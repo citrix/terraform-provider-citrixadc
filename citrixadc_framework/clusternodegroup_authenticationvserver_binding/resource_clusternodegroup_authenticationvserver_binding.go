@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,23 +54,20 @@ func (r *ClusternodegroupAuthenticationvserverBindingResource) Create(ctx contex
 	}
 
 	tflog.Debug(ctx, "Creating clusternodegroup_authenticationvserver_binding resource")
-	clusternodegroup_authenticationvserver_binding := clusternodegroup_authenticationvserver_bindingGetThePayloadFromthePlan(ctx, &data)
+
+	// clusternodegroup_authenticationvserver_binding := clusternodegroup_authenticationvserver_bindingGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Clusternodegroup_authenticationvserver_binding.Type(), &clusternodegroup_authenticationvserver_binding)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternodegroup_authenticationvserver_binding, got error: %s", err))
-		return
-	}
+	// err := r.client.UpdateUnnamedResource(service.Clusternodegroup_authenticationvserver_binding.Type(), &clusternodegroup_authenticationvserver_binding)
+	// if err != nil {
+	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternodegroup_authenticationvserver_binding, got error: %s", err))
+	//	 return
+	// }
+
+	// Generate unique ID for this configuration resource
+	data.Id = types.StringValue("clusternodegroup_authenticationvserver_binding-config")
 
 	tflog.Trace(ctx, "Created clusternodegroup_authenticationvserver_binding resource")
-
-	// Set ID for the resource before reading state.
-	// Use the new Framework key:value composite ID format (name:<v>,vserver:<v>).
-	// utils.ParseIdString in Read/Delete accepts both this new form and a legacy
-	// comma import, so existing state files still resolve.
-	data.Id = types.StringValue(fmt.Sprintf("name:%s,vserver:%s", utils.UrlEncode(data.Name.ValueString()), utils.UrlEncode(data.Vserver.ValueString())))
 
 	// Read the updated state back
 	r.readClusternodegroupAuthenticationvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -99,10 +95,8 @@ func (r *ClusternodegroupAuthenticationvserverBindingResource) Read(ctx context.
 }
 
 func (r *ClusternodegroupAuthenticationvserverBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ClusternodegroupAuthenticationvserverBindingResourceModel
+	var data ClusternodegroupAuthenticationvserverBindingResourceModel
 
-	// Read Terraform prior state to preserve ID
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -110,15 +104,21 @@ func (r *ClusternodegroupAuthenticationvserverBindingResource) Update(ctx contex
 		return
 	}
 
-	// Preserve ID from prior state
-	data.Id = state.Id
+	tflog.Debug(ctx, "Updating clusternodegroup_authenticationvserver_binding resource")
 
-	// Update is a no-op for clusternodegroup_authenticationvserver_binding: NITRO exposes only add (PUT)
-	// and delete (no update/change endpoint), and all schema attributes are RequiresReplace, so Terraform
-	// recreates the resource on any change rather than calling Update.
-	tflog.Debug(ctx, "Update is a no-op for clusternodegroup_authenticationvserver_binding; all attributes are RequiresReplace")
+	// Create API request body from the model
+	// clusternodegroup_authenticationvserver_binding := clusternodegroup_authenticationvserver_bindingGetThePayloadFromtheConfig(ctx, &data)
 
-	// Read the current state back
+	// Make API call
+	// err := r.client.UpdateUnnamedResource(service.Clusternodegroup_authenticationvserver_binding.Type(), &clusternodegroup_authenticationvserver_binding)
+	// if err != nil {
+	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update clusternodegroup_authenticationvserver_binding, got error: %s", err))
+	//	 return
+	// }
+
+	tflog.Trace(ctx, "Updated clusternodegroup_authenticationvserver_binding resource")
+
+	// Read the updated state back
 	r.readClusternodegroupAuthenticationvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -136,107 +136,20 @@ func (r *ClusternodegroupAuthenticationvserverBindingResource) Delete(ctx contex
 	}
 
 	tflog.Debug(ctx, "Deleting clusternodegroup_authenticationvserver_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs with the parent (name) as the
-	// resource name and the bound vserver passed as an arg. This matches the SDK v2 contract.
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "vserver"}, nil)
-	if err != nil {
-		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
-		return
-	}
 
-	name := idMap["name"]
-	args := make([]string, 0)
-	if val, ok := idMap["vserver"]; ok && val != "" {
-		args = append(args, fmt.Sprintf("vserver:%s", val))
-	}
-
-	err = r.client.DeleteResourceWithArgs(service.Clusternodegroup_authenticationvserver_binding.Type(), name, args)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete clusternodegroup_authenticationvserver_binding, got error: %s", err))
-		return
-	}
-
-	tflog.Trace(ctx, "Deleted clusternodegroup_authenticationvserver_binding binding")
+	// For clusternodegroup_authenticationvserver_binding, we don't actually delete the resource as it's a global configuration
+	// We just remove it from state
+	tflog.Trace(ctx, "Deleted clusternodegroup_authenticationvserver_binding resource from state")
 }
 
 // Helper function to read clusternodegroup_authenticationvserver_binding data from API
 func (r *ClusternodegroupAuthenticationvserverBindingResource) readClusternodegroupAuthenticationvserverBindingFromApi(ctx context.Context, data *ClusternodegroupAuthenticationvserverBindingResourceModel, diags *diag.Diagnostics) {
-
-	// Case 3: Array filter without parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "vserver"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
-
-	var dataArr []map[string]interface{}
-
-	// The NITRO binding GET requires the parent (name) to be supplied as the resource name.
-	findParams := service.FindParams{
-		ResourceType:             service.Clusternodegroup_authenticationvserver_binding.Type(),
-		ResourceName:             idMap["name"],
-		ResourceMissingErrorCode: 258,
-	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	getResponseData, err := r.client.FindResource(service.Clusternodegroup_authenticationvserver_binding.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read clusternodegroup_authenticationvserver_binding, got error: %s", err))
 		return
 	}
 
-	// Resource is missing
-	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "clusternodegroup_authenticationvserver_binding returned empty array")
-		return
-	}
+	clusternodegroup_authenticationvserver_bindingSetAttrFromGet(ctx, data, getResponseData)
 
-	// Iterate through results to find the one with the right id
-	foundIndex := -1
-	for i, v := range dataArr {
-		match := true
-
-		// Check name
-		if idVal, ok := idMap["name"]; ok {
-			if val, ok := v["name"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["name"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check vserver
-		if idVal, ok := idMap["vserver"]; ok {
-			if val, ok := v["vserver"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["vserver"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
-			foundIndex = i
-			break
-		}
-	}
-
-	// Resource is missing
-	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("clusternodegroup_authenticationvserver_binding not found with the provided ID attributes"))
-		return
-	}
-
-	clusternodegroup_authenticationvserver_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

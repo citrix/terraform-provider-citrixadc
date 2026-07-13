@@ -17,37 +17,24 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_clusternode_binding_basic = `
 
-resource "citrixadc_clusternodegroup" "tf_ng_node" {
-	name   = "tf_ng_node"
-	strict = "NO"
-	sticky = "YES"
-}
-
 resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
-	name = citrixadc_clusternodegroup.tf_ng_node.name
+	name = "my_tf_group"
 	node = 0
-	depends_on = [citrixadc_clusternodegroup.tf_ng_node]
 	}
-
+  
 `
 
 const testAccClusternodegroup_clusternode_binding_basic_step2 = `
-
-resource "citrixadc_clusternodegroup" "tf_ng_node" {
-	name   = "tf_ng_node"
-	strict = "NO"
-	sticky = "YES"
-}
 
 `
 
@@ -69,7 +56,7 @@ func TestAccClusternodegroup_clusternode_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_clusternode_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_clusternode_bindingNotExist("citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "tf_ng_node,0"),
+					testAccCheckClusternodegroup_clusternode_bindingNotExist("citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "my_group,2"),
 				),
 			},
 		},
@@ -103,13 +90,10 @@ func testAccCheckClusternodegroup_clusternode_bindingExist(n string, id *string)
 
 		bindingId := rs.Primary.ID
 
-		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "node"}, nil)
-		if err != nil {
-			return err
-		}
+		idSlice := strings.SplitN(bindingId, ",", 2)
 
-		name := idMap["name"]
-		node := idMap["node"]
+		name := idSlice[0]
+		node := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_clusternode_binding",
@@ -148,13 +132,13 @@ func testAccCheckClusternodegroup_clusternode_bindingNotExist(n string, id strin
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idMap, _, err := utils.ParseIdString(id, []string{"name", "node"}, nil)
-		if err != nil {
-			return err
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
+		idSlice := strings.SplitN(id, ",", 2)
 
-		name := idMap["name"]
-		node := idMap["node"]
+		name := idSlice[0]
+		node := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_clusternode_binding",
@@ -212,20 +196,13 @@ func testAccCheckClusternodegroup_clusternode_bindingDestroy(s *terraform.State)
 }
 
 const testAccClusternodegroup_clusternode_bindingDataSource_basic = `
-	resource "citrixadc_clusternodegroup" "tf_ng_node_ds" {
-		name   = "tf_ng_node_ds"
-		strict = "NO"
-		sticky = "YES"
-	}
-
 	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
-		name = citrixadc_clusternodegroup.tf_ng_node_ds.name
+		name = "my_tf_group"
 		node = 0
-		depends_on = [citrixadc_clusternodegroup.tf_ng_node_ds]
 	}
 
 	data "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
-		name = citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding.name
+		name = "my_tf_group"
 		node = 0
 		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
@@ -243,7 +220,7 @@ func TestAccclusternodegroup_clusternode_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_clusternode_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "name", "tf_ng_node_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding", "node", "0"),
 				),
 			},

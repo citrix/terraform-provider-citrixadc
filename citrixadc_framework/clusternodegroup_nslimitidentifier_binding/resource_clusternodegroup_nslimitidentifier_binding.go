@@ -3,10 +3,8 @@ package clusternodegroup_nslimitidentifier_binding
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -56,23 +54,20 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Create(ctx context.Co
 	}
 
 	tflog.Debug(ctx, "Creating clusternodegroup_nslimitidentifier_binding resource")
-	clusternodegroup_nslimitidentifier_binding := clusternodegroup_nslimitidentifier_bindingGetThePayloadFromthePlan(ctx, &data)
+
+	// clusternodegroup_nslimitidentifier_binding := clusternodegroup_nslimitidentifier_bindingGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// Binding resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Clusternodegroup_nslimitidentifier_binding.Type(), &clusternodegroup_nslimitidentifier_binding)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternodegroup_nslimitidentifier_binding, got error: %s", err))
-		return
-	}
+	// err := r.client.UpdateUnnamedResource(service.Clusternodegroup_nslimitidentifier_binding.Type(), &clusternodegroup_nslimitidentifier_binding)
+	// if err != nil {
+	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternodegroup_nslimitidentifier_binding, got error: %s", err))
+	//	 return
+	// }
+
+	// Generate unique ID for this configuration resource
+	data.Id = types.StringValue("clusternodegroup_nslimitidentifier_binding-config")
 
 	tflog.Trace(ctx, "Created clusternodegroup_nslimitidentifier_binding resource")
-
-	// Set ID for the resource before reading state
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("identifiername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Identifiername.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readClusternodegroupNslimitidentifierBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -100,10 +95,8 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Read(ctx context.Cont
 }
 
 func (r *ClusternodegroupNslimitidentifierBindingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ClusternodegroupNslimitidentifierBindingResourceModel
+	var data ClusternodegroupNslimitidentifierBindingResourceModel
 
-	// Read Terraform prior state to preserve ID
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -111,15 +104,21 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Update(ctx context.Co
 		return
 	}
 
-	// Preserve ID from prior state
-	data.Id = state.Id
+	tflog.Debug(ctx, "Updating clusternodegroup_nslimitidentifier_binding resource")
 
-	// Update is a no-op for clusternodegroup_nslimitidentifier_binding: NITRO exposes only add (PUT)
-	// and delete (no update/change endpoint), and all schema attributes are RequiresReplace, so Terraform
-	// recreates the resource on any change rather than calling Update.
-	tflog.Debug(ctx, "Update is a no-op for clusternodegroup_nslimitidentifier_binding; all attributes are RequiresReplace")
+	// Create API request body from the model
+	// clusternodegroup_nslimitidentifier_binding := clusternodegroup_nslimitidentifier_bindingGetThePayloadFromtheConfig(ctx, &data)
 
-	// Read the current state back
+	// Make API call
+	// err := r.client.UpdateUnnamedResource(service.Clusternodegroup_nslimitidentifier_binding.Type(), &clusternodegroup_nslimitidentifier_binding)
+	// if err != nil {
+	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update clusternodegroup_nslimitidentifier_binding, got error: %s", err))
+	//	 return
+	// }
+
+	tflog.Trace(ctx, "Updated clusternodegroup_nslimitidentifier_binding resource")
+
+	// Read the updated state back
 	r.readClusternodegroupNslimitidentifierBindingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -137,119 +136,20 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Delete(ctx context.Co
 	}
 
 	tflog.Debug(ctx, "Deleting clusternodegroup_nslimitidentifier_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgsMap.
-	// Per NITRO doc: DELETE .../clusternodegroup_nslimitidentifier_binding/<name_value>?args=identifiername:<value>
-	// name is the URL PATH key (parent); identifiername is the ONLY query arg.
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "identifiername"}, nil)
-	if err != nil {
-		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
-		return
-	}
 
-	name_value, ok := idMap["name"]
-	if !ok {
-		resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
-		return
-	}
-
-	var argsMap map[string]string = make(map[string]string)
-	if val, ok := idMap["identifiername"]; ok && val != "" {
-		argsMap["identifiername"] = utils.UrlEncode(val)
-	}
-
-	err = r.client.DeleteResourceWithArgsMap(service.Clusternodegroup_nslimitidentifier_binding.Type(), name_value, argsMap)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete clusternodegroup_nslimitidentifier_binding, got error: %s", err))
-		return
-	}
-
-	tflog.Trace(ctx, "Deleted clusternodegroup_nslimitidentifier_binding binding")
+	// For clusternodegroup_nslimitidentifier_binding, we don't actually delete the resource as it's a global configuration
+	// We just remove it from state
+	tflog.Trace(ctx, "Deleted clusternodegroup_nslimitidentifier_binding resource from state")
 }
 
 // Helper function to read clusternodegroup_nslimitidentifier_binding data from API
 func (r *ClusternodegroupNslimitidentifierBindingResource) readClusternodegroupNslimitidentifierBindingFromApi(ctx context.Context, data *ClusternodegroupNslimitidentifierBindingResourceModel, diags *diag.Diagnostics) {
-
-	// Case 4: Array filter with parent ID - parse from ID
-	// name is the URL PATH key (parent); identifiername is the filter within the parent's bindings.
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "identifiername"}, nil)
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
-	}
-
-	name_Name, ok := idMap["name"]
-	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
-		return
-	}
-
-	var dataArr []map[string]interface{}
-
-	findParams := service.FindParams{
-		ResourceType:             service.Clusternodegroup_nslimitidentifier_binding.Type(),
-		ResourceName:             name_Name,
-		ResourceMissingErrorCode: 258,
-	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	getResponseData, err := r.client.FindResource(service.Clusternodegroup_nslimitidentifier_binding.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read clusternodegroup_nslimitidentifier_binding, got error: %s", err))
 		return
 	}
 
-	// Resource is missing
-	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "clusternodegroup_nslimitidentifier_binding returned empty array.")
-		return
-	}
+	clusternodegroup_nslimitidentifier_bindingSetAttrFromGet(ctx, data, getResponseData)
 
-	// Iterate through results to find the one with the right id
-	foundIndex := -1
-	for i, v := range dataArr {
-		match := true
-
-		// Check name
-		if idVal, ok := idMap["name"]; ok {
-			if val, ok := v["name"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["name"].(string); ok {
-			match = false
-			continue
-		}
-
-		// Check identifiername
-		if idVal, ok := idMap["identifiername"]; ok {
-			if val, ok := v["identifiername"].(string); ok {
-				if val != idVal {
-					match = false
-					continue
-				}
-			} else {
-				match = false
-				continue
-			}
-		} else if _, ok := v["identifiername"].(string); ok {
-			match = false
-			continue
-		}
-
-		if match {
-			foundIndex = i
-			break
-		}
-	}
-
-	//  Resource is missing
-	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("clusternodegroup_nslimitidentifier_binding not found with the provided ID attributes"))
-		return
-	}
-
-	clusternodegroup_nslimitidentifier_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

@@ -17,21 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_nslimitidentifier_binding_basic = `
-
-	resource "citrixadc_clusternodegroup" "tf_ng_nslimit" {
-		name   = "tf_ng_nslimit"
-		strict = "NO"
-		sticky = "YES"
-	}
 
 	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier" {
 		limitidentifier = "my_ns_limit_identifier_ds"
@@ -40,27 +34,14 @@ const testAccClusternodegroup_nslimitidentifier_binding_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {
-		name           = citrixadc_clusternodegroup.tf_ng_nslimit.name
+		name           = "my_tf_group"
 		identifiername = citrixadc_nslimitidentifier.tf_nslimitidentifier.limitidentifier
-		depends_on = [citrixadc_clusternodegroup.tf_ng_nslimit]
 	}
-
+  
 `
 
 const testAccClusternodegroup_nslimitidentifier_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
-
-	resource "citrixadc_clusternodegroup" "tf_ng_nslimit" {
-		name   = "tf_ng_nslimit"
-		strict = "NO"
-		sticky = "YES"
-	}
-
-	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier" {
-		limitidentifier = "my_ns_limit_identifier_ds"
-		threshold       = 100
-		timeslice       = 1000
-	}
 `
 
 func TestAccClusternodegroup_nslimitidentifier_binding_basic(t *testing.T) {
@@ -81,7 +62,7 @@ func TestAccClusternodegroup_nslimitidentifier_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_nslimitidentifier_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_nslimitidentifier_bindingNotExist("citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding", "tf_ng_nslimit,my_ns_limit_identifier_ds"),
+					testAccCheckClusternodegroup_nslimitidentifier_bindingNotExist("citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding", "my_group,my_nslimitidentifier"),
 				),
 			},
 		},
@@ -115,12 +96,10 @@ func testAccCheckClusternodegroup_nslimitidentifier_bindingExist(n string, id *s
 
 		bindingId := rs.Primary.ID
 
-		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "identifiername"}, nil)
-		if err != nil {
-			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
-		}
-		name := idMap["name"]
-		identifiername := idMap["identifiername"]
+		idSlice := strings.SplitN(bindingId, ",", 2)
+
+		name := idSlice[0]
+		identifiername := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_nslimitidentifier_binding",
@@ -159,12 +138,13 @@ func testAccCheckClusternodegroup_nslimitidentifier_bindingNotExist(n string, id
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idMap, _, err := utils.ParseIdString(id, []string{"name", "identifiername"}, nil)
-		if err != nil {
-			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		name := idMap["name"]
-		identifiername := idMap["identifiername"]
+		idSlice := strings.SplitN(id, ",", 2)
+
+		name := idSlice[0]
+		identifiername := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_nslimitidentifier_binding",
@@ -229,16 +209,9 @@ const testAccClusternodegroup_nslimitidentifier_bindingDataSource_basic = `
 		timeslice       = 1000
 	}
 
-	resource "citrixadc_clusternodegroup" "tf_ng_nslimit_ds" {
-		name   = "tf_ng_nslimit_ds"
-		strict = "NO"
-		sticky = "YES"
-	}
-
 	resource "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {
-		name           = citrixadc_clusternodegroup.tf_ng_nslimit_ds.name
+		name           = "my_tf_group"
 		identifiername = citrixadc_nslimitidentifier.tf_nslimitidentifier.limitidentifier
-		depends_on = [citrixadc_clusternodegroup.tf_ng_nslimit_ds]
 	}
 
 	data "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {
@@ -260,7 +233,7 @@ func TestAccclusternodegroup_nslimitidentifier_bindingDataSource_basic(t *testin
 			{
 				Config: testAccClusternodegroup_nslimitidentifier_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding", "name", "tf_ng_nslimit_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding", "identifiername", "my_ns_limit_identifier_ds"),
 				),
 			},

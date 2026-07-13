@@ -17,21 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_streamidentifier_binding_basic = `
-
-	resource "citrixadc_clusternodegroup" "tf_ng_stream" {
-		name   = "tf_ng_stream"
-		strict = "NO"
-		sticky = "YES"
-	}
 
 	resource "citrixadc_streamselector" "tf_streamselector" {
 		name = "my_streamselector"
@@ -49,35 +43,13 @@ const testAccClusternodegroup_streamidentifier_binding_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
-		name           = citrixadc_clusternodegroup.tf_ng_stream.name
+		name           = "my_tf_group"
 		identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
-		depends_on = [citrixadc_clusternodegroup.tf_ng_stream]
 	}
 `
 
 const testAccClusternodegroup_streamidentifier_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
-
-	resource "citrixadc_clusternodegroup" "tf_ng_stream" {
-		name   = "tf_ng_stream"
-		strict = "NO"
-		sticky = "YES"
-	}
-
-	resource "citrixadc_streamselector" "tf_streamselector" {
-		name = "my_streamselector"
-		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
-	}
-	resource "citrixadc_streamidentifier" "tf_streamidentifier" {
-		name         = "my_streamidentifier"
-		selectorname = citrixadc_streamselector.tf_streamselector.name
-		samplecount  = 10
-		sort         = "CONNECTIONS"
-		snmptrap     = "ENABLED"
-		loglimit	 = 500
-		loginterval = 60
-		log = "NONE"
-	}
 `
 
 func TestAccClusternodegroup_streamidentifier_binding_basic(t *testing.T) {
@@ -98,7 +70,7 @@ func TestAccClusternodegroup_streamidentifier_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_streamidentifier_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_streamidentifier_bindingNotExist("citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "tf_ng_stream,my_streamidentifier"),
+					testAccCheckClusternodegroup_streamidentifier_bindingNotExist("citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "my_group,my_identifier"),
 				),
 			},
 		},
@@ -132,12 +104,10 @@ func testAccCheckClusternodegroup_streamidentifier_bindingExist(n string, id *st
 
 		bindingId := rs.Primary.ID
 
-		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "identifiername"}, nil)
-		if err != nil {
-			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
-		}
-		name := idMap["name"]
-		identifiername := idMap["identifiername"]
+		idSlice := strings.SplitN(bindingId, ",", 2)
+
+		name := idSlice[0]
+		identifiername := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_streamidentifier_binding",
@@ -176,12 +146,13 @@ func testAccCheckClusternodegroup_streamidentifier_bindingNotExist(n string, id 
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idMap, _, err := utils.ParseIdString(id, []string{"name", "identifiername"}, nil)
-		if err != nil {
-			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		name := idMap["name"]
-		identifiername := idMap["identifiername"]
+		idSlice := strings.SplitN(id, ",", 2)
+
+		name := idSlice[0]
+		identifiername := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_streamidentifier_binding",
@@ -255,16 +226,9 @@ const testAccClusternodegroup_streamidentifier_bindingDataSource_basic = `
 		log = "NONE"
 	}
 
-resource "citrixadc_clusternodegroup" "tf_ng_stream_ds" {
-	name   = "tf_ng_stream_ds"
-	strict = "NO"
-	sticky = "YES"
-}
-
 resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
-name           = citrixadc_clusternodegroup.tf_ng_stream_ds.name
+name           = "my_tf_group"
 identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
-depends_on = [citrixadc_clusternodegroup.tf_ng_stream_ds]
 }
 
 data "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
@@ -286,7 +250,7 @@ func TestAccclusternodegroup_streamidentifier_bindingDataSource_basic(t *testing
 			{
 				Config: testAccClusternodegroup_streamidentifier_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "name", "tf_ng_stream_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "identifiername", "my_streamidentifier"),
 				),
 			},

@@ -17,27 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_csvserver_binding_basic = `
-
-	resource "citrixadc_clusternodegroup" "tf_ng_cs" {
-		name   = "tf_ng_cs"
-		strict = "NO"
-		sticky = "YES"
-	}
-
-	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_cs_node" {
-		name = citrixadc_clusternodegroup.tf_ng_cs.name
-		node = 0
-		depends_on = [citrixadc_clusternodegroup.tf_ng_cs]
-	}
 
 	resource "citrixadc_csvserver" "tf_csvserver" {
 		name        = "my_content_server_ds"
@@ -47,32 +35,12 @@ const testAccClusternodegroup_csvserver_binding_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
-		name = citrixadc_clusternodegroup.tf_ng_cs.name
+		name = "my_tf_group"
 		vserver = citrixadc_csvserver.tf_csvserver.name
-		depends_on = [citrixadc_clusternodegroup.tf_ng_cs, citrixadc_clusternodegroup_clusternode_binding.tf_ng_cs_node]
 	}
 `
 
 const testAccClusternodegroup_csvserver_binding_basic_step2 = `
-
-	resource "citrixadc_clusternodegroup" "tf_ng_cs" {
-		name   = "tf_ng_cs"
-		strict = "NO"
-		sticky = "YES"
-	}
-
-	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_cs_node" {
-		name = citrixadc_clusternodegroup.tf_ng_cs.name
-		node = 0
-		depends_on = [citrixadc_clusternodegroup.tf_ng_cs]
-	}
-
-	resource "citrixadc_csvserver" "tf_csvserver" {
-		name        = "my_content_server_ds"
-		servicetype = "HTTP"
-		ipv46       = "10.71.139.100"
-		port        = "80"
-	}
 `
 
 func TestAccClusternodegroup_csvserver_binding_basic(t *testing.T) {
@@ -93,7 +61,7 @@ func TestAccClusternodegroup_csvserver_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_csvserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_csvserver_bindingNotExist("citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "tf_ng_cs,my_content_server_ds"),
+					testAccCheckClusternodegroup_csvserver_bindingNotExist("citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "my_cs_group,my_csvserver"),
 				),
 			},
 		},
@@ -127,12 +95,10 @@ func testAccCheckClusternodegroup_csvserver_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
-		if err != nil {
-			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
-		}
-		name := idMap["name"]
-		my_csvserver := idMap["vserver"]
+		idSlice := strings.SplitN(bindingId, ",", 2)
+
+		name := idSlice[0]
+		my_csvserver := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_csvserver_binding",
@@ -171,12 +137,13 @@ func testAccCheckClusternodegroup_csvserver_bindingNotExist(n string, id string)
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idMap, _, err := utils.ParseIdString(id, []string{"name", "vserver"}, nil)
-		if err != nil {
-			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		name := idMap["name"]
-		my_csvserver := idMap["vserver"]
+		idSlice := strings.SplitN(id, ",", 2)
+
+		name := idSlice[0]
+		my_csvserver := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_csvserver_binding",
@@ -235,18 +202,6 @@ func testAccCheckClusternodegroup_csvserver_bindingDestroy(s *terraform.State) e
 
 const testAccClusternodegroup_csvserver_bindingDataSource_basic = `
 
-	resource "citrixadc_clusternodegroup" "tf_ng_cs_ds" {
-		name   = "tf_ng_cs_ds"
-		strict = "NO"
-		sticky = "YES"
-	}
-
-	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_cs_ds_node" {
-		name = citrixadc_clusternodegroup.tf_ng_cs_ds.name
-		node = 0
-		depends_on = [citrixadc_clusternodegroup.tf_ng_cs_ds]
-	}
-
 	resource "citrixadc_csvserver" "tf_csvserver" {
 		name        = "my_content_server_ds"
 		servicetype = "HTTP"
@@ -255,9 +210,8 @@ const testAccClusternodegroup_csvserver_bindingDataSource_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
-		name    = citrixadc_clusternodegroup.tf_ng_cs_ds.name
+		name    = "my_tf_group"
 		vserver = citrixadc_csvserver.tf_csvserver.name
-		depends_on = [citrixadc_clusternodegroup.tf_ng_cs_ds, citrixadc_clusternodegroup_clusternode_binding.tf_ng_cs_ds_node]
 	}
 
 	data "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
@@ -279,7 +233,7 @@ func TestAccclusternodegroup_csvserver_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_csvserver_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "name", "tf_ng_cs_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "vserver", "my_content_server_ds"),
 				),
 			},

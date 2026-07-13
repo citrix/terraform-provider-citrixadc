@@ -43,17 +43,16 @@ func (d *ClusternodegroupClusternodeBindingDataSource) Read(ctx context.Context,
 		return
 	}
 
-	// Case 3: Array filter without parent ID
-	name_Name := data.Name
+	// Case 4: Array filter with parent ID
+	name_Name := data.Name.ValueString()
 	node_Name := data.Node
 
 	var dataArr []map[string]interface{}
 	var err error
 
-	// The NITRO binding GET requires the parent (name) to be supplied as the resource name.
 	findParams := service.FindParams{
 		ResourceType:             service.Clusternodegroup_clusternode_binding.Type(),
-		ResourceName:             name_Name.ValueString(),
+		ResourceName:             name_Name,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -64,7 +63,7 @@ func (d *ClusternodegroupClusternodeBindingDataSource) Read(ctx context.Context,
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		resp.Diagnostics.AddError("Client Error", "clusternodegroup_clusternode_binding returned empty array")
+		resp.Diagnostics.AddError("Client Error", "clusternodegroup_clusternode_binding returned empty array.")
 		return
 	}
 
@@ -72,17 +71,6 @@ func (d *ClusternodegroupClusternodeBindingDataSource) Read(ctx context.Context,
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
-
-		// Check name
-		if val, ok := v["name"].(string); ok {
-			if name_Name.IsNull() || val != name_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !name_Name.IsNull() {
-			match = false
-			continue
-		}
 
 		// Check node
 		if val, ok := v["node"]; ok {
@@ -95,7 +83,6 @@ func (d *ClusternodegroupClusternodeBindingDataSource) Read(ctx context.Context,
 			match = false
 			continue
 		}
-
 		if match {
 			foundIndex = i
 			break
@@ -104,11 +91,11 @@ func (d *ClusternodegroupClusternodeBindingDataSource) Read(ctx context.Context,
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("clusternodegroup_clusternode_binding with name %s not found", name_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("clusternodegroup_clusternode_binding with node %s not found", node_Name))
 		return
 	}
 
-	clusternodegroup_clusternode_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	clusternodegroup_clusternode_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

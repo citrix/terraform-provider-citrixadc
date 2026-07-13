@@ -9,8 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,59 +31,35 @@ func (r *ClusternodegroupCrvserverBindingResource) Schema(ctx context.Context, r
 				Description: "The ID of the clusternodegroup_crvserver_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:    true,
 				Description: "Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.",
 			},
 			"vserver": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "vserver that need to be bound to this nodegroup.",
 			},
 		},
 	}
 }
 
-func clusternodegroup_crvserver_bindingGetThePayloadFromthePlan(ctx context.Context, data *ClusternodegroupCrvserverBindingResourceModel) cluster.Clusternodegroupcrvserverbinding {
-	tflog.Debug(ctx, "In clusternodegroup_crvserver_bindingGetThePayloadFromthePlan Function")
+func clusternodegroup_crvserver_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodegroupCrvserverBindingResourceModel) cluster.Clusternodegroupcrvserverbinding {
+	tflog.Debug(ctx, "In clusternodegroup_crvserver_bindingGetThePayloadFromtheConfig Function")
 
 	// Create API request body from the model
 	clusternodegroup_crvserver_binding := cluster.Clusternodegroupcrvserverbinding{}
-	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+	if !data.Name.IsNull() {
 		clusternodegroup_crvserver_binding.Name = data.Name.ValueString()
 	}
-	if !data.Vserver.IsNull() && !data.Vserver.IsUnknown() {
+	if !data.Vserver.IsNull() {
 		clusternodegroup_crvserver_binding.Vserver = data.Vserver.ValueString()
 	}
 
 	return clusternodegroup_crvserver_binding
 }
 
-// clusternodegroup_crvserver_bindingSetAttrFromGet is used by the resource Read/Create flow.
-// It preserves the plan/state-supplied values (name, vserver are both RequiresReplace identity attrs) and
-// does NOT recompute the ID, which is set exactly once in Create.
 func clusternodegroup_crvserver_bindingSetAttrFromGet(ctx context.Context, data *ClusternodegroupCrvserverBindingResourceModel, getResponseData map[string]interface{}) *ClusternodegroupCrvserverBindingResourceModel {
 	tflog.Debug(ctx, "In clusternodegroup_crvserver_bindingSetAttrFromGet Function")
-
-	// Convert API response to model
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	}
-	if val, ok := getResponseData["vserver"]; ok && val != nil {
-		data.Vserver = types.StringValue(val.(string))
-	}
-
-	return data
-}
-
-// clusternodegroup_crvserver_bindingSetAttrFromGetForDatasource faithfully copies every field
-// from the GET response and composes the ID, since the datasource has no Create to seed those values.
-func clusternodegroup_crvserver_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ClusternodegroupCrvserverBindingResourceModel, getResponseData map[string]interface{}) *ClusternodegroupCrvserverBindingResourceModel {
-	tflog.Debug(ctx, "In clusternodegroup_crvserver_bindingSetAttrFromGetForDatasource Function")
 
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
@@ -99,7 +73,7 @@ func clusternodegroup_crvserver_bindingSetAttrFromGetForDatasource(ctx context.C
 		data.Vserver = types.StringNull()
 	}
 
-	// Set ID for the datasource
+	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))

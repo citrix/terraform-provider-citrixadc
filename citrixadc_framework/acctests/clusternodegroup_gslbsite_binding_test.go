@@ -17,28 +17,21 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccClusternodegroup_gslbsite_binding_basic = `
 
-resource "citrixadc_clusternodegroup" "tf_ng_gslbsite" {
-	name   = "tf_ng_gslbsite"
-	strict = "NO"
-	sticky = "YES"
-}
-
 resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
 	gslbsite = citrixadc_gslbsite.site_remote.sitename
-	name     = citrixadc_clusternodegroup.tf_ng_gslbsite.name
-	depends_on = [citrixadc_clusternodegroup.tf_ng_gslbsite]
+	name     = "my_tf_group"
 	}
-
+  
   resource "citrixadc_gslbsite" "site_remote" {
 	sitename        = "my_local_site"
 	siteipaddress   = "10.222.74.169"
@@ -49,12 +42,6 @@ resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslb
 `
 
 const testAccClusternodegroup_gslbsite_binding_basic_step2 = `
-resource "citrixadc_clusternodegroup" "tf_ng_gslbsite" {
-	name   = "tf_ng_gslbsite"
-	strict = "NO"
-	sticky = "YES"
-}
-
 resource "citrixadc_gslbsite" "site_remote" {
 	sitename        = "my_local_site"
 	siteipaddress   = "10.222.74.169"
@@ -82,7 +69,7 @@ func TestAccClusternodegroup_gslbsite_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_gslbsite_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_gslbsite_bindingNotExist("citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "tf_ng_gslbsite,my_local_site"),
+					testAccCheckClusternodegroup_gslbsite_bindingNotExist("citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "my_group,my_local_site"),
 				),
 			},
 		},
@@ -116,13 +103,10 @@ func testAccCheckClusternodegroup_gslbsite_bindingExist(n string, id *string) re
 
 		bindingId := rs.Primary.ID
 
-		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "gslbsite"}, nil)
-		if err != nil {
-			return err
-		}
+		idSlice := strings.SplitN(bindingId, ",", 2)
 
-		name := idMap["name"]
-		gslbsite := idMap["gslbsite"]
+		name := idSlice[0]
+		gslbsite := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_gslbsite_binding",
@@ -161,13 +145,13 @@ func testAccCheckClusternodegroup_gslbsite_bindingNotExist(n string, id string) 
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idMap, _, err := utils.ParseIdString(id, []string{"name", "gslbsite"}, nil)
-		if err != nil {
-			return err
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
+		idSlice := strings.SplitN(id, ",", 2)
 
-		name := idMap["name"]
-		gslbsite := idMap["gslbsite"]
+		name := idSlice[0]
+		gslbsite := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_gslbsite_binding",
@@ -234,16 +218,9 @@ const testAccClusternodegroup_gslbsite_bindingDataSource_basic = `
 		sitepassword    = "secret"
 	}
 
-	resource "citrixadc_clusternodegroup" "tf_ng_gslbsite_ds" {
-		name   = "tf_ng_gslbsite_ds"
-		strict = "NO"
-		sticky = "YES"
-	}
-
 	resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
-		name     = citrixadc_clusternodegroup.tf_ng_gslbsite_ds.name
+		name     = "my_tf_group"
 		gslbsite = citrixadc_gslbsite.tf_gslbsite.sitename
-		depends_on = [citrixadc_clusternodegroup.tf_ng_gslbsite_ds]
 	}
 
 	data "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
@@ -265,7 +242,7 @@ func TestAccclusternodegroup_gslbsite_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_gslbsite_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "name", "tf_ng_gslbsite_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding", "gslbsite", "my_gslb_site_ds"),
 				),
 			},

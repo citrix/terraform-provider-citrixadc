@@ -9,8 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,59 +31,35 @@ func (r *ClusternodegroupNslimitidentifierBindingResource) Schema(ctx context.Co
 				Description: "The ID of the clusternodegroup_nslimitidentifier_binding resource.",
 			},
 			"identifiername": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "stream identifier  and rate limit identifier that need to be bound to this nodegroup.",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:    true,
 				Description: "Name of the nodegroup to which you want to bind a cluster node or an entity.",
 			},
 		},
 	}
 }
 
-func clusternodegroup_nslimitidentifier_bindingGetThePayloadFromthePlan(ctx context.Context, data *ClusternodegroupNslimitidentifierBindingResourceModel) cluster.Clusternodegroupnslimitidentifierbinding {
-	tflog.Debug(ctx, "In clusternodegroup_nslimitidentifier_bindingGetThePayloadFromthePlan Function")
+func clusternodegroup_nslimitidentifier_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodegroupNslimitidentifierBindingResourceModel) cluster.Clusternodegroupnslimitidentifierbinding {
+	tflog.Debug(ctx, "In clusternodegroup_nslimitidentifier_bindingGetThePayloadFromtheConfig Function")
 
 	// Create API request body from the model
 	clusternodegroup_nslimitidentifier_binding := cluster.Clusternodegroupnslimitidentifierbinding{}
-	if !data.Identifiername.IsNull() && !data.Identifiername.IsUnknown() {
+	if !data.Identifiername.IsNull() {
 		clusternodegroup_nslimitidentifier_binding.Identifiername = data.Identifiername.ValueString()
 	}
-	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+	if !data.Name.IsNull() {
 		clusternodegroup_nslimitidentifier_binding.Name = data.Name.ValueString()
 	}
 
 	return clusternodegroup_nslimitidentifier_binding
 }
 
-// clusternodegroup_nslimitidentifier_bindingSetAttrFromGet is used by the resource Read/Create flow.
-// It preserves the plan/state-supplied values (name, identifiername are both RequiresReplace identity attrs) and
-// does NOT recompute the ID, which is set exactly once in Create.
 func clusternodegroup_nslimitidentifier_bindingSetAttrFromGet(ctx context.Context, data *ClusternodegroupNslimitidentifierBindingResourceModel, getResponseData map[string]interface{}) *ClusternodegroupNslimitidentifierBindingResourceModel {
 	tflog.Debug(ctx, "In clusternodegroup_nslimitidentifier_bindingSetAttrFromGet Function")
-
-	// Convert API response to model
-	if val, ok := getResponseData["identifiername"]; ok && val != nil {
-		data.Identifiername = types.StringValue(val.(string))
-	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	}
-
-	return data
-}
-
-// clusternodegroup_nslimitidentifier_bindingSetAttrFromGetForDatasource faithfully copies every field
-// from the GET response and composes the ID, since the datasource has no Create to seed those values.
-func clusternodegroup_nslimitidentifier_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ClusternodegroupNslimitidentifierBindingResourceModel, getResponseData map[string]interface{}) *ClusternodegroupNslimitidentifierBindingResourceModel {
-	tflog.Debug(ctx, "In clusternodegroup_nslimitidentifier_bindingSetAttrFromGetForDatasource Function")
 
 	// Convert API response to model
 	if val, ok := getResponseData["identifiername"]; ok && val != nil {
@@ -99,11 +73,11 @@ func clusternodegroup_nslimitidentifier_bindingSetAttrFromGetForDatasource(ctx c
 		data.Name = types.StringNull()
 	}
 
-	// Set ID for the datasource
+	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("identifiername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Identifiername.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

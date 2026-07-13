@@ -4,31 +4,28 @@ subcategory: "Cluster"
 
 # Data Source: clusternodegroup_crvserver_binding
 
-The clusternodegroup_crvserver_binding data source allows you to retrieve information about a cache redirection virtual server bound to a cluster node group on the Citrix ADC.
+This data source retrieves information about a specific cluster nodegroup to cache redirection virtual server binding.
 
+## Example Usage
 
-## Example usage
-
-```terraform
+```hcl
 data "citrixadc_clusternodegroup_crvserver_binding" "example" {
-  name    = "ng1"
-  vserver = "crvs1"
+  name    = "my_nodegroup"
+  vserver = "my_crvserver"
 }
 
-output "bound_vserver" {
-  value = data.citrixadc_clusternodegroup_crvserver_binding.example.vserver
+output "binding_id" {
+  value = data.citrixadc_clusternodegroup_crvserver_binding.example.id
 }
 ```
-
 
 ## Argument Reference
 
 * `name` - (Required) Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.
-* `vserver` - (Required) Name of the cache redirection virtual server bound to this nodegroup.
-
+* `vserver` - (Required) Cache redirection virtual server that needs to be bound to this nodegroup.
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the clusternodegroup_crvserver_binding. It is a comma-separated set of `key:value` pairs in the form `name:<name>,vserver:<vserver>`, with the values URL-encoded.
+* `id` - The id of the binding. It is the concatenation of `name` and `vserver` attributes seperated by comma.

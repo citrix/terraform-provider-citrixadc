@@ -2,7 +2,6 @@ package clusternodegroup
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 
@@ -35,10 +34,7 @@ func (r *ClusternodegroupResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the clusternodegroup resource.",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:    true,
 				Description: "Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.",
 			},
 			"priority": schema.Int64Attribute{
@@ -68,48 +64,24 @@ func (r *ClusternodegroupResource) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func clusternodegroupGetThePayloadFromthePlan(ctx context.Context, data *ClusternodegroupResourceModel) cluster.Clusternodegroup {
-	tflog.Debug(ctx, "In clusternodegroupGetThePayloadFromthePlan Function")
+func clusternodegroupGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodegroupResourceModel) cluster.Clusternodegroup {
+	tflog.Debug(ctx, "In clusternodegroupGetThePayloadFromtheConfig Function")
 
 	// Create API request body from the model
 	clusternodegroup := cluster.Clusternodegroup{}
-	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+	if !data.Name.IsNull() {
 		clusternodegroup.Name = data.Name.ValueString()
 	}
-	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+	if !data.Priority.IsNull() {
 		clusternodegroup.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.State.IsNull() && !data.State.IsUnknown() {
+	if !data.State.IsNull() {
 		clusternodegroup.State = data.State.ValueString()
 	}
-	if !data.Sticky.IsNull() && !data.Sticky.IsUnknown() {
+	if !data.Sticky.IsNull() {
 		clusternodegroup.Sticky = data.Sticky.ValueString()
 	}
-	if !data.Strict.IsNull() && !data.Strict.IsUnknown() {
-		clusternodegroup.Strict = data.Strict.ValueString()
-	}
-
-	return clusternodegroup
-}
-
-// clusternodegroupGetThePayloadForUpdate builds the NITRO set (PUT) payload.
-// `sticky` is create-only (NITRO set does not accept it; tfdata is_updateable=false)
-// and is RequiresReplace in the schema, so it is deliberately omitted here.
-func clusternodegroupGetThePayloadForUpdate(ctx context.Context, data *ClusternodegroupResourceModel) cluster.Clusternodegroup {
-	tflog.Debug(ctx, "In clusternodegroupGetThePayloadForUpdate Function")
-
-	// Create API request body from the model (excludes create-only `sticky`)
-	clusternodegroup := cluster.Clusternodegroup{}
-	if !data.Name.IsNull() && !data.Name.IsUnknown() {
-		clusternodegroup.Name = data.Name.ValueString()
-	}
-	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
-		clusternodegroup.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
-	}
-	if !data.State.IsNull() && !data.State.IsUnknown() {
-		clusternodegroup.State = data.State.ValueString()
-	}
-	if !data.Strict.IsNull() && !data.Strict.IsUnknown() {
+	if !data.Strict.IsNull() {
 		clusternodegroup.Strict = data.Strict.ValueString()
 	}
 
@@ -149,8 +121,8 @@ func clusternodegroupSetAttrFromGet(ctx context.Context, data *ClusternodegroupR
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute - use plain value as ID
-	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+	// Case 2: Single unique attribute
+	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data
 }

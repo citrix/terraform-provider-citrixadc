@@ -18,25 +18,13 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"strings"
 	"testing"
 )
 
 const testAccClusternodegroup_authenticationvserver_binding_basic = `
-
-resource "citrixadc_clusternodegroup" "tf_ng_auth" {
-	name   = "tf_ng_auth"
-	strict = "NO"
-	sticky = "YES"
-}
-
-resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_auth_node" {
-	name = citrixadc_clusternodegroup.tf_ng_auth.name
-	node = 0
-	depends_on = [citrixadc_clusternodegroup.tf_ng_auth]
-}
 
 resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 	name           = "my_authentication_server"
@@ -46,34 +34,14 @@ resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 }
 
 resource "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
-	name     = citrixadc_clusternodegroup.tf_ng_auth.name
+	name     = "my_tf_group"
 	vserver = citrixadc_authenticationvserver.tf_authenticationvserver.name
-	depends_on = [citrixadc_clusternodegroup.tf_ng_auth, citrixadc_clusternodegroup_clusternode_binding.tf_ng_auth_node]
 	}
-
+  
 `
 
 const testAccClusternodegroup_authenticationvserver_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
-
-resource "citrixadc_clusternodegroup" "tf_ng_auth" {
-	name   = "tf_ng_auth"
-	strict = "NO"
-	sticky = "YES"
-}
-
-resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_auth_node" {
-	name = citrixadc_clusternodegroup.tf_ng_auth.name
-	node = 0
-	depends_on = [citrixadc_clusternodegroup.tf_ng_auth]
-}
-
-resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
-	name           = "my_authentication_server"
-	servicetype    = "SSL"
-	authentication = "ON"
-	state          = "ENABLED"
-}
 `
 
 func TestAccClusternodegroup_authenticationvserver_binding_basic(t *testing.T) {
@@ -94,7 +62,7 @@ func TestAccClusternodegroup_authenticationvserver_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_authenticationvserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_authenticationvserver_bindingNotExist("citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding", "tf_ng_auth,my_authentication_server"),
+					testAccCheckClusternodegroup_authenticationvserver_bindingNotExist("citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding", "my_authentication_group,my_authentication_server"),
 				),
 			},
 		},
@@ -128,13 +96,10 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingExist(n string, i
 
 		bindingId := rs.Primary.ID
 
-		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
-		if err != nil {
-			return err
-		}
+		idSlice := strings.SplitN(bindingId, ",", 2)
 
-		name := idMap["name"]
-		vserver := idMap["vserver"]
+		name := idSlice[0]
+		vserver := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_authenticationvserver_binding",
@@ -173,13 +138,13 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingNotExist(n string
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idMap, _, err := utils.ParseIdString(id, []string{"name", "vserver"}, nil)
-		if err != nil {
-			return err
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
+		idSlice := strings.SplitN(id, ",", 2)
 
-		name := idMap["name"]
-		vserver := idMap["vserver"]
+		name := idSlice[0]
+		vserver := idSlice[1]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_authenticationvserver_binding",
@@ -238,18 +203,6 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingDestroy(s *terraf
 
 const testAccClusternodegroup_authenticationvserver_bindingDataSource_basic = `
 
-	resource "citrixadc_clusternodegroup" "tf_ng_auth_ds" {
-		name   = "tf_ng_auth_ds"
-		strict = "NO"
-		sticky = "YES"
-	}
-
-	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_ng_auth_ds_node" {
-		name = citrixadc_clusternodegroup.tf_ng_auth_ds.name
-		node = 0
-		depends_on = [citrixadc_clusternodegroup.tf_ng_auth_ds]
-	}
-
 	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 		name           = "my_authentication_server_ds"
 		servicetype    = "SSL"
@@ -258,9 +211,8 @@ const testAccClusternodegroup_authenticationvserver_bindingDataSource_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
-		name    = citrixadc_clusternodegroup.tf_ng_auth_ds.name
+		name    = "my_tf_group"
 		vserver = citrixadc_authenticationvserver.tf_authenticationvserver.name
-		depends_on = [citrixadc_clusternodegroup.tf_ng_auth_ds, citrixadc_clusternodegroup_clusternode_binding.tf_ng_auth_ds_node]
 	}
 
 	data "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
@@ -282,7 +234,7 @@ func TestAccclusternodegroup_authenticationvserver_bindingDataSource_basic(t *te
 			{
 				Config: testAccClusternodegroup_authenticationvserver_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding", "name", "tf_ng_auth_ds"),
+					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding", "vserver", "my_authentication_server_ds"),
 				),
 			},

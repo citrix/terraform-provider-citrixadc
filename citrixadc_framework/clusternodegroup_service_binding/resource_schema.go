@@ -9,8 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,59 +31,35 @@ func (r *ClusternodegroupServiceBindingResource) Schema(ctx context.Context, req
 				Description: "The ID of the clusternodegroup_service_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:    true,
 				Description: "Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.",
 			},
 			"service": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "name of the service bound to this nodegroup.",
 			},
 		},
 	}
 }
 
-func clusternodegroup_service_bindingGetThePayloadFromthePlan(ctx context.Context, data *ClusternodegroupServiceBindingResourceModel) cluster.Clusternodegroupservicebinding {
-	tflog.Debug(ctx, "In clusternodegroup_service_bindingGetThePayloadFromthePlan Function")
+func clusternodegroup_service_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodegroupServiceBindingResourceModel) cluster.Clusternodegroupservicebinding {
+	tflog.Debug(ctx, "In clusternodegroup_service_bindingGetThePayloadFromtheConfig Function")
 
 	// Create API request body from the model
 	clusternodegroup_service_binding := cluster.Clusternodegroupservicebinding{}
-	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+	if !data.Name.IsNull() {
 		clusternodegroup_service_binding.Name = data.Name.ValueString()
 	}
-	if !data.Service.IsNull() && !data.Service.IsUnknown() {
+	if !data.Service.IsNull() {
 		clusternodegroup_service_binding.Service = data.Service.ValueString()
 	}
 
 	return clusternodegroup_service_binding
 }
 
-// clusternodegroup_service_bindingSetAttrFromGet is used by the resource Read/Create flow.
-// It preserves the plan/state-supplied values (name, service are both RequiresReplace identity attrs) and
-// does NOT recompute the ID, which is set exactly once in Create.
 func clusternodegroup_service_bindingSetAttrFromGet(ctx context.Context, data *ClusternodegroupServiceBindingResourceModel, getResponseData map[string]interface{}) *ClusternodegroupServiceBindingResourceModel {
 	tflog.Debug(ctx, "In clusternodegroup_service_bindingSetAttrFromGet Function")
-
-	// Convert API response to model
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	}
-	if val, ok := getResponseData["service"]; ok && val != nil {
-		data.Service = types.StringValue(val.(string))
-	}
-
-	return data
-}
-
-// clusternodegroup_service_bindingSetAttrFromGetForDatasource faithfully copies every field
-// from the GET response and composes the ID, since the datasource has no Create to seed those values.
-func clusternodegroup_service_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ClusternodegroupServiceBindingResourceModel, getResponseData map[string]interface{}) *ClusternodegroupServiceBindingResourceModel {
-	tflog.Debug(ctx, "In clusternodegroup_service_bindingSetAttrFromGetForDatasource Function")
 
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
@@ -99,7 +73,7 @@ func clusternodegroup_service_bindingSetAttrFromGetForDatasource(ctx context.Con
 		data.Service = types.StringNull()
 	}
 
-	// Set ID for the datasource
+	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
