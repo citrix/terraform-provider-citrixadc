@@ -291,3 +291,28 @@ func TestAccAuthenticationpushservice_clientsecret_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationpushservice_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationpushserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationpushservice_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpushserviceExist("citrixadc_authenticationpushservice.tf_pushservice", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationpushservice_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpushserviceExist("citrixadc_authenticationpushservice.tf_pushservice", nil),
+				),
+			},
+		},
+	})
+}

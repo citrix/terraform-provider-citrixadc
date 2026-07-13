@@ -260,6 +260,31 @@ func TestAccAuthenticationldapaction_ldapbinddnpassword_wo_ephemeral(t *testing.
 	})
 }
 
+func TestAccAuthenticationldapaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationldapactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationldapaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.foo", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationldapaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.foo", nil),
+				),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationldapactionDataSource_basic = `
 	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
 		name   		  = "tf_authenticationldapaction"

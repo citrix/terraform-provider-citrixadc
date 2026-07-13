@@ -285,3 +285,28 @@ func TestAccAaatacacsparams_tacacssecret_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaatacacsparams_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaatacacsparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaatacacsparamsExist("citrixadc_aaatacacsparams.tf_aaatacacsparams", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaatacacsparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaatacacsparamsExist("citrixadc_aaatacacsparams.tf_aaatacacsparams", nil),
+				),
+			},
+		},
+	})
+}

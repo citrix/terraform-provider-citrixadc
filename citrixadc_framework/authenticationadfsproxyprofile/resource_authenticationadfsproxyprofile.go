@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *AuthenticationadfsproxyprofileResource) Create(ctx context.Context, req
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationadfsproxyprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationadfsproxyprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationadfsproxyprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *AuthenticationadfsproxyprofileResource) Read(ctx context.Context, req r
 
 	tflog.Debug(ctx, "Reading authenticationadfsproxyprofile resource")
 
-	r.readAuthenticationadfsproxyprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationadfsproxyprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -181,7 +194,12 @@ func (r *AuthenticationadfsproxyprofileResource) Update(ctx context.Context, req
 	}
 
 	// Read the updated state back
-	r.readAuthenticationadfsproxyprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationadfsproxyprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationadfsproxyprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -210,7 +228,7 @@ func (r *AuthenticationadfsproxyprofileResource) Delete(ctx context.Context, req
 }
 
 // Helper function to read authenticationadfsproxyprofile data from API
-func (r *AuthenticationadfsproxyprofileResource) readAuthenticationadfsproxyprofileFromApi(ctx context.Context, data *AuthenticationadfsproxyprofileResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationadfsproxyprofileResource) readAuthenticationadfsproxyprofileFromApi(ctx context.Context, data *AuthenticationadfsproxyprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -220,10 +238,14 @@ func (r *AuthenticationadfsproxyprofileResource) readAuthenticationadfsproxyprof
 
 	getResponseData, err = r.client.FindResource(service.Authenticationadfsproxyprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationadfsproxyprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationadfsproxyprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

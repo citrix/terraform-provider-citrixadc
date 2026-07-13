@@ -314,3 +314,28 @@ func TestAccDnskeyDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDnskey_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnskey_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.dnskey", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnskey_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.dnskey", nil),
+				),
+			},
+		},
+	})
+}

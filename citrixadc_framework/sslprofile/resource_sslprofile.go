@@ -7,6 +7,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -109,7 +110,12 @@ func (r *SslprofileResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Read the updated state back
-	r.readSslprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -127,7 +133,14 @@ func (r *SslprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading sslprofile resource")
 
-	r.readSslprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -464,7 +477,12 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Read the updated state back
-	r.readSslprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -493,7 +511,7 @@ func (r *SslprofileResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 // Helper function to read sslprofile data from API
-func (r *SslprofileResource) readSslprofileFromApi(ctx context.Context, data *SslprofileResourceModel, diags *diag.Diagnostics) {
+func (r *SslprofileResource) readSslprofileFromApi(ctx context.Context, data *SslprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -503,8 +521,11 @@ func (r *SslprofileResource) readSslprofileFromApi(ctx context.Context, data *Ss
 
 	getResponseData, err = r.client.FindResource(service.Sslprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	sslprofileSetAttrFromGet(ctx, data, getResponseData)
@@ -519,6 +540,7 @@ func (r *SslprofileResource) readSslprofileFromApi(ctx context.Context, data *Ss
 		r.readCipherBindings(ctx, data, diags)
 	}
 
+	return true
 }
 
 // ECC curve binding helpers

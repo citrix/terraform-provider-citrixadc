@@ -36,7 +36,7 @@ resource "citrixadc_sslhsmkey" "demo_sslhsmkey" {
 
 ### Using password_wo (write-only/ephemeral - NOT persisted in state)
 
-The `password_wo` attribute provides an ephemeral path for the HSM partition password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `password_wo_version`.
+The `password_wo` attribute provides an ephemeral path for the HSM partition password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `password_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslhsmkey_password" {
@@ -62,7 +62,7 @@ resource "citrixadc_sslhsmkey" "demo_sslhsmkey" {
 * `keystore` - (Optional) Name of keystore object representing HSM where key is stored. For example, name of keyvault object or azurekeyvault authentication object. Applies only to KEYVAULT type HSM.
 * `password` - (Optional, Sensitive) Password for a partition. Applies only to SAFENET HSM. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative.
 * `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
-* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
+* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Note: this secret is immutable on the ADC, so changing `password_wo_version` (or `password`/`password_wo`) forces the resource to be **destroyed and recreated** rather than updated in place. Defaults to `1`.
 * `serialnum` - (Optional) Serial number of the partition on which the key is present. Applies only to SAFENET HSM.
 
 

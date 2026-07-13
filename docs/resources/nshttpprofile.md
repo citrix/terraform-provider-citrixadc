@@ -80,6 +80,7 @@ resource "citrixadc_nshttpprofile" "tf_httpprofile" {
 * `maxduplicateheaderfields` - (Optional) Maximum number of allowed occurrences of header fields that share the same field name. This threshold is enforced only for well-known header field names recognized by NetScaler. If the value is set to 0, then it will be similar to previous behavior, Where we store only 15 duplicate headers and rest are parsed and send to the server.
 * `passprotocolupgrade` - (Optional) Pass protocol upgrade request to the server.
 * `http2extendedconnect` - (Optional) Choose whether to enable HTTP/2 Extended CONNECT mechanism.
+* `http2smallwndtimeout` - (Optional) Timeout (in seconds) for HTTP/2 small-window stalled streams. Configure this parameter to mitigate CVE-2026-13474.
 
 ## Attribute Reference
 

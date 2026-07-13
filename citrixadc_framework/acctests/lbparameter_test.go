@@ -306,6 +306,31 @@ func TestAccLbparameter_cookiepassphrase_wo_ephemeral(t *testing.T) {
 	})
 }
 
+func TestAccLbparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbparameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbparameter_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbparameter_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbparameterExist("citrixadc_lbparameter.tf_lbparameter", nil),
+				),
+			},
+		},
+	})
+}
+
 const testAccLbparameterDataSource_basic = `
 
 	resource "citrixadc_lbparameter" "tf_lbparameter" {

@@ -90,6 +90,21 @@ func dbuserGetThePayloadFromthePlan(ctx context.Context, data *DbuserResourceMod
 	return dbuser
 }
 
+func dbuserGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *DbuserResourceModel) db.Dbuser {
+	tflog.Debug(ctx, "In dbuserGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	dbuser := db.Dbuser{}
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
+		dbuser.Password = data.Password.ValueString()
+	}
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
+		dbuser.Username = data.Username.ValueString()
+	}
+
+	return dbuser
+}
+
 func dbuserGetThePayloadFromtheConfig(ctx context.Context, data *DbuserResourceModel, payload *db.Dbuser) {
 	tflog.Debug(ctx, "In dbuserGetThePayloadFromtheConfig Function")
 

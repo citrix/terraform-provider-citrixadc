@@ -279,6 +279,62 @@ func sslcrlGetThePayloadFromthePlan(ctx context.Context, data *SslcrlResourceMod
 	return sslcrl
 }
 
+func sslcrlGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *SslcrlResourceModel) ssl.Sslcrl {
+	tflog.Debug(ctx, "In sslcrlGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	sslcrl := ssl.Sslcrl{}
+	if !data.Basedn.IsNull() && !data.Basedn.IsUnknown() {
+		sslcrl.Basedn = data.Basedn.ValueString()
+	}
+	if !data.Binary.IsNull() && !data.Binary.IsUnknown() {
+		sslcrl.Binary = data.Binary.ValueString()
+	}
+	if !data.Binddn.IsNull() && !data.Binddn.IsUnknown() {
+		sslcrl.Binddn = data.Binddn.ValueString()
+	}
+	if !data.Cacert.IsNull() && !data.Cacert.IsUnknown() {
+		sslcrl.Cacert = data.Cacert.ValueString()
+	}
+	if !data.Crlname.IsNull() && !data.Crlname.IsUnknown() {
+		sslcrl.Crlname = data.Crlname.ValueString()
+	}
+	if !data.Day.IsNull() && !data.Day.IsUnknown() {
+		sslcrl.Day = utils.IntPtr(int(data.Day.ValueInt64()))
+	}
+	if !data.Interval.IsNull() && !data.Interval.IsUnknown() {
+		sslcrl.Interval = data.Interval.ValueString()
+	}
+	if !data.Method.IsNull() && !data.Method.IsUnknown() {
+		sslcrl.Method = data.Method.ValueString()
+	}
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
+		sslcrl.Password = data.Password.ValueString()
+	}
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		sslcrl.Port = utils.IntPtr(int(data.Port.ValueInt64()))
+	}
+	if !data.Refresh.IsNull() && !data.Refresh.IsUnknown() {
+		sslcrl.Refresh = data.Refresh.ValueString()
+	}
+	if !data.Scope.IsNull() && !data.Scope.IsUnknown() {
+		sslcrl.Scope = data.Scope.ValueString()
+	}
+	if !data.Server.IsNull() && !data.Server.IsUnknown() {
+		sslcrl.Server = data.Server.ValueString()
+	}
+	if !data.Time.IsNull() && !data.Time.IsUnknown() {
+		sslcrl.Time = data.Time.ValueString()
+	}
+	if !data.Url.IsNull() && !data.Url.IsUnknown() {
+		sslcrl.Url = data.Url.ValueString()
+	}
+
+	return sslcrl
+}
+
 func sslcrlGetThePayloadFromtheConfig(ctx context.Context, data *SslcrlResourceModel, payload *ssl.Sslcrl) {
 	tflog.Debug(ctx, "In sslcrlGetThePayloadFromtheConfig Function")
 

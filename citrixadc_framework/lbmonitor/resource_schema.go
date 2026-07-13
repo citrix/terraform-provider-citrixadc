@@ -713,7 +713,10 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "String expected from the server for the service to be marked as trofs. Applicable to HTTP-ECV/TCP-ECV monitors.",
 			},
 			"type": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Type of monitor that you want to create.",
 			},
 			"units1": schema.StringAttribute{

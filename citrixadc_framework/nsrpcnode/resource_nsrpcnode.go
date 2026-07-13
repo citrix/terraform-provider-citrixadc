@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *NsrpcnodeResource) Create(ctx context.Context, req resource.CreateReque
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Ipaddress.ValueString()))
 
 	// Read the updated state back
-	r.readNsrpcnodeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsrpcnodeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsrpcnode not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *NsrpcnodeResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading nsrpcnode resource")
 
-	r.readNsrpcnodeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNsrpcnodeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -161,7 +174,12 @@ func (r *NsrpcnodeResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Read the updated state back
-	r.readNsrpcnodeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsrpcnodeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsrpcnode not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -183,7 +201,7 @@ func (r *NsrpcnodeResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 // Helper function to read nsrpcnode data from API
-func (r *NsrpcnodeResource) readNsrpcnodeFromApi(ctx context.Context, data *NsrpcnodeResourceModel, diags *diag.Diagnostics) {
+func (r *NsrpcnodeResource) readNsrpcnodeFromApi(ctx context.Context, data *NsrpcnodeResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	ipaddress_Name := data.Id.ValueString()
@@ -193,10 +211,15 @@ func (r *NsrpcnodeResource) readNsrpcnodeFromApi(ctx context.Context, data *Nsrp
 
 	getResponseData, err = r.client.FindResource(service.Nsrpcnode.Type(), ipaddress_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsrpcnode, got error: %s", err))
-		return
+		return false
 	}
 
 	nsrpcnodeSetAttrFromGet(ctx, data, getResponseData)
+
+	return true
 
 }

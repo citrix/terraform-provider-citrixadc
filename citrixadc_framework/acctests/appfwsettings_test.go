@@ -348,3 +348,27 @@ func TestAccAppfwsettingsDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwsettings_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwsettings_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_appfwsettings", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwsettings_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_appfwsettings", nil),
+				),
+			},
+		},
+	})
+}

@@ -60,8 +60,8 @@ resource "citrixadc_authenticationdfaaction" "tf_dfaaction" {
 ## Argument Reference
 
 * `name` - (Required) Name for the DFA action.  Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the DFA action is added.
-* `passphrase` - (Optional, Sensitive) Key shared between the DFA server and the Citrix ADC. Required to allow the Citrix ADC to communicate with the DFA server. The value is persisted in Terraform state (encrypted). See also `passphrase_wo` for an ephemeral alternative.
-* `passphrase_wo` - (Optional, Sensitive, WriteOnly) Same as `passphrase`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `passphrase_wo_version`. If both `passphrase` and `passphrase_wo` are set, `passphrase_wo` takes precedence.
+* `passphrase` - (Optional, Sensitive) Key shared between the DFA server and the Citrix ADC. Required to allow the Citrix ADC to communicate with the DFA server. The value is persisted in Terraform state (encrypted). See also `passphrase_wo` for an ephemeral alternative. At least one of `passphrase` or `passphrase_wo` must be set.
+* `passphrase_wo` - (Optional, Sensitive, WriteOnly) Same as `passphrase`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `passphrase_wo_version`. If both `passphrase` and `passphrase_wo` are set, `passphrase_wo` takes precedence. At least one of `passphrase` or `passphrase_wo` must be set.
 * `passphrase_wo_version` - (Optional) An integer version tracker for `passphrase_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `serverurl` - (Required) DFA Server URL
 * `clientid` - (Required) If configured, this string is sent to the DFA server as the X-Citrix-Exchange header value.

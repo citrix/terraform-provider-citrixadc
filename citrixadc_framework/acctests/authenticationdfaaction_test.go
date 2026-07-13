@@ -276,3 +276,28 @@ func TestAccAuthenticationdfaaction_passphrase_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationdfaaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationdfaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationdfaaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationdfaactionExist("citrixadc_authenticationdfaaction.tf_dfaaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationdfaaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationdfaactionExist("citrixadc_authenticationdfaaction.tf_dfaaction", nil),
+				),
+			},
+		},
+	})
+}

@@ -296,3 +296,28 @@ func TestAccAuthenticationemailaction_password_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationemailaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationemailaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationemailaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
+				),
+			},
+		},
+	})
+}

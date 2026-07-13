@@ -1,3 +1,51 @@
+## 2.2.2 (July 9, 2026)
+
+BUG FIXES
+* **provider**: Reinstated self-healing on read for resources migrated from SDKv2 to the Plugin Framework. When a resource's object is deleted out-of-band, `Read` now removes it from Terraform state (and recreates it on the next apply) instead of failing with an error, matching the pre-migration SDKv2 behavior.
+* **citrixadc_lbmonitor**: Restored backward compatibility for the legacy resource id, so state created before v2.2.1 (bare `monitorname`) continues to work after upgrade. New ids use the composite `monitorname:type` form.
+* **citrixadc_nshttpprofile**: Added `http2smallwndtimeout` attribute to mitigate CVE-2026-13474.
+* **citrixadc_cluster** and **citrixadc_nscapacity**: Re-registered these resources in the SDKv2 provider so they remain available.
+
+ENHANCEMENTS
+* **testing**: Added backward-compatibility acceptance tests covering the SDKv2 to Framework id-format upgrade for migrated resources.
+* **documentation**: Rectified and expanded ephemeral (write-only) attribute documentation across resources, including lbmonitor, sslcertkey, gslbsite, systemuser, dnskey, ipsecprofile, autoscaleprofile, sslcert, sslcertreq, sslecdsakey, sslrsakey, sslhsmkey and several authentication resources.
+
+
+## 2.2.1 (June 30, 2026)
+
+FEATURES
+* **New Resource**: Support for creating and managing citrixadc_apiprofile.
+* **New Resource**: Support for creating and managing citrixadc_apispec.
+* **New Resource**: Support for creating and managing citrixadc_apispecfile.
+* **New Resource**: Support for creating and managing citrixadc_appfwarchive.
+* **New Resource**: Support for creating and managing citrixadc_appfwarchive_export.
+* **New Resource**: Support for creating and managing citrixadc_appfwgrpccontenttype.
+* **New Resource**: Support for creating and managing citrixadc_appfwgrpcwebjsoncontenttype.
+* **New Resource**: Support for creating and managing citrixadc_appfwgrpcwebtextcontenttype.
+* **New Resource**: Support for creating and managing citrixadc_appfwprotofile.
+* **New Resource**: Support for creating and managing citrixadc_authenticationadfsproxyprofile.
+* **New Resource**: Support for creating and managing citrixadc_authenticationazurekeyvault.
+* **New Resource**: Support for creating and managing citrixadc_authenticationprotecteduseraction.
+* **New Resource**: Support for creating and managing citrixadc_authenticationsmartaccesspolicy.
+* **New Resource**: Support for creating and managing citrixadc_authenticationsmartaccessprofile.
+* **New Resource**: Support for creating and managing citrixadc_azureapplication.
+* **New Resource**: Support for creating and managing citrixadc_azurekeyvault.
+* **provider**: Added ephemeral (write-only) support for secret/password attributes across resources: aaakcdaccount, aaaldapparams, aaaradiusparams, aaassoprofile, aaatacacsparams, aaauser, analyticsprofile, appflowparam, appfwsettings, auditsyslogaction, authenticationadfsproxyprofile, authenticationazurekeyvault, authenticationcaptchaaction, authenticationdfaaction, authenticationemailaction, authenticationnegotiateaction, authenticationoauthaction, authenticationoauthidpprofile, authenticationpushservice, autoscaleprofile, azureapplication, botsettings, dbuser, dnskey, gslbsite, ipsecprofile, lbmonitor, lbprofile, nsencryptionkey, nsencryptionparams, nshmackey, radiusnode, rdpclientprofile, rdpserverprofile, reputationsettings, smppuser, sslcert, sslcertreq, sslcrl, sslecdsakey, sslhsmkey, sslprofile and sslrsakey.
+
+ENHANCEMENTS
+* **provider**: Added Mend security scanning checks for the provider.
+* **documentation**: Updated documentation for FEO resources (feoaction, feoparameter, feopolicy) and for ephemeral attribute usage.
+
+BUG FIXES
+* **citrixadc_systemfile**: Updated systemfile schema and fixed content decoding/encoding issues. [#1402]
+
+EXAMPLE USECASES
+* **New Usecase**: Added example to form an HA pair between two NetScaler ADCs and deploy LB configuration on the auto-detected primary node.
+* **New Usecase**: Added example for forming a three-node cluster.
+
+[#1402]: https://github.com/citrix/terraform-provider-citrixadc/issues/1402
+
+
 ## 2.2.0 (May 01, 2026)
 
 FEATURES

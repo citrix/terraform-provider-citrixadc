@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -71,7 +72,12 @@ func (r *AppfwgrpcwebtextcontenttypeResource) Create(ctx context.Context, req re
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Grpcwebtextcontenttypevalue.ValueString()))
 
 	// Read the updated state back
-	r.readAppfwgrpcwebtextcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwgrpcwebtextcontenttypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwgrpcwebtextcontenttype not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,7 +95,14 @@ func (r *AppfwgrpcwebtextcontenttypeResource) Read(ctx context.Context, req reso
 
 	tflog.Debug(ctx, "Reading appfwgrpcwebtextcontenttype resource")
 
-	r.readAppfwgrpcwebtextcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwgrpcwebtextcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -133,7 +146,12 @@ func (r *AppfwgrpcwebtextcontenttypeResource) Update(ctx context.Context, req re
 	}
 
 	// Read the updated state back
-	r.readAppfwgrpcwebtextcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwgrpcwebtextcontenttypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwgrpcwebtextcontenttype not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -162,7 +180,7 @@ func (r *AppfwgrpcwebtextcontenttypeResource) Delete(ctx context.Context, req re
 }
 
 // Helper function to read appfwgrpcwebtextcontenttype data from API
-func (r *AppfwgrpcwebtextcontenttypeResource) readAppfwgrpcwebtextcontenttypeFromApi(ctx context.Context, data *AppfwgrpcwebtextcontenttypeResourceModel, diags *diag.Diagnostics) {
+func (r *AppfwgrpcwebtextcontenttypeResource) readAppfwgrpcwebtextcontenttypeFromApi(ctx context.Context, data *AppfwgrpcwebtextcontenttypeResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	grpcwebtextcontenttypevalue_Name := data.Id.ValueString()
@@ -172,10 +190,14 @@ func (r *AppfwgrpcwebtextcontenttypeResource) readAppfwgrpcwebtextcontenttypeFro
 
 	getResponseData, err = r.client.FindResource(service.Appfwgrpcwebtextcontenttype.Type(), grpcwebtextcontenttypevalue_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwgrpcwebtextcontenttype, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwgrpcwebtextcontenttypeSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -253,6 +253,36 @@ func TestAccNsrpcnode_password_wo_ephemeral(t *testing.T) {
 	})
 }
 
+func TestAccNsrpcnode_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("Operation not permitted under CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsrpcnode_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsrpcnode_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsrpcnodeExist("citrixadc_nsrpcnode.tf_nsrpcnode", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNsrpcnodeDataSource_basic(t *testing.T) {
 	if adcTestbed != "CLUSTER" {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)

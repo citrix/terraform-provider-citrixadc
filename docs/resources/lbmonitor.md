@@ -36,6 +36,39 @@ resource "citrixadc_lbmonitor" "tf_lbmonitor_mysql" {
 }
 ```
 
+### Using password_wo (write-only/ephemeral - NOT persisted in state)
+
+The `password_wo` attribute provides an ephemeral path for the monitor password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the password value changes, increment `password_wo_version`.
+
+```hcl
+variable "lbmonitor_password" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_mysql" {
+  monitorname         = "tf_lbmonitor_mysql"
+  type                = "MYSQL"
+  username            = "monitoruser"
+  password_wo         = var.lbmonitor_password
+  password_wo_version = 1
+  database            = "mydb"
+}
+```
+
+To rotate the password, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_lbmonitor" "tf_lbmonitor_mysql" {
+  monitorname         = "tf_lbmonitor_mysql"
+  type                = "MYSQL"
+  username            = "monitoruser"
+  password_wo         = var.lbmonitor_password
+  password_wo_version = 2  # Bumped to trigger update
+  database            = "mydb"
+}
+```
+
 ### Using radkey (sensitive attribute - persisted in state)
 
 ```hcl
@@ -53,11 +86,138 @@ resource "citrixadc_lbmonitor" "tf_lbmonitor_radius" {
 }
 ```
 
+### Using radkey_wo (write-only/ephemeral - NOT persisted in state)
+
+The `radkey_wo` attribute provides an ephemeral path for the RADIUS shared secret. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `radkey_wo_version`.
+
+```hcl
+variable "lbmonitor_radkey" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_radius" {
+  monitorname       = "tf_lbmonitor_radius"
+  type              = "RADIUS"
+  username          = "monitoruser"
+  radkey_wo         = var.lbmonitor_radkey
+  radkey_wo_version = 1
+  radnasid          = "my-nas"
+}
+```
+
+To rotate the key, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_lbmonitor" "tf_lbmonitor_radius" {
+  monitorname       = "tf_lbmonitor_radius"
+  type              = "RADIUS"
+  username          = "monitoruser"
+  radkey_wo         = var.lbmonitor_radkey
+  radkey_wo_version = 2  # Bumped to trigger update
+  radnasid          = "my-nas"
+}
+```
+
+### Using secondarypassword (sensitive attribute - persisted in state)
+
+```hcl
+variable "lbmonitor_secondarypassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_citrixag" {
+  monitorname       = "tf_lbmonitor_citrixag"
+  type              = "CITRIX-AG"
+  username          = "monitoruser"
+  secondarypassword = var.lbmonitor_secondarypassword
+}
+```
+
+### Using secondarypassword_wo (write-only/ephemeral - NOT persisted in state)
+
+The `secondarypassword_wo` attribute provides an ephemeral path for the Access Gateway secondary password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `secondarypassword_wo_version`.
+
+```hcl
+variable "lbmonitor_secondarypassword" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_citrixag" {
+  monitorname                  = "tf_lbmonitor_citrixag"
+  type                         = "CITRIX-AG"
+  username                     = "monitoruser"
+  secondarypassword_wo         = var.lbmonitor_secondarypassword
+  secondarypassword_wo_version = 1
+}
+```
+
+To rotate the secondary password, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_lbmonitor" "tf_lbmonitor_citrixag" {
+  monitorname                  = "tf_lbmonitor_citrixag"
+  type                         = "CITRIX-AG"
+  username                     = "monitoruser"
+  secondarypassword_wo         = var.lbmonitor_secondarypassword
+  secondarypassword_wo_version = 2  # Bumped to trigger update
+}
+```
+
+### Using secureargs (sensitive attribute - persisted in state)
+
+```hcl
+variable "lbmonitor_secureargs" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_user" {
+  monitorname = "tf_lbmonitor_user"
+  type        = "USER"
+  scriptname  = "nsbstest.pl"
+  secureargs  = var.lbmonitor_secureargs
+}
+```
+
+### Using secureargs_wo (write-only/ephemeral - NOT persisted in state)
+
+The `secureargs_wo` attribute provides an ephemeral path for the secure script arguments. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `secureargs_wo_version`.
+
+```hcl
+variable "lbmonitor_secureargs" {
+  type      = string
+  sensitive = true
+}
+
+resource "citrixadc_lbmonitor" "tf_lbmonitor_user" {
+  monitorname           = "tf_lbmonitor_user"
+  type                  = "USER"
+  scriptname            = "nsbstest.pl"
+  secureargs_wo         = var.lbmonitor_secureargs
+  secureargs_wo_version = 1
+}
+```
+
+To rotate the arguments, update the variable value and bump the version:
+
+```hcl
+resource "citrixadc_lbmonitor" "tf_lbmonitor_user" {
+  monitorname           = "tf_lbmonitor_user"
+  type                  = "USER"
+  scriptname            = "nsbstest.pl"
+  secureargs_wo         = var.lbmonitor_secureargs
+  secureargs_wo_version = 2  # Bumped to trigger update
+}
+```
+
 
 ## Argument Reference
 
-* `monitorname` - (Optional) Name for the monitor. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. If not specified, a unique name is auto-generated.
-* `type` - (Optional) Type of monitor that you want to create. Possible values: [ PING, TCP, HTTP, TCP-ECV, HTTP-ECV, UDP-ECV, DNS, FTP, LDNS-PING, LDNS-TCP, LDNS-DNS, RADIUS, USER, HTTP-INLINE, SIP-UDP, SIP-TCP, LOAD, FTP-EXTENDED, SMTP, SNMP, NNTP, MYSQL, MYSQL-ECV, MSSQL-ECV, ORACLE-ECV, LDAP, POP3, CITRIX-XML-SERVICE, CITRIX-WEB-INTERFACE, DNS-TCP, RTSP, ARP, CITRIX-AG, CITRIX-AAC-LOGINPAGE, CITRIX-AAC-LAS, CITRIX-XD-DDC, ND6, CITRIX-WI-EXTENDED, DIAMETER, RADIUS_ACCOUNTING, STOREFRONT, APPC, SMPP, CITRIX-XNC-ECV, CITRIX-XDM, CITRIX-STA-SERVICE, CITRIX-STA-SERVICE-NHOP ]
+* `monitorname` - (Required) Name for the monitor. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Changing this forces a new resource to be created.
+* `type` - (Required) Type of monitor that you want to create. Changing this forces a new resource to be created. Possible values: [ PING, TCP, HTTP, TCP-ECV, HTTP-ECV, UDP-ECV, DNS, FTP, LDNS-PING, LDNS-TCP, LDNS-DNS, RADIUS, USER, HTTP-INLINE, SIP-UDP, SIP-TCP, LOAD, FTP-EXTENDED, SMTP, SNMP, NNTP, MYSQL, MYSQL-ECV, MSSQL-ECV, ORACLE-ECV, LDAP, POP3, CITRIX-XML-SERVICE, CITRIX-WEB-INTERFACE, DNS-TCP, RTSP, ARP, CITRIX-AG, CITRIX-AAC-LOGINPAGE, CITRIX-AAC-LAS, CITRIX-XD-DDC, ND6, CITRIX-WI-EXTENDED, DIAMETER, RADIUS_ACCOUNTING, STOREFRONT, APPC, SMPP, CITRIX-XNC-ECV, CITRIX-XDM, CITRIX-STA-SERVICE, CITRIX-STA-SERVICE-NHOP ]
 * `action` - (Optional) Action to perform when the response to an inline monitor (a monitor of type HTTP-INLINE) indicates that the service is down. A service monitored by an inline monitor is considered DOWN if the response code is not one of the codes that have been specified for the Response Code parameter. Available settings function as follows: NONE - Do not take any action. LOG - Log the event in NSLOG or SYSLOG. DOWN - Mark the service as being down, and then do not direct any traffic to the service until the configured down time has expired. Possible values: [ NONE, LOG, DOWN ]. Defaults to `"DOWN"`.
 * `alertretries` - (Optional) Number of consecutive probe failures after which the appliance generates an SNMP trap called monProbeFailed.
 * `application` - (Optional) Name of the application used to determine the state of the service. Applicable to monitors of type CITRIX-XML-SERVICE.
@@ -107,7 +267,9 @@ resource "citrixadc_lbmonitor" "tf_lbmonitor_radius" {
 * `oraclesid` - (Optional) Name of the service identifier that is used to connect to the Oracle database during authentication.
 * `originhost` - (Optional) Origin-Host value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.
 * `originrealm` - (Optional) Origin-Realm value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.
-* `password` - (Optional, Sensitive) Password that is required for logging on to the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC-ECV or CITRIX-XDM server. Used in conjunction with the user name specified for the User Name parameter. The value is persisted in Terraform state (encrypted).
+* `password` - (Optional, Sensitive) Password that is required for logging on to the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC-ECV or CITRIX-XDM server. Used in conjunction with the user name specified for the User Name parameter. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative.
+* `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
+* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `productname` - (Optional) Product-Name value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.
 * `query` - (Optional) Domain name to resolve as part of monitoring the DNS service (for example, example.com).
 * `querytype` - (Optional) Type of DNS record for which to send monitoring queries. Set to Address for querying A records, AAAA for querying AAAA records, and Zone for querying the SOA record. Possible values: [ Address, Zone, AAAA ]
@@ -115,7 +277,9 @@ resource "citrixadc_lbmonitor" "tf_lbmonitor_radius" {
 * `radaccounttype` - (Optional) Account Type to be used in Account Request Packet. Applicable to monitors of type RADIUS_ACCOUNTING. Defaults to `1`.
 * `radapn` - (Optional) Called Station Id to be used in Account Request Packet. Applicable to monitors of type RADIUS_ACCOUNTING.
 * `radframedip` - (Optional) Source IP with which the packet will go out. Applicable to monitors of type RADIUS_ACCOUNTING.
-* `radkey` - (Optional, Sensitive) Authentication key (shared secret text string) for RADIUS clients and servers to exchange. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING. The value is persisted in Terraform state (encrypted).
+* `radkey` - (Optional, Sensitive) Authentication key (shared secret text string) for RADIUS clients and servers to exchange. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING. The value is persisted in Terraform state (encrypted). See also `radkey_wo` for an ephemeral alternative.
+* `radkey_wo` - (Optional, Sensitive, WriteOnly) Same as `radkey`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `radkey_wo_version`. If both `radkey` and `radkey_wo` are set, `radkey_wo` takes precedence.
+* `radkey_wo_version` - (Optional) An integer version tracker for `radkey_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `radmsisdn` - (Optional) Calling Stations Id to be used in Account Request Packet. Applicable to monitors of type RADIUS_ACCOUNTING.
 * `radnasid` - (Optional) NAS-Identifier to send in the Access-Request packet. Applicable to monitors of type RADIUS.
 * `radnasip` - (Optional) Network Access Server (NAS) IP address to use as the source IP address when monitoring a RADIUS server. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING.
@@ -128,9 +292,13 @@ resource "citrixadc_lbmonitor" "tf_lbmonitor_radius" {
 * `rtsprequest` - (Optional) RTSP request to send to the server (for example, `"OPTIONS *"`).
 * `scriptargs` - (Optional) String of arguments for the script. The string is copied verbatim into the request.
 * `scriptname` - (Optional) Path and name of the script to execute. The script must be available on the Citrix ADC, in the /nsconfig/monitors/ directory.
-* `secondarypassword` - (Optional, Sensitive) Secondary password that users might have to provide to log on to the Access Gateway server. Applicable to CITRIX-AG monitors. The value is persisted in Terraform state (encrypted).
+* `secondarypassword` - (Optional, Sensitive) Secondary password that users might have to provide to log on to the Access Gateway server. Applicable to CITRIX-AG monitors. The value is persisted in Terraform state (encrypted). See also `secondarypassword_wo` for an ephemeral alternative.
+* `secondarypassword_wo` - (Optional, Sensitive, WriteOnly) Same as `secondarypassword`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `secondarypassword_wo_version`. If both `secondarypassword` and `secondarypassword_wo` are set, `secondarypassword_wo` takes precedence.
+* `secondarypassword_wo_version` - (Optional) An integer version tracker for `secondarypassword_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `secure` - (Optional) Use a secure SSL connection when monitoring a service. Applicable only to TCP based monitors. The secure option cannot be used with a CITRIX-AG monitor, because a CITRIX-AG monitor uses a secure connection by default. Possible values: [ YES, NO ]
-* `secureargs` - (Optional, Sensitive) List of arguments for the script which should be secure. The value is persisted in Terraform state (encrypted).
+* `secureargs` - (Optional, Sensitive) List of arguments for the script which should be secure. The value is persisted in Terraform state (encrypted). See also `secureargs_wo` for an ephemeral alternative.
+* `secureargs_wo` - (Optional, Sensitive, WriteOnly) Same as `secureargs`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `secureargs_wo_version`. If both `secureargs` and `secureargs_wo` are set, `secureargs_wo` takes precedence.
+* `secureargs_wo_version` - (Optional) An integer version tracker for `secureargs_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed and trigger an update. Defaults to `1`.
 * `send` - (Optional) String to send to the service. Applicable to TCP-ECV, HTTP-ECV, and UDP-ECV monitors.
 * `servicegroupname` - (Optional) The name of the service group to which the monitor is to be bound.
 * `servicename` - (Optional) The name of the service to which the monitor is bound.

@@ -305,3 +305,28 @@ func TestAccAuthenticationtacacsactionDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationtacacsaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationtacacsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationtacacsaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacsactionExist("citrixadc_authenticationtacacsaction.tf_tacacsaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationtacacsaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacsactionExist("citrixadc_authenticationtacacsaction.tf_tacacsaction", nil),
+				),
+			},
+		},
+	})
+}

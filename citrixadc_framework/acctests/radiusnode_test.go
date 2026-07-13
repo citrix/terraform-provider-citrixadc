@@ -189,6 +189,31 @@ func TestAccRadiusnode_radkey_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccRadiusnode_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRadiusnodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRadiusnode_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRadiusnode_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode", nil),
+				),
+			},
+		},
+	})
+}
+
 // Test ephemeral path: using radkey_wo (WriteOnly attribute) with version tracker
 const testAccRadiusnode_radkey_wo_step1 = `
 	variable "radiusnode_radkey_wo" {

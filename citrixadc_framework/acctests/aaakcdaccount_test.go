@@ -280,3 +280,28 @@ func TestAccAaakcdaccount_kcdpassword_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaakcdaccount_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaakcdaccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaakcdaccount_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaakcdaccount_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
+				),
+			},
+		},
+	})
+}

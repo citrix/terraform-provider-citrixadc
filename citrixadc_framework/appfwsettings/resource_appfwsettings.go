@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *AppfwsettingsResource) Create(ctx context.Context, req resource.CreateR
 	data.Id = types.StringValue("appfwsettings-config")
 
 	// Read the updated state back
-	r.readAppfwsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwsettingsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwsettings not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *AppfwsettingsResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading appfwsettings resource")
 
-	r.readAppfwsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -237,7 +250,12 @@ func (r *AppfwsettingsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// Read the updated state back
-	r.readAppfwsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwsettingsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwsettings not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -259,7 +277,7 @@ func (r *AppfwsettingsResource) Delete(ctx context.Context, req resource.DeleteR
 }
 
 // Helper function to read appfwsettings data from API
-func (r *AppfwsettingsResource) readAppfwsettingsFromApi(ctx context.Context, data *AppfwsettingsResourceModel, diags *diag.Diagnostics) {
+func (r *AppfwsettingsResource) readAppfwsettingsFromApi(ctx context.Context, data *AppfwsettingsResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -267,10 +285,14 @@ func (r *AppfwsettingsResource) readAppfwsettingsFromApi(ctx context.Context, da
 
 	getResponseData, err = r.client.FindResource(service.Appfwsettings.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwsettings, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwsettingsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

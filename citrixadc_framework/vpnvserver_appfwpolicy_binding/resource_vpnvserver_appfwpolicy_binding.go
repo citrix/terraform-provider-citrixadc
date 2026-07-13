@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -72,7 +73,12 @@ func (r *VpnvserverAppfwpolicyBindingResource) Create(ctx context.Context, req r
 	tflog.Trace(ctx, "Created vpnvserver_appfwpolicy_binding resource")
 
 	// Read the updated state back
-	r.readVpnvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnvserver_appfwpolicy_binding not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -90,7 +96,14 @@ func (r *VpnvserverAppfwpolicyBindingResource) Read(ctx context.Context, req res
 
 	tflog.Debug(ctx, "Reading vpnvserver_appfwpolicy_binding resource")
 
-	r.readVpnvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -152,7 +165,7 @@ func (r *VpnvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req r
 }
 
 // Helper function to read vpnvserver_appfwpolicy_binding data from API
-func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingFromApi(ctx context.Context, data *VpnvserverAppfwpolicyBindingResourceModel, diags *diag.Diagnostics) {
+func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingFromApi(ctx context.Context, data *VpnvserverAppfwpolicyBindingResourceModel, diags *diag.Diagnostics) bool {
 	bindingId := data.Id.ValueString()
 	idSlice := strings.SplitN(bindingId, ",", 2)
 
@@ -167,15 +180,18 @@ func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingF
 
 	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnvserver_appfwpolicy_binding, got error: %s", err))
-		return
+		return false
 	}
 
 	// Resource is missing
 	if len(dataArr) == 0 {
 		tflog.Warn(ctx, fmt.Sprintf("Clearing vpnvserver_appfwpolicy_binding state %s - not found", bindingId))
 		data.Id = types.StringNull()
-		return
+		return false
 	}
 
 	// Iterate through results to find the one with the right policy
@@ -191,10 +207,12 @@ func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingF
 	if foundIndex == -1 {
 		tflog.Warn(ctx, fmt.Sprintf("Clearing vpnvserver_appfwpolicy_binding state %s - policy not found", bindingId))
 		data.Id = types.StringNull()
-		return
+		return false
 	}
 
 	getResponseData := dataArr[foundIndex]
 
 	vpnvserverAppfwpolicyBindingSetAttrFromGet(ctx, data, getResponseData)
+
+	return true
 }

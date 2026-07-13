@@ -228,6 +228,31 @@ func TestAccRdpserverprofile_psk_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccRdpserverprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRdpserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRdpserverprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpserverprofileExist("citrixadc_rdpserverprofile.tf_rdpserverprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRdpserverprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpserverprofileExist("citrixadc_rdpserverprofile.tf_rdpserverprofile", nil),
+				),
+			},
+		},
+	})
+}
+
 // Test ephemeral path: using psk_wo (WriteOnly attribute) with version tracker
 const testAccRdpserverprofile_psk_wo_step1 = `
 	variable "rdpserverprofile_psk_wo" {

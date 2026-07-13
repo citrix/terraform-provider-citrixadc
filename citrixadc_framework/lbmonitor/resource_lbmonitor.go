@@ -79,7 +79,12 @@ func (r *LbmonitorResource) Create(ctx context.Context, req resource.CreateReque
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
-	r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbmonitor not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -97,7 +102,14 @@ func (r *LbmonitorResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading lbmonitor resource")
 
-	r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -580,7 +592,12 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	// Read the updated state back
-	r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbmonitor not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -598,7 +615,7 @@ func (r *LbmonitorResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting lbmonitor resource")
 	// Binding with parent - delete using DeleteResourceWithArgs
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), nil, nil)
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"monitorname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
@@ -625,19 +642,19 @@ func (r *LbmonitorResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 // Helper function to read lbmonitor data from API
-func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *LbmonitorResourceModel, diags *diag.Diagnostics) {
+func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *LbmonitorResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 4: Array filter with parent ID - parse from ID
-	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), nil, nil)
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"monitorname"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
+		return false
 	}
 
 	monitorname_Name, ok := idMap["monitorname"]
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'monitorname' not found in ID string")
-		return
+		return false
 	}
 
 	var dataArr []map[string]interface{}
@@ -649,14 +666,16 @@ func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *Lbmo
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbmonitor, got error: %s", err))
-		return
+		return false
 	}
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "lbmonitor returned empty array.")
-		return
+		return false
 	}
 
 	// Iterate through results to find the one with the right id
@@ -679,9 +698,9 @@ func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *Lbmo
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("lbmonitor not found with the provided ID attributes"))
-		return
+		return false
 	}
 
 	lbmonitorSetAttrFromGet(ctx, data, dataArr[foundIndex])
+	return true
 }

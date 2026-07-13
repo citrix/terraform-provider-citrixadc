@@ -229,3 +229,28 @@ func TestAccNsencryptionparams_keyvalue_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNsencryptionparams_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsencryptionparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsencryptionparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
+				),
+			},
+		},
+	})
+}

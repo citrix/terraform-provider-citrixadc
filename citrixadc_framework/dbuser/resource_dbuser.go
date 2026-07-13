@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *DbuserResource) Create(ctx context.Context, req resource.CreateRequest,
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Username.ValueString()))
 
 	// Read the updated state back
-	r.readDbuserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDbuserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dbuser not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *DbuserResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	tflog.Debug(ctx, "Reading dbuser resource")
 
-	r.readDbuserFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDbuserFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -133,7 +146,7 @@ func (r *DbuserResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		dbuser := dbuserGetThePayloadFromthePlan(ctx, &data)
+		dbuser := dbuserGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		dbuserGetThePayloadFromtheConfig(ctx, &config, &dbuser)
 		// Make API call
@@ -151,7 +164,12 @@ func (r *DbuserResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// Read the updated state back
-	r.readDbuserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDbuserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dbuser not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -180,7 +198,7 @@ func (r *DbuserResource) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 // Helper function to read dbuser data from API
-func (r *DbuserResource) readDbuserFromApi(ctx context.Context, data *DbuserResourceModel, diags *diag.Diagnostics) {
+func (r *DbuserResource) readDbuserFromApi(ctx context.Context, data *DbuserResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	username_Name := data.Id.ValueString()
@@ -190,10 +208,14 @@ func (r *DbuserResource) readDbuserFromApi(ctx context.Context, data *DbuserReso
 
 	getResponseData, err = r.client.FindResource(service.Dbuser.Type(), username_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dbuser, got error: %s", err))
-		return
+		return false
 	}
 
 	dbuserSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

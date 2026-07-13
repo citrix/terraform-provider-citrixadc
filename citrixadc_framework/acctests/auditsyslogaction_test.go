@@ -285,6 +285,31 @@ func TestAccAuditsyslogaction_httpauthtoken_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccAuditsyslogaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuditsyslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuditsyslogaction_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuditsyslogaction_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, nil),
+				),
+			},
+		},
+	})
+}
+
 const testAccAuditsyslogaction_httpauthtoken_wo_step1 = `
 variable "auditsyslogaction_httpauthtoken_wo" {
   type      = string

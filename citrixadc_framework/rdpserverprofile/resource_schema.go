@@ -106,6 +106,30 @@ func rdpserverprofileGetThePayloadFromthePlan(ctx context.Context, data *Rdpserv
 	return rdpserverprofile
 }
 
+func rdpserverprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *RdpserverprofileResourceModel) rdp.Rdpserverprofile {
+	tflog.Debug(ctx, "In rdpserverprofileGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model (NITRO-updatable fields only)
+	rdpserverprofile := rdp.Rdpserverprofile{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		rdpserverprofile.Name = data.Name.ValueString()
+	}
+	if !data.Psk.IsNull() && !data.Psk.IsUnknown() {
+		rdpserverprofile.Psk = data.Psk.ValueString()
+	}
+	if !data.Rdpip.IsNull() && !data.Rdpip.IsUnknown() {
+		rdpserverprofile.Rdpip = data.Rdpip.ValueString()
+	}
+	if !data.Rdpport.IsNull() && !data.Rdpport.IsUnknown() {
+		rdpserverprofile.Rdpport = utils.IntPtr(int(data.Rdpport.ValueInt64()))
+	}
+	if !data.Rdpredirection.IsNull() && !data.Rdpredirection.IsUnknown() {
+		rdpserverprofile.Rdpredirection = data.Rdpredirection.ValueString()
+	}
+
+	return rdpserverprofile
+}
+
 func rdpserverprofileGetThePayloadFromtheConfig(ctx context.Context, data *RdpserverprofileResourceModel, payload *rdp.Rdpserverprofile) {
 	tflog.Debug(ctx, "In rdpserverprofileGetThePayloadFromtheConfig Function")
 

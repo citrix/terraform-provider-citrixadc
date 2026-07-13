@@ -122,3 +122,28 @@ func TestAccNscapacityDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNscapacity_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNscapacity_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNscapacity_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
+				),
+			},
+		},
+	})
+}

@@ -272,6 +272,31 @@ func TestAccAuthenticationnegotiateaction_domainuserpasswd_wo_ephemeral(t *testi
 	})
 }
 
+func TestAccAuthenticationnegotiateaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationnegotiateactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationnegotiateaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationnegotiateaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationnegotiateactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
