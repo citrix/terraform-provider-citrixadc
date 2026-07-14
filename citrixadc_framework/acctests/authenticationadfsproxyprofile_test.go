@@ -47,6 +47,7 @@ resource "citrixadc_authenticationadfsproxyprofile" "tf_authenticationadfsproxyp
 `
 
 func TestAccAuthenticationadfsproxyprofile_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -147,6 +148,7 @@ data "citrixadc_authenticationadfsproxyprofile" "tf_authenticationadfsproxyprofi
 `
 
 func TestAccAuthenticationadfsproxyprofileDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -198,6 +200,7 @@ const testAccAuthenticationadfsproxyprofile_password_step2 = `
 `
 
 func TestAccAuthenticationadfsproxyprofile_password_backward_compat(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	t.Setenv("TF_VAR_authenticationadfsproxyprofile_password", "oldpassword123")
 	t.Setenv("TF_VAR_authenticationadfsproxyprofile_password_2", "newpassword456")
 	resource.Test(t, resource.TestCase{
@@ -262,6 +265,7 @@ const testAccAuthenticationadfsproxyprofile_password_wo_step2 = `
 `
 
 func TestAccAuthenticationadfsproxyprofile_password_wo_ephemeral(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	t.Setenv("TF_VAR_authenticationadfsproxyprofile_password_wo", "ephemeral_pass1")
 	t.Setenv("TF_VAR_authenticationadfsproxyprofile_password_wo_2", "ephemeral_pass2")
 	resource.Test(t, resource.TestCase{

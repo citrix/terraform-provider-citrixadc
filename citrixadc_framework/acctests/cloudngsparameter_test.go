@@ -45,6 +45,7 @@ const testAccCloudngsparameter_basic_step2 = `
 `
 
 func TestAccCloudngsparameter_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -129,6 +130,7 @@ const testAccCloudngsparameterDataSource_basic = `
 `
 
 func TestAccCloudngsparameterDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

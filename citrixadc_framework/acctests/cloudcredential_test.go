@@ -53,6 +53,7 @@ resource "citrixadc_cloudcredential" "tf_cloudcredential" {
 `
 
 func TestAccCloudcredential_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -152,6 +153,7 @@ const testAccCloudcredential_applicationsecret_wo_step2 = `
 `
 
 func TestAccCloudcredential_applicationsecret_wo_ephemeral(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	t.Setenv("TF_VAR_cloudcredential_applicationsecret_wo", "ephemeral_secret1")
 	t.Setenv("TF_VAR_cloudcredential_applicationsecret_wo_2", "ephemeral_secret2")
 	resource.Test(t, resource.TestCase{

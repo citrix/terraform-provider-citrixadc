@@ -51,8 +51,8 @@ resource "citrixadc_nsaptlicense" "tf_nsaptlicense" {
 `
 
 func TestAccNsaptlicense_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// DANGER: consumes pooled CADS licenses; must NOT run in automation.
-	t.Skip("DANGER: nsaptlicense ALLOCATES pooled CADS licenses (DISRUPTIVE, non-idempotent) and needs a real id/sessionid from a license-server session. Run manually only.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -111,7 +111,7 @@ data "citrixadc_nsaptlicense" "tf_nsaptlicense" {
 `
 
 func TestAccNsaptlicenseDataSource_basic(t *testing.T) {
-	t.Skip("DANGER: nsaptlicense datasource needs a real allocated license record (serialno) on the appliance, which requires a disruptive pooled-license allocation. Run manually only.")
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

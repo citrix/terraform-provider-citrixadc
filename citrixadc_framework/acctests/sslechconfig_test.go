@@ -29,27 +29,23 @@ import (
 // the test first creates a citrixadc_sslhpkekey (participating entity) and
 // wires hpkekeyname to it via reference + depends_on.
 //
-// The HPKE key requires a `file` that already exists on the appliance (the HPKE
-// private key file under /nsconfig/ssl) and dhkem = X_25519.
+// The HPKE key requires a `file` (X25519 PKCS#8 DER) that already exists under
+// /nsconfig/ssl on the appliance and dhkem = X_25519. The test PreCheck
+// (doSslhpkekeyPreChecks) stages testdata/hpke_key.der there.
 //
-// TODO_PLACEHOLDER:
-//   - citrixadc_sslhpkekey.file  -> name of an HPKE key file present on the
-//     appliance (e.g. "hpke_key.pem" under /nsconfig/ssl).
-//   - echcipher value below uses the HPKE KDF/AEAD cipher-suite naming
-//     "HKDF_SHA256_AES_128_GCM" as a best-effort default; confirm against the
-//     NITRO "Possible values" for sslechconfig.echcipher on the testbed and
-//     adjust if the appliance rejects it.
+// echcipher must be one of the NITRO "Possible values" for sslechconfig.echcipher
+// (AES128/256-GCM-HKDFSHA256/384/512); this test uses AES128-GCM-HKDFSHA256.
 
 const testAccSslechconfig_basic_step1 = `
 resource "citrixadc_sslhpkekey" "tf_sslhpkekey" {
   hpkekeyname = "tf_sslhpkekey"
   dhkem       = "X_25519"
-  file        = "TODO_PLACEHOLDER"
+  file        = "hpke_key.der"
 }
 
 resource "citrixadc_sslechconfig" "tf_sslechconfig" {
   echconfigname = "tf_sslechconfig"
-  echcipher     = "HKDF_SHA256_AES_128_GCM"
+  echcipher     = "AES128-GCM-HKDFSHA256"
   hpkekeyname   = citrixadc_sslhpkekey.tf_sslhpkekey.hpkekeyname
   echpublicname = "public.example.com"
   echconfigid   = 1
@@ -62,7 +58,7 @@ resource "citrixadc_sslechconfig" "tf_sslechconfig" {
 
 func TestAccSslechconfig_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslechconfigDestroy,
 		Steps: []resource.TestStep{
@@ -71,7 +67,7 @@ func TestAccSslechconfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslechconfigExist("citrixadc_sslechconfig.tf_sslechconfig", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslechconfig.tf_sslechconfig", "echconfigname", "tf_sslechconfig"),
-					resource.TestCheckResourceAttr("citrixadc_sslechconfig.tf_sslechconfig", "echcipher", "HKDF_SHA256_AES_128_GCM"),
+					resource.TestCheckResourceAttr("citrixadc_sslechconfig.tf_sslechconfig", "echcipher", "AES128-GCM-HKDFSHA256"),
 					resource.TestCheckResourceAttr("citrixadc_sslechconfig.tf_sslechconfig", "echpublicname", "public.example.com"),
 					resource.TestCheckResourceAttr("citrixadc_sslechconfig.tf_sslechconfig", "echconfigid", "1"),
 				),
@@ -142,12 +138,12 @@ const testAccSslechconfigDataSource_basic = `
 resource "citrixadc_sslhpkekey" "tf_sslhpkekey" {
   hpkekeyname = "tf_sslhpkekey"
   dhkem       = "X_25519"
-  file        = "TODO_PLACEHOLDER"
+  file        = "hpke_key.der"
 }
 
 resource "citrixadc_sslechconfig" "tf_sslechconfig" {
   echconfigname = "tf_sslechconfig"
-  echcipher     = "HKDF_SHA256_AES_128_GCM"
+  echcipher     = "AES128-GCM-HKDFSHA256"
   hpkekeyname   = citrixadc_sslhpkekey.tf_sslhpkekey.hpkekeyname
   echpublicname = "public.example.com"
   echconfigid   = 1
@@ -164,13 +160,14 @@ data "citrixadc_sslechconfig" "tf_sslechconfig" {
 
 func TestAccSslechconfigDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslechconfigDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslechconfig.tf_sslechconfig", "echconfigname", "tf_sslechconfig"),
-					resource.TestCheckResourceAttr("data.citrixadc_sslechconfig.tf_sslechconfig", "echcipher", "HKDF_SHA256_AES_128_GCM"),
+					resource.TestCheckResourceAttr("data.citrixadc_sslechconfig.tf_sslechconfig", "echcipher", "AES128-GCM-HKDFSHA256"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslechconfig.tf_sslechconfig", "echpublicname", "public.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslechconfig.tf_sslechconfig", "echconfigid", "1"),
 				),

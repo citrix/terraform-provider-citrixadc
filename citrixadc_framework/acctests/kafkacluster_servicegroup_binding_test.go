@@ -33,7 +33,7 @@ import (
 //
 // Participating entity config is lifted from:
 //   - kafkacluster_test.go   (resource "citrixadc_kafkacluster")
-//   - servicegroup_test.go   (resource "citrixadc_servicegroup", HTTP servicetype)
+//   - servicegroup_test.go   (resource "citrixadc_servicegroup", KAFKA_BROKER servicetype)
 
 const testAccKafkacluster_servicegroup_binding_basic_step1 = `
 
@@ -43,7 +43,8 @@ const testAccKafkacluster_servicegroup_binding_basic_step1 = `
 
 	resource "citrixadc_servicegroup" "tf_servicegroup" {
 		servicegroupname = "tf_kafka_servicegroup"
-		servicetype      = "HTTP"
+		servicetype      = "KAFKA_BROKER"
+		bootstrap        = "YES"
 	}
 
 	resource "citrixadc_kafkacluster_servicegroup_binding" "tf_binding" {
@@ -64,7 +65,8 @@ const testAccKafkacluster_servicegroup_binding_basic_step2 = `
 
 	resource "citrixadc_servicegroup" "tf_servicegroup" {
 		servicegroupname = "tf_kafka_servicegroup"
-		servicetype      = "HTTP"
+		servicetype      = "KAFKA_BROKER"
+		bootstrap        = "YES"
 	}
 `
 
@@ -239,7 +241,8 @@ const testAccKafkacluster_servicegroup_binding_DataSource_basic = `
 
 	resource "citrixadc_servicegroup" "tf_servicegroup" {
 		servicegroupname = "tf_kafka_servicegroup"
-		servicetype      = "HTTP"
+		servicetype      = "KAFKA_BROKER"
+		bootstrap        = "YES"
 	}
 
 	resource "citrixadc_kafkacluster_servicegroup_binding" "tf_binding" {

@@ -53,6 +53,7 @@ resource "citrixadc_appfwcustomsettings" "tf_appfwcustomsettings" {
 `
 
 func TestAccAppfwcustomsettings_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

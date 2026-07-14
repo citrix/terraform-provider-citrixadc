@@ -153,23 +153,25 @@ func (r *StreamidentifierAnalyticsprofileBindingResource) Delete(ctx context.Con
 	}
 
 	tflog.Debug(ctx, "Deleting streamidentifier_analyticsprofile_binding resource")
-	// Binding delete via NITRO args= query parameter (DeleteResourceWithArgs).
-	// NITRO doc: DELETE /streamidentifier_analyticsprofile_binding?args=name:<value>,analyticsprofile:<value>
+	// Binding delete: the parent name (streamidentifier) must go in the URL path
+	// so DeleteResourceWithArgsMap's pre-delete existence GET hits
+	// /streamidentifier_analyticsprofile_binding/<name> (a nameless GET returns
+	// errorcode 1095 and the client would wrongly skip the DELETE). The remaining
+	// discriminator (analyticsprofile) is passed via the args= query parameter.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), nil, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
 	}
 
-	args := make([]string, 0, 2)
-	if val, ok := idMap["name"]; ok && val != "" {
-		args = append(args, fmt.Sprintf("name:%s", val))
-	}
+	name := idMap["name"]
+
+	argsMap := make(map[string]string)
 	if val, ok := idMap["analyticsprofile"]; ok && val != "" {
-		args = append(args, fmt.Sprintf("analyticsprofile:%s", val))
+		argsMap["analyticsprofile"] = val
 	}
 
-	err = r.client.DeleteResourceWithArgs(service.Streamidentifier_analyticsprofile_binding.Type(), "", args)
+	err = r.client.DeleteResourceWithArgsMap(service.Streamidentifier_analyticsprofile_binding.Type(), name, argsMap)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete streamidentifier_analyticsprofile_binding, got error: %s", err))
 		return
@@ -190,8 +192,12 @@ func (r *StreamidentifierAnalyticsprofileBindingResource) readStreamidentifierAn
 
 	var dataArr []map[string]interface{}
 
+	// Binding GET requires the parent name in the URL path
+	// (GET /streamidentifier_analyticsprofile_binding/<name>); a nameless GET
+	// returns errorcode 1095 "Name argument required for binding object".
 	findParams := service.FindParams{
 		ResourceType:             service.Streamidentifier_analyticsprofile_binding.Type(),
+		ResourceName:             idMap["name"],
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)

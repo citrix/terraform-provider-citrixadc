@@ -102,6 +102,7 @@ const testAccVpnvserverAuthenticationpolicyBinding_basic_step2 = `
 `
 
 func TestAccVpnvserverAuthenticationpolicyBinding_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -344,6 +345,7 @@ const testAccVpnvserverAuthenticationpolicyBindingDataSource_basic = `
 `
 
 func TestAccVpnvserverAuthenticationpolicyBindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

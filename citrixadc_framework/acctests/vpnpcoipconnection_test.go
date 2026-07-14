@@ -41,7 +41,6 @@ import (
 
 const testAccVpnpcoipconnection_basic_step1 = `
 resource "citrixadc_vpnpcoipconnection" "tf_vpnpcoipconnection" {
-  username = "someuser"
   all      = true
 }
 
@@ -57,7 +56,6 @@ func TestAccVpnpcoipconnection_basic(t *testing.T) {
 				Config: testAccVpnpcoipconnection_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnpcoipconnectionExist("citrixadc_vpnpcoipconnection.tf_vpnpcoipconnection", nil),
-					resource.TestCheckResourceAttr("citrixadc_vpnpcoipconnection.tf_vpnpcoipconnection", "username", "someuser"),
 					resource.TestCheckResourceAttr("citrixadc_vpnpcoipconnection.tf_vpnpcoipconnection", "all", "true"),
 				),
 			},

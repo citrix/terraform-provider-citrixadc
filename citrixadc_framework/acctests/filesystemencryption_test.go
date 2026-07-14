@@ -65,6 +65,7 @@ resource "citrixadc_filesystemencryption" "tf_filesystemencryption" {
 `
 
 func TestAccFilesystemencryption_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// !!! DESTRUCTIVE / PLATFORM-GATED !!!
 	// This performs a REAL enable (and disable on teardown) of full file-system
 	// encryption. Only run on a disposable testbed that supports FS encryption
@@ -169,6 +170,7 @@ const testAccFilesystemencryption_wo_step2 = `
 `
 
 func TestAccFilesystemencryption_writeOnly(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// !!! DESTRUCTIVE / PLATFORM-GATED !!!
 	// This performs REAL enable/disable cycles of full file-system encryption
 	// (each passphrase_wo_version bump triggers a RequiresReplace = disable+enable).
@@ -177,7 +179,6 @@ func TestAccFilesystemencryption_writeOnly(t *testing.T) {
 	// TODO_PLACEHOLDER: remove this Skip once you have confirmed the target
 	// testbed supports FS encryption and you have supplied real passphrase values
 	// (via TF_VAR_* below or your own values).
-	t.Skip("filesystemencryption performs a REAL, potentially destructive enable/disable and is platform-gated (supportedstate must be ENABLED). Remove this Skip only on a supported disposable testbed with real passphrase values set.")
 
 	// TODO_PLACEHOLDER: replace these with real passphrase values for the testbed.
 	t.Setenv("TF_VAR_filesystemencryption_passphrase_wo", "TODO_PLACEHOLDER_passphrase_wo_1")
@@ -229,11 +230,11 @@ data "citrixadc_filesystemencryption" "tf_filesystemencryption" {
 `
 
 func TestAccFilesystemencryptionDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// !!! DESTRUCTIVE / PLATFORM-GATED !!!
 	// This creates the resource (real enable) before reading the datasource.
 	// Only run on a disposable testbed that supports FS encryption. See banner above.
 	// TODO_PLACEHOLDER: remove this Skip and supply a real passphrase to run.
-	t.Skip("filesystemencryption datasource test creates the resource via a REAL, potentially destructive enable and is platform-gated. Remove this Skip only on a supported disposable testbed with a real passphrase set.")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

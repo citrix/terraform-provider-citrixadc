@@ -84,9 +84,9 @@ resource "citrixadc_sslwrapkey" "tf_sslwrapkey" {
 `
 
 func TestAccSslwrapkey_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// FIPS/crypto subsystem required: wrap-key creation is likely unsupported on
 	// the non-FIPS VPX testbed.
-	t.Skip("sslwrapkey creation needs the FIPS/crypto subsystem and is likely unsupported on the non-FIPS VPX testbed.")
 
 	// Replace these with real secret values before running on a capable appliance.
 	t.Setenv("TF_VAR_sslwrapkey_password_wo", "TODO_PLACEHOLDER")
@@ -204,9 +204,9 @@ data "citrixadc_sslwrapkey" "tf_sslwrapkey" {
 `
 
 func TestAccSslwrapkeyDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// FIPS/crypto subsystem required: the datasource first creates the wrap key,
 	// which is likely unsupported on the non-FIPS VPX testbed.
-	t.Skip("sslwrapkey datasource depends on wrap-key creation, which needs the FIPS/crypto subsystem and is likely unsupported on the non-FIPS VPX testbed.")
 
 	t.Setenv("TF_VAR_sslwrapkey_password_wo", "TODO_PLACEHOLDER")
 	t.Setenv("TF_VAR_sslwrapkey_salt_wo", "TODO_PLACEHOLDER")

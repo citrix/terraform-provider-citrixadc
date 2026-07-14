@@ -204,6 +204,30 @@ func doSslcertkeyPreChecks(t *testing.T) {
 	}
 }
 
+func doSslhpkekeyPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"hpke_key.der",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Stage the X25519 HPKE key file under /nsconfig/ssl so the sslhpkekey
+	// resource's `file` attribute resolves. NOTE: `add ssl hpkekey` accepts the
+	// X25519 PKCS#8 *DER* form only - a PEM-armored key is rejected with
+	// "Invalid HPKEKey" (verified on the appliance).
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/nsconfig/ssl")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func doSslcertbundlePreChecks(t *testing.T) {
 	testAccPreCheck(t)
 

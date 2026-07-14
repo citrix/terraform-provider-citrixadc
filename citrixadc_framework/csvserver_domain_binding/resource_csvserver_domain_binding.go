@@ -140,13 +140,35 @@ func (r *CsvserverDomainBindingResource) Update(ctx context.Context, req resourc
 	}
 
 	if hasChange {
-		// Create API request body from the model
-		csvserver_domain_binding := csvserver_domain_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Csvserver_domain_binding.Type(), &csvserver_domain_binding)
+		// This binding exposes no NITRO "set"/update endpoint (only add/delete/get/count),
+		// and the ADC rejects re-binding an already-bound domain via PUT with errorcode 1842
+		// ("The domain is already bound to a GSLB vserver"). To change an updateable
+		// attribute (ttl, backupip, cookiedomain, cookietimeout, sitedomainttl) we must
+		// unbind the existing domain and rebind it with the new values. name + domainname
+		// are RequiresReplace identity keys, so they are unchanged here (data.Id == state.Id).
+		idMap, _, err := utils.ParseIdString(data.Id.ValueString(), nil, nil)
 		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_domain_binding, got error: %s", err))
+			resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for update: %s", err))
+			return
+		}
+		name_value, ok := idMap["name"]
+		if !ok {
+			resp.Diagnostics.AddError("Parse Error", "Parent attribute 'name' not found in ID")
+			return
+		}
+		argsMap := make(map[string]string)
+		if val, ok := idMap["domainname"]; ok && val != "" {
+			argsMap["domainname"] = val
+		}
+		// Unbind the existing domain binding.
+		if err := r.client.DeleteResourceWithArgsMap(service.Csvserver_domain_binding.Type(), name_value, argsMap); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_domain_binding (unbind step), got error: %s", err))
+			return
+		}
+		// Rebind the domain with the new values.
+		csvserver_domain_binding := csvserver_domain_bindingGetThePayloadFromthePlan(ctx, &data)
+		if err := r.client.UpdateUnnamedResource(service.Csvserver_domain_binding.Type(), &csvserver_domain_binding); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csvserver_domain_binding (rebind step), got error: %s", err))
 			return
 		}
 

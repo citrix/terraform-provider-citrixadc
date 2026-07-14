@@ -26,10 +26,15 @@ type Sslpkcs12Resource struct {
 	client *service.NitroClient
 }
 
-// ValidateConfig enforces that the mandatory secret attributes are supplied via
-// at least one of their value/write-only variants (Pattern 17). The secret value
-// attributes are both Optional in the schema, so without this check the user could
-// omit both and the NITRO convert call would fail with a required-field error.
+// ValidateConfig enforces that the mandatory secret attribute password is
+// supplied via one of its value/write-only variants (Pattern 17). password
+// protects the PKCS#12 material and is required for the convert action.
+//
+// pempassphrase is intentionally NOT required: it is only needed to unlock an
+// ENCRYPTED input PEM key when exporting. Exporting an unencrypted key needs no
+// pass phrase, so requiring it unconditionally would reject a valid config. When
+// it is actually needed but missing/wrong, the NITRO convert call returns a
+// clear error.
 func (r *Sslpkcs12Resource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var data Sslpkcs12ResourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -40,12 +45,6 @@ func (r *Sslpkcs12Resource) ValidateConfig(ctx context.Context, req resource.Val
 		resp.Diagnostics.AddError(
 			"Missing required attribute",
 			"One of \"password\" or \"password_wo\" must be set for sslpkcs12.",
-		)
-	}
-	if data.Pempassphrase.IsNull() && data.PempassphraseWo.IsNull() {
-		resp.Diagnostics.AddError(
-			"Missing required attribute",
-			"One of \"pempassphrase\" or \"pempassphrase_wo\" must be set for sslpkcs12.",
 		)
 	}
 }

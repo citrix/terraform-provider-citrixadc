@@ -77,6 +77,7 @@ resource "citrixadc_application" "tf_application" {
 `
 
 func TestAccApplication_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

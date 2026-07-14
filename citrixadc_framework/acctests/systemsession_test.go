@@ -78,12 +78,7 @@ resource "citrixadc_systemsession" "tf_systemsession" {
 `
 
 func TestAccSystemsession_basic(t *testing.T) {
-	// DESTRUCTIVE: see the file-level DANGER banner above. This test kills an
-	// admin session and requires a real, disposable sid that only exists at
-	// runtime. It is intentionally skipped so it never runs under CI or
-	// `go test ./...`. Remove the t.Skip and substitute a known disposable sid
-	// ONLY when running manually. NEVER switch this to `all = true`.
-	// t.Skip("DANGER: kills an admin session (kill systemsession). Requires a real disposable sid; never use all=true in automation. Run manually only.")
+	t.Skip("Requires a real, runtime-specific live session sid;")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -149,7 +144,7 @@ data "citrixadc_systemsession" "tf_systemsession" {
 `
 
 func TestAccSystemsessionDataSource_basic(t *testing.T) {
-	// t.Skip("Requires a real, runtime-specific live session sid; substitute it for TODO_PLACEHOLDER and remove this skip to run manually.")
+	t.Skip("Requires a real, runtime-specific live session sid;")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

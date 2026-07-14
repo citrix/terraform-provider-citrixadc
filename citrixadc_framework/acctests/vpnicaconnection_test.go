@@ -41,7 +41,6 @@ import (
 
 const testAccVpnicaconnection_basic_step1 = `
 resource "citrixadc_vpnicaconnection" "tf_vpnicaconnection" {
-  transproto = "TCP"
   all        = true
 }
 
@@ -57,7 +56,6 @@ func TestAccVpnicaconnection_basic(t *testing.T) {
 				Config: testAccVpnicaconnection_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnicaconnectionExist("citrixadc_vpnicaconnection.tf_vpnicaconnection", nil),
-					resource.TestCheckResourceAttr("citrixadc_vpnicaconnection.tf_vpnicaconnection", "transproto", "TCP"),
 					resource.TestCheckResourceAttr("citrixadc_vpnicaconnection.tf_vpnicaconnection", "all", "true"),
 				),
 			},

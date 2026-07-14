@@ -26,28 +26,29 @@ import (
 )
 
 // Participating entities (deep dependency chain):
-//   - citrixadc_sslhpkekey   (HPKE key; requires a key file present on the appliance -> TODO_PLACEHOLDER)
+//   - citrixadc_sslhpkekey   (HPKE key; file staged under /nsconfig/ssl by the PreCheck)
 //   - citrixadc_sslechconfig (ECH config referencing the HPKE key)
 //   - citrixadc_sslprofile   (the SSL profile the ech config is bound to)
 // Composite ID = name,echconfigname.
 //
-// NOTE: the sslhpkekey "file" must be an HPKE key file that already exists on the
-// target appliance (e.g. uploaded under /nsconfig/ssl/). There is no portable
-// default, so it is left as TODO_PLACEHOLDER. echcipher / dhkem values below are
-// example values and may need adjustment per appliance build.
+// The sslhpkekey "file" is testdata/hpke_key.der (X25519 PKCS#8 DER - the only
+// format `add ssl hpkekey` accepts), staged under /nsconfig/ssl by the PreCheck
+// (doSslhpkekeyPreChecks). dhkem = X_25519 and echcipher = AES128-GCM-HKDFSHA256
+// are the NITRO-documented values. NOTE: creating citrixadc_sslprofile requires
+// the default SSL profile feature enabled on the appliance.
 
 const testAccSslprofileSslechconfigBinding_basic_step1 = `
 	resource "citrixadc_sslhpkekey" "tf_sslhpkekey" {
 		hpkekeyname = "tf_hpkekey_ech"
-		dhkem       = "X25519"
-		file        = "TODO_PLACEHOLDER"
+		dhkem       = "X_25519"
+		file        = "hpke_key.der"
 	}
 
 	resource "citrixadc_sslechconfig" "tf_sslechconfig" {
 		echconfigname = "tf_echconfig"
 		echconfigid   = 1
 		echpublicname = "example.com"
-		echcipher     = "X25519:HKDF-SHA256:AES-128-GCM"
+		echcipher     = "AES128-GCM-HKDFSHA256"
 		hpkekeyname   = citrixadc_sslhpkekey.tf_sslhpkekey.hpkekeyname
 
 		depends_on = [citrixadc_sslhpkekey.tf_sslhpkekey]
@@ -73,15 +74,15 @@ const testAccSslprofileSslechconfigBinding_basic_step1 = `
 const testAccSslprofileSslechconfigBinding_basic_step2 = `
 	resource "citrixadc_sslhpkekey" "tf_sslhpkekey" {
 		hpkekeyname = "tf_hpkekey_ech"
-		dhkem       = "X25519"
-		file        = "TODO_PLACEHOLDER"
+		dhkem       = "X_25519"
+		file        = "hpke_key.der"
 	}
 
 	resource "citrixadc_sslechconfig" "tf_sslechconfig" {
 		echconfigname = "tf_echconfig"
 		echconfigid   = 1
 		echpublicname = "example.com"
-		echcipher     = "X25519:HKDF-SHA256:AES-128-GCM"
+		echcipher     = "AES128-GCM-HKDFSHA256"
 		hpkekeyname   = citrixadc_sslhpkekey.tf_sslhpkekey.hpkekeyname
 
 		depends_on = [citrixadc_sslhpkekey.tf_sslhpkekey]
@@ -95,7 +96,7 @@ const testAccSslprofileSslechconfigBinding_basic_step2 = `
 
 func TestAccSslprofileSslechconfigBinding_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslprofileSslechconfigBindingDestroy,
 		Steps: []resource.TestStep{
@@ -216,15 +217,15 @@ func testAccCheckSslprofileSslechconfigBindingDestroy(s *terraform.State) error 
 const testAccSslprofileSslechconfigBindingDataSource_basic = `
 	resource "citrixadc_sslhpkekey" "tf_sslhpkekey" {
 		hpkekeyname = "tf_hpkekey_ech"
-		dhkem       = "X25519"
-		file        = "TODO_PLACEHOLDER"
+		dhkem       = "X_25519"
+		file        = "hpke_key.der"
 	}
 
 	resource "citrixadc_sslechconfig" "tf_sslechconfig" {
 		echconfigname = "tf_echconfig"
 		echconfigid   = 1
 		echpublicname = "example.com"
-		echcipher     = "X25519:HKDF-SHA256:AES-128-GCM"
+		echcipher     = "AES128-GCM-HKDFSHA256"
 		hpkekeyname   = citrixadc_sslhpkekey.tf_sslhpkekey.hpkekeyname
 
 		depends_on = [citrixadc_sslhpkekey.tf_sslhpkekey]
@@ -255,7 +256,7 @@ const testAccSslprofileSslechconfigBindingDataSource_basic = `
 
 func TestAccSslprofileSslechconfigBindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslprofileSslechconfigBindingDestroy,
 		Steps: []resource.TestStep{

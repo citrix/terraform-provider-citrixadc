@@ -49,7 +49,7 @@ resource "citrixadc_streamidentifier" "tf_streamidentifier" {
 
 resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
   name             = "my_analyticsprofile"
-  type             = "timeseries"
+  type             = "streaminsight"
 }
 
 resource "citrixadc_streamidentifier_analyticsprofile_binding" "tf_binding" {
@@ -210,9 +210,7 @@ resource "citrixadc_streamidentifier" "tf_streamidentifier" {
 
 resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
   name             = "my_analyticsprofile"
-  type             = "webinsight"
-  httppagetracking = "DISABLED"
-  httpurl          = "DISABLED"
+  type             = "streaminsight"
 }
 
 resource "citrixadc_streamidentifier_analyticsprofile_binding" "tf_binding" {

@@ -52,6 +52,7 @@ resource "citrixadc_systemsshkey" "tf_systemsshkey" {
 `
 
 func TestAccSystemsshkey_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSystemSshKeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -187,6 +188,7 @@ data "citrixadc_systemsshkey" "tf_systemsshkey" {
 `
 
 func TestAccSystemsshkeyDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSystemSshKeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

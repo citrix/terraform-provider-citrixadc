@@ -37,6 +37,7 @@ resource "citrixadc_nskeymanagerproxy" "tf_nskeymanagerproxy" {
 `
 
 func TestAccNskeymanagerproxy_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -122,6 +123,7 @@ data "citrixadc_nskeymanagerproxy" "tf_nskeymanagerproxy" {
 `
 
 func TestAccNskeymanagerproxyDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

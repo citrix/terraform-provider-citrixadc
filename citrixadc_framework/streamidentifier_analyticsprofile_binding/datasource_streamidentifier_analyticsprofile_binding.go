@@ -49,8 +49,12 @@ func (d *StreamidentifierAnalyticsprofileBindingDataSource) Read(ctx context.Con
 	var dataArr []map[string]interface{}
 	var err error
 
+	// Binding GET requires the parent name in the URL path
+	// (GET /streamidentifier_analyticsprofile_binding/<name>); a nameless GET
+	// returns errorcode 1095 "Name argument required for binding object".
 	findParams := service.FindParams{
 		ResourceType:             service.Streamidentifier_analyticsprofile_binding.Type(),
+		ResourceName:             name_Name.ValueString(),
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)

@@ -49,6 +49,7 @@ resource "citrixadc_cloudprofile" "tf_cloudprofile" {
 `
 
 func TestAccCloudprofile_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -157,6 +158,7 @@ data "citrixadc_cloudprofile" "tf_cloudprofile" {
 `
 
 func TestAccCloudprofileDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

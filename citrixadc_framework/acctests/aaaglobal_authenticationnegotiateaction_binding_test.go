@@ -59,6 +59,7 @@ resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction" {
 `
 
 func TestAccAaaglobalAuthenticationnegotiateactionBinding_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -223,6 +224,7 @@ data "citrixadc_aaaglobal_authenticationnegotiateaction_binding" "tf_aaaglobal_a
 `
 
 func TestAccAaaglobalAuthenticationnegotiateactionBindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

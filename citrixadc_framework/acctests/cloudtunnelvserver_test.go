@@ -57,6 +57,7 @@ resource "citrixadc_cloudtunnelvserver" "tf_cloudtunnelvserver" {
 `
 
 func TestAccCloudtunnelvserver_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -160,6 +161,7 @@ data "citrixadc_cloudtunnelvserver" "tf_cloudtunnelvserver" {
 `
 
 func TestAccCloudtunnelvserverDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

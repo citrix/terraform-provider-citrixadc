@@ -29,24 +29,24 @@ import (
 // recreation. There is therefore no step2 "update" path; the basic test is a
 // single create+verify.
 //
-// The `file` attribute names an HPKE key file that the appliance reads from /
-// writes under /nsconfig/ssl/. A valid HPKE key file (curve X25519) must exist
-// on the appliance for `add ssl hpkekey` to succeed. Supply a real filename for
-// the testbed before running. See TODO_PLACEHOLDER below.
+// The `file` attribute names an HPKE key file that must already exist under
+// /nsconfig/ssl/ on the appliance for `add ssl hpkekey` to succeed. The test's
+// PreCheck (doSslhpkekeyPreChecks) stages testdata/hpke_key.der there.
+// IMPORTANT: the appliance accepts only the X25519 PKCS#8 *DER* form; a
+// PEM-armored key is rejected with "Invalid HPKEKey" (verified on the
+// appliance), and there is no `create ssl hpkekey` generator, so the key must be
+// pre-staged as DER.
 const testAccSslhpkekey_basic = `
 resource "citrixadc_sslhpkekey" "tf_sslhpkekey" {
   hpkekeyname = "tf_sslhpkekey"
   dhkem       = "X_25519"
-  // TODO_PLACEHOLDER: name of an HPKE key file present under /nsconfig/ssl/ on
-  // the testbed appliance (X25519 curve). Replace with a real filename, e.g.
-  // "hpke_key.pem".
-  file = "TODO_PLACEHOLDER"
+  file = "hpke_key.der"
 }
 `
 
 func TestAccSslhpkekey_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslhpkekeyDestroy,
 		Steps: []resource.TestStep{
@@ -130,9 +130,8 @@ const testAccSslhpkekeyDataSource_basic = `
 resource "citrixadc_sslhpkekey" "tf_sslhpkekey" {
   hpkekeyname = "tf_sslhpkekey"
   dhkem       = "X_25519"
-  // TODO_PLACEHOLDER: name of an HPKE key file present under /nsconfig/ssl/ on
-  // the testbed appliance (X25519 curve). Replace with a real filename.
-  file = "TODO_PLACEHOLDER"
+  // Staged under /nsconfig/ssl/ by doSslhpkekeyPreChecks (X25519 PKCS#8 DER).
+  file = "hpke_key.der"
 }
 
 data "citrixadc_sslhpkekey" "tf_sslhpkekey" {
@@ -143,7 +142,7 @@ data "citrixadc_sslhpkekey" "tf_sslhpkekey" {
 
 func TestAccSslhpkekeyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

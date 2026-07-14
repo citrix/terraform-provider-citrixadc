@@ -34,13 +34,17 @@ import (
 // The basic test therefore creates the binding in step1, then changes updateable optionals
 // (ttl, cookietimeout) in step2 while keeping name + domainname constant, exercising the
 // in-place PUT-bind update path.
+//
+// IMPORTANT: A domain can only be bound to a CS vserver whose targetType is GSLB
+// (verified via CLI: "bind cs vserver <name> -domainName ..." returns errorcode 257
+// "Operation not permitted" on an ordinary IP/port-based CS vserver, but succeeds on a
+// GSLB-targetType CS vserver). A GSLB-targetType CS vserver is created without an IP/port.
 
 const testAccCsvserver_domain_binding_basic_step1 = `
 resource "citrixadc_csvserver" "tf_csvserver" {
   name        = "tf_csvserver_domain"
-  ipv46       = "10.202.11.11"
-  port        = 8080
   servicetype = "HTTP"
+  targettype  = "GSLB"
 }
 
 resource "citrixadc_csvserver_domain_binding" "tf_csvserver_domain_binding" {
@@ -56,9 +60,8 @@ resource "citrixadc_csvserver_domain_binding" "tf_csvserver_domain_binding" {
 const testAccCsvserver_domain_binding_basic_step2 = `
 resource "citrixadc_csvserver" "tf_csvserver" {
   name        = "tf_csvserver_domain"
-  ipv46       = "10.202.11.11"
-  port        = 8080
   servicetype = "HTTP"
+  targettype  = "GSLB"
 }
 
 resource "citrixadc_csvserver_domain_binding" "tf_csvserver_domain_binding" {
@@ -217,9 +220,8 @@ func testAccCheckCsvserver_domain_bindingDestroy(s *terraform.State) error {
 const testAccCsvserver_domain_binding_DataSource_basic = `
 resource "citrixadc_csvserver" "tf_csvserver" {
   name        = "tf_csvserver_domain"
-  ipv46       = "10.202.11.11"
-  port        = 8080
   servicetype = "HTTP"
+  targettype  = "GSLB"
 }
 
 resource "citrixadc_csvserver_domain_binding" "tf_csvserver_domain_binding" {

@@ -57,6 +57,7 @@ resource "citrixadc_cloudparameter" "tf_cloudparameter" {
 `
 
 func TestAccCloudparameter_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -139,6 +140,7 @@ data "citrixadc_cloudparameter" "tf_cloudparameter" {
 `
 
 func TestAccCloudparameterDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

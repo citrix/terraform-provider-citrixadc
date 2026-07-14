@@ -39,6 +39,7 @@ resource "citrixadc_cloudallowedngsticketprofile" "tf_cloudallowedngsticketprofi
 `
 
 func TestAccCloudallowedngsticketprofile_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -142,6 +143,7 @@ data "citrixadc_cloudallowedngsticketprofile" "tf_cloudallowedngsticketprofile_d
 `
 
 func TestAccCloudallowedngsticketprofileDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

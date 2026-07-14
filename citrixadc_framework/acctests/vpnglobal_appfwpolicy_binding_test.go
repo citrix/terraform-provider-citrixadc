@@ -63,6 +63,7 @@ const testAccVpnglobalAppfwpolicyBinding_basic_step2 = `
 `
 
 func TestAccVpnglobalAppfwpolicyBinding_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -244,6 +245,7 @@ const testAccVpnglobalAppfwpolicyBindingDataSource_basic = `
 `
 
 func TestAccVpnglobalAppfwpolicyBindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

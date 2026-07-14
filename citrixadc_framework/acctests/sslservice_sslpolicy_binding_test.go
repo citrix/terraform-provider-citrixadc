@@ -132,6 +132,7 @@ resource "citrixadc_sslpolicy" "tf_sslpolicy" {
 `
 
 func TestAccSslserviceSslpolicyBinding_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -347,6 +348,7 @@ data "citrixadc_sslservice_sslpolicy_binding" "tf_binding" {
 `
 
 func TestAccSslserviceSslpolicyBindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

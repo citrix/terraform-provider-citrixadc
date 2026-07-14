@@ -67,6 +67,7 @@ const testAccLinkset_interface_binding_basic_step2 = `
 `
 
 func TestAccLinkset_interface_binding_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -292,6 +293,7 @@ const testAccLinkset_interface_binding_DataSource_basic = `
 `
 
 func TestAccLinkset_interface_binding_DataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

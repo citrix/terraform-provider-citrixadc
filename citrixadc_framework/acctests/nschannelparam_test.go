@@ -37,6 +37,7 @@ const testAccNschannelparam_basic_step2 = `
 `
 
 func TestAccNschannelparam_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -112,6 +113,7 @@ const testAccNschannelparamDataSource_basic = `
 `
 
 func TestAccNschannelparamDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

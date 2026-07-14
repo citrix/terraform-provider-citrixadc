@@ -67,10 +67,10 @@ resource "citrixadc_sslfipssimtarget" "tf_sslfipssimtarget" {
 `
 
 func TestAccSslfipssimtarget_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// !!! DANGER -- FIPS SIM KEY IMPORT & FIPS-HARDWARE-ONLY !!!
 	// Imports FIPS secret/key material; requires a dedicated FIPS/HSM card not
 	// present on the VPX testbed. Never run against a shared/production FIPS box.
-	t.Skip("DANGER: sslfipssimtarget performs FIPS SIM key import and requires dedicated FIPS/HSM hardware not present on the VPX testbed.")
 
 	// Replace these with real secret values before running on a FIPS appliance.
 	t.Setenv("TF_VAR_sslfipssimtarget_sourcesecret", "TODO_PLACEHOLDER")

@@ -69,8 +69,15 @@ func (r *VpnpcoipconnectionResource) Create(ctx context.Context, req resource.Cr
 
 	// Set synthetic ID once, here in Create. The killed connection is not a
 	// queryable managed object, so this ID is purely a Terraform state handle,
-	// not a NITRO lookup key. username is the single kill identifier.
-	data.Id = types.StringValue(data.Username.ValueString())
+	// not a NITRO lookup key. Compose it from the supplied kill scope so distinct
+	// kills produce distinct IDs; a bare "kill all" uses a static ID. username is
+	// optional, so the ID must never be left empty (otherwise Terraform reports
+	// "resource ID not set" after a successful apply).
+	id := "kill-all"
+	if !data.Username.IsNull() && !data.Username.IsUnknown() && data.Username.ValueString() != "" {
+		id = fmt.Sprintf("kill:username:%s", data.Username.ValueString())
+	}
+	data.Id = types.StringValue(id)
 
 	// Read is a no-op (no stable GET-backed managed object); state is what the
 	// plan supplied plus the synthetic ID.

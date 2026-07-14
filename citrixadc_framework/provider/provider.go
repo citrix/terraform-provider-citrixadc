@@ -275,7 +275,6 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudservice"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelvserver"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterfiles"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterinstance"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternode"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternode_routemonitor_binding"
@@ -1271,7 +1270,6 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		aaasession.NewAaasessionResource,
 		authenticationvserver_authenticationsmartaccesspolicy_binding.NewAuthenticationvserverAuthenticationsmartaccesspolicyBindingResource,
 		apiprofile_apispec_binding.NewApiprofileApispecBindingResource,
-		clusterfiles.NewClusterfilesResource,
 		clusterpropstatus.NewClusterpropstatusResource,
 		hafiles.NewHafilesResource,
 		hasync.NewHasyncResource,
@@ -1359,12 +1357,9 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		sslservice_sslcacertbundle_binding.NewSslserviceSslcacertbundleBindingResource,
 		sslservice_sslcipher_binding.NewSslserviceSslcipherBindingResource,
 		sslservice_sslpolicy_binding.NewSslserviceSslpolicyBindingResource,
-		sslservicegroup.NewSslservicegroupResource,
-		sslservicegroup_ecccurve_binding.NewSslservicegroupEcccurveBindingResource,
 		sslservicegroup_sslcacertbundle_binding.NewSslservicegroupSslcacertbundleBindingResource,
 		sslservicegroup_sslcertkey_binding.NewSslservicegroupSslcertkeyBindingResource,
 		sslservicegroup_sslcipher_binding.NewSslservicegroupSslcipherBindingResource,
-		sslservicegroup_sslciphersuite_binding.NewSslservicegroupSslciphersuiteBindingResource,
 		sslvserver_sslcacertbundle_binding.NewSslvserverSslcacertbundleBindingResource,
 		sslvserver_sslcertkeybundle_binding.NewSslvserverSslcertkeybundleBindingResource,
 		sslvserver_sslcipher_binding.NewSslvserverSslcipherBindingResource,

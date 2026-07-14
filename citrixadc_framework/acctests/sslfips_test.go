@@ -104,11 +104,11 @@ resource "citrixadc_sslfips" "tf_sslfips" {
 `
 
 func TestAccSslfips_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// !!! DANGER -- DESTRUCTIVE & FIPS-HARDWARE-ONLY !!!
 	// HSM initialization erases ALL FIPS key/cert data and requires a FIPS card.
 	// The standalone VPX testbed has no FIPS hardware, so this test cannot run
 	// here and must never be run against a shared/production FIPS appliance.
-	t.Skip("DANGER: sslfips inithsm is destructive (erases all FIPS data) and requires dedicated FIPS/HSM hardware not present on the VPX testbed.")
 
 	// Replace these with real secret values before running on a FIPS appliance.
 	t.Setenv("TF_VAR_sslfips_sopassword_wo", "TODO_PLACEHOLDER")
@@ -221,11 +221,11 @@ data "citrixadc_sslfips" "tf_sslfips" {
 `
 
 func TestAccSslfipsDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// !!! DANGER -- DESTRUCTIVE & FIPS-HARDWARE-ONLY !!!
 	// This datasource test first creates the sslfips resource, which initializes
 	// the HSM (destructive) and requires FIPS hardware not present on the VPX
 	// testbed.
-	t.Skip("DANGER: sslfips datasource depends on HSM init (destructive) and requires dedicated FIPS/HSM hardware not present on the VPX testbed.")
 
 	t.Setenv("TF_VAR_sslfips_sopassword_wo", "TODO_PLACEHOLDER")
 	t.Setenv("TF_VAR_sslfips_oldsopassword_wo", "TODO_PLACEHOLDER")

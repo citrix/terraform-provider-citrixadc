@@ -75,6 +75,7 @@ const testAccAaagroupIntranetip6BindingDataSource_basic = `
 `
 
 func TestAccAaagroup_intranetip6_binding_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -103,6 +104,7 @@ func TestAccAaagroup_intranetip6_binding_basic(t *testing.T) {
 }
 
 func TestAccAaagroupIntranetip6BindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

@@ -82,7 +82,9 @@ resource "citrixadc_gslbsite" "site_local" {
 `
 
 func TestAccSslservicegroup_sslciphersuite_binding_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -274,7 +276,9 @@ data "citrixadc_sslservicegroup_sslciphersuite_binding" "tf_sslservicegroup_sslc
 `
 
 func TestAccSslservicegroup_sslciphersuite_bindingDataSource_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

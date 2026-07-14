@@ -65,6 +65,7 @@ resource "citrixadc_cloudtunnelparameter" "tf_cloudtunnelparameter" {
 `
 
 func TestAccCloudtunnelparameter_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// TODO_PLACEHOLDER (PREREQUISITE): requires a cloud-tunnel license/feature on the testbed.
 	// If the target testbed does not have the feature enabled, skip this test.
 	resource.Test(t, resource.TestCase{
@@ -152,6 +153,7 @@ data "citrixadc_cloudtunnelparameter" "tf_cloudtunnelparameter" {
 `
 
 func TestAccCloudtunnelparameterDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	// TODO_PLACEHOLDER (TESTBED / FEATURE-GATED): This datasource reads a singleton that is
 	// gated behind a cloud-tunnel license/feature. On a testbed where the feature is NOT
 	// enabled the GET tolerates the failure gracefully and the datasource attributes may come

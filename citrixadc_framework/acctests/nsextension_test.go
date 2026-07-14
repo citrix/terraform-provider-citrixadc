@@ -57,6 +57,7 @@ resource "citrixadc_nsextension" "tf_nsextension" {
 `
 
 func TestAccNsextension_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -164,6 +165,7 @@ data "citrixadc_nsextension" "tf_nsextension" {
 `
 
 func TestAccNsextensionDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

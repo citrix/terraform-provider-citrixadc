@@ -39,33 +39,19 @@ import (
 // asserted.
 const testAccSslpkcs8_basic = `
 
-	variable "sslpkcs8_password" {
-	  type      = string
-	  sensitive = true
-	}
-
 	resource "citrixadc_sslpkcs8" "tf_sslpkcs8" {
-		// TODO_PLACEHOLDER: existing PEM/DER private-key file under /nsconfig/ssl/
-		// on the testbed appliance, e.g. "tf_key.pem".
-		keyfile = "TODO_PLACEHOLDER"
-
-		// Output PKCS#8 file written under /nsconfig/ssl/ by the convert action.
+		keyfile = "/nsconfig/ssl/servercert1.key"
 		pkcs8file = "tf_sslpkcs8.pk8"
-
-		// Format the input key is stored in. Possible values: DER, PEM (default PEM).
 		keyform = "PEM"
-
-		// password applies only when the PEM key is encrypted. Optional.
-		password = var.sslpkcs8_password
 	}
 `
 
 func TestAccSslpkcs8_basic(t *testing.T) {
 	// TODO_PLACEHOLDER: pass phrase for the encrypted PEM key, if any. Leave a
 	// real value if the input key is encrypted; otherwise an empty string is fine.
-	t.Setenv("TF_VAR_sslpkcs8_password", "TODO_PLACEHOLDER")
+	t.Skip("Requires clean up of pkcs8file from ADC file system or unique pkcs8file has to be provided.")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		// No CheckDestroy: action-only resource has no DELETE endpoint.
 		Steps: []resource.TestStep{
@@ -108,4 +94,125 @@ func testAccCheckSslpkcs8Exist(n string, id *string) resource.TestCheckFunc {
 		// GET endpoint to read back the converted result.
 		return nil
 	}
+}
+
+// -----------------------------------------------------------------------------
+// Backward-compatibility test: the legacy plaintext `password` attribute must
+// keep working after the write-only `password_wo` variant was introduced.
+// Mirrors TestAccSslcertkey_passplain in sslcertkey_test.go.
+//
+// Uses servercert3.key, an encrypted PEM key staged on the appliance by
+// doSslcertkeyPreChecks (pass phrase "1234567", the same value the sslcertkey
+// tests use). The convert action decrypts the input key with `password` and
+// writes the PKCS#8 output. The secret is sensitive and is never asserted; only
+// the echoed non-secret attributes are checked.
+const testAccSslpkcs8_password_basic = `
+
+	variable "sslpkcs8_password" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslpkcs8" "tf_sslpkcs8_pw" {
+		keyfile   = "/nsconfig/ssl/servercert3.key"
+		pkcs8file = "tf_sslpkcs8_pw.pk8"
+		keyform   = "PEM"
+		password = var.sslpkcs8_password
+	}
+`
+
+func TestAccSslpkcs8_password(t *testing.T) {
+	t.Skip("Requires clean up of pkcs8file from ADC file system or unique pkcs8file has to be provided.")
+	// Pass phrase of the encrypted input key servercert3.key.
+	t.Setenv("TF_VAR_sslpkcs8_password", "1234567")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// No CheckDestroy: action-only resource has no DELETE endpoint.
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslpkcs8_password_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslpkcs8Exist("citrixadc_sslpkcs8.tf_sslpkcs8_pw", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_pw", "keyfile", "/nsconfig/ssl/servercert3.key"),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_pw", "pkcs8file", "tf_sslpkcs8_pw.pk8"),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_pw", "keyform", "PEM"),
+				),
+			},
+		},
+	})
+}
+
+// -----------------------------------------------------------------------------
+// Write-only (_wo) test: exercises `password_wo` + `password_wo_version`, plus a
+// version bump across steps to signal a secret rotation. Mirrors the write-only
+// flow in TestAccSslcertkey_basic (passplain_wo / passplain_wo_version).
+//
+// Every sslpkcs8 attribute is RequiresReplace (action-only convert), so each
+// step re-runs the convert. Step 1 converts the encrypted servercert2.key (pass
+// phrase "123456"); step 2 rotates to servercert3.key (pass phrase "1234567")
+// and bumps password_wo_version. The write-only secret is never stored in state
+// or asserted.
+const testAccSslpkcs8_wo_step1 = `
+
+	variable "sslpkcs8_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslpkcs8" "tf_sslpkcs8_wo" {
+		keyfile             = "/nsconfig/ssl/servercert2.key"
+		pkcs8file           = "tf_sslpkcs8_wo.pk8"
+		keyform             = "PEM"
+		password_wo         = var.sslpkcs8_password_wo
+		password_wo_version = 1
+	}
+`
+
+const testAccSslpkcs8_wo_step2 = `
+
+	variable "sslpkcs8_password_wo_2" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslpkcs8" "tf_sslpkcs8_wo" {
+		keyfile             = "/nsconfig/ssl/servercert3.key"
+		pkcs8file           = "tf_sslpkcs8_wo_2.pk8"
+		keyform             = "PEM"
+		password_wo         = var.sslpkcs8_password_wo_2
+		password_wo_version = 2
+	}
+`
+
+func TestAccSslpkcs8_wo(t *testing.T) {
+	t.Skip("Requires clean up of pkcs8file from ADC file system or unique pkcs8file has to be provided.")
+	// Pass phrases of the encrypted input keys (staged by doSslcertkeyPreChecks).
+	t.Setenv("TF_VAR_sslpkcs8_password_wo", "123456")
+	t.Setenv("TF_VAR_sslpkcs8_password_wo_2", "1234567")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// No CheckDestroy: action-only resource has no DELETE endpoint.
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslpkcs8_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslpkcs8Exist("citrixadc_sslpkcs8.tf_sslpkcs8_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_wo", "keyfile", "/nsconfig/ssl/servercert2.key"),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_wo", "pkcs8file", "tf_sslpkcs8_wo.pk8"),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_wo", "password_wo_version", "1"),
+				),
+			},
+			{
+				Config: testAccSslpkcs8_wo_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslpkcs8Exist("citrixadc_sslpkcs8.tf_sslpkcs8_wo", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_wo", "keyfile", "/nsconfig/ssl/servercert3.key"),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_wo", "pkcs8file", "tf_sslpkcs8_wo_2.pk8"),
+					resource.TestCheckResourceAttr("citrixadc_sslpkcs8.tf_sslpkcs8_wo", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
 }
