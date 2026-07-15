@@ -96,6 +96,28 @@ func TestAccVpnglobalAuthenticationpolicyBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobalAuthenticationpolicyBinding_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_vpnglobal_authenticationpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobalAuthenticationpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobalAuthenticationpolicyBinding_basic_step1,
+			},
+			{
+				Config:                  testAccVpnglobalAuthenticationpolicyBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVpnglobalAuthenticationpolicyBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

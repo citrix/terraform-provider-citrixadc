@@ -108,6 +108,29 @@ func TestAccVpnvserverVpnepaprofileBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnvserverVpnepaprofileBinding_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+
+	const resAddr = "citrixadc_vpnvserver_vpnepaprofile_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserverVpnepaprofileBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserverVpnepaprofileBinding_basic_step1,
+			},
+			{
+				Config:                  testAccVpnvserverVpnepaprofileBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVpnvserverVpnepaprofileBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -3,6 +3,7 @@ package vrid_channel_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -282,5 +283,21 @@ func (r *VridChannelBindingResource) readVridChannelBindingFromApi(ctx context.C
 	}
 
 	vrid_channel_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill IDENTITY attrs from the parsed composite ID so `terraform import`
+	// fully round-trips. Both vrid_id and ifnum are RequiresReplace ID components:
+	//   - ifnum is NOT echoed by the aggregate vrid_interface_binding row, so on
+	//     import (no prior state) SetAttrFromGet leaves it null; reconstruct it here.
+	//   - vrid_id is echoed as "id" (already set by SetAttrFromGet), but recompute
+	//     it from the ID too for robustness when the row omits it.
+	// ParseIdString already URL-decodes these values (e.g. ifnum "LA/1").
+	if v, ok := idMap["ifnum"]; ok && v != "" {
+		data.Ifnum = types.StringValue(v)
+	}
+	if v, ok := idMap["id"]; ok && v != "" {
+		if n, err := strconv.ParseInt(v, 10, 64); err == nil {
+			data.VridId = types.Int64Value(n)
+		}
+	}
 	return true
 }

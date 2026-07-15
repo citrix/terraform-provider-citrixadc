@@ -276,6 +276,27 @@ data "citrixadc_metricsprofile_crvserver_binding" "tf_metricsprofile_crvserver_b
 }
 `
 
+func TestAccMetricsprofile_crvserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile_crvserver_binding.tf_metricsprofile_crvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_crvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_crvserver_binding_basic_step1,
+			},
+			{
+				Config:                  testAccMetricsprofile_crvserver_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccMetricsprofile_crvserver_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

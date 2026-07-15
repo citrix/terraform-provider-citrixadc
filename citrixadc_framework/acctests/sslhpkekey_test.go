@@ -62,6 +62,27 @@ func TestAccSslhpkekey_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslhpkekey_import(t *testing.T) {
+	const resAddr = "citrixadc_sslhpkekey.tf_sslhpkekey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslhpkekeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslhpkekey_basic,
+			},
+			{
+				Config:                  testAccSslhpkekey_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslhpkekeyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

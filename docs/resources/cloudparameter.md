@@ -42,3 +42,12 @@ resource "citrixadc_cloudparameter" "tf_cloudparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the cloudparameter. Because this is a singleton resource, it is always the static value `cloudparameter-config`.
+
+
+## Import
+
+A cloudparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_cloudparameter.tf_cloudparameter cloudparameter-config
+```

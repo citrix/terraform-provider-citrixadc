@@ -63,3 +63,12 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the callhome resource. Because callhome is a singleton, this is always the static string `"callhome"`.
 * `nodeid` - Unique number that identifies the cluster node. This is a read-only, GET-only cluster-node filter that is populated by the ADC and cannot be set.
+
+
+## Import
+
+A callhome can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_callhome.tf_callhome callhome
+```

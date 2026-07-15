@@ -349,4 +349,27 @@ func (r *AppfwprofileFakeaccountBindingResource) readAppfwprofileFakeaccountBind
 	}
 
 	appfwprofile_fakeaccount_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill the identity / ID-component attributes from the parsed composite
+	// ID so they round-trip on import (where there is no prior plan/state to rely
+	// on). These are always recoverable from the ID; ParseIdString has already
+	// URL-decoded the values. Done AFTER the found/len self-heal checks so a
+	// not-found still leaves data.Id null for self-heal, and the values written
+	// here are identical to what Create composed the ID from, so any downstream
+	// ID rebuild yields the same ID.
+	data.Name = types.StringValue(name_Name)
+	if v, ok := idMap["fakeaccount"]; ok {
+		data.Fakeaccount = types.StringValue(v)
+	}
+	if v, ok := idMap["tag"]; ok {
+		data.Tag = types.StringValue(v)
+	}
+	// formexpression and formurl_fad are the at-most-one arm; only the populated
+	// arm is present in the ID, so only backfill the arm that is actually there.
+	if v, ok := idMap["formexpression"]; ok && v != "" {
+		data.Formexpression = types.StringValue(v)
+	}
+	if v, ok := idMap["formurl_fad"]; ok && v != "" {
+		data.FormurlFad = types.StringValue(v)
+	}
 }

@@ -257,6 +257,27 @@ func testAccCheckLsnpool_lsnip_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLsnpool_lsnip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnpool_lsnip_binding.tf_lsnpool_lsnip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnpool_lsnip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnpool_lsnip_binding_basic_step1,
+			},
+			{
+				Config:                  testAccLsnpool_lsnip_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLsnpool_lsnip_binding_DataSource_basic = `
 	resource "citrixadc_lsnpool" "tf_lsnpool" {
 		poolname            = "my_lsn_pool"

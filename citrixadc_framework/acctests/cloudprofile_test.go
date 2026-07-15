@@ -75,6 +75,28 @@ func TestAccCloudprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudprofile_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudprofile.tf_cloudprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudprofile_basic_step1,
+			},
+			{
+				Config:                  testAccCloudprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCloudprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

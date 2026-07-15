@@ -253,6 +253,33 @@ func TestAccNscentralmanagementserver_adcpassword_backward_compat(t *testing.T) 
 	})
 }
 
+// ---------------------------------------------------------------------------
+// Import
+// ---------------------------------------------------------------------------
+
+func TestAccNscentralmanagementserver_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver"
+	t.Setenv("TF_VAR_nscentralmanagementserver_password", "admpassword123")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNscentralmanagementserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNscentralmanagementserver_password_step1,
+			},
+			{
+				Config:                  testAccNscentralmanagementserver_password_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 // Test ephemeral path: using adcpassword_wo (WriteOnly attribute) with version tracker
 const testAccNscentralmanagementserver_adcpassword_wo_step1 = `
 	variable "nscentralmanagementserver_password" {

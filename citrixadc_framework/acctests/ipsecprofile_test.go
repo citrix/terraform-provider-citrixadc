@@ -82,6 +82,28 @@ func TestAccIpsecprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccIpsecprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_ipsecprofile.tf_ipsecprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpsecprofile_basic},
+			{
+				Config:            testAccIpsecprofile_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// psk is a sensitive value that NITRO never echoes back, and
+				// psk_wo_version is a computed version tracker not returned by the
+				// API; neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"psk", "psk_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckIpsecprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

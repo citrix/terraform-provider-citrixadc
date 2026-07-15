@@ -79,6 +79,27 @@ func TestAccVpnvserver_secureprivateaccessurl_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnvserver_secureprivateaccessurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_secureprivateaccessurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_secureprivateaccessurl_binding_basic,
+			},
+			{
+				Config:                  testAccVpnvserver_secureprivateaccessurl_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVpnvserver_secureprivateaccessurl_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

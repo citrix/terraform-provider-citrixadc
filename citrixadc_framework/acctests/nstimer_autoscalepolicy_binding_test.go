@@ -132,6 +132,34 @@ func TestAccNstimer_autoscalepolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccNstimer_autoscalepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nstimer_autoscalepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstimer_autoscalepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstimer_autoscalepolicy_binding_basic_step1,
+			},
+			{
+				Config:            testAccNstimer_autoscalepolicy_binding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// name and policyname round-trip: they are components of the composite
+				// ID and are backfilled from the parsed ID in Read (readXFromApi).
+				// priority is Required but is NOT part of the composite ID, and the
+				// typed binding GET returns an empty body on this firmware (verified
+				// live: aggregate nstimer_binding echoes only "name") - so it cannot be
+				// recovered from the appliance on import. Category (c): genuinely
+				// non-recoverable.
+				ImportStateVerifyIgnore: []string{"priority"}, // not in ID; GET returns empty body on this firmware
+			},
+		},
+	})
+}
+
 func testAccCheckNstimer_autoscalepolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

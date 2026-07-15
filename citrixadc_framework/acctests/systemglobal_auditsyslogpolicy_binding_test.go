@@ -126,6 +126,31 @@ func TestAccSystemglobal_auditsyslogpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystemglobal_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_auditsyslogpolicy_binding.tf_systemglobal_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t); setupAuditsyslogpolicyBindingParticipants(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			err := testAccCheckSystemglobal_auditsyslogpolicy_bindingDestroy(s)
+			teardownAuditsyslogpolicyBindingParticipants(t)
+			return err
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_auditsyslogpolicy_binding_basic,
+			},
+			{
+				Config:                  testAccSystemglobal_auditsyslogpolicy_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSystemglobal_auditsyslogpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

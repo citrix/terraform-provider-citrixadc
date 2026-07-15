@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -14,7 +13,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SystemadmuserinfoResource{}
 var _ resource.ResourceWithConfigure = (*SystemadmuserinfoResource)(nil)
-var _ resource.ResourceWithImportState = (*SystemadmuserinfoResource)(nil)
 
 func NewSystemadmuserinfoResource() resource.Resource {
 	return &SystemadmuserinfoResource{}
@@ -23,10 +21,6 @@ func NewSystemadmuserinfoResource() resource.Resource {
 // SystemadmuserinfoResource defines the resource implementation.
 type SystemadmuserinfoResource struct {
 	client *service.NitroClient
-}
-
-func (r *SystemadmuserinfoResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *SystemadmuserinfoResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

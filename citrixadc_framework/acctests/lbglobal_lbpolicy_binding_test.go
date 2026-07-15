@@ -93,6 +93,27 @@ func TestAccLbglobal_lbpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbglobal_lbpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbglobal_lbpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbglobal_lbpolicy_binding_basic_step1,
+			},
+			{
+				Config:                  testAccLbglobal_lbpolicy_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckLbglobal_lbpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

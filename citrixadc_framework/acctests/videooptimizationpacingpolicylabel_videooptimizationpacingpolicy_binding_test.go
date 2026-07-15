@@ -117,6 +117,38 @@ func TestAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_bin
 	})
 }
 
+func TestAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding_basic_step1,
+			},
+			{
+				Config:                  testAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				// Drop the binding (but keep the participating entities) so the
+				// binding is removed from state before the framework's final
+				// destroy. This mirrors the basic test and avoids CheckDestroy
+				// querying bindings under an already-deleted parent label
+				// (which returns NITRO errorcode 3087 instead of 258).
+				Config: testAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_bindingNotExist("tf_videoopt_pacing_pl", "tf_videooptimizationpacingpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

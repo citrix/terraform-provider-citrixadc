@@ -28,3 +28,12 @@ resource "citrixadc_rnatparam" "tf_rnatparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the rnatparam resource. Because this is a singleton resource, the id is a fixed synthetic string with the value `"rnatparam-config"`.
+
+
+## Import
+
+A rnatparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_rnatparam.tf_rnatparam rnatparam-config
+```

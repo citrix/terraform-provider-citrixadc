@@ -65,6 +65,28 @@ func TestAccCloudallowedngsticketprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudallowedngsticketprofile_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudallowedngsticketprofile.tf_cloudallowedngsticketprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudallowedngsticketprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudallowedngsticketprofile_basic_step1,
+			},
+			{
+				Config:                  testAccCloudallowedngsticketprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCloudallowedngsticketprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

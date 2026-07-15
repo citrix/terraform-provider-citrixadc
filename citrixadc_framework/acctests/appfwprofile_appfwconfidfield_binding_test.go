@@ -275,6 +275,31 @@ data "citrixadc_appfwprofile_appfwconfidfield_binding" "tf_appfwprofile_appfwcon
 }
 `
 
+func TestAccAppfwprofileAppfwconfidfieldBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_appfwconfidfield_binding.tf_appfwprofile_appfwconfidfield_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileAppfwconfidfieldBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileAppfwconfidfieldBinding_basic_step1,
+			},
+			{
+				Config:            testAccAppfwprofileAppfwconfidfieldBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Full round-trip: identity attributes (name, confidfield, cffield_url) are
+				// backfilled from the parsed composite ID and the write-able config attributes
+				// (isregex_cffield, state, comment) are read from the GET response (the appliance
+				// echoes them verbatim), so nothing needs to be ignored on import.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAppfwprofileAppfwconfidfieldBindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

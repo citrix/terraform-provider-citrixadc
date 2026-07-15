@@ -148,6 +148,44 @@ func TestAccSslfips_basic(t *testing.T) {
 	})
 }
 
+// Import test: sslfips is a singleton whose Terraform id is the synthetic
+// constant "sslfips-config" (set in Create). ImportState uses passthrough, so
+// the stored id is reused for import -- no ImportStateIdFunc is required.
+// Skip-gated for the same FIPS-hardware/destructive reasons as the other tests
+// in this file.
+func TestAccSslfips_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	// !!! DANGER -- DESTRUCTIVE & FIPS-HARDWARE-ONLY !!!
+	// The create step performs HSM initialization, which erases ALL FIPS
+	// key/cert data and requires a FIPS card not present on the VPX testbed.
+
+	const resAddr = "citrixadc_sslfips.tf_sslfips"
+
+	// Replace these with real secret values before running on a FIPS appliance.
+	t.Setenv("TF_VAR_sslfips_sopassword_wo", "TODO_PLACEHOLDER")
+	t.Setenv("TF_VAR_sslfips_oldsopassword_wo", "TODO_PLACEHOLDER")
+	t.Setenv("TF_VAR_sslfips_userpassword_wo", "TODO_PLACEHOLDER")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource: no CheckDestroy (sslfips always exists on ADC and
+		// cannot be deleted).
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslfips_basic_step1,
+			},
+			{
+				Config:                  testAccSslfips_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslfipsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -130,7 +130,9 @@ const testAccSslprofile_cipherbinding_unbind = `
 `
 
 func TestAccSslprofile_cipher_binding(t *testing.T) {
-
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -149,6 +151,27 @@ func TestAccSslprofile_cipher_binding(t *testing.T) {
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile.foo", "name", "tfAcc_sslprofile"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslprofile_add},
+			{
+				Config:            testAccSslprofile_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// sessionticketkeydata_wo_version is a write-only version tracker that
+				// NITRO does not return, so it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"sessionticketkeydata_wo_version"},
 			},
 		},
 	})

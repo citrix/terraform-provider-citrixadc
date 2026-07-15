@@ -108,6 +108,27 @@ func TestAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_binding_
 	})
 }
 
+func TestAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationglobalpacing_videooptimizationpacingpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationglobalpacing_videooptimizationpacingpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_binding_basic_step1,
+			},
+			{
+				Config:                  testAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVideooptimizationglobalpacing_videooptimizationpacingpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

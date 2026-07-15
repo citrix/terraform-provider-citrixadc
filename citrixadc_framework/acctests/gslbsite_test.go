@@ -47,6 +47,27 @@ func TestAccGslbsite_basic(t *testing.T) {
 	})
 }
 
+func TestAccGslbsite_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+
+	const resAddr = "citrixadc_gslbsite.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbsite_basic},
+			{
+				Config:                  testAccGslbsite_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckGslbsiteExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -88,6 +88,27 @@ func TestAccCsvserver_lbvserver_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_lbvserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_lbvserver_binding.tf_csvserver_lbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_lbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_lbvserver_binding_basic,
+			},
+			{
+				Config:                  testAccCsvserver_lbvserver_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCsvserver_lbvserver_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

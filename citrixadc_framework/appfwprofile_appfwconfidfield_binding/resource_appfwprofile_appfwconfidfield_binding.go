@@ -265,4 +265,15 @@ func (r *AppfwprofileAppfwconfidfieldBindingResource) readAppfwprofileAppfwconfi
 	}
 
 	appfwprofile_appfwconfidfield_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill the identity attributes from the parsed composite ID so that
+	// `terraform import` (which has no prior plan/state) repopulates them. These
+	// are the exact values the ID was composed from, so the ID stays identical.
+	data.Name = types.StringValue(name_Name)
+	if val, ok := idMap["confidfield"]; ok && val != "" {
+		data.Confidfield = types.StringValue(val)
+	}
+	if val, ok := idMap["cffield_url"]; ok && val != "" {
+		data.CffieldUrl = types.StringValue(val)
+	}
 }

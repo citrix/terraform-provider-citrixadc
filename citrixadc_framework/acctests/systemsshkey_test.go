@@ -187,6 +187,28 @@ data "citrixadc_systemsshkey" "tf_systemsshkey" {
 }
 `
 
+func TestAccSystemsshkey_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_systemsshkey.tf_systemsshkey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSystemSshKeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemsshkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemsshkey_basic_step1,
+			},
+			{
+				Config:                  testAccSystemsshkey_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSystemsshkeyDataSource_basic(t *testing.T) {
 	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{

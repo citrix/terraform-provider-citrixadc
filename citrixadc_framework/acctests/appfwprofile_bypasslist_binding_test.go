@@ -94,6 +94,32 @@ func TestAccAppfwprofileBypasslistBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwprofileBypasslistBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_bypasslist_binding.tf_appfwprofile_bypasslist_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileBypasslistBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileBypasslistBinding_basic_step1,
+			},
+			{
+				Config:            testAccAppfwprofileBypasslistBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Full round-trip: the identity attrs (name, as_bypass_list,
+				// as_bypass_list_value_type, as_bypass_list_location) are restored from
+				// the parsed composite ID, and the echoed config attrs
+				// (as_bypass_list_action, comment, state) plus the Computed
+				// resourceid/alertonly/isautodeployed are repopulated from the GET row.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprofileBypasslistBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

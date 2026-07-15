@@ -100,6 +100,27 @@ func TestAccMetricsprofile_gslbvserver_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccMetricsprofile_gslbvserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile_gslbvserver_binding.tf_metricsprofile_gslbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_gslbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_gslbvserver_binding_basic_step1,
+			},
+			{
+				Config:                  testAccMetricsprofile_gslbvserver_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckMetricsprofile_gslbvserver_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

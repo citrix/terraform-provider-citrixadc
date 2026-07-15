@@ -3,6 +3,7 @@ package vrid6_channel_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -279,5 +280,21 @@ func (r *Vrid6ChannelBindingResource) readVrid6ChannelBindingFromApi(ctx context
 	}
 
 	vrid6_channel_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill identity attributes from the parsed composite ID so import (which
+	// starts with no prior state) round-trips. Both attrs are RequiresReplace
+	// ID-components: "id" (vrid_id) is echoed by the GET row but "ifnum" is NOT,
+	// so reconstruct both from the ID to guarantee they are populated. This runs
+	// only after the found/len self-heal checks above, so drift (null-Id on
+	// not-found) is preserved and yields the SAME composite ID.
+	if idStr, ok := idMap["id"]; ok && idStr != "" {
+		if intVal, err := strconv.ParseInt(idStr, 10, 64); err == nil {
+			data.VridId = types.Int64Value(intVal)
+		}
+	}
+	if ifnumStr, ok := idMap["ifnum"]; ok && ifnumStr != "" {
+		data.Ifnum = types.StringValue(ifnumStr)
+	}
+
 	return true
 }

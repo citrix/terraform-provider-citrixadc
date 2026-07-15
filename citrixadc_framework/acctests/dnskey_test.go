@@ -111,6 +111,29 @@ func TestAccDnskey_basic(t *testing.T) {
 	})
 }
 
+func TestAccDnskey_import(t *testing.T) {
+	const resAddr = "citrixadc_dnskey.dnskey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnskey_add,
+			},
+			{
+				Config:            testAccDnskey_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password_wo_version is a write-only version tracker that NITRO
+				// does not echo back, so it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"password_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckDnskeyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

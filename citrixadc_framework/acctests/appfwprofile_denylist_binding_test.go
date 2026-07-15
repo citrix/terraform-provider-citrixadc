@@ -97,6 +97,32 @@ func TestAccAppfwprofileDenylistBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwprofileDenylistBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_denylist_binding.tf_appfwprofile_denylist_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileDenylistBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileDenylistBinding_basic_step1,
+			},
+			{
+				Config:            testAccAppfwprofileDenylistBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Full round-trip: the identity attributes (name, as_deny_list,
+				// as_deny_list_value_type, as_deny_list_location) are backfilled from
+				// the parsed composite ID, and the remaining user-supplied attributes
+				// (as_deny_list_action, comment, state) are echoed verbatim by the GET
+				// response and read back in appfwprofile_denylist_bindingSetAttrFromGet.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprofileDenylistBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

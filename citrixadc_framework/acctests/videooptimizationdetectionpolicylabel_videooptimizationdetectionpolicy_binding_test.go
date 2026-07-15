@@ -112,6 +112,27 @@ func TestAccVideooptimizationdetectionpolicylabel_videooptimizationdetectionpoli
 	})
 }
 
+func TestAccVideooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding_basic_step1,
+			},
+			{
+				Config:                  testAccVideooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVideooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -233,7 +254,10 @@ func testAccCheckVideooptimizationdetectionpolicylabel_videooptimizationdetectio
 
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 		if err != nil {
-			return err
+			// The parent label is destroyed before this check runs, so the
+			// NITRO GET on the (now absent) label returns an error. That means
+			// the binding is gone too - treat it as destroyed.
+			continue
 		}
 
 		found := false

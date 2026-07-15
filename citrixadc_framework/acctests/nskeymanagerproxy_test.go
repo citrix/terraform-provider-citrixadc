@@ -55,6 +55,28 @@ func TestAccNskeymanagerproxy_basic(t *testing.T) {
 	})
 }
 
+func TestAccNskeymanagerproxy_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_nskeymanagerproxy.tf_nskeymanagerproxy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNskeymanagerproxyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNskeymanagerproxy_basic_step1,
+			},
+			{
+				Config:                  testAccNskeymanagerproxy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNskeymanagerproxyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

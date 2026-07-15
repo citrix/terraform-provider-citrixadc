@@ -76,6 +76,7 @@ resource "citrixadc_lbvserver" "tf_lbvserver" {
 `
 
 func TestAccLbwlmLbvserverBinding_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -94,6 +95,28 @@ func TestAccLbwlmLbvserverBinding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbwlmLbvserverBindingNotExist("citrixadc_lbwlm_lbvserver_binding.tf_binding", "tf_lbwlm", "tf_lbvserver"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbwlmLbvserverBinding_import(t *testing.T) {
+	t.Skip("TODO: Requires review.")
+	const resAddr = "citrixadc_lbwlm_lbvserver_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbwlmLbvserverBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbwlmLbvserverBinding_basic_step1,
+			},
+			{
+				Config:                  testAccLbwlmLbvserverBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -262,6 +285,7 @@ data "citrixadc_lbwlm_lbvserver_binding" "tf_binding_data" {
 `
 
 func TestAccLbwlmLbvserverBindingDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

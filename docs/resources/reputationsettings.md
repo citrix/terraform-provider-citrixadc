@@ -81,3 +81,12 @@ resource "citrixadc_reputationsettings" "tf_reputationsettings" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the reputationsettings. It is a unique string prefixed with `tf-reputationsettings-` attribute.
+
+
+## Import
+
+A reputationsettings can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_reputationsettings.tf_reputationsettings reputationsettings-config
+```

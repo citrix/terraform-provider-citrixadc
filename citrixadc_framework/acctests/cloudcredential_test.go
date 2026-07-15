@@ -80,6 +80,31 @@ func TestAccCloudcredential_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudcredential_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudcredential.tf_cloudcredential"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource: no CheckDestroy (never deleted from the ADC).
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudcredential_basic_step1,
+			},
+			{
+				Config:            testAccCloudcredential_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Import id is the synthetic constant "cloudcredential-config"
+				// (see Create in resource_cloudcredential.go). ImportStatePassthroughID
+				// uses the stored resource id, so no ImportStateIdFunc is needed.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCloudcredentialExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

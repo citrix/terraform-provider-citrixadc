@@ -79,6 +79,44 @@ func TestAccPolicyurlset_basic(t *testing.T) {
 	})
 }
 
+// TestAccPolicyurlset_import verifies ImportState round-trips the resource.
+// policyurlset is an import-as-create resource: Read reconstructs state from the
+// name-keyed ID via the filtered GET /policyurlset?args=imported:true. `name` is
+// the single-key composite ID and is backfilled from the parsed ID by Read;
+// `matchedid` is echoed by the GET row and round-trips via SetAttrFromGet. Both
+// therefore round-trip and are NOT ignored.
+//
+// The remaining ImportStateVerifyIgnore entries are all genuinely non-recoverable
+// (confirmed against the live appliance): the imported-urlset list GET row echoes
+// ONLY name/imported/patterncount/url/matchedid, and even an explicit `attrs=`
+// query returns nothing more. None of the ignored attrs are part of the ID, so
+// there is no source to reconstruct them from on import.
+func TestAccPolicyurlset_import(t *testing.T) {
+	const resAddr = "citrixadc_policyurlset.tf_policyurlset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doPolicyUrlSetPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyurlsetDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicyurlset_basic_step1},
+			{
+				Config:            testAccPolicyurlset_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"comment",             // (c) rejected by the Import action (NITRO errorcode 278 "Invalid argument [comment]"); never sent, never returned, not in ID
+					"interval",            // (c) not returned by the imported-urlset GET row (even with explicit attrs=); not in ID
+					"privateset",          // (c) not returned by the imported-urlset GET row (even with explicit attrs=); not in ID
+					"subdomainexactmatch", // (c) not returned by the imported-urlset GET row (even with explicit attrs=); not in ID
+					"url",                 // (c) write-only secret; GET echoes only an encrypted blob, never the config value; not in ID
+					"url_wo_version",      // (c) client-side version tracker; never stored on the appliance
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyurlsetExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

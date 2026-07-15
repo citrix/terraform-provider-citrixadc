@@ -277,6 +277,37 @@ func TestAccLsngroup_ipsecalgprofile_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLsngroup_ipsecalgprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_ipsecalgprofile_binding.tf_lsngroup_ipsecalgprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_ipsecalgprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create the managed prerequisite parents first.
+				Config: testAccLsngroup_ipsecalgprofile_binding_basic_step0,
+			},
+			{
+				// Provision broken-Read child bindings out-of-band, then apply the
+				// ALG binding so it exists in state ready to be imported.
+				PreConfig: func() { provisionLsnAlgOutOfBandPrereq(t, ipsecAlgPrereqParams) },
+				Config:    testAccLsngroup_ipsecalgprofile_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_ipsecalgprofile_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				Config:                  testAccLsngroup_ipsecalgprofile_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckLsngroup_ipsecalgprofile_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

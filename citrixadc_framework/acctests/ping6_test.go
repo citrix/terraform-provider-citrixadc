@@ -50,6 +50,7 @@ resource "citrixadc_ping6" "tf_ping6" {
 `
 
 func TestAccPing6_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

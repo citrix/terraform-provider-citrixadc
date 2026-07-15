@@ -163,9 +163,25 @@ func appfwprofile_grpcvalidation_bindingSetAttrFromGet(ctx context.Context, data
 		data.Resourceid = types.StringNull()
 	}
 
-	// name, grpcvalidation, grpc_relax_validation_action, comment and state are
-	// user-supplied (RequiresReplace) and are intentionally NOT overwritten from the
-	// GET response - the plan/state value is authoritative (Pattern 7).
+	// comment and state are echoed verbatim by the GET row, so read them back to
+	// make `terraform import` round-trip (category (b)). The appliance does not
+	// normalize these values, so populating them from the response does not
+	// introduce an "inconsistent result after apply" diff in the basic test.
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+
+	// name, grpcvalidation and grpc_relax_validation_action are identity /
+	// composite-ID components; they are backfilled from the parsed ID in
+	// readAppfwprofileGrpcvalidationBindingFromApi (so import round-trips) and are
+	// not overwritten from the GET response here.
 
 	return data
 }

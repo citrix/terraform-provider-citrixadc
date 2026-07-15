@@ -96,6 +96,33 @@ func TestAccAppfwprofileBlockkeywordBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwprofileBlockkeywordBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_blockkeyword_binding.tf_appfwprofile_blockkeyword_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileBlockkeywordBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileBlockkeywordBinding_basic_step1,
+			},
+			{
+				Config:            testAccAppfwprofileBlockkeywordBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Full round-trip: identity/ID-component attrs (name, blockkeyword,
+				// fieldname, as_blockkeyword_formurl) are backfilled from the parsed ID
+				// in the Read helper, and the echoed config attrs
+				// (as_fieldname_isregex_blockkeyword, blockkeywordtype, state, comment)
+				// are backfilled from the GET response in SetAttrFromGet on import. So
+				// nothing needs to be ignored.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprofileBlockkeywordBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

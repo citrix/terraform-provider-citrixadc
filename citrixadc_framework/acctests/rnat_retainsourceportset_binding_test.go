@@ -90,6 +90,27 @@ func TestAccRnat_retainsourceportset_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccRnat_retainsourceportset_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_rnat_retainsourceportset_binding.tf_rnat_retainsourceportset_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnat_retainsourceportset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnat_retainsourceportset_binding_basic,
+			},
+			{
+				Config:                  testAccRnat_retainsourceportset_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckRnat_retainsourceportset_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

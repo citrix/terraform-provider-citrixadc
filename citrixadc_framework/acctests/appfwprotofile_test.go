@@ -74,6 +74,43 @@ func TestAccAppfwprotofile_basic(t *testing.T) {
 	})
 }
 
+// doAppfwprotofilePreChecks uploads the gRPC schema file to /var/tmp so the
+// resource's `src = "local:tftest.proto"` Import resolves on the appliance.
+func doAppfwprotofilePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+	if err := uploadTestdataFile(c, t, "tftest.proto", "/var/tmp"); err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+func TestAccAppfwprotofile_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprotofile.tf_appfwprotofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwprotofilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprotofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprotofile_basic_step1},
+			{
+				Config:            testAccAppfwprotofile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// `comment` is a write-only Import input that NITRO never echoes
+				// back, and `src` is a write-only Import input that NITRO
+				// normalizes (strips the "local:" prefix); neither can round-trip
+				// through import.
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprotofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

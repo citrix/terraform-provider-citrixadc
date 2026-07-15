@@ -58,6 +58,29 @@ func TestAccAuditsyslogaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditsyslogaction_import(t *testing.T) {
+	const resAddr = "citrixadc_auditsyslogaction.tf_syslogaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogaction_basic_step1,
+			},
+			{
+				Config:            testAccAuditsyslogaction_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// httpauthtoken_wo_version is a write-only version tracker held only
+				// in state; NITRO never echoes it back, so it cannot round-trip on import.
+				ImportStateVerifyIgnore: []string{"httpauthtoken_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuditsyslogactionExist(n string, id *string, expectedValues map[string]interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

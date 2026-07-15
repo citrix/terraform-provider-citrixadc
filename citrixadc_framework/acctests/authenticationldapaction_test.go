@@ -71,6 +71,32 @@ func TestAccAuthenticationldapaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationldapaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationldapaction.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationldapactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationldapaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist(resAddr, nil),
+				),
+			},
+			{
+				Config:            testAccAuthenticationldapaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// ldapbinddnpassword_wo_version is a write-only version tracker
+				// that is not stored on the ADC and cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"ldapbinddnpassword_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationldapactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

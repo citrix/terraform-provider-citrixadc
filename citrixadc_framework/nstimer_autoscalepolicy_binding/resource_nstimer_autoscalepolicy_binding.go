@@ -206,6 +206,19 @@ func (r *NstimerAutoscalepolicyBindingResource) readNstimerAutoscalepolicyBindin
 	}
 	policyname_Name := idMap["policyname"]
 
+	// Backfill identity attributes from the composite ID. name and policyname are
+	// ID components and are therefore always recoverable regardless of what the GET
+	// returns - this is what lets `terraform import` round-trip them even though the
+	// typed binding GET returns an empty body on this firmware (see Read note). We
+	// only adopt from the ID when the model has no value yet (covers import); on a
+	// normal Read/Create the plan/state values are already present and identical.
+	if data.Name.IsNull() || data.Name.ValueString() == "" {
+		data.Name = types.StringValue(name_Name)
+	}
+	if (data.Policyname.IsNull() || data.Policyname.ValueString() == "") && policyname_Name != "" {
+		data.Policyname = types.StringValue(policyname_Name)
+	}
+
 	// Primary read: by-name typed binding endpoint, narrowed by policyname via the
 	// documented ?filter= query parameter. On firmwares that echo the bound row this
 	// returns it; on this firmware it returns an empty body (see the note in Read).

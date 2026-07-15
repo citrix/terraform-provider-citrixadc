@@ -3,6 +3,7 @@ package vrid6_interface_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -275,5 +276,19 @@ func (r *Vrid6InterfaceBindingResource) readVrid6InterfaceBindingFromApi(ctx con
 	}
 
 	vrid6_interface_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill identity attributes from the parsed composite ID so that
+	// `terraform import` (which starts with no prior state) fully round-trips.
+	// Both vrid_id and ifnum are RequiresReplace identity values and are always
+	// encoded in the ID. In particular, ifnum is NOT echoed by the aggregate GET
+	// (rows are {"id","vlan","flags"}), so it can only be recovered from the ID.
+	// This is done after the found/len self-heal checks so drift still nulls the
+	// state, and it does not change data.Id (SetAttrFromGet does not rebuild it).
+	if v, err := strconv.ParseInt(id_Name, 10, 64); err == nil {
+		data.VridId = types.Int64Value(v)
+	}
+	if ifnum, ok := idMap["ifnum"]; ok {
+		data.Ifnum = types.StringValue(ifnum)
+	}
 	return true
 }

@@ -71,6 +71,34 @@ func TestAccPolicypatsetfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccPolicypatsetfile_import(t *testing.T) {
+	const resAddr = "citrixadc_policypatsetfile.tf_policypatsetfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doPolicyPatSetFilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatsetfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicypatsetfile_basic_step1,
+			},
+			{
+				Config:            testAccPolicypatsetfile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The composite ID is just `name`; name and charset already round-trip
+				// (read from the imported:true GET row). The three attrs below are all
+				// genuinely non-recoverable on import (category (c)):
+				ImportStateVerifyIgnore: []string{
+					"comment",   // (c) the NITRO Import action rejects `comment` (errorcode 278 "Invalid argument [comment]"); it is never sent, never stored, and never echoed by GET.
+					"overwrite", // (c) write-only Import flag; never returned by the GET row, not part of the ID.
+					"src",       // (c) GET echoes `src` with the "local:" scheme stripped (e.g. "tftest.patset" for "local:tftest.patset"); reading it back would break the basic test (inconsistent-after-apply), so it cannot round-trip.
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckPolicypatsetfileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

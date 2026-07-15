@@ -101,6 +101,27 @@ func TestAccLbvserver_auditnslogpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_auditnslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_auditnslogpolicy_binding_basic_step1,
+			},
+			{
+				Config:                  testAccLbvserver_auditnslogpolicy_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckLbvserver_auditnslogpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

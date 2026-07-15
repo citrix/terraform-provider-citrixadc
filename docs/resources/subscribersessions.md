@@ -56,8 +56,3 @@ Note: Because this is an action-only resource whose Read is a no-op, these attri
 In addition to the arguments, the following attributes are available:
 
 * `id` - A synthetic identifier for the clear action. It is derived from the supplied selectors: `subscribersessions-clear-all` when no selector is given, `subscribersessions-clear-<ip>`, `subscribersessions-clear-<ip>-<vlan>`, or `subscribersessions-clear-vlan-<vlan>`. It does not correspond to any persistent object on the ADC.
-
-
-## Import
-
-Because subscribersessions is an action-only resource with no persistent backing object, importing is not meaningful and is not supported in a useful way. To perform another clear, add or re-apply the resource configuration.

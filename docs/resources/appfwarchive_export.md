@@ -43,14 +43,3 @@ resource "citrixadc_appfwarchive_export" "tf_appfwarchive_export" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwarchive_export`. It has the same value as the `name` attribute.
-
-
-## Import
-
-An `appfwarchive_export` resource can be imported using its id (the archive name), e.g.
-
-```shell
-terraform import citrixadc_appfwarchive_export.tf_appfwarchive_export tf_appfwarchive
-```
-
-Because NITRO has no GET endpoint for export state, an imported resource carries only the values present in Terraform configuration; the original `target` cannot be recovered from the ADC.

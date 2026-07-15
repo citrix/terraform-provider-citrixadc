@@ -285,5 +285,21 @@ func (r *AppfwprofileBypasslistBindingResource) readAppfwprofileBypasslistBindin
 		return
 	}
 
+	// Backfill the identity attributes from the parsed composite ID so they
+	// round-trip on a state-less `terraform import` (SetAttrFromGet intentionally
+	// leaves these untouched). These values always equal what Create encoded into
+	// the ID, so setting them here is a no-op during Create/Update/Read and never
+	// changes the composite ID.
+	data.Name = types.StringValue(name_Name)
+	if v, ok := idMap["as_bypass_list"]; ok {
+		data.AsBypassList = types.StringValue(v)
+	}
+	if v, ok := idMap["as_bypass_list_location"]; ok {
+		data.AsBypassListLocation = types.StringValue(v)
+	}
+	if v, ok := idMap["as_bypass_list_value_type"]; ok {
+		data.AsBypassListValueType = types.StringValue(v)
+	}
+
 	appfwprofile_bypasslist_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

@@ -94,6 +94,31 @@ func TestAccChannel_interface_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccChannel_interface_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_channel_interface_binding.tf_channel_interface_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckChannel_interface_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannel_interface_binding_basic_step1,
+			},
+			{
+				Config:            testAccChannel_interface_binding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// channelid and ifnum are both recovered from the composite ID by the
+				// Read path (readChannelInterfaceBindingFromApi backfills identity attrs
+				// from the parsed idMap), so `terraform import` fully round-trips and
+				// nothing needs to be ignored.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 // channelInterfaceBindingAggregateReadForTest reads the bound interfaces via the
 // AGGREGATE parent endpoint (channel_binding/<id>) and flattens the nested
 // "channel_interface_binding" arrays. The direct channel_interface_binding endpoint

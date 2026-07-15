@@ -35,6 +35,10 @@ import (
 // synthetic string "id". Use "vrid_id" in HCL, never "id".
 
 const testAccVrid_channel_binding_basic_step1 = `
+	resource "citrixadc_channel" "tf_channel" {
+		channel_id = "LA/1"
+	}
+
 	resource "citrixadc_vrid" "tf_vrid" {
 		vrid_id    = 100
 		preemption = "DISABLED"
@@ -44,14 +48,18 @@ const testAccVrid_channel_binding_basic_step1 = `
 
 	resource "citrixadc_vrid_channel_binding" "tf_vrid_channel_binding" {
 		vrid_id = citrixadc_vrid.tf_vrid.vrid_id
-		ifnum   = "1/2" # free interface, e.g. "1/2" (testbed-specific)
+		ifnum   = citrixadc_channel.tf_channel.channel_id # a channel interface, e.g. "LA/1" (testbed-specific)
 
-		depends_on = [citrixadc_vrid.tf_vrid]
+		depends_on = [citrixadc_vrid.tf_vrid, citrixadc_channel.tf_channel]
 	}
 `
 
-// Step 2 drops the binding (keeps the parent VRID) to verify clean deletion.
+// Step 2 drops the binding (keeps the parent VRID and the channel) to verify clean deletion.
 const testAccVrid_channel_binding_basic_step2 = `
+	resource "citrixadc_channel" "tf_channel" {
+		channel_id = "LA/1"
+	}
+
 	resource "citrixadc_vrid" "tf_vrid" {
 		vrid_id    = 100
 		preemption = "DISABLED"
@@ -71,14 +79,38 @@ func TestAccVrid_channel_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVrid_channel_bindingExist("citrixadc_vrid_channel_binding.tf_vrid_channel_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "ifnum", "LA/1"),
 				),
 			},
 			{
 				Config: testAccVrid_channel_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVrid_channel_bindingNotExist("citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "100,1/2"),
+					testAccCheckVrid_channel_bindingNotExist("citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "100,LA/1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVrid_channel_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vrid_channel_binding.tf_vrid_channel_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVrid_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVrid_channel_binding_basic_step1,
+			},
+			{
+				Config:            testAccVrid_channel_binding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// All attributes round-trip: vrid_id is echoed by the aggregate GET
+				// (as "id") and ifnum, though NOT echoed by the vrid_interface_binding
+				// row, is reconstructed from the composite ID during Read.
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -270,6 +302,10 @@ func testAccCheckVrid_channel_bindingDestroy(s *terraform.State) error {
 // read-only outputs (flags, vlan) are not asserted because they are
 // appliance-assigned and not deterministic.
 const testAccVrid_channel_bindingDataSource_basic = `
+	resource "citrixadc_channel" "tf_channel" {
+		channel_id = "LA/1"
+	}
+
 	resource "citrixadc_vrid" "tf_vrid" {
 		vrid_id    = 100
 		preemption = "DISABLED"
@@ -279,9 +315,9 @@ const testAccVrid_channel_bindingDataSource_basic = `
 
 	resource "citrixadc_vrid_channel_binding" "tf_vrid_channel_binding" {
 		vrid_id = citrixadc_vrid.tf_vrid.vrid_id
-		ifnum   = "1/2" # free interface, e.g. "1/2" (testbed-specific)
+		ifnum   = citrixadc_channel.tf_channel.channel_id # a channel interface, e.g. "LA/1" (testbed-specific)
 
-		depends_on = [citrixadc_vrid.tf_vrid]
+		depends_on = [citrixadc_vrid.tf_vrid, citrixadc_channel.tf_channel]
 	}
 
 	data "citrixadc_vrid_channel_binding" "tf_vrid_channel_binding" {
@@ -302,7 +338,7 @@ func TestAccVrid_channel_bindingDataSource_basic(t *testing.T) {
 				Config: testAccVrid_channel_bindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("data.citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "ifnum", "LA/1"),
 				),
 			},
 		},

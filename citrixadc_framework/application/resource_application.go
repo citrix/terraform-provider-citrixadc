@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -14,7 +13,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &ApplicationResource{}
 var _ resource.ResourceWithConfigure = (*ApplicationResource)(nil)
-var _ resource.ResourceWithImportState = (*ApplicationResource)(nil)
 
 func NewApplicationResource() resource.Resource {
 	return &ApplicationResource{}
@@ -23,10 +21,6 @@ func NewApplicationResource() resource.Resource {
 // ApplicationResource defines the resource implementation.
 type ApplicationResource struct {
 	client *service.NitroClient
-}
-
-func (r *ApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

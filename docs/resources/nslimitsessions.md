@@ -28,12 +28,3 @@ resource "citrixadc_nslimitsessions" "tf_nslimitsessions" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nslimitsessions resource. It is a synthetic identifier that has the same value as the `limitidentifier` attribute.
-
-
-## Import
-
-An nslimitsessions resource can be imported using the limit identifier, e.g.
-
-```shell
-terraform import citrixadc_nslimitsessions.tf_nslimitsessions myratelimit
-```

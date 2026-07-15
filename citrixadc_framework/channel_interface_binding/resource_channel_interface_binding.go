@@ -315,5 +315,24 @@ func (r *ChannelInterfaceBindingResource) readChannelInterfaceBindingFromApi(ctx
 	}
 
 	channel_interface_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill identity attrs from the parsed composite ID for the import path,
+	// where there is no prior state/plan to seed them. channelid and ifnum are
+	// RequiresReplace identity attrs encoded in the composite ID
+	// (id:<channel>,ifnum:<intf>), so they can always be recovered from the ID and
+	// `terraform import` fully round-trips. The guards below leave the values
+	// untouched in the Create/Read/Update flows (where plan/state already populated
+	// them), so no perpetual diff is introduced. Rebuilding these does NOT change
+	// data.Id (set once in Create / passed through on import).
+	if data.Channelid.IsNull() || data.Channelid.ValueString() == "" {
+		data.Channelid = types.StringValue(channelid)
+	}
+	if data.Ifnum.IsNull() || data.Ifnum.IsUnknown() {
+		if ifnumVal, ok := idMap["ifnum"]; ok && ifnumVal != "" {
+			listValue, d := types.ListValueFrom(ctx, types.StringType, []string{ifnumVal})
+			diags.Append(d...)
+			data.Ifnum = listValue
+		}
+	}
 	return true
 }

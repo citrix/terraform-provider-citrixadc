@@ -72,6 +72,27 @@ func TestAccAnalyticsprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccAnalyticsprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_analyticsprofile.tf_analyticsprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAnalyticsprofile_basic},
+			{
+				Config:            testAccAnalyticsprofile_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// analyticsauthtoken_wo_version is a write-only version tracker that
+				// NITRO does not echo back, so it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"analyticsauthtoken_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAnalyticsprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

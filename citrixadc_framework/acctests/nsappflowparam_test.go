@@ -69,6 +69,28 @@ func TestAccNsappflowparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsappflowparam_import(t *testing.T) {
+	const resAddr = "citrixadc_nsappflowparam.tf_nsappflowparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource: never truly deleted from the ADC (state-only removal).
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsappflowparam_basic_step1},
+			{
+				// Import id is the synthetic constant set in Create ("nsappflowparam-config"),
+				// resolved by ImportStatePassthroughID from the stored resource id.
+				Config:                  testAccNsappflowparam_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNsappflowparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

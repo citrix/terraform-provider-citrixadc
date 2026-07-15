@@ -55,6 +55,25 @@ func TestAccSystemnsbtracing_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystemnsbtracing_import(t *testing.T) {
+	const resAddr = "citrixadc_systemnsbtracing.tf_systemnsbtracing"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemnsbtracingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemnsbtracing_basic},
+			{
+				Config:                  testAccSystemnsbtracing_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 // testAccCheckSystemnsbtracingExist confirms the resource is present in state and
 // that NSB tracing is actually ENABLED on the appliance (configuredstate=ENABLED).
 func testAccCheckSystemnsbtracingExist(n string, id *string) resource.TestCheckFunc {

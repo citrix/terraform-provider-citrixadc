@@ -32,7 +32,7 @@ import (
 //
 // IMPORTANT: ifnum is TESTBED-SPECIFIC. Binding/tagging an interface to a VLAN can
 // disrupt the appliance's networking. Replace the TODO_PLACEHOLDER below with a
-// FREE interface on the target testbed (e.g. "1/2") before running these tests.
+// FREE interface on the target testbed (e.g. "1/1") before running these tests.
 //
 // Participating entity: a citrixadc_vlan (vlanid = 100) is created first and the
 // interface is then bound to it. The vlan config is lifted from vlan_test.go.
@@ -45,7 +45,7 @@ const testAccVlan_linkset_binding_basic_step1 = `
 
 	resource "citrixadc_vlan_linkset_binding" "tf_vlan_linkset_binding" {
 		vlanid     = citrixadc_vlan.tf_vlan.vlanid
-		ifnum      = "1/2" # e.g. "1/2" -- a FREE interface on the target testbed
+		ifnum      = "1/1" # e.g. "1/1" -- a FREE interface on the target testbed
 		tagged     = true
 		depends_on = [citrixadc_vlan.tf_vlan]
 	}
@@ -72,14 +72,14 @@ func TestAccVlan_linkset_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVlan_linkset_bindingExist("citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "vlanid", "100"),
-					resource.TestCheckResourceAttr("citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "ifnum", "1/1"),
 					resource.TestCheckResourceAttr("citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "tagged", "true"),
 				),
 			},
 			{
 				Config: testAccVlan_linkset_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVlan_linkset_bindingNotExist("citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "vlanid:100,ifnum:1%2F2"),
+					testAccCheckVlan_linkset_bindingNotExist("citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "vlanid:100,ifnum:1%2F1"),
 				),
 			},
 		},
@@ -274,18 +274,39 @@ const testAccVlan_linkset_binding_DataSource_basic = `
 
 	resource "citrixadc_vlan_linkset_binding" "tf_vlan_linkset_binding" {
 		vlanid     = citrixadc_vlan.tf_vlan.vlanid
-		ifnum      = "1/2" # e.g. "1/2" -- a FREE interface on the target testbed
+		ifnum      = "1/1" # e.g. "1/1" -- a FREE interface on the target testbed
 		tagged     = true
 		depends_on = [citrixadc_vlan.tf_vlan]
 	}
 
 	data "citrixadc_vlan_linkset_binding" "tf_vlan_linkset_binding" {
 		vlanid     = citrixadc_vlan.tf_vlan.vlanid
-		ifnum      = "1/2" # must match the bound interface above
+		ifnum      = "1/1" # must match the bound interface above
 		depends_on = [citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding]
 	}
 
 `
+
+func TestAccVlan_linkset_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_linkset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_linkset_binding_basic_step1,
+			},
+			{
+				Config:                  testAccVlan_linkset_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccVlan_linkset_binding_DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -297,7 +318,7 @@ func TestAccVlan_linkset_binding_DataSource_basic(t *testing.T) {
 				Config: testAccVlan_linkset_binding_DataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "vlanid", "100"),
-					resource.TestCheckResourceAttr("data.citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("data.citrixadc_vlan_linkset_binding.tf_vlan_linkset_binding", "ifnum", "1/1"),
 				),
 			},
 		},

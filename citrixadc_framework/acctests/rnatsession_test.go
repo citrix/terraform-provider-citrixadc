@@ -36,9 +36,12 @@ import (
 //     filters; none is Required, and all are RequiresReplace. network/netmask
 //     scope the flush to a subnet, natip filters by the RNAT NAT IP, and aclname
 //     filters by a configured extended ACL. When all are omitted, the flush
-//     clears ALL RNAT sessions. The basic test sets network + netmask (the
-//     simplest self-contained form; flushing a subnet with no matching sessions
-//     is a no-op success and needs no pre-existing RNAT config on the testbed).
+//     clears ALL RNAT sessions. The basic test sets network + netmask, which the
+//     ADC rejects with errorcode 775 ("ACL or NETWORK based RNAT rule does not
+//     exist") UNLESS a matching NETWORK-based RNAT rule already exists for that
+//     subnet. The test is therefore made self-contained: it first creates a
+//     citrixadc_rnat NETWORK rule for the same subnet and the flush depends_on
+//     it, so the scoped flush has a rule to act on.
 //   - The Exist check below only verifies that the resource landed in Terraform
 //     state with its synthetic ID ("rnatsession-config"); it does NOT (and
 //     cannot) verify the flush side-effect via NITRO.
@@ -53,12 +56,26 @@ import (
 // needed.
 
 // Single apply step: all attributes are RequiresReplace, so there is no in-place
-// update to exercise. network + netmask flush only RNAT sessions in the given
-// subnet (simplest self-contained form, no pre-existing RNAT sessions required).
+// update to exercise. network + netmask flush RNAT sessions in the given subnet;
+// the ADC requires a matching NETWORK-based RNAT rule to exist for that subnet,
+// so we create a citrixadc_rnat rule first and have the flush depend on it. The
+// rnat rule is a normal resource and is torn down automatically at end of test,
+// leaving the appliance clean.
 const testAccRnatsession_basic = `
+resource "citrixadc_rnat" "tf_rnat_rnatsession" {
+  name             = "tf_rnat_rnatsession"
+  network          = "192.0.2.0"
+  netmask          = "255.255.255.0"
+  useproxyport     = "ENABLED"
+  srcippersistency = "DISABLED"
+  connfailover     = "DISABLED"
+}
+
 resource "citrixadc_rnatsession" "tf_rnatsession" {
   network = "192.0.2.0"
   netmask = "255.255.255.0"
+
+  depends_on = [citrixadc_rnat.tf_rnat_rnatsession]
 }
 
 `

@@ -86,6 +86,27 @@ func TestAccCloudparameter_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudparameter_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudparameter.tf_cloudparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource: no CheckDestroy (a cloudparameter always exists on the ADC).
+		Steps: []resource.TestStep{
+			{Config: testAccCloudparameter_basic_step1},
+			{
+				Config:            testAccCloudparameter_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Import uses the synthetic passthrough id "cloudparameter-config".
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCloudparameterExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

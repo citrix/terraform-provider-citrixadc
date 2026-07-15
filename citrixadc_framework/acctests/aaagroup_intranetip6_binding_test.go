@@ -121,6 +121,28 @@ func TestAccAaagroupIntranetip6BindingDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaagroup_intranetip6_binding_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_aaagroup_intranetip6_binding.tf_aaagroup_intranetip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_intranetip6_binding_basic_step1,
+			},
+			{
+				Config:                  testAccAaagroup_intranetip6_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAaagroup_intranetip6_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

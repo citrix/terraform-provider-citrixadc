@@ -279,6 +279,30 @@ data "citrixadc_appfwprofile_restvalidation_binding" "tf_appfwprofile_restvalida
 }
 `
 
+func TestAccAppfwprofileRestvalidationBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_restvalidation_binding.tf_appfwprofile_restvalidation_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileRestvalidationBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileRestvalidationBinding_basic_step1,
+			},
+			{
+				Config:            testAccAppfwprofileRestvalidationBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Full round-trip: name/restvalidation/rest_validation_action are
+				// backfilled from the parsed composite ID, and comment/state are read
+				// back from the GET row, so no attribute needs to be ignored on import.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAppfwprofileRestvalidationBindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

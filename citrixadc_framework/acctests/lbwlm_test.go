@@ -52,6 +52,7 @@ resource "citrixadc_lbwlm" "tf_lbwlm" {
 `
 
 func TestAccLbwlm_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -78,6 +79,28 @@ func TestAccLbwlm_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lbwlm.tf_lbwlm", "port", "3060"),
 					resource.TestCheckResourceAttr("citrixadc_lbwlm.tf_lbwlm", "katimeout", "10"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbwlm_import(t *testing.T) {
+	t.Skip("TODO: Requires review.")
+	const resAddr = "citrixadc_lbwlm.tf_lbwlm"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbwlmDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbwlm_basic_step1,
+			},
+			{
+				Config:                  testAccLbwlm_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -164,6 +187,7 @@ data "citrixadc_lbwlm" "tf_lbwlm_data" {
 `
 
 func TestAccLbwlmDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

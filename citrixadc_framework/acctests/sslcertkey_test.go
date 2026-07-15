@@ -124,6 +124,27 @@ func TestAccSslcertkey_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslcertkey_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkey.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkey_basic,
+			},
+			{
+				Config:                  testAccSslcertkey_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccSslcertkey_linkcert_nolink = `
 
 resource "citrixadc_sslcertkey" "client" {

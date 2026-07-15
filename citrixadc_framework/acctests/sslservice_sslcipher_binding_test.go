@@ -110,6 +110,27 @@ func TestAccSslserviceSslcipherBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslserviceSslcipherBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslservice_sslcipher_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslserviceSslcipherBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslserviceSslcipherBinding_basic_step1,
+			},
+			{
+				Config:                  testAccSslserviceSslcipherBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslserviceSslcipherBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

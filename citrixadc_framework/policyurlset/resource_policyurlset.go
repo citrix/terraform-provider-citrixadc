@@ -198,6 +198,15 @@ func (r *PolicyurlsetResource) readPolicyurlsetFromApi(ctx context.Context, data
 	}
 
 	policyurlsetSetAttrFromGet(ctx, data, getResponseData)
+
+	// Category (a) identity backfill: the composite ID is the single key `name`.
+	// On import there is no prior plan/state, so recover `name` directly from the
+	// parsed ID. This is done AFTER the found/not-found self-heal above (so a
+	// null-Id on not-found is preserved) and after SetAttrFromGet, and it always
+	// yields the SAME ID (Id == name), keeping the datasource path unaffected.
+	if !data.Id.IsNull() {
+		data.Name = types.StringValue(policyurlsetName)
+	}
 }
 
 // findImportedPolicyurlsetByName lists imported urlsets

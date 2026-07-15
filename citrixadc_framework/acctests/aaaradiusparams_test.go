@@ -281,6 +281,28 @@ func TestAccAaaradiusparams_radkey_wo_ephemeral(t *testing.T) {
 	})
 }
 
+func TestAccAaaradiusparams_import(t *testing.T) {
+	const resAddr = "citrixadc_aaaradiusparams.tf_aaaradiusparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAaaradiusparams_basic},
+			{
+				Config:            testAccAaaradiusparams_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// radkey is a secret the API returns encrypted/hashed (cannot
+				// round-trip); radkey_wo_version is a state-only version tracker
+				// that the NITRO GET never echoes back.
+				ImportStateVerifyIgnore: []string{"radkey", "radkey_wo_version"},
+			},
+		},
+	})
+}
+
 func TestAccAaaradiusparams_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

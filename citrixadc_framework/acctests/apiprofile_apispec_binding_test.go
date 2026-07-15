@@ -111,6 +111,27 @@ func TestAccApiprofileApispecBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccApiprofileApispecBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_apiprofile_apispec_binding.tf_apiprofile_apispec_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doApiSpecPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApiprofileApispecBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApiprofileApispecBinding_basic_step1,
+			},
+			{
+				Config:                  testAccApiprofileApispecBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckApiprofileApispecBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

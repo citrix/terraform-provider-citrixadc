@@ -40,7 +40,7 @@ resource "citrixadc_vrid6" "tf_vrid6" {
 
 resource "citrixadc_vrid6_interface_binding" "tf_vrid6_interface_binding" {
 	vrid_id = citrixadc_vrid6.tf_vrid6.vrid6_id
-	ifnum   = "1/2" // free interface, e.g. "1/2" (testbed-specific, disruptive)
+	ifnum   = "1/1" // free interface, e.g. "1/1" (testbed-specific, disruptive)
 
 	depends_on = [citrixadc_vrid6.tf_vrid6]
 }
@@ -67,13 +67,13 @@ func TestAccVrid6_interface_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVrid6_interface_bindingExist("citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "ifnum", "1/1"),
 				),
 			},
 			{
 				Config: testAccVrid6_interface_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVrid6_interface_bindingNotExist("citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "id:100,ifnum:1%2F2"),
+					testAccCheckVrid6_interface_bindingNotExist("citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "id:100,ifnum:1%2F1"),
 				),
 			},
 		},
@@ -299,7 +299,7 @@ resource "citrixadc_vrid6" "tf_vrid6" {
 
 resource "citrixadc_vrid6_interface_binding" "tf_vrid6_interface_binding" {
 	vrid_id = citrixadc_vrid6.tf_vrid6.vrid6_id
-	ifnum   = "1/2" // free interface, e.g. "1/2" (testbed-specific, disruptive)
+	ifnum   = "1/1" // free interface, e.g. "1/1" (testbed-specific, disruptive)
 
 	depends_on = [citrixadc_vrid6.tf_vrid6]
 }
@@ -312,6 +312,31 @@ data "citrixadc_vrid6_interface_binding" "tf_vrid6_interface_binding" {
 }
 `
 
+func TestAccVrid6_interface_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVrid6_interface_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVrid6_interface_binding_basic_step1,
+			},
+			{
+				Config:            testAccVrid6_interface_binding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Full round-trip: vrid_id and ifnum are backfilled from the composite
+				// ID during Read (the firmware does not echo "ifnum" in the aggregate
+				// read, but it is always recoverable from the ID), so nothing needs to
+				// be ignored on import.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccVrid6_interface_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -322,7 +347,7 @@ func TestAccVrid6_interface_bindingDataSource_basic(t *testing.T) {
 				Config: testAccVrid6_interface_bindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("data.citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "ifnum", "1/1"),
 				),
 			},
 		},

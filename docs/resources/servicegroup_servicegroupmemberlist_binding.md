@@ -62,14 +62,3 @@ Each `members` object supports the following:
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the servicegroup\_servicegroupmemberlist\_binding. It has the same value as the `servicegroupname` attribute.
-
-
-## Import
-
-A servicegroup\_servicegroupmemberlist\_binding can be imported using the `servicegroupname`.
-
-```shell
-terraform import citrixadc_servicegroup_servicegroupmemberlist_binding.tf_binding tf_servicegroup
-```
-
-~> **Note:** Because the NITRO API has no GET endpoint for this binding, an import populates the `id` and `servicegroupname` but cannot read the existing `members` from the ADC. After importing, run a plan and reconcile the `members` block in your configuration with the actual member set on the service group.

@@ -121,6 +121,39 @@ func TestAccSslwrapkey_basic(t *testing.T) {
 	})
 }
 
+// Import test. sslwrapkey is a named resource whose ID holds the wrapkeyname;
+// ImportStatePassthroughID reconstructs state from that ID, so no
+// ImportStateIdFunc is needed. Reuses the basic config, PreCheck and
+// CheckDestroy. Skip-gated for the same FIPS/crypto reason as the basic test.
+func TestAccSslwrapkey_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	// FIPS/crypto subsystem required: wrap-key creation is likely unsupported on
+	// the non-FIPS VPX testbed.
+
+	// Replace these with real secret values before running on a capable appliance.
+	t.Setenv("TF_VAR_sslwrapkey_password_wo", "TODO_PLACEHOLDER")
+	t.Setenv("TF_VAR_sslwrapkey_salt_wo", "TODO_PLACEHOLDER")
+
+	const resAddr = "citrixadc_sslwrapkey.tf_sslwrapkey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslwrapkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslwrapkey_basic_step1,
+			},
+			{
+				Config:                  testAccSslwrapkey_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslwrapkeyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

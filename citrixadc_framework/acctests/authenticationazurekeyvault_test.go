@@ -164,6 +164,27 @@ const testAccAuthenticationazurekeyvault_clientsecret_step2 = `
 	}
 `
 
+func TestAccAuthenticationazurekeyvault_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_authenticationazurekeyvault.tf_authenticationazurekeyvault"
+	t.Setenv("TF_VAR_authenticationazurekeyvault_clientsecret", "<clientsecret>")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationazurekeyvaultDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationazurekeyvault_clientsecret_step1},
+			{
+				Config:                  testAccAuthenticationazurekeyvault_clientsecret_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationazurekeyvault_clientsecret_backward_compat(t *testing.T) {
 	t.Setenv("TF_VAR_authenticationazurekeyvault_clientsecret", "<clientsecret>")
 	t.Setenv("TF_VAR_authenticationazurekeyvault_clientsecret_2", "<clientsecret_2>")

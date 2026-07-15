@@ -26,3 +26,12 @@ resource "citrixadc_cloudawsparam" "tf_cloudawsparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the cloudawsparam. It is a unique string prefixed with `cloudawsparam-config`.
+
+
+## Import
+
+A cloudawsparam can be imported using its id (a fixed synthetic constant), e.g.
+
+```shell
+terraform import citrixadc_cloudawsparam.tf_cloudawsparam cloudawsparam-config
+```

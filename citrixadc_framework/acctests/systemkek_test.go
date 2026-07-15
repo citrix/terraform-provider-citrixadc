@@ -72,6 +72,7 @@ resource "citrixadc_systemkek" "tf_systemkek" {
 `
 
 func TestAccSystemkek_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	// DESTRUCTIVE / IRREVERSIBLE: see the file-level DANGER banner above. This
 	// test rotates the appliance KEK and is provided for completeness only. It is
 	// intentionally skipped so it never runs under CI or `go test ./...`. Remove

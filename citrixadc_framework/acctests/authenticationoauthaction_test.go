@@ -78,6 +78,28 @@ func TestAccAuthenticationoauthaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationoauthaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationoauthaction.tf_authenticationoauthaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationoauthaction_add},
+			{
+				Config:            testAccAuthenticationoauthaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// clientsecret is a sensitive attribute NITRO never echoes back, and
+				// clientsecret_wo_version is a client-side write-only version tracker not
+				// returned by the API; neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"clientsecret", "clientsecret_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationoauthactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

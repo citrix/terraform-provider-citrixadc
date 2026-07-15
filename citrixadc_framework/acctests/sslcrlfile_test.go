@@ -59,6 +59,27 @@ func TestAccSslcrlfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslcrlfile_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcrlfile.tf_sslcrlfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcrlfilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcrlfileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcrlfile_basic_step1},
+			{
+				Config:            testAccSslcrlfile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// `src` is a write-only Import input that NITRO does not echo back,
+				// so it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"src"},
+			},
+		},
+	})
+}
+
 func testAccCheckSslcrlfileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

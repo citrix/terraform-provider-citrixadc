@@ -75,6 +75,28 @@ func TestAccSystemrestorepoint_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystemrestorepoint_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_systemrestorepoint.tf_systemrestorepoint"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemrestorepointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemrestorepoint_basic,
+			},
+			{
+				Config:                  testAccSystemrestorepoint_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSystemrestorepointExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

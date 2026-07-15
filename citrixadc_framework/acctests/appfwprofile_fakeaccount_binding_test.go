@@ -102,6 +102,32 @@ func TestAccAppfwprofileFakeaccountBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwprofileFakeaccountBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fakeaccount_binding.tf_appfwprofile_fakeaccount_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileFakeaccountBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileFakeaccountBinding_basic_step1,
+			},
+			{
+				Config:            testAccAppfwprofileFakeaccountBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Full round-trip: identity attrs (name, fakeaccount, tag,
+				// formurl_fad) are backfilled from the parsed composite ID in
+				// readXFromApi, and the GET-echoed config attrs (isfieldnameregex,
+				// state, comment) are populated from the GET row in SetAttrFromGet.
+				// Nothing needs to be ignored.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprofileFakeaccountBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

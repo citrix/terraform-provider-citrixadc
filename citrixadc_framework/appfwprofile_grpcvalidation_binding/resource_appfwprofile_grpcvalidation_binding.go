@@ -264,4 +264,19 @@ func (r *AppfwprofileGrpcvalidationBindingResource) readAppfwprofileGrpcvalidati
 	}
 
 	appfwprofile_grpcvalidation_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill the identity / composite-ID attributes from the parsed ID so that
+	// `terraform import` (which has no prior plan/state) fully round-trips. These
+	// are category (a) attributes: name, grpcvalidation and
+	// grpc_relax_validation_action are all components of data.Id, so they can
+	// always be recovered from idMap. This is done after the found/len self-heal
+	// checks above (which return early on not-found, preserving null-Id self-heal)
+	// and does not alter the ID composition.
+	data.Name = types.StringValue(name_Name)
+	if val, ok := idMap["grpcvalidation"]; ok {
+		data.Grpcvalidation = types.StringValue(val)
+	}
+	if val, ok := idMap["grpc_relax_validation_action"]; ok {
+		data.GrpcRelaxValidationAction = types.StringValue(val)
+	}
 }

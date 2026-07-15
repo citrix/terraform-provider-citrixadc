@@ -62,6 +62,27 @@ func TestAccNschannelparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccNschannelparam_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_nschannelparam.tf_nschannelparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource: never truly deleted from the ADC (state-only removal).
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNschannelparam_basic_step1},
+			{
+				Config:                  testAccNschannelparam_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNschannelparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

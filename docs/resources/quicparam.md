@@ -38,3 +38,12 @@ resource "citrixadc_quicparam" "tf_quicparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The ID of the quicparam resource. Because this is a singleton, it is a fixed string with the value `"quicparam-config"`.
+
+
+## Import
+
+A quicparam can be imported using its id (the fixed singleton value `quicparam-config`), e.g.
+
+```shell
+terraform import citrixadc_quicparam.tf_quicparam quicparam-config
+```

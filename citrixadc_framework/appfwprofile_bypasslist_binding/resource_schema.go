@@ -157,13 +157,16 @@ func appfwprofile_bypasslist_bindingGetThePayloadFromthePlan(ctx context.Context
 }
 
 // appfwprofile_bypasslist_bindingSetAttrFromGet is the RESOURCE setter.
-// It preserves user-supplied plan/state values for the write-able / identity
-// attributes (name, as_bypass_list, as_bypass_list_value_type,
-// as_bypass_list_location, as_bypass_list_action, comment, state,
-// isautodeployed) so that a GET response (which may normalize or default these)
-// does not produce an "inconsistent result after apply" diff. It only copies the
-// server-managed read-only attributes (resourceid, alertonly) from the response.
-// The ID is composed once in Create and never recomputed here (Pattern 6).
+// It copies the server-managed read-only attributes (resourceid, alertonly,
+// isautodeployed) from the GET response, and backfills the user-supplied config
+// attributes (as_bypass_list_action, comment, state) from the response ONLY when
+// they are null - i.e. on a state-less `terraform import` - so that they
+// round-trip while still preserving plan/state authority during
+// Create/Update/Read (avoiding an "inconsistent result after apply" diff). The
+// identity attributes (name, as_bypass_list, as_bypass_list_value_type,
+// as_bypass_list_location) are restored from the parsed composite ID in
+// readAppfwprofileBypasslistBindingFromApi. The ID is composed once in Create and
+// never recomputed here (Pattern 6).
 func appfwprofile_bypasslist_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileBypasslistBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileBypasslistBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_bypasslist_bindingSetAttrFromGet Function")
 
@@ -185,10 +188,32 @@ func appfwprofile_bypasslist_bindingSetAttrFromGet(ctx context.Context, data *Ap
 		data.Resourceid = types.StringNull()
 	}
 
-	// name, as_bypass_list, as_bypass_list_value_type, as_bypass_list_location,
-	// as_bypass_list_action, comment and state are user-supplied (RequiresReplace)
-	// and are intentionally NOT overwritten from the GET response - the plan/state
-	// value is authoritative (Pattern 7).
+	// name, as_bypass_list, as_bypass_list_value_type and as_bypass_list_location
+	// are identity/ID-component attributes. They are backfilled from the parsed
+	// composite ID in readAppfwprofileBypasslistBindingFromApi (so they round-trip
+	// on a state-less import) and are intentionally NOT touched here.
+
+	// as_bypass_list_action, comment and state are user-supplied config attributes
+	// that the GET row echoes. Populate them from the GET response ONLY when the
+	// current value is null - i.e. on a state-less `terraform import`, where they
+	// would otherwise stay null. During Create/Update/Read the plan/state value is
+	// already present and authoritative, so it is preserved to avoid an
+	// "inconsistent result after apply" diff (Pattern 7).
+	if data.AsBypassListAction.IsNull() {
+		if val, ok := getResponseData["as_bypass_list_action"]; ok && val != nil {
+			data.AsBypassListAction = types.StringValue(val.(string))
+		}
+	}
+	if data.Comment.IsNull() {
+		if val, ok := getResponseData["comment"]; ok && val != nil {
+			data.Comment = types.StringValue(val.(string))
+		}
+	}
+	if data.State.IsNull() {
+		if val, ok := getResponseData["state"]; ok && val != nil {
+			data.State = types.StringValue(val.(string))
+		}
+	}
 
 	return data
 }

@@ -54,6 +54,29 @@ func TestAccSystemcpuparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystemcpuparam_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_systemcpuparam.tf_systemcpuparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource - cannot be deleted from the ADC.
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemcpuparam_basic,
+			},
+			{
+				Config:                  testAccSystemcpuparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSystemcpuparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

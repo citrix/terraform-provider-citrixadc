@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -14,7 +13,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &ServicegroupServicegroupmemberlistBindingResource{}
 var _ resource.ResourceWithConfigure = (*ServicegroupServicegroupmemberlistBindingResource)(nil)
-var _ resource.ResourceWithImportState = (*ServicegroupServicegroupmemberlistBindingResource)(nil)
 
 func NewServicegroupServicegroupmemberlistBindingResource() resource.Resource {
 	return &ServicegroupServicegroupmemberlistBindingResource{}
@@ -23,10 +21,6 @@ func NewServicegroupServicegroupmemberlistBindingResource() resource.Resource {
 // ServicegroupServicegroupmemberlistBindingResource defines the resource implementation.
 type ServicegroupServicegroupmemberlistBindingResource struct {
 	client *service.NitroClient
-}
-
-func (r *ServicegroupServicegroupmemberlistBindingResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *ServicegroupServicegroupmemberlistBindingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

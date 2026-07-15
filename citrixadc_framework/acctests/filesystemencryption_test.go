@@ -95,6 +95,39 @@ func TestAccFilesystemencryption_basic(t *testing.T) {
 	})
 }
 
+// ---------------------------------------------------------------------------
+// Import test
+// ---------------------------------------------------------------------------
+//
+// The Terraform id is a synthetic constant ("filesystemencryption-config") set
+// by Create, and ImportState uses ImportStatePassthroughID, so no
+// ImportStateIdFunc is needed - the stored id is used directly.
+func TestAccFilesystemencryption_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	// !!! DESTRUCTIVE / PLATFORM-GATED !!!
+	// This performs a REAL enable (and disable on teardown) of full file-system
+	// encryption before importing. Only run on a disposable testbed that supports
+	// FS encryption (supportedstate == ENABLED). See the file-level warning banner
+	// above. Skip-gated in line with the sibling filesystemencryption tests.
+
+	const resAddr = "citrixadc_filesystemencryption.tf_filesystemencryption"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Action-only resource: CheckDestroy is intentionally omitted (see banner).
+		Steps: []resource.TestStep{
+			{Config: testAccFilesystemencryption_basic_step1},
+			{
+				Config:                  testAccFilesystemencryption_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 // testAccCheckFilesystemencryptionExist verifies the resource is in state and
 // that the nameless singleton GET is reachable. The GET may legitimately return
 // nothing meaningful on some platforms (the resource is action-only), so a nil

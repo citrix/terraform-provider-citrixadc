@@ -287,4 +287,20 @@ func (r *AppfwprofileDenylistBindingResource) readAppfwprofileDenylistBindingFro
 	}
 
 	appfwprofile_denylist_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill the identity / ID-component attributes from the parsed ID so they
+	// round-trip on import (on import the prior state has only the ID). These are
+	// always recoverable from the composite ID and are authoritative over any
+	// normalization the GET response might apply. The ID itself is never rebuilt
+	// here (Pattern 6), so it remains unchanged.
+	data.Name = types.StringValue(name_Name)
+	if v, ok := idMap["as_deny_list"]; ok {
+		data.AsDenyList = types.StringValue(v)
+	}
+	if v, ok := idMap["as_deny_list_location"]; ok {
+		data.AsDenyListLocation = types.StringValue(v)
+	}
+	if v, ok := idMap["as_deny_list_value_type"]; ok {
+		data.AsDenyListValueType = types.StringValue(v)
+	}
 }

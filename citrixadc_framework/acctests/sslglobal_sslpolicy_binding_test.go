@@ -93,6 +93,27 @@ func TestAccSslglobalSslpolicyBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslglobalSslpolicyBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslglobal_sslpolicy_binding.tf_sslglobal_sslpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslglobalSslpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslglobalSslpolicyBinding_basic_step1,
+			},
+			{
+				Config:                  testAccSslglobalSslpolicyBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslglobalSslpolicyBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

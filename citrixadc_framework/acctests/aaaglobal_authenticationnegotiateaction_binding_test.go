@@ -83,6 +83,28 @@ func TestAccAaaglobalAuthenticationnegotiateactionBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaaglobalAuthenticationnegotiateactionBinding_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_aaaglobal_authenticationnegotiateaction_binding.tf_aaaglobal_authenticationnegotiateaction_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaaglobalAuthenticationnegotiateactionBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaglobalAuthenticationnegotiateactionBinding_basic_step1,
+			},
+			{
+				Config:                  testAccAaaglobalAuthenticationnegotiateactionBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAaaglobalAuthenticationnegotiateactionBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

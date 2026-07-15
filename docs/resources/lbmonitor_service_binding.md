@@ -52,12 +52,3 @@ The following arguments are supported:
 In addition to the arguments, the following attributes are available:
 
 * `id` - The ID of the `lbmonitor_service_binding` resource. It is a comma-separated, URL-encoded composite key of the form `monitorname:<monitorname>,servicename:<servicename>` (and additionally `,servicegroupname:<servicegroupname>` when a service group is bound), for example `monitorname:http_monitor,servicename:web_service1`.
-
-
-## Import
-
-A `lbmonitor_service_binding` resource can be imported using its composite id (`monitorname:<monitorname>,servicename:<servicename>[,servicegroupname:<servicegroupname>]`), e.g.
-
-```shell
-terraform import citrixadc_lbmonitor_service_binding.tf_binding monitorname:http_monitor,servicename:web_service1
-```

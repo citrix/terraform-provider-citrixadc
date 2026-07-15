@@ -60,6 +60,27 @@ func TestAccVideooptimizationdetectionpolicylabel_basic(t *testing.T) {
 	})
 }
 
+func TestAccVideooptimizationdetectionpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionpolicylabel_basic_step1,
+			},
+			{
+				Config:                  testAccVideooptimizationdetectionpolicylabel_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVideooptimizationdetectionpolicylabelExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

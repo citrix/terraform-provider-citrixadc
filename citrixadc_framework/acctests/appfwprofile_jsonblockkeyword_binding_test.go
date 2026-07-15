@@ -98,6 +98,33 @@ func TestAccAppfwprofileJsonblockkeywordBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwprofileJsonblockkeywordBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_jsonblockkeyword_binding.tf_appfwprofile_jsonblockkeyword_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileJsonblockkeywordBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileJsonblockkeywordBinding_basic_step1,
+			},
+			{
+				Config:            testAccAppfwprofileJsonblockkeywordBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Read fully round-trips every attribute: the identity attributes
+				// (name, jsonblockkeyword, keyname_json_blockkeyword,
+				// jsonblockkeywordurl) are backfilled from the parsed ID, and the
+				// config attributes (iskeyregex_json_blockkeyword,
+				// jsonblockkeywordtype, state, comment) are echoed verbatim by the
+				// GET response. No attribute needs to be ignored on import.
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprofileJsonblockkeywordBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

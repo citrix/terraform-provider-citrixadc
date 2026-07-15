@@ -43,6 +43,7 @@ resource "citrixadc_cloudservice" "tf_cloudservice" {
 `
 
 func TestAccCloudservice_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

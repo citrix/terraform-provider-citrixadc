@@ -92,6 +92,27 @@ func TestAccMetricsprofile_vpnvserver_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccMetricsprofile_vpnvserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile_vpnvserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_vpnvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_vpnvserver_binding_basic_step1,
+			},
+			{
+				Config:                  testAccMetricsprofile_vpnvserver_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckMetricsprofile_vpnvserver_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -51,8 +51,3 @@ The following arguments are supported. Exactly one of `sid` or `all` must be set
 In addition to the arguments, the following attributes are available:
 
 * `id` - The identifier of the kill action: the `sid` value when a single session was killed, or the literal string `"all"` when `all = true`.
-
-
-## Import
-
-Import is not meaningful for this action-only resource. The `kill` action has no persistent footprint on the appliance to import into Terraform state.

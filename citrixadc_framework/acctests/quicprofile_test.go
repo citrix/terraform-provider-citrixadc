@@ -94,6 +94,27 @@ func TestAccQuicprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccQuicprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_quicprofile.tf_quicprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckQuicprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQuicprofile_basic_step1,
+			},
+			{
+				Config:                  testAccQuicprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckQuicprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -31,7 +30,6 @@ import (
 //   - The GET(all) side is exposed via the companion datasource.
 var _ resource.Resource = &AppfwlearningdataResource{}
 var _ resource.ResourceWithConfigure = (*AppfwlearningdataResource)(nil)
-var _ resource.ResourceWithImportState = (*AppfwlearningdataResource)(nil)
 
 func NewAppfwlearningdataResource() resource.Resource {
 	return &AppfwlearningdataResource{}
@@ -40,10 +38,6 @@ func NewAppfwlearningdataResource() resource.Resource {
 // AppfwlearningdataResource defines the resource implementation.
 type AppfwlearningdataResource struct {
 	client *service.NitroClient
-}
-
-func (r *AppfwlearningdataResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *AppfwlearningdataResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

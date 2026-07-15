@@ -57,6 +57,29 @@ func TestAccSslcertbundle_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslcertbundle_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcertbundle.tf_sslcertbundle"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertbundlePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertbundleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertbundle_basic_step1,
+			},
+			{
+				Config:            testAccSslcertbundle_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// src is an Import-only input and is not echoed back by NITRO GET,
+				// so it cannot round-trip on import.
+				ImportStateVerifyIgnore: []string{"src"},
+			},
+		},
+	})
+}
+
 func testAccCheckSslcertbundleExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

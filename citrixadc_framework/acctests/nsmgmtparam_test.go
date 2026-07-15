@@ -66,6 +66,26 @@ func TestAccNsmgmtparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsmgmtparam_import(t *testing.T) {
+	const resAddr = "citrixadc_nsmgmtparam.tf_nsmgmtparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource: never truly deleted from the ADC (state-only removal).
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsmgmtparam_basic_step1},
+			{
+				Config:                  testAccNsmgmtparam_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNsmgmtparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

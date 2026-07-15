@@ -52,7 +52,3 @@ All arguments are optional and scope the flush action. Supplying none flushes al
 In addition to the arguments, the following attributes are available:
 
 * `id` - A synthetic identifier for the flush action. It is derived from the supplied scope (for example `flush:sourceip:192.168.10.5`), or `flush-all` when no scope is provided. It does not correspond to a persistent object on the Citrix ADC.
-
-## Import
-
-This resource performs a runtime action and has no persistent backing object, so importing is not meaningful.

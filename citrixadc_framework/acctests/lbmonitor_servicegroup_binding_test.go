@@ -84,6 +84,32 @@ func TestAccLbmonitorServicegroupBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbmonitorServicegroupBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbmonitor_servicegroup_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// No CheckDestroy: lbmonitor_servicegroup_binding has no NITRO GET
+		// endpoint, so the binding's removal cannot be confirmed against the
+		// appliance.
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitorServicegroupBinding_basic,
+			},
+			{
+				Config:            testAccLbmonitorServicegroupBinding_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// No NITRO GET endpoint (Pattern 13): ImportState is a passthrough of
+				// the composite id and Read is a no-op, so the plan attributes cannot
+				// be repopulated on import and are excluded from ImportStateVerify.
+				ImportStateVerifyIgnore: []string{"monitorname", "servicegroupname", "weight"},
+			},
+		},
+	})
+}
+
 // testAccCheckLbmonitorServicegroupBindingExist is STATE-ONLY by design.
 //
 // lbmonitor_servicegroup_binding has no NITRO GET endpoint (add/delete only), so

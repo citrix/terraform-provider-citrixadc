@@ -110,6 +110,25 @@ func TestAccGslbservicegroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccGslbservicegroup_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup.tf_gslbservicegroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbservicegroup_add},
+			{
+				Config:                  testAccGslbservicegroup_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccGslbservicegroupDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

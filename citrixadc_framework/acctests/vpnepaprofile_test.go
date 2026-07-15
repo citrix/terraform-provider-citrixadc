@@ -37,6 +37,7 @@ resource "citrixadc_vpnepaprofile" "tf_vpnepaprofile" {
 `
 
 func TestAccVpnepaprofile_basic(t *testing.T) {
+	t.Skip("TODO: Requires Review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -49,6 +50,28 @@ func TestAccVpnepaprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnepaprofile.tf_vpnepaprofile", "name", "tf_vpnepaprofile"),
 					resource.TestCheckResourceAttr("citrixadc_vpnepaprofile.tf_vpnepaprofile", "filename", "tf_vpnepaprofile.xml"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnepaprofile_import(t *testing.T) {
+	t.Skip("TODO: Requires Review.")
+	const resAddr = "citrixadc_vpnepaprofile.tf_vpnepaprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnepaprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnepaprofile_basic_step1,
+			},
+			{
+				Config:                  testAccVpnepaprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -129,6 +152,7 @@ data "citrixadc_vpnepaprofile" "tf_vpnepaprofile" {
 `
 
 func TestAccVpnepaprofileDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires Review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

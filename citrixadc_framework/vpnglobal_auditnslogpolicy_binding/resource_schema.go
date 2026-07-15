@@ -103,12 +103,19 @@ func vpnglobal_auditnslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Cont
 func vpnglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnglobalAuditnslogpolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnglobalAuditnslogpolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnglobal_auditnslogpolicy_bindingSetAttrFromGet Function")
 
-	// Convert API response to model
-	// Pattern 7: the NITRO GET response does NOT echo back gotopriorityexpression,
-	// groupextraction or secondary as discrete fields (groupextraction/secondary
-	// are folded into the stateflag bitmask). Only overwrite these from the
-	// response when the key is actually present; otherwise preserve the existing
-	// plan/state value so the post-apply state matches the user config.
+	// Convert API response to model.
+	//
+	// Verified live (10.101.132.151): the GET row contains only
+	//   policyname, priority, policysubtype, stateflag
+	// The GET does NOT echo gotopriorityexpression, groupextraction or
+	// secondary, and these are NOT encoded in stateflag (the stateflag value is
+	// identical for secondary=true/false and groupextraction=true). They are
+	// write-only bind flags, so we only overwrite them from the response when the
+	// key is actually present; otherwise we preserve the existing plan/state value
+	// so the post-apply state matches the user config. On import (no prior state)
+	// secondary/groupextraction/gotopriorityexpression are therefore genuinely
+	// non-recoverable and cannot be part of the composite ID (ID = policyname
+	// only). policyname (identity) and priority (config) ARE echoed and round-trip.
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	}

@@ -49,7 +49,7 @@ resource "citrixadc_shutdown" "tf_shutdown" {
 `
 
 func TestAccShutdown_basic(t *testing.T) {
-
+	t.Skip("Will shutdown target ADC testbed.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

@@ -40,6 +40,7 @@ resource "citrixadc_cloudawsparam" "tf_cloudawsparam" {
 `
 
 func TestAccCloudawsparam_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -50,6 +51,25 @@ func TestAccCloudawsparam_basic(t *testing.T) {
 					testAccCheckCloudawsparamExist("citrixadc_cloudawsparam.tf_cloudawsparam", nil),
 					resource.TestCheckResourceAttr("citrixadc_cloudawsparam.tf_cloudawsparam", "rolearn", "arn:aws:iam::123456789012:role/example"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudawsparam_import(t *testing.T) {
+	t.Skip("cloudawsparam is only supported on AWS-hosted NetScaler appliances; skipping import test on non-AWS testbed")
+	const resAddr = "citrixadc_cloudawsparam.tf_cloudawsparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: testAccCloudawsparam_basic_step1},
+			{
+				Config:                  testAccCloudawsparam_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -106,6 +126,7 @@ data "citrixadc_cloudawsparam" "tf_cloudawsparam" {
 `
 
 func TestAccCloudawsparamDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review.")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

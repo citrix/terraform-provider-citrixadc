@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -100,6 +101,27 @@ func TestAccCspolicylabel_cspolicy_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCspolicylabel_cspolicy_bindingNotExist("tf_cspolicylabel", "tf_cspollabel_policy"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCspolicylabel_cspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_cspolicylabel_cspolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicylabel_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCspolicylabel_cspolicy_binding_basic_step1,
+			},
+			{
+				Config:                  testAccCspolicylabel_cspolicy_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -225,6 +247,10 @@ func testAccCheckCspolicylabel_cspolicy_bindingDestroy(s *terraform.State) error
 
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 		if err != nil {
+			// Parent cspolicylabel already deleted (errorcode 3087) => binding is gone too.
+			if strings.Contains(err.Error(), "errorcode 3087") {
+				continue
+			}
 			return err
 		}
 

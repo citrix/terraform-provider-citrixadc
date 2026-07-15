@@ -38,12 +38,3 @@ resource "citrixadc_vrid_trackinterface_binding" "tf_vrid_trackinterface_binding
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vrid_trackinterface_binding. It is the concatenation of the `vrid_id` and `trackifnum` values in the form `id:<vrid_id>,trackifnum:<trackifnum>` (the `trackifnum` value is URL-encoded because interface names contain a `/`).
-
-
-## Import
-
-A vrid_trackinterface_binding can be imported using the composite id in the form `id:<vrid_id>,trackifnum:<trackifnum>`, e.g.
-
-```shell
-terraform import citrixadc_vrid_trackinterface_binding.tf_vrid_trackinterface_binding id:60,trackifnum:1%2F3
-```

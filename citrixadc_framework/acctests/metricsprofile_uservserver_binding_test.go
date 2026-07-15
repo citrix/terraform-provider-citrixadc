@@ -137,6 +137,28 @@ func TestAccMetricsprofile_uservserver_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccMetricsprofile_uservserver_binding_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_metricsprofile_uservserver_binding.tf_metricsprofile_uservserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_uservserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_uservserver_binding_basic_step1,
+			},
+			{
+				Config:                  testAccMetricsprofile_uservserver_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckMetricsprofile_uservserver_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

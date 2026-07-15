@@ -30,3 +30,12 @@ In addition to the arguments, the following attributes are available:
 * `id` - The ID of the videooptimizationparameter resource. Because this is a singleton, the ID is the static string `videooptimizationparameter-config`.
 
 ~> **Note** This is a singleton resource — only one instance can exist per Citrix ADC. There is no delete operation: removing the resource from your configuration only removes it from Terraform state; the parameters remain on the ADC at their last-applied values.
+
+
+## Import
+
+A videooptimizationparameter can be imported using its id (the static string `videooptimizationparameter-config`), e.g.
+
+```shell
+terraform import citrixadc_videooptimizationparameter.tf_videooptimizationparameter videooptimizationparameter-config
+```

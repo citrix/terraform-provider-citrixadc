@@ -72,6 +72,26 @@ func TestAccCloudparaminternal_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudparaminternal_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudparaminternal.tf_cloudparaminternal"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource - no CheckDestroy (resource cannot be deleted on ADC).
+		Steps: []resource.TestStep{
+			{Config: testAccCloudparaminternal_basic_step1},
+			{
+				Config:                  testAccCloudparaminternal_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCloudparaminternalExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

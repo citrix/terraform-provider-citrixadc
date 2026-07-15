@@ -43,14 +43,3 @@ resource "citrixadc_application" "tf_application" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the application. It has the same value as the `appname` attribute.
-
-
-## Import
-
-An application can be imported using its `appname`, e.g.
-
-```shell
-terraform import citrixadc_application.tf_application myapp
-```
-
-Because the Citrix ADC exposes no GET endpoint for an imported application, the provider cannot read the object's attributes back from the appliance. After import, set `apptemplatefilename` (and `deploymentfilename`, if used) in your configuration to match the values originally used to import the application, so that Terraform does not attempt to recreate it.

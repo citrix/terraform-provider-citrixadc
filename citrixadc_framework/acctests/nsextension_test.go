@@ -84,6 +84,28 @@ func TestAccNsextension_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsextension_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_nsextension.tf_nsextension"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsextensionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsextension_basic_step1,
+			},
+			{
+				Config:                  testAccNsextension_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNsextensionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -73,6 +73,30 @@ func TestAccAuthenticationnegotiateaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationnegotiateaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationnegotiateaction.tf_negotiateaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnegotiateactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnegotiateaction_add,
+			},
+			{
+				Config:            testAccAuthenticationnegotiateaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// domainuserpasswd is sensitive and never echoed back by NITRO;
+				// domainuserpasswd_wo_version is a config-only version tracker not
+				// populated from the API. Neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"domainuserpasswd", "domainuserpasswd_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationnegotiateactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

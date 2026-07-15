@@ -38,3 +38,12 @@ To disable NSB tracing, remove this resource from your configuration (or run `te
 In addition to the arguments, the following attributes are available:
 
 * `id` - The ID of the systemnsbtracing resource. Because this is a global singleton, the ID is a synthetic constant string `systemnsbtracing-config`.
+
+
+## Import
+
+A systemnsbtracing can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_systemnsbtracing.tf_systemnsbtracing systemnsbtracing-config
+```

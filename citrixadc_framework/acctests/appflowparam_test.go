@@ -73,6 +73,31 @@ func TestAccAppflowparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppflowparam_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowparam.tf_appflowparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// appflowparam is a singleton (PARTIAL) resource; it has no delete on the
+		// ADC, so there is no CheckDestroy.
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowparam_basic},
+			{
+				// Import id is the synthetic constant "appflowparam-config" set in
+				// Create; ImportStatePassthroughID uses the stored id.
+				Config:            testAccAppflowparam_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// analyticsauthtoken_wo_version is a write-only version tracker
+				// (default 1) that is not returned by NITRO and cannot round-trip
+				// through import.
+				ImportStateVerifyIgnore: []string{"analyticsauthtoken_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAppflowparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

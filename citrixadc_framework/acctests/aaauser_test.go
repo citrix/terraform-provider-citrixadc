@@ -65,6 +65,28 @@ func TestAccAaauser_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaauser_import(t *testing.T) {
+	const resAddr = "citrixadc_aaauser.tf_aaauser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauserDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaauser_basic},
+			{
+				Config:            testAccAaauser_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password is a secret NITRO never echoes back, and
+				// password_wo_version is a computed default that is not populated on
+				// import, so neither can round-trip.
+				ImportStateVerifyIgnore: []string{"password", "password_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAaauserExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

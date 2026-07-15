@@ -285,5 +285,24 @@ func (r *AppfwprofileJsonblockkeywordBindingResource) readAppfwprofileJsonblockk
 		return
 	}
 
+	// Backfill the identity / ID-component attributes from the parsed ID so that
+	// `terraform import` (which has no prior plan/state) fully round-trips these
+	// RequiresReplace identity attributes. On a normal Read the values are
+	// identical to the prior state, so this is a no-op there. These are the exact
+	// values the ID is composed from, so data.Id remains unchanged. Placed after
+	// the found/len self-heal checks so null-Id-on-not-found is preserved.
+	if val, ok := idMap["name"]; ok {
+		data.Name = types.StringValue(val)
+	}
+	if val, ok := idMap["jsonblockkeyword"]; ok {
+		data.Jsonblockkeyword = types.StringValue(val)
+	}
+	if val, ok := idMap["keyname_json_blockkeyword"]; ok {
+		data.KeynameJsonBlockkeyword = types.StringValue(val)
+	}
+	if val, ok := idMap["jsonblockkeywordurl"]; ok {
+		data.Jsonblockkeywordurl = types.StringValue(val)
+	}
+
 	appfwprofile_jsonblockkeyword_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

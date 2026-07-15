@@ -46,6 +46,31 @@ func TestAccSystemuser_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystemuser_import(t *testing.T) {
+	const resAddr = "citrixadc_systemuser.tf_user"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemuser_basic_step1},
+			{
+				Config:            testAccSystemuser_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password: NITRO returns only the hashed password (tracked in
+				// hashedpassword), so the plaintext cannot round-trip.
+				// password_wo_version: a Computed version tracker not returned by
+				// the API and not read back on import.
+				// cmdpolicybinding: import starts with a null set, so the inline
+				// bindings are not read back and cannot round-trip.
+				ImportStateVerifyIgnore: []string{"password", "password_wo_version", "cmdpolicybinding"},
+			},
+		},
+	})
+}
+
 func testAccCheckSystemuserExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

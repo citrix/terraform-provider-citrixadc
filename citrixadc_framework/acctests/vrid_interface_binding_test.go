@@ -28,7 +28,7 @@ import (
 // NOTE: The interface number (ifnum) below is TESTBED-SPECIFIC. Binding an
 // interface to a VRID changes VMAC ownership of that interface and CAN DISRUPT
 // NETWORKING on the appliance. Replace TODO_PLACEHOLDER with a free, unused
-// interface (slot/port notation, e.g. "1/2") before running this test.
+// interface (slot/port notation, e.g. "1/1") before running this test.
 //
 // The parent VRID key attribute is "vrid_id" (the integer VRID, 1-255). It was
 // renamed from the NITRO wire field "id" to avoid colliding with the framework's
@@ -44,7 +44,7 @@ const testAccVrid_interface_binding_basic_step1 = `
 
 	resource "citrixadc_vrid_interface_binding" "tf_vrid_interface_binding" {
 		vrid_id = citrixadc_vrid.tf_vrid.vrid_id
-		ifnum   = "1/2" # free interface, e.g. "1/2" (testbed-specific)
+		ifnum   = "1/1" # free interface, e.g. "1/1" (testbed-specific)
 
 		depends_on = [citrixadc_vrid.tf_vrid]
 	}
@@ -71,13 +71,13 @@ func TestAccVrid_interface_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVrid_interface_bindingExist("citrixadc_vrid_interface_binding.tf_vrid_interface_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "ifnum", "1/1"),
 				),
 			},
 			{
 				Config: testAccVrid_interface_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVrid_interface_bindingNotExist("citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "100,1/2"),
+					testAccCheckVrid_interface_bindingNotExist("citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "100,1/1"),
 				),
 			},
 		},
@@ -284,7 +284,7 @@ const testAccVrid_interface_bindingDataSource_basic = `
 
 	resource "citrixadc_vrid_interface_binding" "tf_vrid_interface_binding" {
 		vrid_id = citrixadc_vrid.tf_vrid.vrid_id
-		ifnum   = "1/2" # free interface, e.g. "1/2" (testbed-specific)
+		ifnum   = "1/1" # free interface, e.g. "1/1" (testbed-specific)
 
 		depends_on = [citrixadc_vrid.tf_vrid]
 	}
@@ -307,8 +307,37 @@ func TestAccVrid_interface_bindingDataSource_basic(t *testing.T) {
 				Config: testAccVrid_interface_bindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("data.citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "ifnum", "1/1"),
 				),
+			},
+		},
+	})
+}
+
+// Import test: ImportStatePassthroughID uses the resource's stored composite ID
+// ("id:<vrid>,ifnum:<value>"), so no ImportStateIdFunc is needed. Note: the
+// appliance does not echo "ifnum" in the aggregate read, so it may need to be
+// listed in ImportStateVerifyIgnore.
+func TestAccVrid_interface_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vrid_interface_binding.tf_vrid_interface_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVrid_interface_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVrid_interface_binding_basic_step1,
+			},
+			{
+				Config:            testAccVrid_interface_binding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Empty: both vrid_id and ifnum are RequiresReplace ID-components,
+				// backfilled from the parsed composite ID in readVridInterfaceBindingFromApi,
+				// so they fully round-trip on import even though the appliance does not
+				// echo "ifnum" in the aggregate read.
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

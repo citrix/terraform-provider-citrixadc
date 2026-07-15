@@ -94,6 +94,31 @@ func TestAccAppfwprofileGrpcvalidationBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwprofileGrpcvalidationBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_grpcvalidation_binding.tf_appfwprofile_grpcvalidation_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileGrpcvalidationBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileGrpcvalidationBinding_basic_step1,
+			},
+			{
+				Config:            testAccAppfwprofileGrpcvalidationBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// All attributes round-trip on import: the identity components
+				// (name, grpcvalidation, grpc_relax_validation_action) are backfilled
+				// from the parsed composite ID, and comment/state are read back from
+				// the GET row (Read fix in resource_schema.go / resource_*.go).
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprofileGrpcvalidationBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -159,9 +159,22 @@ func appfwprofile_restvalidation_bindingSetAttrFromGet(ctx context.Context, data
 		data.Resourceid = types.StringNull()
 	}
 
-	// name, restvalidation, rest_validation_action, comment and state are
-	// user-supplied (RequiresReplace) and are intentionally NOT overwritten from the
-	// GET response - the plan/state value is authoritative (Pattern 7).
+	// comment and state are echoed verbatim by the GET row (the appliance does not
+	// normalize them), so populate them here to make `terraform import` round-trip.
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+
+	// name, restvalidation and rest_validation_action are identity / ID-component
+	// attributes; they are backfilled from the parsed composite ID in
+	// readAppfwprofileRestvalidationBindingFromApi (authoritative on import).
 
 	return data
 }

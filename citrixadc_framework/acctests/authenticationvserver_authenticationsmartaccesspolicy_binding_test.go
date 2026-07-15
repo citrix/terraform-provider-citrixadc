@@ -157,6 +157,27 @@ func TestAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_basic(
 	})
 }
 
+func TestAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationsmartaccesspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_basic_step1,
+			},
+			{
+				Config:                  testAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationvserver_authenticationsmartaccesspolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

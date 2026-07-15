@@ -267,4 +267,18 @@ func (r *AppfwprofileRestvalidationBindingResource) readAppfwprofileRestvalidati
 	}
 
 	appfwprofile_restvalidation_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill identity / ID-component attributes from the parsed composite ID so
+	// that `terraform import` (which has no prior plan/state) fully round-trips.
+	// These are always encoded in the ID and are authoritative. Done after the
+	// found/len self-heal checks so a not-found still yields a null Id.
+	data.Name = types.StringValue(name_Name)
+	if val, ok := idMap["restvalidation"]; ok && val != "" {
+		data.Restvalidation = types.StringValue(val)
+	}
+	if val, ok := idMap["rest_validation_action"]; ok && val != "" {
+		data.RestValidationAction = types.StringValue(val)
+	} else {
+		data.RestValidationAction = types.StringNull()
+	}
 }

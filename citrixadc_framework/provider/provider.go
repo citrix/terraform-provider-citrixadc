@@ -1358,7 +1358,6 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		sslservice_sslcipher_binding.NewSslserviceSslcipherBindingResource,
 		sslservice_sslpolicy_binding.NewSslserviceSslpolicyBindingResource,
 		sslservicegroup_sslcacertbundle_binding.NewSslservicegroupSslcacertbundleBindingResource,
-		sslservicegroup_sslcertkey_binding.NewSslservicegroupSslcertkeyBindingResource,
 		sslservicegroup_sslcipher_binding.NewSslservicegroupSslcipherBindingResource,
 		sslvserver_sslcacertbundle_binding.NewSslvserverSslcacertbundleBindingResource,
 		sslvserver_sslcertkeybundle_binding.NewSslvserverSslcertkeybundleBindingResource,

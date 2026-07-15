@@ -292,6 +292,28 @@ const testAccLinkset_interface_binding_DataSource_basic = `
 
 `
 
+func TestAccLinkset_interface_binding_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_linkset_interface_binding.tf_linkset_interface_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLinkset_interface_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLinkset_interface_binding_basic_step1,
+			},
+			{
+				Config:                  testAccLinkset_interface_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccLinkset_interface_binding_DataSource_basic(t *testing.T) {
 	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{

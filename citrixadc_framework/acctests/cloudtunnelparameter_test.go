@@ -94,6 +94,28 @@ func TestAccCloudtunnelparameter_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudtunnelparameter_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	// cloudtunnelparameter is a singleton whose Terraform id is a synthetic constant
+	// ("cloudtunnelparameter-config"). ImportStatePassthroughID uses that stored id, so
+	// no ImportStateIdFunc is needed.
+	const resAddr = "citrixadc_cloudtunnelparameter.tf_cloudtunnelparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: testAccCloudtunnelparameter_basic_step1},
+			{
+				Config:                  testAccCloudtunnelparameter_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCloudtunnelparameterExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -202,6 +202,27 @@ func testAccCheckEndpointinfoDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccEndpointinfo_import(t *testing.T) {
+	const resAddr = "citrixadc_endpointinfo.tf_endpointinfo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointinfoDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointinfo_basic_step1,
+			},
+			{
+				Config:                  testAccEndpointinfo_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccEndpointinfoDataSource_basic = `
 
 resource "citrixadc_endpointinfo" "tf_endpointinfo" {

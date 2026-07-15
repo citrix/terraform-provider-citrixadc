@@ -81,6 +81,27 @@ func TestAccStreamidentifier_analyticsprofile_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccStreamidentifier_analyticsprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_streamidentifier_analyticsprofile_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckStreamidentifier_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamidentifier_analyticsprofile_binding_basic_step1,
+			},
+			{
+				Config:                  testAccStreamidentifier_analyticsprofile_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckStreamidentifier_analyticsprofile_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

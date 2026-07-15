@@ -284,5 +284,21 @@ func (r *AppfwprofileBlockkeywordBindingResource) readAppfwprofileBlockkeywordBi
 		return
 	}
 
+	// Backfill identity (ID-component) attributes from the parsed ID so that
+	// `terraform import` (which starts with only the ID and null attrs) fully
+	// round-trips. The ID components are the canonical source for these
+	// RequiresReplace keys and always equal the values used to build the ID, so
+	// overwriting is a no-op on Create/Read and only matters on import.
+	data.Name = types.StringValue(name_Name)
+	if v, ok := idMap["blockkeyword"]; ok {
+		data.Blockkeyword = types.StringValue(v)
+	}
+	if v, ok := idMap["fieldname"]; ok {
+		data.Fieldname = types.StringValue(v)
+	}
+	if v, ok := idMap["as_blockkeyword_formurl"]; ok {
+		data.AsBlockkeywordFormurl = types.StringValue(v)
+	}
+
 	appfwprofile_blockkeyword_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

@@ -35,12 +35,3 @@ resource "citrixadc_fis_interface_binding" "tf_fis_interface_binding" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the fis_interface_binding. It is a composite key of the form `name:<name>,ifnum:<ifnum>`, where each value is URL-encoded (for example, `name:fis1,ifnum:1%2F3`).
-
-
-## Import
-
-A fis_interface_binding can be imported using its id, e.g.
-
-```shell
-terraform import citrixadc_fis_interface_binding.tf_fis_interface_binding "name:fis1,ifnum:1%2F3"
-```

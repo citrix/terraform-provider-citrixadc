@@ -169,14 +169,16 @@ func appfwprofile_jsonblockkeyword_bindingGetThePayloadFromthePlan(ctx context.C
 }
 
 // appfwprofile_jsonblockkeyword_bindingSetAttrFromGet is the RESOURCE setter.
-// It preserves user-supplied plan/state values for the write-able / identity
-// attributes (name, jsonblockkeyword, keyname_json_blockkeyword,
-// jsonblockkeywordurl, iskeyregex_json_blockkeyword, jsonblockkeywordtype,
-// comment, state, isautodeployed) so that a GET response (which may normalize or
-// default these) does not produce an "inconsistent result after apply" diff. It
-// only copies the server-managed read-only attributes (resourceid, alertonly)
-// from the response. The ID is composed once in Create and never recomputed here
-// (Pattern 6).
+// It copies the server-managed read-only attributes (resourceid, alertonly,
+// isautodeployed) from the GET response, and also copies the config attributes
+// that the GET faithfully echoes verbatim (iskeyregex_json_blockkeyword,
+// jsonblockkeywordtype, state, comment) so that `terraform import` (which has no
+// prior plan/state) fully round-trips them. The ADC returns these values exactly
+// as supplied, so this does not produce an "inconsistent result after apply"
+// diff. The identity attributes (name, jsonblockkeyword,
+// keyname_json_blockkeyword, jsonblockkeywordurl) are backfilled from the parsed
+// ID in readAppfwprofileJsonblockkeywordBindingFromApi. The ID is composed once
+// in Create and never recomputed here (Pattern 6).
 func appfwprofile_jsonblockkeyword_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileJsonblockkeywordBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileJsonblockkeywordBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_jsonblockkeyword_bindingSetAttrFromGet Function")
 
@@ -198,10 +200,30 @@ func appfwprofile_jsonblockkeyword_bindingSetAttrFromGet(ctx context.Context, da
 		data.Resourceid = types.StringNull()
 	}
 
-	// name, jsonblockkeyword, keyname_json_blockkeyword, jsonblockkeywordurl,
-	// iskeyregex_json_blockkeyword, jsonblockkeywordtype, comment and state are
-	// user-supplied (RequiresReplace) and are intentionally NOT overwritten from the
-	// GET response - the plan/state value is authoritative (Pattern 7).
+	// Config attributes echoed back verbatim by the GET response. Copying them
+	// (rather than trusting only the prior state) lets `terraform import`
+	// round-trip these attributes. The ADC does not normalize these values, so
+	// there is no post-apply diff.
+	if val, ok := getResponseData["iskeyregex_json_blockkeyword"]; ok && val != nil {
+		data.IskeyregexJsonBlockkeyword = types.StringValue(val.(string))
+	} else {
+		data.IskeyregexJsonBlockkeyword = types.StringNull()
+	}
+	if val, ok := getResponseData["jsonblockkeywordtype"]; ok && val != nil {
+		data.Jsonblockkeywordtype = types.StringValue(val.(string))
+	} else {
+		data.Jsonblockkeywordtype = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
 
 	return data
 }

@@ -34,6 +34,15 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the sslcertificatechain. It has the same value as the `certkeyname` attribute.
 
 
+## Import
+
+A sslcertificatechain can be imported using its certkeyname, e.g.
+
+```shell
+terraform import citrixadc_sslcertificatechain.tf_sslcertificatechain tf_sslcertificatechain
+```
+
+
 ## Note on deletion
 
-The Citrix ADC NITRO API exposes no delete endpoint for `sslcertificatechain`. The certificate chain that this resource forms cannot be removed through NITRO. When you run `terraform destroy` (or otherwise remove this resource), Terraform only drops the resource from its state; the chain that was formed remains in effect on the appliance. Because there is no removable named object and no by-id delete, this resource does not provide an `## Import` workflow.
+The Citrix ADC NITRO API exposes no delete endpoint for `sslcertificatechain`. The certificate chain that this resource forms cannot be removed through NITRO. When you run `terraform destroy` (or otherwise remove this resource), Terraform only drops the resource from its state; the chain that was formed remains in effect on the appliance.

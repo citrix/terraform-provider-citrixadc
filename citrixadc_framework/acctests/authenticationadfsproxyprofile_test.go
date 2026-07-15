@@ -77,6 +77,29 @@ func TestAccAuthenticationadfsproxyprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationadfsproxyprofile_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationadfsproxyprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationadfsproxyprofile_basic_step1},
+			{
+				Config:            testAccAuthenticationadfsproxyprofile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password is a Sensitive attribute that NITRO does not echo back,
+				// and password_wo_version is a Computed default that Read does not
+				// repopulate, so neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"password", "password_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationadfsproxyprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

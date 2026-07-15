@@ -100,6 +100,30 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_basic(t *testing.T) 
 	})
 }
 
+func TestAccGslbservicegroup_gslbservicegroupmember_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic,
+			},
+			{
+				Config:            testAccGslbservicegroup_gslbservicegroupmember_binding_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The resource Read/SetAttrFromGet preserves identity fields from prior
+				// state and does not repopulate them from the ID during import, so these
+				// RequiresReplace identity attributes cannot round-trip on a bare import.
+				ImportStateVerifyIgnore: []string{"port", "servername", "servicegroupname"},
+			},
+		},
+	})
+}
+
 func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -196,10 +196,34 @@ func appfwprofile_blockkeyword_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Resourceid = types.StringNull()
 	}
 
-	// name, blockkeyword, fieldname, as_blockkeyword_formurl, comment, state,
-	// as_fieldname_isregex_blockkeyword and blockkeywordtype are user-supplied
-	// (RequiresReplace) and are intentionally NOT overwritten from the GET response
-	// - the plan/state value is authoritative (Pattern 7).
+	// Config attributes echoed back by the GET row. On a normal Create/Read the
+	// plan/state value is already set and is authoritative (RequiresReplace), so we
+	// must NOT overwrite it (avoids "inconsistent result after apply" when the
+	// appliance normalizes/defaults a value). On `terraform import`, however, these
+	// arrive null (no prior plan/state), so we backfill them from the GET response
+	// to make import fully round-trip. The `IsNull()` guard distinguishes the two
+	// cases. (name, blockkeyword, fieldname, as_blockkeyword_formurl are ID
+	// components and are backfilled from the parsed ID in readAppfwprofileBlockkeywordBindingFromApi.)
+	if data.AsFieldnameIsregexBlockkeyword.IsNull() {
+		if val, ok := getResponseData["as_fieldname_isregex_blockkeyword"]; ok && val != nil {
+			data.AsFieldnameIsregexBlockkeyword = types.StringValue(val.(string))
+		}
+	}
+	if data.Blockkeywordtype.IsNull() {
+		if val, ok := getResponseData["blockkeywordtype"]; ok && val != nil {
+			data.Blockkeywordtype = types.StringValue(val.(string))
+		}
+	}
+	if data.State.IsNull() {
+		if val, ok := getResponseData["state"]; ok && val != nil {
+			data.State = types.StringValue(val.(string))
+		}
+	}
+	if data.Comment.IsNull() {
+		if val, ok := getResponseData["comment"]; ok && val != nil {
+			data.Comment = types.StringValue(val.(string))
+		}
+	}
 
 	return data
 }

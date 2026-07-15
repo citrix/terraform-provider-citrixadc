@@ -68,6 +68,29 @@ func TestAccAuthenticationpushservice_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationpushservice_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpushservice.tf_pushservice"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpushserviceDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationpushservice_add},
+			{
+				Config:            testAccAuthenticationpushservice_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// clientsecret is Sensitive and not returned by the NITRO API;
+				// clientsecret_wo_version is a write-only version tracker that is
+				// retained from config and not echoed back. Neither can round-trip
+				// through import.
+				ImportStateVerifyIgnore: []string{"clientsecret", "clientsecret_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationpushserviceExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

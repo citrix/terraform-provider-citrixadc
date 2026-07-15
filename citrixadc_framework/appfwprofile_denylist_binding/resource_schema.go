@@ -189,10 +189,32 @@ func appfwprofile_denylist_bindingSetAttrFromGet(ctx context.Context, data *Appf
 		data.Resourceid = types.StringNull()
 	}
 
-	// name, as_deny_list, as_deny_list_value_type, as_deny_list_location,
-	// as_deny_list_action (string[]), comment and state are user-supplied
-	// (RequiresReplace) and are intentionally NOT overwritten from the GET response
-	// - the plan/state value is authoritative (Pattern 7).
+	// as_deny_list_action, comment and state are echoed verbatim by the GET
+	// response (the appliance does not normalize them), so read them back so they
+	// round-trip on import. name, as_deny_list, as_deny_list_value_type and
+	// as_deny_list_location are ID components and are backfilled from the parsed
+	// ID in readAppfwprofileDenylistBindingFromApi (authoritative over GET).
+	if val, ok := getResponseData["as_deny_list_action"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.AsDenyListAction = listValue
+		} else {
+			data.AsDenyListAction = types.ListNull(types.StringType)
+		}
+	} else {
+		data.AsDenyListAction = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
 
 	return data
 }

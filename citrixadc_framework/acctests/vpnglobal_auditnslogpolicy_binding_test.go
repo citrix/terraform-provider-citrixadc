@@ -95,6 +95,35 @@ func TestAccVpnglobalAuditnslogpolicyBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobalAuditnslogpolicyBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobalAuditnslogpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobalAuditnslogpolicyBinding_basic_step1,
+			},
+			{
+				Config:            testAccVpnglobalAuditnslogpolicyBinding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// policyname (identity) and priority (config) round-trip from the GET.
+				// gotopriorityexpression/groupextraction are non-recoverable but omitted
+				// from config (null==null) so they need no ignore. secondary is the only
+				// remaining ignore: verified live that the GET row returns only
+				// policyname/priority/policysubtype/stateflag and that stateflag does NOT
+				// encode secondary (identical for true/false); it is a write-only bind flag
+				// the appliance never echoes and it is not part of the composite ID
+				// (ID = policyname only), so it is genuinely non-recoverable on import.
+				ImportStateVerifyIgnore: []string{"secondary"},
+			},
+		},
+	})
+}
+
 func testAccCheckVpnglobalAuditnslogpolicyBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

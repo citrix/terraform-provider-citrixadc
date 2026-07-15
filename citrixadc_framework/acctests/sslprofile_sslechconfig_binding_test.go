@@ -95,6 +95,9 @@ const testAccSslprofileSslechconfigBinding_basic_step2 = `
 `
 
 func TestAccSslprofileSslechconfigBinding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -113,6 +116,30 @@ func TestAccSslprofileSslechconfigBinding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.tf_sslprofile", nil),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslprofileSslechconfigBinding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslprofile_sslechconfig_binding.tf_sslprofile_sslechconfig_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofileSslechconfigBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofileSslechconfigBinding_basic_step1,
+			},
+			{
+				Config:                  testAccSslprofileSslechconfigBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -255,6 +282,9 @@ const testAccSslprofileSslechconfigBindingDataSource_basic = `
 `
 
 func TestAccSslprofileSslechconfigBindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

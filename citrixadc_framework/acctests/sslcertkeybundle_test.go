@@ -59,6 +59,27 @@ func TestAccSslcertkeybundle_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslcertkeybundle_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkeybundle.tf_sslcertkeybundle"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeybundlePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeybundleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkeybundle_basic_step1,
+			},
+			{
+				Config:                  testAccSslcertkeybundle_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"passplain_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckSslcertkeybundleExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

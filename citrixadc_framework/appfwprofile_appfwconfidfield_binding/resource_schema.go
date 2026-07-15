@@ -141,12 +141,13 @@ func appfwprofile_appfwconfidfield_bindingGetThePayloadFromthePlan(ctx context.C
 }
 
 // appfwprofile_appfwconfidfield_bindingSetAttrFromGet is the RESOURCE setter.
-// It preserves user-supplied plan/state values for the write-able / identity
-// attributes (name, confidfield, cffield_url, comment, isregex_cffield, state)
-// so that a GET response (which may normalize or default these) does not produce
-// an "inconsistent result after apply" diff. It only copies the server-managed
-// read-only attributes (resourceid, isautodeployed, alertonly) from the response.
-// The ID is composed once in Create and never recomputed here (Pattern 6).
+// It copies the server-managed read-only attributes (resourceid, isautodeployed,
+// alertonly) as well as the write-able config attributes that the GET response
+// faithfully echoes without normalization (comment, isregex_cffield, state) so
+// that `terraform import` can fully round-trip them. The identity attributes
+// (name, confidfield, cffield_url) are backfilled from the parsed composite ID
+// in readAppfwprofileAppfwconfidfieldBindingFromApi. The ID is composed once in
+// Create and never recomputed here (Pattern 6).
 func appfwprofile_appfwconfidfield_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileAppfwconfidfieldBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileAppfwconfidfieldBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_appfwconfidfield_bindingSetAttrFromGet Function")
 
@@ -167,9 +168,29 @@ func appfwprofile_appfwconfidfield_bindingSetAttrFromGet(ctx context.Context, da
 		data.Resourceid = types.StringNull()
 	}
 
-	// name, confidfield, cffield_url, comment, isregex_cffield and state are
-	// user-supplied (RequiresReplace) and are intentionally NOT overwritten from
-	// the GET response - the plan/state value is authoritative (Pattern 7).
+	// Write-able config attributes that the GET response echoes verbatim - copying
+	// them from the response lets `terraform import` round-trip them without
+	// introducing an "inconsistent result after apply" diff (the appliance returns
+	// exactly what was sent).
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["isregex_cffield"]; ok && val != nil {
+		data.IsregexCffield = types.StringValue(val.(string))
+	} else {
+		data.IsregexCffield = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+
+	// name, confidfield and cffield_url are identity components of the composite
+	// ID; they are backfilled from the parsed ID in the caller so that import
+	// (no prior state) repopulates them.
 
 	return data
 }

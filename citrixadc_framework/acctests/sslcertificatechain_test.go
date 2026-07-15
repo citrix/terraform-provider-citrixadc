@@ -66,6 +66,27 @@ func TestAccSslcertificatechain_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslcertificatechain_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcertificatechain.tf_sslcertificatechain"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertificatechainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertificatechain_basic_step1,
+			},
+			{
+				Config:                  testAccSslcertificatechain_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslcertificatechainExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

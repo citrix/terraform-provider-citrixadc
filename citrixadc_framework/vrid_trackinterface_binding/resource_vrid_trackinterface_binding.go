@@ -8,7 +8,6 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -17,7 +16,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &VridTrackinterfaceBindingResource{}
 var _ resource.ResourceWithConfigure = (*VridTrackinterfaceBindingResource)(nil)
-var _ resource.ResourceWithImportState = (*VridTrackinterfaceBindingResource)(nil)
 
 func NewVridTrackinterfaceBindingResource() resource.Resource {
 	return &VridTrackinterfaceBindingResource{}
@@ -26,10 +24,6 @@ func NewVridTrackinterfaceBindingResource() resource.Resource {
 // VridTrackinterfaceBindingResource defines the resource implementation.
 type VridTrackinterfaceBindingResource struct {
 	client *service.NitroClient
-}
-
-func (r *VridTrackinterfaceBindingResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *VridTrackinterfaceBindingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

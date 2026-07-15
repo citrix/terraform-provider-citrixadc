@@ -32,3 +32,12 @@ resource "citrixadc_cloudngsparameter" "tf_cloudngsparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the cloudngsparameter. Because this is a singleton resource, it is a fixed string set to `cloudngsparameter-config`.
+
+
+## Import
+
+A cloudngsparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_cloudngsparameter.tf_cloudngsparameter cloudngsparameter-config
+```

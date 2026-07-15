@@ -28,3 +28,12 @@ resource "citrixadc_systemcpuparam" "tf_systemcpuparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The ID of the systemcpuparam resource. Because this is a global singleton, the ID is a synthetic constant string `systemcpuparam-config`.
+
+
+## Import
+
+A systemcpuparam can be imported using its id (a synthetic constant, because this is a global singleton), e.g.
+
+```shell
+terraform import citrixadc_systemcpuparam.tf_systemcpuparam systemcpuparam-config
+```

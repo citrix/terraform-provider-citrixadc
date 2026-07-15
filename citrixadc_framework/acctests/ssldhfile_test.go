@@ -133,6 +133,29 @@ func testAccCheckSsldhfileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSsldhfile_import(t *testing.T) {
+	const resAddr = "citrixadc_ssldhfile.tf_ssldhfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSsldhfilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSsldhfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSsldhfile_basic_step1,
+			},
+			{
+				Config:            testAccSsldhfile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// `src` is a write-only Import input that NITRO does not echo back;
+				// it cannot be reconstructed on import so it does not round-trip.
+				ImportStateVerifyIgnore: []string{"src"},
+			},
+		},
+	})
+}
+
 const testAccSsldhfileDataSource_basic = `
 
 resource "citrixadc_ssldhfile" "tf_ssldhfile" {

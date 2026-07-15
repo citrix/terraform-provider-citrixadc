@@ -63,6 +63,27 @@ func TestAccVpnglobalSecureprivateaccessurlBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobalSecureprivateaccessurlBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_secureprivateaccessurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobalSecureprivateaccessurlBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobalSecureprivateaccessurlBinding_basic_step1,
+			},
+			{
+				Config:                  testAccVpnglobalSecureprivateaccessurlBinding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVpnglobalSecureprivateaccessurlBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

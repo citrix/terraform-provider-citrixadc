@@ -26,7 +26,7 @@ import (
 )
 
 // NOTE: ifnum is testbed-specific and binding a channel interface to a VMAC6
-// can be DISRUPTIVE. Replace TODO_PLACEHOLDER with a free interface (e.g. "1/2")
+// can be DISRUPTIVE. Replace TODO_PLACEHOLDER with a free interface (e.g. "1/1")
 // that is safe to use on the target ADC before running this test.
 
 // step1: create the vrid6 parent, then bind a channel interface to it.
@@ -40,7 +40,7 @@ resource "citrixadc_vrid6" "tf_vrid6" {
 
 resource "citrixadc_vrid6_channel_binding" "tf_vrid6_channel_binding" {
 	vrid_id = citrixadc_vrid6.tf_vrid6.vrid6_id
-	ifnum   = "1/2" // free interface, e.g. "1/2" (testbed-specific, disruptive)
+	ifnum   = "1/1" // free interface, e.g. "1/1" (testbed-specific, disruptive)
 
 	depends_on = [citrixadc_vrid6.tf_vrid6]
 }
@@ -67,13 +67,13 @@ func TestAccVrid6_channel_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVrid6_channel_bindingExist("citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", "ifnum", "1/1"),
 				),
 			},
 			{
 				Config: testAccVrid6_channel_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVrid6_channel_bindingNotExist("citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", "id:100,ifnum:1%2F2"),
+					testAccCheckVrid6_channel_bindingNotExist("citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", "id:100,ifnum:1%2F1"),
 				),
 			},
 		},
@@ -305,7 +305,7 @@ resource "citrixadc_vrid6" "tf_vrid6" {
 
 resource "citrixadc_vrid6_channel_binding" "tf_vrid6_channel_binding" {
 	vrid_id = citrixadc_vrid6.tf_vrid6.vrid6_id
-	ifnum   = "1/2" // free interface, e.g. "1/2" (testbed-specific, disruptive)
+	ifnum   = "1/1" // free interface, e.g. "1/1" (testbed-specific, disruptive)
 
 	depends_on = [citrixadc_vrid6.tf_vrid6]
 }
@@ -328,8 +328,32 @@ func TestAccVrid6_channel_bindingDataSource_basic(t *testing.T) {
 				Config: testAccVrid6_channel_bindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("data.citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("data.citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding", "ifnum", "1/1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVrid6_channel_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vrid6_channel_binding.tf_vrid6_channel_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVrid6_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVrid6_channel_binding_basic_step1,
+			},
+			{
+				Config:            testAccVrid6_channel_binding_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// vrid_id and ifnum are both composite-ID components and are
+				// reconstructed from the parsed ID in readVrid6ChannelBindingFromApi,
+				// so all attributes round-trip on import.
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

@@ -90,6 +90,28 @@ func TestAccDbuser_basic(t *testing.T) {
 	})
 }
 
+func TestAccDbuser_import(t *testing.T) {
+	const resAddr = "citrixadc_dbuser.tf_dbuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbuserDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDbuser_basic},
+			{
+				Config:            testAccDbuser_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password_wo_version is a write-only version tracker that NITRO
+				// does not return; on import there is no config to retain it from,
+				// so it cannot round-trip.
+				ImportStateVerifyIgnore: []string{"password_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckDbuserExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

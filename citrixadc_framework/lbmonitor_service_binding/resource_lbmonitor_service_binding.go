@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -17,7 +16,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &LbmonitorServiceBindingResource{}
 var _ resource.ResourceWithConfigure = (*LbmonitorServiceBindingResource)(nil)
-var _ resource.ResourceWithImportState = (*LbmonitorServiceBindingResource)(nil)
 var _ resource.ResourceWithValidateConfig = (*LbmonitorServiceBindingResource)(nil)
 
 func NewLbmonitorServiceBindingResource() resource.Resource {
@@ -27,10 +25,6 @@ func NewLbmonitorServiceBindingResource() resource.Resource {
 // LbmonitorServiceBindingResource defines the resource implementation.
 type LbmonitorServiceBindingResource struct {
 	client *service.NitroClient
-}
-
-func (r *LbmonitorServiceBindingResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *LbmonitorServiceBindingResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

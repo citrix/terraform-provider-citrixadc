@@ -47,6 +47,28 @@ func TestAccRadiusnode_basic(t *testing.T) {
 	})
 }
 
+func TestAccRadiusnode_import(t *testing.T) {
+	const resAddr = "citrixadc_radiusnode.tf_radiusnode"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRadiusnodeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRadiusnode_basic},
+			{
+				Config:            testAccRadiusnode_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// radkey is a Sensitive secret that NITRO never echoes back, and
+				// radkey_wo_version is a client-side version tracker that is not
+				// returned by the API - neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"radkey", "radkey_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckRadiusnodeExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

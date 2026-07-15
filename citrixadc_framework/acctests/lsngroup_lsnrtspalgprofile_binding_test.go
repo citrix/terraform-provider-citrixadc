@@ -175,6 +175,34 @@ func TestAccLsngroup_lsnrtspalgprofile_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccLsngroup_lsnrtspalgprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnrtspalgprofile_binding.tf_rtspbind_lsngroup_lsnrtspalgprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnrtspalgprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsnrtspalgprofile_binding_basic_step0,
+			},
+			{
+				PreConfig: func() { provisionLsnAlgOutOfBandPrereq(t, rtspAlgPrereqParams) },
+				Config:    testAccLsngroup_lsnrtspalgprofile_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnrtspalgprofile_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				Config:                  testAccLsngroup_lsnrtspalgprofile_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckLsngroup_lsnrtspalgprofile_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

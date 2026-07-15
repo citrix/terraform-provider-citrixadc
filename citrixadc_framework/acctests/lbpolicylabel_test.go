@@ -55,6 +55,19 @@ func TestAccLbpolicylabel_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_lbpolicylabel.tf_lbpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbpolicylabel_basic_step1},
+			{Config: testAccLbpolicylabel_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbpolicylabelExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

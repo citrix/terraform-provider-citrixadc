@@ -77,6 +77,28 @@ func TestAccCloudngsparameter_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudngsparameter_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudngsparameter.tf_cloudngsparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource: it always exists on the ADC and is never deleted,
+		// so no CheckDestroy is used.
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{Config: testAccCloudngsparameter_basic_step1},
+			{
+				Config:                  testAccCloudngsparameter_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCloudngsparameterExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

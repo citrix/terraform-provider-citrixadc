@@ -3,6 +3,7 @@ package vrid_interface_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -296,5 +297,23 @@ func (r *VridInterfaceBindingResource) readVridInterfaceBindingFromApi(ctx conte
 	}
 
 	vrid_interface_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	// Backfill the identity attributes from the parsed composite ID. Both vrid_id
+	// and ifnum are RequiresReplace ID-components (encoded as "id:<vrid>,ifnum:<val>"),
+	// so they are ALWAYS recoverable from the ID. This is essential for
+	// `terraform import` to round-trip: the aggregate GET row does NOT echo "ifnum"
+	// (and only echoes the vrid as "id"), so without this backfill those attrs would
+	// come back null when there is no prior plan/state. Rebuilding them from the ID
+	// yields exactly the same values the ID was composed from, so it introduces no
+	// diff in the normal create/refresh flow and keeps data.Id stable.
+	if v, ok := idMap["id"]; ok && v != "" {
+		if intVal, err := strconv.ParseInt(v, 10, 64); err == nil {
+			data.VridId = types.Int64Value(intVal)
+		}
+	}
+	if v, ok := idMap["ifnum"]; ok {
+		data.Ifnum = types.StringValue(v)
+	}
+
 	return true
 }

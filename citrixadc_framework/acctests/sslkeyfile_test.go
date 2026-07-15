@@ -64,6 +64,30 @@ func TestAccSslkeyfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslkeyfile_import(t *testing.T) {
+	const resAddr = "citrixadc_sslkeyfile.tf_sslkeyfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslkeyfilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslkeyfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslkeyfile_basic_step1,
+			},
+			{
+				Config:            testAccSslkeyfile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// src is a write-only Import input NITRO never echoes back, and
+				// password_wo_version is a client-side version tracker; neither is
+				// reconstructed by Read on import, so both are ignored.
+				ImportStateVerifyIgnore: []string{"src", "password_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckSslkeyfileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

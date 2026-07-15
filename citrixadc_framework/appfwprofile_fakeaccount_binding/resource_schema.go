@@ -177,13 +177,16 @@ func appfwprofile_fakeaccount_bindingGetThePayloadFromthePlan(ctx context.Contex
 }
 
 // appfwprofile_fakeaccount_bindingSetAttrFromGet is the RESOURCE setter.
-// It preserves user-supplied plan/state values for the write-able / identity
-// attributes (name, fakeaccount, tag, formexpression, formurl_fad,
-// isfieldnameregex, comment, state, isautodeployed) so that a GET response (which
-// may normalize or default these) does not produce an "inconsistent result after
-// apply" diff. It only copies the server-managed read-only attributes
-// (resourceid, alertonly) from the response. The ID is composed once in Create
-// and never recomputed here (Pattern 6).
+// It copies the server-managed read-only attributes (resourceid, alertonly,
+// isautodeployed) plus the GET-echoed config attributes (isfieldnameregex, state,
+// comment) from the response so they become known after apply AND round-trip on
+// import (where there is no prior plan/state). The GET row for this binding
+// echoes these values verbatim (no normalization), so populating them does not
+// introduce an "inconsistent result after apply" diff. The identity /
+// ID-component attributes (name, fakeaccount, tag, formexpression, formurl_fad)
+// are backfilled from the parsed composite ID in readXFromApi (they are always
+// recoverable from the ID). The ID is composed once in Create and never
+// recomputed here (Pattern 6).
 func appfwprofile_fakeaccount_bindingSetAttrFromGet(ctx context.Context, data *AppfwprofileFakeaccountBindingResourceModel, getResponseData map[string]interface{}) *AppfwprofileFakeaccountBindingResourceModel {
 	tflog.Debug(ctx, "In appfwprofile_fakeaccount_bindingSetAttrFromGet Function")
 
@@ -205,10 +208,28 @@ func appfwprofile_fakeaccount_bindingSetAttrFromGet(ctx context.Context, data *A
 		data.Resourceid = types.StringNull()
 	}
 
-	// name, fakeaccount, tag, formexpression, formurl_fad, isfieldnameregex,
-	// comment and state are user-supplied (RequiresReplace) and are intentionally
-	// NOT overwritten from the GET response - the plan/state value is authoritative
-	// (Pattern 7).
+	// GET-echoed config attributes - the appliance returns these verbatim, so
+	// copying them makes them round-trip on import without perturbing the basic
+	// apply (config value == GET value).
+	if val, ok := getResponseData["isfieldnameregex"]; ok && val != nil {
+		data.Isfieldnameregex = types.StringValue(val.(string))
+	} else {
+		data.Isfieldnameregex = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+
+	// name, fakeaccount, tag, formexpression and formurl_fad are the identity /
+	// ID-component attributes and are backfilled from the parsed composite ID in
+	// readXFromApi (Pattern 7), so they are NOT set from the GET response here.
 
 	return data
 }

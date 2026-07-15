@@ -76,6 +76,27 @@ func TestAccSslechconfig_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslechconfig_import(t *testing.T) {
+	const resAddr = "citrixadc_sslechconfig.tf_sslechconfig"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslechconfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslechconfig_basic_step1,
+			},
+			{
+				Config:                  testAccSslechconfig_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslechconfigExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

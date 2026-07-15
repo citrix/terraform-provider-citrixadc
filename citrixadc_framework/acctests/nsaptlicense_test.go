@@ -100,6 +100,25 @@ func testAccCheckNsaptlicenseExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+// Import test for nsaptlicense. The resource implements
+// ImportStatePassthroughID on "id" and its Read reconstructs state from the
+// license record (filtered by serialno / matched by id), so import is
+// meaningful. Gated with t.Skip like the other tests because the underlying
+// allocation action is disruptive and consumes pooled CADS licenses.
+func TestAccNsaptlicense_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_nsaptlicense.tf_nsaptlicense"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Action-only resource: no CheckDestroy (matches the basic test).
+		Steps: []resource.TestStep{
+			{Config: testAccNsaptlicense_basic_step1},
+			{Config: testAccNsaptlicense_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 // Datasource test for nsaptlicense. Gated with t.Skip because it requires a
 // real allocated license record (filtered by serialno) to exist on the
 // appliance, which in turn requires a disruptive allocation.
