@@ -95,6 +95,15 @@ func (r *SslprofileSslciphersuiteBindingResource) Read(ctx context.Context, req 
 	tflog.Debug(ctx, "Reading sslprofile_sslciphersuite_binding resource")
 
 	r.readSslprofileSslciphersuiteBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the binding is gone out-of-band, remove it from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -226,6 +235,12 @@ func (r *SslprofileSslciphersuiteBindingResource) readSslprofileSslciphersuiteBi
 	if row := findCipherBindingViaUmbrella(ctx, r.client, name_Name, ciphername_Name, diags); row != nil {
 		sslprofile_sslciphersuite_bindingSetAttrFromGet(ctx, data, row)
 	} else if diags.HasError() {
+		return
+	} else {
+		// Neither the typed GET nor the umbrella endpoint has the binding: it was
+		// deleted out-of-band. Signal "gone" so Read removes it from state and a
+		// subsequent apply re-creates it.
+		data.Id = types.StringNull()
 		return
 	}
 

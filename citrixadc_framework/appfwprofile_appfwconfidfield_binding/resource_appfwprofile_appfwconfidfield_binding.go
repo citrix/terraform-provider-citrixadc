@@ -96,6 +96,16 @@ func (r *AppfwprofileAppfwconfidfieldBindingResource) Read(ctx context.Context, 
 
 	r.readAppfwprofileAppfwconfidfieldBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource was deleted out-of-band - remove from state for self-healing
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -200,9 +210,9 @@ func (r *AppfwprofileAppfwconfidfieldBindingResource) readAppfwprofileAppfwconfi
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal deletion for self-healing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwprofile_appfwconfidfield_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -248,9 +258,9 @@ func (r *AppfwprofileAppfwconfidfieldBindingResource) readAppfwprofileAppfwconfi
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - signal deletion for self-healing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_appfwconfidfield_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

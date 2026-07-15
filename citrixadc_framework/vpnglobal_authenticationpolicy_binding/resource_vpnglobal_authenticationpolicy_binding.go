@@ -89,6 +89,15 @@ func (r *VpnglobalAuthenticationpolicyBindingResource) Read(ctx context.Context,
 	tflog.Debug(ctx, "Reading vpnglobal_authenticationpolicy_binding resource")
 
 	r.readVpnglobalAuthenticationpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object deleted out-of-band: remove from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -172,9 +181,9 @@ func (r *VpnglobalAuthenticationpolicyBindingResource) readVpnglobalAuthenticati
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band): signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnglobal_authenticationpolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -200,9 +209,9 @@ func (r *VpnglobalAuthenticationpolicyBindingResource) readVpnglobalAuthenticati
 		}
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band): signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_authenticationpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -91,6 +92,16 @@ func (r *VpnepaprofileResource) Read(ctx context.Context, req resource.ReadReque
 
 	r.readVpnepaprofileFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the object was deleted out-of-band, remove it from state so a subsequent apply re-creates it
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -153,6 +164,10 @@ func (r *VpnepaprofileResource) readVpnepaprofileFromApi(ctx context.Context, da
 
 	getResponseData, err = r.client.FindResource(service.Vpnepaprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnepaprofile, got error: %s", err))
 		return
 	}

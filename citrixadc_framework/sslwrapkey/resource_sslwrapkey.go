@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -124,6 +125,15 @@ func (r *SslwrapkeyResource) Read(ctx context.Context, req resource.ReadRequest,
 	tflog.Debug(ctx, "Reading sslwrapkey resource")
 
 	r.readSslwrapkeyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Resource is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -181,6 +191,12 @@ func (r *SslwrapkeyResource) readSslwrapkeyFromApi(ctx context.Context, data *Ss
 	// Named resource: read by wrapkeyname (the ID holds the plain key value).
 	getResponseData, err := r.client.FindResource(service.Sslwrapkey.Type(), data.Id.ValueString())
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			// Resource no longer exists on the ADC. Signal removal via a null Id so the
+			// Read caller drops it from state instead of erroring.
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslwrapkey, got error: %s", err))
 		return
 	}

@@ -96,6 +96,15 @@ func (r *MetricsprofileCsvserverBindingResource) Read(ctx context.Context, req r
 
 	r.readMetricsprofileCsvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -196,7 +205,7 @@ func (r *MetricsprofileCsvserverBindingResource) readMetricsprofileCsvserverBind
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "metricsprofile_csvserver_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -244,7 +253,7 @@ func (r *MetricsprofileCsvserverBindingResource) readMetricsprofileCsvserverBind
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("metricsprofile_csvserver_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

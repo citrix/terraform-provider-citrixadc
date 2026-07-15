@@ -95,6 +95,15 @@ func (r *LbpolicylabelLbpolicyBindingResource) Read(ctx context.Context, req res
 
 	r.readLbpolicylabelLbpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -193,9 +202,9 @@ func (r *LbpolicylabelLbpolicyBindingResource) readLbpolicylabelLbpolicyBindingF
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band) - signal removal via null Id
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "lbpolicylabel_lbpolicy_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -225,9 +234,9 @@ func (r *LbpolicylabelLbpolicyBindingResource) readLbpolicylabelLbpolicyBindingF
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing (deleted out-of-band) - signal removal via null Id
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("lbpolicylabel_lbpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

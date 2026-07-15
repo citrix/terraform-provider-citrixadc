@@ -95,6 +95,15 @@ func (r *MetricsprofileVpnvserverBindingResource) Read(ctx context.Context, req 
 	tflog.Debug(ctx, "Reading metricsprofile_vpnvserver_binding resource")
 
 	r.readMetricsprofileVpnvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource was deleted out-of-band; remove it from state so it can be recreated
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -196,7 +205,7 @@ func (r *MetricsprofileVpnvserverBindingResource) readMetricsprofileVpnvserverBi
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "metricsprofile_vpnvserver_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -244,7 +253,7 @@ func (r *MetricsprofileVpnvserverBindingResource) readMetricsprofileVpnvserverBi
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("metricsprofile_vpnvserver_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

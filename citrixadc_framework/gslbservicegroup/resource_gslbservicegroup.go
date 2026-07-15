@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -90,6 +92,15 @@ func (r *GslbservicegroupResource) Read(ctx context.Context, req resource.ReadRe
 	tflog.Debug(ctx, "Reading gslbservicegroup resource")
 
 	r.readGslbservicegroupFromApi(ctx, &data, &resp.Diagnostics)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -196,6 +207,10 @@ func (r *GslbservicegroupResource) readGslbservicegroupFromApi(ctx context.Conte
 
 	getResponseData, err := r.client.FindResource(service.Gslbservicegroup.Type(), servicegroupname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read gslbservicegroup, got error: %s", err))
 		return
 	}

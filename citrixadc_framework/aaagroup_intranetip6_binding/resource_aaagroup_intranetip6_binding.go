@@ -97,6 +97,16 @@ func (r *AaagroupIntranetip6BindingResource) Read(ctx context.Context, req resou
 
 	r.readAaagroupIntranetip6BindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource was deleted out-of-band - remove from state for self-healing
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -210,9 +220,9 @@ func (r *AaagroupIntranetip6BindingResource) readAaagroupIntranetip6BindingFromA
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal deletion for self-healing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "aaagroup_intranetip6_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -262,9 +272,9 @@ func (r *AaagroupIntranetip6BindingResource) readAaagroupIntranetip6BindingFromA
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - signal deletion for self-healing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("aaagroup_intranetip6_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

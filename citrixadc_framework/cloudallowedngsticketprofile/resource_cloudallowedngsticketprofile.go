@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -91,6 +92,16 @@ func (r *CloudallowedngsticketprofileResource) Read(ctx context.Context, req res
 
 	r.readCloudallowedngsticketprofileFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object gone out-of-band - remove from state so a subsequent apply re-creates it
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -176,6 +187,11 @@ func (r *CloudallowedngsticketprofileResource) readCloudallowedngsticketprofileF
 
 	getResponseData, err = r.client.FindResource(service.Cloudallowedngsticketprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			// Object deleted out-of-band; signal removal via null Id.
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read cloudallowedngsticketprofile, got error: %s", err))
 		return
 	}

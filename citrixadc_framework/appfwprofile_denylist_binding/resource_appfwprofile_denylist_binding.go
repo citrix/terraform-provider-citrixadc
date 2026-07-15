@@ -97,6 +97,17 @@ func (r *AppfwprofileDenylistBindingResource) Read(ctx context.Context, req reso
 
 	r.readAppfwprofileDenylistBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Self-heal: object was deleted out-of-band, remove from state so a
+	// subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -205,9 +216,9 @@ func (r *AppfwprofileDenylistBindingResource) readAppfwprofileDenylistBindingFro
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal for self-heal.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwprofile_denylist_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -269,9 +280,9 @@ func (r *AppfwprofileDenylistBindingResource) readAppfwprofileDenylistBindingFro
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - signal removal for self-heal.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_denylist_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

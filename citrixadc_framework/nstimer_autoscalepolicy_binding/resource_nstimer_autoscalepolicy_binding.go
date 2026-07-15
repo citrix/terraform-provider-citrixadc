@@ -108,6 +108,16 @@ func (r *NstimerAutoscalepolicyBindingResource) Read(ctx context.Context, req re
 		return
 	}
 
+	// Binding deleted out-of-band (list returned rows but ours is gone): remove from
+	// state so a later apply re-creates it. Note: the empty-body case is deliberately
+	// NOT treated as gone here (see readNstimerAutoscalepolicyBindingFromApi / firmware
+	// note above), so Id is only nulled when the item is genuinely absent from a
+	// non-empty list.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -232,6 +242,9 @@ func (r *NstimerAutoscalepolicyBindingResource) readNstimerAutoscalepolicyBindin
 	}
 
 	if foundIndex == -1 {
+		// List returned rows but our binding is not among them: genuinely gone.
+		// Signal drift so Read removes it from state (self-heal on next apply).
+		data.Id = types.StringNull()
 		return false
 	}
 

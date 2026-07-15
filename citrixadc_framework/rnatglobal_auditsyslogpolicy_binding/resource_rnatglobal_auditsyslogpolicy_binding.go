@@ -92,6 +92,16 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) Read(ctx context.Context, r
 
 	r.readRnatglobalAuditsyslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the resource was deleted out-of-band, remove it from state
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -190,9 +200,10 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) readRnatglobalAuditsyslogpo
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band); signal removal to Read.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "rnatglobal_auditsyslogpolicy_binding returned empty array")
+		tflog.Warn(ctx, "rnatglobal_auditsyslogpolicy_binding returned empty array, removing from state")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -205,9 +216,10 @@ func (r *RnatglobalAuditsyslogpolicyBindingResource) readRnatglobalAuditsyslogpo
 		}
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band); signal removal to Read.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("rnatglobal_auditsyslogpolicy_binding not found with the provided ID attributes"))
+		tflog.Warn(ctx, "rnatglobal_auditsyslogpolicy_binding not found with the provided ID attributes, removing from state")
+		data.Id = types.StringNull()
 		return
 	}
 

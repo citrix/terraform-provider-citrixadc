@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -89,6 +90,15 @@ func (r *NsextensionResource) Read(ctx context.Context, req resource.ReadRequest
 	tflog.Debug(ctx, "Reading nsextension resource")
 
 	r.readNsextensionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object deleted out-of-band: remove from state so a later apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -188,6 +198,10 @@ func (r *NsextensionResource) readNsextensionFromApi(ctx context.Context, data *
 
 	getResponseData, err = r.client.FindResource(service.Nsextension.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsextension, got error: %s", err))
 		return
 	}

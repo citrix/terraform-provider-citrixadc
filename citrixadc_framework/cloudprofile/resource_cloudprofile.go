@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -91,6 +93,17 @@ func (r *CloudprofileResource) Read(ctx context.Context, req resource.ReadReques
 
 	r.readCloudprofileFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the object was deleted out-of-band, remove it from state so a
+	// subsequent apply re-creates it instead of erroring.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -157,6 +170,11 @@ func (r *CloudprofileResource) readCloudprofileFromApi(ctx context.Context, data
 
 	getResponseData, err = r.client.FindResource(service.Cloudprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			// Object deleted out-of-band: signal "gone" so Read removes it from state.
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read cloudprofile, got error: %s", err))
 		return
 	}

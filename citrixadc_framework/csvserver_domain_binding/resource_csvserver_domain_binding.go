@@ -94,6 +94,15 @@ func (r *CsvserverDomainBindingResource) Read(ctx context.Context, req resource.
 	tflog.Debug(ctx, "Reading csvserver_domain_binding resource")
 
 	r.readCsvserverDomainBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object is gone out-of-band: remove from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -251,9 +260,9 @@ func (r *CsvserverDomainBindingResource) readCsvserverDomainBindingFromApi(ctx c
 		return
 	}
 
-	// Resource is missing
+	// Resource (parent) is gone: signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "csvserver_domain_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -283,9 +292,9 @@ func (r *CsvserverDomainBindingResource) readCsvserverDomainBindingFromApi(ctx c
 		}
 	}
 
-	//  Resource is missing
+	//  Binding is gone: signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("csvserver_domain_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

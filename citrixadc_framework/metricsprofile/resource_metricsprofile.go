@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -95,6 +96,15 @@ func (r *MetricsprofileResource) Read(ctx context.Context, req resource.ReadRequ
 	tflog.Debug(ctx, "Reading metricsprofile resource")
 
 	r.readMetricsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object genuinely absent on the appliance: treat as drift and clear state.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -218,6 +228,11 @@ func (r *MetricsprofileResource) readMetricsprofileFromApi(ctx context.Context, 
 
 	getResponseData, err = r.client.FindResource(service.Metricsprofile.Type(), name_Name)
 	if err != nil {
+		// Object deleted out-of-band: signal drift by nulling the Id so Read removes it from state.
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read metricsprofile, got error: %s", err))
 		return
 	}

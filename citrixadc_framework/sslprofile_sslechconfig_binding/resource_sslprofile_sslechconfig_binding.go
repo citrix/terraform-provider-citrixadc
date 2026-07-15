@@ -95,6 +95,15 @@ func (r *SslprofileSslechconfigBindingResource) Read(ctx context.Context, req re
 	tflog.Debug(ctx, "Reading sslprofile_sslechconfig_binding resource")
 
 	r.readSslprofileSslechconfigBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the binding is gone out-of-band, remove it from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -193,9 +202,9 @@ func (r *SslprofileSslechconfigBindingResource) readSslprofileSslechconfigBindin
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - deleted out-of-band; signal "gone" so Read removes it from state.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "sslprofile_sslechconfig_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -225,9 +234,9 @@ func (r *SslprofileSslechconfigBindingResource) readSslprofileSslechconfigBindin
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - deleted out-of-band; signal "gone" so Read removes it from state.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("sslprofile_sslechconfig_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

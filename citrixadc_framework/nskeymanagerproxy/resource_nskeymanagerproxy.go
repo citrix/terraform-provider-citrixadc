@@ -117,6 +117,15 @@ func (r *NskeymanagerproxyResource) Read(ctx context.Context, req resource.ReadR
 	tflog.Debug(ctx, "Reading nskeymanagerproxy resource")
 
 	r.readNskeymanagerproxyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object deleted out-of-band: remove from state so a later apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -191,6 +200,10 @@ func (r *NskeymanagerproxyResource) readNskeymanagerproxyFromApi(ctx context.Con
 
 	getResponseData, err := r.client.FindResource(service.Nskeymanagerproxy.Type(), name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nskeymanagerproxy, got error: %s", err))
 		return
 	}

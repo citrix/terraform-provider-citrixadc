@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -90,6 +91,16 @@ func (r *QuicprofileResource) Read(ctx context.Context, req resource.ReadRequest
 	tflog.Debug(ctx, "Reading quicprofile resource")
 
 	r.readQuicprofileFromApi(ctx, &data, &resp.Diagnostics)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the resource was deleted out-of-band, remove it from state
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -240,6 +251,12 @@ func (r *QuicprofileResource) readQuicprofileFromApi(ctx context.Context, data *
 
 	getResponseData, err = r.client.FindResource(service.Quicprofile.Type(), name_Name)
 	if err != nil {
+		// Resource is missing (deleted out-of-band); signal removal to Read.
+		if utils.IsNotFoundError(err) {
+			tflog.Warn(ctx, fmt.Sprintf("quicprofile %s not found, removing from state", name_Name))
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read quicprofile, got error: %s", err))
 		return
 	}

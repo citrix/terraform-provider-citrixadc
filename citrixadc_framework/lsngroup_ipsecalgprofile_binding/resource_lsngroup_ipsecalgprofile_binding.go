@@ -94,6 +94,15 @@ func (r *LsngroupIpsecalgprofileBindingResource) Read(ctx context.Context, req r
 	tflog.Debug(ctx, "Reading lsngroup_ipsecalgprofile_binding resource")
 
 	r.readLsngroupIpsecalgprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Binding genuinely absent on the appliance: treat as drift and clear state.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -195,9 +204,9 @@ func (r *LsngroupIpsecalgprofileBindingResource) readLsngroupIpsecalgprofileBind
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing: signal drift by nulling the Id so Read removes it from state.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "lsngroup_ipsecalgprofile_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -227,9 +236,9 @@ func (r *LsngroupIpsecalgprofileBindingResource) readLsngroupIpsecalgprofileBind
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing: signal drift by nulling the Id so Read removes it from state.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("lsngroup_ipsecalgprofile_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

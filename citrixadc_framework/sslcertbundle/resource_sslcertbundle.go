@@ -90,6 +90,15 @@ func (r *SslcertbundleResource) Read(ctx context.Context, req resource.ReadReque
 
 	r.readSslcertbundleFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -169,7 +178,8 @@ func (r *SslcertbundleResource) readSslcertbundleFromApi(ctx context.Context, da
 	}
 
 	if getResponseData == nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslcertbundle: no record found with name %s", name_value))
+		// Object is gone out-of-band; signal removal via null Id.
+		data.Id = types.StringNull()
 		return
 	}
 

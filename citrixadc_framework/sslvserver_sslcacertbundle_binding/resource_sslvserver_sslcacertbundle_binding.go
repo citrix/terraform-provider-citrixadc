@@ -94,6 +94,15 @@ func (r *SslvserverSslcacertbundleBindingResource) Read(ctx context.Context, req
 	tflog.Debug(ctx, "Reading sslvserver_sslcacertbundle_binding resource")
 
 	r.readSslvserverSslcacertbundleBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -211,7 +220,9 @@ func (r *SslvserverSslcacertbundleBindingResource) readSslvserverSslcacertbundle
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "sslvserver_sslcacertbundle_binding returned empty array.")
+		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
+		// so the Read caller drops it from state instead of erroring.
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -243,7 +254,8 @@ func (r *SslvserverSslcacertbundleBindingResource) readSslvserverSslcacertbundle
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("sslvserver_sslcacertbundle_binding not found with the provided ID attributes"))
+		// Matching binding not found: signal removal via a null Id.
+		data.Id = types.StringNull()
 		return
 	}
 

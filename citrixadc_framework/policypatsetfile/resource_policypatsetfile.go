@@ -90,6 +90,16 @@ func (r *PolicypatsetfileResource) Read(ctx context.Context, req resource.ReadRe
 
 	r.readPolicypatsetfileFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the resource was deleted out-of-band, remove it from state
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -155,8 +165,10 @@ func (r *PolicypatsetfileResource) readPolicypatsetfileFromApi(ctx context.Conte
 		return
 	}
 
+	// Resource is missing (deleted out-of-band); signal removal to Read.
 	if getResponseData == nil {
-		diags.AddError("Client Error", fmt.Sprintf("policypatsetfile %s not found.", name))
+		tflog.Warn(ctx, fmt.Sprintf("policypatsetfile %s not found, removing from state", name))
+		data.Id = types.StringNull()
 		return
 	}
 

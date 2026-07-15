@@ -94,6 +94,15 @@ func (r *SslservicegroupSslcacertbundleBindingResource) Read(ctx context.Context
 	tflog.Debug(ctx, "Reading sslservicegroup_sslcacertbundle_binding resource")
 
 	r.readSslservicegroupSslcacertbundleBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the binding is gone out-of-band, remove it from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -209,9 +218,9 @@ func (r *SslservicegroupSslcacertbundleBindingResource) readSslservicegroupSslca
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - deleted out-of-band; signal "gone" so Read removes it from state.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "sslservicegroup_sslcacertbundle_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -241,9 +250,9 @@ func (r *SslservicegroupSslcacertbundleBindingResource) readSslservicegroupSslca
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - deleted out-of-band; signal "gone" so Read removes it from state.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("sslservicegroup_sslcacertbundle_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

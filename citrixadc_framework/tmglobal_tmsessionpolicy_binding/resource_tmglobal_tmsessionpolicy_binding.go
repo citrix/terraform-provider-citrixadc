@@ -90,6 +90,15 @@ func (r *TmglobalTmsessionpolicyBindingResource) Read(ctx context.Context, req r
 	tflog.Debug(ctx, "Reading tmglobal_tmsessionpolicy_binding resource")
 
 	r.readTmglobalTmsessionpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object was deleted out-of-band; remove it from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -178,9 +187,9 @@ func (r *TmglobalTmsessionpolicyBindingResource) readTmglobalTmsessionpolicyBind
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band); signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "tmglobal_tmsessionpolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -211,9 +220,9 @@ func (r *TmglobalTmsessionpolicyBindingResource) readTmglobalTmsessionpolicyBind
 		}
 	}
 
-	// Resource is missing
+	// Matching item not found (deleted out-of-band); signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("tmglobal_tmsessionpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

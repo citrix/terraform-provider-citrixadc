@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -90,6 +92,16 @@ func (r *SslechconfigResource) Read(ctx context.Context, req resource.ReadReques
 	tflog.Debug(ctx, "Reading sslechconfig resource")
 
 	r.readSslechconfigFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the object was deleted out-of-band, remove it from state so a
+	// subsequent apply re-creates it instead of erroring.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -148,6 +160,11 @@ func (r *SslechconfigResource) readSslechconfigFromApi(ctx context.Context, data
 
 	getResponseData, err = r.client.FindResource(service.Sslechconfig.Type(), echconfigname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			// Object is gone out-of-band; signal removal via null Id.
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslechconfig, got error: %s", err))
 		return
 	}

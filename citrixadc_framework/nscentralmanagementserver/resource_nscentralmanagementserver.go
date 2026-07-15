@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -121,6 +122,15 @@ func (r *NscentralmanagementserverResource) Read(ctx context.Context, req resour
 	tflog.Debug(ctx, "Reading nscentralmanagementserver resource")
 
 	r.readNscentralmanagementserverFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource was deleted out-of-band; remove it from state so it can be recreated
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -183,6 +193,10 @@ func (r *NscentralmanagementserverResource) readNscentralmanagementserverFromApi
 
 	getResponseData, err = r.client.FindResource(service.Nscentralmanagementserver.Type(), type_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nscentralmanagementserver, got error: %s", err))
 		return
 	}

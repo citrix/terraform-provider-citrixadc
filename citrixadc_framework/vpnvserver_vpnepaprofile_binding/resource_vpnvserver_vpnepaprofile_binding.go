@@ -100,6 +100,15 @@ func (r *VpnvserverVpnepaprofileBindingResource) Read(ctx context.Context, req r
 	tflog.Debug(ctx, "Reading vpnvserver_vpnepaprofile_binding resource")
 
 	r.readVpnvserverVpnepaprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object deleted out-of-band: remove from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -200,9 +209,9 @@ func (r *VpnvserverVpnepaprofileBindingResource) readVpnvserverVpnepaprofileBind
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band): signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnvserver_vpnepaprofile_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -232,9 +241,9 @@ func (r *VpnvserverVpnepaprofileBindingResource) readVpnvserverVpnepaprofileBind
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing (deleted out-of-band): signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_vpnepaprofile_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

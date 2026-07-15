@@ -95,6 +95,16 @@ func (r *ApiprofileApispecBindingResource) Read(ctx context.Context, req resourc
 
 	r.readApiprofileApispecBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource was deleted out-of-band - remove from state for self-healing
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -195,9 +205,9 @@ func (r *ApiprofileApispecBindingResource) readApiprofileApispecBindingFromApi(c
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal deletion for self-healing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "apiprofile_apispec_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -227,9 +237,9 @@ func (r *ApiprofileApispecBindingResource) readApiprofileApispecBindingFromApi(c
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - signal deletion for self-healing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("apiprofile_apispec_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

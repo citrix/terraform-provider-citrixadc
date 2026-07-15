@@ -96,6 +96,17 @@ func (r *AppfwprofileRestvalidationBindingResource) Read(ctx context.Context, re
 
 	r.readAppfwprofileRestvalidationBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Self-heal: object was deleted out-of-band, remove from state so a
+	// subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -201,9 +212,9 @@ func (r *AppfwprofileRestvalidationBindingResource) readAppfwprofileRestvalidati
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal for self-heal.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwprofile_restvalidation_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -249,9 +260,9 @@ func (r *AppfwprofileRestvalidationBindingResource) readAppfwprofileRestvalidati
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - signal removal for self-heal.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_restvalidation_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

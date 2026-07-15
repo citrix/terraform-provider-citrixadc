@@ -90,6 +90,16 @@ func (r *VpnglobalAuditnslogpolicyBindingResource) Read(ctx context.Context, req
 
 	r.readVpnglobalAuditnslogpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the object was deleted out-of-band, remove it from state so a subsequent apply re-creates it
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -175,9 +185,9 @@ func (r *VpnglobalAuditnslogpolicyBindingResource) readVpnglobalAuditnslogpolicy
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band) - signal removal by nulling the Id
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnglobal_auditnslogpolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -190,9 +200,9 @@ func (r *VpnglobalAuditnslogpolicyBindingResource) readVpnglobalAuditnslogpolicy
 		}
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band) - signal removal by nulling the Id
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_auditnslogpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

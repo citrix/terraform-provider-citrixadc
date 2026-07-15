@@ -94,6 +94,15 @@ func (r *SslserviceSslcipherBindingResource) Read(ctx context.Context, req resou
 	tflog.Debug(ctx, "Reading sslservice_sslcipher_binding resource")
 
 	r.readSslserviceSslcipherBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the binding is gone out-of-band, remove it from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -242,7 +251,10 @@ func (r *SslserviceSslcipherBindingResource) readSslserviceSslcipherBindingFromA
 		if diags.HasError() {
 			return
 		}
-		diags.AddError("Client Error", "sslservice_sslcipher_binding not found with the provided ID attributes")
+		// Neither the typed GET nor the umbrella endpoint has the binding: it was
+		// deleted out-of-band. Signal "gone" so Read removes it from state and a
+		// subsequent apply re-creates it.
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -95,6 +95,16 @@ func (r *SystemsshkeyResource) Read(ctx context.Context, req resource.ReadReques
 
 	r.readSystemsshkeyFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource has been deleted out-of-band - remove from state
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -174,9 +184,9 @@ func (r *SystemsshkeyResource) readSystemsshkeyFromApi(ctx context.Context, data
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal from state
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "systemsshkey returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -217,9 +227,9 @@ func (r *SystemsshkeyResource) readSystemsshkeyFromApi(ctx context.Context, data
 		}
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal from state
 	if foundIndex == -1 {
-		diags.AddError("Client Error", "systemsshkey not found with the provided ID attributes")
+		data.Id = types.StringNull()
 		return
 	}
 

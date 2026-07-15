@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -90,6 +91,15 @@ func (r *LbwlmResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	tflog.Debug(ctx, "Reading lbwlm resource")
 
 	r.readLbwlmFromApi(ctx, &data, &resp.Diagnostics)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -177,6 +187,10 @@ func (r *LbwlmResource) readLbwlmFromApi(ctx context.Context, data *LbwlmResourc
 
 	getResponseData, err = r.client.FindResource(service.Lbwlm.Type(), wlmname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbwlm, got error: %s", err))
 		return
 	}

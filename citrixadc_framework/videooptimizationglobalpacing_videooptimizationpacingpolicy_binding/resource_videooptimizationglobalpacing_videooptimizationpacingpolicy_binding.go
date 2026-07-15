@@ -96,6 +96,15 @@ func (r *VideooptimizationglobalpacingVideooptimizationpacingpolicyBindingResour
 	tflog.Debug(ctx, "Reading videooptimizationglobalpacing_videooptimizationpacingpolicy_binding resource")
 
 	r.readVideooptimizationglobalpacingVideooptimizationpacingpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object was deleted out-of-band; remove it from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -196,9 +205,9 @@ func (r *VideooptimizationglobalpacingVideooptimizationpacingpolicyBindingResour
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band); signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "videooptimizationglobalpacing_videooptimizationpacingpolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -255,9 +264,9 @@ func (r *VideooptimizationglobalpacingVideooptimizationpacingpolicyBindingResour
 		}
 	}
 
-	// Resource is missing
+	// Matching item not found (deleted out-of-band); signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("videooptimizationglobalpacing_videooptimizationpacingpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -89,6 +90,15 @@ func (r *NsaptlicenseResource) Read(ctx context.Context, req resource.ReadReques
 	tflog.Debug(ctx, "Reading nsaptlicense resource")
 
 	r.readNsaptlicenseFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource was deleted out-of-band; remove it from state so it can be recreated
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -147,7 +157,7 @@ func (r *NsaptlicenseResource) readNsaptlicenseFromApi(ctx context.Context, data
 	}
 
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "nsaptlicense returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -165,7 +175,7 @@ func (r *NsaptlicenseResource) readNsaptlicenseFromApi(ctx context.Context, data
 	}
 
 	if foundIndex == -1 {
-		diags.AddError("Client Error", "nsaptlicense not found with the provided ID attributes")
+		data.Id = types.StringNull()
 		return
 	}
 

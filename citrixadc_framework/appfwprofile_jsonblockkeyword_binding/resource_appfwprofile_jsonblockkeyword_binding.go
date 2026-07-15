@@ -97,6 +97,17 @@ func (r *AppfwprofileJsonblockkeywordBindingResource) Read(ctx context.Context, 
 
 	r.readAppfwprofileJsonblockkeywordBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Self-heal: object was deleted out-of-band, remove from state so a
+	// subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -204,9 +215,9 @@ func (r *AppfwprofileJsonblockkeywordBindingResource) readAppfwprofileJsonblockk
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal for self-heal.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwprofile_jsonblockkeyword_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -268,9 +279,9 @@ func (r *AppfwprofileJsonblockkeywordBindingResource) readAppfwprofileJsonblockk
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - signal removal for self-heal.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_jsonblockkeyword_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

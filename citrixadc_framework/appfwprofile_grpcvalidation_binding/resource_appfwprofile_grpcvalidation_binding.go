@@ -96,6 +96,17 @@ func (r *AppfwprofileGrpcvalidationBindingResource) Read(ctx context.Context, re
 
 	r.readAppfwprofileGrpcvalidationBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Self-heal: object was deleted out-of-band, remove from state so a
+	// subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -198,9 +209,9 @@ func (r *AppfwprofileGrpcvalidationBindingResource) readAppfwprofileGrpcvalidati
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal for self-heal.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwprofile_grpcvalidation_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -246,9 +257,9 @@ func (r *AppfwprofileGrpcvalidationBindingResource) readAppfwprofileGrpcvalidati
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - signal removal for self-heal.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_grpcvalidation_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

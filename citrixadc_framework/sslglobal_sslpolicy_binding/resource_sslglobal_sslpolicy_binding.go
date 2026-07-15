@@ -97,6 +97,16 @@ func (r *SslglobalSslpolicyBindingResource) Read(ctx context.Context, req resour
 	tflog.Debug(ctx, "Reading sslglobal_sslpolicy_binding resource")
 
 	r.readSslglobalSslpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the binding was deleted out-of-band, remove it from state so a
+	// subsequent apply re-creates it instead of erroring.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -194,9 +204,9 @@ func (r *SslglobalSslpolicyBindingResource) readSslglobalSslpolicyBindingFromApi
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "sslglobal_sslpolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -253,9 +263,9 @@ func (r *SslglobalSslpolicyBindingResource) readSslglobalSslpolicyBindingFromApi
 		}
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("sslglobal_sslpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

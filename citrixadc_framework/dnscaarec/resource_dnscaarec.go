@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -86,6 +87,15 @@ func (r *DnscaarecResource) Read(ctx context.Context, req resource.ReadRequest, 
 	tflog.Debug(ctx, "Reading dnscaarec resource")
 
 	r.readDnscaarecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Record is gone out-of-band: remove from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -224,8 +234,9 @@ func (r *DnscaarecResource) readDnscaarecFromApi(ctx context.Context, data *Dnsc
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnscaarec, got error: %s", err))
 		return
 	}
+	// Parent domain is gone: signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "dnscaarec returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -242,8 +253,9 @@ func (r *DnscaarecResource) readDnscaarecFromApi(ctx context.Context, data *Dnsc
 		}
 	}
 
+	// Record is gone: signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", "dnscaarec not found with the provided recordid")
+		data.Id = types.StringNull()
 		return
 	}
 

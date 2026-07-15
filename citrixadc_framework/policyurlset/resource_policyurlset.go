@@ -117,6 +117,16 @@ func (r *PolicyurlsetResource) Read(ctx context.Context, req resource.ReadReques
 
 	r.readPolicyurlsetFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the resource was deleted out-of-band, remove it from state
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

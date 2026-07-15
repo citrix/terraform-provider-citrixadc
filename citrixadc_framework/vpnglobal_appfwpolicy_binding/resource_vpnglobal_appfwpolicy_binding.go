@@ -90,6 +90,16 @@ func (r *VpnglobalAppfwpolicyBindingResource) Read(ctx context.Context, req reso
 
 	r.readVpnglobalAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the object was deleted out-of-band, remove it from state so a subsequent apply re-creates it
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -171,9 +181,9 @@ func (r *VpnglobalAppfwpolicyBindingResource) readVpnglobalAppfwpolicyBindingFro
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band) - signal removal by nulling the Id
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnglobal_appfwpolicy_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -199,9 +209,9 @@ func (r *VpnglobalAppfwpolicyBindingResource) readVpnglobalAppfwpolicyBindingFro
 		}
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band) - signal removal by nulling the Id
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnglobal_appfwpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

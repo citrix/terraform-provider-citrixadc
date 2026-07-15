@@ -95,6 +95,15 @@ func (r *VpnvserverAuthenticationpolicyBindingResource) Read(ctx context.Context
 	tflog.Debug(ctx, "Reading vpnvserver_authenticationpolicy_binding resource")
 
 	r.readVpnvserverAuthenticationpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object deleted out-of-band: remove from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -196,9 +205,9 @@ func (r *VpnvserverAuthenticationpolicyBindingResource) readVpnvserverAuthentica
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band): signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "vpnvserver_authenticationpolicy_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -244,9 +253,9 @@ func (r *VpnvserverAuthenticationpolicyBindingResource) readVpnvserverAuthentica
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing (deleted out-of-band): signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationpolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -97,6 +97,16 @@ func (r *AppfwprofileBypasslistBindingResource) Read(ctx context.Context, req re
 
 	r.readAppfwprofileBypasslistBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource was deleted out-of-band - remove from state for self-healing
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -205,9 +215,9 @@ func (r *AppfwprofileBypasslistBindingResource) readAppfwprofileBypasslistBindin
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal deletion for self-healing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "appfwprofile_bypasslist_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -269,9 +279,9 @@ func (r *AppfwprofileBypasslistBindingResource) readAppfwprofileBypasslistBindin
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing - signal deletion for self-healing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("appfwprofile_bypasslist_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

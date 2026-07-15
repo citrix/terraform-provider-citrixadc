@@ -91,6 +91,16 @@ func (r *SsldhfileResource) Read(ctx context.Context, req resource.ReadRequest, 
 	tflog.Debug(ctx, "Reading ssldhfile resource")
 
 	r.readSsldhfileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If the object was deleted out-of-band, remove it from state so a
+	// subsequent apply re-creates it instead of erroring.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -159,7 +169,8 @@ func (r *SsldhfileResource) readSsldhfileFromApi(ctx context.Context, data *Ssld
 	}
 
 	if getResponseData == nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read ssldhfile: no record found with name %s", name))
+		// Object is gone out-of-band; signal removal via null Id.
+		data.Id = types.StringNull()
 		return
 	}
 

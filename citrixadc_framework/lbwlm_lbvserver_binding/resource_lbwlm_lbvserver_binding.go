@@ -95,6 +95,15 @@ func (r *LbwlmLbvserverBindingResource) Read(ctx context.Context, req resource.R
 
 	r.readLbwlmLbvserverBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -192,9 +201,9 @@ func (r *LbwlmLbvserverBindingResource) readLbwlmLbvserverBindingFromApi(ctx con
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band) - signal removal via null Id
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "lbwlm_lbvserver_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -224,9 +233,9 @@ func (r *LbwlmLbvserverBindingResource) readLbwlmLbvserverBindingFromApi(ctx con
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing (deleted out-of-band) - signal removal via null Id
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("lbwlm_lbvserver_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

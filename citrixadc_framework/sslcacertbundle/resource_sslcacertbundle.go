@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -91,6 +93,15 @@ func (r *SslcacertbundleResource) Read(ctx context.Context, req resource.ReadReq
 
 	r.readSslcacertbundleFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -153,6 +164,10 @@ func (r *SslcacertbundleResource) readSslcacertbundleFromApi(ctx context.Context
 
 	getResponseData, err = r.client.FindResource(service.Sslcacertbundle.Type(), cacertbundlename_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslcacertbundle, got error: %s", err))
 		return
 	}

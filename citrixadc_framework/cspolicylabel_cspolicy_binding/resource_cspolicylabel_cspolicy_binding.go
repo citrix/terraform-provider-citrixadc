@@ -94,6 +94,15 @@ func (r *CspolicylabelCspolicyBindingResource) Read(ctx context.Context, req res
 	tflog.Debug(ctx, "Reading cspolicylabel_cspolicy_binding resource")
 
 	r.readCspolicylabelCspolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Object is gone out-of-band: remove from state so a subsequent apply re-creates it.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -191,9 +200,9 @@ func (r *CspolicylabelCspolicyBindingResource) readCspolicylabelCspolicyBindingF
 		return
 	}
 
-	// Resource is missing
+	// Resource (parent) is gone: signal removal via null Id.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "cspolicylabel_cspolicy_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -223,9 +232,9 @@ func (r *CspolicylabelCspolicyBindingResource) readCspolicylabelCspolicyBindingF
 		}
 	}
 
-	//  Resource is missing
+	//  Binding is gone: signal removal via null Id.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("cspolicylabel_cspolicy_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

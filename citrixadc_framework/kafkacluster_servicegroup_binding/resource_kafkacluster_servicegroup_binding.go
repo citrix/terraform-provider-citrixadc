@@ -95,6 +95,15 @@ func (r *KafkaclusterServicegroupBindingResource) Read(ctx context.Context, req 
 
 	r.readKafkaclusterServicegroupBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -193,9 +202,9 @@ func (r *KafkaclusterServicegroupBindingResource) readKafkaclusterServicegroupBi
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band) - signal removal from state.
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "kafkacluster_servicegroup_binding returned empty array.")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -225,9 +234,9 @@ func (r *KafkaclusterServicegroupBindingResource) readKafkaclusterServicegroupBi
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing (deleted out-of-band) - signal removal from state.
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("kafkacluster_servicegroup_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -190,10 +191,14 @@ func (r *NslimitselectorResource) readNslimitselectorFromApi(ctx context.Context
 
 	getResponseData, err := r.client.FindResource(service.Streamselector.Type(), selectorname_Name)
 	if err != nil {
-		// FindResource returns an error both for a genuine 404 and an empty body.
-		// Treat as not-found so the caller can decide (drift vs. hard error).
-		tflog.Debug(ctx, fmt.Sprintf("nslimitselector %s not found: %s", selectorname_Name, err))
-		return false
+		// Only a genuine not-found signals drift (caller removes from state).
+		// Transient/auth/5xx errors are surfaced as hard errors so state is preserved.
+		if utils.IsNotFoundError(err) {
+			tflog.Debug(ctx, fmt.Sprintf("nslimitselector %s not found: %s", selectorname_Name, err))
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read nslimitselector, got error: %s", err))
+		return true
 	}
 
 	nslimitselectorSetAttrFromGet(ctx, data, getResponseData)

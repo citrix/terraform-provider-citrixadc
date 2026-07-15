@@ -95,6 +95,16 @@ func (r *StreamidentifierAnalyticsprofileBindingResource) Read(ctx context.Conte
 
 	r.readStreamidentifierAnalyticsprofileBindingFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource has been deleted out-of-band - remove from state
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -206,9 +216,9 @@ func (r *StreamidentifierAnalyticsprofileBindingResource) readStreamidentifierAn
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal from state
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "streamidentifier_analyticsprofile_binding returned empty array")
+		data.Id = types.StringNull()
 		return
 	}
 
@@ -255,9 +265,9 @@ func (r *StreamidentifierAnalyticsprofileBindingResource) readStreamidentifierAn
 		}
 	}
 
-	// Resource is missing
+	// Resource is missing - signal removal from state
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("streamidentifier_analyticsprofile_binding not found with the provided ID attributes"))
+		data.Id = types.StringNull()
 		return
 	}
 

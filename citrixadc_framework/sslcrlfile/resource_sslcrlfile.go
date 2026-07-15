@@ -92,6 +92,15 @@ func (r *SslcrlfileResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	r.readSslcrlfileFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -159,7 +168,8 @@ func (r *SslcrlfileResource) readSslcrlfileFromApi(ctx context.Context, data *Ss
 	}
 
 	if getResponseData == nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslcrlfile: no record found with name %s", name))
+		// Object is gone out-of-band; signal removal via null Id.
+		data.Id = types.StringNull()
 		return
 	}
 
