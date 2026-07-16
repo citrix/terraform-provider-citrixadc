@@ -824,6 +824,15 @@ func providerResources() map[string]*schema.Resource {
 		"citrixadc_systemuser_systemcmdpolicy_binding":                            resourceCitrixAdcSystemuser_systemcmdpolicy_binding(),
 		"citricadc_nscapacity":                                                    resourceCitrixAdcNscapacity(),
 		"citrixadc_nslicenseserver":                                               resourceCitrixAdcNslicenseserver(),
+		"citrixadc_nsconfig_save":                                                 resourceCitrixAdcNsconfigSave(),
+		"citrixadc_nsconfig_clear":                                                resourceCitrixAdcNsconfigClear(),
+		"citrixadc_nsconfig_update":                                               resourceCitrixAdcNsconfigUpdate(),
+		"citrixadc_gslbservicegroup":                                              resourceCitrixAdcGslbservicegroup(),
+		"citrixadc_gslbservicegroup_lbmonitor_binding":                            resourceCitrixAdcGslbservicegroup_lbmonitor_binding(),
+		"citrixadc_gslbservicegroup_gslbservicegroupmember_binding":               resourceCitrixAdcGslbservicegroup_gslbservicegroupmember_binding(),
+		"citrixadc_rnatparam":                                                     resourceCitrixAdcRnatparam(),
+		"citrixadc_rnatglobal_auditsyslogpolicy_binding":                          resourceCitrixAdcRnatglobal_auditsyslogpolicy_binding(),
+		"citrixadc_vridparam":                                                     resourceCitrixAdcVridparam(),
 	}
 }
 
