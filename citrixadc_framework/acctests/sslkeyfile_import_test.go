@@ -1,0 +1,201 @@
+/*
+Copyright 2016 Citrix Systems, Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package citrixadc
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+)
+
+// sslkeyfile_import is an Import-as-create resource (POST ?action=Import), with
+// no update (every attribute is RequiresReplace) and a keyless delete
+// (DELETE ?args=name:<name>). The `src` attribute must point at a reachable
+// key file (an http(s) URL or a local: path of a file already on the
+// appliance). It is a write-only Import input that NITRO does not echo back,
+// so it is never asserted. `password` is an optional secret (passphrase for an
+// encrypted key file) expanded into the write-only triple
+// password / password_wo / password_wo_version; secrets are never asserted.
+//
+// doSslkeyfilePreChecks (see helpers_test.go) uploads testdata/sample.key and
+// testdata/sample_enc.key to /var/tmp as prerequisites. The basic/datasource
+// tests use the UNENCRYPTED src = "local:sample.key"; the password_wo ephemeral
+// test uses the ENCRYPTED src = "local:sample_enc.key" (the supplied passphrase
+// decrypts it on Import). Secrets/src are never asserted.
+
+const testAccSslkeyfileImport_basic_step1 = `
+resource "citrixadc_sslkeyfile_import" "tf_sslkeyfile" {
+  name = "tf_sslkeyfile"
+  src  = "local:sample.key"
+}
+
+`
+
+func TestAccSslkeyfileImport_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslkeyfilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslkeyfileImportDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslkeyfileImport_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslkeyfileImportExist("citrixadc_sslkeyfile_import.tf_sslkeyfile", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslkeyfile_import.tf_sslkeyfile", "name", "tf_sslkeyfile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslkeyfileImport_import(t *testing.T) {
+	const resAddr = "citrixadc_sslkeyfile_import.tf_sslkeyfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslkeyfilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslkeyfileImportDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslkeyfileImport_basic_step1,
+			},
+			{
+				Config:            testAccSslkeyfileImport_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// src is a write-only Import input NITRO never echoes back, and
+				// password_wo_version is a client-side version tracker; neither is
+				// reconstructed by Read on import, so both are ignored.
+				ImportStateVerifyIgnore: []string{"src", "password_wo_version"},
+			},
+		},
+	})
+}
+
+func testAccCheckSslkeyfileImportExist(n string, id *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No sslkeyfile name is set")
+		}
+
+		if id != nil {
+			if *id != "" && *id != rs.Primary.ID {
+				return fmt.Errorf("Resource ID has changed!")
+			}
+
+			*id = rs.Primary.ID
+		}
+
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		// sslkeyfile has NO get-by-name endpoint (GET /sslkeyfile/<name> => 400,
+		// errorcode 1090). Get all records and filter by name.
+		allResources, err := client.FindAllResources(service.Sslkeyfile.Type())
+		if err != nil {
+			return err
+		}
+
+		found := false
+		for _, v := range allResources {
+			if name, ok := v["name"].(string); ok && name == rs.Primary.ID {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("sslkeyfile %s not found", n)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckSslkeyfileImportDestroy(s *terraform.State) error {
+	client, err := testAccGetFrameworkClient()
+	if err != nil {
+		return fmt.Errorf("Failed to get test client: %v", err)
+	}
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "citrixadc_sslkeyfile_import" {
+			continue
+		}
+
+		// sslkeyfile has NO get-by-name endpoint. Get all records and filter by
+		// name; a list error is treated as destroyed.
+		allResources, err := client.FindAllResources(service.Sslkeyfile.Type())
+		if err != nil {
+			continue
+		}
+
+		for _, v := range allResources {
+			if name, ok := v["name"].(string); ok && name == rs.Primary.ID {
+				return fmt.Errorf("sslkeyfile %s still exists", rs.Primary.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
+// Write-only ephemeral test for the password secret. The key file referenced by
+// `src` must be encrypted with the supplied passphrase for the Import to
+// succeed; bump password_wo_version between steps to trigger replacement. The
+// secret value itself is never stored in state and is never asserted.
+const testAccSslkeyfileImport_password_wo_step1 = `
+
+	variable "sslkeyfile_password_wo" {
+	  type      = string
+	  sensitive = true
+	}
+
+	resource "citrixadc_sslkeyfile_import" "tf_sslkeyfile" {
+		name                = "tf_sslkeyfile"
+		src                 = "local:sample_enc.key"
+		password_wo         = var.sslkeyfile_password_wo
+		password_wo_version = 1
+	}
+`
+
+func TestAccSslkeyfileImport_password_wo_ephemeral(t *testing.T) {
+	t.Setenv("TF_VAR_sslkeyfile_password_wo", "1234567")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslkeyfilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslkeyfileImportDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslkeyfileImport_password_wo_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslkeyfileImportExist("citrixadc_sslkeyfile_import.tf_sslkeyfile", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslkeyfile_import.tf_sslkeyfile", "password_wo_version", "1"),
+					resource.TestCheckResourceAttr("citrixadc_sslkeyfile_import.tf_sslkeyfile", "name", "tf_sslkeyfile"),
+				),
+			},
+		},
+	})
+}
