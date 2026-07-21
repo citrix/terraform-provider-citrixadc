@@ -31,9 +31,14 @@ const testAccClusternodegroup_gslbvserver_binding_basic = `
 		name        = "my_gslb_vserver_ds"
 		servicetype = "HTTP"
 	}
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
 	resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
 		name = "my_tf_group"
 		vserver = citrixadc_gslbvserver.tf_gslbvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup]
 	}
 `
 
@@ -205,9 +210,15 @@ const testAccClusternodegroup_gslbvserver_bindingDataSource_basic = `
 		servicetype = "HTTP"
 	}
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
 		name    = "my_tf_group"
 		vserver = citrixadc_gslbvserver.tf_gslbvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup]
 	}
 
 	data "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {

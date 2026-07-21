@@ -333,9 +333,9 @@ data "citrixadc_sslservice_ecccurve_binding" "tf_sslservice_ecccurve_binding_ds"
 `
 
 func TestAccSslservice_ecccurve_bindingDataSource_basic(t *testing.T) {
-	// if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
-	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
-	// }
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

@@ -56,6 +56,9 @@ const testAccSslservicegroup_sslcipher_binding_basic_step2 = `
 `
 
 func TestAccSslservicegroup_sslcipher_binding_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -80,6 +83,9 @@ func TestAccSslservicegroup_sslcipher_binding_basic(t *testing.T) {
 }
 
 func TestAccSslservicegroup_sslcipher_binding_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	const resAddr = "citrixadc_sslservicegroup_sslcipher_binding.tf_sslservicegroup_sslcipher_binding"
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -260,6 +266,9 @@ const testAccSslservicegroup_sslcipher_bindingDataSource_basic = `
 `
 
 func TestAccSslservicegroup_sslcipher_bindingDataSource_basic(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

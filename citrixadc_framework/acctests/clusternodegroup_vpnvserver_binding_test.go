@@ -29,7 +29,7 @@ const testAccClusternodegroup_vpnvserver_binding_basic = `
 
 	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
 		name   = "my_clusternode_ds"
-		strict = "NO"
+		sticky = "YES"
 	}
 
 	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
@@ -72,7 +72,7 @@ func TestAccClusternodegroup_vpnvserver_binding_basic(t *testing.T) {
 			{
 				Config: testAccClusternodegroup_vpnvserver_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusternodegroup_vpnvserver_bindingNotExist("citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding", "my_vpn_group,my_vpnvserver"),
+					testAccCheckClusternodegroup_vpnvserver_bindingNotExist("citrixadc_clusternodegroup_vpnvserver_binding.tf_clusternodegroup_vpnvserver_binding", "my_clusternode_ds,my_vpn_vserver_ds"),
 				),
 			},
 		},
@@ -213,14 +213,25 @@ func testAccCheckClusternodegroup_vpnvserver_bindingDestroy(s *terraform.State) 
 
 const testAccClusternodegroup_vpnvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "my_vpn_vserver_ds"
 		servicetype = "SSL"
 	}
 
 	resource "citrixadc_clusternodegroup_vpnvserver_binding" "tf_clusternodegroup_vpnvserver_binding" {
-		name    = "my_tf_group"
+		name    = citrixadc_clusternodegroup.tf_clusternodegroup.name
 		vserver = citrixadc_vpnvserver.tf_vpnvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_vpnvserver_binding" "tf_clusternodegroup_vpnvserver_binding" {

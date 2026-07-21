@@ -27,11 +27,17 @@ import (
 
 const testAccClusternodegroup_gslbsite_binding_basic = `
 
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "YES"
+	}
+
 resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
 	gslbsite = citrixadc_gslbsite.site_remote.sitename
 	name     = "my_tf_group"
+	depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup]
 	}
-  
+
   resource "citrixadc_gslbsite" "site_remote" {
 	sitename        = "my_local_site"
 	siteipaddress   = "10.222.74.169"
@@ -210,6 +216,11 @@ func testAccCheckClusternodegroup_gslbsite_bindingDestroy(s *terraform.State) er
 
 const testAccClusternodegroup_gslbsite_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "YES"
+	}
+
 	resource "citrixadc_gslbsite" "tf_gslbsite" {
 		sitename        = "my_gslb_site_ds"
 		siteipaddress   = "192.0.2.1"
@@ -221,6 +232,7 @@ const testAccClusternodegroup_gslbsite_bindingDataSource_basic = `
 	resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
 		name     = "my_tf_group"
 		gslbsite = citrixadc_gslbsite.tf_gslbsite.sitename
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup]
 	}
 
 	data "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {

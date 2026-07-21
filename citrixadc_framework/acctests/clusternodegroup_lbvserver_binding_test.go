@@ -27,6 +27,11 @@ import (
 
 const testAccClusternodegroup_lbvserver_binding_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "my_lb_vserver_ds"
 		servicetype = "HTTP"
@@ -35,6 +40,7 @@ const testAccClusternodegroup_lbvserver_binding_basic = `
 	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
 		name = "my_tf_group"
 		vserver = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_lbvserver.tf_lbvserver]
 	}
 `
 
@@ -201,6 +207,11 @@ func testAccCheckClusternodegroup_lbvserver_bindingDestroy(s *terraform.State) e
 
 const testAccClusternodegroup_lbvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "my_lb_vserver_ds"
 		servicetype = "HTTP"
@@ -209,6 +220,7 @@ const testAccClusternodegroup_lbvserver_bindingDataSource_basic = `
 	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
 		name    = "my_tf_group"
 		vserver = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_lbvserver.tf_lbvserver]
 	}
 
 	data "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {

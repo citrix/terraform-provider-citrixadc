@@ -46,21 +46,43 @@ func (d *LsnappsprofilePortBindingDataSource) Read(ctx context.Context, req data
 	appsprofilename_Name := data.Appsprofilename.ValueString()
 	lsnport_Name := data.Lsnport
 
-	var dataArr []map[string]interface{}
 	var err error
 
+	// NOTE: The direct "lsnappsprofile_port_binding/<appsprofilename>" GET endpoint does not
+	// return the bound ports on the ADC (it responds with an empty payload even when a port
+	// is bound). The bound ports are only exposed through the aggregate
+	// "lsnappsprofile_binding/<appsprofilename>" endpoint, so read from there instead and
+	// extract the nested "lsnappsprofile_port_binding" array.
 	findParams := service.FindParams{
-		ResourceType:             service.Lsnappsprofile_port_binding.Type(),
+		ResourceType:             "lsnappsprofile_binding",
 		ResourceName:             appsprofilename_Name,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	aggArr, err := d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read lsnappsprofile_port_binding, got error: %s", err))
 		return
 	}
 
-	// Resource is missing
+	// Parent appsprofile is missing
+	if len(aggArr) == 0 {
+		resp.Diagnostics.AddError("Client Error", "lsnappsprofile_port_binding returned empty array.")
+		return
+	}
+
+	// Extract the nested lsnappsprofile_port_binding array from the aggregate response
+	dataArr := []map[string]interface{}{}
+	if raw, ok := aggArr[0]["lsnappsprofile_port_binding"]; ok && raw != nil {
+		if arr, ok := raw.([]interface{}); ok {
+			for _, item := range arr {
+				if m, ok := item.(map[string]interface{}); ok {
+					dataArr = append(dataArr, m)
+				}
+			}
+		}
+	}
+
+	// No ports are bound to this appsprofile
 	if len(dataArr) == 0 {
 		resp.Diagnostics.AddError("Client Error", "lsnappsprofile_port_binding returned empty array.")
 		return

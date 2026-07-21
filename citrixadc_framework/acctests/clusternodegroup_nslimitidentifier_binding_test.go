@@ -27,6 +27,11 @@ import (
 
 const testAccClusternodegroup_nslimitidentifier_binding_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier" {
 		limitidentifier = "my_ns_limit_identifier_ds"
 		threshold       = 100
@@ -36,8 +41,9 @@ const testAccClusternodegroup_nslimitidentifier_binding_basic = `
 	resource "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {
 		name           = "my_tf_group"
 		identifiername = citrixadc_nslimitidentifier.tf_nslimitidentifier.limitidentifier
+		depends_on     = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_nslimitidentifier.tf_nslimitidentifier]
 	}
-  
+
 `
 
 const testAccClusternodegroup_nslimitidentifier_binding_basic_step2 = `
@@ -203,6 +209,11 @@ func testAccCheckClusternodegroup_nslimitidentifier_bindingDestroy(s *terraform.
 
 const testAccClusternodegroup_nslimitidentifier_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier" {
 		limitidentifier = "my_ns_limit_identifier_ds"
 		threshold       = 100
@@ -212,6 +223,7 @@ const testAccClusternodegroup_nslimitidentifier_bindingDataSource_basic = `
 	resource "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {
 		name           = "my_tf_group"
 		identifiername = citrixadc_nslimitidentifier.tf_nslimitidentifier.limitidentifier
+		depends_on     = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_nslimitidentifier.tf_nslimitidentifier]
 	}
 
 	data "citrixadc_clusternodegroup_nslimitidentifier_binding" "tf_clusternodegroup_nslimitidentifier_binding" {

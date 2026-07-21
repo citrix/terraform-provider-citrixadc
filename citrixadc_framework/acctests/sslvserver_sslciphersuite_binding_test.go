@@ -82,7 +82,7 @@ const testAccSslvserver_sslciphersuite_bindingDataSource_basic = `
 `
 
 func TestAccSslvserver_sslciphersuite_binding_basic(t *testing.T) {
-	t.Skip("TODO: Operation not permitted!")
+	// t.Skip("TODO: Operation not permitted!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -249,8 +249,8 @@ func testAccCheckSslvserver_sslciphersuite_bindingDestroy(s *terraform.State) er
 }
 
 func TestAccSslvserver_sslciphersuite_bindingDataSource_basic(t *testing.T) {
-	t.Skip("TODO: Operation not permitted when SSL profiles are enabled!")
-	if adcTestbed == "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+	// t.Skip("TODO: Operation not permitted when SSL profiles are enabled!")
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
 		t.Skipf("ADC testbed is %s. This test is incompatible with SSL profiles.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{

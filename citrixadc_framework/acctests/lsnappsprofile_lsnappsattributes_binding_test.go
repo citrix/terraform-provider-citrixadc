@@ -52,9 +52,20 @@ const testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic = `
 		port              = 90
 		sessiontimeout    = 40
 	}
+
+	# The LSN application profile must have the port (that the appsattributes
+	# references) bound to it before an lsnappsattributes can be bound.
+	# Without this, the binding fails with errorcode 257
+	# "Operation not permitted [Ports Not Bound to Appsprofile]".
+	resource "citrixadc_lsnappsprofile_port_binding" "tf_lsnappsprofile_port_binding" {
+		appsprofilename = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
+		lsnport         = "90"
+	}
+
 resource "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
 	appsprofilename    = citrixadc_lsnappsprofile.tf_lsnappsprofile.appsprofilename
 	appsattributesname = citrixadc_lsnappsattributes.tf_lsnappsattributes.name
+	depends_on         = [citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding]
 }
 
 data "citrixadc_lsnappsprofile_lsnappsattributes_binding" "tf_lsnappsprofile_lsnappsattributes_binding" {
@@ -227,7 +238,7 @@ func TestAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic(t *testing.
 			{
 				Config: testAccLsnappsprofile_lsnappsattributes_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding", "appsprofilename", "my_lsn_profile"),
+					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding", "appsprofilename", "my_lsn_appsprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding", "appsattributesname", "my_lsn_appattributes"),
 				),
 			},

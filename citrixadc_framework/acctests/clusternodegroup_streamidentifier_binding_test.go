@@ -42,9 +42,15 @@ const testAccClusternodegroup_streamidentifier_binding_basic = `
 		log = "NONE"
 	}
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
 		name           = "my_tf_group"
 		identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
+		depends_on     = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_streamidentifier.tf_streamidentifier]
 	}
 `
 
@@ -226,9 +232,15 @@ const testAccClusternodegroup_streamidentifier_bindingDataSource_basic = `
 		log = "NONE"
 	}
 
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+  name   = "my_tf_group"
+  strict = "NO"
+}
+
 resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
 name           = "my_tf_group"
 identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
+depends_on     = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_streamidentifier.tf_streamidentifier]
 }
 
 data "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
