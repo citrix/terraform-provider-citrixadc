@@ -12,7 +12,7 @@
 *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
- */
+*/
 
 package quic
 
@@ -24,4 +24,9 @@ type Quicparam struct {
 	* Rotation frequency, in seconds, for the secret used to generate address validation tokens that will be issued in QUIC Retry packets and QUIC NEW_TOKEN frames sent by the Citrix ADC. A value of 0 can be configured if secret rotation is not desired.
 	*/
 	Quicsecrettimeout *int `json:"quicsecrettimeout,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

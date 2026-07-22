@@ -12,32 +12,25 @@
 *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 *   See the License for the specific language governing permissions and
 *   limitations under the License.
- */
+*/
 
 package kafka
 
 /**
 * Configuration for Kafka cluster resource.
- */
+*/
 type Kafkacluster struct {
 	/**
-	* Name for the Kafka cluster.
-	 */
+	* Name for the Kafka cluster
+	*/
 	Name string `json:"name,omitempty"`
-	/**
-	* Total active services bound to servicegroup.
-	 */
-	Activesvc float64 `json:"activesvc,omitempty"`
-	/**
-	* Total services bound to servicegroup.
-	 */
-	Totalsvc float64 `json:"totalsvc,omitempty"`
-	/**
-	* Topic of the servicegroup.
-	 */
+
+	//------- Read only Parameter ---------;
+
+	Activesvc string `json:"activesvc,omitempty"`
+	Totalsvc string `json:"totalsvc,omitempty"`
 	Topicname string `json:"topicname,omitempty"`
-	/**
-	* Total number of topic servicegroups bound.
-	 */
-	Numtopics float64 `json:"numtopics,omitempty"`
+	Numtopics string `json:"numtopics,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }

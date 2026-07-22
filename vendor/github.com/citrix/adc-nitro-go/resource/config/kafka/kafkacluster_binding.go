@@ -17,15 +17,11 @@
 package kafka
 
 /**
-* Binding class showing the servicegroup that can be bound to kafkacluster.
+* Binding object which returns the resources bound to kafkacluster_binding. 
 */
-type Kafkaclusterservicegroupbinding struct {
+type Kafkaclusterbinding struct {
 	/**
-	* Name of the bound servicegroup.
-	*/
-	Servicegroupname string `json:"servicegroupname,omitempty"`
-	/**
-	* Name for the Kafka cluster
+	* Name for the Kafka cluster.<br/>Minimum value =  
 	*/
 	Name string `json:"name,omitempty"`
 

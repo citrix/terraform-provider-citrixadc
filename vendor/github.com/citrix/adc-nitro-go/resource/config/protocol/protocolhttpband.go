@@ -17,23 +17,45 @@
 package protocol
 
 /**
-* Configuration for HTTP band resource.
+* Configuration for HTTP request/response band resource.
 */
 type Protocolhttpband struct {
 	/**
-	* Band size, in bytes, for HTTP request band statistics.
+	* Band size, in bytes, for HTTP request band statistics. For example, if you specify a band size of 100 bytes, statistics will be maintained and displayed for the following size ranges:
+		0 - 99 bytes
+		100 - 199 bytes
+		200 - 299 bytes and so on.
 	*/
 	Reqbandsize *int `json:"reqbandsize,omitempty"`
 	/**
-	* Band size, in bytes, for HTTP response band statistics.
+	* Band size, in bytes, for HTTP response band statistics. For example, if you specify a band size of 100 bytes, statistics will be maintained and displayed for the following size ranges:
+		0 - 99 bytes
+		100 - 199 bytes
+		200 - 299 bytes and so on.
 	*/
 	Respbandsize *int `json:"respbandsize,omitempty"`
 	/**
-	* Type of statistics to display (show/clear filter only).
+	* Type of statistics to display.
 	*/
 	Type string `json:"type,omitempty"`
 	/**
-	* Unique number that identifies the cluster node (GET filter only).
+	* Unique number that identifies the cluster node.
 	*/
 	Nodeid *int `json:"nodeid,omitempty"`
+
+	//------- Read only Parameter ---------;
+
+	Bandrange string `json:"bandrange,omitempty"`
+	Numberofbands string `json:"numberofbands,omitempty"`
+	Totalbandsize string `json:"totalbandsize,omitempty"`
+	Avgbandsize string `json:"avgbandsize,omitempty"`
+	Avgbandsizenew string `json:"avgbandsizenew,omitempty"`
+	Banddata string `json:"banddata,omitempty"`
+	Banddatanew string `json:"banddatanew,omitempty"`
+	Accesscount string `json:"accesscount,omitempty"`
+	Accessratio string `json:"accessratio,omitempty"`
+	Accessrationew string `json:"accessrationew,omitempty"`
+	Totals string `json:"totals,omitempty"`
+	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+
 }
