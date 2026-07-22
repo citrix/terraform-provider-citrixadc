@@ -207,6 +207,28 @@ func TestAccSslhsmkey_password_backward_compat(t *testing.T) {
 	})
 }
 
+func TestAccSslhsmkey_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslhsmkey.tf_hsmkey1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslhsmkeyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslhsmkey_basic},
+			{
+				Config:                  testAccSslhsmkey_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSslhsmkey_sdkv2StateUpgrade(t *testing.T) {
 	if adcTestbed != "STANDALONE_HSM" {
 		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)

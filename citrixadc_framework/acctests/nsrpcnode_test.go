@@ -51,6 +51,39 @@ func TestAccNsrpcnode_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsrpcnode_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("Operation not permitted under CPX")
+	}
+	const resAddr = "citrixadc_nsrpcnode.tf_nsrpcnode"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsrpcnode_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsrpcnodeExist(resAddr, nil),
+				),
+			},
+			{
+				Config:            testAccNsrpcnode_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// `password` is a Sensitive attribute that NITRO does not echo back,
+				// and `password_wo_version` is a Computed version tracker not returned
+				// by the GET, so neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"password", "password_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckNsrpcnodeExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

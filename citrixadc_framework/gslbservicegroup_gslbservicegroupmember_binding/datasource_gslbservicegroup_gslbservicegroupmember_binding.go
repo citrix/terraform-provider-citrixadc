@@ -49,11 +49,6 @@ func (d *GslbservicegroupGslbservicegroupmemberBindingDataSource) Read(ctx conte
 	port_Name := data.Port
 	servername_Name := data.Servername
 
-	if ip_Name.IsNull() && servername_Name.IsNull() {
-		resp.Diagnostics.AddError("Data Source Error", "At least one of ip or servername must be set")
-		return
-	}
-
 	var dataArr []map[string]interface{}
 	var err error
 
@@ -74,34 +69,49 @@ func (d *GslbservicegroupGslbservicegroupmemberBindingDataSource) Read(ctx conte
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right id.
+	// ip and servername are a mutually-exclusive lookup choice: only filter on the one the
+	// user actually supplied in config. (When binding by servername the ADC still echoes the
+	// server's ip back, so unconditionally filtering on ip would never match a servername lookup.)
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check ip
-		if val, ok := v["ip"].(string); ok {
-			if !ip_Name.IsNull() && val != ip_Name.ValueString() {
+		// Check ip (only when supplied in config)
+		if !ip_Name.IsNull() {
+			if val, ok := v["ip"].(string); ok {
+				if val != ip_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
 		}
 
 		// Check port
-		if val, ok := v["port"]; ok {
-			val, _ = utils.ConvertToInt64(val)
-			if port_Name.IsNull() || val != port_Name.ValueInt64() {
+		if !port_Name.IsNull() {
+			if val, ok := v["port"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != port_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !port_Name.IsNull() {
-			match = false
-			continue
 		}
 
-		// Check servername
-		if val, ok := v["servername"].(string); ok {
-			if !servername_Name.IsNull() && val != servername_Name.ValueString() {
+		// Check servername (only when supplied in config)
+		if !servername_Name.IsNull() {
+			if val, ok := v["servername"].(string); ok {
+				if val != servername_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
@@ -118,7 +128,7 @@ func (d *GslbservicegroupGslbservicegroupmemberBindingDataSource) Read(ctx conte
 		return
 	}
 
-	gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

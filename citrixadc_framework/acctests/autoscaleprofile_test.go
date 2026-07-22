@@ -415,6 +415,27 @@ func TestAccAutoscaleprofileDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccAutoscaleprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_autoscaleprofile.tf_autoscaleprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscaleprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleprofile_basic,
+			},
+			{
+				Config:                  testAccAutoscaleprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apikey", "apikey_wo_version", "sharedsecret", "sharedsecret_wo_version"},
+			},
+		},
+	})
+}
+
 func TestAccAutoscaleprofile_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

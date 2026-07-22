@@ -2,6 +2,8 @@ package citrixadc
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
@@ -40,7 +42,7 @@ func resourceCitrixAdcNsvpxparam() *schema.Resource {
 				ForceNew: true,
 			},
 			"ownernode": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
@@ -52,15 +54,23 @@ func resourceCitrixAdcNsvpxparam() *schema.Resource {
 func createNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG]  citrixadc-provider: In createNsvpxparamFunc")
 	client := meta.(*NetScalerNitroClient).client
-	nsvpxparamName := resource.PrefixedUniqueId("tf-nsvpxparam-")
 
 	nsvpxparam := ns.Nsvpxparam{
 		Cpuyield:            d.Get("cpuyield").(string),
 		Masterclockcpu1:     d.Get("masterclockcpu1").(string),
 		Kvmvirtiomultiqueue: d.Get("kvmvirtiomultiqueue").(string),
 	}
+
+	// On a cluster, ownernode selects the node the settings apply to and is the
+	// resource's identity. On a standalone VPX ownernode is not configured and
+	// there is a single implicit entry. Encode this decision in the ID so Read
+	// can select the correct node even during a refresh, when the raw config is
+	// not available.
+	nsvpxparamName := resource.PrefixedUniqueId("tf-nsvpxparam-")
 	if raw := d.GetRawConfig().GetAttr("ownernode"); !raw.IsNull() {
-		nsvpxparam.Ownernode = intPtr(d.Get("ownernode").(int))
+		ownernode := d.Get("ownernode").(int)
+		nsvpxparam.Ownernode = intPtr(ownernode)
+		nsvpxparamName = strconv.Itoa(ownernode)
 	}
 
 	err := client.UpdateUnnamedResource("nsvpxparam", &nsvpxparam)
@@ -86,13 +96,20 @@ func readNsvpxparamFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.FromErr(err)
 	}
 
-	ownernode, ownernodeOk := d.GetOk("ownernode")
-
+	// The ID encodes the cluster node this resource represents (see
+	// createNsvpxparamFunc). A numeric ID means a specific ownernode was
+	// configured; anything else is a standalone VPX with a single entry. This is
+	// derived from the ID rather than the raw config because the config is not
+	// available during a refresh.
 	foundIndex := -1
-	if ownernodeOk {
+	if node, convErr := strconv.Atoi(nsvpxparamName); convErr == nil {
+		// Cluster mode: match by ownernode. NITRO returns ownernode as a string
+		// (e.g. "0"); compare numerically.
+		target := strconv.Itoa(node)
 		for index, value := range dataArr {
-			if ownernode == value["ownernode"] {
+			if fmt.Sprintf("%v", value["ownernode"]) == target {
 				foundIndex = index
+				break
 			}
 		}
 	} else {

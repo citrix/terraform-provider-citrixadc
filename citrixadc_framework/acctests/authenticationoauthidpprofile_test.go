@@ -68,6 +68,27 @@ func TestAccAuthenticationoauthidpprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationoauthidpprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationoauthidpprofile.tf_idpprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationoauthidpprofile_add},
+			{
+				Config:            testAccAuthenticationoauthidpprofile_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// clientsecret is not returned by the NITRO API (secret) and is only
+				// retained from config, so it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"clientsecret"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationoauthidpprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -7,7 +7,6 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -16,7 +15,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &AppfwarchiveResource{}
 var _ resource.ResourceWithConfigure = (*AppfwarchiveResource)(nil)
-var _ resource.ResourceWithImportState = (*AppfwarchiveResource)(nil)
 
 func NewAppfwarchiveResource() resource.Resource {
 	return &AppfwarchiveResource{}
@@ -25,10 +23,6 @@ func NewAppfwarchiveResource() resource.Resource {
 // AppfwarchiveResource defines the resource implementation.
 type AppfwarchiveResource struct {
 	client *service.NitroClient
-}
-
-func (r *AppfwarchiveResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *AppfwarchiveResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

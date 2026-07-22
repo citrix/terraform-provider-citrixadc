@@ -9,7 +9,7 @@ The `appfwarchive_export` resource exports an existing Application Firewall tar 
 Note: This is a one-shot side-effect action. NITRO exposes no inverse API (no "un-export" and no delete-by-export-target), no update endpoint, and no GET endpoint that reports export state. As a result:
 
 * `Read` is a no-op that preserves Terraform state.
-* `Update` is a no-op; every attribute is `RequiresReplace`, so any plan change forces destroy + recreate, which triggers another export.
+* `Update` is a no-op; this resource is immutable, so any plan change forces destroy + recreate, which triggers another export.
 * `Delete` only removes the resource from Terraform state; the exported file on the ADC is not removed.
 
 This resource is intentionally split from `citrixadc_appfwarchive` (which models `?action=Import`) because the two actions have incompatible payload requirements.
@@ -43,14 +43,3 @@ resource "citrixadc_appfwarchive_export" "tf_appfwarchive_export" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwarchive_export`. It has the same value as the `name` attribute.
-
-
-## Import
-
-An `appfwarchive_export` resource can be imported using its id (the archive name), e.g.
-
-```shell
-terraform import citrixadc_appfwarchive_export.tf_appfwarchive_export tf_appfwarchive
-```
-
-Because NITRO has no GET endpoint for export state, an imported resource carries only the values present in Terraform configuration; the original `target` cannot be recovered from the ADC.

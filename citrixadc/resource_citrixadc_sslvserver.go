@@ -371,9 +371,22 @@ func readSslvserverFunc(ctx context.Context, d *schema.ResourceData, meta interf
 		"zerorttearlydata",
 	}
 
+	// NITRO returns these integer-typed fields as JSON strings (e.g. dhcount:"0").
+	// Passing a string to d.Set on a schema.TypeInt attribute panics, so route
+	// them through setToInt which converts string/float64/int/nil to int.
+	intSslvserverAttributes := map[string]bool{
+		"dhcount":                           true,
+		"ersacount":                         true,
+		"maxage":                            true,
+		"sesstimeout":                       true,
+		"tls13sessionticketsperauthcontext": true,
+	}
+
 	for _, val := range sslvserverAttributes {
 		if _, exists := data[val]; exists {
-			if data[val] != "" || data[val] != nil {
+			if intSslvserverAttributes[val] {
+				setToInt(val, d, data[val])
+			} else if data[val] != "" || data[val] != nil {
 				d.Set(val, data[val])
 			}
 		}

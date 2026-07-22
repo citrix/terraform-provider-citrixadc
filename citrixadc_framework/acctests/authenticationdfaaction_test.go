@@ -67,6 +67,28 @@ func TestAccAuthenticationdfaaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationdfaaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationdfaaction.tf_dfaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationdfaactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationdfaaction_add},
+			{
+				Config:            testAccAuthenticationdfaaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// passphrase is a sensitive value that NITRO never echoes back, and
+				// passphrase_wo_version is a client-side tracker not stored on the ADC;
+				// neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"passphrase", "passphrase_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationdfaactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

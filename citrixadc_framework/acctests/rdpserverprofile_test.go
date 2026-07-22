@@ -76,6 +76,28 @@ func TestAccRdpserverprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccRdpserverprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_rdpserverprofile.tf_rdpserverprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRdpserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRdpserverprofile_basic},
+			{
+				Config:            testAccRdpserverprofile_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// psk is Sensitive and never echoed back by NITRO (retained from
+				// config), and psk_wo_version is a state-only version tracker; neither
+				// can round-trip through import.
+				ImportStateVerifyIgnore: []string{"psk", "psk_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckRdpserverprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

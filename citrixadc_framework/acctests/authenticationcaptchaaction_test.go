@@ -74,6 +74,29 @@ func TestAccAuthenticationcaptchaaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationcaptchaaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationcaptchaaction.tf_captchaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcaptchaactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationcaptchaaction_add},
+			{
+				Config:            testAccAuthenticationcaptchaaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// secretkey/sitekey are sensitive and never echoed back by NITRO
+				// (retained from config on Read), so they are null after import.
+				// The *_wo_version trackers are Computed and not populated by the
+				// GET response, so none of these can round-trip through import.
+				ImportStateVerifyIgnore: []string{"secretkey", "secretkey_wo_version", "sitekey", "sitekey_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationcaptchaactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

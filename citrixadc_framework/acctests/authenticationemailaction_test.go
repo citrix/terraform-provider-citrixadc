@@ -72,6 +72,28 @@ func TestAccAuthenticationemailaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationemailaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationemailaction.tf_emailaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationemailaction_add},
+			{
+				Config:            testAccAuthenticationemailaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password is a secret NITRO never echoes back; password_wo_version is a
+				// local write-only version tracker; timeout is not returned by the NITRO
+				// GET for this action, so none of them can round-trip through import.
+				ImportStateVerifyIgnore: []string{"password", "password_wo_version", "timeout"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationemailactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -69,6 +69,25 @@ func TestAccVridparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccVridparam_import(t *testing.T) {
+	const resAddr = "citrixadc_vridparam.tf_vridparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccVridparam_add},
+			{
+				Config:                  testAccVridparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVridparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

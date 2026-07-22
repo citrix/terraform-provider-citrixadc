@@ -60,6 +60,27 @@ func TestAccNsencryptionparams_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsencryptionparams_import(t *testing.T) {
+	const resAddr = "citrixadc_nsencryptionparams.tf_nsencryptionparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsencryptionparams_basic},
+			{
+				Config:            testAccNsencryptionparams_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// keyvalue_wo_version is a write-only version tracker (defaults to 1);
+				// it is not populated from the NITRO GET response on import.
+				ImportStateVerifyIgnore: []string{"keyvalue_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckNsencryptionparamsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

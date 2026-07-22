@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -100,6 +101,27 @@ func TestAccGslbservicegroup_lbmonitor_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccGslbservicegroup_lbmonitor_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroup_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroup_lbmonitor_binding_basic,
+			},
+			{
+				Config:                  testAccGslbservicegroup_lbmonitor_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckGslbservicegroup_lbmonitor_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -127,10 +149,12 @@ func testAccCheckGslbservicegroup_lbmonitor_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		servicegroupname := idSlice[0]
-		monitor_name := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "monitor_name"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		servicegroupname := idMap["servicegroupname"]
+		monitor_name := idMap["monitor_name"]
 
 		findParams := service.FindParams{
 			ResourceType:             "gslbservicegroup_lbmonitor_binding",

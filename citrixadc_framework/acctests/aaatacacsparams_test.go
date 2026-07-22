@@ -286,6 +286,29 @@ func TestAccAaatacacsparams_tacacssecret_wo_ephemeral(t *testing.T) {
 	})
 }
 
+func TestAccAaatacacsparams_import(t *testing.T) {
+	const resAddr = "citrixadc_aaatacacsparams.tf_aaatacacsparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaatacacsparams_basic,
+			},
+			{
+				Config:            testAccAaatacacsparams_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// tacacssecret_wo_version is a client-side write-only version tracker
+				// that NITRO does not store or return, so it cannot round-trip on import.
+				ImportStateVerifyIgnore: []string{"tacacssecret_wo_version"},
+			},
+		},
+	})
+}
+
 func TestAccAaatacacsparams_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

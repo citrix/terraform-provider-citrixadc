@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -99,6 +100,30 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_basic(t *testing.T) 
 	})
 }
 
+func TestAccGslbservicegroup_gslbservicegroupmember_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic,
+			},
+			{
+				Config:            testAccGslbservicegroup_gslbservicegroupmember_binding_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The resource Read/SetAttrFromGet preserves identity fields from prior
+				// state and does not repopulate them from the ID during import, so these
+				// RequiresReplace identity attributes cannot round-trip on a bare import.
+				ImportStateVerifyIgnore: []string{"port", "servername", "servicegroupname"},
+			},
+		},
+	})
+}
+
 func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -125,14 +150,17 @@ func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(n string, 
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 3)
-		servicegroupname := idSlice[0]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "servername", "ip", "port"}, []string{"servername", "ip", "port"})
+		if err != nil {
+			return err
+		}
+		servicegroupname := idMap["servicegroupname"]
 
-		servername := idSlice[1]
+		servername := idMap["servername"]
 
 		port := 0
-		if len(idSlice) == 3 {
-			if port, err = strconv.Atoi(idSlice[2]); err != nil {
+		if portStr, ok := idMap["port"]; ok && portStr != "" {
+			if port, err = strconv.Atoi(portStr); err != nil {
 				return err
 			}
 		}

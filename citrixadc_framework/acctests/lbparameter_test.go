@@ -114,6 +114,28 @@ func TestAccLbparameter_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_lbparameter.tf_lbparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbparameterDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbparameter_basic_step1},
+			{
+				Config:            testAccLbparameter_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// cookiepassphrase_wo_version is a write-only version tracker
+				// (default 1) that is populated from config, not read back from
+				// the ADC, so it is absent after a bare import and cannot round-trip.
+				ImportStateVerifyIgnore: []string{"cookiepassphrase_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckLbparameterExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

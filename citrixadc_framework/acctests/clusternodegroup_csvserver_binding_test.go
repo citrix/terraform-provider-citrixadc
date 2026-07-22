@@ -27,6 +27,11 @@ import (
 
 const testAccClusternodegroup_csvserver_binding_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_csvserver" "tf_csvserver" {
 		name        = "my_content_server_ds"
 		servicetype = "HTTP"
@@ -37,6 +42,7 @@ const testAccClusternodegroup_csvserver_binding_basic = `
 	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
 		name = "my_tf_group"
 		vserver = citrixadc_csvserver.tf_csvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_csvserver.tf_csvserver]
 	}
 `
 
@@ -202,6 +208,11 @@ func testAccCheckClusternodegroup_csvserver_bindingDestroy(s *terraform.State) e
 
 const testAccClusternodegroup_csvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_csvserver" "tf_csvserver" {
 		name        = "my_content_server_ds"
 		servicetype = "HTTP"
@@ -212,6 +223,7 @@ const testAccClusternodegroup_csvserver_bindingDataSource_basic = `
 	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
 		name    = "my_tf_group"
 		vserver = citrixadc_csvserver.tf_csvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_csvserver.tf_csvserver]
 	}
 
 	data "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {

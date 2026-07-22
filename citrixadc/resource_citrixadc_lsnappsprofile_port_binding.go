@@ -68,8 +68,12 @@ func readLsnappsprofile_port_bindingFunc(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] citrixadc-provider: Reading lsnappsprofile_port_binding state %s", bindingId)
 
+	// NOTE: The direct "lsnappsprofile_port_binding/<appsprofilename>" GET endpoint does not
+	// return the bound ports on the ADC (it responds with an empty payload even when a port
+	// is bound). The bound ports are only exposed through the aggregate
+	// "lsnappsprofile_binding/<appsprofilename>" endpoint, so read from there instead.
 	findParams := service.FindParams{
-		ResourceType:             "lsnappsprofile_port_binding",
+		ResourceType:             "lsnappsprofile_binding",
 		ResourceName:             appsprofilename,
 		ResourceMissingErrorCode: 258,
 	}
@@ -81,7 +85,7 @@ func readLsnappsprofile_port_bindingFunc(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	// Resource is missing
+	// Resource is missing (parent appsprofile not found)
 	if len(dataArr) == 0 {
 		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams returned empty array")
 		log.Printf("[WARN] citrixadc-provider: Clearing lsnappsprofile_port_binding state %s", bindingId)
@@ -89,28 +93,37 @@ func readLsnappsprofile_port_bindingFunc(ctx context.Context, d *schema.Resource
 		return nil
 	}
 
-	// Iterate through results to find the one with the right id
-	foundIndex := -1
-	for i, v := range dataArr {
-		if v["lsnport"].(string) == lsnport {
-			foundIndex = i
+	// Extract the nested lsnappsprofile_port_binding array from the aggregate response
+	portBindings := []interface{}{}
+	if raw, ok := dataArr[0]["lsnappsprofile_port_binding"]; ok && raw != nil {
+		if arr, ok := raw.([]interface{}); ok {
+			portBindings = arr
+		}
+	}
+
+	// Iterate through results to find the one with the right lsnport
+	var foundBinding map[string]interface{}
+	for _, v := range portBindings {
+		binding, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		if boundPort, ok := binding["lsnport"].(string); ok && boundPort == lsnport {
+			foundBinding = binding
 			break
 		}
 	}
 
 	// Resource is missing
-	if foundIndex == -1 {
-		log.Printf("[DEBUG] citrixadc-provider: FindResourceArrayWithParams lsnport not found in array")
+	if foundBinding == nil {
+		log.Printf("[DEBUG] citrixadc-provider: lsnport not found in aggregate lsnappsprofile_binding response")
 		log.Printf("[WARN] citrixadc-provider: Clearing lsnappsprofile_port_binding state %s", bindingId)
 		d.SetId("")
 		return nil
 	}
-	// Fallthrough
 
-	data := dataArr[foundIndex]
-
-	d.Set("appsprofilename", data["appsprofilename"])
-	d.Set("lsnport", data["lsnport"])
+	d.Set("appsprofilename", foundBinding["appsprofilename"])
+	d.Set("lsnport", foundBinding["lsnport"])
 
 	return nil
 

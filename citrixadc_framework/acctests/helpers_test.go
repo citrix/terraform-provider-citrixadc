@@ -73,6 +73,72 @@ func doApiSpecPreChecks(t *testing.T) {
 	}
 }
 
+func doPolicyPatSetFilePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"tftest.patset",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the patset file to /var/tmp so the resource's
+	// `src = "local:tftest.patset"` import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doPolicyUrlSetPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"tftest.urlset",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the urlset file to /var/tmp so the resource's
+	// `url = "local:tftest.urlset"` import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doSystemSshKeyPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"tftest_sshkey.pub",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the disposable PUBLIC ssh key to /var/tmp so the resource's
+	// `src = "local:tftest_sshkey.pub"` import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func doDnskeyPreChecks(t *testing.T) {
 	testAccPreCheck(t)
 
@@ -130,6 +196,164 @@ func doSslcertkeyPreChecks(t *testing.T) {
 	}
 
 	//c := testAccProvider.Meta().(*NetScalerNitroClient)
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/nsconfig/ssl")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doSslhpkekeyPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"hpke_key.der",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Stage the X25519 HPKE key file under /nsconfig/ssl so the sslhpkekey
+	// resource's `file` attribute resolves. NOTE: `add ssl hpkekey` accepts the
+	// X25519 PKCS#8 *DER* form only - a PEM-armored key is rejected with
+	// "Invalid HPKEKey" (verified on the appliance).
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/nsconfig/ssl")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doSslcertbundlePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"servercert1_bundle.pem",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the cert bundle to /var/tmp so the resource's
+	// `src = "local:servercert1_bundle.pem"` Import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doSslcacertbundlePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"ca-bundle.pem",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the CA cert bundle to /nsconfig/ssl so the resource's
+	// `bundlefile = "ca-bundle.pem"` resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/nsconfig/ssl")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doSslkeyfilePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"sample.key",
+		"sample_enc.key",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the key file to /var/tmp so the resource's
+	// `src = "local:sample.key"` Import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doSsldhfilePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"dhparam.pem",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the DH parameters file to /var/tmp so the resource's
+	// `src = "local:dhparam.pem"` Import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doSslcrlfilePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"sample.crl",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the CRL file to /var/tmp so the resource's
+	// `src = "local:sample.crl"` Import resolves on the appliance.
+	for _, filename := range uploads {
+		err := uploadTestdataFile(c, t, filename, "/var/tmp")
+		if err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
+func doSslcertkeybundlePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	uploads := []string{
+		"servercert1_certkeybundle.pem",
+		"servercert1_certkeybundle_with_passplain.pem",
+	}
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	// Upload the cert-key bundle (key + cert chain) to /nsconfig/ssl so the
+	// resource's `bundlefile = "servercert1_certkeybundle.pem"` resolves on the appliance.
 	for _, filename := range uploads {
 		err := uploadTestdataFile(c, t, filename, "/nsconfig/ssl")
 		if err != nil {

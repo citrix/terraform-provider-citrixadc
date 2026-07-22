@@ -26,7 +26,7 @@ import (
 const testAccSslcert_basic = `
 
 	resource "citrixadc_sslcert" "tf_sslcert_ephem" {
-		certfile = "/nsconfig/ssl/rootcert21.cert"
+		certfile = "/nsconfig/ssl/rootcert211.cert"
 		reqfile  = "/nsconfig/ssl/rootcert2.req"
 		certtype = "ROOT_CERT"
 		keyfile  = "/nsconfig/ssl/rootcert2.key"
@@ -143,6 +143,7 @@ func TestAccSslcert_pempassphrase_wo_ephemeral(t *testing.T) {
 }
 
 func TestAccSslcert_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of certfile at ADC!")
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { doSslcertkeyPreChecks(t) },
 		Steps: []resource.TestStep{

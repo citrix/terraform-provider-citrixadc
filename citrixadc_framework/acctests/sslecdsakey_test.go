@@ -138,6 +138,7 @@ func TestAccSslecdsakey_password_wo_ephemeral(t *testing.T) {
 }
 
 func TestAccSslecdsakey_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of keyfile at ADC!")
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{

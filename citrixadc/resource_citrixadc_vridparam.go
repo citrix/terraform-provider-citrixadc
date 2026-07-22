@@ -21,6 +21,9 @@ func resourceCitrixAdcVridparam() *schema.Resource {
 		ReadContext:   readVridparamFunc,
 		UpdateContext: updateVridparamFunc,
 		DeleteContext: deleteVridparamFunc,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"deadinterval": {
 				Type:     schema.TypeInt,

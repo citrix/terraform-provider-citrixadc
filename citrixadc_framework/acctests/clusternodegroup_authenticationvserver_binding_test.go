@@ -26,6 +26,11 @@ import (
 
 const testAccClusternodegroup_authenticationvserver_binding_basic = `
 
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
+
 resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 	name           = "my_authentication_server"
 	servicetype    = "SSL"
@@ -36,8 +41,9 @@ resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 resource "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
 	name     = "my_tf_group"
 	vserver = citrixadc_authenticationvserver.tf_authenticationvserver.name
+	depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_authenticationvserver.tf_authenticationvserver]
 	}
-  
+
 `
 
 const testAccClusternodegroup_authenticationvserver_binding_basic_step2 = `
@@ -203,6 +209,11 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingDestroy(s *terraf
 
 const testAccClusternodegroup_authenticationvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 		name           = "my_authentication_server_ds"
 		servicetype    = "SSL"
@@ -213,6 +224,7 @@ const testAccClusternodegroup_authenticationvserver_bindingDataSource_basic = `
 	resource "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
 		name    = "my_tf_group"
 		vserver = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_authenticationvserver.tf_authenticationvserver]
 	}
 
 	data "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {

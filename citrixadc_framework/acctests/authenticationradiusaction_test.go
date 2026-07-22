@@ -83,6 +83,30 @@ func TestAccAuthenticationradiusaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationradiusaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationradiusaction.tf_radiusaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationradiusaction_add,
+			},
+			{
+				Config:            testAccAuthenticationradiusaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// radkey is a sensitive secret NITRO never echoes back, and
+				// radkey_wo_version is a write-only version tracker; neither can
+				// round-trip through import.
+				ImportStateVerifyIgnore: []string{"radkey", "radkey_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationradiusactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -54,20 +54,20 @@ func (r *RnatparamResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	tflog.Debug(ctx, "Creating rnatparam resource")
-
-	// rnatparam := rnatparamGetThePayloadFromtheConfig(ctx, &data)
+	rnatparam := rnatparamGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Rnatparam.Type(), &rnatparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rnatparam, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("rnatparam-config")
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Rnatparam.Type(), &rnatparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rnatparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created rnatparam resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue("rnatparam-config")
 
 	// Read the updated state back
 	r.readRnatparamFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +95,10 @@ func (r *RnatparamResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *RnatparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data RnatparamResourceModel
+	var data, state RnatparamResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +106,37 @@ func (r *RnatparamResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating rnatparam resource")
 
-	// Create API request body from the model
-	// rnatparam := rnatparamGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Srcippersistency.Equal(state.Srcippersistency) {
+		tflog.Debug(ctx, fmt.Sprintf("srcippersistency has changed for rnatparam"))
+		hasChange = true
+	}
+	if !data.Tcpproxy.Equal(state.Tcpproxy) {
+		tflog.Debug(ctx, fmt.Sprintf("tcpproxy has changed for rnatparam"))
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Rnatparam.Type(), &rnatparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rnatparam, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		rnatparam := rnatparamGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Rnatparam.Type(), &rnatparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rnatparam, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated rnatparam resource")
+		tflog.Trace(ctx, "Updated rnatparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for rnatparam resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readRnatparamFromApi(ctx, &data, &resp.Diagnostics)
@@ -136,15 +156,18 @@ func (r *RnatparamResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	tflog.Debug(ctx, "Deleting rnatparam resource")
-
-	// For rnatparam, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted rnatparam resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed rnatparam from Terraform state")
 }
 
 // Helper function to read rnatparam data from API
 func (r *RnatparamResource) readRnatparamFromApi(ctx context.Context, data *RnatparamResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Rnatparam.Type(), "")
+
+	// Case 1: Simple find without ID
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Rnatparam.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read rnatparam, got error: %s", err))
 		return

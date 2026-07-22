@@ -255,7 +255,7 @@ func TestAccSslservice_sslciphersuite_binding_basic(t *testing.T) {
 	})
 }
 
-func TestAccSslserviceSslciphersuiteBindingDataSource_basic(t *testing.T) {
+func TestAccSslservice_sslciphersuite_bindingDataSource_basic(t *testing.T) {
 	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
 		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
 	}

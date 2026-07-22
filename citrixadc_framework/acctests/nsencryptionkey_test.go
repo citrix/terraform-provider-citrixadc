@@ -75,6 +75,28 @@ func TestAccNsencryptionkey_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsencryptionkey_import(t *testing.T) {
+	const resAddr = "citrixadc_nsencryptionkey.tf_encryptionkey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsencryptionkeyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsencryptionkey_add},
+			{
+				Config:            testAccNsencryptionkey_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// keyvalue is a Sensitive attribute that NITRO never echoes back, and
+				// keyvalue_wo_version is a state-only version tracker (also not returned
+				// by NITRO) - neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"keyvalue", "keyvalue_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckNsencryptionkeyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

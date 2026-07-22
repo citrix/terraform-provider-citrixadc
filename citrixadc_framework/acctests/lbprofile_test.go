@@ -63,6 +63,28 @@ func TestAccLbprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_lbprofile.tf_lbprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbprofile_basic},
+			{
+				Config:            testAccLbprofile_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// cookiepassphrase_wo_version is a write-only version tracker that
+				// defaults to 1 in config but is never read back from NITRO, so it
+				// cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"cookiepassphrase_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckLbprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

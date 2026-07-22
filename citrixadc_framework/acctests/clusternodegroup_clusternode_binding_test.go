@@ -27,11 +27,17 @@ import (
 
 const testAccClusternodegroup_clusternode_binding_basic = `
 
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "YES"
+}
+
 resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
 	name = "my_tf_group"
 	node = 0
+	depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup]
 	}
-  
+
 `
 
 const testAccClusternodegroup_clusternode_binding_basic_step2 = `
@@ -196,9 +202,15 @@ func testAccCheckClusternodegroup_clusternode_bindingDestroy(s *terraform.State)
 }
 
 const testAccClusternodegroup_clusternode_bindingDataSource_basic = `
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "YES"
+	}
+
 	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
 		name = "my_tf_group"
 		node = 0
+		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup]
 	}
 
 	data "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {

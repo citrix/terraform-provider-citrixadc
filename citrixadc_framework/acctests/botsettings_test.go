@@ -91,6 +91,28 @@ func TestAccBotsettings_basic(t *testing.T) {
 	})
 }
 
+func TestAccBotsettings_import(t *testing.T) {
+	const resAddr = "citrixadc_botsettings.default"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// botsettings resource do not have DELETE operation
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{Config: testAccBotsettings_basic},
+			{
+				Config:            testAccBotsettings_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// proxypassword_wo_version is a write-only version tracker stored in
+				// state but never returned by NITRO, so it cannot round-trip on import.
+				ImportStateVerifyIgnore: []string{"proxypassword_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckBotsettingsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

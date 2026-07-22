@@ -215,6 +215,7 @@ func TestAccSslcertreq_pempassphrase_wo_ephemeral(t *testing.T) {
 }
 
 func TestAccSslcertreq_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of reqfile at ADC!")
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Steps: []resource.TestStep{

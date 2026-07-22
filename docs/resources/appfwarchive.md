@@ -6,7 +6,7 @@ subcategory: "Application Firewall"
 
 The `appfwarchive` resource is used to import an Application Firewall tar archive onto the Citrix ADC. It models the NITRO `appfwarchive ?action=Import` action.
 
-Note: The NITRO API exposes no update endpoint for `appfwarchive`. Every attribute is therefore `RequiresReplace` — any change to a configured value forces Terraform to destroy and re-create the archive. To export an existing archive to a target path, use the sibling `citrixadc_appfwarchive_export` resource.
+Note: The NITRO API exposes no update endpoint for `appfwarchive`. This resource is therefore immutable — any change to a configured value forces Terraform to destroy and re-create the archive. To export an existing archive to a target path, use the sibling `citrixadc_appfwarchive_export` resource.
 
 
 ## Example usage
@@ -33,12 +33,3 @@ resource "citrixadc_appfwarchive" "tf_appfwarchive" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwarchive`. It has the same value as the `name` attribute.
-
-
-## Import
-
-An `appfwarchive` can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_appfwarchive.tf_appfwarchive tf_appfwarchive
-```

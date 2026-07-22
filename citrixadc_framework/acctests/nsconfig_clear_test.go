@@ -27,12 +27,11 @@ const testAccNsconfigClear_basic = `
 	resource "citrixadc_nsconfig_clear" "foo" {
 		force = false
 		level = "full"
-		#  rbaconfig = "YES"
+		timestamp = "2024-06-01T12:00:00"
 	}
 `
 
 func TestAccNsconfigClear_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

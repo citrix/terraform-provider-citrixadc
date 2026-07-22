@@ -77,6 +77,27 @@ func TestAccAuthenticationtacacsaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationtacacsaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationtacacsaction.tf_tacacsaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationtacacsactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationtacacsaction_add},
+			{
+				Config:            testAccAuthenticationtacacsaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// tacacssecret_wo_version is a write-only version tracker that NITRO
+				// does not return, so it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"tacacssecret_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationtacacsactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

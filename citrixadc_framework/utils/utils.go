@@ -287,11 +287,11 @@ func ParseIdString(idStr string, legacyAttrOrder []string, legacyOptionalAttrs [
 }
 
 // IsNotFoundError reports whether err represents a NITRO "resource not found"
-// condition (HTTP 404 / "No such resource"). Read handlers use this to drop a
-// resource from Terraform state (instead of erroring) when its backing object
-// has been deleted out-of-band, matching the SDKv2 self-healing behavior.
-// Transient errors (auth/network/5xx) are deliberately NOT treated as not-found
-// so they continue to surface as hard errors.
+// condition. Read handlers use this to drop a resource from Terraform state
+// (instead of erroring) when its backing object has been deleted out-of-band,
+// matching the SDKv2 self-healing behavior. Transient errors (auth/network/5xx)
+// are deliberately NOT treated as not-found so they continue to surface as hard
+// errors.
 func IsNotFoundError(err error) bool {
 	if err == nil {
 		return false
@@ -299,5 +299,9 @@ func IsNotFoundError(err error) bool {
 	m := strings.ToLower(err.Error())
 	return strings.Contains(m, "404") ||
 		strings.Contains(m, "not found") ||
-		strings.Contains(m, "no such resource")
+		strings.Contains(m, "no such resource") ||
+		// adc-nitro-go FindResource returns "No resource <name> of type <type> found" on not-found.
+		strings.Contains(m, "no resource") ||
+		// Some NITRO objects report not-found as "<X> does not exist" (e.g. "Profile does not exist").
+		strings.Contains(m, "does not exist")
 }

@@ -24,7 +24,7 @@ import (
 )
 
 func TestAccNscapacity_basic(t *testing.T) {
-	t.Skip("NS capacity")
+	t.Skip("Requires License Server Configuration.")
 	// if isCpxRun {
 	// 	t.Skip("Feature not supported in CPX")
 	// }
@@ -108,6 +108,7 @@ const testAccNscapacityDataSource_basic = `
 `
 
 func TestAccNscapacityDataSource_basic(t *testing.T) {
+	t.Skip("Requires License Server Configuration.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -124,6 +125,7 @@ func TestAccNscapacityDataSource_basic(t *testing.T) {
 }
 
 func TestAccNscapacity_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("Requires License Server Configuration.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: nil,

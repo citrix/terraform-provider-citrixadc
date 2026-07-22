@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package tftest;
+
+service TestService {
+  rpc Ping (PingRequest) returns (PingReply) {}
+}
+
+message PingRequest {
+  string name = 1;
+}
+
+message PingReply {
+  string message = 1;
+}

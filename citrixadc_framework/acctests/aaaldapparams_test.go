@@ -69,6 +69,27 @@ func TestAccAaaldapparams_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaaldapparams_import(t *testing.T) {
+	const resAddr = "citrixadc_aaaldapparams.tf_aaaldapparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAaaldapparams_basic},
+			{
+				Config:            testAccAaaldapparams_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// ldapbinddnpassword_wo_version is a write-only version tracker that
+				// NITRO does not return; it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"ldapbinddnpassword_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAaaldapparamsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

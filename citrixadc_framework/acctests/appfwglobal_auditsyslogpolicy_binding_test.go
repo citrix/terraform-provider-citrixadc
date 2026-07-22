@@ -39,11 +39,14 @@ const testAccAppfwglobal_auditsyslogpolicy_binding_basic = `
 		rule   = "ns_true"
 		action = citrixadc_auditsyslogaction.tf_syslogaction.name
 	}
+	# This advanced auditsyslog policy can only be bound at bindpoint "none",
+	# so "type" is intentionally omitted (the ADC rejects any explicit type value
+	# for this policy: errorcode 1097 for "NONE", 3293 for a real bindpoint).
+	# "state" is also omitted: it applies to classic policies only and the ADC
+	# always reports the binding as ENABLED.
 	resource "citrixadc_appfwglobal_auditsyslogpolicy_binding" "tf_binding" {
 		policyname = citrixadc_auditsyslogpolicy.tf_policy.name
 		priority   = 90
-		state      = "DISABLED"
-		type       = "NONE"
 	}
 `
 
@@ -220,16 +223,17 @@ const testAccAppfwglobal_auditsyslogpolicy_bindingDataSource_basic = `
 		rule   = "ns_true"
 		action = citrixadc_auditsyslogaction.tf_syslogaction.name
 	}
+	# This advanced auditsyslog policy can only be bound at bindpoint "none",
+	# so "type" is intentionally omitted (the ADC rejects any explicit type value
+	# for this policy: errorcode 1097 for "NONE", 3293 for a real bindpoint).
 	resource "citrixadc_appfwglobal_auditsyslogpolicy_binding" "tf_binding" {
 		policyname = citrixadc_auditsyslogpolicy.tf_policy.name
 		priority   = 90
-		state      = "DISABLED"
-		type       = "NONE"
 	}
 
 	data "citrixadc_appfwglobal_auditsyslogpolicy_binding" "tf_binding" {
 		policyname = citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding.policyname
-		type       = citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding.type
+		type       = ""
 		depends_on = [citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding]
 	}
 `
@@ -245,7 +249,6 @@ func TestAccAppfwglobal_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) 
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding", "policyname", "tf_auditsyslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding", "priority", "90"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding", "state", "ENABLED"),
-					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding", "type", "NONE"),
 				),
 			},
 		},

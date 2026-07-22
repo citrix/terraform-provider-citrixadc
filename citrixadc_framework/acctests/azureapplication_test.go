@@ -217,6 +217,30 @@ func TestAccAzureapplication_clientsecret_wo_ephemeral(t *testing.T) {
 	})
 }
 
+func TestAccAzureapplication_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_azureapplication.tf_azureapplication"
+	t.Setenv("TF_VAR_azureapplication_clientsecret", "<clientsecret>")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAzureapplicationDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAzureapplication_clientsecret_step1},
+			{
+				Config:            testAccAzureapplication_clientsecret_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// clientsecret is Sensitive and never echoed back by NITRO, and
+				// clientsecret_wo_version is a computed version tracker not returned
+				// by the API, so neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"clientsecret", "clientsecret_wo_version"},
+			},
+		},
+	})
+}
+
 const testAccAzureapplicationDataSource_basic = `
 
 variable "azureapplication_clientsecret" {
