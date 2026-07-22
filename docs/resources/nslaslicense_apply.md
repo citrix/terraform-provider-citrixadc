@@ -6,9 +6,9 @@ subcategory: "NS"
 
 The nslaslicense_apply resource applies a local-area-services (LAS) / fixed-bandwidth license file that has already been staged on the Citrix ADC, activating the licensed capacity it grants. Use it to bring a previously uploaded license file into effect on the appliance.
 
-!> **DISRUPTIVE / NON-IDEMPOTENT.** This resource maps to the NITRO `apply` action (`POST ?action=apply`). Applying it alters the licensed capacity of the appliance and is **not idempotent** — every create or replace re-applies the license. NITRO exposes no get/add/update/delete endpoint for this object, so the applied license is **not readable back**: Read is a no-op, drift cannot be detected, and Delete only removes the resource from Terraform state without affecting the appliance. Treat this resource as a one-shot operational action rather than ordinary declarative configuration.
+!> **DISRUPTIVE / NON-IDEMPOTENT.** Applying this resource alters the licensed capacity of the appliance and is **not idempotent** — every create or replace re-applies the license. Treat this resource as a one-shot operational action rather than ordinary declarative configuration.
 
-~> **Note.** All attributes are marked `RequiresReplace`, so changing any of them forces the apply action to run again as a replacement. Import is not meaningful for this resource because there is no server-side object to read back.
+~> **Note.** This resource is immutable, so changing any of its attributes forces the apply action to run again as a replacement. Import is not meaningful for this resource.
 
 
 ## Example usage
@@ -33,4 +33,4 @@ resource "citrixadc_nslaslicense_apply" "tf_nslaslicense_apply" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `nslaslicense_apply`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the nslaslicense_apply resource. It is set to `nslaslicense_apply`.

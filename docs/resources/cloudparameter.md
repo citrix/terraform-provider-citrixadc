@@ -41,7 +41,7 @@ resource "citrixadc_cloudparameter" "tf_cloudparameter" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the cloudparameter. Because this is a singleton resource, it is always the static value `cloudparameter-config`.
+* `id` - The id of the cloudparameter. It is set to `cloudparameter-config`.
 
 
 ## Import

@@ -6,11 +6,7 @@ subcategory: "Network"
 
 Binds a link-aggregation channel (LA channel) to a Virtual Router ID (VRID) so that the channel participates in VRRP for that virtual router. Binding a channel associates the VRID's virtual MAC address (VMAC, of the form `00:00:5e:00:01:<VRID>`) with the channel, allowing the channel to send and receive traffic for the virtual router during a VRRP failover.
 
-This resource maps to the NITRO `vrid_channel_binding` bind endpoint. Because a binding cannot be modified in place, the resource has the following lifecycle semantics:
-
-- **Create** binds the channel to the VRID (NITRO PUT/bind).
-- **Update** is a no-op. Every configurable attribute forces replacement, so any change destroys the existing binding and creates a new one.
-- **Delete** removes the binding (unbinds the channel from the VRID).
+Because a binding cannot be modified in place, every configurable attribute forces replacement: changing any attribute destroys the existing binding and creates a new one.
 
 
 ## Example usage

@@ -6,7 +6,7 @@ subcategory: "Policy"
 
 The policyurlset_export resource exports the entries of an existing URL set on the Citrix ADC to an external CSV file. Use it when you want to back up or share the contents of a named `policyurlset` object by writing them to a remote location over HTTP, HTTPS or FTP.
 
-~> **One-shot action.** This resource maps to the NITRO `export` action (`POST ?action=export`); it does not create a persistent object on the appliance. Each `terraform apply` that creates or replaces this resource performs the export once. There is no readable server-side object and no NITRO GET endpoint, so there is no corresponding data source: Read is a no-op, Delete only removes the resource from Terraform state, and changing `name` or `url` forces a new export (replacement).
+~> **One-shot action.** This resource maps to the NITRO `export` action; it does not manage a persistent object, so each `terraform apply` that creates or replaces this resource performs the export once, and changing `name` or `url` forces a new export (replacement).
 
 
 ## Example usage
@@ -29,4 +29,4 @@ resource "citrixadc_policyurlset_export" "tf_policyurlset_export" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the policyurlset_export resource. It is a synthetic identifier with the format `policyurlset_export-<name>` (for example, `policyurlset_export-top_malware_urls`); it does not correspond to any object on the Citrix ADC.
+* `id` - The ID of the policyurlset_export resource. It has the format `policyurlset_export-<name>` (for example, `policyurlset_export-top_malware_urls`).

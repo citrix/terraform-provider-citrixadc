@@ -6,7 +6,7 @@ subcategory: "NS"
 
 Flushes the surge queue on the Citrix ADC. The surge queue holds client connections that are waiting for the appliance to open new server-side connections when a server is momentarily unable to accept the offered load. Flushing it clears those queued requests, which is helpful when draining a server, recovering from a backlog, or testing surge-protection behavior. The flush can be applied system-wide, or scoped to a specific virtual server, service, or service group member.
 
-This is an **action-only** resource. Applying it triggers the NITRO `flush` action on the `nssurgeq` endpoint. There is no corresponding ADC object to read back, so this resource performs a one-shot action on create. Read and update are no-ops, and importing it is not meaningful.
+This is an action resource: applying it performs the flush; it does not manage a persistent object, so re-applying re-runs the action.
 
 
 ## Example usage
@@ -39,9 +39,9 @@ resource "citrixadc_nssurgeq_flush" "flush_member" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier with the fixed value `nssurgeq_flush`. Because `nssurgeq_flush` is an action-only resource with no NITRO GET endpoint, the ID does not correspond to a readable ADC object.
+* `id` - The id of the nssurgeq_flush resource. It is set to `nssurgeq_flush`.
 
 
 ## Note
 
-This resource models a one-shot action rather than a persistent ADC object. Applying it flushes the surge queue at the moment of apply; the result cannot be read back from the ADC, so subsequent plans will not detect drift. To flush the queue again, taint the resource or change any of the scoping arguments. Destroying the resource only removes it from Terraform state and has no effect on the appliance. Importing this resource is not meaningful.
+This resource models a one-shot action rather than a persistent ADC object. Applying it flushes the surge queue at the moment of apply. To flush the queue again, taint the resource or change any of the scoping arguments. Importing this resource is not meaningful.

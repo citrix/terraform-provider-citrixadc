@@ -8,7 +8,7 @@ Enables full file system encryption on a Citrix ADC appliance, protecting the da
 
 ~> **WARNING: This resource performs a real, potentially destructive, platform-gated operation.** Enabling file system encryption zeroes out the `/flash` and `/var` directories (`ntimes0flash` / `ntimes0var` times) and re-encrypts the file system. It is only supported on hardware/platforms that report `supportedstate = "ENABLED"`. Attempting to enable it on an unsupported platform will fail, and running it in production without understanding the consequences can render the appliance temporarily unavailable or lead to data loss. Verify `supportedstate` (for example via the `citrixadc_filesystemencryption` data source) before applying, and retain the passphrase — it is required to later `disable` encryption.
 
--> **Note:** This is an action-only resource. There is no NITRO GET, update, or inverse endpoint for the `enable` action, so Read, Update, and Delete are no-ops. Every attribute is marked `RequiresReplace`, so any change to a configured value re-triggers the `enable` action.
+-> **Note:** This is an action resource: applying it performs the `enable` action; it does not manage a persistent object, so any change to a configured value re-triggers the action.
 
 
 ## Example usage
@@ -72,4 +72,4 @@ resource "citrixadc_filesystemencryption_enable" "example" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `filesystemencryption_enable`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the filesystemencryption_enable resource. It is set to `filesystemencryption_enable`.

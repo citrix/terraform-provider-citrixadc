@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,7 +14,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &ClusterpropstatusClearResource{}
 var _ resource.ResourceWithConfigure = (*ClusterpropstatusClearResource)(nil)
-var _ resource.ResourceWithImportState = (*ClusterpropstatusClearResource)(nil)
 
 func NewClusterpropstatusClearResource() resource.Resource {
 	return &ClusterpropstatusClearResource{}
@@ -40,10 +38,6 @@ type ClusterpropstatusClearResource struct {
 // ClusterpropstatusClearResourceModel describes the resource data model.
 type ClusterpropstatusClearResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *ClusterpropstatusClearResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *ClusterpropstatusClearResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

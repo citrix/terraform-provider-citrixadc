@@ -37,7 +37,7 @@ resource "citrixadc_quicparam" "tf_quicparam" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the quicparam resource. Because this is a singleton, it is a fixed string with the value `"quicparam-config"`.
+* `id` - The ID of the quicparam resource. It is set to `quicparam-config`.
 
 
 ## Import

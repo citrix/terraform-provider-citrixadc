@@ -9,19 +9,16 @@ captures the appliance configuration together with a tech-support bundle, giving
 you a known-good point you can fall back to during upgrades, maintenance, or
 troubleshooting.
 
-This resource maps to the NITRO `create` action (`POST ?action=create`) on the
-`systemrestorepoint` object. NITRO exposes no `add` verb and no update verb for
-restore points, so this is modeled as a managed lifecycle resource whose ID is
-the real object name (the filename): creating the resource snapshots the config,
-and destroying it deletes the actual restore point from the appliance.
+Creating the resource snapshots the config, and destroying it deletes the
+restore point from the appliance. The resource ID is the real object name
+(the filename).
 
 ~> **NOTE:** The appliance enforces a MAXIMUM of 3 restore points. Attempting to
 create a fourth restore point fails on the NITRO side until an existing restore
 point is deleted.
 
-~> **NOTE:** The `filename` attribute is marked `RequiresReplace`. NITRO has no
-update verb for a restore point, so changing the filename destroys the existing
-restore point and creates a new one.
+~> **NOTE:** The `filename` attribute is immutable. Changing the filename
+destroys the existing restore point and creates a new one.
 
 
 ## Example usage

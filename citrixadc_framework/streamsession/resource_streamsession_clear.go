@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/stream"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &StreamsessionClearResource{}
 var _ resource.ResourceWithConfigure = (*StreamsessionClearResource)(nil)
-var _ resource.ResourceWithImportState = (*StreamsessionClearResource)(nil)
 
 func NewStreamsessionClearResource() resource.Resource {
 	return &StreamsessionClearResource{}
@@ -37,10 +35,6 @@ type StreamsessionClearResource struct {
 type StreamsessionClearResourceModel struct {
 	Id   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`
-}
-
-func (r *StreamsessionClearResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *StreamsessionClearResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

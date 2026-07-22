@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -17,7 +16,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &EndpointinfoClearResource{}
 var _ resource.ResourceWithConfigure = (*EndpointinfoClearResource)(nil)
-var _ resource.ResourceWithImportState = (*EndpointinfoClearResource)(nil)
 
 func NewEndpointinfoClearResource() resource.Resource {
 	return &EndpointinfoClearResource{}
@@ -36,10 +34,6 @@ type EndpointinfoClearResource struct {
 type EndpointinfoClearResourceModel struct {
 	Id           types.String `tfsdk:"id"`
 	Endpointkind types.String `tfsdk:"endpointkind"`
-}
-
-func (r *EndpointinfoClearResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *EndpointinfoClearResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

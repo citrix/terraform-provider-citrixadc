@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/protocol"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &ProtocolhttpbandClearResource{}
 var _ resource.ResourceWithConfigure = (*ProtocolhttpbandClearResource)(nil)
-var _ resource.ResourceWithImportState = (*ProtocolhttpbandClearResource)(nil)
 
 func NewProtocolhttpbandClearResource() resource.Resource {
 	return &ProtocolhttpbandClearResource{}
@@ -37,10 +35,6 @@ type ProtocolhttpbandClearResource struct {
 type ProtocolhttpbandClearResourceModel struct {
 	Id   types.String `tfsdk:"id"`
 	Type types.String `tfsdk:"type"`
-}
-
-func (r *ProtocolhttpbandClearResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *ProtocolhttpbandClearResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

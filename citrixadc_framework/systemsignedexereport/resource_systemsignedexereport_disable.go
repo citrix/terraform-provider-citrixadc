@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,7 +26,6 @@ import (
 //     enum, so the literal NITRO name is used with ActOnResource.
 var _ resource.Resource = &SystemsignedexereportDisableResource{}
 var _ resource.ResourceWithConfigure = (*SystemsignedexereportDisableResource)(nil)
-var _ resource.ResourceWithImportState = (*SystemsignedexereportDisableResource)(nil)
 
 func NewSystemsignedexereportDisableResource() resource.Resource {
 	return &SystemsignedexereportDisableResource{}
@@ -44,10 +42,6 @@ type SystemsignedexereportDisableResource struct {
 // arguments), so the model carries only the synthetic id.
 type SystemsignedexereportDisableResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *SystemsignedexereportDisableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *SystemsignedexereportDisableResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

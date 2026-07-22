@@ -35,7 +35,7 @@ resource "citrixadc_cloudtunnelparameter" "tf_cloudtunnelparameter" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the cloudtunnelparameter. Because this is a singleton resource, it is always the static value `cloudtunnelparameter-config`.
+* `id` - The id of the cloudtunnelparameter. It is set to `cloudtunnelparameter-config`.
 
 
 ## Import

@@ -8,7 +8,7 @@ The `citrixadc_cloudparaminternal` data source is used to retrieve the internal 
 
 Note: The underlying NITRO GET/show operation (`show cloud paramInternal`) is platform-gated. On platforms that do not support it, NITRO returns "Operation not supported on this platform", and the data source may return empty attribute values for that reason.
 
-## Example Usage
+## Example usage
 
 ```hcl
 data "citrixadc_cloudparaminternal" "example" {}
@@ -18,7 +18,7 @@ output "cloudparaminternal_details" {
 }
 ```
 
-## Example Usage with Resource
+## Example usage with Resource
 
 ```hcl
 data "citrixadc_cloudparaminternal" "tf_cloudparaminternal" {
@@ -38,5 +38,5 @@ This data source is a singleton and does not require any lookup arguments. It re
 
 In addition to the above arguments, the following attributes are exported:
 
-* `id` - The id of the cloudparaminternal data source. Because this is a singleton resource, it is always the static value `cloudparaminternal-config`.
+* `id` - The id of the cloudparaminternal data source. It is set to `cloudparaminternal-config`.
 * `nonftumode` - Indicates whether the management GUI is in first-time-user (FTU) mode or not. Possible values: `YES`, `NO`. May be empty on platforms where the GET operation is not supported.

@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NslimitsessionsClearResource{}
 var _ resource.ResourceWithConfigure = (*NslimitsessionsClearResource)(nil)
-var _ resource.ResourceWithImportState = (*NslimitsessionsClearResource)(nil)
 
 func NewNslimitsessionsClearResource() resource.Resource {
 	return &NslimitsessionsClearResource{}
@@ -38,10 +36,6 @@ type NslimitsessionsClearResource struct {
 type NslimitsessionsClearResourceModel struct {
 	Id              types.String `tfsdk:"id"`
 	Limitidentifier types.String `tfsdk:"limitidentifier"`
-}
-
-func (r *NslimitsessionsClearResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *NslimitsessionsClearResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

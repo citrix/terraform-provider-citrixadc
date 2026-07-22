@@ -6,11 +6,7 @@ subcategory: "Network"
 
 Binds a network interface to a Virtual Router ID (VRID) so that the interface participates in VRRP for that virtual router. Binding an interface associates the VRID's virtual MAC address (VMAC, of the form `00:00:5e:00:01:<VRID>`) with the interface, enabling the interface to carry traffic for the virtual router and to take over during a VRRP failover.
 
-This resource maps to the NITRO `vrid_interface_binding` bind endpoint. Because a binding cannot be modified in place, the resource has the following lifecycle semantics:
-
-- **Create** binds the interface to the VRID (NITRO PUT/bind).
-- **Update** is a no-op. Every configurable attribute forces replacement, so any change destroys the existing binding and creates a new one.
-- **Delete** removes the binding (unbinds the interface from the VRID).
+Because a binding cannot be modified in place, every configurable attribute forces replacement: changing any attribute destroys the existing binding and creates a new one.
 
 
 ## Example usage

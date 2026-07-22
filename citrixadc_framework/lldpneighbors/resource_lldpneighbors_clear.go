@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &LldpneighborsClearResource{}
 var _ resource.ResourceWithConfigure = (*LldpneighborsClearResource)(nil)
-var _ resource.ResourceWithImportState = (*LldpneighborsClearResource)(nil)
 
 func NewLldpneighborsClearResource() resource.Resource {
 	return &LldpneighborsClearResource{}
@@ -40,10 +38,6 @@ type LldpneighborsClearResourceModel struct {
 	Id     types.String `tfsdk:"id"`
 	Ifnum  types.String `tfsdk:"ifnum"`
 	Nodeid types.Int64  `tfsdk:"nodeid"`
-}
-
-func (r *LldpneighborsClearResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *LldpneighborsClearResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

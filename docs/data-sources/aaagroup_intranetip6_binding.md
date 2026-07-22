@@ -32,5 +32,4 @@ output "numaddr" {
 In addition to the arguments, the following attributes are available:
 
 * `numaddr` - Number of IPv6 addresses bound, starting with `intranetip6`.
-* `gotopriorityexpression` - Not applicable to the intranet IPv6 branch of this binding; the ADC does not populate a meaningful value for it.
 * `id` - The id of the aaagroup_intranetip6_binding. It is a comma-separated set of `key:value` pairs in the form `groupname:<groupname>,intranetip6:<intranetip6>,numaddr:<numaddr>`, with the `intranetip6` value URL-encoded (colons become `%3A`).

@@ -33,7 +33,7 @@ resource "citrixadc_sslprofile_sslechconfig_binding" "tf_binding" {
 
 * `name` - (Required) Name of the SSL profile. Changing this attribute forces a new resource to be created.
 * `echconfigname` - (Required) Name of the Encrypted Client Hello (ECH) configuration to bind. Changing this attribute forces a new resource to be created.
-* `cipherpriority` - (Optional, Computed) Priority of the cipher binding. Changing this attribute forces a new resource to be created.
+* `cipherpriority` - (Optional) Priority of the cipher binding. Changing this attribute forces a new resource to be created.
 
 
 ## Attribute Reference

@@ -7,7 +7,6 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -20,7 +19,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NsconfigDiffResource{}
 var _ resource.ResourceWithConfigure = (*NsconfigDiffResource)(nil)
-var _ resource.ResourceWithImportState = (*NsconfigDiffResource)(nil)
 
 func NewNsconfigDiffResource() resource.Resource {
 	return &NsconfigDiffResource{}
@@ -108,10 +106,6 @@ func (r *NsconfigDiffResource) Configure(ctx context.Context, req resource.Confi
 		return
 	}
 	r.client = *req.ProviderData.(**service.NitroClient)
-}
-
-func (r *NsconfigDiffResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *NsconfigDiffResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

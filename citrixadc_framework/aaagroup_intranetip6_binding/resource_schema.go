@@ -20,11 +20,10 @@ import (
 
 // AaagroupIntranetip6BindingResourceModel describes the resource data model.
 type AaagroupIntranetip6BindingResourceModel struct {
-	Id                     types.String `tfsdk:"id"`
-	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
-	Groupname              types.String `tfsdk:"groupname"`
-	Intranetip6            types.String `tfsdk:"intranetip6"`
-	Numaddr                types.Int64  `tfsdk:"numaddr"`
+	Id          types.String `tfsdk:"id"`
+	Groupname   types.String `tfsdk:"groupname"`
+	Intranetip6 types.String `tfsdk:"intranetip6"`
+	Numaddr     types.Int64  `tfsdk:"numaddr"`
 }
 
 func (r *AaagroupIntranetip6BindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -34,13 +33,6 @@ func (r *AaagroupIntranetip6BindingResource) Schema(ctx context.Context, req res
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the aaagroup_intranetip6_binding resource.",
-			},
-			"gotopriorityexpression": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Description: "Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.\n* USE_INVOCATION_RESULT - Applicable if this policy invokes another policy label. If the final goto in the invoked policy label has a value of END, the evaluation stops. If the final goto is anything other than END, the current policy label performs a NEXT.\n* An expression that evaluates to a number.\nIf you specify an expression, the number to which it evaluates determines the next policy to evaluate, as follows:\n*  If the expression evaluates to a higher numbered priority, the policy with that priority is evaluated next.\n* If the expression evaluates to the priority of the current policy, the policy with the next higher numbered priority is evaluated next.\n* If the expression evaluates to a number that is larger than the largest numbered priority, policy evaluation ends.\nAn UNDEF event is triggered if:\n* The expression is invalid.\n* The expression evaluates to a priority number that is numerically lower than the current policy's priority.\n* The expression evaluates to a priority number that is between the current policy's priority number (say, 30) and the highest priority number (say, 100), but does not match any configured priority number (for example, the expression evaluates to the number 85). This example assumes that the priority number increments by 10 for every successive policy, and therefore a priority number of 85 does not exist in the policy label.",
 			},
 			"groupname": schema.StringAttribute{
 				Required: true,
@@ -72,8 +64,6 @@ func aaagroup_intranetip6_bindingGetThePayloadFromthePlan(ctx context.Context, d
 
 	// Create API request body from the model
 	aaagroup_intranetip6_binding := aaa.Aaagroupintranetip6binding{}
-	// Pattern 15: gotopriorityexpression is exclusive to the -policy branch of
-	// `bind aaa group` and is NOT accepted on the intranetIP6 branch. Never send it.
 	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		aaagroup_intranetip6_binding.Groupname = data.Groupname.ValueString()
 	}
@@ -88,15 +78,11 @@ func aaagroup_intranetip6_bindingGetThePayloadFromthePlan(ctx context.Context, d
 }
 
 // aaagroup_intranetip6_bindingSetAttrFromGet is the resource-side setter.
-// It preserves user-configured values (gotopriorityexpression is never echoed
-// in a meaningful way and is not part of this branch) and only refreshes the
-// identity attributes from the GET response. It does NOT (re)compute the ID -
-// the resource sets the ID exactly once in Create.
+// It refreshes the identity attributes from the GET response and does NOT
+// (re)compute the ID - the resource sets the ID exactly once in Create.
 func aaagroup_intranetip6_bindingSetAttrFromGet(ctx context.Context, data *AaagroupIntranetip6BindingResourceModel, getResponseData map[string]interface{}) *AaagroupIntranetip6BindingResourceModel {
 	tflog.Debug(ctx, "In aaagroup_intranetip6_bindingSetAttrFromGet Function")
 
-	// gotopriorityexpression is not sent/echoed on the intranetIP6 branch -
-	// preserve the existing plan/state value, do not overwrite it.
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
 	}
@@ -118,11 +104,6 @@ func aaagroup_intranetip6_bindingSetAttrFromGet(ctx context.Context, data *Aaagr
 func aaagroup_intranetip6_bindingSetAttrFromGetForDatasource(ctx context.Context, data *AaagroupIntranetip6BindingResourceModel, getResponseData map[string]interface{}) *AaagroupIntranetip6BindingResourceModel {
 	tflog.Debug(ctx, "In aaagroup_intranetip6_bindingSetAttrFromGetForDatasource Function")
 
-	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
-		data.Gotopriorityexpression = types.StringValue(val.(string))
-	} else {
-		data.Gotopriorityexpression = types.StringNull()
-	}
 	if val, ok := getResponseData["groupname"]; ok && val != nil {
 		data.Groupname = types.StringValue(val.(string))
 	} else {

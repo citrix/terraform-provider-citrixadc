@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -17,7 +16,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &ApplicationExportResource{}
 var _ resource.ResourceWithConfigure = (*ApplicationExportResource)(nil)
-var _ resource.ResourceWithImportState = (*ApplicationExportResource)(nil)
 
 func NewApplicationExportResource() resource.Resource {
 	return &ApplicationExportResource{}
@@ -39,10 +37,6 @@ type ApplicationExportResourceModel struct {
 	Appname             types.String `tfsdk:"appname"`
 	Apptemplatefilename types.String `tfsdk:"apptemplatefilename"`
 	Deploymentfilename  types.String `tfsdk:"deploymentfilename"`
-}
-
-func (r *ApplicationExportResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *ApplicationExportResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

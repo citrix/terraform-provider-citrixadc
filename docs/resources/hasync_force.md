@@ -6,7 +6,7 @@ subcategory: "High Availability"
 
 Forces a configuration synchronization between the nodes of a Citrix ADC high-availability (HA) pair, copying the running configuration from the current node to its peer so both nodes stay consistent and the secondary is ready to take over. Use this when you need to trigger a sync on demand rather than relying on automatic HA propagation.
 
-This is an **action-only** resource: applying it triggers a one-time `Force` synchronization action on the ADC. It does **not** manage persistent server-side state. Because NITRO exposes no GET endpoint for this action, the resource performs no read-back (drift cannot be detected), there is no update, and Read/Delete are state-only no-ops. Changing the `force` or `save` argument forces the resource to be re-created, which re-runs the forced sync.
+This is an action resource: applying it performs the `Force` synchronization; it does not manage a persistent object, so re-applying re-runs the action. Changing the `force` or `save` argument forces the resource to be re-created, which re-runs the forced sync.
 
 This resource requires an HA setup and operates on an HA node. Applying it against a standalone node returns an error.
 
@@ -31,4 +31,4 @@ resource "citrixadc_hasync_force" "force_sync" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier with the constant value `"hasync_force"`. This action-only resource has no server-assigned identity.
+* `id` - The id of the hasync_force resource. It is set to `hasync_force`.

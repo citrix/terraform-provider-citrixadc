@@ -7,7 +7,7 @@ subcategory: "SSL"
 The sslprofile_sslechconfig_binding data source allows you to retrieve information about the binding between an SSL profile and an Encrypted Client Hello (ECH) configuration on the Citrix ADC.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslprofile_sslechconfig_binding" "tf_binding" {

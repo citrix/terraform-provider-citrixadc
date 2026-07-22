@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &RnatsessionFlushResource{}
 var _ resource.ResourceWithConfigure = (*RnatsessionFlushResource)(nil)
-var _ resource.ResourceWithImportState = (*RnatsessionFlushResource)(nil)
 
 func NewRnatsessionFlushResource() resource.Resource {
 	return &RnatsessionFlushResource{}
@@ -41,10 +39,6 @@ type RnatsessionFlushResourceModel struct {
 	Natip   types.String `tfsdk:"natip"`
 	Netmask types.String `tfsdk:"netmask"`
 	Network types.String `tfsdk:"network"`
-}
-
-func (r *RnatsessionFlushResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *RnatsessionFlushResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

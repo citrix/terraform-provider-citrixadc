@@ -28,4 +28,4 @@ This datasource does not require any arguments.
 The following attributes are available:
 
 * `rolearn` - IAM Role ARN that the Citrix ADC assumes when accessing AWS services.
-* `id` - The id of the cloudawsparam. It is a system-generated identifier.
+* `id` - The id of the cloudawsparam.

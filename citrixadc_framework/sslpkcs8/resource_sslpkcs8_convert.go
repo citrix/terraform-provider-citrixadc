@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
@@ -21,7 +20,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &Sslpkcs8ConvertResource{}
 var _ resource.ResourceWithConfigure = (*Sslpkcs8ConvertResource)(nil)
-var _ resource.ResourceWithImportState = (*Sslpkcs8ConvertResource)(nil)
 
 func NewSslpkcs8ConvertResource() resource.Resource {
 	return &Sslpkcs8ConvertResource{}
@@ -46,10 +44,6 @@ type Sslpkcs8ConvertResourceModel struct {
 	PasswordWo        types.String `tfsdk:"password_wo"`
 	PasswordWoVersion types.Int64  `tfsdk:"password_wo_version"`
 	Pkcs8file         types.String `tfsdk:"pkcs8file"`
-}
-
-func (r *Sslpkcs8ConvertResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *Sslpkcs8ConvertResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

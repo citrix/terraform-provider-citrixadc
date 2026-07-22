@@ -27,7 +27,7 @@ This datasource is a singleton and does not require any arguments. All attribute
 
 The following attributes are available:
 
-* `id` - The id of the nsmgmtparam datasource. Set to the constant string `nsmgmtparam-config`.
+* `id` - The id of the nsmgmtparam datasource. It is set to `nsmgmtparam-config`.
 * `mgmthttpport` - Port on which the management HTTP server listens.
 * `mgmthttpsport` - Port on which the management HTTPS server listens.
 * `httpdmaxclients` - The HTTPD Max Clients value in the `httpd.conf` file. Minimum value: `1`, Maximum value: `255`.

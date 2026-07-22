@@ -6,7 +6,7 @@ subcategory: "DNS"
 
 Publishes a DNS Certification Authority Authorization (CAA) resource record on the Citrix ADC. CAA records let a domain owner declare which certificate authorities are permitted to issue certificates for a domain, helping prevent unauthorized certificate issuance.
 
-CAA resource records cannot be modified on the ADC. Changing any attribute forces the record to be destroyed and recreated (all attributes carry a `RequiresReplace` plan modifier).
+CAA resource records cannot be modified on the ADC. Changing any attribute forces the record to be destroyed and recreated.
 
 ## Example usage
 

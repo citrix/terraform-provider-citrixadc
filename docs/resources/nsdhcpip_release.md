@@ -4,9 +4,9 @@ subcategory: "NS"
 
 # Resource: nsdhcpip_release
 
-The nsdhcpip_release resource performs the NITRO `nsdhcpip` `release` action, which releases the DHCP lease for the appliance management IP. It is an action-only, zero-attribute resource: applying it triggers the release, and there are no configurable arguments.
+The nsdhcpip_release resource releases the DHCP lease for the appliance management IP. It is an action-only, zero-attribute resource: applying it triggers the release, and there are no configurable arguments.
 
-~> **NOTE** There is no NITRO GET endpoint for `nsdhcpip`, so the resource cannot be read back or verified; `Read`/`Update` are no-ops and `Delete` only removes the resource from Terraform state.
+~> **NOTE** This is an action resource: applying it performs the release; it does not manage a persistent object, so re-applying re-runs the release.
 
 
 ## Example usage
@@ -26,4 +26,4 @@ This resource has no configurable arguments.
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nsdhcpip_release resource. It is a synthetic value (`nsdhcpip_release`), since the NITRO `nsdhcpip` action exposes no readable object.
+* `id` - The id of the nsdhcpip_release resource. It is set to `nsdhcpip_release`.

@@ -6,7 +6,7 @@ subcategory: "Bot"
 
 The botprofile_kmdetectionexpr_binding data source allows you to retrieve information about the bindings between a bot profile and keyboard-mouse (KM) detection expressions.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_botprofile_kmdetectionexpr_binding" "tf_binding" {

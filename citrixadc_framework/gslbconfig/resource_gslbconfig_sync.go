@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,7 +14,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &GslbconfigSyncResource{}
 var _ resource.ResourceWithConfigure = (*GslbconfigSyncResource)(nil)
-var _ resource.ResourceWithImportState = (*GslbconfigSyncResource)(nil)
 
 func NewGslbconfigSyncResource() resource.Resource {
 	return &GslbconfigSyncResource{}
@@ -35,10 +33,6 @@ type GslbconfigSyncResourceModel struct {
 	Nowarn     types.Bool   `tfsdk:"nowarn"`
 	Preview    types.Bool   `tfsdk:"preview"`
 	Saveconfig types.Bool   `tfsdk:"saveconfig"`
-}
-
-func (r *GslbconfigSyncResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *GslbconfigSyncResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

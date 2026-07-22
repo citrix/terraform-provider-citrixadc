@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &VpnpcoipconnectionKillResource{}
 var _ resource.ResourceWithConfigure = (*VpnpcoipconnectionKillResource)(nil)
-var _ resource.ResourceWithImportState = (*VpnpcoipconnectionKillResource)(nil)
 
 func NewVpnpcoipconnectionKillResource() resource.Resource {
 	return &VpnpcoipconnectionKillResource{}
@@ -40,10 +38,6 @@ type VpnpcoipconnectionKillResourceModel struct {
 	Id       types.String `tfsdk:"id"`
 	All      types.Bool   `tfsdk:"all"`
 	Username types.String `tfsdk:"username"`
-}
-
-func (r *VpnpcoipconnectionKillResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *VpnpcoipconnectionKillResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

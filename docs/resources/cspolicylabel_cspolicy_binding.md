@@ -47,7 +47,7 @@ resource "citrixadc_cspolicylabel_cspolicy_binding" "tf_binding" {
 * `labeltype` - (Optional) Type of policy label invocation. Changing this forces a new resource to be created.
 * `invoke_labelname` - (Optional) Name of the label to invoke if the current policy rule evaluates to TRUE. Changing this forces a new resource to be created.
 
-This binding has no NITRO update endpoint; every attribute is replace-only, so changing any of them recreates the binding.
+Every attribute is replace-only, so changing any of them recreates the binding.
 
 
 ## Attribute Reference

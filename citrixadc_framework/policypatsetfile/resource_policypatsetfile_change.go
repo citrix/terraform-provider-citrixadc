@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &PolicypatsetfileChangeResource{}
 var _ resource.ResourceWithConfigure = (*PolicypatsetfileChangeResource)(nil)
-var _ resource.ResourceWithImportState = (*PolicypatsetfileChangeResource)(nil)
 
 func NewPolicypatsetfileChangeResource() resource.Resource {
 	return &PolicypatsetfileChangeResource{}
@@ -39,10 +37,6 @@ type PolicypatsetfileChangeResource struct {
 type PolicypatsetfileChangeResourceModel struct {
 	Id   types.String `tfsdk:"id"`
 	Name types.String `tfsdk:"name"`
-}
-
-func (r *PolicypatsetfileChangeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *PolicypatsetfileChangeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

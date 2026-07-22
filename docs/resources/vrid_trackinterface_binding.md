@@ -6,13 +6,6 @@ subcategory: "Network"
 
 Binds a tracked interface to a Virtual Router ID (VRID) so that VRRP monitors the state of that interface for the virtual router. When a tracked interface goes down, the VRID's effective priority is reduced, which can trigger a VRRP failover to a backup router. This lets the virtual router react to the health of interfaces that are not themselves carrying VRRP traffic.
 
-This resource maps to the NITRO `vrid_trackinterface_binding` bind endpoint. Because a binding cannot be modified in place, the resource has the following lifecycle semantics:
-
-- **Create** binds the tracked interface to the VRID (NITRO PUT/bind).
-- **Update** is a no-op. Every configurable attribute forces replacement, so any change destroys the existing binding and creates a new one.
-- **Delete** removes the binding (stops tracking the interface for the VRID).
-
-
 ## Example usage
 
 ```hcl
@@ -38,3 +31,5 @@ resource "citrixadc_vrid_trackinterface_binding" "tf_vrid_trackinterface_binding
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vrid_trackinterface_binding. It is the concatenation of the `vrid_id` and `trackifnum` values in the form `id:<vrid_id>,trackifnum:<trackifnum>` (the `trackifnum` value is URL-encoded because interface names contain a `/`).
+
+

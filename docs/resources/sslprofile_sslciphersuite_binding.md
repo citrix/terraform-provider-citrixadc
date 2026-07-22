@@ -27,7 +27,7 @@ resource "citrixadc_sslprofile_sslciphersuite_binding" "tf_binding" {
 
 * `name` - (Required) Name of the SSL profile. Changing this attribute forces a new resource to be created.
 * `ciphername` - (Required) The cipher group, alias, or individual cipher configuration to bind. Changing this attribute forces a new resource to be created.
-* `cipherpriority` - (Optional, Computed) Cipher priority. Changing this attribute forces a new resource to be created.
+* `cipherpriority` - (Optional) Cipher priority. Changing this attribute forces a new resource to be created.
 
 
 ## Attribute Reference

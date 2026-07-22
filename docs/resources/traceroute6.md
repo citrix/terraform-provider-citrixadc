@@ -6,8 +6,6 @@ subcategory: "Utility"
 
 The traceroute6 resource performs the NITRO `traceroute6` action, which runs an IPv6 traceroute from the target Citrix ADC. It is an action-only diagnostic resource: applying it runs the traceroute6 once. Every argument is one-shot and forces replacement when changed.
 
-~> **NOTE** There is no NITRO GET endpoint for `traceroute6`, so the resource cannot be read back or verified; `Read`/`Update` are no-ops and `Delete` only removes the resource from Terraform state.
-
 -> **Attribute naming** The NITRO parameters `I` and `T` are exposed as the lowercase Terraform attributes `i` and `t` respectively (the lowercase NITRO variants do not exist for traceroute6, so no `_upper` suffix is needed).
 
 
@@ -41,4 +39,4 @@ resource "citrixadc_traceroute6" "tf_traceroute6" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the traceroute6 resource. It is a synthetic value (`traceroute6-config`), since the NITRO `traceroute6` action exposes no readable object.
+* `id` - The id of the traceroute6 resource. It is set to `traceroute6-config`.

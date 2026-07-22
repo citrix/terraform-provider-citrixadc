@@ -32,7 +32,7 @@ resource "citrixadc_videooptimizationglobalpacing_videooptimizationpacingpolicy_
 * `labeltype` - (Optional) Type of invocation. Available settings function as follows: `vserver` - Forward the request to the specified virtual server; `policylabel` - Invoke the specified policy label.
 * `labelname` - (Optional) Name of the policy label to invoke. Applies when the current policy evaluates to TRUE, the `invoke` parameter is set, and `labeltype` is `policylabel`.
 
-~> **Note** All arguments are immutable. Changing any of them forces the binding to be destroyed and recreated, since NITRO exposes no update endpoint for this binding.
+~> **Note** All arguments are immutable. Changing any of them forces the binding to be destroyed and recreated.
 
 
 ## Attribute Reference

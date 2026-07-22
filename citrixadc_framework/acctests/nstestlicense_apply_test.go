@@ -82,26 +82,3 @@ func testAccCheckNstestlicenseApplyExist(n string, id *string) resource.TestChec
 		return nil
 	}
 }
-
-// Datasource: nstestlicense has a keyless get(all) that returns the license
-// feature-flag object. Only the synthetic "id" is stably assertable. The
-// datasource is read-only and non-destructive (it does NOT apply a license).
-const testAccNstestlicenseDataSource_basic = `
-data "citrixadc_nstestlicense" "tf_nstestlicense" {
-}
-`
-
-func TestAccNstestlicenseDataSource_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNstestlicenseDataSource_basic,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.citrixadc_nstestlicense.tf_nstestlicense", "id"),
-				),
-			},
-		},
-	})
-}

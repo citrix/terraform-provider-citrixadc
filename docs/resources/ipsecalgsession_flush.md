@@ -6,9 +6,9 @@ subcategory: "IPSECALG"
 
 The ipsecalgsession_flush resource flushes active IPSec ALG (Application Layer Gateway) sessions on the Citrix ADC. It is an action-only resource: applying it invokes the NITRO `?action=flush` action, which clears entries from the IPSec ALG session table so that new IPSec traffic re-establishes through the current configuration. This is useful for clearing stale mappings, for troubleshooting, or for forcing sessions off a particular source, NAT, or destination IP address.
 
-This resource does not create, read, or manage a persistent object on the appliance. The IPSec ALG session table is populated by the traffic engine, not by the configuration API, and there is no inverse "un-flush" action. Each apply performs the flush; changing any scope argument forces the resource to be recreated, which re-runs the flush. Removing the resource simply drops it from Terraform state and does not restore previously flushed sessions.
+This is an action resource: applying it performs the flush; it does not manage a persistent object, so re-applying re-runs the action. Changing any scope argument forces the resource to be recreated, which re-runs the flush.
 
--> **Note:** The IPSec ALG feature must be in use for sessions to exist. Flushing when no sessions match the supplied scope is a valid no-op.
+-> **Note:** The IPSec ALG feature must be in use for sessions to exist. Flushing when no sessions match the supplied scope has no effect.
 
 
 ## Example usage
@@ -46,13 +46,13 @@ All arguments are optional and scope the flush action. Supplying none flushes al
 * `sourceip` - (Optional) Original source IP address. Restricts the flush to sessions matching this source. Changing this attribute re-triggers the flush.
 * `natip` - (Optional) Natted source IP address. Restricts the flush to sessions matching this NAT IP. Changing this attribute re-triggers the flush.
 * `destip` - (Optional) Destination IP address. Restricts the flush to sessions matching this destination. Changing this attribute re-triggers the flush.
-* `sourceip_alg` - (Optional) Original source IP address. This is the NITRO GET filter name; it is accepted for compatibility but is **not** sent in the flush payload. Use `sourceip` to scope the flush. Changing this attribute re-triggers the flush.
-* `natip_alg` - (Optional) Natted source IP address. This is the NITRO GET filter name; it is accepted for compatibility but is **not** sent in the flush payload. Use `natip` to scope the flush. Changing this attribute re-triggers the flush.
-* `destip_alg` - (Optional) Destination IP address. This is the NITRO GET filter name; it is accepted for compatibility but is **not** sent in the flush payload. Use `destip` to scope the flush. Changing this attribute re-triggers the flush.
+* `sourceip_alg` - (Optional) Original source IP address. Use `sourceip` to scope the flush. Changing this attribute re-triggers the flush.
+* `natip_alg` - (Optional) Natted source IP address. Use `natip` to scope the flush. Changing this attribute re-triggers the flush.
+* `destip_alg` - (Optional) Destination IP address. Use `destip` to scope the flush. Changing this attribute re-triggers the flush.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `ipsecalgsession_flush`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the ipsecalgsession_flush resource. It is set to `ipsecalgsession_flush`.

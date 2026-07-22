@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -21,7 +20,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &Sslpkcs12ConvertResource{}
 var _ resource.ResourceWithConfigure = (*Sslpkcs12ConvertResource)(nil)
-var _ resource.ResourceWithImportState = (*Sslpkcs12ConvertResource)(nil)
 var _ resource.ResourceWithValidateConfig = (*Sslpkcs12ConvertResource)(nil)
 
 func NewSslpkcs12ConvertResource() resource.Resource {
@@ -78,10 +76,6 @@ func (r *Sslpkcs12ConvertResource) ValidateConfig(ctx context.Context, req resou
 			"One of \"password\" or \"password_wo\" must be set for sslpkcs12_convert.",
 		)
 	}
-}
-
-func (r *Sslpkcs12ConvertResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *Sslpkcs12ConvertResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

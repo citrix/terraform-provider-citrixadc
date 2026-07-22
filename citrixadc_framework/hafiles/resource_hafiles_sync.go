@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -17,7 +16,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &HafilesSyncResource{}
 var _ resource.ResourceWithConfigure = (*HafilesSyncResource)(nil)
-var _ resource.ResourceWithImportState = (*HafilesSyncResource)(nil)
 
 func NewHafilesSyncResource() resource.Resource {
 	return &HafilesSyncResource{}
@@ -32,10 +30,6 @@ type HafilesSyncResource struct {
 type HafilesSyncResourceModel struct {
 	Id   types.String `tfsdk:"id"`
 	Mode types.List   `tfsdk:"mode"`
-}
-
-func (r *HafilesSyncResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *HafilesSyncResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

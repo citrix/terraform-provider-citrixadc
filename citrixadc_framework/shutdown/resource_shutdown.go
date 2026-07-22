@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -24,7 +23,6 @@ import (
 //     for deliberate, operator-initiated use only.
 var _ resource.Resource = &ShutdownResource{}
 var _ resource.ResourceWithConfigure = (*ShutdownResource)(nil)
-var _ resource.ResourceWithImportState = (*ShutdownResource)(nil)
 
 func NewShutdownResource() resource.Resource {
 	return &ShutdownResource{}
@@ -33,10 +31,6 @@ func NewShutdownResource() resource.Resource {
 // ShutdownResource defines the resource implementation.
 type ShutdownResource struct {
 	client *service.NitroClient
-}
-
-func (r *ShutdownResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *ShutdownResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

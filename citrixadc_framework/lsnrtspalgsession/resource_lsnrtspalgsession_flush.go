@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &LsnrtspalgsessionFlushResource{}
 var _ resource.ResourceWithConfigure = (*LsnrtspalgsessionFlushResource)(nil)
-var _ resource.ResourceWithImportState = (*LsnrtspalgsessionFlushResource)(nil)
 
 func NewLsnrtspalgsessionFlushResource() resource.Resource {
 	return &LsnrtspalgsessionFlushResource{}
@@ -40,10 +38,6 @@ type LsnrtspalgsessionFlushResourceModel struct {
 	Id        types.String `tfsdk:"id"`
 	Nodeid    types.Int64  `tfsdk:"nodeid"`
 	Sessionid types.String `tfsdk:"sessionid"`
-}
-
-func (r *LsnrtspalgsessionFlushResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *LsnrtspalgsessionFlushResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

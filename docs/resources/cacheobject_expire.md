@@ -6,7 +6,7 @@ subcategory: "Integrated Caching"
 
 The cacheobject_expire resource forcibly expires objects held in the Citrix ADC integrated cache so that the next matching request is revalidated against the origin server instead of being served stale. It is an action-only resource: applying it invokes the NITRO `expire` action against the integrated cache. This is useful after publishing new content when you want cached copies of a specific URL, host, or object locator to be marked expired immediately.
 
-This resource does not create, read, or manage a persistent object on the appliance. There is no NITRO GET endpoint for the expire action, so there is no corresponding data source. Each apply performs the expire; because every input attribute is marked `RequiresReplace`, changing any argument destroys the resource from state and re-fires the action with the new inputs. Read and Delete are no-ops.
+Each apply performs the expire; changing any argument re-fires the action with the new inputs.
 
 To re-run the action (for example, to expire the same object again), taint the resource or bump a distinguishing input value so Terraform re-creates it.
 
@@ -53,4 +53,4 @@ You must specify either `locator` OR both `url` and `host` (not both forms toget
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `cacheobject_expire`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the cacheobject_expire resource. It is set to `cacheobject_expire`.

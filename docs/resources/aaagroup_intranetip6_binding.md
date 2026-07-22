@@ -28,9 +28,7 @@ resource "citrixadc_aaagroup_intranetip6_binding" "tf_aaagroup_intranetip6_bindi
 * `intranetip6` - (Required) The intranet IPv6 address (start of the range) bound to the group. Changing this forces a new resource to be created.
 * `numaddr` - (Required) Number of IPv6 addresses bound, starting with `intranetip6`. Changing this forces a new resource to be created.
 
-~> **Note** This resource has no NITRO update endpoint and every attribute forces replacement. Any change to `groupname`, `intranetip6`, or `numaddr` recreates the binding.
-
-~> **Note** `gotopriorityexpression` is not applicable to the intranet IPv6 branch of `bind aaa group` and is not accepted by the ADC on this binding; it is therefore not exposed as a configurable argument here.
+~> **Note** Every attribute forces replacement. Any change to `groupname`, `intranetip6`, or `numaddr` recreates the binding.
 
 
 ## Attribute Reference

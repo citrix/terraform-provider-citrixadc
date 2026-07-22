@@ -46,7 +46,7 @@ resource "citrixadc_streamidentifier_analyticsprofile_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the streamidentifier_analyticsprofile_binding. It is a system-generated identifier built from the unique attributes as a comma-separated list of `key:value` pairs (the values are URL-encoded), in the form `analyticsprofile:<analyticsprofile>,name:<name>`.
+* `id` - The id of the streamidentifier_analyticsprofile_binding. It is a comma-separated list of `key:value` pairs (values URL-encoded), in the form `analyticsprofile:<analyticsprofile>,name:<name>`.
 
 
 ## Import

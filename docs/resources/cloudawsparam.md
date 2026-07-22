@@ -25,7 +25,7 @@ resource "citrixadc_cloudawsparam" "tf_cloudawsparam" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the cloudawsparam. It is a unique string prefixed with `cloudawsparam-config`.
+* `id` - The id of the cloudawsparam. It is set to `cloudawsparam-config`.
 
 
 ## Import

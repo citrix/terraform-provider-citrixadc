@@ -7,7 +7,7 @@ subcategory: "SSL"
 The sslprofile_sslciphersuite_binding data source allows you to retrieve information about the binding between an SSL profile and a cipher suite on the Citrix ADC.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslprofile_sslciphersuite_binding" "tf_binding" {

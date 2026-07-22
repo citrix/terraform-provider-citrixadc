@@ -6,7 +6,7 @@ subcategory: "SSL"
 
 The sslcertkeybundle_change resource re-reads and updates an existing SSL certificate-key bundle on the Citrix ADC from its on-disk bundle file. Use it when the underlying X509 certificate bundle file (for example, after a certificate renewal) has been replaced on the appliance and you want the ADC to reload the certificate, private-key, and any intermediate certificates from that file without deleting and re-adding the `sslcertkeybundle` object.
 
-~> **One-shot action.** This resource maps to the NITRO `change` operation for `sslcertkeybundle`. The on-wire verb is `POST ?action=update` (CLI: `update ssl certKeyBundle <certkeybundlename>`); it does not create a new persistent object on the appliance. Each `terraform apply` that creates or replaces this resource performs the change once. There is no readable server-side object for the action itself and no NITRO GET endpoint, so there is no corresponding data source: Read is a no-op, Delete only removes the resource from Terraform state, and changing any argument forces a new change (replacement).
+~> **One-shot action.** This resource performs the `change` action for `sslcertkeybundle` (CLI: `update ssl certKeyBundle <certkeybundlename>`); it does not create a new persistent object on the appliance. Each `terraform apply` that creates or replaces this resource performs the change once, and changing any argument forces a new change (replacement).
 
 
 ## Example usage
@@ -36,4 +36,4 @@ variable "sslcertkeybundle_change_passplain" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the sslcertkeybundle_change resource. It is a synthetic identifier with the format `sslcertkeybundle_change-<certkeybundlename>` (for example, `sslcertkeybundle_change-servercertbundle1`); it does not correspond to any object on the Citrix ADC.
+* `id` - The ID of the sslcertkeybundle_change resource. It has the format `sslcertkeybundle_change-<certkeybundlename>` (for example, `sslcertkeybundle_change-servercertbundle1`).

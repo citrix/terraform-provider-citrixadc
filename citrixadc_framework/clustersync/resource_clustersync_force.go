@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -24,7 +23,6 @@ import (
 //   - Because there is no GET endpoint, there is NO datasource for clustersync_force.
 var _ resource.Resource = &ClustersyncForceResource{}
 var _ resource.ResourceWithConfigure = (*ClustersyncForceResource)(nil)
-var _ resource.ResourceWithImportState = (*ClustersyncForceResource)(nil)
 
 func NewClustersyncForceResource() resource.Resource {
 	return &ClustersyncForceResource{}
@@ -43,10 +41,6 @@ type ClustersyncForceResource struct {
 // only the synthetic id.
 type ClustersyncForceResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *ClustersyncForceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *ClustersyncForceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

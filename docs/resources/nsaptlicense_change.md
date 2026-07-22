@@ -4,11 +4,11 @@ subcategory: "NS"
 
 # Resource: nsaptlicense_change
 
-The nsaptlicense_change resource allocates Citrix ADC pooled APT/CADS license counts to the appliance against a registered license session. It maps to the NITRO nsaptlicense `change` action (invoked at `POST ?action=update`) and is used to draw down a number of available licenses from a pooled licensing server and bind them to this instance.
+The nsaptlicense_change resource allocates Citrix ADC pooled APT/CADS license counts to the appliance against a registered license session. It is used to draw down a number of available licenses from a pooled licensing server and bind them to this instance.
 
-!> **DISRUPTIVE / NON-IDEMPOTENT.** Applying this resource invokes the NITRO change/update action, which consumes pooled licenses from the licensing server and changes the licensed capacity of the appliance. It is **not idempotent** — each apply re-runs the allocation action, which can over-allocate or exhaust the pool. Review the `countavailable` value carefully before applying, and treat this resource as a one-shot operational action rather than ordinary declarative configuration.
+!> **DISRUPTIVE / NON-IDEMPOTENT.** Applying this resource consumes pooled licenses from the licensing server and changes the licensed capacity of the appliance. It is **not idempotent** — each apply re-runs the allocation action, which can over-allocate or exhaust the pool. Review the `countavailable` value carefully before applying, and treat this resource as a one-shot operational action rather than ordinary declarative configuration.
 
-~> **Note.** This is an action-only resource. Create performs the allocation; Read, Update, and Delete are no-ops. There is no inverse NITRO API (no "un-allocate"), so deleting the resource only removes it from Terraform state — the allocated licenses remain on the appliance. Every attribute is marked `RequiresReplace`, so changing any argument forces the allocation action to run again as a replacement.
+~> **Note.** This is an action resource: applying it performs the license allocation; it does not manage a persistent object, so re-applying re-runs the allocation. Every attribute is immutable, so changing any argument forces the allocation action to run again as a replacement.
 
 
 ## Example usage
@@ -31,7 +31,7 @@ resource "citrixadc_nsaptlicense_change" "tf_nsaptlicense_change" {
 * `bindtype` - (Required) Bind type. Changing this value forces the resource to be replaced.
 * `countavailable` - (Required) The user can allocate one or more licenses. Ensure the value is less than (for partial allocation) or equal to the total number of available licenses. Changing this value forces the resource to be replaced.
 * `licensedir` - (Optional) License Directory. Changing this value forces the resource to be replaced.
-* `serialno` - (Optional) Hardware Serial Number/License Activation Code (LAC). This is a GET-only filter key; it is not part of the change/update action payload sent to the appliance. Changing this value forces the resource to be replaced.
+* `serialno` - (Optional) Hardware Serial Number/License Activation Code (LAC). Changing this value forces the resource to be replaced.
 * `useproxy` - (Optional) Specifies whether to use the licenseproxyserver to reach the internet. Make sure to configure licenseproxyserver to use this option. Changing this value forces the resource to be replaced.
 
 

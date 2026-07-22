@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/utility"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -21,7 +20,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &FilesystemencryptionDisableResource{}
 var _ resource.ResourceWithConfigure = (*FilesystemencryptionDisableResource)(nil)
-var _ resource.ResourceWithImportState = (*FilesystemencryptionDisableResource)(nil)
 
 // passphrase is a CLI-mandatory secret enforced at plan time via ValidateConfig
 // (Pattern 17); this assertion registers the extra interface.
@@ -49,10 +47,6 @@ type FilesystemencryptionDisableResourceModel struct {
 	Passphrase          types.String `tfsdk:"passphrase"`
 	PassphraseWo        types.String `tfsdk:"passphrase_wo"`
 	PassphraseWoVersion types.Int64  `tfsdk:"passphrase_wo_version"`
-}
-
-func (r *FilesystemencryptionDisableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *FilesystemencryptionDisableResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

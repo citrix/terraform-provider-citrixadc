@@ -6,7 +6,7 @@ subcategory: "NS"
 
 Regenerates the priority numbers of the configured IPv6 extended ACL (ACL6) rules on the Citrix ADC, spacing them evenly so that new rules can be inserted between existing ones. Use this resource when the ACL6 priorities have become tightly packed and you need room to add rules at specific positions without manually reassigning priorities.
 
-This is an **action-only** resource. Applying it triggers the NITRO `renumber` action on the `nsacls6` endpoint (the same endpoint also backs the `apply` and `clear` actions). There is no corresponding ADC object to read back, so this resource performs a one-shot action on create. Read, update, and delete are no-ops, and importing it is not meaningful. There is no NITRO GET endpoint for this action, so there is no corresponding data source.
+This is an action resource: applying it renumbers the current ACL6 rule priorities; it does not manage a persistent object, so re-applying re-runs the action.
 
 
 ## Example usage
@@ -37,9 +37,9 @@ resource "citrixadc_nsacls6_renumber" "renumber_dfd" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `nsacls6_renumber`. Because `nsacls6_renumber` performs a NITRO action with no GET endpoint, the ID does not correspond to any readable object on the Citrix ADC.
+* `id` - The id of the nsacls6_renumber resource. It is set to `nsacls6_renumber`.
 
 
 ## Note
 
-This resource models a one-shot action rather than a persistent ADC object. Applying it renumbers the current ACL6 rule priorities; the result cannot be read back from the ADC, so subsequent plans will not detect drift. To re-run the renumber action, taint the resource or change the `type` argument. Destroying the resource only removes it from Terraform state and does not revert the renumbered priorities. Importing this resource is not meaningful.
+To re-run the renumber action, taint the resource or change the `type` argument.

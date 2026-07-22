@@ -6,7 +6,7 @@ subcategory: "Application Firewall"
 
 The appfwprofile_restvalidation_binding data source allows you to retrieve information about a REST/API schema validation relaxation rule bound to a Citrix ADC application firewall profile.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_appfwprofile_restvalidation_binding" "tf_binding" {

@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -25,7 +24,6 @@ import (
 //     dbsmonitors_restart.
 var _ resource.Resource = &DbsmonitorsRestartResource{}
 var _ resource.ResourceWithConfigure = (*DbsmonitorsRestartResource)(nil)
-var _ resource.ResourceWithImportState = (*DbsmonitorsRestartResource)(nil)
 
 func NewDbsmonitorsRestartResource() resource.Resource {
 	return &DbsmonitorsRestartResource{}
@@ -44,10 +42,6 @@ type DbsmonitorsRestartResource struct {
 // therefore carries only the synthetic id.
 type DbsmonitorsRestartResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *DbsmonitorsRestartResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *DbsmonitorsRestartResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

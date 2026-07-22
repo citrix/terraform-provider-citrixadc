@@ -43,11 +43,11 @@ resource "citrixadc_sslservice_sslpolicy_binding" "tf_binding" {
 
 * `servicename` - (Required) Name of the SSL service for which to set advanced configuration. Changing this forces a new resource to be created.
 * `policyname` - (Required) The SSL policy binding. Changing this forces a new resource to be created.
-* `priority` - (Optional, Computed) The priority of the policies bound to this SSL service. Changing this forces a new resource to be created.
-* `gotopriorityexpression` - (Optional, Computed) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE. Changing this forces a new resource to be created.
-* `invoke` - (Optional, Computed) Invoke flag. This attribute is relevant only for ADVANCED policies. Changing this forces a new resource to be created.
-* `labelname` - (Optional, Computed) Name of the label to invoke if the current policy rule evaluates to TRUE. Changing this forces a new resource to be created.
-* `labeltype` - (Optional, Computed) Type of policy label invocation. Changing this forces a new resource to be created.
+* `priority` - (Optional) The priority of the policies bound to this SSL service. Changing this forces a new resource to be created.
+* `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE. Changing this forces a new resource to be created.
+* `invoke` - (Optional) Invoke flag. This attribute is relevant only for ADVANCED policies. Changing this forces a new resource to be created.
+* `labelname` - (Optional) Name of the label to invoke if the current policy rule evaluates to TRUE. Changing this forces a new resource to be created.
+* `labeltype` - (Optional) Type of policy label invocation. Changing this forces a new resource to be created.
 
 
 ## Attribute Reference

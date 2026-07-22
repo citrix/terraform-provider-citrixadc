@@ -15,11 +15,9 @@ old keys are backed up and new keys are generated every time. There is no way to
 roll a KEK rotation back. Apply this resource only when you intend to rotate the
 KEK.
 
-~> **NOTE:** NITRO exposes no GET endpoint for this resource, so the rotation
-cannot be read back and Terraform cannot detect drift. The `level` attribute is
-marked `RequiresReplace`: any change forces the resource to be destroyed and
-recreated, which triggers a fresh KEK rotation. Destroying the resource only
-removes it from Terraform state; it does not undo the rotation on the appliance.
+~> **NOTE:** The `level` attribute is immutable: any change forces the resource
+to be destroyed and recreated, which triggers a fresh KEK rotation. Destroying
+the resource does not undo the rotation on the appliance.
 
 ~> **NOTE:** Using `level = "extended"` additionally rewrites the configuration
 database (`ns.conf`, `nscfg.db`, and all `ns.conf` files for the same release)
@@ -61,6 +59,4 @@ resource "citrixadc_systemkek_change" "tf_systemkek_change" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic constant identifier for the resource. It is always set to
-  `systemkek_change`. Because there is no GET endpoint, this value is not derived
-  from the appliance.
+* `id` - The id of the systemkek_change resource. It is set to `systemkek_change`.

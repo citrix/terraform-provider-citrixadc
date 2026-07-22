@@ -6,7 +6,7 @@ subcategory: "Application Firewall"
 
 The appfwprofile_jsonblockkeyword_binding data source allows you to retrieve information about an existing JSON block-keyword binding on an application firewall profile.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_appfwprofile_jsonblockkeyword_binding" "tf_binding" {

@@ -9,9 +9,9 @@ The sslfipssimtarget_enable resource drives the **enable** stage of the Secure I
 ~> **WARNING: FIPS / HSM hardware required.**
 > This resource requires a dedicated FIPS appliance with an on-board Hardware Security Module. It is **not supported on non-FIPS appliances** (including VPX/CPX/standard MPX models) and will fail there.
 >
-> This resource invokes a FIPS SIM key-transfer action that operates on cryptographic key material in the target appliance's FIPS HSM. Destroying the resource only removes it from Terraform state and does not undo the action performed on the appliance. Plan FIPS key transfers carefully and keep a backup of the appliance configuration.
+> This resource invokes a FIPS SIM key-transfer action that operates on cryptographic key material in the target appliance's FIPS HSM. Destroying the resource does not undo the action performed on the appliance. Plan FIPS key transfers carefully and keep a backup of the appliance configuration.
 
--> **Note (one-shot action):** This is an action-only resource. The NITRO API exposes only the `enable` action for it and provides **no GET, update, or delete endpoint**. As a result, the provider's Read is a no-op (drift cannot be detected), Update is a no-op, and Delete only removes the entry from Terraform state. All attributes force replacement when changed. Because there is no GET endpoint, no data source is published for this resource, and import is not meaningful.
+-> **Note (one-shot action):** This is an action-only resource: applying it performs the `enable` action; it does not manage a persistent object, so re-applying re-runs the action. All attributes force replacement when changed.
 
 ## Example usage
 
@@ -36,4 +36,4 @@ resource "citrixadc_sslfipssimtarget_enable" "tf_sslfipssimtarget_enable" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. Because there is no GET endpoint, it is a fixed string with the value `sslfipssimtarget_enable`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the sslfipssimtarget_enable resource. It is set to `sslfipssimtarget_enable`.

@@ -28,6 +28,6 @@ This data source takes no arguments. It is a singleton, so the single global ins
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the videooptimizationparameter resource. It is the static string `videooptimizationparameter-config`.
+* `id` - The ID of the videooptimizationparameter resource. It is set to `videooptimizationparameter-config`.
 * `randomsamplingpercentage` - Random sampling percentage applied to video traffic for optimization decisions.
 * `quicpacingrate` - QUIC video pacing rate, in Kbps.

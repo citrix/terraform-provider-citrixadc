@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &DnssubnetcacheFlushResource{}
 var _ resource.ResourceWithConfigure = (*DnssubnetcacheFlushResource)(nil)
-var _ resource.ResourceWithImportState = (*DnssubnetcacheFlushResource)(nil)
 var _ resource.ResourceWithValidateConfig = (*DnssubnetcacheFlushResource)(nil)
 
 func NewDnssubnetcacheFlushResource() resource.Resource {
@@ -44,10 +42,6 @@ type DnssubnetcacheFlushResourceModel struct {
 	Id        types.String `tfsdk:"id"`
 	All       types.Bool   `tfsdk:"all"`
 	Ecssubnet types.String `tfsdk:"ecssubnet"`
-}
-
-func (r *DnssubnetcacheFlushResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *DnssubnetcacheFlushResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

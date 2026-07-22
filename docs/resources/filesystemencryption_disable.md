@@ -8,7 +8,7 @@ Disables full file system encryption on a Citrix ADC appliance, decrypting the d
 
 ~> **WARNING: This resource performs a real, potentially destructive, platform-gated operation.** Disabling file system encryption zeroes out the `/flash` and `/var` directories (`ntimes0flash` / `ntimes0var` times) and decrypts the file system. Running it in production without understanding the consequences can render the appliance temporarily unavailable or lead to data loss. You must supply the passphrase that was used to enable encryption; without it the operation cannot complete.
 
--> **Note:** This is an action-only resource. There is no NITRO GET, update, or inverse endpoint for the `disable` action, so Read, Update, and Delete are no-ops. Every attribute is marked `RequiresReplace`, so any change to a configured value re-triggers the `disable` action.
+-> **Note:** This is an action resource: applying it performs the `disable` action; it does not manage a persistent object, so any change to a configured value re-triggers the action.
 
 
 ## Example usage
@@ -72,4 +72,4 @@ resource "citrixadc_filesystemencryption_disable" "example" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `filesystemencryption_disable`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the filesystemencryption_disable resource. It is set to `filesystemencryption_disable`.

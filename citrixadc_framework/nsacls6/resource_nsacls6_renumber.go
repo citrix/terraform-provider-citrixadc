@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -17,7 +16,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &Nsacls6RenumberResource{}
 var _ resource.ResourceWithConfigure = (*Nsacls6RenumberResource)(nil)
-var _ resource.ResourceWithImportState = (*Nsacls6RenumberResource)(nil)
 
 func NewNsacls6RenumberResource() resource.Resource {
 	return &Nsacls6RenumberResource{}
@@ -37,10 +35,6 @@ type Nsacls6RenumberResource struct {
 type Nsacls6RenumberResourceModel struct {
 	Id   types.String `tfsdk:"id"`
 	Type types.String `tfsdk:"type"`
-}
-
-func (r *Nsacls6RenumberResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *Nsacls6RenumberResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

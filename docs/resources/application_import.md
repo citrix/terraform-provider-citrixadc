@@ -6,7 +6,7 @@ subcategory: "AppExpert"
 
 Imports an AppExpert application onto the Citrix ADC from an application template file that already resides on the appliance filesystem. Use this resource to deploy a packaged AppExpert application (its policies, expressions, and configuration) so that it becomes an active application on the appliance without recreating each component by hand.
 
-This is a managed resource with a create-and-delete lifecycle: create maps to the NITRO `application` object's `Import` action, and delete removes the imported application by `appname`. The Citrix ADC provides no GET endpoint for an imported application, so the provider cannot read the object back to detect drift, and there is no update operation. Any change to a configured attribute forces the application to be deleted and re-imported.
+This is a managed resource with a create-and-delete lifecycle: create maps to the NITRO `application` object's `Import` action, and delete removes the imported application by `appname`. Any change to a configured attribute forces the application to be deleted and re-imported.
 
 
 ## Example usage

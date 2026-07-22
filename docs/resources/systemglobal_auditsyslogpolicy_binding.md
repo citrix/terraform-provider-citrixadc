@@ -26,14 +26,14 @@ resource "citrixadc_systemglobal_auditsyslogpolicy_binding" "syslog_global" {
 ## Argument Reference
 
 * `policyname` - (Required) The name of the audit syslog policy to bind to the system global scope. This is the binding key. Changing this value forces a new binding to be created.
-* `priority` - (Optional, Computed) The priority assigned to the policy at the global scope. Policies are evaluated in ascending order of priority. Changing this value forces a new binding to be created.
-* `nextfactor` - (Optional, Computed) On-success invoke label. Applicable for advanced authentication policy binding. Changing this value forces a new binding to be created.
-* `gotopriorityexpression` - (Optional, Computed) Applicable only to advanced authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE. Specify one of the following values: NEXT (evaluate the policy with the next higher priority number) or END (end policy evaluation). Changing this value forces a new binding to be created.
+* `priority` - (Optional) The priority assigned to the policy at the global scope. Policies are evaluated in ascending order of priority. Changing this value forces a new binding to be created.
+* `nextfactor` - (Optional) On-success invoke label. Applicable for advanced authentication policy binding. Changing this value forces a new binding to be created.
+* `gotopriorityexpression` - (Optional) Applicable only to advanced authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE. Specify one of the following values: NEXT (evaluate the policy with the next higher priority number) or END (end policy evaluation). Changing this value forces a new binding to be created.
 
-The following attributes are read-only discriminators returned by the NITRO server. They describe the binding scope and are not accepted as bind arguments, so the provider does not send them in the create payload:
+The following attributes are read-only and returned by the appliance. They describe the binding scope:
 
-* `feature` - (Read-only, Computed) The feature checked while applying this configuration.
-* `globalbindtype` - (Read-only, Computed) The global bind type for this binding. The NITRO server reports this as `SYSTEM_GLOBAL` for system global bindings.
+* `feature` - The feature checked while applying this configuration.
+* `globalbindtype` - The global bind type for this binding, reported as `SYSTEM_GLOBAL` for system global bindings.
 
 
 ## Attribute Reference

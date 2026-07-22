@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SslfipssimsourceInitResource{}
 var _ resource.ResourceWithConfigure = (*SslfipssimsourceInitResource)(nil)
-var _ resource.ResourceWithImportState = (*SslfipssimsourceInitResource)(nil)
 
 func NewSslfipssimsourceInitResource() resource.Resource {
 	return &SslfipssimsourceInitResource{}
@@ -38,10 +36,6 @@ type SslfipssimsourceInitResource struct {
 type SslfipssimsourceInitResourceModel struct {
 	Id       types.String `tfsdk:"id"`
 	Certfile types.String `tfsdk:"certfile"`
-}
-
-func (r *SslfipssimsourceInitResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *SslfipssimsourceInitResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

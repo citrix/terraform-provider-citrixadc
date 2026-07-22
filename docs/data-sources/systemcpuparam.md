@@ -29,5 +29,5 @@ This data source is a singleton and does not require any lookup arguments. It re
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the systemcpuparam data source. It is a synthetic constant string `systemcpuparam-config`.
+* `id` - The ID of the systemcpuparam data source. It is set to `systemcpuparam-config`.
 * `pemode` - The currently configured PE mode on the appliance.

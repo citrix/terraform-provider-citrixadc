@@ -69,7 +69,7 @@ resource "citrixadc_cloudcredential" "tf_cloudcredential" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the cloudcredential. Because this is a singleton resource, it is the fixed string `cloudcredential-config`.
+* `id` - The id of the cloudcredential. It is set to `cloudcredential-config`.
 
 
 ## Import

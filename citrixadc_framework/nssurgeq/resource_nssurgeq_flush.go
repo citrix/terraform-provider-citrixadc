@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NssurgeqFlushResource{}
 var _ resource.ResourceWithConfigure = (*NssurgeqFlushResource)(nil)
-var _ resource.ResourceWithImportState = (*NssurgeqFlushResource)(nil)
 
 func NewNssurgeqFlushResource() resource.Resource {
 	return &NssurgeqFlushResource{}
@@ -40,10 +38,6 @@ type NssurgeqFlushResourceModel struct {
 	Name       types.String `tfsdk:"name"`
 	Port       types.Int64  `tfsdk:"port"`
 	Servername types.String `tfsdk:"servername"`
-}
-
-func (r *NssurgeqFlushResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *NssurgeqFlushResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

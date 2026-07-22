@@ -35,9 +35,9 @@ resource "citrixadc_lbglobal_lbpolicy_binding" "lb_global_bind" {
 
 * `policyname` - (Required) Name of the LB policy.
 * `priority` - (Required) Specifies the priority of the policy. A lower number is evaluated before a higher number.
-* `type` - (Optional, Computed) The bind point at which the policy is evaluated globally. Forms part of the resource ID together with `policyname`. Possible values = REQ_OVERRIDE, REQ_DEFAULT, OTHERTCP_REQ_OVERRIDE, OTHERTCP_REQ_DEFAULT
-* `gotopriorityexpression` - (Optional, Computed) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `invoke` - (Optional, Computed) If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
+* `type` - (Optional) The bind point at which the policy is evaluated globally. Forms part of the resource ID together with `policyname`. Possible values = REQ_OVERRIDE, REQ_DEFAULT, OTHERTCP_REQ_OVERRIDE, OTHERTCP_REQ_DEFAULT
+* `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `invoke` - (Optional) If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labelname` - (Optional) Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.
 * `labeltype` - (Optional) Type of invocation. Available settings function as follows: `vserver` - Invokes the unnamed policy label associated with the specified virtual server; `policylabel` - Invoke the specified policy label. Possible values = vserver, policylabel
 
@@ -47,7 +47,7 @@ resource "citrixadc_lbglobal_lbpolicy_binding" "lb_global_bind" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The ID of the lbglobal_lbpolicy_binding. It is a comma-separated list of `key:value` pairs (URL-encoded) composed of the `policyname` and `type` attributes — for example, `policyname:lbpol1,type:REQ_DEFAULT`.
-* `globalbindtype` - (Computed) Server-managed global bind type discriminator echoed by the ADC (defaults to `SYSTEM_GLOBAL`). It is not a configurable input; the NITRO server manages this value.
+* `globalbindtype` - Global bind type discriminator (defaults to `SYSTEM_GLOBAL`). It is not a configurable input.
 
 
 ## Import

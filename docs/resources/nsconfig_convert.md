@@ -6,7 +6,7 @@ subcategory: "NS"
 
 The nsconfig_convert resource converts a classic Citrix ADC configuration file into the equivalent NITRO (declarative) representation. Use it to migrate an existing CLI-style config file into a NITRO graph that can be consumed by automation or stored for later application.
 
-~> **One-shot action.** This resource maps to the NITRO `convert` action (`POST ?action=convert`); it does not create a persistent object on the appliance. Each `terraform apply` that creates or replaces this resource runs the conversion once. There is no readable server-side object and no NITRO GET endpoint, so there is no corresponding data source: Read is a no-op, Delete only removes the resource from Terraform state, and changing any argument forces the conversion to run again (replacement). Bump `timestamp` to re-run the conversion when the other arguments are unchanged.
+~> **One-shot action.** This is an action resource: applying it performs the configuration conversion; it does not manage a persistent object, so re-applying re-runs the conversion. Each `terraform apply` that creates or replaces this resource runs the conversion once, and changing any argument forces the conversion to run again (replacement). Bump `timestamp` to re-run the conversion when the other arguments are unchanged.
 
 
 ## Example usage

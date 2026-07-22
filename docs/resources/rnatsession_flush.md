@@ -6,7 +6,7 @@ subcategory: "Network"
 
 The rnatsession_flush resource flushes active RNAT (Reverse NAT) sessions on the Citrix ADC. It is an action-only resource: applying it invokes the NITRO flush action, which clears the RNAT session table so that new connections re-establish through the current RNAT configuration. This is useful after changing RNAT rules, for troubleshooting stale mappings, or for forcing sessions off a particular NAT IP or ACL.
 
-This resource does not create, read, or manage a persistent object on the appliance. There is no NITRO GET endpoint for RNAT sessions, so there is no corresponding data source. Each apply performs the flush; changing any filter argument re-triggers the flush.
+Each apply performs the flush; changing any filter argument re-triggers the flush.
 
 
 ## Example usage
@@ -61,4 +61,4 @@ The filter arguments are mutually exclusive: use either the `network` + `netmask
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `rnatsession_flush`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the rnatsession_flush resource. It is set to `rnatsession_flush`.

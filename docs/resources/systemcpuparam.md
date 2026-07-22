@@ -27,7 +27,7 @@ resource "citrixadc_systemcpuparam" "tf_systemcpuparam" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the systemcpuparam resource. Because this is a global singleton, the ID is a synthetic constant string `systemcpuparam-config`.
+* `id` - The id of the systemcpuparam. It is set to `systemcpuparam-config`.
 
 
 ## Import

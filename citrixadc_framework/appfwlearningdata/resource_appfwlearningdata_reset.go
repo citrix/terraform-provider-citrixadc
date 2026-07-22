@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -16,7 +15,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &AppfwlearningdataResetResource{}
 var _ resource.ResourceWithConfigure = (*AppfwlearningdataResetResource)(nil)
-var _ resource.ResourceWithImportState = (*AppfwlearningdataResetResource)(nil)
 
 func NewAppfwlearningdataResetResource() resource.Resource {
 	return &AppfwlearningdataResetResource{}
@@ -37,10 +35,6 @@ type AppfwlearningdataResetResource struct {
 // reset-state and no inverse API. Read/Update/Delete are therefore no-ops.
 type AppfwlearningdataResetResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *AppfwlearningdataResetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *AppfwlearningdataResetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

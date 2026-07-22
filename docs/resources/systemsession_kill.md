@@ -6,13 +6,7 @@ subcategory: "System"
 
 The systemsession_kill resource terminates administrative (NITRO/CLI/GUI) sessions on the Citrix ADC. Applying it invokes the NITRO `kill` action to forcibly log out either a single session identified by its session ID, or every administrative session on the appliance. Use it to revoke access for a stale or unauthorized session, or to clear out administrative sessions during maintenance.
 
-This is a **destructive, one-shot action resource**. There is no add/update/delete NITRO API for it and no corresponding data source:
-
-* `Create` performs the `kill` action.
-* `Read` and `Update` are no-ops; the resource is not reconciled against live state (administrative sessions are transient runtime objects).
-* `Delete` removes the resource from Terraform state only — there is no inverse "un-kill" operation.
-
-Each apply performs the kill; changing `sid` or `all` re-triggers the action (both attributes force replacement).
+This is a destructive, one-shot action resource: applying it performs the kill; it does not manage a persistent object. Each apply performs the kill; changing `sid` or `all` re-triggers the action (both attributes force replacement).
 
 ~> **WARNING:** Setting `all = true` terminates **ALL** administrative sessions except the current one — and depending on session reuse, this can include the provider's own NITRO session, causing subsequent operations in the same apply to fail with authentication errors. Specifying a `sid` kills only that single session. Use this resource deliberately; killing sessions immediately disconnects active administrators.
 
@@ -50,4 +44,4 @@ The following arguments are supported. Exactly one of `sid` or `all` must be set
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `systemsession_kill`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the systemsession_kill resource. It is set to `systemsession_kill`.

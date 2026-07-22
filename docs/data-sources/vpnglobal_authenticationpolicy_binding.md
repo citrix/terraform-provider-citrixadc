@@ -6,7 +6,7 @@ subcategory: "VPN"
 
 The vpnglobal_authenticationpolicy_binding data source allows you to retrieve information about an advanced authentication policy bound to the global VPN bind point.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_vpnglobal_authenticationpolicy_binding" "tf_bind" {

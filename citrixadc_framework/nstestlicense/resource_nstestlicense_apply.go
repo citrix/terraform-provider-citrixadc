@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -32,7 +31,6 @@ const nstestlicenseResourceType = "nstestlicense"
 //     datasource to read back the (read-only) get(all) attributes.
 var _ resource.Resource = &NstestlicenseApplyResource{}
 var _ resource.ResourceWithConfigure = (*NstestlicenseApplyResource)(nil)
-var _ resource.ResourceWithImportState = (*NstestlicenseApplyResource)(nil)
 
 func NewNstestlicenseApplyResource() resource.Resource {
 	return &NstestlicenseApplyResource{}
@@ -49,10 +47,6 @@ type NstestlicenseApplyResource struct {
 // synthetic id.
 type NstestlicenseApplyResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *NstestlicenseApplyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *NstestlicenseApplyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

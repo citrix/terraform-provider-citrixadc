@@ -6,7 +6,7 @@ subcategory: "Protocol"
 
 Configures the band-size granularity used by the Citrix ADC when it collects HTTP request and response size statistics. Tuning the band sizes lets you control the width of the size buckets that appear in the HTTP band statistics reports, so you can profile the distribution of request and response payload sizes at the resolution you need.
 
-This is a singleton settings resource: a single configuration object always exists on the appliance, so creating the resource sets the values and destroying it simply removes it from Terraform state (the appliance retains the last configured values).
+This is a singleton settings resource: a single configuration object always exists on the appliance. Creating the resource sets the values; destroying it leaves the last configured values in effect on the appliance.
 
 
 ## Example usage
@@ -29,10 +29,4 @@ resource "citrixadc_protocolhttpband" "tf_protocolhttpband" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the protocolhttpband resource. Because this is a singleton settings resource, the ID is a fixed synthetic value: `"protocolhttpband-config"`.
-
-
-## Operational notes
-
-* **Read is a no-op.** The NITRO API only exposes an HTTP band *statistics* view for this object; it does not return the configured `reqbandsize` / `respbandsize` values for readback. The provider therefore preserves the values from Terraform state on refresh and does not detect drift introduced outside Terraform.
-* **Delete is a no-op.** The appliance provides no verb to remove this configuration. Destroying the resource only removes it from Terraform state; the last configured band sizes remain in effect on the appliance.
+* `id` - The ID of the protocolhttpband resource. It is set to `protocolhttpband-config`.

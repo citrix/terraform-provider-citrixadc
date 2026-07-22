@@ -7,7 +7,7 @@ subcategory: "Kafka"
 Retrieves information about a service group bound to a Kafka cluster. Look the binding up by the Kafka cluster name and the bound service group name. The Kafka feature must be available and licensed on the appliance.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_kafkacluster_servicegroup_binding" "tf_binding" {

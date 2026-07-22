@@ -80,31 +80,3 @@ func testAccCheckNssourceroutecachetableFlushExist(n string, id *string) resourc
 		return nil
 	}
 }
-
-// Datasource: nssourceroutecachetable get(all) returns a TABLE (list) of cache
-// entries. On an idle testbed the table is empty and the get(all) errors
-// ("no resource found"), so this test is skipped by default. Remove the t.Skip
-// only when the source-route cache is known to be populated.
-//
-// The datasource type (citrixadc_nssourceroutecachetable) is UNCHANGED by the
-// action refactor and is retained here verbatim.
-const testAccNssourceroutecachetableDataSource_basic = `
-data "citrixadc_nssourceroutecachetable" "tf_nssourceroutecachetable" {
-}
-`
-
-func TestAccNssourceroutecachetableDataSource_basic(t *testing.T) {
-	t.Skip("nssourceroutecachetable get(all) returns a cache table that is empty on an idle testbed; the datasource Read errors on an empty result.")
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNssourceroutecachetableDataSource_basic,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.citrixadc_nssourceroutecachetable.tf_nssourceroutecachetable", "id"),
-				),
-			},
-		},
-	})
-}

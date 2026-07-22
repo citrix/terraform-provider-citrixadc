@@ -23,9 +23,9 @@ resource "citrixadc_lbpolicylabel" "tf_lbpolicylabel" {
 * `labelname` - (Required) Name for the LB policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, `"my lb policy label"` or `'my lb policy label'`). Changing this value forces a new resource to be created.
 * `policylabeltype` - (Optional) Protocols supported by the policy label. Changing this value forces a new resource to be created. Defaults to `"HTTP"`. Possible values: [ HTTP, DNS, OTHERTCP, SIP_UDP, SIP_TCP, MYSQL, MSSQL, ORACLE, NAT, DIAMETER, RADIUS, MQTT, QUIC_BRIDGE, HTTP_QUIC ]
 * `comment` - (Optional) Any comments to preserve information about this LB policy label. Changing this value forces a new resource to be created.
-* `newname` - (Optional) New name for the LB policy label. This is a rename-only, advanced attribute that maps to the NITRO `rename` action; it is not sent in the create request. Most users should leave it unset and instead control the name through `labelname`. Must follow the same naming rules as `labelname`.
+* `newname` - (Optional) New name for the LB policy label. This is a rename-only, advanced attribute. Most users should leave it unset and instead control the name through `labelname`. Must follow the same naming rules as `labelname`.
 
-~> **Note:** This resource has no in-place update. NITRO exposes only add, delete, and rename operations for `lbpolicylabel` (there is no set/update endpoint), so all attributes are marked `RequiresReplace`. Changing `labelname`, `policylabeltype`, or `comment` forces Terraform to destroy and recreate the resource.
+~> **Note:** This resource is immutable. Changing `labelname`, `policylabeltype`, or `comment` forces Terraform to destroy and recreate the resource.
 
 
 ## Attribute Reference

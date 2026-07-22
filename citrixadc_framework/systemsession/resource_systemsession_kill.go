@@ -21,7 +21,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SystemsessionKillResource{}
 var _ resource.ResourceWithConfigure = (*SystemsessionKillResource)(nil)
-var _ resource.ResourceWithImportState = (*SystemsessionKillResource)(nil)
 
 // ValidateConfig enforces the CLI's mandatory mutually-exclusive `(<sid> | -all)` choice
 // for the kill action (NitroValidator Pattern 8/17). Keeping this assertion is required
@@ -51,10 +50,6 @@ type SystemsessionKillResourceModel struct {
 	Id  types.String `tfsdk:"id"`
 	All types.Bool   `tfsdk:"all"`
 	Sid types.Int64  `tfsdk:"sid"`
-}
-
-func (r *SystemsessionKillResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *SystemsessionKillResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

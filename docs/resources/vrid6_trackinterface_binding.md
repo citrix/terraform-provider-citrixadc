@@ -34,3 +34,5 @@ resource "citrixadc_vrid6_trackinterface_binding" "tf_vrid6_trackinterface_bindi
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vrid6_trackinterface_binding. It is the concatenation of the `vrid_id` and `trackifnum` attributes in the form `id:<vrid_id>,trackifnum:<trackifnum>` (each value URL-encoded).
+
+

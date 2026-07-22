@@ -6,7 +6,7 @@ subcategory: "SSL"
 
 The sslservice_sslcacertbundle_binding data source allows you to retrieve information about the binding between an SSL service and a CA certificate bundle.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslservice_sslcacertbundle_binding" "example" {
@@ -28,5 +28,5 @@ output "skipcacertbundle" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslservice_sslcacertbundle_binding. It is a system-generated identifier.
+* `id` - The id of the sslservice_sslcacertbundle_binding.
 * `skipcacertbundle` - The flag is used to indicate whether all CA_names in this particular CA certificate bundle needs to be sent to the SSL client while requesting for client certificate in a SSL handshake.

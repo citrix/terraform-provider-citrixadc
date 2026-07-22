@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SystemhwerrorCheckResource{}
 var _ resource.ResourceWithConfigure = (*SystemhwerrorCheckResource)(nil)
-var _ resource.ResourceWithImportState = (*SystemhwerrorCheckResource)(nil)
 
 func NewSystemhwerrorCheckResource() resource.Resource {
 	return &SystemhwerrorCheckResource{}
@@ -37,10 +35,6 @@ type SystemhwerrorCheckResource struct {
 type SystemhwerrorCheckResourceModel struct {
 	Id        types.String `tfsdk:"id"`
 	Diskcheck types.Bool   `tfsdk:"diskcheck"`
-}
-
-func (r *SystemhwerrorCheckResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *SystemhwerrorCheckResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,7 +21,6 @@ import (
 //     resource cannot be verified by reading it back.
 var _ resource.Resource = &Ping6Resource{}
 var _ resource.ResourceWithConfigure = (*Ping6Resource)(nil)
-var _ resource.ResourceWithImportState = (*Ping6Resource)(nil)
 
 func NewPing6Resource() resource.Resource {
 	return &Ping6Resource{}
@@ -31,10 +29,6 @@ func NewPing6Resource() resource.Resource {
 // Ping6Resource defines the resource implementation.
 type Ping6Resource struct {
 	client *service.NitroClient
-}
-
-func (r *Ping6Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *Ping6Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

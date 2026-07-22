@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,7 +25,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NsdhcpipReleaseResource{}
 var _ resource.ResourceWithConfigure = (*NsdhcpipReleaseResource)(nil)
-var _ resource.ResourceWithImportState = (*NsdhcpipReleaseResource)(nil)
 
 func NewNsdhcpipReleaseResource() resource.Resource {
 	return &NsdhcpipReleaseResource{}
@@ -45,10 +43,6 @@ type NsdhcpipReleaseResource struct {
 // carries only the synthetic id.
 type NsdhcpipReleaseResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *NsdhcpipReleaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *NsdhcpipReleaseResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

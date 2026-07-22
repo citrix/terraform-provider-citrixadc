@@ -6,7 +6,7 @@ subcategory: "NS"
 
 The shutdown resource performs the NITRO `shutdown` action, which shuts down the Citrix ADC appliance. It is an action-only, zero-attribute resource: applying it triggers the shutdown, and there are no configurable arguments.
 
-~> **WARNING** Applying this resource **shuts down the appliance**, making it unreachable. It is intended for deliberate, operator-initiated use only. There is no NITRO GET endpoint for `shutdown`, so the resource cannot be read back or verified; `Read`/`Update` are no-ops and `Delete` only removes the resource from Terraform state (it does not power the appliance back on).
+~> **WARNING** Applying this resource **shuts down the appliance**, making it unreachable. It is intended for deliberate, operator-initiated use only.
 
 
 ## Example usage
@@ -26,4 +26,4 @@ This resource has no configurable arguments.
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the shutdown resource. It is a synthetic value (`shutdown-config`), since the NITRO `shutdown` action exposes no readable object.
+* `id` - The id of the shutdown resource. It is set to `shutdown-config`.

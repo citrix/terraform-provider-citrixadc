@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,7 +21,6 @@ import (
 //     the resource cannot be verified by reading it back.
 var _ resource.Resource = &TracerouteResource{}
 var _ resource.ResourceWithConfigure = (*TracerouteResource)(nil)
-var _ resource.ResourceWithImportState = (*TracerouteResource)(nil)
 
 func NewTracerouteResource() resource.Resource {
 	return &TracerouteResource{}
@@ -31,10 +29,6 @@ func NewTracerouteResource() resource.Resource {
 // TracerouteResource defines the resource implementation.
 type TracerouteResource struct {
 	client *service.NitroClient
-}
-
-func (r *TracerouteResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *TracerouteResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

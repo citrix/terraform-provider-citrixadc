@@ -6,7 +6,7 @@ subcategory: "High Availability"
 
 Synchronizes configuration files (such as SSL certificates, Access Gateway bookmarks, application firewall imports, and license files) from the current node to its peer across a Citrix ADC high-availability (HA) pair. This keeps both HA nodes in sync so the secondary node is ready to take over with the same file-based configuration as the primary.
 
-This is an **action-only** resource: applying it triggers a one-time `sync` action on the ADC. It does **not** manage persistent server-side state. Because NITRO exposes no GET endpoint for this action, the resource performs no read-back (drift cannot be detected), there is no update, and Read/Delete are state-only no-ops. Changing the `mode` argument forces the resource to be re-created, which re-runs the sync.
+This is an action resource: applying it performs the `sync`; it does not manage a persistent object, so re-applying re-runs the action. Changing the `mode` argument forces the resource to be re-created, which re-runs the sync.
 
 This resource requires an HA setup and operates on an HA node.
 
@@ -53,4 +53,4 @@ resource "citrixadc_hafiles_sync" "sync_default" {}
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier with the constant value `"hafiles_sync"`. This action-only resource has no server-assigned identity.
+* `id` - The id of the hafiles_sync resource. It is set to `hafiles_sync`.

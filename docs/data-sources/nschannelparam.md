@@ -27,5 +27,5 @@ This datasource is a singleton and does not require any arguments. All attribute
 
 The following attributes are available:
 
-* `id` - The id of the nschannelparam datasource. Set to the constant string `nschannelparam-config`.
+* `id` - The id of the nschannelparam datasource. It is set to `nschannelparam-config`.
 * `vfautorecover` - VF autorecover mode for channels. Possible values: `DISABLE`, `ENABLE`.

@@ -6,11 +6,7 @@ subcategory: "Policy"
 
 The policypatsetfile resource imports a pattern-set file into the Citrix ADC. Importing the file loads a collection of patterns from an external source (an HTTP/HTTPS/FTP URL or a file already present on the appliance) and registers it under a named pattern set, which can then be referenced in policy expressions for pattern-set matching.
 
-This resource maps to the NITRO `Import` action (`POST /policypatsetfile?action=Import`). Because the import is a one-shot operation, the resource has the following lifecycle semantics:
-
-- **Create** performs the import.
-- **Update** is a no-op. Every configurable attribute forces replacement, so any change to the configuration destroys the existing imported file and re-imports it.
-- **Delete** removes the imported pattern-set file from the appliance.
+Importing the file is a one-shot operation. Every configurable attribute forces replacement, so any change to the configuration destroys the existing imported file and re-imports it. Destroying the resource removes the imported pattern-set file from the appliance.
 
 
 ## Example usage

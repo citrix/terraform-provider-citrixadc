@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,7 +27,6 @@ import (
 // ActOnResource.
 var _ resource.Resource = &SystemautorestorefeatureDisableResource{}
 var _ resource.ResourceWithConfigure = (*SystemautorestorefeatureDisableResource)(nil)
-var _ resource.ResourceWithImportState = (*SystemautorestorefeatureDisableResource)(nil)
 
 func NewSystemautorestorefeatureDisableResource() resource.Resource {
 	return &SystemautorestorefeatureDisableResource{}
@@ -46,10 +44,6 @@ type SystemautorestorefeatureDisableResource struct {
 // payload. The model therefore carries only the synthetic id.
 type SystemautorestorefeatureDisableResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *SystemautorestorefeatureDisableResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *SystemautorestorefeatureDisableResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

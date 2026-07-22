@@ -6,7 +6,7 @@ subcategory: "SSL"
 
 The sslservice_sslcipher_binding data source allows you to retrieve information about the binding between an SSL service and a cipher, cipher group, or cipher alias.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslservice_sslcipher_binding" "example" {
@@ -32,7 +32,7 @@ output "description" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslservice_sslcipher_binding. It is a system-generated identifier.
+* `id` - The id of the sslservice_sslcipher_binding.
 * `cipheraliasname` - The cipher group/alias/individual cipher configuration.
 * `cipherdefaulton` - Flag indicating whether the bound cipher was the DEFAULT cipher, bound at boot time, or any other cipher from the CLI.
 * `description` - The cipher suite description.

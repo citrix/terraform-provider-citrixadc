@@ -34,7 +34,7 @@ This data source takes no arguments; it always reads the singleton `cloudparamet
 
 The following attributes are available:
 
-* `id` - The id of the cloudparameter. It is always the static value `cloudparameter-config`.
+* `id` - The id of the cloudparameter. It is set to `cloudparameter-config`.
 * `controllerfqdn` - FQDN of the controller to which the Citrix ADC SDProxy connects.
 * `controllerport` - Port number of the controller to which the Citrix ADC SDProxy connects.
 * `customerid` - Customer ID of the Citrix Cloud customer.

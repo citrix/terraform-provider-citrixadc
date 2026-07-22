@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &HasyncForceResource{}
 var _ resource.ResourceWithConfigure = (*HasyncForceResource)(nil)
-var _ resource.ResourceWithImportState = (*HasyncForceResource)(nil)
 
 func NewHasyncForceResource() resource.Resource {
 	return &HasyncForceResource{}
@@ -39,10 +37,6 @@ type HasyncForceResourceModel struct {
 	Id    types.String `tfsdk:"id"`
 	Force types.Bool   `tfsdk:"force"`
 	Save  types.String `tfsdk:"save"`
-}
-
-func (r *HasyncForceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *HasyncForceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

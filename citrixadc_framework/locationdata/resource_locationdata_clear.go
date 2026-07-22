@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -24,7 +23,6 @@ import (
 //   - Because there is no GET endpoint, there is NO datasource for locationdata_clear.
 var _ resource.Resource = &LocationdataClearResource{}
 var _ resource.ResourceWithConfigure = (*LocationdataClearResource)(nil)
-var _ resource.ResourceWithImportState = (*LocationdataClearResource)(nil)
 
 func NewLocationdataClearResource() resource.Resource {
 	return &LocationdataClearResource{}
@@ -43,10 +41,6 @@ type LocationdataClearResource struct {
 // carries only the synthetic id.
 type LocationdataClearResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *LocationdataClearResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *LocationdataClearResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

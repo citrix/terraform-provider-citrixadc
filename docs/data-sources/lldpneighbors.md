@@ -53,7 +53,7 @@ Both arguments are optional. When neither is supplied, the first learned neighbo
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lldpneighbors data source. It is a fixed synthetic value, `lldpneighbors`.
+* `id` - The id of the lldpneighbors data source. It is set to `lldpneighbors`.
 * `ifnum` - Interface name on which the LLDP neighbor was learned.
 * `nodeid` - Unique number that identifies the cluster node from which the neighbor information was read.
 * `chassisidsubtype` - Chassis ID subtype of the LLDP neighbor.

@@ -24,7 +24,7 @@ resource "citrixadc_metricsprofile_authenticationvserver_binding" "tf_binding" {
 * `entityname` - (Required) Name of the authentication virtual server to bind to the metrics profile. Changing this attribute forces a new resource to be created.
 * `entitytype` - (Required) Type of the entity bound to the metrics profile. For this binding the value is always `authvserver`. Changing this attribute forces a new resource to be created.
 
-This binding is immutable: there is no NITRO update endpoint, so every argument carries a `RequiresReplace` plan modifier. Any change results in the binding being destroyed and recreated.
+This binding is immutable. Any change results in the binding being destroyed and recreated.
 
 
 ## Attribute Reference

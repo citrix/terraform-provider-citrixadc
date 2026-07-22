@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NsaptlicenseChangeResource{}
 var _ resource.ResourceWithConfigure = (*NsaptlicenseChangeResource)(nil)
-var _ resource.ResourceWithImportState = (*NsaptlicenseChangeResource)(nil)
 
 func NewNsaptlicenseChangeResource() resource.Resource {
 	return &NsaptlicenseChangeResource{}
@@ -53,10 +51,6 @@ type NsaptlicenseChangeResourceModel struct {
 	Serialno       types.String `tfsdk:"serialno"`
 	Sessionid      types.String `tfsdk:"sessionid"`
 	Useproxy       types.String `tfsdk:"useproxy"`
-}
-
-func (r *NsaptlicenseChangeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *NsaptlicenseChangeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

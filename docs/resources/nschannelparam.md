@@ -27,7 +27,7 @@ resource "citrixadc_nschannelparam" "tf_nschannelparam" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nschannelparam. Because this is a singleton, it is set to the constant string `nschannelparam-config`.
+* `id` - The id of the nschannelparam. It is set to `nschannelparam-config`.
 
 
 ## Import

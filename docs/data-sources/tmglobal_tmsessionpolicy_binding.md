@@ -7,7 +7,7 @@ subcategory: "Traffic Management"
 The tmglobal_tmsessionpolicy_binding data source allows you to retrieve information about a TM session policy bound to the global TM bind point, identified by its policy name.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_tmglobal_tmsessionpolicy_binding" "tf_tmglobal_tmsessionpolicy_binding" {

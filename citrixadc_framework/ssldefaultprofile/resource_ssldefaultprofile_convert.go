@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -31,7 +30,6 @@ const ssldefaultprofileResourceType = "ssldefaultprofile"
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SsldefaultprofileConvertResource{}
 var _ resource.ResourceWithConfigure = (*SsldefaultprofileConvertResource)(nil)
-var _ resource.ResourceWithImportState = (*SsldefaultprofileConvertResource)(nil)
 
 func NewSsldefaultprofileConvertResource() resource.Resource {
 	return &SsldefaultprofileConvertResource{}
@@ -50,10 +48,6 @@ type SsldefaultprofileConvertResource struct {
 // model therefore carries only the synthetic id.
 type SsldefaultprofileConvertResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *SsldefaultprofileConvertResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *SsldefaultprofileConvertResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

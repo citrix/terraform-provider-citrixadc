@@ -32,7 +32,7 @@ resource "citrixadc_nsmgmtparam" "tf_nsmgmtparam" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nsmgmtparam. Because this is a singleton, it is set to the constant string `nsmgmtparam-config`.
+* `id` - The id of the nsmgmtparam. It is set to `nsmgmtparam-config`.
 
 
 ## Import

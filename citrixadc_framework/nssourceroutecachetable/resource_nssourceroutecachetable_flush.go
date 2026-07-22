@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,7 +29,6 @@ const nssourceroutecachetableResourceType = "nssourceroutecachetable"
 //     synthetic id.
 var _ resource.Resource = &NssourceroutecachetableFlushResource{}
 var _ resource.ResourceWithConfigure = (*NssourceroutecachetableFlushResource)(nil)
-var _ resource.ResourceWithImportState = (*NssourceroutecachetableFlushResource)(nil)
 
 func NewNssourceroutecachetableFlushResource() resource.Resource {
 	return &NssourceroutecachetableFlushResource{}
@@ -47,10 +45,6 @@ type NssourceroutecachetableFlushResource struct {
 // synthetic id.
 type NssourceroutecachetableFlushResourceModel struct {
 	Id types.String `tfsdk:"id"`
-}
-
-func (r *NssourceroutecachetableFlushResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *NssourceroutecachetableFlushResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

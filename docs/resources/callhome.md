@@ -6,7 +6,7 @@ subcategory: "Utility"
 
 The callhome resource configures the Citrix ADC Call Home feature, which allows the appliance to automatically report failures and periodic heartbeats to Citrix technical support. Configure it to set the administrator contact email, the reporting mode, and an optional proxy server to use when the ADC reaches out over the internet.
 
-Call Home is a singleton feature: there is exactly one Call Home configuration per Citrix ADC. Applying this resource sets the global Call Home configuration. There is no create or delete operation on the ADC; running `terraform destroy` only removes the resource from Terraform state and leaves the configuration in place on the appliance.
+Call Home is a singleton feature: there is exactly one Call Home configuration per Citrix ADC. Applying this resource sets the global Call Home configuration. Destroying the resource leaves the configuration in place on the appliance.
 
 
 ## Example usage
@@ -61,8 +61,8 @@ resource "citrixadc_callhome" "tf_callhome" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the callhome resource. Because callhome is a singleton, this is always the static string `"callhome"`.
-* `nodeid` - Unique number that identifies the cluster node. This is a read-only, GET-only cluster-node filter that is populated by the ADC and cannot be set.
+* `id` - The id of the callhome resource. It is set to `callhome`.
+* `nodeid` - Unique number that identifies the cluster node. This is a read-only attribute that cannot be set.
 
 
 ## Import

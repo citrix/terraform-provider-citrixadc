@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -28,7 +27,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SystemkekChangeResource{}
 var _ resource.ResourceWithConfigure = (*SystemkekChangeResource)(nil)
-var _ resource.ResourceWithImportState = (*SystemkekChangeResource)(nil)
 
 func NewSystemkekChangeResource() resource.Resource {
 	return &SystemkekChangeResource{}
@@ -43,10 +41,6 @@ type SystemkekChangeResource struct {
 type SystemkekChangeResourceModel struct {
 	Id    types.String `tfsdk:"id"`
 	Level types.String `tfsdk:"level"`
-}
-
-func (r *SystemkekChangeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *SystemkekChangeResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

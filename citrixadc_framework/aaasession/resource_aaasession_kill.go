@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -19,7 +18,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &AaasessionKillResource{}
 var _ resource.ResourceWithConfigure = (*AaasessionKillResource)(nil)
-var _ resource.ResourceWithImportState = (*AaasessionKillResource)(nil)
 
 func NewAaasessionKillResource() resource.Resource {
 	return &AaasessionKillResource{}
@@ -47,10 +45,6 @@ type AaasessionKillResourceModel struct {
 	Nodeid     types.Int64  `tfsdk:"nodeid"`
 	Sessionkey types.String `tfsdk:"sessionkey"`
 	Username   types.String `tfsdk:"username"`
-}
-
-func (r *AaasessionKillResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *AaasessionKillResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

@@ -7,7 +7,7 @@ subcategory: "SSL"
 The sslglobal_sslpolicy_binding data source allows you to retrieve information about the global binding of an SSL policy on the Citrix ADC.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslglobal_sslpolicy_binding" "tf_binding" {

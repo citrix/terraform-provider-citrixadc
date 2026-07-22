@@ -6,7 +6,7 @@ subcategory: "NS"
 
 Commits the staged IPv6 extended ACL (ACL6) rule set so that newly added, modified, or removed `ns acl6` entries take effect on the Citrix ADC packet-processing engine. Until an apply is performed, ACL6 changes remain in a pending state and are not enforced. Use this resource as the final step in an ACL6 configuration workflow to activate the rules.
 
-This is an **action-only** resource. Applying it triggers the NITRO `apply` action on the `nsacls6` endpoint (the same endpoint also backs the `clear` and `renumber` actions). There is no corresponding ADC object to read back, so this resource performs a one-shot action on create. Read, update, and delete are no-ops, and importing it is not meaningful. There is no NITRO GET endpoint for this action, so there is no corresponding data source.
+This is an action resource: applying it commits the current ACL6 rule set; it does not manage a persistent object, so re-applying re-runs the action.
 
 
 ## Example usage
@@ -37,9 +37,9 @@ resource "citrixadc_nsacls6_apply" "apply_dfd" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `nsacls6_apply`. Because `nsacls6_apply` performs a NITRO action with no GET endpoint, the ID does not correspond to any readable object on the Citrix ADC.
+* `id` - The id of the nsacls6_apply resource. It is set to `nsacls6_apply`.
 
 
 ## Note
 
-This resource models a one-shot action rather than a persistent ADC object. Applying it commits the current ACL6 rule set; the result cannot be read back from the ADC, so subsequent plans will not detect drift. To re-run the apply action (for example after further ACL6 changes), taint the resource or change the `type` argument. Destroying the resource only removes it from Terraform state and does not undo the applied ACL6 changes. Importing this resource is not meaningful.
+To re-run the apply action (for example after further ACL6 changes), taint the resource or change the `type` argument.

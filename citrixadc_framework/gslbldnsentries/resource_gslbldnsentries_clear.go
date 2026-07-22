@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -17,7 +16,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &GslbldnsentriesClearResource{}
 var _ resource.ResourceWithConfigure = (*GslbldnsentriesClearResource)(nil)
-var _ resource.ResourceWithImportState = (*GslbldnsentriesClearResource)(nil)
 
 func NewGslbldnsentriesClearResource() resource.Resource {
 	return &GslbldnsentriesClearResource{}
@@ -39,10 +37,6 @@ type GslbldnsentriesClearResource struct {
 type GslbldnsentriesClearResourceModel struct {
 	Id     types.String `tfsdk:"id"`
 	Nodeid types.Int64  `tfsdk:"nodeid"`
-}
-
-func (r *GslbldnsentriesClearResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *GslbldnsentriesClearResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &GslbldnsentryDeleteResource{}
 var _ resource.ResourceWithConfigure = (*GslbldnsentryDeleteResource)(nil)
-var _ resource.ResourceWithImportState = (*GslbldnsentryDeleteResource)(nil)
 
 func NewGslbldnsentryDeleteResource() resource.Resource {
 	return &GslbldnsentryDeleteResource{}
@@ -46,10 +44,6 @@ type GslbldnsentryDeleteResource struct {
 type GslbldnsentryDeleteResourceModel struct {
 	Id        types.String `tfsdk:"id"`
 	Ipaddress types.String `tfsdk:"ipaddress"`
-}
-
-func (r *GslbldnsentryDeleteResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *GslbldnsentryDeleteResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

@@ -6,7 +6,7 @@ subcategory: "SSL"
 
 The sslpkcs8_convert resource converts a private key file to PKCS#8 format on the Citrix ADC, reading the input key in PEM or DER format and writing the converted PKCS#8 key to an output file on the appliance filesystem.
 
-This resource performs a one-shot convert action (`?action=convert`). The operation reads the source key from, and writes the output file to, the appliance filesystem. It is **non-idempotent** and there is no NITRO GET endpoint to read the result back, so the converted output is not refreshed into Terraform state, and destroying the resource only removes the Terraform state entry while the converted file remains on the appliance.
+This resource performs a one-shot convert action (`?action=convert`). The operation reads the source key from, and writes the output file to, the appliance filesystem. It is **non-idempotent**: re-applying re-runs the conversion.
 
 
 ## Example usage
@@ -61,4 +61,4 @@ resource "citrixadc_sslpkcs8_convert" "tf_pkcs8" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslpkcs8_convert. It is a static string `"sslpkcs8_convert"`, because this action-only resource has no NITRO GET endpoint.
+* `id` - The id of the sslpkcs8_convert. It is set to `sslpkcs8_convert`.

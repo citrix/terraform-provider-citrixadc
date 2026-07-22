@@ -6,7 +6,7 @@ subcategory: "Integrated Caching"
 
 The cacheobject_flush resource evicts objects from the Citrix ADC integrated cache, removing the cached copies entirely so that subsequent requests are re-fetched from the origin server. It is an action-only resource: applying it invokes the NITRO `flush` action against the integrated cache. This is useful for clearing stale or unwanted cached content for a specific URL, host, or object locator without waiting for the cached object to expire on its own.
 
-This resource does not create, read, or manage a persistent object on the appliance. There is no NITRO GET endpoint for the flush action, so there is no corresponding data source. Each apply performs the flush; because every input attribute is marked `RequiresReplace`, changing any argument destroys the resource from state and re-fires the action with the new inputs. Read and Delete are no-ops.
+Each apply performs the flush; changing any argument re-fires the action with the new inputs.
 
 To re-run the action (for example, to flush the same object again), taint the resource or bump a distinguishing input value so Terraform re-creates it.
 
@@ -53,4 +53,4 @@ You must specify either `locator` OR both `url` and `host` (not both forms toget
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - A synthetic identifier for this action-only resource. It is a fixed string with the value `cacheobject_flush`. It does not correspond to any object on the Citrix ADC.
+* `id` - The id of the cacheobject_flush resource. It is set to `cacheobject_flush`.

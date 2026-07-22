@@ -106,7 +106,7 @@ resource "citrixadc_sslfips" "tf_sslfips" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslfips. Because sslfips is a singleton resource, it is a synthetic constant string `"sslfips-config"`.
+* `id` - The id of the sslfips. It is set to `sslfips-config`.
 
 ## Import
 

@@ -29,7 +29,7 @@ resource "citrixadc_cloudparaminternal" "tf_cloudparaminternal" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the cloudparaminternal. Because this is a singleton resource, it is always the static value `cloudparaminternal-config`.
+* `id` - The id of the cloudparaminternal. It is set to `cloudparaminternal-config`.
 
 
 ## Import

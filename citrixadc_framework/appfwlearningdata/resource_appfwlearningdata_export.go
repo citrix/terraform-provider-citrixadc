@@ -6,7 +6,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -18,7 +17,6 @@ import (
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &AppfwlearningdataExportResource{}
 var _ resource.ResourceWithConfigure = (*AppfwlearningdataExportResource)(nil)
-var _ resource.ResourceWithImportState = (*AppfwlearningdataExportResource)(nil)
 
 func NewAppfwlearningdataExportResource() resource.Resource {
 	return &AppfwlearningdataExportResource{}
@@ -43,10 +41,6 @@ type AppfwlearningdataExportResourceModel struct {
 	Profilename   types.String `tfsdk:"profilename"`
 	Securitycheck types.String `tfsdk:"securitycheck"`
 	Target        types.String `tfsdk:"target"`
-}
-
-func (r *AppfwlearningdataExportResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *AppfwlearningdataExportResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
