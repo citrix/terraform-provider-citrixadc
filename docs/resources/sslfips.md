@@ -4,12 +4,10 @@ subcategory: "SSL"
 
 # Resource: sslfips
 
-The sslfips resource configures the FIPS (Federal Information Processing Standard) Hardware Security Module (HSM) on a Citrix ADC FIPS appliance. It is used to initialize the on-board HSM, set the security-officer and user passwords that protect the HSM, label the module, and (optionally) drive the FIPS firmware update action. This is a singleton resource: there is exactly one FIPS configuration per appliance.
+This resource is used to configure the FIPS Hardware Security Module (HSM) on a Citrix ADC FIPS appliance.
 
-~> **WARNING: FIPS / HSM hardware required and DESTRUCTIVE.**
-> This resource requires a dedicated FIPS appliance with an on-board Hardware Security Module. It is **not supported on non-FIPS appliances** (including VPX/CPX/standard MPX models) and will fail there.
->
-> Setting `inithsm` performs an HSM initialization that **ERASES all FIPS key and certificate data currently stored on the appliance**. The operation is irreversible, may require one or more appliance reboots to complete, and must be coordinated with a full configuration backup. Do not apply this resource against a production FIPS appliance without understanding that all existing FIPS material will be lost.
+!> **WARNING:** Requires a dedicated FIPS appliance with an on-board HSM. Setting `inithsm` initializes the HSM and ERASES all FIPS key and certificate data; the operation is irreversible.
+
 
 ## Example usage
 

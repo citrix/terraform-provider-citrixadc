@@ -4,11 +4,7 @@ subcategory: "RDP"
 
 # Resource: rdpconnections_kill
 
-The rdpconnections_kill resource terminates active RDP proxy connections on the Citrix ADC. It is an action-only resource: applying it fires the NITRO `kill` action against the appliance to disconnect one or more live RDP proxy sessions established through the NetScaler Gateway / VPN RDP proxy feature. This is useful for administratively forcing users off stale or unauthorized RDP proxy sessions.
-
-Since every apply re-fires the kill, both arguments are marked as forcing replacement. To kill connections again after a previous apply, use `terraform taint` (or `-replace`) or change a selector.
-
-~> **Note** The RDP Proxy feature (NetScaler Gateway / VPN RDP proxy) must be in use for any RDP connections to exist. If there are no active RDP proxy sessions, the kill action succeeds with nothing to terminate.
+This resource is used to terminate active RDP proxy connections on the Citrix ADC.
 
 
 ## Example usage

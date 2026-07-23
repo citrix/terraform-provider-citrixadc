@@ -4,9 +4,9 @@ subcategory: "Cluster"
 
 # Resource: clustersync_force
 
-The clustersync_force resource performs the NITRO `clustersync` `Force` action, which forces a synchronization of the cluster configuration across nodes. It is an action-only, zero-attribute resource: applying it triggers the forced sync, and there are no configurable arguments.
+This resource is used to force a synchronization of the cluster configuration across nodes on the Citrix ADC.
 
-~> **WARNING** Forcing a cluster sync overwrites the running configuration on cluster nodes with the configuration coordinator's config. It is intended for deliberate, operator-initiated use only.
+!> **WARNING:** Forcing a cluster sync overwrites the running configuration on cluster nodes with the configuration coordinator's config. For deliberate operator use only.
 
 
 ## Example usage

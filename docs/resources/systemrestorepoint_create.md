@@ -4,21 +4,7 @@ subcategory: "System"
 
 # Resource: systemrestorepoint_create
 
-Creates a restore point on a Citrix ADC. A restore point is a named snapshot that
-captures the appliance configuration together with a tech-support bundle, giving
-you a known-good point you can fall back to during upgrades, maintenance, or
-troubleshooting.
-
-Creating the resource snapshots the config, and destroying it deletes the
-restore point from the appliance. The resource ID is the real object name
-(the filename).
-
-~> **NOTE:** The appliance enforces a MAXIMUM of 3 restore points. Attempting to
-create a fourth restore point fails on the NITRO side until an existing restore
-point is deleted.
-
-~> **NOTE:** The `filename` attribute is immutable. Changing the filename
-destroys the existing restore point and creates a new one.
+This resource is used to create a restore point on a Citrix ADC.
 
 
 ## Example usage

@@ -4,7 +4,8 @@ subcategory: "Audit"
 
 # Data Source: auditnslogparams
 
-The `citrixadc_auditnslogparams` data source allows you to retrieve information about the global Audit NS Log parameters configuration. These parameters control the behavior of audit logging to NS Log servers on the Citrix ADC.
+The auditnslogparams data source allows you to retrieve information about the global audit NS Log parameters configuration.
+
 
 ## Example usage
 

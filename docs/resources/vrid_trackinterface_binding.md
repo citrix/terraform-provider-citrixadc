@@ -4,7 +4,8 @@ subcategory: "Network"
 
 # Resource: vrid_trackinterface_binding
 
-Binds a tracked interface to a Virtual Router ID (VRID) so that VRRP monitors the state of that interface for the virtual router. When a tracked interface goes down, the VRID's effective priority is reduced, which can trigger a VRRP failover to a backup router. This lets the virtual router react to the health of interfaces that are not themselves carrying VRRP traffic.
+This resource is used to bind a tracked interface to a VRID.
+
 
 ## Example usage
 

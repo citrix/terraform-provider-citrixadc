@@ -4,7 +4,7 @@ subcategory: "API Definition"
 
 # Resource: apispec
 
-The apispec resource is used to create and manage Citrix ADC API specifications. An API spec describes the contract of an API (in formats such as OAS/Swagger, PROTO, or GraphQL) that the appliance uses for schema validation and routing.
+This resource is used to manage Citrix ADC API specifications.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "Network"
 
 # Resource: vrid_channel_binding
 
-Binds a link-aggregation channel (LA channel) to a Virtual Router ID (VRID) so that the channel participates in VRRP for that virtual router. Binding a channel associates the VRID's virtual MAC address (VMAC, of the form `00:00:5e:00:01:<VRID>`) with the channel, allowing the channel to send and receive traffic for the virtual router during a VRRP failover.
-
-Because a binding cannot be modified in place, every configurable attribute forces replacement: changing any attribute destroys the existing binding and creates a new one.
+This resource is used to bind a channel to a VRID.
 
 
 ## Example usage

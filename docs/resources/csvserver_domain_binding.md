@@ -4,7 +4,7 @@ subcategory: "Content Switching"
 
 # Resource: csvserver_domain_binding
 
-Binds a DNS domain to a content switching virtual server so that the ADC can adjust DNS handling for that domain - overriding the time-to-live (TTL), supplying a backup service IP address, and controlling persistence cookie behavior (cookie domain and timeout) for requests matched by the content switching vserver.
+This resource is used to bind a DNS domain to a content switching virtual server.
 
 
 ## Example usage

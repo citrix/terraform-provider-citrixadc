@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslcertkeybundle_change
 
-The sslcertkeybundle_change resource re-reads and updates an existing SSL certificate-key bundle on the Citrix ADC from its on-disk bundle file. Use it when the underlying X509 certificate bundle file (for example, after a certificate renewal) has been replaced on the appliance and you want the ADC to reload the certificate, private-key, and any intermediate certificates from that file without deleting and re-adding the `sslcertkeybundle` object.
-
-~> **One-shot action.** This resource performs the `change` action for `sslcertkeybundle` (CLI: `update ssl certKeyBundle <certkeybundlename>`); it does not create a new persistent object on the appliance. Each `terraform apply` that creates or replaces this resource performs the change once, and changing any argument forces a new change (replacement).
+This resource is used to reload (change) an existing SSL certificate-key bundle from its on-disk file on the Citrix ADC.
 
 
 ## Example usage

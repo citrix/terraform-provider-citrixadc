@@ -4,9 +4,7 @@ subcategory: "VideoOptimization"
 
 # Resource: videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding
 
-Binds a video optimization pacing policy to a video optimization pacing policy label on the Citrix ADC. Use this resource to add a pacing policy to a reusable policy label at a specific evaluation priority, and to control the flow of evaluation (next-priority expression and label invocation) when that policy's rule matches request or response traffic.
-
-~> **Note** The Citrix ADC CLI marks the video optimization pacing feature as deprecated. This binding resource is retained for backward compatibility.
+This resource is used to bind a video optimization pacing policy to a video optimization pacing policy label.
 
 
 ## Example usage

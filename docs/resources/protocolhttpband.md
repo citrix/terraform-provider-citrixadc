@@ -4,9 +4,7 @@ subcategory: "Protocol"
 
 # Resource: protocolhttpband
 
-Configures the band-size granularity used by the Citrix ADC when it collects HTTP request and response size statistics. Tuning the band sizes lets you control the width of the size buckets that appear in the HTTP band statistics reports, so you can profile the distribution of request and response payload sizes at the resolution you need.
-
-This is a singleton settings resource: a single configuration object always exists on the appliance. Creating the resource sets the values; destroying it leaves the last configured values in effect on the appliance.
+This resource is used to manage the HTTP band-size settings on the Citrix ADC.
 
 
 ## Example usage

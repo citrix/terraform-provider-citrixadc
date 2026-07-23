@@ -4,9 +4,9 @@ subcategory: "LLDP"
 
 # Data Source: lldpneighbors
 
-The lldpneighbors data source retrieves information about the Link Layer Discovery Protocol (LLDP) neighbors that the Citrix ADC has learned on its interfaces. It backs the NITRO `show lldp neighbors` (get-all) call and returns the read-only neighbor telemetry the ADC has discovered from directly connected devices.
+The lldpneighbors data source allows you to retrieve information about the LLDP neighbors learned on the Citrix ADC interfaces.
 
-An empty result is valid: if no LLDP peers have been learned (for example, because LLDP is not enabled on any interface or no neighboring device advertises LLDP), the neighbor list is empty and no error is raised. LLDP must be enabled per-interface for neighbor information to be learned.
+~> **Note:** An empty result is valid — if no LLDP peers have been learned (for example, LLDP is not enabled on any interface), the neighbor list is empty and no error is raised.
 
 
 ## Example usage

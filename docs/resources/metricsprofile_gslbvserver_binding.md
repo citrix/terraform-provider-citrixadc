@@ -4,7 +4,7 @@ subcategory: "Metrics"
 
 # Resource: metricsprofile_gslbvserver_binding
 
-Binds a GSLB (Global Server Load Balancing) virtual server to a metrics profile, so that the time-series metrics collected by that profile (such as request rate, latency, and connection counters) are gathered for the bound GSLB vserver. Create one of these bindings for each GSLB vserver whose traffic you want a given metrics profile to track.
+This resource is used to bind a GSLB virtual server to a metrics profile.
 
 
 ## Example usage

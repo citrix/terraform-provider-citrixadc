@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslvserver\_sslcertkeybundle\_binding
 
-Binds a certificate-key bundle to an SSL virtual server on the Citrix ADC. Use this resource to associate a server certificate (and its private key) bundle with an SSL vserver so it can be presented during the SSL handshake, optionally as an SNI certificate.
+This resource is used to bind a certificate-key bundle to an SSL virtual server.
 
 
 ## Example usage

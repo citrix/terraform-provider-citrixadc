@@ -4,9 +4,7 @@ subcategory: "Stream"
 
 # Resource: streamidentifier_analyticsprofile_binding
 
-Binds an analytics profile to a stream identifier so that traffic tracked by the stream identifier is reported through the specified analytics profile on the Citrix ADC. Create this binding when you want the records collected for a given stream identifier to be exported to a particular analytics profile.
-
-This binding is immutable: it can only be created (bound) or deleted (unbound). Changing either attribute forces Terraform to replace the resource.
+This resource is used to bind an analytics profile to a stream identifier.
 
 
 ## Example usage

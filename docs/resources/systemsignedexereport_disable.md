@@ -4,11 +4,7 @@ subcategory: "System"
 
 # Resource: systemsignedexereport_disable
 
-Turns off the Citrix ADC signed executable report, stopping the appliance from validating and reporting on the digital signatures of system binaries. Apply this resource to invoke the NITRO `disable` action when you want to switch off signature verification reporting.
-
-This is an action-only, zero-attribute resource. Each apply performs the disable action.
-
-~> **NOTE** To enable the report, use the separate `citrixadc_systemsignedexereport_enable` resource.
+This resource is used to disable the Citrix ADC signed executable report.
 
 
 ## Example usage

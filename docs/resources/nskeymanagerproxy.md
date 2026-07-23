@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nskeymanagerproxy
 
-The nskeymanagerproxy resource configures a Key Manager proxy server on the Citrix ADC. It tells the ADC how to reach an external Key Manager (by IP address or hostname and port) so that key-management traffic can be proxied to that server.
-
-All attributes are immutable: changing any of them forces a new resource to be created, because the NITRO API exposes only add, delete, and get operations for this resource.
+This resource is used to manage the Key Manager proxy server configuration.
 
 
 ## Example usage

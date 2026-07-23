@@ -4,12 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslprofile_ecccurve_binding
 
-The sslprofile_ecccurve_binding resource is used to create bindings between sslprofiles and ecccurves.
-
-~>  If you are using this resource to bind ecccurves to a sslprofile, do not define the `ecccurvebindings` attribute in the sslprofile resource.
-
-~>  The attribute `remove_existing_ecccurve_binding` should be `true` if you want to delete all the exiting bindings, and bind the new ecccurve to sslprofile.
-
+This resource is used to bind ECC curves to an SSL profile.
 
 
 ## Example usage

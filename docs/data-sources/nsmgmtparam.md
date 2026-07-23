@@ -4,7 +4,7 @@ subcategory: "NS"
 
 # Data Source: nsmgmtparam
 
-The nsmgmtparam data source allows you to retrieve the embedded management HTTP server (httpd) parameters configured on the Citrix ADC appliance, such as the management HTTP and HTTPS ports and the httpd worker capacity settings.
+The nsmgmtparam data source allows you to retrieve information about the management HTTP server (httpd) parameters.
 
 
 ## Example usage

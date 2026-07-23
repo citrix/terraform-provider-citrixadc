@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nsacls6_renumber
 
-Regenerates the priority numbers of the configured IPv6 extended ACL (ACL6) rules on the Citrix ADC, spacing them evenly so that new rules can be inserted between existing ones. Use this resource when the ACL6 priorities have become tightly packed and you need room to add rules at specific positions without manually reassigning priorities.
-
-This is an action resource: applying it renumbers the current ACL6 rule priorities; it does not manage a persistent object, so re-applying re-runs the action.
+This resource is used to renumber IPv6 extended ACL (ACL6) rule priorities on the Citrix ADC.
 
 
 ## Example usage

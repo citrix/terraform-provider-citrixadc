@@ -4,7 +4,8 @@ subcategory: "Network"
 
 # Data Source: netprofile_natrule_binding
 
-The `citrixadc_netprofile_natrule_binding` data source allows you to retrieve information about a specific binding between a netprofile and a NAT rule. This binding represents the association of a NAT rule to a netprofile for IP address rewriting purposes.
+The netprofile_natrule_binding data source allows you to retrieve information about a binding between a netprofile and a NAT rule.
+
 
 ## Example usage
 

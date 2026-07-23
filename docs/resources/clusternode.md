@@ -41,8 +41,8 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A clusternode can be imported using its name, e.g.
+A clusternode can be imported using its nodeid, e.g.
 
 ```shell
-terraform import citrixadc_clusternode.tf_clusternode tf_csaction
+terraform import citrixadc_clusternode.tf_clusternode 1
 ```

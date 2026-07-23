@@ -4,9 +4,7 @@ subcategory: "Cloud"
 
 # Data Source: cloudtunnelvserver
 
-The cloudtunnelvserver data source allows you to retrieve information about a configured Cloud Tunnel virtual server on the Citrix ADC, including its service type, listen policy, and runtime configuration.
-
-~> **Prerequisite:** The Cloud Tunnel feature is license- and feature-gated. Ensure the cloud tunnel feature is licensed and enabled on the target Citrix ADC before querying this data source.
+The cloudtunnelvserver data source allows you to retrieve information about a Cloud Tunnel virtual server on the Citrix ADC.
 
 
 ## Example usage

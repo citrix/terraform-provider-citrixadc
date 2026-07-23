@@ -4,7 +4,8 @@ subcategory: "Utility"
 
 # Data Source: callhome
 
-The `citrixadc_callhome` data source is used to retrieve the Call Home configuration from the Citrix ADC. Because Call Home is a singleton feature, there is exactly one configuration per appliance, so no lookup argument is required.
+The callhome data source allows you to retrieve information about the Call Home configuration.
+
 
 ## Example usage
 

@@ -4,15 +4,7 @@ subcategory: "Integrated Caching"
 
 # Resource: cacheobject_flush
 
-The cacheobject_flush resource evicts objects from the Citrix ADC integrated cache, removing the cached copies entirely so that subsequent requests are re-fetched from the origin server. It is an action-only resource: applying it invokes the NITRO `flush` action against the integrated cache. This is useful for clearing stale or unwanted cached content for a specific URL, host, or object locator without waiting for the cached object to expire on its own.
-
-Each apply performs the flush; changing any argument re-fires the action with the new inputs.
-
-To re-run the action (for example, to flush the same object again), taint the resource or bump a distinguishing input value so Terraform re-creates it.
-
-> The integrated caching (IC) feature must be enabled on the Citrix ADC before this action can be performed (`enable ns feature IC`).
-
-You must supply either `locator` OR the combination of `url` and `host` (optionally refined with `port`, `groupname`, and `httpmethod`), but not both. This choice is enforced at plan time.
+This resource is used to flush objects from the Citrix ADC integrated cache.
 
 
 ## Example usage

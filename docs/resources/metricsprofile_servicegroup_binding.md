@@ -4,7 +4,7 @@ subcategory: "Metrics"
 
 # Resource: metricsprofile_servicegroup_binding
 
-Binds a service group entity to a metrics profile on the Citrix ADC, so that the time-series metrics collection rules defined in the profile are applied to that service group. Create one binding for each service group whose metrics you want governed by a given metrics profile.
+This resource is used to bind a service group to a metrics profile.
 
 
 ## Example usage

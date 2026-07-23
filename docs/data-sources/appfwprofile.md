@@ -4,9 +4,8 @@ subcategory: "Application Firewall"
 
 # Data Source: appfwprofile
 
-Use this data source to retrieve information about an existing Application Firewall Profile.
+The appfwprofile data source allows you to retrieve information about an Application Firewall profile.
 
-The `citrixadc_appfwprofile` data source allows you to retrieve details of an Application Firewall profile by its name. This is useful for referencing existing profiles in your Terraform configurations without managing them directly.
 
 ## Example usage
 

@@ -4,7 +4,7 @@ subcategory: "Load Balancing"
 
 # Resource: lbpolicylabel_lbpolicy_binding
 
-Binds an LB policy to an LB policy label at a specific priority. A policy label is an ordered collection of LB policies; the priority assigned in this binding controls the order in which the policy is evaluated within the label, and the optional invoke settings let a matching policy hand off evaluation to another policy label or virtual server. Use this resource to assemble the policy-evaluation sequence for an LB policy label that is itself invoked from a load balancing virtual server.
+This resource is used to manage the binding between an LB policy and an LB policy label.
 
 
 ## Example usage

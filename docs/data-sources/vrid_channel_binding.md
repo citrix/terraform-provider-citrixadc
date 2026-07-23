@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Data Source: vrid_channel_binding
 
-The vrid_channel_binding data source allows you to retrieve information about a link-aggregation channel that is bound to a Virtual Router ID (VRID) for VRRP, including the read-only VLAN and flags reported by the appliance for that binding.
+The vrid_channel_binding data source allows you to retrieve information about a channel bound to a VRID.
 
 
 ## Example usage

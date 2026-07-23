@@ -4,7 +4,7 @@ subcategory: "Metrics"
 
 # Resource: metricsprofile
 
-The metricsprofile resource configures a named metrics profile on the Citrix ADC. A metrics profile controls how time-series counters are collected and exported to an external observability backend (for example Prometheus, Splunk, or an Avro/JSON collector) — including the destination collector, output format, export frequency, and the authentication token used to push data to the endpoint. Create one to ship ADC telemetry to your monitoring stack.
+This resource is used to manage metrics profiles on the Citrix ADC.
 
 
 ## Example usage

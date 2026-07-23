@@ -4,7 +4,7 @@ subcategory: "Metrics"
 
 # Resource: metricsprofile_lbvserver_binding
 
-Associates a load balancing virtual server with a metrics profile so that the metrics defined in the profile are collected for that vserver. Create one binding for each lbvserver you want the metrics profile to monitor.
+This resource is used to bind a load balancing virtual server to a metrics profile.
 
 
 ## Example usage

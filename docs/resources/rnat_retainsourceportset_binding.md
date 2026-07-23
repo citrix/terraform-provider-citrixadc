@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Resource: rnat_retainsourceportset_binding
 
-Associates a source port range with an RNAT (Reverse NAT) rule so that Citrix ADC preserves the client source port when selecting a port for the connection to the backend servers. This is useful when backend applications rely on specific source ports and you need the ADC to pick from a defined range rather than assigning an arbitrary port.
+This resource is used to bind a source port range to an RNAT rule.
 
 
 ## Example usage

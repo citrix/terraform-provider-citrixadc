@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nsdhcpip_release
 
-The nsdhcpip_release resource releases the DHCP lease for the appliance management IP. It is an action-only, zero-attribute resource: applying it triggers the release, and there are no configurable arguments.
-
-~> **NOTE** This is an action resource: applying it performs the release; it does not manage a persistent object, so re-applying re-runs the release.
+This resource is used to release the DHCP lease for the appliance management IP.
 
 
 ## Example usage

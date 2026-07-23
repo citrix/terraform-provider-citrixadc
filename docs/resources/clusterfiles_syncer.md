@@ -4,19 +4,7 @@ subcategory: "Cluster"
 
 # Resource: clustefiles\_syncer
 
-This resource is used to manually trigger the cluster files synchronization
-operation.
-
-It is the equivalent of running
-```shell
-sync cluster files
-```
-on the command prompt of the Cluster IP address.
-
-By its nature this resource does not have a remote state to read or modify.
-
-Any change in the local state will trigger the operation once more.
-
+This resource is used to manually trigger the cluster files synchronization operation.
 
 
 ## Example usage

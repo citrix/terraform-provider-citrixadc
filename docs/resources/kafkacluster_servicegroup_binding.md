@@ -4,9 +4,9 @@ subcategory: "Kafka"
 
 # Resource: kafkacluster_servicegroup_binding
 
-Binds a service group to a Kafka cluster so that the Citrix ADC can distribute Kafka broker traffic across the members of that service group. Use this binding to associate the back-end brokers (grouped in a service group) with the Kafka cluster definition that fronts them. The Kafka feature must be available and licensed on the appliance.
+This resource is used to bind a service group to a Kafka cluster on the Citrix ADC.
 
-~> **Immutable binding.** Both `name` and `servicegroupname` force replacement, so changing either attribute unbinds the existing pairing and creates a new one.
+~> **Immutable binding:** Both `name` and `servicegroupname` force replacement. The `kafka` feature must be licensed and enabled.
 
 
 ## Example usage

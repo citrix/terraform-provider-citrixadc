@@ -4,7 +4,7 @@ subcategory: "LSN"
 
 # Resource: lsngroup_ipsecalgprofile_binding
 
-Associates an IPSec ALG profile with a Large Scale NAT (LSN) group so that IPSec (IKE/ESP) traffic traversing that group is handled by the ALG. Binding the profile applies its IPSec ALG settings (such as connection failover and IKE session timeout) to all subscribers served by the LSN group.
+This resource is used to bind an IPSec ALG profile to an LSN group.
 
 
 ## Example usage

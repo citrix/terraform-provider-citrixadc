@@ -4,7 +4,7 @@ subcategory: "Azure"
 
 # Resource: azureapplication
 
-The azureapplication resource is used to configure an Azure Active Directory application registration on the Citrix ADC. The application is used by the ADC to authenticate to Azure and obtain access tokens for Azure resources such as Azure Key Vault.
+This resource is used to manage Azure Active Directory application registrations on the Citrix ADC.
 
 
 ## Example usage

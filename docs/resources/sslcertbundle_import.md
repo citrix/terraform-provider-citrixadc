@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslcertbundle_import
 
-Imports a set of certificates packaged together (for example, an end-entity certificate together with its intermediate chain) onto the Citrix ADC from a remote or local source. Use this resource to pull a bundle file into the appliance's SSL store in a single operation so it can be referenced by SSL configuration.
-
-The bundle is brought in through the NITRO `Import` action. This is a managed resource: creating it imports the bundle onto the appliance and destroying it removes the bundle. There is no in-place update; changing either argument forces the resource to be re-created.
+This resource is used to import a certificate bundle onto the Citrix ADC.
 
 
 ## Example usage

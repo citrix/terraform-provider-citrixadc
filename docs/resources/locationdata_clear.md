@@ -4,7 +4,7 @@ subcategory: "Basic"
 
 # Resource: locationdata_clear
 
-The locationdata_clear resource performs the NITRO `locationdata` `clear` action, which clears the static location (GSLB geo) database from memory. It is an action resource: applying it performs the clear, there are no configurable arguments, and re-applying re-runs the action.
+This resource is used to clear the static location (GSLB geo) database from memory.
 
 
 ## Example usage

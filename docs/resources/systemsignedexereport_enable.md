@@ -4,11 +4,7 @@ subcategory: "System"
 
 # Resource: systemsignedexereport_enable
 
-Turns on the Citrix ADC signed executable report, which validates that system binaries are digitally signed and records the outcome. Apply this resource to invoke the NITRO `enable` action when you want signature verification reporting active on the appliance.
-
-This is an action-only, zero-attribute resource. Each apply performs the enable action.
-
-~> **NOTE** To disable the report, use the separate `citrixadc_systemsignedexereport_disable` resource.
+This resource is used to enable the signed executable report on the Citrix ADC.
 
 
 ## Example usage

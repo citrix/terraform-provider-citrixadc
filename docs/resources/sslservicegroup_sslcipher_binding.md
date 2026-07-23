@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslservicegroup_sslcipher_binding
 
-Binds an SSL cipher, cipher-alias, or user-defined cipher-group to an SSL service group. This controls the set of cipher suites the Citrix ADC negotiates on the back-end SSL connections of the service group.
-
-~> **NOTE:** If the service group uses a non-default SSL profile, ciphers are managed through the SSL profile rather than directly on the service group. This binding applies to service groups that use the default (legacy) SSL configuration; on ADC builds where SSL profiles are enabled by default, bind ciphers to the SSL profile instead.
+This resource is used to bind an SSL cipher to an SSL service group.
 
 
 ## Example usage

@@ -4,7 +4,8 @@ subcategory: "AAA"
 
 # Data Source: aaagroup_aaauser_binding
 
-The `aaagroup_aaauser_binding` data source allows you to retrieve information about a specific binding between an AAA group and a user. This binding represents the association of a user to a group for authentication, authorization, and auditing purposes.
+The aaagroup_aaauser_binding data source allows you to retrieve information about an AAA group to user binding.
+
 
 ## Example usage
 

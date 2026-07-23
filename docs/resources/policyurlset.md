@@ -4,11 +4,7 @@ subcategory: "Policy"
 
 # Resource: policyurlset
 
-A URL set is a named collection of URL patterns (optionally annotated with metadata) that the Citrix ADC uses for URL categorization and policy matching, for example to allow or block large lists of sites. Rather than configuring each URL individually, you maintain the list as a CSV file at an external location (HTTP, HTTPS or FTP) and load it into the ADC.
-
-This resource models that import operation. Creating a `citrixadc_policyurlset` performs a NITRO `Import` action (`POST /policyurlset?action=Import`), pulling the CSV from the configured `url` and materializing a named URL set on the appliance. Because the import is the create, **every configurable attribute forces replacement** — there is no in-place update. Changing any attribute (including the source `url` or `url_wo_version`) re-imports the set under a freshly created resource. Deleting the resource removes the URL set from the ADC.
-
-The source `url` is a secret and is implemented as a write-only triple (`url` / `url_wo` / `url_wo_version`). Exactly one of `url` or `url_wo` must be specified.
+This resource is used to manage policy URL sets.
 
 
 ## Example usage

@@ -4,9 +4,8 @@ subcategory: "Network"
 
 # Data Source: bridgetable
 
-Use this data source to retrieve information about an existing Bridge Table entry.
+The bridgetable data source allows you to retrieve information about a bridge table entry.
 
-The `citrixadc_bridgetable` data source allows you to retrieve details of a bridge table entry. Bridge table entries map MAC addresses to VXLAN tunnel endpoints (VTEPs) in a VXLAN network configuration.
 
 ## Example usage
 

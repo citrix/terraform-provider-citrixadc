@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Data Source: rnatglobal_auditsyslogpolicy_binding
 
-The rnatglobal_auditsyslogpolicy_binding data source allows you to retrieve information about an audit syslog policy bound to the global RNAT configuration on the Citrix ADC. The binding is looked up by `policy` (the audit syslog policy name).
+The rnatglobal_auditsyslogpolicy_binding data source allows you to retrieve information about an audit syslog policy bound to the global RNAT configuration.
 
 
 ## Example usage

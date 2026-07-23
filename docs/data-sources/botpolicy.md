@@ -4,9 +4,8 @@ subcategory: "Bot"
 
 # Data Source: botpolicy
 
-Use this data source to retrieve information about an existing Bot Policy.
+The botpolicy data source allows you to retrieve information about a bot policy.
 
-The `citrixadc_botpolicy` data source allows you to retrieve details of a bot policy by its name. This is useful for referencing existing bot policies in your Terraform configurations without managing them directly.
 
 ## Example usage
 

@@ -4,7 +4,7 @@ subcategory: "DNS"
 
 # Data Source: dnscaarec
 
-The dnscaarec data source allows you to retrieve information about a DNS Certification Authority Authorization (CAA) resource record configured on the Citrix ADC. Because multiple CAA records can share a domain, the record is looked up by both `domain` and its server-assigned `recordid`.
+The dnscaarec data source allows you to retrieve information about a DNS Certification Authority Authorization (CAA) resource record.
 
 
 ## Example usage

@@ -4,10 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslprofile_sslcipher_binding
 
-The sslprofile_sslcipher_binding resource is used to create bindings between sslprofiles and sslciphers.
-
-~> If you are using this resource to bind sslciphers to a sslprofile
-do not define the `cipherbindings` attribute in the sslprofile resource.
+This resource is used to create bindings between sslprofiles and sslciphers.
 
 
 ## Example usage

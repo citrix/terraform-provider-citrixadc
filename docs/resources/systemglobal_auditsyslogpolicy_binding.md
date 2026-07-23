@@ -4,7 +4,7 @@ subcategory: "System"
 
 # Resource: systemglobal_auditsyslogpolicy_binding
 
-Binds an audit syslog policy to the Citrix ADC system global scope. A syslog policy bound at the system global level applies its logging rules to all traffic processed by the appliance, letting you forward audit events to one or more syslog servers without binding the policy to an individual virtual server. The binding is keyless on the global side: the policy is identified solely by its `policyname`.
+This resource is used to bind an audit syslog policy to the system global scope.
 
 
 ## Example usage

@@ -28,7 +28,7 @@ resource "citrixadc_authenticationauthnprofile" "tf_authenticationauthnprofile" 
 
 ## Argument Reference
 
-* `name` - (Required) Name for the authentication profile.  Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the RADIUS action is added.
+* `name` - (Required) Name for the authentication profile.  Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 * `authnvsname` - (Required) Name of the authentication vserver at which authentication should be done.
 * `authenticationdomain` - (Optional) Domain for which TM cookie must to be set. If unspecified, cookie will be set for FQDN.
 * `authenticationhost` - (Optional) Hostname of the authentication vserver to which user must be redirected for authentication.

@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Resource: linkset\_interface\_binding
 
-Binds an interface to an existing linkset on the Citrix ADC. A linkset groups several interfaces so the appliance treats them as a single logical entity for bridging and Layer 2 forwarding, which avoids forwarding loops and duplicate broadcast traffic in topologies where the ADC bridges between multiple physical links.
+This resource is used to bind an interface to a linkset.
 
 
 ## Example usage

@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Data Source: vrid_trackinterface_binding
 
-The vrid_trackinterface_binding data source allows you to retrieve information about a tracked interface that is bound to a Virtual Router ID (VRID) for VRRP, including the read-only flags reported by the appliance for that binding.
+The vrid_trackinterface_binding data source allows you to retrieve information about a track interface bound to a VRID.
 
 
 ## Example usage

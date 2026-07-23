@@ -4,11 +4,9 @@ subcategory: "NS"
 
 # Resource: nslaslicense_apply
 
-The nslaslicense_apply resource applies a local-area-services (LAS) / fixed-bandwidth license file that has already been staged on the Citrix ADC, activating the licensed capacity it grants. Use it to bring a previously uploaded license file into effect on the appliance.
+This resource is used to apply a staged LAS / fixed-bandwidth license file on the Citrix ADC.
 
-!> **DISRUPTIVE / NON-IDEMPOTENT.** Applying this resource alters the licensed capacity of the appliance and is **not idempotent** — every create or replace re-applies the license. Treat this resource as a one-shot operational action rather than ordinary declarative configuration.
-
-~> **Note.** This resource is immutable, so changing any of its attributes forces the apply action to run again as a replacement. Import is not meaningful for this resource.
+!> **DISRUPTIVE / NON-IDEMPOTENT:** Applying this resource alters the licensed capacity and re-applies the license on every create/replace. Treat it as a one-shot operational action.
 
 
 ## Example usage

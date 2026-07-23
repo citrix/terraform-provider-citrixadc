@@ -4,9 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnicaconnection_kill
 
-The vpnicaconnection_kill resource terminates (kills) active ICA connections that are tunneled through Citrix ADC (NetScaler) Gateway. It is an action-only resource: applying it invokes the NITRO `kill` action against the matching active ICA connections. Use it to forcibly disconnect a specific user's ICA sessions, sessions of a particular transport protocol, or all active ICA connections at once.
-
-This resource does not manage a persistent object on the appliance. Each apply performs the kill; changing any argument re-triggers the kill action.
+This resource is used to terminate (kill) active ICA connections on the Citrix ADC (NetScaler) Gateway.
 
 
 ## Example usage

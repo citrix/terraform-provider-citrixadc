@@ -4,7 +4,8 @@ subcategory: "LSN"
 
 # Data Source: lsngroup_lsnpool_binding
 
-The `citrixadc_lsngroup_lsnpool_binding` data source allows you to retrieve information about a specific binding between an LSN group and an LSN pool. This binding represents the association of an LSN pool to an LSN group for Large Scale NAT configuration.
+The lsngroup_lsnpool_binding data source allows you to retrieve information about the binding between an LSN group and an LSN pool.
+
 
 ## Example usage
 

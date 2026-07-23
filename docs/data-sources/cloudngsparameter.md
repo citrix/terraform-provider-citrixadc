@@ -4,7 +4,7 @@ subcategory: "Cloud"
 
 # Data Source: cloudngsparameter
 
-The cloudngsparameter data source allows you to retrieve the global Citrix Gateway Service (CGS) NextGen Service parameters configured on the Citrix ADC. Because this is a singleton configuration object, no lookup argument is required.
+The cloudngsparameter data source allows you to retrieve information about the global Cloud NextGen Service (CGS) parameters.
 
 
 ## Example usage

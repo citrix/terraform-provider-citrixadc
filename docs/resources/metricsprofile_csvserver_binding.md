@@ -4,7 +4,7 @@ subcategory: "Metrics"
 
 # Resource: metricsprofile_csvserver_binding
 
-Binds a content switching virtual server (csvserver) to a metrics profile on the Citrix ADC. Creating this binding tells the ADC to collect the metrics defined in the named metrics profile for the specified content switching virtual server, so its traffic statistics can be exported through the configured metrics collector.
+This resource is used to manage the binding between a content switching virtual server and a metrics profile.
 
 
 ## Example usage

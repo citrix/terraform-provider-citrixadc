@@ -4,9 +4,8 @@ subcategory: "DNS"
 
 # Resource: dnscaarec
 
-Publishes a DNS Certification Authority Authorization (CAA) resource record on the Citrix ADC. CAA records let a domain owner declare which certificate authorities are permitted to issue certificates for a domain, helping prevent unauthorized certificate issuance.
+This resource is used to manage DNS CAA resource records.
 
-CAA resource records cannot be modified on the ADC. Changing any attribute forces the record to be destroyed and recreated.
 
 ## Example usage
 

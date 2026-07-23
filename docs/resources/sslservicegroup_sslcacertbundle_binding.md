@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslservicegroup_sslcacertbundle_binding
 
-Binds a CA certificate bundle to an SSL service group. The bound CA certificate bundle is used to validate the certificate chain presented by the back-end server during SSL handshakes for the service group.
+This resource is used to bind a CA certificate bundle to an SSL service group.
 
 
 ## Example usage

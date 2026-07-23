@@ -4,11 +4,7 @@ subcategory: "LLDP"
 
 # Resource: lldpneighbors_clear
 
-The lldpneighbors_clear resource flushes the learned Link Layer Discovery Protocol (LLDP) neighbor table on the Citrix ADC. Applying it invokes the NITRO `?action=clear` operation, which discards the LLDP peer information the ADC has learned on its interfaces. Use it to force the ADC to relearn neighbor data (for example, after correcting a cabling or LLDP configuration issue) instead of waiting for the existing entries to age out.
-
-This is an action resource: applying it performs the clear; it does not manage a persistent object, so re-applying re-runs the action. The clear action takes no arguments. To clear the table again, taint the resource (`terraform taint`) or change one of its arguments so a fresh `apply` re-issues the clear action.
-
-LLDP must be enabled on the relevant interfaces (see `citrixadc_lldpparam` and the per-interface LLDP mode) for neighbor information to be learned in the first place. Read-only LLDP neighbor telemetry is available through the `citrixadc_lldpneighbors` data source.
+This resource is used to clear the learned LLDP neighbor table on the Citrix ADC.
 
 
 ## Example usage

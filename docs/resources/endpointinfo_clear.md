@@ -4,9 +4,7 @@ subcategory: "Endpoint"
 
 # Resource: endpointinfo_clear
 
-The endpointinfo_clear resource clears the cached endpoint information that the Citrix ADC maintains for discovered endpoints. Use it when you want the appliance to discard the currently learned endpoint records (for example, IP endpoints) so that endpoint information is re-learned from scratch, which is useful after topology changes or when stale endpoint entries need to be flushed.
-
-~> **One-shot action.** This resource maps to the `clear` action (CLI: `clear endpointInfo -endpointKind <kind>`); it does not manage a persistent object, so each `terraform apply` that creates or replaces this resource performs the clear once.
+This resource is used to clear cached endpoint information on the Citrix ADC.
 
 
 ## Example usage

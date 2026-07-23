@@ -4,9 +4,7 @@ subcategory: "Policy"
 
 # Resource: policytracing_clear
 
-The policytracing_clear resource clears the policy-tracing records collected on the Citrix ADC. Policy tracing records the policy-evaluation history for transactions; over time these records accumulate in memory, and you may want to discard them before starting a fresh capture. Applying this resource invokes the NITRO `clear` action (`POST ?action=clear`), removing the collected policy-tracing data from memory.
-
-This is an action resource: applying it performs a one-shot clear and does not manage a persistent object. Re-running `terraform apply` after a destroy (or after tainting the resource) clears the records again.
+This resource is used to clear the policy tracing records on the Citrix ADC.
 
 
 ## Example usage
