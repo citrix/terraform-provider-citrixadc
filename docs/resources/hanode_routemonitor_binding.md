@@ -20,7 +20,7 @@ resource "citrixadc_hanode_routemonitor_binding" "tf_hanode_routemonitor_binding
 
 ## Argument Reference
 
-* `id` - (Required) Number that uniquely identifies the local node. The ID of the local node is always 0.
+* `hanode_id` - (Required) Number that uniquely identifies the local node. The ID of the local node is always 0.
 * `netmask` - (Required) The netmask.
 * `routemonitor` - (Required) The IP address (IPv4 or IPv6) Notice: this adress should be the network adress.
 
@@ -29,7 +29,7 @@ resource "citrixadc_hanode_routemonitor_binding" "tf_hanode_routemonitor_binding
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the hanode_routemonitor_binding. It has the same value as the `name` attribute.
+* `id` - The id of the hanode_routemonitor_binding is the concatenation of the `hanode_id` and `routemonitor` attributes separated by comma.
 
 
 ## Import

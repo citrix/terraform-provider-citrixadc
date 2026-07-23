@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslpkcs8_convert
 
-The sslpkcs8_convert resource converts a private key file to PKCS#8 format on the Citrix ADC, reading the input key in PEM or DER format and writing the converted PKCS#8 key to an output file on the appliance filesystem.
-
-This resource performs a one-shot convert action (`?action=convert`). The operation reads the source key from, and writes the output file to, the appliance filesystem. It is **non-idempotent**: re-applying re-runs the conversion.
+This resource is used to convert a private key file to PKCS#8 format on the Citrix ADC.
 
 
 ## Example usage

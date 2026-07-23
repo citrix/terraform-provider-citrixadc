@@ -4,7 +4,7 @@ subcategory: "System"
 
 # Data Source: systemsession
 
-Retrieves information about an administrative session on the Citrix ADC, looked up by its session ID (`sid`). This is the read-only counterpart to the `citrixadc_systemsession` resource (which kills sessions): use it to inspect details such as the logged-in user, login time, and client IP address of an active session.
+The systemsession data source allows you to retrieve information about an administrative session on the Citrix ADC.
 
 
 ## Example usage

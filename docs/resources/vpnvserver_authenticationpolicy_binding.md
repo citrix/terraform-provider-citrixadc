@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnvserver_authenticationpolicy_binding
 
-Binds an authentication policy to a specific VPN (NetScaler Gateway) virtual server so that the policy governs how users authenticate when connecting through that virtual server. Use this resource to attach primary, secondary (two-factor), or group-extraction authentication policies to an individual VPN vserver, controlling the evaluation order via priority.
+This resource is used to bind an authentication policy to a VPN virtual server.
 
 
 ## Example usage

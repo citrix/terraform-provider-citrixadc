@@ -4,7 +4,7 @@ subcategory: "LSN"
 
 # Resource: lsngroup_lsnrtspalgprofile_binding
 
-Associates an LSN RTSP ALG profile with a Large Scale NAT (LSN) group so that RTSP control and media traffic handled by that group is processed according to the profile's Application Layer Gateway settings. Bind a profile when subscribers behind the LSN group use RTSP-based applications (such as streaming media) that require the ADC to rewrite embedded transport addresses.
+This resource is used to bind an LSN RTSP ALG profile to an LSN group.
 
 
 ## Example usage

@@ -4,9 +4,8 @@ subcategory: "Authentication"
 
 # Data Source: authenticationsamlidpprofile
 
-Use this data source to retrieve information about an existing SAML Identity Provider (IdP) profile.
+The authenticationsamlidpprofile data source allows you to retrieve information about an authentication SAML IdP profile.
 
-The `citrixadc_authenticationsamlidpprofile` data source allows you to retrieve details of an authentication SAML IdP profile by its name. This is useful for referencing existing profiles in your Terraform configurations without managing them directly.
 
 ## Example usage
 

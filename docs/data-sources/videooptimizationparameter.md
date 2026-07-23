@@ -4,7 +4,7 @@ subcategory: "VideoOptimization"
 
 # Data Source: videooptimizationparameter
 
-The videooptimizationparameter data source allows you to retrieve the global video optimization parameters configured on the Citrix ADC. Because this is a singleton resource, no lookup attribute is required — there is exactly one instance per ADC.
+The videooptimizationparameter data source allows you to retrieve the global video optimization parameters configuration.
 
 
 ## Example usage

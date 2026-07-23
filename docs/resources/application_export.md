@@ -4,9 +4,7 @@ subcategory: "AppExpert"
 
 # Resource: application_export
 
-Exports a configured AppExpert application from the Citrix ADC into an application template file (and, optionally, a deployment file) on the appliance filesystem. This is the inverse of the import action: use it to package a deployed application so it can be backed up, version-controlled, or moved to another appliance.
-
-This is an action-only resource: it maps to the NITRO `application` object's `export` action. Each apply invokes the export and writes the template file on the appliance. Changing any configured attribute re-triggers the export.
+This resource is used to export an AppExpert application to a template file on the Citrix ADC.
 
 
 ## Example usage

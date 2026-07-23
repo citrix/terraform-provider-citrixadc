@@ -4,11 +4,7 @@ subcategory: "System"
 
 # Resource: systemautorestorefeature_enable
 
-The systemautorestorefeature_enable resource turns on the Citrix ADC autorestore feature (the NITRO `enable` action). The autorestore feature is what allows the appliance to create and manage restorepoint resources, so this action must be applied before autorestore-dependent configuration can be used.
-
-It is an action-only, zero-attribute resource with no configurable arguments. Applying this resource invokes the enable action.
-
-~> **NOTE** To turn the feature off, use the companion `citrixadc_systemautorestorefeature_disable` resource.
+This resource is used to enable the system autorestore feature.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "Kafka"
 
 # Data Source: kafkacluster
 
-The kafkacluster data source allows you to retrieve information about an existing Kafka cluster configured on the Citrix ADC by looking it up by name.
-
-The `kafka` feature must be licensed and enabled on the Citrix ADC.
+The kafkacluster data source allows you to retrieve information about a Kafka cluster on the Citrix ADC.
 
 
 ## Example usage

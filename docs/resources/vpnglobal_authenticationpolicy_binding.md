@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_authenticationpolicy_binding
 
-Binds an advanced authentication policy to the global VPN bind point, so that the policy is evaluated for every VPN (NetScaler Gateway) connection rather than being scoped to a single VPN virtual server. Use this to enforce a common authentication chain — including primary, secondary (two-factor), and group-extraction steps — across all gateway logins.
+This resource is used to bind an authentication policy to the global VPN bind point.
 
 
 ## Example usage

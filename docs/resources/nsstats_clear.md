@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nsstats_clear
 
-Clears (resets to zero) the ever-incrementing statistics counters on the Citrix ADC. This is useful when you want to establish a fresh baseline for monitoring after a configuration change, a maintenance window, or a troubleshooting session, without having to reboot the appliance.
-
-This is an action resource: applying it performs the clear; it does not manage a persistent object, so re-applying re-runs the action.
+This resource is used to clear the statistics counters on the Citrix ADC.
 
 
 ## Example usage

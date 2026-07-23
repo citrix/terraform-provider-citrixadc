@@ -31,7 +31,7 @@ resource "citrixadc_tunnelglobal_tunneltrafficpolicy_binding" "tf_tunnelglobal_t
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the tunnelglobal_tunneltrafficpolicy_binding. It has the same value as the `name` attribute.
+* `id` - The id of the tunnelglobal_tunneltrafficpolicy_binding. It has the same value as the `policyname` attribute.
 
 
 ## Import

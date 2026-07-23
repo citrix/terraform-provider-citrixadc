@@ -4,9 +4,8 @@ subcategory: "Network"
 
 # Data Source: vlan\_linkset\_binding
 
-The vlan\_linkset\_binding data source allows you to retrieve information about an
-interface bound to a VLAN. Despite the resource name, this binding references an
-interface (`ifnum`) bound to a VLAN identified by `vlanid`, not a linkset object.
+The vlan_linkset_binding data source allows you to retrieve information about an interface bound to a VLAN.
+
 
 ## Example usage
 

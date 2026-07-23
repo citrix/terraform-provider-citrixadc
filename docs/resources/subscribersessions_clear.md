@@ -4,13 +4,9 @@ subcategory: "Subscriber"
 
 # Resource: subscribersessions_clear
 
-The subscribersessions_clear resource performs the Citrix ADC "clear subscriber sessions" action. Applying it flushes entries from the subscriber session database that the ADC maintains for Subscriber/Gx (PCRF) sessions. Use it to force the ADC to purge stale or specific subscriber sessions so that fresh session state is negotiated with the PCRF on the next request.
+This resource is used to clear subscriber (Gx/PCRF) sessions on the Citrix ADC.
 
-This is an **action-only resource**. Each apply fires a `?action=clear` call against the ADC; there is no persistent object to manage, and the resource holds only a synthetic ID in state. Because the `ip` and `vlan` selectors are immutable, changing either one causes Terraform to destroy and recreate the resource, which re-fires the clear action.
-
-~> **Caution: a bare apply flushes the ENTIRE subscriber session database.** If you configure the resource with neither `ip` nor `vlan`, the clear action removes every subscriber session on the ADC. Always set `ip` and/or `vlan` when you intend to clear only a specific subscriber session.
-
--> **Note:** The Subscriber/Gx/PCRF (Telco) feature must be licensed and enabled on the Citrix ADC for subscriber sessions to exist. If the feature is not active, there are no sessions to clear.
+~> **Action-only:** Each apply fires a `clear` action; the `ip` and `vlan` selectors are immutable, so changing them re-triggers the action.
 
 
 ## Example usage

@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslcertkeybundle
 
-A certificate-key bundle combines a server certificate, its intermediate CA certificate chain, and the matching private key into a single named entity on the Citrix ADC, loaded from one PEM bundle file on the appliance. Using a single bundle simplifies binding a complete certificate chain plus key to a VIP instead of managing separate certkey and chain objects. Use this resource to create, update, and delete such a bundle.
+This resource is used to manage SSL certificate-key bundles.
 
 
 ## Example usage

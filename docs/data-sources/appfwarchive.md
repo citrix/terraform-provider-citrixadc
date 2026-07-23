@@ -4,9 +4,9 @@ subcategory: "Application Firewall"
 
 # Data Source: appfwarchive
 
-The `citrixadc_appfwarchive` data source is used to retrieve information about an existing Application Firewall tar archive configured on the Citrix ADC.
+The appfwarchive data source allows you to retrieve information about an Application Firewall tar archive configured on the Citrix ADC.
 
-Note: NITRO's `appfwarchive` GET response carries no per-archive identifying fields. The data source confirms the archive collection is reachable on the ADC and surfaces the lookup name and any optional values supplied in configuration; it does not read individual archive contents back from the ADC.
+~> **Note:** The NITRO GET response carries no per-archive identifying fields; the data source confirms reachability and surfaces the lookup name rather than reading archive contents back.
 
 
 ## Example usage

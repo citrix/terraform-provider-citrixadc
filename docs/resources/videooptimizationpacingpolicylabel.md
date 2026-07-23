@@ -4,9 +4,7 @@ subcategory: "VideoOptimization"
 
 # Resource: videooptimizationpacingpolicylabel
 
-The videooptimizationpacingpolicylabel resource defines a named policy label on the Citrix ADC that groups a set of video optimization pacing policies for invocation as a unit. Bind pacing policies to the label and invoke the label from a video optimization pacing policy so a common set of pacing rules can be reused and evaluated together for request or response traffic.
-
-~> **Note** Video optimization pacing functionality is deprecated on the Citrix ADC (NITRO/CLI). This resource is retained for compatibility with existing configurations.
+This resource is used to manage video optimization pacing policy labels on the Citrix ADC.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "System"
 
 # Resource: systemsshkey_import
 
-Imports an SSH key (public or private) onto the Citrix ADC from a remote or local source URL. SSH keys are used to establish trusted, password-less SSH connectivity between the ADC and external hosts (for example, for secure file transfers or scripted administration). Creating this resource performs the NITRO `Import` action against the provided source location; deleting it removes the imported key from the appliance.
-
-All attributes force replacement when changed.
+This resource is used to import an SSH key onto the Citrix ADC from a source URL.
 
 
 ## Example usage

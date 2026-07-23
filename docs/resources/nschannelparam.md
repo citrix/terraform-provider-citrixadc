@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nschannelparam
 
-Configures the global channel (link aggregation / VF) parameters on the Citrix ADC. The `vfautorecover` setting controls whether channels automatically recover their virtual function (VF) interfaces - that is, whether member interfaces are brought back into an aggregated channel automatically once they become available again, rather than requiring manual intervention.
-
-This is a singleton resource: a single channel parameter configuration always exists on the appliance, so this resource has no create or delete operation on the ADC - applying it updates the existing configuration, and destroying it only removes the resource from Terraform state.
+This resource is used to manage global channel (link aggregation) parameters on the Citrix ADC.
 
 
 ## Example usage

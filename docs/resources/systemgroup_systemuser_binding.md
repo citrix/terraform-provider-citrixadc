@@ -4,9 +4,9 @@ subcategory: "System"
 
 # Resource: systemgroup_systemuser_binding
 
-The systemgroup_systemuser_binding resource is used to bind systemuser to systemgroup.
+This resource is used to bind a system user to a system group on the Citrix ADC.
 
-~>  If you are using this resource to bind `systemuser` to a `systemgroup`, do not define the `systemusers` attribute in the systemgroup resource.
+~> **Note:** When using this resource to bind `systemuser` to a `systemgroup`, do not also define the `systemusers` attribute on the `systemgroup` resource.
 
 
 ## Example usage

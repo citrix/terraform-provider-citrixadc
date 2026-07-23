@@ -4,7 +4,7 @@ subcategory: "System"
 
 # Data Source: systemglobal_auditsyslogpolicy_binding
 
-The systemglobal_auditsyslogpolicy_binding data source allows you to retrieve information about an audit syslog policy bound to the Citrix ADC system global scope. The binding is looked up by `policyname`.
+The systemglobal_auditsyslogpolicy_binding data source allows you to retrieve information about an audit syslog policy bound to the system global scope.
 
 
 ## Example usage

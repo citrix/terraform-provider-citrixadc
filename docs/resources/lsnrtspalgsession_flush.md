@@ -4,11 +4,7 @@ subcategory: "LSN"
 
 # Resource: lsnrtspalgsession_flush
 
-The lsnrtspalgsession_flush resource performs the imperative `flush` action on the Citrix ADC, clearing a Large Scale NAT (LSN) RTSP ALG (Application Layer Gateway) session. Use it to forcibly tear down the data-channel state the ADC tracks for a streaming RTSP call — for example to recover stuck media flows or to reclaim ALG resources during troubleshooting. The session to clear is selected by its `sessionid`.
-
-This is an action resource: applying it performs the flush; it does not manage a persistent object, so re-applying re-runs the action. Every argument forces resource replacement; changing `sessionid` and re-applying re-runs the flush against the new session.
-
-Because re-applying re-runs the flush, use this resource for deliberate, one-shot session-flush workflows rather than for declarative, drift-corrected configuration. To inspect RTSP ALG sessions without clearing them, use the `citrixadc_lsnrtspalgsession` data source instead.
+This resource is used to flush an LSN RTSP ALG session on the Citrix ADC.
 
 
 ## Example usage

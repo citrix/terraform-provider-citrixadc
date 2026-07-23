@@ -4,9 +4,9 @@ subcategory: "Cloud"
 
 # Resource: cloudtunnelvserver
 
-The cloudtunnelvserver resource configures a Cloud Tunnel virtual server on the Citrix ADC. A Cloud Tunnel virtual server acts as the listener that accepts client traffic and tunnels it through a cloud tunnel connection, letting you extend on-premises services into a cloud back end without exposing them directly. Use it to define which traffic (by service type and an optional listen policy) is forwarded over the cloud tunnel.
+This resource is used to manage a Cloud Tunnel virtual server on the Citrix ADC.
 
-~> **Prerequisite:** The Cloud Tunnel feature is license- and feature-gated. Ensure the cloud tunnel feature is licensed and enabled on the target Citrix ADC before creating this resource; otherwise the NITRO API call will fail.
+~> **Prerequisite:** The Cloud Tunnel feature must be licensed and enabled on the appliance before creating this resource.
 
 
 ## Example usage

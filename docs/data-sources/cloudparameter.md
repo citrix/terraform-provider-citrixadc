@@ -4,9 +4,7 @@ subcategory: "Cloud"
 
 # Data Source: cloudparameter
 
-The cloudparameter data source allows you to retrieve the global Citrix Cloud / NGS Connector parameters currently configured on the Citrix ADC.
-
-Because `cloudparameter` is a singleton, no lookup argument is required — the data source always reads the single global configuration.
+The cloudparameter data source allows you to retrieve information about the global cloud parameters configured on the Citrix ADC.
 
 
 ## Example usage

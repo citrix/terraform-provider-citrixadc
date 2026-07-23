@@ -4,9 +4,7 @@ subcategory: "System"
 
 # Resource: systemgroup_systemcmdpolicy_binding
 
-The systemgroup_systemcmdpolicy_binding resource is used to bind systemcmdpolicy to systemgroup.
-
-~>  If you are using this resource to bind `systemcmdpolicy` to a `systemgroup`, do not define the `cmdpolicybinding` attribute in the systemgroup resource.
+This resource is used to bind a systemcmdpolicy to a systemgroup.
 
 
 ## Example usage

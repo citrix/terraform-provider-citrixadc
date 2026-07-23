@@ -4,7 +4,7 @@ subcategory: "VideoOptimization"
 
 # Resource: videooptimizationdetectionpolicylabel
 
-The videooptimizationdetectionpolicylabel resource defines a named policy label on the Citrix ADC that groups a set of video optimization detection policies for invocation as a unit. Bind detection policies to the label and invoke the label from a video optimization detection policy so a common set of detection rules can be reused and evaluated together for request or response traffic.
+This resource is used to manage video optimization detection policy labels on the Citrix ADC.
 
 
 ## Example usage

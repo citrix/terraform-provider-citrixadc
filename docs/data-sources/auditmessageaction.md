@@ -4,9 +4,8 @@ subcategory: "Audit"
 
 # Data Source: auditmessageaction
 
-Use this data source to retrieve information about an existing Audit Message Action.
+The auditmessageaction data source allows you to retrieve information about an audit message action.
 
-The `citrixadc_auditmessageaction` data source allows you to retrieve details of an audit message action by its name. This is useful for referencing existing audit message actions in your Terraform configurations without managing them directly.
 
 ## Example usage
 

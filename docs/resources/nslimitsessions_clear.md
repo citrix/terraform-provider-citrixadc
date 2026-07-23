@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nslimitsessions_clear
 
-The nslimitsessions_clear resource flushes (clears) the active rate-limit sessions tracked on the Citrix ADC for a given rate-limit identifier. Use it when you want to reset the accumulated hit/drop counters and per-selectlet session state for a limit identifier so that throttling decisions start from a clean slate.
-
-This is an action resource: applying it flushes the active rate-limit sessions; it does not manage a persistent object, so re-applying re-runs the clear. Changing `limitidentifier` forces a new clear action to be performed (replacement).
+This resource is used to clear the active rate-limit sessions for a rate-limit identifier on the Citrix ADC.
 
 
 ## Example usage

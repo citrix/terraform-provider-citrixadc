@@ -4,11 +4,9 @@ subcategory: "Cloud"
 
 # Data Source: cloudtunnelparameter
 
-The cloudtunnelparameter data source allows you to retrieve the global cloud-tunnel parameters currently configured on the Citrix ADC.
+The cloudtunnelparameter data source allows you to retrieve information about the global cloud tunnel parameters.
 
-Because `cloudtunnelparameter` is a singleton, no lookup argument is required — the data source always reads the single global configuration.
-
-~> **Prerequisite:** This feature is license/feature-gated. On platforms or releases where the cloud-tunnel feature is not enabled, the NITRO GET operation returns `Feature not supported in this release` (or a similar platform message). In that case the data source read is tolerated gracefully and the returned attribute values may be empty (null).
+~> **Note:** This feature is license/feature-gated; on platforms where it is not enabled the read is tolerated and the returned attribute values may be empty.
 
 
 ## Example usage

@@ -51,5 +51,5 @@ In addition to the arguments, the following attributes are available:
 An appqoeaction can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_csaction.tf_csaction tf_csaction
+terraform import citrixadc_appqoeaction.tf_appqoeaction my_appqoeaction
 ```

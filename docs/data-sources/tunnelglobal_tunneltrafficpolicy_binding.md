@@ -4,7 +4,8 @@ subcategory: "Tunnel"
 
 # Data Source: tunnelglobal_tunneltrafficpolicy_binding
 
-The `citrixadc_tunnelglobal_tunneltrafficpolicy_binding` data source allows you to retrieve information about a specific binding between the global tunnel configuration and a tunnel traffic policy. This binding determines which tunnel traffic policies are applied globally and their priority order.
+The tunnelglobal_tunneltrafficpolicy_binding data source allows you to retrieve information about the binding between the global tunnel configuration and a tunnel traffic policy.
+
 
 ## Example Usage
 

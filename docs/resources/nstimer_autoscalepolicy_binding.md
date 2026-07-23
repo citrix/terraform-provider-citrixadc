@@ -4,7 +4,7 @@ subcategory: "NS"
 
 # Resource: nstimer_autoscalepolicy_binding
 
-Binds an autoscale policy to an `nstimer` on the Citrix ADC. The timer drives periodic evaluation of the bound policy, so this binding is what actually schedules autoscale decisions: at every timer interval the appliance evaluates the policy's rule and, when the configured threshold is met across the sample window, triggers the policy's autoscale action (for example scaling a service group up or down).
+This resource is used to bind an autoscale policy to an nstimer.
 
 
 ## Example usage

@@ -10,21 +10,11 @@ The crvserver resource is used to create Cache Redirection Vserver.
 ## Example usage
 
 ```hcl
-resource "citrixadc_csvserver" "test_csvserver" {
-  ipv46       = "10.10.10.22"
-  name        = "test_csvserver"
-  port        = 443
-  servicetype = "SSL"
-
-  sslpolicybinding {
-      policyname = "tf_policy"
-     priority = 200
-  }
-  sslpolicybinding {
-      policyname = citrixadc_sslpolicy.tf_sslpolicy2.name
-     priority = 100
-  }
-
+resource "citrixadc_crvserver" "crvserver" {
+  name        = "my_vserver"
+  servicetype = "HTTP"
+  cachetype   = "TRANSPARENT"
+  arp         = "OFF"
 }
 ```
 

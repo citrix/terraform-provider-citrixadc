@@ -4,7 +4,7 @@ subcategory: "Metrics"
 
 # Resource: metricsprofile_authenticationvserver_binding
 
-The metricsprofile_authenticationvserver_binding resource binds an authentication virtual server to a metrics profile on the Citrix ADC. Creating this binding makes the ADC collect and export the metrics defined by the referenced metrics profile for the specified authentication vserver, allowing you to monitor that vserver through your metrics pipeline.
+This resource is used to bind an authentication virtual server to a metrics profile.
 
 
 ## Example usage

@@ -4,11 +4,9 @@ subcategory: "Kafka"
 
 # Resource: kafkacluster
 
-The kafkacluster resource defines a named Kafka cluster on the Citrix ADC. The cluster acts as a logical grouping that Kafka broker service groups are later bound to, allowing the ADC to load balance and proxy traffic across the brokers that make up the cluster.
+This resource is used to manage a Kafka cluster on the Citrix ADC.
 
-The `kafka` feature must be licensed and enabled on the Citrix ADC before this resource can be created.
-
-Note: This is a create-only resource. The Kafka cluster has no updatable attributes; changing `name` forces the resource to be destroyed and re-created.
+~> **Prerequisite:** The `kafka` feature must be licensed and enabled. This is a create-only resource; changing `name` forces re-creation.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "Network"
 
 # Resource: vridparam
 
-Configures the global VRRP (Virtual Router Redundancy Protocol) parameters used in active-active high-availability deployments. These settings control whether a backup node forwards traffic to the master node, and the VRRP advertisement (hello) and dead-peer detection intervals that determine how quickly the Citrix ADC detects a failed peer and triggers a master takeover.
-
-This is a singleton resource: a single global VRRP-parameter object always exists on the Citrix ADC. Applying this resource manages that global configuration; destroying it only removes it from Terraform state (the global object itself is not deleted from the appliance).
+This resource is used to manage the global VRRP (VRID) parameters.
 
 
 ## Example usage

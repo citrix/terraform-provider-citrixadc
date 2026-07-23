@@ -4,9 +4,7 @@ subcategory: "GSLB"
 
 # Resource: gslbconfig_sync
 
-Synchronizes the Global Server Load Balancing (GSLB) configuration across all GSLB sites in the deployment. Applying this resource triggers an imperative `sync` action on the master node, which propagates the master's GSLB configuration to the slave nodes at the other sites. It does not manage any persistent object on the Citrix ADC, so re-applying re-runs the sync.
-
-Use this resource when you want a GSLB configuration sync to run as part of a Terraform apply. A working GSLB deployment with the GSLB sites already configured (using `citrixadc_gslbsite` and related resources) is a prerequisite; this resource only synchronizes that existing configuration.
+This resource is used to synchronize the GSLB configuration across all GSLB sites.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslkeyfile_import
 
-The sslkeyfile_import resource imports a private key file onto the Citrix ADC so it can be paired with a certificate to terminate SSL traffic. The key file is fetched from a remote source at creation time and stored under the given name on the appliance. If the key is encrypted, the passphrase used to decrypt it can be supplied via the `password` attributes.
-
-This resource maps to the NITRO `Import` action for the `sslkeyfile` object. The ADC exposes this object only through that import action (there is no in-place update endpoint), so every attribute forces a new resource when changed.
+This resource is used to import a private key file onto the Citrix ADC.
 
 
 ## Example usage

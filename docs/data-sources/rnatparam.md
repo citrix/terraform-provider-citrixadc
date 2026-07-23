@@ -4,7 +4,8 @@ subcategory: "Network"
 
 # Data Source: rnatparam
 
-The rnatparam data source allows you to retrieve the global Reverse Network Address Translation (RNAT) parameters configuration from the Citrix ADC. This is a singleton data source, so no lookup argument is required.
+The rnatparam data source allows you to retrieve information about the global RNAT parameters configuration.
+
 
 ## Example Usage
 

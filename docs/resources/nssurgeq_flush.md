@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nssurgeq_flush
 
-Flushes the surge queue on the Citrix ADC. The surge queue holds client connections that are waiting for the appliance to open new server-side connections when a server is momentarily unable to accept the offered load. Flushing it clears those queued requests, which is helpful when draining a server, recovering from a backlog, or testing surge-protection behavior. The flush can be applied system-wide, or scoped to a specific virtual server, service, or service group member.
-
-This is an action resource: applying it performs the flush; it does not manage a persistent object, so re-applying re-runs the action.
+This resource is used to flush the surge queue on the Citrix ADC.
 
 
 ## Example usage

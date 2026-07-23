@@ -4,10 +4,10 @@ subcategory: "SSL"
 
 # Resource: sslwrapkey_create
 
-The sslwrapkey_create resource creates a named SSL wrap key on the Citrix ADC through the NITRO `create` action. A wrap key is a password- and salt-derived key used by the appliance's crypto subsystem to wrap (encrypt) and unwrap other key material — for example, when exporting or importing protected keys. The key is immutable: any change to its attributes forces a new wrap key to be created. The resource manages a full lifecycle — it creates the wrap key on apply and deletes it on destroy.
+This resource is used to create an SSL wrap key on the Citrix ADC.
 
-~> **WARNING: FIPS / crypto subsystem required.**
-> This resource depends on the Citrix ADC FIPS / cryptographic subsystem being available on the appliance. It is intended for FIPS-capable appliances and may not be supported on appliances where the crypto subsystem is unavailable; the create action will fail in that case. Validate against your target platform before applying.
+~> **WARNING:** Depends on the Citrix ADC FIPS / crypto subsystem. The wrap key is immutable; any attribute change forces a new key.
+
 
 ## Example usage
 

@@ -4,9 +4,7 @@ subcategory: "AAA"
 
 # Resource: aaasession_kill
 
-Terminates active AAA-TM/VPN sessions on the Citrix ADC. Applying this resource performs an imperative `kill` action: it logs off the AAA sessions that match the supplied optional filters (user, group, intranet IP range, or session key), or every active session when `all` is set. Use it for deliberate, one-shot session-termination workflows such as forcing a compromised user off the appliance or clearing sessions after a policy change.
-
-This is an action resource: applying it performs the kill; it does not manage a persistent object, so re-applying re-runs the action. Every argument forces resource replacement. To read active sessions without terminating them, use the `citrixadc_aaasession` data source instead.
+This resource is used to kill active AAA-TM/VPN sessions on the Citrix ADC.
 
 
 ## Example usage

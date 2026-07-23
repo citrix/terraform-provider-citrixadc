@@ -4,25 +4,9 @@ subcategory: "System"
 
 # Resource: systemkek_change
 
-Rotates the appliance Key Encryption Key (KEK) on a Citrix ADC. The KEK is the
-master key used to protect other secrets stored on the appliance. Applying this
-resource backs up the existing keys and generates brand-new ones, which is
-typically done as part of a security-hardening or key-rotation policy.
+This resource is used to rotate the appliance Key Encryption Key (KEK) on the Citrix ADC.
 
-~> **WARNING: This operation is IRREVERSIBLE and NON-IDEMPOTENT.** Each `terraform
-apply` that creates (or recreates) this resource ROTATES the appliance KEK. The
-old keys are backed up and new keys are generated every time. There is no way to
-roll a KEK rotation back. Apply this resource only when you intend to rotate the
-KEK.
-
-~> **NOTE:** The `level` attribute is immutable: any change forces the resource
-to be destroyed and recreated, which triggers a fresh KEK rotation. Destroying
-the resource does not undo the rotation on the appliance.
-
-~> **NOTE:** Using `level = "extended"` additionally rewrites the configuration
-database (`ns.conf`, `nscfg.db`, and all `ns.conf` files for the same release)
-across every partition. While the extended rotation runs, the appliance BLOCKS
-all configuration changes until the operation completes.
+!> **WARNING:** This operation is IRREVERSIBLE and NON-IDEMPOTENT — each apply backs up the old keys and generates new ones. A KEK rotation cannot be rolled back.
 
 
 ## Example usage

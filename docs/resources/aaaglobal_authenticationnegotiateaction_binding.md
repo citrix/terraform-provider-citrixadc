@@ -4,7 +4,7 @@ subcategory: "AAA"
 
 # Resource: aaaglobal_authenticationnegotiateaction_binding
 
-Binds a negotiate (Kerberos/NTLM) authentication action to the global AAA configuration on the Citrix ADC. Use this resource to enable Windows Integrated Authentication for traffic that is not matched by a more specific authentication virtual server or policy, so that users are authenticated against the negotiate profile system-wide.
+This resource is used to bind a negotiate (Kerberos/NTLM) authentication action to the global AAA configuration.
 
 
 ## Example usage

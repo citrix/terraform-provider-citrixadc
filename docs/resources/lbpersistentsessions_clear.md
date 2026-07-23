@@ -4,9 +4,7 @@ subcategory: "Load Balancing"
 
 # Resource: lbpersistentsessions_clear
 
-The lbpersistentsessions_clear resource performs the imperative `clear` action on the Citrix ADC, flushing active load balancing persistence sessions. Use it to forcibly drop client-to-server affinity so that subsequent requests are re-balanced — for example after changing back-end membership or during maintenance. Omit `vserver` to flush persistence sessions for all virtual servers, or set `vserver` (optionally with `persistenceparameter`) to flush a targeted subset.
-
-This is an action resource: applying it performs the `clear`; it does not manage a persistent object, so re-applying re-runs the action. Every argument forces resource replacement, which re-runs the `clear` action.
+This resource is used to clear load balancing persistence sessions on the Citrix ADC.
 
 
 ## Example usage

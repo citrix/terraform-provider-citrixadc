@@ -4,9 +4,8 @@ subcategory: "Network"
 
 # Data Source: forwardingsession
 
-Use this data source to retrieve information about an existing Forwarding Session.
+The forwardingsession data source allows you to retrieve information about a forwarding session.
 
-The `citrixadc_forwardingsession` data source allows you to retrieve details of a forwarding session by its name. This is useful for referencing existing forwarding session rules in your Terraform configurations without managing them directly.
 
 ## Example usage
 

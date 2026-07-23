@@ -4,11 +4,9 @@ subcategory: "Application Firewall"
 
 # Resource: appfwlearningdata_reset
 
-The appfwlearningdata_reset resource clears the Citrix ADC Application-Firewall learned-data on demand. It is an action-only resource: applying it invokes the NITRO `reset` action on `appfwlearningdata`, which purges all learned-data databases and zeroes the transaction count. Use it to discard accumulated learning (for example, after tuning App-Firewall profiles or before starting a fresh learning cycle) so that subsequently learned rules are not skewed by stale samples.
+This resource is used to reset (clear) the Application Firewall learned data on the Citrix ADC.
 
-Each apply performs the reset.
-
-~> **WARNING** Applying this resource clears (resets) all App-Firewall learned data. This is a disruptive, non-reversible side effect. Use it deliberately.
+!> **WARNING:** Applying this resource clears all App-Firewall learned data. This action is irreversible.
 
 
 ## Example usage

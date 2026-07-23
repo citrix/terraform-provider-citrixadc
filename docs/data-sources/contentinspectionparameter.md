@@ -4,7 +4,8 @@ subcategory: "Content Inspection"
 
 # Data Source: contentinspectionparameter
 
-The `citrixadc_contentinspectionparameter` data source allows you to retrieve information about the global Content Inspection parameters configuration. These parameters control the behavior of content inspection on the Citrix ADC.
+The contentinspectionparameter data source allows you to retrieve information about the global content inspection parameters.
+
 
 ## Example usage
 

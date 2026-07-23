@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nsextension
 
-Imports a NetScaler extension onto the Citrix ADC. Extensions are user-written Lua modules that add custom protocol parsing, policy functions, or callouts to the appliance's packet engine, letting you extend the built-in policy language with your own logic. Creating this resource uploads the Lua source from `src` to the appliance (via the NITRO `?action=Import` endpoint) and registers it under `name`.
-
-~> **Note** The `src` attribute is a write-only import input. The appliance stores the imported code under `name` but does not return the original source location from a GET, so `src` cannot be recovered on read or import. After importing an existing extension into Terraform state you must set `src` in your configuration to the original location to keep the configuration consistent.
+This resource is used to import NetScaler extensions.
 
 
 ## Example usage

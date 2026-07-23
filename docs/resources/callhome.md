@@ -4,9 +4,7 @@ subcategory: "Utility"
 
 # Resource: callhome
 
-The callhome resource configures the Citrix ADC Call Home feature, which allows the appliance to automatically report failures and periodic heartbeats to Citrix technical support. Configure it to set the administrator contact email, the reporting mode, and an optional proxy server to use when the ADC reaches out over the internet.
-
-Call Home is a singleton feature: there is exactly one Call Home configuration per Citrix ADC. Applying this resource sets the global Call Home configuration. Destroying the resource leaves the configuration in place on the appliance.
+This resource is used to manage the Citrix ADC Call Home configuration.
 
 
 ## Example usage

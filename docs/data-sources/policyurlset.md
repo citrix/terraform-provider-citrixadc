@@ -4,7 +4,7 @@ subcategory: "Policy"
 
 # Data Source: policyurlset
 
-The policyurlset data source allows you to retrieve information about an existing URL set on the Citrix ADC, such as its CSV import settings and matching behavior. The source `url` is a secret and is never returned by the NITRO API, so it is not available through this data source.
+The policyurlset data source allows you to retrieve information about a URL set.
 
 
 ## Example usage

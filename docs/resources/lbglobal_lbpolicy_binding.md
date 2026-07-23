@@ -4,9 +4,7 @@ subcategory: "Load Balancing"
 
 # Resource: lbglobal_lbpolicy_binding
 
-Binds a load balancing policy to the global LB bind point so it is evaluated for all load balancing traffic on the Citrix ADC, rather than being attached to a single LB virtual server. Use this to apply LB policy logic globally — for example, to invoke a shared policy label or to enforce a policy across every LB vserver from one place.
-
-`lbglobal` is a singleton (it has no parent name), so the binding is identified by the policy and its bind point alone.
+This resource is used to bind an LB policy to the global LB bind point.
 
 
 ## Example usage

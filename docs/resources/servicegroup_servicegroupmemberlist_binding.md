@@ -4,13 +4,9 @@ subcategory: "Basic"
 
 # Resource: servicegroup\_servicegroupmemberlist\_binding
 
-Manages the complete set of members of a Citrix ADC service group as a single atomic unit. Applying this resource replaces the entire member set of the named service group with the `members` you declare: any existing member that is not present in the list is removed (or disabled, depending on the graceful setting on the service group).
+This resource is used to manage the complete member set of a service group as a single unit on the Citrix ADC.
 
-This bulk behavior is what distinguishes it from `servicegroup_servicegroupmember_binding`, which manages a single member at a time and leaves other members untouched. Use this resource when you want Terraform to own the full membership of a service group declaratively; use the single-member binding when you only want to add or remove individual members alongside members managed elsewhere.
-
-~> **Full-membership replacement.** Because every attribute forces replacement, any change to `servicegroupname` or `members` recreates the binding, replacing the full member set of the service group.
-
-~> **Autoscale service group required.** This bulk desired-state member-list operation is only permitted by NITRO on an autoscale-enabled service group. Applying it against a plain (non-autoscale) service group fails with NITRO `errorcode 257, "Operation not permitted"`. The parent `citrixadc_servicegroup` must be created with `autoscale = "API"` (or another autoscale mode supported by your appliance). To manage members of a plain service group one at a time, use `servicegroup_servicegroupmember_binding` instead.
+~> **Full-membership replacement:** Applying this resource replaces the entire member set and every attribute forces replacement. Requires an autoscale-enabled service group (NITRO `errorcode 257` otherwise).
 
 
 ## Example usage

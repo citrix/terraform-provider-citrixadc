@@ -4,7 +4,9 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_fakeaccount_binding
 
-Binds a fake-account detection rule to an application firewall profile on the Citrix ADC. Fake-account detection identifies bogus account-registration submissions by matching a form field and a tag expression, optionally refined by *either* a regular expression (`formexpression`) *or* a detection URL (`formurl_fad`) — the two are mutually exclusive, so set at most one. Create this binding to add such a rule to an existing `appfwprofile`.
+This resource is used to bind a fake-account detection rule to an application firewall profile.
+
+~> **Note:** `formexpression` and `formurl_fad` are mutually exclusive — set at most one.
 
 
 ## Example usage

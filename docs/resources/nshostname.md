@@ -26,4 +26,4 @@ resource "citrixadc_nshostname" "tf_nshostname" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nshostname. It has the same value as the `name` attribute.
+* `id` - The id of the nshostname. It has the same value as the `hostname` attribute.

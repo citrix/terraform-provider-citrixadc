@@ -4,7 +4,7 @@ subcategory: "Cloud"
 
 # Resource: cloudngsparameter
 
-Configures the global Citrix Gateway Service (CGS) NextGen Service parameters on the Citrix ADC. Use this resource to tune connection-level behavior for cloud gateway deployments, such as the UDT/EDT version negotiated with clients, DTLS 1.2 support, ticket-profile enforcement, and decoupling of content-switching virtual server state from the ticketing service. This is a singleton resource: a single configuration object always exists on the appliance, so applying this resource updates the existing global parameters rather than creating a new object.
+This resource is used to manage the global Citrix Gateway Service NextGen Service parameters.
 
 
 ## Example usage

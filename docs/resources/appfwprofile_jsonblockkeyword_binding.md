@@ -4,7 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_jsonblockkeyword_binding
 
-Adds a JSON block-keyword relaxation (or rule) to an application firewall profile. The application firewall inspects JSON payloads for the configured keyword at the given JSON key and URL; this binding lets you control how that keyword is treated (for example, flag it as a regex match, or block requests containing it) so you can tune protection for a specific API or JSON endpoint without weakening the rest of the profile.
+This resource is used to bind a JSON block keyword to an application firewall profile.
 
 
 ## Example usage

@@ -4,7 +4,7 @@ subcategory: "Content Switching"
 
 # Data Source: cspolicylabel\_cspolicy\_binding
 
-The cspolicylabel\_cspolicy\_binding data source allows you to retrieve information about a content switching policy bound to a content switching policy label, such as its priority, target virtual server, and label invocation settings.
+The cspolicylabel_cspolicy_binding data source allows you to retrieve information about a content switching policy bound to a content switching policy label.
 
 
 ## Example usage

@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnvserver_secureprivateaccessurl_binding
 
-Binds a Secure Private Access URL to a VPN (NetScaler Gateway) virtual server so that the application reachable at that URL is published through the gateway. Use this resource to associate a specific Secure Private Access application URL with an individual VPN vserver.
+This resource is used to manage the binding of Secure Private Access URLs to a VPN virtual server.
 
 
 ## Example usage

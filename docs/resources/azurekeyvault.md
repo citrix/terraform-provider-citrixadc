@@ -4,7 +4,7 @@ subcategory: "Azure"
 
 # Resource: azurekeyvault
 
-The azurekeyvault resource is used to configure an Azure Key Vault entity on the Citrix ADC. The Key Vault, in combination with an Azure application registration, allows the ADC to use keys and certificates stored in Azure for SSL operations.
+This resource is used to manage Azure Key Vault entities.
 
 
 ## Example usage

@@ -4,7 +4,7 @@ subcategory: "Load Balancing"
 
 # Data Source: lbpolicylabel_lbpolicy_binding
 
-The lbpolicylabel_lbpolicy_binding data source allows you to retrieve information about an LB policy bound to an LB policy label, including the priority at which the policy is evaluated within the label and any invoke settings.
+The lbpolicylabel_lbpolicy_binding data source allows you to retrieve information about an LB policy bound to an LB policy label.
 
 
 ## Example usage

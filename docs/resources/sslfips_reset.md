@@ -4,9 +4,9 @@ subcategory: "SSL"
 
 # Resource: sslfips_reset
 
-The sslfips_reset resource resets the FIPS Hardware Security Module (HSM) on a Citrix ADC FIPS appliance. Use it when you need to zeroize and reinitialize the FIPS card back to a known factory state (for example, before re-provisioning the HSM, recovering from an inconsistent FIPS configuration, or as part of a documented FIPS key-management procedure).
+This resource is used to reset the FIPS HSM on a Citrix ADC FIPS appliance.
 
-~> **One-shot action.** This resource performs the `reset` action (CLI: `reset ssl fips`); it does not create a persistent object on the appliance. Each `terraform apply` that creates or replaces this resource performs the reset once.
+!> **WARNING:** Requires a FIPS appliance. This zeroizes and reinitializes the FIPS card to factory state. Each apply that creates or replaces this resource performs the reset once.
 
 
 ## Example usage

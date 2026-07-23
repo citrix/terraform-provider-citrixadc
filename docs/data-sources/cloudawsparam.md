@@ -4,7 +4,7 @@ subcategory: "Cloud"
 
 # Data Source: cloudawsparam
 
-The cloudawsparam data source allows you to retrieve the AWS integration parameters configured on the Citrix ADC, such as the IAM Role ARN that the appliance assumes when accessing AWS services. This is a singleton configuration, so no lookup argument is required.
+The cloudawsparam data source allows you to retrieve information about the AWS integration parameters configured on the Citrix ADC.
 
 
 ## Example usage

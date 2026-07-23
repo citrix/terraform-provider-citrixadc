@@ -4,9 +4,7 @@ subcategory: "Network"
 
 # Resource: vrid_interface_binding
 
-Binds a network interface to a Virtual Router ID (VRID) so that the interface participates in VRRP for that virtual router. Binding an interface associates the VRID's virtual MAC address (VMAC, of the form `00:00:5e:00:01:<VRID>`) with the interface, enabling the interface to carry traffic for the virtual router and to take over during a VRRP failover.
-
-Because a binding cannot be modified in place, every configurable attribute forces replacement: changing any attribute destroys the existing binding and creates a new one.
+This resource is used to bind a network interface to a Virtual Router ID (VRID).
 
 
 ## Example usage

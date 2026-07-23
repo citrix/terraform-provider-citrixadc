@@ -4,7 +4,7 @@ subcategory: "Basic"
 
 # Resource: dbsmonitors_restart
 
-The dbsmonitors_restart resource performs the NITRO `dbsmonitors` `restart` action, which restarts the database (DBS) monitors on the Citrix ADC. It is an action-only, zero-attribute resource: applying it triggers the restart, and there are no configurable arguments.
+This resource is used to restart the DBS monitors on the Citrix ADC.
 
 
 ## Example usage

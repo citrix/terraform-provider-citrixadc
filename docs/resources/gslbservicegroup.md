@@ -4,7 +4,7 @@ subcategory: "GSLB"
 
 # Resource: gslbservicegroup
 
-A GSLB (Global Server Load Balancing) service group groups together a set of GSLB service members that belong to the same GSLB site and share a common protocol and set of settings. Binding a service group to a GSLB virtual server lets the Citrix ADC distribute client traffic across data centers (sites) for disaster recovery, proximity-based routing, and capacity sharing, while managing the member services as a single logical unit. Use this resource to define the service group and its site-wide settings; individual members and monitor bindings are typically managed with the companion `citrixadc_gslbservicegroup_gslbservicegroupmember_binding` and `citrixadc_gslbservicegroup_lbmonitor_binding` resources.
+This resource is used to manage GSLB service groups.
 
 
 ## Example usage

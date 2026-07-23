@@ -4,9 +4,7 @@ subcategory: "System"
 
 # Resource: systemadmuserinfo
 
-Sets the admin-user name that the Citrix ADC records in its syslogs for the management session established between the ADC and Citrix Application Delivery Management (ADM) over SSH. Use this resource when you want the syslog entries generated during the ADC-to-ADM SSH session to be attributed to a specific adm-user account.
-
-~> **NOTE** Applying this resource sets the configured `username` for the admin-user info used in the ADC-to-ADM SSH session. Destroying the resource does not revert the adm-user info on the ADC, and importing it is not meaningful.
+This resource is used to manage the admin-user info logged for the ADC-to-ADM SSH session.
 
 
 ## Example usage

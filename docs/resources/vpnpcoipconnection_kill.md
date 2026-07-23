@@ -4,9 +4,9 @@ subcategory: "VPN"
 
 # Resource: vpnpcoipconnection_kill
 
-The vpnpcoipconnection_kill resource terminates (kills) active PCoIP connections that are tunneled through Citrix ADC (NetScaler) Gateway. It is an action-only resource: applying it invokes the NITRO `kill` action against the matching active PCoIP connections. Use it to forcibly disconnect a specific user's PCoIP sessions or to tear down all active PCoIP connections at once, for example when reclaiming licenses or evicting a stuck session.
+This resource is used to terminate active PCoIP connections tunneled through Citrix ADC Gateway.
 
-This resource does not manage a persistent object on the appliance. Each apply performs the kill; changing any argument re-triggers the kill action.
+~> **Action-only:** Applying this resource forcibly disconnects matching PCoIP connections; each apply re-triggers the kill.
 
 
 ## Example usage

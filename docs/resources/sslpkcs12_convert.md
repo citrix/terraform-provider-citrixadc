@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslpkcs12_convert
 
-The sslpkcs12_convert resource converts a certificate and private key to or from PKCS#12 format on the Citrix ADC. Use the import direction to extract a certificate-key pair from a PKCS#12 bundle into PEM format, or the export direction to package an existing PEM certificate and key into a PKCS#12 bundle.
-
-This resource performs a one-shot convert action (`?action=convert`). The operation reads source files from, and writes the output file to, the appliance filesystem. It is **non-idempotent**: re-applying re-runs the conversion, and importing this resource into Terraform is not meaningful.
+This resource is used to convert a certificate and private key to or from PKCS#12 format.
 
 
 ## Example usage
