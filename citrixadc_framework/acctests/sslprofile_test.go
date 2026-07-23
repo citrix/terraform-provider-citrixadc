@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -416,4 +417,212 @@ func TestAccSslprofile_sessionticketkeydata_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Unset support test
+//
+// Step 1 sets every unset-eligible attribute to a valid non-default value; step 2
+// removes them from the configuration, which must drive an ?action=unset so each
+// attribute reverts to its NITRO/schema default with an empty post-apply plan.
+//
+// Three of the 40 unset-eligible attributes are intentionally omitted from the
+// non-default set (their defaults are still exercised implicitly on every create,
+// so their unset wiring is still safe; they simply cannot be driven to a
+// non-default value from a self-contained front-end profile config):
+//   - dh: its only non-default value (ENABLED) requires a companion dhFile file
+//     ("Required argument missing [dhFile, dh==ENABLED]") that cannot be provided
+//     from a self-contained Terraform config; dh=DISABLED (default) applies fine.
+//   - serverauth: a backend-only attribute; setting it to ENABLED on the default
+//     (front-end) profile is rejected ("Specified parameters are not applicable
+//     for this type of SSL profile."); serverauth=DISABLED (default) applies fine.
+//   - skipclientcertpolicycheck: its non-default value (ENABLED) requires both
+//     clientAuth==ENABLED and clientCert==Mandatory, and clientCert==Mandatory in
+//     turn requires clientAuth==ENABLED. That coupling cannot coexist with
+//     unsetting clientauth in step 2, so it is omitted; its default (DISABLED)
+//     applies fine.
+// ---------------------------------------------------------------------------
+
+const testAccSslprofile_unset_step1 = `
+	resource "citrixadc_sslprofile" "tf_unset" {
+		name                              = "tf_test_sslprofile_unset"
+
+		allowextendedmastersecret         = "YES"
+		allowunknownsni                   = "ENABLED"
+		cipherredirect                    = "ENABLED"
+		clientauth                        = "ENABLED"
+		clientauthuseboundcachain         = "ENABLED"
+		denysslreneg                      = "NO"
+		dhekeyexchangewithpsk             = "YES"
+		dhkeyexpsizelimit                 = "ENABLED"
+		dropreqwithnohostheader           = "YES"
+		encryptedclienthello              = "ENABLED"
+		encrypttriggerpktcount            = 50
+		hsts                              = "ENABLED"
+		includesubdomains                 = "YES"
+		maxage                            = 100
+		maxrenegrate                      = 10
+		ocspstapling                      = "ENABLED"
+		preload                           = "YES"
+		prevsessionkeylifetime            = 100
+		pushenctriggertimeout             = 10
+		quantumsize                       = "16384"
+		redirectportrewrite               = "ENABLED"
+		sendclosenotify                   = "NO"
+		sessionticket                     = "ENABLED"
+		sessreuse                         = "DISABLED"
+		snienable                         = "ENABLED"
+		snihttphostmatch                  = "STRICT"
+		ssl3                              = "ENABLED"
+		sslclientlogs                     = "ENABLED"
+		sslimaxsessperserver              = 100
+		sslinterception                   = "ENABLED"
+		ssliocspcheck                     = "DISABLED"
+		sslireneg                         = "DISABLED"
+		sslredirect                       = "ENABLED"
+		ssltriggertimeout                 = 200
+		strictcachecks                    = "YES"
+		tls13sessionticketsperauthcontext = 2
+		zerorttearlydata                  = "ENABLED"
+	}
+`
+
+const testAccSslprofile_unset_step2 = `
+	resource "citrixadc_sslprofile" "tf_unset" {
+		name = "tf_test_sslprofile_unset"
+		# All unset-eligible attributes removed from config -> provider must unset them.
+	}
+`
+
+func TestAccSslprofile_unset(t *testing.T) {
+	// The resource's other CRUD/datasource tests run on the default standalone
+	// testbed without a skip guard, so this test mirrors that (no guard).
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccSslprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofileExist("citrixadc_sslprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "allowextendedmastersecret", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "allowunknownsni", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "cipherredirect", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "clientauth", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "clientauthuseboundcachain", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "denysslreneg", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "dhekeyexchangewithpsk", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "dhkeyexpsizelimit", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "dropreqwithnohostheader", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "encryptedclienthello", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "encrypttriggerpktcount", "50"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "hsts", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "includesubdomains", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "maxage", "100"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "maxrenegrate", "10"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "ocspstapling", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "preload", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "prevsessionkeylifetime", "100"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "pushenctriggertimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "quantumsize", "16384"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "redirectportrewrite", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sendclosenotify", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sessionticket", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sessreuse", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "snienable", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "snihttphostmatch", "STRICT"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "ssl3", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslclientlogs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslimaxsessperserver", "100"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslinterception", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "ssliocspcheck", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslireneg", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslredirect", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "ssltriggertimeout", "200"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "strictcachecks", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "tls13sessionticketsperauthcontext", "2"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "zerorttearlydata", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccSslprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofileExist("citrixadc_sslprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "allowextendedmastersecret", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "allowunknownsni", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "cipherredirect", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "clientauth", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "clientauthuseboundcachain", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "denysslreneg", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "dhekeyexchangewithpsk", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "dhkeyexpsizelimit", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "dropreqwithnohostheader", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "encryptedclienthello", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "encrypttriggerpktcount", "45"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "hsts", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "includesubdomains", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "maxage", "0"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "maxrenegrate", "0"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "ocspstapling", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "preload", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "prevsessionkeylifetime", "0"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "pushenctriggertimeout", "1"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "quantumsize", "8192"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "redirectportrewrite", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sendclosenotify", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sessionticket", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sessreuse", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "snienable", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "snihttphostmatch", "CERT"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "ssl3", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslclientlogs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslimaxsessperserver", "10"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslinterception", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "ssliocspcheck", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslireneg", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "sslredirect", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "ssltriggertimeout", "100"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "strictcachecks", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "tls13sessionticketsperauthcontext", "1"),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile.tf_unset", "zerorttearlydata", "DISABLED"),
+					// Independent appliance-level confirmation the unset actually reverted values.
+					testAccCheckSslprofileADCValue("tf_test_sslprofile_unset", "allowextendedmastersecret", "NO"),
+					testAccCheckSslprofileADCValue("tf_test_sslprofile_unset", "hsts", "DISABLED"),
+					testAccCheckSslprofileADCValue("tf_test_sslprofile_unset", "denysslreneg", "ALL"),
+					testAccCheckSslprofileADCValue("tf_test_sslprofile_unset", "encrypttriggerpktcount", "45"),
+					testAccCheckSslprofileADCValue("tf_test_sslprofile_unset", "quantumsize", "8192"),
+					testAccCheckSslprofileADCValue("tf_test_sslprofile_unset", "sendclosenotify", "YES"),
+					testAccCheckSslprofileADCValue("tf_test_sslprofile_unset", "sslimaxsessperserver", "10"),
+					testAccCheckSslprofileADCValue("tf_test_sslprofile_unset", "ssltriggertimeout", "100"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSslprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckSslprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("sslprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("sslprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

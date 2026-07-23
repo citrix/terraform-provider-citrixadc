@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -201,4 +202,130 @@ func TestAccNsextensionDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Unset test for the single unset-eligible attribute of nsextension: `trace`
+// (see resource_nsextension.go: `attributesToUnset = append(attributesToUnset,
+// "trace")`; schema Default is stringdefault.StaticString("off")).
+//
+// STRUCTURE NOTE (why 3 steps, not the 2-step template): `trace` is NOT part of
+// the Import (create) payload — nsextensionGetThePayloadFromthePlan sends only
+// name/src/overwrite/comment, and trace belongs exclusively to the update (PUT)
+// endpoint (nsextensionGetTheUpdatePayloadFromthePlan). So trace can only be set
+// via the Update path, and the unset wiring itself lives in Update. Setting trace
+// in the very first (Create) config would make Create import without trace and
+// then read back the appliance default, producing a state != plan mismatch. The
+// test therefore:
+//
+//	step1 - create with trace omitted        -> trace defaults to "off"
+//	step2 - set trace = "all"                 -> Update PUT applies it ("all")
+//	step3 - remove trace from config          -> Update issues ?action=unset,
+//	                                             reverting trace to "off"
+//
+// step3 also confirms the revert directly on the appliance and that the implicit
+// post-apply plan is empty (no perpetual diff).
+//
+// SKIP: gated with the identical t.Skip("TODO: Requires review") guard used by
+// every other nsextension test in this file. nsextension is created via the
+// NITRO ?action=Import endpoint, which requires `src` to point to a real,
+// reachable, and (for `add`) compilable .lua extension source staged on the
+// appliance. That source is a TODO_PLACEHOLDER ("local:tftest_extension.lua")
+// and has never been made real in the test harness, so the resource cannot be
+// created here and the unset flow cannot be exercised. This test skips on
+// exactly the same testbeds the rest of the resource's tests skip on. Remove the
+// guard (and stage a real .lua source in the config below) to run it live.
+//
+// TODO_PLACEHOLDER: replace `src` with a real reachable/compilable .lua extension
+// (see the note above the basic test) before removing the skip guard.
+const testAccNsextension_unset_step1_create = `
+resource "citrixadc_nsextension" "tf_unset" {
+  name    = "tf_test_nsextension_unset"
+  src     = "local:tftest_extension.lua"
+  comment = "nsextension unset acceptance test"
+  # trace omitted -> defaults to "off"
+}
+`
+
+const testAccNsextension_unset_step2_set = `
+resource "citrixadc_nsextension" "tf_unset" {
+  name    = "tf_test_nsextension_unset"
+  src     = "local:tftest_extension.lua"
+  comment = "nsextension unset acceptance test"
+  trace   = "all"
+}
+`
+
+const testAccNsextension_unset_step3_unset = `
+resource "citrixadc_nsextension" "tf_unset" {
+  name    = "tf_test_nsextension_unset"
+  src     = "local:tftest_extension.lua"
+  comment = "nsextension unset acceptance test"
+  # trace removed from config -> provider must ?action=unset it back to "off"
+}
+`
+
+func TestAccNsextension_unset(t *testing.T) {
+	// Mirror the identical skip guard used by every other nsextension test:
+	// the resource cannot be created without a real, compilable .lua extension
+	// source staged on the appliance (src is a TODO_PLACEHOLDER).
+	t.Skip("TODO: Requires review")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsextensionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create with trace omitted -> ADC default "off".
+				Config: testAccNsextension_unset_step1_create,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsextensionExist("citrixadc_nsextension.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsextension.tf_unset", "trace", "off"),
+				),
+			},
+			{
+				// Non-default value applies and persists.
+				Config: testAccNsextension_unset_step2_set,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsextensionExist("citrixadc_nsextension.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsextension.tf_unset", "trace", "all"),
+				),
+			},
+			{
+				// Removing trace must unset -> state reverts to the NITRO default,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccNsextension_unset_step3_unset,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsextensionExist("citrixadc_nsextension.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsextension.tf_unset", "trace", "off"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsextensionADCValue("tf_test_nsextension_unset", "trace", "off"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsextensionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. Mirrors testAccCheckNsextensionExist's use of FindResource (GET by name).
+func testAccCheckNsextensionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsextension.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsextension %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nsextension %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

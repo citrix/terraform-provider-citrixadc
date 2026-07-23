@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -313,6 +314,92 @@ func TestAccSystemuser_password_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Unset support test
+// ---------------------------------------------------------------------------
+
+// Step 1: unset-eligible attributes (externalauth, logging, timeout) set to
+// non-default values so we can prove they take effect.
+const testAccSystemuser_unset_step1 = `
+resource "citrixadc_systemuser" "tf_unset" {
+    username     = "tf_test_systemuser_unset"
+    password     = "tf_unset_password"
+    externalauth = "DISABLED"
+    logging      = "ENABLED"
+    timeout      = 300
+}
+`
+
+// Step 2: the unset-eligible attributes are removed from configuration, so the
+// provider must issue ?action=unset and the appliance reverts each to its
+// default (externalauth=ENABLED, logging=DISABLED, timeout=900).
+const testAccSystemuser_unset_step2 = `
+resource "citrixadc_systemuser" "tf_unset" {
+    username = "tf_test_systemuser_unset"
+    password = "tf_unset_password"
+}
+`
+
+func TestAccSystemuser_unset(t *testing.T) {
+	// No skip guards on the other systemuser tests: they run on the default
+	// standalone testbed, so this test mirrors that (no guard).
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccSystemuser_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_unset", "externalauth", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_unset", "logging", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_unset", "timeout", "300"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccSystemuser_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuserExist("citrixadc_systemuser.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_unset", "externalauth", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_unset", "logging", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemuser.tf_unset", "timeout", "900"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSystemuserADCValue("tf_test_systemuser_unset", "externalauth", "ENABLED"),
+					testAccCheckSystemuserADCValue("tf_test_systemuser_unset", "logging", "DISABLED"),
+					testAccCheckSystemuserADCValue("tf_test_systemuser_unset", "timeout", "900"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSystemuserADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckSystemuserADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Systemuser.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("systemuser %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("systemuser %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSystemuser_sdkv2StateUpgrade(t *testing.T) {

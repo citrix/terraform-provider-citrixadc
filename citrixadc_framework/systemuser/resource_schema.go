@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -57,6 +58,7 @@ func (r *SystemuserResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"externalauth": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Whether to use external authentication servers for the system user authentication or not",
 			},
 			"hashedpassword": schema.StringAttribute{
@@ -67,6 +69,7 @@ func (r *SystemuserResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"logging": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Users logging privilege",
 			},
 			"maxsession": schema.Int64Attribute{
@@ -99,6 +102,7 @@ func (r *SystemuserResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(900),
 				Description: "CLI session inactivity timeout, in seconds. If Restrictedtimeout argument of system parameter is enabled, Timeout can have values in the range [300-86400] seconds. If Restrictedtimeout argument of system parameter is disabled, Timeout can have values in the range [0, 10-100000000] seconds. Default value is 900 seconds.",
 			},
 			"username": schema.StringAttribute{

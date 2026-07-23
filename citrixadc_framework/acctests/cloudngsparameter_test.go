@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -169,4 +170,85 @@ func TestAccCloudngsparameterDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Step 1: all unset-eligible attributes set to non-default values.
+const testAccCloudngsparameter_unset_step1 = `
+	resource "citrixadc_cloudngsparameter" "tf_unset" {
+		allowdtls12                = "YES"
+		allowedudtversion          = "V5"
+		blockonallowedngstktprof   = "YES"
+		csvserverticketingdecouple = "YES"
+	}
+`
+
+// Step 2: eligible attributes removed from config -> provider must unset them,
+// reverting each to its NITRO default.
+const testAccCloudngsparameter_unset_step2 = `
+	resource "citrixadc_cloudngsparameter" "tf_unset" {
+	}
+`
+
+func TestAccCloudngsparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton resource: it always exists on the ADC and is never deleted,
+		// so no CheckDestroy is used.
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccCloudngsparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudngsparameterExist("citrixadc_cloudngsparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cloudngsparameter.tf_unset", "allowdtls12", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_cloudngsparameter.tf_unset", "allowedudtversion", "V5"),
+					resource.TestCheckResourceAttr("citrixadc_cloudngsparameter.tf_unset", "blockonallowedngstktprof", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_cloudngsparameter.tf_unset", "csvserverticketingdecouple", "YES"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccCloudngsparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudngsparameterExist("citrixadc_cloudngsparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cloudngsparameter.tf_unset", "allowdtls12", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_cloudngsparameter.tf_unset", "allowedudtversion", "V4"),
+					resource.TestCheckResourceAttr("citrixadc_cloudngsparameter.tf_unset", "blockonallowedngstktprof", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_cloudngsparameter.tf_unset", "csvserverticketingdecouple", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCloudngsparameterADCValue("allowdtls12", "NO"),
+					testAccCheckCloudngsparameterADCValue("allowedudtversion", "V4"),
+					testAccCheckCloudngsparameterADCValue("blockonallowedngstktprof", "NO"),
+					testAccCheckCloudngsparameterADCValue("csvserverticketingdecouple", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCloudngsparameterADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. cloudngsparameter is a singleton, so it is read with an empty name.
+func testAccCheckCloudngsparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Cloudngsparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("cloudngsparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("cloudngsparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }

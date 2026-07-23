@@ -134,9 +134,14 @@ func (r *AnalyticsprofileResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Allhttpheaders.Equal(state.Allhttpheaders) {
 		tflog.Debug(ctx, fmt.Sprintf("allhttpheaders has changed for analyticsprofile"))
-		hasChange = true
+		if config.Allhttpheaders.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "allhttpheaders")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute analyticsauthtoken or its version tracker
 	if !data.Analyticsauthtoken.Equal(state.Analyticsauthtoken) {
@@ -180,23 +185,43 @@ func (r *AnalyticsprofileResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Grpcstatus.Equal(state.Grpcstatus) {
 		tflog.Debug(ctx, fmt.Sprintf("grpcstatus has changed for analyticsprofile"))
-		hasChange = true
+		if config.Grpcstatus.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "grpcstatus")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpauthentication.Equal(state.Httpauthentication) {
 		tflog.Debug(ctx, fmt.Sprintf("httpauthentication has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpauthentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpauthentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpclientsidemeasurements.Equal(state.Httpclientsidemeasurements) {
 		tflog.Debug(ctx, fmt.Sprintf("httpclientsidemeasurements has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpclientsidemeasurements.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpclientsidemeasurements")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpcontenttype.Equal(state.Httpcontenttype) {
 		tflog.Debug(ctx, fmt.Sprintf("httpcontenttype has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpcontenttype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpcontenttype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpcookie.Equal(state.Httpcookie) {
 		tflog.Debug(ctx, fmt.Sprintf("httpcookie has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpcookie.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpcookie")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpcustomheaders.Equal(state.Httpcustomheaders) {
 		tflog.Debug(ctx, fmt.Sprintf("httpcustomheaders has changed for analyticsprofile"))
@@ -204,59 +229,115 @@ func (r *AnalyticsprofileResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Httpdomainname.Equal(state.Httpdomainname) {
 		tflog.Debug(ctx, fmt.Sprintf("httpdomainname has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpdomainname.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpdomainname")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httphost.Equal(state.Httphost) {
 		tflog.Debug(ctx, fmt.Sprintf("httphost has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httphost.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httphost")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httplocation.Equal(state.Httplocation) {
 		tflog.Debug(ctx, fmt.Sprintf("httplocation has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httplocation.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httplocation")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpmethod.Equal(state.Httpmethod) {
 		tflog.Debug(ctx, fmt.Sprintf("httpmethod has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpmethod")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httppagetracking.Equal(state.Httppagetracking) {
 		tflog.Debug(ctx, fmt.Sprintf("httppagetracking has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httppagetracking.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httppagetracking")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpreferer.Equal(state.Httpreferer) {
 		tflog.Debug(ctx, fmt.Sprintf("httpreferer has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpreferer.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpreferer")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpsetcookie.Equal(state.Httpsetcookie) {
 		tflog.Debug(ctx, fmt.Sprintf("httpsetcookie has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpsetcookie.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpsetcookie")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpsetcookie2.Equal(state.Httpsetcookie2) {
 		tflog.Debug(ctx, fmt.Sprintf("httpsetcookie2 has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpsetcookie2.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpsetcookie2")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpurl.Equal(state.Httpurl) {
 		tflog.Debug(ctx, fmt.Sprintf("httpurl has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpurl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpurl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpurlquery.Equal(state.Httpurlquery) {
 		tflog.Debug(ctx, fmt.Sprintf("httpurlquery has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpurlquery.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpurlquery")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpuseragent.Equal(state.Httpuseragent) {
 		tflog.Debug(ctx, fmt.Sprintf("httpuseragent has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpuseragent.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpuseragent")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpvia.Equal(state.Httpvia) {
 		tflog.Debug(ctx, fmt.Sprintf("httpvia has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpvia.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpvia")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpxforwardedforheader.Equal(state.Httpxforwardedforheader) {
 		tflog.Debug(ctx, fmt.Sprintf("httpxforwardedforheader has changed for analyticsprofile"))
-		hasChange = true
+		if config.Httpxforwardedforheader.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpxforwardedforheader")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Integratedcache.Equal(state.Integratedcache) {
 		tflog.Debug(ctx, fmt.Sprintf("integratedcache has changed for analyticsprofile"))
-		hasChange = true
+		if config.Integratedcache.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "integratedcache")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Managementlog.Equal(state.Managementlog) {
 		tflog.Debug(ctx, fmt.Sprintf("managementlog has changed for analyticsprofile"))
@@ -296,7 +377,11 @@ func (r *AnalyticsprofileResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Urlcategory.Equal(state.Urlcategory) {
 		tflog.Debug(ctx, fmt.Sprintf("urlcategory has changed for analyticsprofile"))
-		hasChange = true
+		if config.Urlcategory.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "urlcategory")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -317,6 +402,17 @@ func (r *AnalyticsprofileResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated analyticsprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for analyticsprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Analyticsprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset analyticsprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

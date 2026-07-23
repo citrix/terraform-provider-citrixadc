@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -307,6 +308,81 @@ func TestAccAaatacacsparams_import(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: step1 sets the unset-eligible attributes (serverport, authtimeout)
+// to non-default values; step2 removes them from config so the provider must issue
+// ?action=unset and the appliance reverts each to its NITRO default (serverport=49,
+// authtimeout=3). The implicit post-apply plan on step2 must be empty (no perpetual diff).
+const testAccAaatacacsparams_unset_step1 = `
+resource "citrixadc_aaatacacsparams" "tf_unset" {
+	serverip    = "10.222.74.200"
+	serverport  = 88
+	authtimeout = 10
+}
+`
+
+const testAccAaatacacsparams_unset_step2 = `
+resource "citrixadc_aaatacacsparams" "tf_unset" {
+	serverip = "10.222.74.200"
+	# serverport and authtimeout removed from config -> provider must unset them
+}
+`
+
+func TestAccAaatacacsparams_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAaatacacsparams_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaatacacsparamsExist("citrixadc_aaatacacsparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaatacacsparams.tf_unset", "serverport", "88"),
+					resource.TestCheckResourceAttr("citrixadc_aaatacacsparams.tf_unset", "authtimeout", "10"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAaatacacsparams_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaatacacsparamsExist("citrixadc_aaatacacsparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaatacacsparams.tf_unset", "serverport", "49"),
+					resource.TestCheckResourceAttr("citrixadc_aaatacacsparams.tf_unset", "authtimeout", "3"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAaatacacsparamsADCValue("serverport", "49"),
+					testAccCheckAaatacacsparamsADCValue("authtimeout", "3"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAaatacacsparamsADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+// aaatacacsparams is a singleton (params) resource, so it is fetched with an empty name.
+func testAccCheckAaatacacsparamsADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaatacacsparams.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("aaatacacsparams not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("aaatacacsparams: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAaatacacsparams_sdkv2StateUpgrade(t *testing.T) {

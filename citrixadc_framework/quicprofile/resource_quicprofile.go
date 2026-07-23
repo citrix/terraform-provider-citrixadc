@@ -107,12 +107,14 @@ func (r *QuicprofileResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *QuicprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state QuicprofileResourceModel
+	var data, state, config QuicprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,73 +127,143 @@ func (r *QuicprofileResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	// Collect eligible attributes removed from config so they can be unset (reverted to ADC default)
+	attributesToUnset := []string{}
 	if !data.Ackdelayexponent.Equal(state.Ackdelayexponent) {
 		tflog.Debug(ctx, fmt.Sprintf("ackdelayexponent has changed for quicprofile"))
-		hasChange = true
+		if config.Ackdelayexponent.IsNull() {
+			attributesToUnset = append(attributesToUnset, "ackdelayexponent")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Activeconnectionidlimit.Equal(state.Activeconnectionidlimit) {
 		tflog.Debug(ctx, fmt.Sprintf("activeconnectionidlimit has changed for quicprofile"))
-		hasChange = true
+		if config.Activeconnectionidlimit.IsNull() {
+			attributesToUnset = append(attributesToUnset, "activeconnectionidlimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Activeconnectionmigration.Equal(state.Activeconnectionmigration) {
 		tflog.Debug(ctx, fmt.Sprintf("activeconnectionmigration has changed for quicprofile"))
-		hasChange = true
+		if config.Activeconnectionmigration.IsNull() {
+			attributesToUnset = append(attributesToUnset, "activeconnectionmigration")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Congestionctrlalgorithm.Equal(state.Congestionctrlalgorithm) {
 		tflog.Debug(ctx, fmt.Sprintf("congestionctrlalgorithm has changed for quicprofile"))
-		hasChange = true
+		if config.Congestionctrlalgorithm.IsNull() {
+			attributesToUnset = append(attributesToUnset, "congestionctrlalgorithm")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Initialmaxdata.Equal(state.Initialmaxdata) {
 		tflog.Debug(ctx, fmt.Sprintf("initialmaxdata has changed for quicprofile"))
-		hasChange = true
+		if config.Initialmaxdata.IsNull() {
+			attributesToUnset = append(attributesToUnset, "initialmaxdata")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Initialmaxstreamdatabidilocal.Equal(state.Initialmaxstreamdatabidilocal) {
 		tflog.Debug(ctx, fmt.Sprintf("initialmaxstreamdatabidilocal has changed for quicprofile"))
-		hasChange = true
+		if config.Initialmaxstreamdatabidilocal.IsNull() {
+			attributesToUnset = append(attributesToUnset, "initialmaxstreamdatabidilocal")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Initialmaxstreamdatabidiremote.Equal(state.Initialmaxstreamdatabidiremote) {
 		tflog.Debug(ctx, fmt.Sprintf("initialmaxstreamdatabidiremote has changed for quicprofile"))
-		hasChange = true
+		if config.Initialmaxstreamdatabidiremote.IsNull() {
+			attributesToUnset = append(attributesToUnset, "initialmaxstreamdatabidiremote")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Initialmaxstreamdatauni.Equal(state.Initialmaxstreamdatauni) {
 		tflog.Debug(ctx, fmt.Sprintf("initialmaxstreamdatauni has changed for quicprofile"))
-		hasChange = true
+		if config.Initialmaxstreamdatauni.IsNull() {
+			attributesToUnset = append(attributesToUnset, "initialmaxstreamdatauni")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Initialmaxstreamsbidi.Equal(state.Initialmaxstreamsbidi) {
 		tflog.Debug(ctx, fmt.Sprintf("initialmaxstreamsbidi has changed for quicprofile"))
-		hasChange = true
+		if config.Initialmaxstreamsbidi.IsNull() {
+			attributesToUnset = append(attributesToUnset, "initialmaxstreamsbidi")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Initialmaxstreamsuni.Equal(state.Initialmaxstreamsuni) {
 		tflog.Debug(ctx, fmt.Sprintf("initialmaxstreamsuni has changed for quicprofile"))
-		hasChange = true
+		if config.Initialmaxstreamsuni.IsNull() {
+			attributesToUnset = append(attributesToUnset, "initialmaxstreamsuni")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxackdelay.Equal(state.Maxackdelay) {
 		tflog.Debug(ctx, fmt.Sprintf("maxackdelay has changed for quicprofile"))
-		hasChange = true
+		if config.Maxackdelay.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxackdelay")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxidletimeout.Equal(state.Maxidletimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("maxidletimeout has changed for quicprofile"))
-		hasChange = true
+		if config.Maxidletimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxidletimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxudpdatagramsperburst.Equal(state.Maxudpdatagramsperburst) {
 		tflog.Debug(ctx, fmt.Sprintf("maxudpdatagramsperburst has changed for quicprofile"))
-		hasChange = true
+		if config.Maxudpdatagramsperburst.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxudpdatagramsperburst")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxudppayloadsize.Equal(state.Maxudppayloadsize) {
 		tflog.Debug(ctx, fmt.Sprintf("maxudppayloadsize has changed for quicprofile"))
-		hasChange = true
+		if config.Maxudppayloadsize.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxudppayloadsize")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Newtokenvalidityperiod.Equal(state.Newtokenvalidityperiod) {
 		tflog.Debug(ctx, fmt.Sprintf("newtokenvalidityperiod has changed for quicprofile"))
-		hasChange = true
+		if config.Newtokenvalidityperiod.IsNull() {
+			attributesToUnset = append(attributesToUnset, "newtokenvalidityperiod")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Retrytokenvalidityperiod.Equal(state.Retrytokenvalidityperiod) {
 		tflog.Debug(ctx, fmt.Sprintf("retrytokenvalidityperiod has changed for quicprofile"))
-		hasChange = true
+		if config.Retrytokenvalidityperiod.IsNull() {
+			attributesToUnset = append(attributesToUnset, "retrytokenvalidityperiod")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Statelessaddressvalidation.Equal(state.Statelessaddressvalidation) {
 		tflog.Debug(ctx, fmt.Sprintf("statelessaddressvalidation has changed for quicprofile"))
-		hasChange = true
+		if config.Statelessaddressvalidation.IsNull() {
+			attributesToUnset = append(attributesToUnset, "statelessaddressvalidation")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -209,6 +281,16 @@ func (r *QuicprofileResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated quicprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for quicprofile resource, skipping update")
+	}
+
+	// Unset (revert to ADC default) any eligible attributes removed from config.
+	// Update-then-unset ordering ensures any default carried in the update payload is superseded.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Quicprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset quicprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

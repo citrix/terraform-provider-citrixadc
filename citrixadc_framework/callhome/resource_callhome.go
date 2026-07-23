@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -95,12 +97,14 @@ func (r *CallhomeResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *CallhomeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state CallhomeResourceModel
+	var data, state, config CallhomeResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -113,13 +117,20 @@ func (r *CallhomeResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	// Collect eligible attributes removed from config so they can be reverted
+	// to their ADC defaults via a single ?action=unset call.
+	attributesToUnset := []string{}
 	if !data.Emailaddress.Equal(state.Emailaddress) {
 		tflog.Debug(ctx, fmt.Sprintf("emailaddress has changed for callhome"))
 		hasChange = true
 	}
 	if !data.Hbcustominterval.Equal(state.Hbcustominterval) {
 		tflog.Debug(ctx, fmt.Sprintf("hbcustominterval has changed for callhome"))
-		hasChange = true
+		if config.Hbcustominterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "hbcustominterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ipaddress.Equal(state.Ipaddress) {
 		tflog.Debug(ctx, fmt.Sprintf("ipaddress has changed for callhome"))
@@ -127,7 +138,11 @@ func (r *CallhomeResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Mode.Equal(state.Mode) {
 		tflog.Debug(ctx, fmt.Sprintf("mode has changed for callhome"))
-		hasChange = true
+		if config.Mode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "mode")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Port.Equal(state.Port) {
 		tflog.Debug(ctx, fmt.Sprintf("port has changed for callhome"))
@@ -139,7 +154,11 @@ func (r *CallhomeResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Proxymode.Equal(state.Proxymode) {
 		tflog.Debug(ctx, fmt.Sprintf("proxymode has changed for callhome"))
-		hasChange = true
+		if config.Proxymode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proxymode")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -156,6 +175,15 @@ func (r *CallhomeResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated callhome resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for callhome resource, skipping update")
+	}
+
+	// Unset attributes that were removed from configuration (revert to ADC defaults).
+	// update-then-unset ordering ensures any default carried in the update payload is superseded.
+	// callhome is a singleton resource: no identity fields required in the unset payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Callhome.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset callhome attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

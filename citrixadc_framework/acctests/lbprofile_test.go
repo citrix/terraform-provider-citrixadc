@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -355,4 +356,100 @@ func TestAccLbprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Step 1: all unset-eligible attributes set to non-default (valid) values.
+const testAccLbprofile_unset_step1 = `
+resource "citrixadc_lbprofile" "tf_unset" {
+	lbprofilename                 = "tf_test_lbprofile_unset"
+	dbslb                         = "ENABLED"
+	httponlycookieflag            = "DISABLED"
+	lbhashalgorithm               = "PRAC"
+	lbhashfingers                 = 258
+	processlocal                  = "ENABLED"
+	proximityfromself             = "YES"
+	storemqttclientidandusername  = "YES"
+	useencryptedpersistencecookie = "ENABLED"
+}
+`
+
+// Step 2: all unset-eligible attributes removed from config -> provider must
+// issue ?action=unset so each reverts to its NITRO/schema default.
+const testAccLbprofile_unset_step2 = `
+resource "citrixadc_lbprofile" "tf_unset" {
+	lbprofilename = "tf_test_lbprofile_unset"
+}
+`
+
+func TestAccLbprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccLbprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbprofileExist("citrixadc_lbprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "dbslb", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "httponlycookieflag", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "lbhashalgorithm", "PRAC"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "lbhashfingers", "258"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "processlocal", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "proximityfromself", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "storemqttclientidandusername", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "useencryptedpersistencecookie", "ENABLED"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccLbprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbprofileExist("citrixadc_lbprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "dbslb", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "httponlycookieflag", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "lbhashalgorithm", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "lbhashfingers", "256"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "processlocal", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "proximityfromself", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "storemqttclientidandusername", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_lbprofile.tf_unset", "useencryptedpersistencecookie", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLbprofileADCValue("tf_test_lbprofile_unset", "dbslb", "DISABLED"),
+					testAccCheckLbprofileADCValue("tf_test_lbprofile_unset", "httponlycookieflag", "ENABLED"),
+					testAccCheckLbprofileADCValue("tf_test_lbprofile_unset", "lbhashalgorithm", "DEFAULT"),
+					testAccCheckLbprofileADCValue("tf_test_lbprofile_unset", "lbhashfingers", "256"),
+					testAccCheckLbprofileADCValue("tf_test_lbprofile_unset", "processlocal", "DISABLED"),
+					testAccCheckLbprofileADCValue("tf_test_lbprofile_unset", "proximityfromself", "NO"),
+					testAccCheckLbprofileADCValue("tf_test_lbprofile_unset", "storemqttclientidandusername", "NO"),
+					testAccCheckLbprofileADCValue("tf_test_lbprofile_unset", "useencryptedpersistencecookie", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLbprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckLbprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("lbprofile", name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lbprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lbprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

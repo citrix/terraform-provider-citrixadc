@@ -133,6 +133,7 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Accounting.Equal(state.Accounting) {
 		tflog.Debug(ctx, fmt.Sprintf("accounting has changed for aaatacacsparams"))
 		hasChange = true
@@ -147,7 +148,11 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Authtimeout.Equal(state.Authtimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("authtimeout has changed for aaatacacsparams"))
-		hasChange = true
+		if config.Authtimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authtimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for aaatacacsparams"))
@@ -163,7 +168,11 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Serverport.Equal(state.Serverport) {
 		tflog.Debug(ctx, fmt.Sprintf("serverport has changed for aaatacacsparams"))
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute tacacssecret or its version tracker
 	if !data.Tacacssecret.Equal(state.Tacacssecret) {
@@ -191,6 +200,16 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated aaatacacsparams resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for aaatacacsparams resource, skipping update")
+	}
+
+	// Issue a single batched unset for attributes removed from config so the
+	// appliance reverts them to their defaults. Update-then-unset ordering
+	// ensures any default carried in the update payload is superseded.
+	// aaatacacsparams is a singleton (params) resource with no identity fields.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Aaatacacsparams.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaatacacsparams attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

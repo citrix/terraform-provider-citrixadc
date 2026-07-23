@@ -55,6 +55,7 @@ func (r *AuthenticationcaptchaactionResource) Schema(ctx context.Context, req re
 			"scorethreshold": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "This is the score threshold value for recaptcha v3.",
 			},
 			"secretkey": schema.StringAttribute{

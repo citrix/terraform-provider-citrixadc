@@ -131,13 +131,18 @@ func (r *MetricsprofileResource) Update(ctx context.Context, req resource.Update
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Collector.Equal(state.Collector) {
 		tflog.Debug(ctx, fmt.Sprintf("collector has changed for metricsprofile"))
 		hasChange = true
 	}
 	if !data.Metrics.Equal(state.Metrics) {
 		tflog.Debug(ctx, fmt.Sprintf("metrics has changed for metricsprofile"))
-		hasChange = true
+		if config.Metrics.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "metrics")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute metricsauthtoken or its version tracker
 	if !data.Metricsauthtoken.Equal(state.Metricsauthtoken) {
@@ -153,11 +158,19 @@ func (r *MetricsprofileResource) Update(ctx context.Context, req resource.Update
 	}
 	if !data.Metricsexportfrequency.Equal(state.Metricsexportfrequency) {
 		tflog.Debug(ctx, fmt.Sprintf("metricsexportfrequency has changed for metricsprofile"))
-		hasChange = true
+		if config.Metricsexportfrequency.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "metricsexportfrequency")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Outputmode.Equal(state.Outputmode) {
 		tflog.Debug(ctx, fmt.Sprintf("outputmode has changed for metricsprofile"))
-		hasChange = true
+		if config.Outputmode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "outputmode")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Schemafile.Equal(state.Schemafile) {
 		tflog.Debug(ctx, fmt.Sprintf("schemafile has changed for metricsprofile"))
@@ -165,7 +178,11 @@ func (r *MetricsprofileResource) Update(ctx context.Context, req resource.Update
 	}
 	if !data.Servemode.Equal(state.Servemode) {
 		tflog.Debug(ctx, fmt.Sprintf("servemode has changed for metricsprofile"))
-		hasChange = true
+		if config.Servemode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "servemode")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -186,6 +203,17 @@ func (r *MetricsprofileResource) Update(ctx context.Context, req resource.Update
 		tflog.Trace(ctx, "Updated metricsprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for metricsprofile resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	// Update-then-unset ordering ensures any default value carried in the update
+	// payload for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Metricsprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset metricsprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

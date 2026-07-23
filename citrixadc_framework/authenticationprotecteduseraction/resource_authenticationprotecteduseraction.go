@@ -109,12 +109,14 @@ func (r *AuthenticationprotecteduseractionResource) Read(ctx context.Context, re
 }
 
 func (r *AuthenticationprotecteduseractionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationprotecteduseractionResourceModel
+	var data, state, config AuthenticationprotecteduseractionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,9 +129,14 @@ func (r *AuthenticationprotecteduseractionResource) Update(ctx context.Context, 
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Maxconcurrentusers.Equal(state.Maxconcurrentusers) {
 		tflog.Debug(ctx, fmt.Sprintf("maxconcurrentusers has changed for authenticationprotecteduseraction"))
-		hasChange = true
+		if config.Maxconcurrentusers.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxconcurrentusers")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Realmstr.Equal(state.Realmstr) {
 		tflog.Debug(ctx, fmt.Sprintf("realmstr has changed for authenticationprotecteduseraction"))
@@ -151,6 +158,16 @@ func (r *AuthenticationprotecteduseractionResource) Update(ctx context.Context, 
 		tflog.Trace(ctx, "Updated authenticationprotecteduseraction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationprotecteduseraction resource, skipping update")
+	}
+
+	// Unset attributes removed from configuration so they revert to ADC defaults.
+	// Update-then-unset ordering: the unset supersedes any default carried in the update payload.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationprotecteduseraction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationprotecteduseraction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

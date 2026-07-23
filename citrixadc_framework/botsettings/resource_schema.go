@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -47,6 +48,7 @@ func (r *BotsettingsResource) Schema(ctx context.Context, req resource.SchemaReq
 			"defaultnonintrusiveprofile": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("BOT_STATS"),
 				Description: "Profile to use when the feature is not enabled but feature is licensed. NonIntrusive checks will be disabled and IPRep cronjob(24 Hours) will be removed if this is set to BOT_BYPASS.",
 			},
 			"defaultprofile": schema.StringAttribute{
@@ -84,6 +86,7 @@ func (r *BotsettingsResource) Schema(ctx context.Context, req resource.SchemaReq
 			"proxyport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(8080),
 				Description: "Proxy Server Port to get updated signatures from AWS.",
 			},
 			"proxyserver": schema.StringAttribute{
@@ -109,26 +112,31 @@ func (r *BotsettingsResource) Schema(ctx context.Context, req resource.SchemaReq
 			"signatureautoupdate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Flag used to enable/disable bot auto update signatures",
 			},
 			"signatureurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("https://nsbotsignatures.s3.amazonaws.com/BotSignatureMapping.json"),
 				Description: "URL to download the bot signature mapping file from server",
 			},
 			"trapurlautogenerate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable/disable trap URL auto generation. When enabled, trap URL is updated within the configured interval.",
 			},
 			"trapurlinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3600),
 				Description: "Time in seconds after which trap URL is updated.",
 			},
 			"trapurllength": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(32),
 				Description: "Length of the auto-generated trap URL.",
 			},
 		},

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -36,6 +37,7 @@ func (r *VideooptimizationparameterResource) Schema(ctx context.Context, req res
 			"randomsamplingpercentage": schema.Float64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     float64default.StaticFloat64(0),
 				Description: "Random Sampling Percentage.",
 			},
 		},

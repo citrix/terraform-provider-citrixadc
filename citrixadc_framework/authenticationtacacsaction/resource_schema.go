@@ -162,6 +162,7 @@ func (r *AuthenticationtacacsactionResource) Schema(ctx context.Context, req res
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Number of seconds the Citrix ADC waits for a response from the TACACS+ server.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -189,6 +190,7 @@ func (r *AuthenticationtacacsactionResource) Schema(ctx context.Context, req res
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(49),
 				Description: "Port number on which the TACACS+ server listens for connections.",
 			},
 			"tacacssecret": schema.StringAttribute{

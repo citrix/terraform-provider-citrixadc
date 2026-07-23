@@ -134,6 +134,7 @@ func (r *NsencryptionkeyResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, fmt.Sprintf("comment has changed for nsencryptionkey"))
 		hasChange = true
@@ -156,7 +157,11 @@ func (r *NsencryptionkeyResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Padding.Equal(state.Padding) {
 		tflog.Debug(ctx, fmt.Sprintf("padding has changed for nsencryptionkey"))
-		hasChange = true
+		if config.Padding.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "padding")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -177,6 +182,17 @@ func (r *NsencryptionkeyResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated nsencryptionkey resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nsencryptionkey resource, skipping update")
+	}
+
+	// Unset any attributes that were removed from the configuration.
+	// Update-then-unset ordering ensures a removed attribute is reverted to its
+	// ADC default even if the update payload carried a value for it.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsencryptionkey.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsencryptionkey attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -152,9 +152,14 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Authentication.Equal(state.Authentication) {
 		tflog.Debug(ctx, fmt.Sprintf("authentication has changed for authenticationazurekeyvault"))
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientid.Equal(state.Clientid) {
 		tflog.Debug(ctx, fmt.Sprintf("clientid has changed for authenticationazurekeyvault"))
@@ -178,7 +183,11 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 	}
 	if !data.Refreshinterval.Equal(state.Refreshinterval) {
 		tflog.Debug(ctx, fmt.Sprintf("refreshinterval has changed for authenticationazurekeyvault"))
-		hasChange = true
+		if config.Refreshinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refreshinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Servicekeyname.Equal(state.Servicekeyname) {
 		tflog.Debug(ctx, fmt.Sprintf("servicekeyname has changed for authenticationazurekeyvault"))
@@ -186,7 +195,11 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 	}
 	if !data.Signaturealg.Equal(state.Signaturealg) {
 		tflog.Debug(ctx, fmt.Sprintf("signaturealg has changed for authenticationazurekeyvault"))
-		hasChange = true
+		if config.Signaturealg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "signaturealg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tenantid.Equal(state.Tenantid) {
 		tflog.Debug(ctx, fmt.Sprintf("tenantid has changed for authenticationazurekeyvault"))
@@ -219,6 +232,15 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 		tflog.Trace(ctx, "Updated authenticationazurekeyvault resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationazurekeyvault resource, skipping update")
+	}
+
+	// Unset attributes that were removed from configuration (update-then-unset ordering)
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationazurekeyvault.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationazurekeyvault attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

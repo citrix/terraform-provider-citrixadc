@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -318,6 +320,78 @@ func TestAccNsencryptionkey_keyvalue_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+// --- Unset test for the padding attribute ---
+
+const testAccNsencryptionkey_unset_step1 = `
+	resource "citrixadc_nsencryptionkey" "tf_unset" {
+		name     = "tf_test_nsencryptionkey_unset"
+		method   = "AES256"
+		keyvalue = "26ea5537b7e0746089476e5658f9327c0b10c3b4778c673a5b38cee182874711"
+		padding  = "ON"
+	}
+`
+
+const testAccNsencryptionkey_unset_step2 = `
+	resource "citrixadc_nsencryptionkey" "tf_unset" {
+		name     = "tf_test_nsencryptionkey_unset"
+		method   = "AES256"
+		keyvalue = "26ea5537b7e0746089476e5658f9327c0b10c3b4778c673a5b38cee182874711"
+		# padding removed from config -> provider must unset it (revert to DEFAULT)
+	}
+`
+
+func TestAccNsencryptionkey_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsencryptionkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applies and persists.
+				Config: testAccNsencryptionkey_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionkeyExist("citrixadc_nsencryptionkey.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionkey.tf_unset", "padding", "ON"),
+				),
+			},
+			{
+				// Removing padding must unset -> state reverts to NITRO default,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccNsencryptionkey_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionkeyExist("citrixadc_nsencryptionkey.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsencryptionkey.tf_unset", "padding", "DEFAULT"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsencryptionkeyADCValue("tf_test_nsencryptionkey_unset", "padding", "DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsencryptionkeyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNsencryptionkeyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsencryptionkey.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsencryptionkey %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nsencryptionkey %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNsencryptionkey_sdkv2StateUpgrade(t *testing.T) {

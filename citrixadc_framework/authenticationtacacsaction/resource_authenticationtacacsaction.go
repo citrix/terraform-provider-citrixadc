@@ -134,6 +134,7 @@ func (r *AuthenticationtacacsactionResource) Update(ctx context.Context, req res
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Accounting.Equal(state.Accounting) {
 		tflog.Debug(ctx, fmt.Sprintf("accounting has changed for authenticationtacacsaction"))
 		hasChange = true
@@ -216,7 +217,11 @@ func (r *AuthenticationtacacsactionResource) Update(ctx context.Context, req res
 	}
 	if !data.Authtimeout.Equal(state.Authtimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("authtimeout has changed for authenticationtacacsaction"))
-		hasChange = true
+		if config.Authtimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authtimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for authenticationtacacsaction"))
@@ -232,7 +237,11 @@ func (r *AuthenticationtacacsactionResource) Update(ctx context.Context, req res
 	}
 	if !data.Serverport.Equal(state.Serverport) {
 		tflog.Debug(ctx, fmt.Sprintf("serverport has changed for authenticationtacacsaction"))
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute tacacssecret or its version tracker
 	if !data.Tacacssecret.Equal(state.Tacacssecret) {
@@ -261,6 +270,16 @@ func (r *AuthenticationtacacsactionResource) Update(ctx context.Context, req res
 		tflog.Trace(ctx, "Updated authenticationtacacsaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationtacacsaction resource, skipping update")
+	}
+
+	// Issue a single batched unset for attributes removed from config so the
+	// appliance reverts them to their defaults (update-then-unset ordering).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationtacacsaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationtacacsaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

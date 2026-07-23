@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -446,6 +448,83 @@ func TestAccAuthenticationcaptchaaction_sitekey_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+// ---- unset support test ----
+
+// Step 1: scorethreshold set to a non-default value (default is 5).
+const testAccAuthenticationcaptchaaction_unset_step1 = `
+	resource "citrixadc_authenticationcaptchaaction" "tf_unset" {
+		name           = "tf_test_authenticationcaptchaaction_unset"
+		secretkey      = "secret"
+		sitekey        = "key"
+		serverurl      = "http://www.example.com/"
+		scorethreshold = 3
+	}
+`
+
+// Step 2: scorethreshold removed from config -> provider must issue ?action=unset
+// so the appliance reverts it to the NITRO default (5).
+const testAccAuthenticationcaptchaaction_unset_step2 = `
+	resource "citrixadc_authenticationcaptchaaction" "tf_unset" {
+		name           = "tf_test_authenticationcaptchaaction_unset"
+		secretkey      = "secret"
+		sitekey        = "key"
+		serverurl      = "http://www.example.com/"
+	}
+`
+
+func TestAccAuthenticationcaptchaaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcaptchaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applies and persists.
+				Config: testAccAuthenticationcaptchaaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_unset", "scorethreshold", "3"),
+				),
+			},
+			{
+				// Removing it must unset -> state reverts to the NITRO default,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationcaptchaaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcaptchaactionExist("citrixadc_authenticationcaptchaaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcaptchaaction.tf_unset", "scorethreshold", "5"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationcaptchaactionADCValue("tf_test_authenticationcaptchaaction_unset", "scorethreshold", "5"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationcaptchaactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationcaptchaactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationcaptchaaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationcaptchaaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationcaptchaaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAuthenticationcaptchaaction_sdkv2StateUpgrade(t *testing.T) {

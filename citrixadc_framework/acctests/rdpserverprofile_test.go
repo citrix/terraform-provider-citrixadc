@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -332,4 +333,79 @@ func TestAccRdpserverprofile_psk_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Step 1: unset-eligible attributes set to non-default values.
+const testAccRdpserverprofile_unset_step1 = `
+resource "citrixadc_rdpserverprofile" "tf_unset" {
+	name           = "tf_test_rdpserverprofile_unset"
+	psk            = "key"
+	rdpport        = 4000
+	rdpredirection = "ENABLE"
+}
+`
+
+// Step 2: unset-eligible attributes removed from config -> provider must unset
+// them so the appliance reverts each to its NITRO default.
+const testAccRdpserverprofile_unset_step2 = `
+resource "citrixadc_rdpserverprofile" "tf_unset" {
+	name = "tf_test_rdpserverprofile_unset"
+	psk  = "key"
+}
+`
+
+func TestAccRdpserverprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRdpserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccRdpserverprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpserverprofileExist("citrixadc_rdpserverprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rdpserverprofile.tf_unset", "rdpport", "4000"),
+					resource.TestCheckResourceAttr("citrixadc_rdpserverprofile.tf_unset", "rdpredirection", "ENABLE"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccRdpserverprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpserverprofileExist("citrixadc_rdpserverprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rdpserverprofile.tf_unset", "rdpport", "3389"),
+					resource.TestCheckResourceAttr("citrixadc_rdpserverprofile.tf_unset", "rdpredirection", "DISABLE"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckRdpserverprofileADCValue("tf_test_rdpserverprofile_unset", "rdpport", "3389"),
+					testAccCheckRdpserverprofileADCValue("tf_test_rdpserverprofile_unset", "rdpredirection", "DISABLE"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRdpserverprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it to its default.
+func testAccCheckRdpserverprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("rdpserverprofile", name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("rdpserverprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("rdpserverprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -76,6 +77,7 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			"allhttpheaders": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log all the request and response headers.",
 			},
 			"analyticsauthtoken": schema.StringAttribute{
@@ -138,26 +140,31 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			"grpcstatus": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log the gRPC status headers",
 			},
 			"httpauthentication": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log Authentication header.",
 			},
 			"httpclientsidemeasurements": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will insert a javascript into the HTTP response to collect the client side page-timings and will send the same to the configured collectors.",
 			},
 			"httpcontenttype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log content-length header.",
 			},
 			"httpcookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log cookie header.",
 			},
 			"httpcustomheaders": schema.ListAttribute{
@@ -169,71 +176,85 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			"httpdomainname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log domain name.",
 			},
 			"httphost": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log the Host header in appflow records",
 			},
 			"httplocation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log location header.",
 			},
 			"httpmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log the method header in appflow records",
 			},
 			"httppagetracking": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will link the embedded objects of a page together.",
 			},
 			"httpreferer": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log the referer header in appflow records",
 			},
 			"httpsetcookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log set-cookie header.",
 			},
 			"httpsetcookie2": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log set-cookie2 header.",
 			},
 			"httpurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log the URL in appflow records",
 			},
 			"httpurlquery": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log URL Query.",
 			},
 			"httpuseragent": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log User-Agent header.",
 			},
 			"httpvia": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will Via header.",
 			},
 			"httpxforwardedforheader": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log X-Forwarded-For header.",
 			},
 			"integratedcache": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will log the Integrated Caching appflow records",
 			},
 			"managementlog": schema.ListAttribute{
@@ -291,6 +312,7 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 			"urlcategory": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will send the URL category record.",
 			},
 		},

@@ -161,13 +161,18 @@ func (r *AuthenticationcaptchaactionResource) Update(ctx context.Context, req re
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for authenticationcaptchaaction"))
 		hasChange = true
 	}
 	if !data.Scorethreshold.Equal(state.Scorethreshold) {
 		tflog.Debug(ctx, fmt.Sprintf("scorethreshold has changed for authenticationcaptchaaction"))
-		hasChange = true
+		if config.Scorethreshold.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "scorethreshold")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute secretkey or its version tracker
 	if !data.Secretkey.Equal(state.Secretkey) {
@@ -208,6 +213,17 @@ func (r *AuthenticationcaptchaactionResource) Update(ctx context.Context, req re
 		tflog.Trace(ctx, "Updated authenticationcaptchaaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationcaptchaaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from the configuration so the appliance
+	// reverts them to their defaults. Update-then-unset ordering ensures any
+	// default carried in the update payload is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationcaptchaaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationcaptchaaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

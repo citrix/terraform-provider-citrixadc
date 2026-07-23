@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -219,4 +220,137 @@ func TestAccQuicprofileDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Step 1: all unset-eligible attributes set to non-default (but valid) values.
+const testAccQuicprofile_unset_step1 = `
+resource "citrixadc_quicprofile" "tf_unset" {
+  name                           = "tf_test_quicprofile_unset"
+  ackdelayexponent               = 5
+  activeconnectionidlimit        = 4
+  activeconnectionmigration      = "DISABLED"
+  congestionctrlalgorithm        = "CUBIC"
+  initialmaxdata                 = 2097152
+  initialmaxstreamdatabidilocal  = 524288
+  initialmaxstreamdatabidiremote = 524288
+  initialmaxstreamdatauni        = 524288
+  initialmaxstreamsbidi          = 200
+  initialmaxstreamsuni           = 20
+  maxackdelay                    = 25
+  maxidletimeout                 = 200
+  maxudpdatagramsperburst        = 10
+  maxudppayloadsize              = 1500
+  newtokenvalidityperiod         = 600
+  retrytokenvalidityperiod       = 20
+  statelessaddressvalidation     = "DISABLED"
+}
+`
+
+// Step 2: eligible attributes removed from config -> provider must unset them,
+// reverting each to its ADC default.
+const testAccQuicprofile_unset_step2 = `
+resource "citrixadc_quicprofile" "tf_unset" {
+  name = "tf_test_quicprofile_unset"
+}
+`
+
+func TestAccQuicprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckQuicprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccQuicprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuicprofileExist("citrixadc_quicprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "ackdelayexponent", "5"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "activeconnectionidlimit", "4"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "activeconnectionmigration", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "congestionctrlalgorithm", "CUBIC"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxdata", "2097152"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamdatabidilocal", "524288"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamdatabidiremote", "524288"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamdatauni", "524288"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamsbidi", "200"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamsuni", "20"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "maxackdelay", "25"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "maxidletimeout", "200"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "maxudpdatagramsperburst", "10"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "maxudppayloadsize", "1500"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "newtokenvalidityperiod", "600"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "retrytokenvalidityperiod", "20"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "statelessaddressvalidation", "DISABLED"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccQuicprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuicprofileExist("citrixadc_quicprofile.tf_unset", nil),
+					// State reverted to ADC defaults.
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "ackdelayexponent", "3"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "activeconnectionidlimit", "3"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "activeconnectionmigration", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "congestionctrlalgorithm", "Default"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxdata", "1048576"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamdatabidilocal", "262144"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamdatabidiremote", "262144"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamdatauni", "262144"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamsbidi", "100"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "initialmaxstreamsuni", "10"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "maxackdelay", "20"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "maxidletimeout", "180"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "maxudpdatagramsperburst", "8"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "maxudppayloadsize", "1472"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "newtokenvalidityperiod", "300"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "retrytokenvalidityperiod", "10"),
+					resource.TestCheckResourceAttr("citrixadc_quicprofile.tf_unset", "statelessaddressvalidation", "ENABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "ackdelayexponent", "3"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "activeconnectionidlimit", "3"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "activeconnectionmigration", "ENABLED"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "congestionctrlalgorithm", "Default"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "initialmaxdata", "1048576"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "initialmaxstreamdatabidilocal", "262144"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "initialmaxstreamdatabidiremote", "262144"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "initialmaxstreamdatauni", "262144"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "initialmaxstreamsbidi", "100"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "initialmaxstreamsuni", "10"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "maxackdelay", "20"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "maxidletimeout", "180"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "maxudpdatagramsperburst", "8"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "maxudppayloadsize", "1472"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "newtokenvalidityperiod", "300"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "retrytokenvalidityperiod", "10"),
+					testAccCheckQuicprofileADCValue("tf_test_quicprofile_unset", "statelessaddressvalidation", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckQuicprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckQuicprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Quicprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("quicprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("quicprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

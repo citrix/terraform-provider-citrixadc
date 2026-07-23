@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -70,21 +71,25 @@ func (r *LbprofileResource) Schema(ctx context.Context, req resource.SchemaReque
 			"dbslb": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable database specific load balancing for MySQL and MSSQL service types.",
 			},
 			"httponlycookieflag": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Include the HttpOnly attribute in persistence cookies. The HttpOnly attribute limits the scope of a cookie to HTTP requests and helps mitigate the risk of cross-site scripting attacks.",
 			},
 			"lbhashalgorithm": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DEFAULT"),
 				Description: "This option dictates the hashing algorithm used for hash based LB methods (URLHASH, DOMAINHASH, SOURCEIPHASH, DESTINATIONIPHASH, SRCIPDESTIPHASH, SRCIPSRCPORTHASH, TOKEN, USER_TOKEN, CALLIDHASH).",
 			},
 			"lbhashfingers": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(256),
 				Description: "This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory.",
 			},
 			"lbprofilename": schema.StringAttribute{
@@ -102,21 +107,25 @@ func (r *LbprofileResource) Schema(ctx context.Context, req resource.SchemaReque
 			"processlocal": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "By turning on this option packets destined to a vserver in a cluster will not under go any steering. Turn this option for single pa\ncket request response mode or when the upstream device is performing a proper RSS for connection based distribution.",
 			},
 			"proximityfromself": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Use the ADC location instead of client IP for static proximity LB or GSLB decision.",
 			},
 			"storemqttclientidandusername": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "This option allows to store the MQTT clientid and username in transactional logs",
 			},
 			"useencryptedpersistencecookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Encode persistence cookie values using SHA2 hash.",
 			},
 			"usesecuredpersistencecookie": schema.StringAttribute{

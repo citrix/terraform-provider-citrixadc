@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -177,6 +178,7 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			"authentication": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "If authentication is disabled, password is not sent in the request.",
 			},
 			"authorizationendpoint": schema.StringAttribute{
@@ -272,16 +274,19 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			"oauthtype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("GENERIC"),
 				Description: "Type of the OAuth implementation. Default value is generic implementation that is applicable for most deployments.",
 			},
 			"pkce": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Option to enable/disable PKCE flow during authentication.",
 			},
 			"refreshinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1440),
 				Description: "Interval at which services are monitored for necessary configuration.",
 			},
 			"requestattribute": schema.StringAttribute{
@@ -297,6 +302,7 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "This option specifies the allowed clock skew in number of minutes that Citrix ADC allows on an incoming token. For example, if skewTime is 10, then token would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
 			"tenantid": schema.StringAttribute{
@@ -312,6 +318,7 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 			"tokenendpointauthmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("client_secret_post"),
 				Description: "Option to select the variant of token authentication method. This method is used while exchanging code with IdP.",
 			},
 			"userinfourl": schema.StringAttribute{

@@ -133,13 +133,22 @@ func (r *AppfwsettingsResource) Update(ctx context.Context, req resource.UpdateR
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Ceflogging.Equal(state.Ceflogging) {
 		tflog.Debug(ctx, fmt.Sprintf("ceflogging has changed for appfwsettings"))
-		hasChange = true
+		if config.Ceflogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ceflogging")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Centralizedlearning.Equal(state.Centralizedlearning) {
 		tflog.Debug(ctx, fmt.Sprintf("centralizedlearning has changed for appfwsettings"))
-		hasChange = true
+		if config.Centralizedlearning.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "centralizedlearning")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientiploggingheader.Equal(state.Clientiploggingheader) {
 		tflog.Debug(ctx, fmt.Sprintf("clientiploggingheader has changed for appfwsettings"))
@@ -147,7 +156,11 @@ func (r *AppfwsettingsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Cookieflags.Equal(state.Cookieflags) {
 		tflog.Debug(ctx, fmt.Sprintf("cookieflags has changed for appfwsettings"))
-		hasChange = true
+		if config.Cookieflags.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cookieflags")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cookiepostencryptprefix.Equal(state.Cookiepostencryptprefix) {
 		tflog.Debug(ctx, fmt.Sprintf("cookiepostencryptprefix has changed for appfwsettings"))
@@ -155,23 +168,43 @@ func (r *AppfwsettingsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Defaultprofile.Equal(state.Defaultprofile) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultprofile has changed for appfwsettings"))
-		hasChange = true
+		if config.Defaultprofile.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "defaultprofile")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Entitydecoding.Equal(state.Entitydecoding) {
 		tflog.Debug(ctx, fmt.Sprintf("entitydecoding has changed for appfwsettings"))
-		hasChange = true
+		if config.Entitydecoding.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "entitydecoding")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Geolocationlogging.Equal(state.Geolocationlogging) {
 		tflog.Debug(ctx, fmt.Sprintf("geolocationlogging has changed for appfwsettings"))
-		hasChange = true
+		if config.Geolocationlogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "geolocationlogging")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Importsizelimit.Equal(state.Importsizelimit) {
 		tflog.Debug(ctx, fmt.Sprintf("importsizelimit has changed for appfwsettings"))
-		hasChange = true
+		if config.Importsizelimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "importsizelimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Learnratelimit.Equal(state.Learnratelimit) {
 		tflog.Debug(ctx, fmt.Sprintf("learnratelimit has changed for appfwsettings"))
-		hasChange = true
+		if config.Learnratelimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "learnratelimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Malformedreqaction.Equal(state.Malformedreqaction) {
 		tflog.Debug(ctx, fmt.Sprintf("malformedreqaction has changed for appfwsettings"))
@@ -187,7 +220,11 @@ func (r *AppfwsettingsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Proxyport.Equal(state.Proxyport) {
 		tflog.Debug(ctx, fmt.Sprintf("proxyport has changed for appfwsettings"))
-		hasChange = true
+		if config.Proxyport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proxyport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Proxyserver.Equal(state.Proxyserver) {
 		tflog.Debug(ctx, fmt.Sprintf("proxyserver has changed for appfwsettings"))
@@ -203,31 +240,59 @@ func (r *AppfwsettingsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Sessionlifetime.Equal(state.Sessionlifetime) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionlifetime has changed for appfwsettings"))
-		hasChange = true
+		if config.Sessionlifetime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessionlifetime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sessionlimit.Equal(state.Sessionlimit) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionlimit has changed for appfwsettings"))
-		hasChange = true
+		if config.Sessionlimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessionlimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sessiontimeout.Equal(state.Sessiontimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("sessiontimeout has changed for appfwsettings"))
-		hasChange = true
+		if config.Sessiontimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessiontimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Signatureautoupdate.Equal(state.Signatureautoupdate) {
 		tflog.Debug(ctx, fmt.Sprintf("signatureautoupdate has changed for appfwsettings"))
-		hasChange = true
+		if config.Signatureautoupdate.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "signatureautoupdate")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Signatureurl.Equal(state.Signatureurl) {
 		tflog.Debug(ctx, fmt.Sprintf("signatureurl has changed for appfwsettings"))
-		hasChange = true
+		if config.Signatureurl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "signatureurl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, fmt.Sprintf("undefaction has changed for appfwsettings"))
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Useconfigurablesecretkey.Equal(state.Useconfigurablesecretkey) {
 		tflog.Debug(ctx, fmt.Sprintf("useconfigurablesecretkey has changed for appfwsettings"))
-		hasChange = true
+		if config.Useconfigurablesecretkey.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "useconfigurablesecretkey")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -247,6 +312,15 @@ func (r *AppfwsettingsResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated appfwsettings resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for appfwsettings resource, skipping update")
+	}
+
+	// Unset attributes that were removed from configuration (revert to ADC defaults).
+	// update-then-unset ordering ensures any default carried in the update payload is superseded.
+	// appfwsettings is a singleton resource: no identity fields required in the unset payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Appfwsettings.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appfwsettings attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

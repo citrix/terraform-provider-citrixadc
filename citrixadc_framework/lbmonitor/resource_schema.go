@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -316,6 +317,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			"interval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "Time interval between two successive probes. Must be greater than the value of Response Time-out.",
 			},
 			"ipaddress": schema.ListAttribute{
@@ -514,6 +516,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			"resptimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(2),
 				Description: "Amount of time for which the appliance must wait before it marks a probe as FAILED.  Must be less than the value specified for the Interval parameter.\n\nNote: For UDP-ECV monitors for which a receive string is not configured, response timeout does not apply. For UDP-ECV monitors with no receive string, probe failure is indicated by an ICMP port unreachable error received from the service.",
 			},
 			"resptimeoutthresh": schema.Int64Attribute{
@@ -524,11 +527,13 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			"retries": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Maximum number of probes to send to establish the state of a service for which a monitoring probe failed.",
 			},
 			"reverse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Mark a service as DOWN, instead of UP, when probe criteria are satisfied, and as UP instead of DOWN when probe criteria are not satisfied.",
 			},
 			"rtsprequest": schema.StringAttribute{
@@ -679,6 +684,7 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 			"successretries": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Number of consecutive successful probes required to transition a service's state from DOWN to UP.",
 			},
 			"supportedvendorids": schema.ListAttribute{
