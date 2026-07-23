@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -112,6 +113,71 @@ func testAccCheckQuicparamExist(n string, id *string) resource.TestCheckFunc {
 			return fmt.Errorf("quicparam %s not found", n)
 		}
 
+		return nil
+	}
+}
+
+const testAccQuicparam_unset_step1 = `
+	resource "citrixadc_quicparam" "tf_unset" {
+		quicsecrettimeout = 7200
+	}
+`
+
+const testAccQuicparam_unset_step2 = `
+	resource "citrixadc_quicparam" "tf_unset" {
+		# quicsecrettimeout removed from config -> provider must unset it
+	}
+`
+
+func TestAccQuicparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applies and persists.
+				Config: testAccQuicparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuicparamExist("citrixadc_quicparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_quicparam.tf_unset", "quicsecrettimeout", "7200"),
+				),
+			},
+			{
+				// Removing it must unset -> state reverts to the NITRO default,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccQuicparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQuicparamExist("citrixadc_quicparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_quicparam.tf_unset", "quicsecrettimeout", "3600"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckQuicparamADCValue("quicsecrettimeout", "3600"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckQuicparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+// quicparam is a singleton, so it is looked up with an empty resource name.
+func testAccCheckQuicparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Quicparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("quicparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("quicparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
 		return nil
 	}
 }

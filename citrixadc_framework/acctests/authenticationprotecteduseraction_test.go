@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -181,4 +182,75 @@ func TestAccAuthenticationprotecteduseractionDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: maxconcurrentusers is the only unset-eligible attribute
+// (attributesToUnset = append(..., "maxconcurrentusers")). Default is 8.
+const testAccAuthenticationprotecteduseraction_unset_step1 = `
+resource "citrixadc_authenticationprotecteduseraction" "tf_unset" {
+  name               = "tf_authprotecteduseraction_unset"
+  realmstr           = "krealm1"
+  maxconcurrentusers = 10
+}
+`
+
+const testAccAuthenticationprotecteduseraction_unset_step2 = `
+resource "citrixadc_authenticationprotecteduseraction" "tf_unset" {
+  name     = "tf_authprotecteduseraction_unset"
+  realmstr = "krealm1"
+  # maxconcurrentusers removed from config -> provider must unset it (revert to default 8)
+}
+`
+
+func TestAccAuthenticationprotecteduseraction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationprotecteduseractionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applies and persists.
+				Config: testAccAuthenticationprotecteduseraction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationprotecteduseractionExist("citrixadc_authenticationprotecteduseraction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationprotecteduseraction.tf_unset", "maxconcurrentusers", "10"),
+				),
+			},
+			{
+				// Removing it must unset -> state reverts to NITRO default,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationprotecteduseraction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationprotecteduseractionExist("citrixadc_authenticationprotecteduseraction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationprotecteduseraction.tf_unset", "maxconcurrentusers", "8"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationprotecteduseractionADCValue("tf_authprotecteduseraction_unset", "maxconcurrentusers", "8"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationprotecteduseractionADCValue asserts an attribute's
+// value directly on the appliance (not just in Terraform state), proving the
+// unset actually reverted it.
+func testAccCheckAuthenticationprotecteduseractionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationprotecteduseraction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationprotecteduseraction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationprotecteduseraction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -325,4 +326,110 @@ func TestAccAaaldapparamsDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// --- Unset Test ---
+//
+// Proves aaaldapparams unset support end to end for the 6 unset-eligible
+// attributes (authtimeout, maxnestinglevel, nestedgroupextraction,
+// passwdchange, sectype, serverport): step 1 sets them to non-default values;
+// step 2 removes them from config so the provider issues ?action=unset and each
+// reverts to its NITRO default, both in Terraform state and on the appliance.
+//
+// nestedgroupextraction=ON requires groupnameidentifier and groupsearchattribute
+// (NITRO inter-field prerequisite), so those non-eligible fields are supplied in
+// both steps; they are not unset.
+
+const testAccAaaldapparams_unset_step1 = `
+resource "citrixadc_aaaldapparams" "tf_unset" {
+	serverip              = "10.222.74.158"
+	groupnameidentifier   = "samAccountName"
+	groupsearchattribute  = "memberOf"
+	authtimeout           = 10
+	maxnestinglevel       = 3
+	nestedgroupextraction = "ON"
+	passwdchange          = "ENABLED"
+	sectype               = "PLAINTEXT"
+	serverport            = 636
+}
+`
+
+const testAccAaaldapparams_unset_step2 = `
+resource "citrixadc_aaaldapparams" "tf_unset" {
+	serverip             = "10.222.74.158"
+	groupnameidentifier  = "samAccountName"
+	groupsearchattribute = "memberOf"
+	# authtimeout, maxnestinglevel, nestedgroupextraction, passwdchange,
+	# sectype and serverport removed from config -> provider must unset them.
+}
+`
+
+func TestAccAaaldapparams_unset(t *testing.T) {
+	// The resource's other tests run on the default standalone testbed with no
+	// skip guards, so none is added here.
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil, // singleton resource - never truly deleted
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAaaldapparams_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "authtimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "maxnestinglevel", "3"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "nestedgroupextraction", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "passwdchange", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "sectype", "PLAINTEXT"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "serverport", "636"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAaaldapparams_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaldapparamsExist("citrixadc_aaaldapparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "authtimeout", "3"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "maxnestinglevel", "2"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "nestedgroupextraction", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "passwdchange", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "sectype", "TLS"),
+					resource.TestCheckResourceAttr("citrixadc_aaaldapparams.tf_unset", "serverport", "389"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAaaldapparamsADCValue("authtimeout", "3"),
+					testAccCheckAaaldapparamsADCValue("maxnestinglevel", "2"),
+					testAccCheckAaaldapparamsADCValue("nestedgroupextraction", "OFF"),
+					testAccCheckAaaldapparamsADCValue("passwdchange", "DISABLED"),
+					testAccCheckAaaldapparamsADCValue("sectype", "TLS"),
+					testAccCheckAaaldapparamsADCValue("serverport", "389"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAaaldapparamsADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. aaaldapparams is a singleton, so the resource is fetched with an empty name.
+func testAccCheckAaaldapparamsADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaaldapparams.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("aaaldapparams not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("aaaldapparams: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }

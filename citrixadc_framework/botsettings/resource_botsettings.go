@@ -133,9 +133,14 @@ func (r *BotsettingsResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Defaultnonintrusiveprofile.Equal(state.Defaultnonintrusiveprofile) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultnonintrusiveprofile has changed for botsettings"))
-		hasChange = true
+		if config.Defaultnonintrusiveprofile.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "defaultnonintrusiveprofile")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultprofile.Equal(state.Defaultprofile) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultprofile has changed for botsettings"))
@@ -159,7 +164,11 @@ func (r *BotsettingsResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Proxyport.Equal(state.Proxyport) {
 		tflog.Debug(ctx, fmt.Sprintf("proxyport has changed for botsettings"))
-		hasChange = true
+		if config.Proxyport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proxyport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Proxyserver.Equal(state.Proxyserver) {
 		tflog.Debug(ctx, fmt.Sprintf("proxyserver has changed for botsettings"))
@@ -179,23 +188,43 @@ func (r *BotsettingsResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Signatureautoupdate.Equal(state.Signatureautoupdate) {
 		tflog.Debug(ctx, fmt.Sprintf("signatureautoupdate has changed for botsettings"))
-		hasChange = true
+		if config.Signatureautoupdate.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "signatureautoupdate")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Signatureurl.Equal(state.Signatureurl) {
 		tflog.Debug(ctx, fmt.Sprintf("signatureurl has changed for botsettings"))
-		hasChange = true
+		if config.Signatureurl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "signatureurl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Trapurlautogenerate.Equal(state.Trapurlautogenerate) {
 		tflog.Debug(ctx, fmt.Sprintf("trapurlautogenerate has changed for botsettings"))
-		hasChange = true
+		if config.Trapurlautogenerate.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trapurlautogenerate")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Trapurlinterval.Equal(state.Trapurlinterval) {
 		tflog.Debug(ctx, fmt.Sprintf("trapurlinterval has changed for botsettings"))
-		hasChange = true
+		if config.Trapurlinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trapurlinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Trapurllength.Equal(state.Trapurllength) {
 		tflog.Debug(ctx, fmt.Sprintf("trapurllength has changed for botsettings"))
-		hasChange = true
+		if config.Trapurllength.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trapurllength")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -215,6 +244,16 @@ func (r *BotsettingsResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated botsettings resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for botsettings resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Singleton resource - no identity fields required.
+	// Ordered after the update so any default the update payload carried for a
+	// removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Botsettings.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset botsettings attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

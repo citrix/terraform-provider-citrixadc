@@ -152,6 +152,7 @@ func (r *AuthenticationemailactionResource) Update(ctx context.Context, req reso
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Content.Equal(state.Content) {
 		tflog.Debug(ctx, fmt.Sprintf("content has changed for authenticationemailaction"))
 		hasChange = true
@@ -182,7 +183,11 @@ func (r *AuthenticationemailactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Type.Equal(state.Type) {
 		tflog.Debug(ctx, fmt.Sprintf("type has changed for authenticationemailaction"))
-		hasChange = true
+		if config.Type.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "type")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Username.Equal(state.Username) {
 		tflog.Debug(ctx, fmt.Sprintf("username has changed for authenticationemailaction"))
@@ -207,6 +212,17 @@ func (r *AuthenticationemailactionResource) Update(ctx context.Context, req reso
 		tflog.Trace(ctx, "Updated authenticationemailaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationemailaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from the configuration.
+	// Update-then-unset ordering ensures any default value carried in the update
+	// payload for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationemailaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationemailaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

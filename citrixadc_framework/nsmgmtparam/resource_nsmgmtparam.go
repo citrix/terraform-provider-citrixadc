@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -95,12 +97,14 @@ func (r *NsmgmtparamResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *NsmgmtparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsmgmtparamResourceModel
+	var data, state, config NsmgmtparamResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -113,6 +117,7 @@ func (r *NsmgmtparamResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Httpdmaxclients.Equal(state.Httpdmaxclients) {
 		tflog.Debug(ctx, fmt.Sprintf("httpdmaxclients has changed for nsmgmtparam"))
 		hasChange = true
@@ -123,11 +128,19 @@ func (r *NsmgmtparamResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Mgmthttpport.Equal(state.Mgmthttpport) {
 		tflog.Debug(ctx, fmt.Sprintf("mgmthttpport has changed for nsmgmtparam"))
-		hasChange = true
+		if config.Mgmthttpport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "mgmthttpport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Mgmthttpsport.Equal(state.Mgmthttpsport) {
 		tflog.Debug(ctx, fmt.Sprintf("mgmthttpsport has changed for nsmgmtparam"))
-		hasChange = true
+		if config.Mgmthttpsport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "mgmthttpsport")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -144,6 +157,16 @@ func (r *NsmgmtparamResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated nsmgmtparam resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nsmgmtparam resource, skipping update")
+	}
+
+	// Clear attributes removed from configuration by reverting them to their ADC
+	// defaults. Done after the update so any default carried in the update payload
+	// is superseded by the unset. nsmgmtparam is a singleton, so the unset payload
+	// carries no identity fields.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nsmgmtparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsmgmtparam attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

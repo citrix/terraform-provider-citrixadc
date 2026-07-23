@@ -134,6 +134,7 @@ func (r *AuthenticationpushserviceResource) Update(ctx context.Context, req reso
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Clientid.Equal(state.Clientid) {
 		tflog.Debug(ctx, fmt.Sprintf("clientid has changed for authenticationpushservice"))
 		hasChange = true
@@ -152,7 +153,11 @@ func (r *AuthenticationpushserviceResource) Update(ctx context.Context, req reso
 	}
 	if !data.Refreshinterval.Equal(state.Refreshinterval) {
 		tflog.Debug(ctx, fmt.Sprintf("refreshinterval has changed for authenticationpushservice"))
-		hasChange = true
+		if config.Refreshinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refreshinterval")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -173,6 +178,16 @@ func (r *AuthenticationpushserviceResource) Update(ctx context.Context, req reso
 		tflog.Trace(ctx, "Updated authenticationpushservice resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationpushservice resource, skipping update")
+	}
+
+	// Issue a single batched unset for attributes removed from config so the
+	// appliance reverts them to their defaults (update-then-unset ordering).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationpushservice.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationpushservice attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

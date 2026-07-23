@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -47,6 +48,7 @@ func (r *AuthenticationazurekeyvaultResource) Schema(ctx context.Context, req re
 			"authentication": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "If authentication is disabled, otp checks are not performed after azure vault keys are obtained. This is useful to distinguish whether user has registered devices.",
 			},
 			"clientid": schema.StringAttribute{
@@ -90,6 +92,7 @@ func (r *AuthenticationazurekeyvaultResource) Schema(ctx context.Context, req re
 			"refreshinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(50),
 				Description: "Interval at which access token in obtained.",
 			},
 			"servicekeyname": schema.StringAttribute{
@@ -99,6 +102,7 @@ func (r *AuthenticationazurekeyvaultResource) Schema(ctx context.Context, req re
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("RS256"),
 				Description: "Algorithm to be used to sign/verify transactions",
 			},
 			"tenantid": schema.StringAttribute{

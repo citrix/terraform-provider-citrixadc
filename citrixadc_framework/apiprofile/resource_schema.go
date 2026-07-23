@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -31,6 +32,7 @@ func (r *ApiprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"apivisibility": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable/Disable the schema lookup for the requests/apispecs that are bounded to the API profile. The default value of this parameter is DISABLED.",
 			},
 			"name": schema.StringAttribute{

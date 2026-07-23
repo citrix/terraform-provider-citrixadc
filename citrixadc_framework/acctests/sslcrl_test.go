@@ -384,3 +384,96 @@ func TestAccSslcrl_password_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+// Unset test: the only unset-eligible attribute wired for sslcrl is `binary`
+// (default "NO"). Step 1 sets it to a non-default ("YES"); step 2 removes it
+// from config so the provider issues ?action=unset and it reverts to "NO".
+//
+// `binary` ("LDAP-based CRL retrieval mode to binary") only takes effect on an
+// LDAP auto-refresh CRL, so both steps must carry the LDAP prerequisites
+// (method=LDAP, cacert, server, port, basedn, refresh=ENABLED, interval);
+// otherwise NITRO silently ignores binary=YES and returns NO on create, and the
+// non-default value in step 1 never persists. Only `binary` differs between the
+// two steps so its removal is the sole change that must trigger the unset.
+const testAccSslcrl_unset_step1 = `
+	resource "citrixadc_sslcrl" "tf_unset" {
+		crlname  = "tf_test_sslcrl_unset"
+		crlpath  = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert   = "rootrsa_cert1"
+		method   = "LDAP"
+		server   = "1.2.3.4"
+		port     = 389
+		basedn   = "cn=crl"
+		refresh  = "ENABLED"
+		interval = "DAILY"
+		binary   = "YES"
+	}
+`
+
+const testAccSslcrl_unset_step2 = `
+	resource "citrixadc_sslcrl" "tf_unset" {
+		crlname  = "tf_test_sslcrl_unset"
+		crlpath  = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert   = "rootrsa_cert1"
+		method   = "LDAP"
+		server   = "1.2.3.4"
+		port     = 389
+		basedn   = "cn=crl"
+		refresh  = "ENABLED"
+		interval = "DAILY"
+		# binary removed from config -> provider must unset it (revert to "NO")
+	}
+`
+
+func TestAccSslcrl_unset(t *testing.T) {
+	// Mirror the basic test: no skip guard (runs on the default standalone testbed).
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcrlPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcrlDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applies and persists.
+				Config: testAccSslcrl_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_unset", "binary", "YES"),
+				),
+			},
+			{
+				// Removing it must unset -> state reverts to NITRO default,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccSslcrl_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_unset", "binary", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSslcrlADCValue("tf_test_sslcrl_unset", "binary", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSslcrlADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckSslcrlADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslcrl.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("sslcrl %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("sslcrl %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}

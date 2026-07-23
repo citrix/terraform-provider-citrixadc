@@ -152,6 +152,7 @@ func (r *RdpserverprofileResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	// Check secret attribute psk or its version tracker
 	if !data.Psk.Equal(state.Psk) {
 		tflog.Debug(ctx, fmt.Sprintf("psk has changed for rdpserverprofile"))
@@ -166,11 +167,19 @@ func (r *RdpserverprofileResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Rdpport.Equal(state.Rdpport) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpport has changed for rdpserverprofile"))
-		hasChange = true
+		if config.Rdpport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rdpport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rdpredirection.Equal(state.Rdpredirection) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpredirection has changed for rdpserverprofile"))
-		hasChange = true
+		if config.Rdpredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rdpredirection")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -191,6 +200,17 @@ func (r *RdpserverprofileResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated rdpserverprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for rdpserverprofile resource, skipping update")
+	}
+
+	// Issue a single batched unset for attributes removed from config so the
+	// appliance reverts them to their defaults. Update-then-unset ordering
+	// ensures any default the update payload carried is superseded.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Rdpserverprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset rdpserverprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

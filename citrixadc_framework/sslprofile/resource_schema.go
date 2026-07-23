@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -114,6 +115,7 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"allowextendedmastersecret": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "When set to YES, attempt to use the TLS Extended Master Secret (EMS, as\ndescribed in RFC 7627) when negotiating TLS 1.0, TLS 1.1 and TLS 1.2\nconnection parameters. EMS must be supported by both the TLS client and server\nin order to be enabled during a handshake. This setting applies to both\nfrontend and backend SSL profiles.",
 			},
 			"allowunknownsni": schema.StringAttribute{
@@ -139,6 +141,7 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"cipherredirect": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of Cipher Redirect. If this parameter is set to ENABLED, you can configure an SSL virtual server or service to display meaningful error messages if the SSL handshake fails because of a cipher mismatch between the virtual server or service and the client.\nThis parameter is not applicable when configuring a backend profile.",
 			},
 			"cipherurl": schema.StringAttribute{
@@ -154,11 +157,13 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"clientauth": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of client authentication. In service-based SSL offload, the service terminates the SSL handshake if the SSL client does not provide a valid certificate.\nThis parameter is not applicable when configuring a backend profile.",
 			},
 			"clientauthuseboundcachain": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Certficates bound on the VIP are used for validating the client cert. Certficates came along with client cert are not used for validating the client cert",
 			},
 			"clientcert": schema.StringAttribute{
@@ -179,11 +184,13 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"denysslreneg": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ALL"),
 				Description: "Deny renegotiation in specified circumstances. Available settings function as follows:\n* NO - Allow SSL renegotiation.\n* FRONTEND_CLIENT - Deny secure and nonsecure SSL renegotiation initiated by the client.\n* FRONTEND_CLIENTSERVER - Deny secure and nonsecure SSL renegotiation initiated by the client or the Citrix ADC during policy-based client authentication.\n* ALL - Deny all secure and nonsecure SSL renegotiation.\n* NONSECURE - Deny nonsecure SSL renegotiation. Allows only clients that support RFC 5746.",
 			},
 			"dh": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of Diffie-Hellman (DH) key exchange.\nThis parameter is not applicable when configuring a backend profile.",
 			},
 			"dhcount": schema.Int64Attribute{
@@ -194,6 +201,7 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"dhekeyexchangewithpsk": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Whether or not the SSL Virtual Server will require a DHE key exchange to occur when a PSK is accepted during a TLS 1.3 resumption handshake.\nA DHE key exchange ensures forward secrecy even in the event that ticket keys are compromised, at the expense of an additional round trip and resources required to carry out the DHE key exchange.\nIf disabled, a DHE key exchange will be performed when a PSK is accepted but only if requested by the client.\nIf enabled, the server will require a DHE key exchange when a PSK is accepted regardless of whether the client supports combined PSK-DHE key exchange. This setting only has an effect when resumption is enabled.",
 			},
 			"dhfile": schema.StringAttribute{
@@ -204,11 +212,13 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"dhkeyexpsizelimit": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "This option enables the use of NIST recommended (NIST Special Publication 800-56A) bit size for private-key size. For example, for DH params of size 2048bit, the private-key size recommended is 224bits. This is rounded-up to 256bits.",
 			},
 			"dropreqwithnohostheader": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Host header check for SNI enabled sessions. If this check is enabled and the HTTP request does not contain the host header for SNI enabled sessions(i.e vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension), the request is dropped.",
 			},
 			"ecccurvebindings": schema.SetAttribute{
@@ -219,11 +229,13 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"encryptedclienthello": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of TLS 1.3 Encrypted Client Hello Support",
 			},
 			"encrypttriggerpktcount": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(45),
 				Description: "Maximum number of queued packets after which encryption is triggered. Use this setting for SSL transactions that send small packets from server to Citrix ADC.",
 			},
 			"ersa": schema.StringAttribute{
@@ -239,11 +251,13 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"hsts": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of HSTS protocol support for the SSL profile. Using HSTS, a server can enforce the use of an HTTPS connection for all communication with a client",
 			},
 			"includesubdomains": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enable HSTS for subdomains. If set to Yes, a client must send only HTTPS requests for subdomains.",
 			},
 			"insertionencoding": schema.StringAttribute{
@@ -254,6 +268,7 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"maxage": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Set the maximum time, in seconds, in the strict transport security (STS) header during which the client must send only HTTPS requests to the server",
 			},
 			"maxrenegrate": schema.Int64Attribute{
@@ -283,16 +298,19 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"ocspstapling": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of OCSP stapling support on the SSL virtual server. Supported only if the protocol used is higher than SSLv3. Possible values:\nENABLED: The appliance sends a request to the OCSP responder to check the status of the server certificate and caches the response for the specified time. If the response is valid at the time of SSL handshake with the client, the OCSP-based server certificate status is sent to the client during the handshake.\nDISABLED: The appliance does not check the status of the server certificate.",
 			},
 			"preload": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Flag indicates the consent of the site owner to have their domain preloaded.",
 			},
 			"prevsessionkeylifetime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "This option sets the life time of symm key used to generate session tickets issued by NS in secs",
 			},
 			"pushenctrigger": schema.StringAttribute{
@@ -303,6 +321,7 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"pushenctriggertimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "PUSH encryption trigger timeout value. The timeout value is applied only if you set the Push Encryption Trigger parameter to Timer in the SSL virtual server settings.",
 			},
 			"pushflag": schema.Int64Attribute{
@@ -313,21 +332,25 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"quantumsize": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("8192"),
 				Description: "Amount of data to collect before the data is pushed to the crypto hardware for encryption. For large downloads, a larger quantum size better utilizes the crypto resources.",
 			},
 			"redirectportrewrite": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of the port rewrite while performing HTTPS redirect. If this parameter is set to ENABLED, and the URL from the server does not contain the standard port, the port is rewritten to the standard.",
 			},
 			"sendclosenotify": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Enable sending SSL Close-Notify at the end of a transaction.",
 			},
 			"serverauth": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of server authentication support for the SSL Backend profile.",
 			},
 			"sessionkeylifetime": schema.Int64Attribute{
@@ -338,6 +361,7 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"sessionticket": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "This option enables the use of session tickets, as per the RFC 5077",
 			},
 			"sessionticketkeydata": schema.StringAttribute{
@@ -370,6 +394,7 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"sessreuse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "State of session reuse. Establishing the initial handshake requires CPU-intensive public key encryption operations. With the ENABLED setting, session key exchange is avoided for session resumption requests received from the client.",
 			},
 			"sesstimeout": schema.Int64Attribute{
@@ -385,41 +410,49 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"snienable": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of the Server Name Indication (SNI) feature on the virtual server and service-based offload. SNI helps to enable SSL encryption on multiple domains on a single virtual server or service if the domains are controlled by the same organization and share the same second-level domain name. For example, *.sports.net can be used to secure domains such as login.sports.net and help.sports.net.",
 			},
 			"snihttphostmatch": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("CERT"),
 				Description: "Controls how the HTTP 'Host' header value is validated. These checks are performed only if the session is SNI enabled (i.e when vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension) and HTTP request contains 'Host' header.\nAvailable settings function as follows:\nCERT   - Request is forwarded if the 'Host' value is covered\n         by the certificate used to establish this SSL session.\n         Note: 'CERT' matching mode cannot be applied in\n         TLS 1.3 connections established by resuming from a\n         previous TLS 1.3 session. On these connections, 'STRICT'\n         matching mode will be used instead.\nSTRICT - Request is forwarded only if value of 'Host' header\n         in HTTP is identical to the 'Server name' value passed\n         in 'Client Hello' of the SSL connection.\nNO     - No validation is performed on the HTTP 'Host'\n         header value.",
 			},
 			"ssl3": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of SSLv3 protocol support for the SSL profile.\nNote: On platforms with SSL acceleration chips, if the SSL chip does not support SSLv3, this parameter cannot be set to ENABLED.",
 			},
 			"sslclientlogs": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "When enabled, NetScaler will log the session ID and SNI name during SSL handshakes on both the external and internal interfaces.",
 			},
 			"sslimaxsessperserver": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(10),
 				Description: "Maximum ssl session to be cached per dynamic origin server. A unique ssl session is created for each SNI received from the client on ClientHello and the matching session is used for server session reuse.",
 			},
 			"sslinterception": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable transparent interception of SSL sessions.",
 			},
 			"ssliocspcheck": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable OCSP check for origin server certificate.",
 			},
 			"sslireneg": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable triggering the client renegotiation when renegotiation request is received from the origin server.",
 			},
 			"ssllogprofile": schema.StringAttribute{
@@ -438,16 +471,19 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"sslredirect": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of HTTPS redirects for the SSL service.\nFor an SSL session, if the client browser receives a redirect message, the browser tries to connect to the new location. However, the secure SSL session breaks if the object has moved from a secure site (https://) to an unsecure site (http://). Typically, a warning message appears on the screen, prompting the user to continue or disconnect.\nIf SSL Redirect is ENABLED, the redirect message is automatically converted from http:// to https:// and the SSL session does not break.\nThis parameter is not applicable when configuring a backend profile.",
 			},
 			"ssltriggertimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(100),
 				Description: "Time, in milliseconds, after which encryption is triggered for transactions that are not tracked on the Citrix ADC because their length is not known. There can be a delay of up to 10ms from the specified timeout value before the packet is pushed into the queue.",
 			},
 			"strictcachecks": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enable strict CA certificate checks on the appliance.",
 			},
 			"strictsigdigestcheck": schema.StringAttribute{
@@ -478,11 +514,13 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"tls13sessionticketsperauthcontext": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Number of tickets the SSL Virtual Server will issue anytime TLS 1.3 is negotiated, ticket-based resumption is enabled, and either (1) a handshake completes or (2) post-handhsake client auth completes.\nThis value can be increased to enable clients to open multiple parallel connections using a fresh ticket for each connection.\nNo tickets are sent if resumption is disabled.",
 			},
 			"zerorttearlydata": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of TLS 1.3 0-RTT early data support for the SSL Virtual Server. This setting only has an effect if resumption is enabled, as early data cannot be sent along with an initial handshake.\nEarly application data has significantly different security properties - in particular there is no guarantee that the data cannot be replayed.",
 			},
 		},

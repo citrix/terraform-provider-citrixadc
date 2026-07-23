@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -285,6 +286,86 @@ const testAccMetricsprofile_metricsauthtoken_wo_step2 = `
 		metricsexportfrequency = 30
 	}
 `
+
+const testAccMetricsprofile_unset_step1 = `
+resource "citrixadc_metricsprofile" "tf_unset" {
+  name                   = "tf_test_metricsprofile_unset"
+  metrics                = "ENABLED"
+  metricsexportfrequency = 120
+  outputmode             = "prometheus"
+  servemode              = "Pull"
+}
+`
+
+const testAccMetricsprofile_unset_step2 = `
+resource "citrixadc_metricsprofile" "tf_unset" {
+  name = "tf_test_metricsprofile_unset"
+  # eligible attributes removed from config -> provider must unset them
+}
+`
+
+func TestAccMetricsprofile_unset(t *testing.T) {
+	// The resource's other tests (basic/import/datasource) run on the default
+	// standalone testbed with no skip guard, so this test has none either.
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccMetricsprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricsprofileExist("citrixadc_metricsprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_unset", "metrics", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_unset", "metricsexportfrequency", "120"),
+					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_unset", "outputmode", "prometheus"),
+					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_unset", "servemode", "Pull"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccMetricsprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMetricsprofileExist("citrixadc_metricsprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_unset", "metrics", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_unset", "metricsexportfrequency", "30"),
+					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_unset", "outputmode", "avro"),
+					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_unset", "servemode", "Push"),
+					// Independent appliance-level confirmation the unset took effect:
+					testAccCheckMetricsprofileADCValue("tf_test_metricsprofile_unset", "metrics", "DISABLED"),
+					testAccCheckMetricsprofileADCValue("tf_test_metricsprofile_unset", "metricsexportfrequency", "30"),
+					testAccCheckMetricsprofileADCValue("tf_test_metricsprofile_unset", "outputmode", "avro"),
+					testAccCheckMetricsprofileADCValue("tf_test_metricsprofile_unset", "servemode", "Push"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckMetricsprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckMetricsprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Metricsprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("metricsprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("metricsprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccMetricsprofile_metricsauthtoken_wo_ephemeral(t *testing.T) {
 	t.Setenv("TF_VAR_metricsprofile_metricsauthtoken_wo", "SplunkEphemeral_tok1")

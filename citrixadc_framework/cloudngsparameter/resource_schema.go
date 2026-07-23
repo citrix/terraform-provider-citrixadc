@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -31,21 +32,25 @@ func (r *CloudngsparameterResource) Schema(ctx context.Context, req resource.Sch
 			"allowdtls12": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enables DTLS1.2 for client connections on CGS",
 			},
 			"allowedudtversion": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("V4"),
 				Description: "Enables the required UDT version to EDT connections in the CGS deployment",
 			},
 			"blockonallowedngstktprof": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enables blocking connections authenticated with a ticket createdby by an entity not whitelisted in allowedngstktprofile",
 			},
 			"csvserverticketingdecouple": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enables Decoupling CSVSERVER state from Ticketing Service state in the CGS deployment",
 			},
 		},

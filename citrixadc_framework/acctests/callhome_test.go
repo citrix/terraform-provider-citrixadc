@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -141,6 +142,95 @@ func testAccCheckCallhomeDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
+}
+
+// Unset test: eligible attributes wired for ?action=unset in resource_callhome.go
+// are hbcustominterval (default 7), mode (default "Default") and proxymode
+// (default "NO"). Step 1 sets the applicable ones to non-defaults; step 2 removes
+// them so the provider issues ?action=unset, reverting each to its ADC default with
+// an empty post-apply plan.
+//
+// NOTE on `mode`: its only non-default enum value "CSP" is rejected on a standalone
+// appliance with NITRO errorcode 257 "Operation not permitted" (a testbed capability
+// limit, not an invalid value), so it cannot be driven to a non-default here. It is
+// left at its default "Default" and asserted to remain there (no perpetual diff);
+// the true non-default->unset transition for `mode` is only exercisable on an
+// appliance where CSP mode is permitted.
+const testAccCallhome_unset_step1 = `
+resource "citrixadc_callhome" "tf_unset" {
+  hbcustominterval = 10
+  proxymode        = "YES"
+  # mode omitted -> stays at its default "Default" (CSP is "Operation not permitted"
+  # on this standalone testbed).
+}
+`
+
+const testAccCallhome_unset_step2 = `
+resource "citrixadc_callhome" "tf_unset" {
+  # all eligible attributes removed from config -> provider must unset them
+  # (hbcustominterval -> 7, proxymode -> NO); mode remains at its default "Default".
+}
+`
+
+func TestAccCallhome_unset(t *testing.T) {
+	// callhome's other tests (TestAccCallhome_basic/_import/DataSource) have no skip
+	// guards; they run on the default standalone testbed, so no guard is added here.
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCallhomeDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccCallhome_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCallhomeExist("citrixadc_callhome.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_callhome.tf_unset", "hbcustominterval", "10"),
+					resource.TestCheckResourceAttr("citrixadc_callhome.tf_unset", "proxymode", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_callhome.tf_unset", "mode", "Default"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults, and the
+				// implicit post-apply plan must be empty (no perpetual diff).
+				Config: testAccCallhome_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCallhomeExist("citrixadc_callhome.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_callhome.tf_unset", "hbcustominterval", "7"),
+					resource.TestCheckResourceAttr("citrixadc_callhome.tf_unset", "proxymode", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_callhome.tf_unset", "mode", "Default"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCallhomeADCValue("hbcustominterval", "7"),
+					testAccCheckCallhomeADCValue("proxymode", "NO"),
+					testAccCheckCallhomeADCValue("mode", "Default"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCallhomeADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+// callhome is a singleton: read via find-unnamed (empty name).
+func testAccCheckCallhomeADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Callhome.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("callhome not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("callhome: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccCallhomeDataSource_basic = `
