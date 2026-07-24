@@ -136,6 +136,7 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Acctapplicationid.Equal(state.Acctapplicationid) {
 		tflog.Debug(ctx, fmt.Sprintf("acctapplicationid has changed for lbmonitor"))
 		hasChange = true
@@ -254,7 +255,11 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Interval.Equal(state.Interval) {
 		tflog.Debug(ctx, fmt.Sprintf("interval has changed for lbmonitor"))
-		hasChange = true
+		if config.Interval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "interval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ipaddress.Equal(state.Ipaddress) {
 		tflog.Debug(ctx, fmt.Sprintf("ipaddress has changed for lbmonitor"))
@@ -394,7 +399,11 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Resptimeout.Equal(state.Resptimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("resptimeout has changed for lbmonitor"))
-		hasChange = true
+		if config.Resptimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "resptimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Resptimeoutthresh.Equal(state.Resptimeoutthresh) {
 		tflog.Debug(ctx, fmt.Sprintf("resptimeoutthresh has changed for lbmonitor"))
@@ -402,11 +411,19 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Retries.Equal(state.Retries) {
 		tflog.Debug(ctx, fmt.Sprintf("retries has changed for lbmonitor"))
-		hasChange = true
+		if config.Retries.IsNull() {
+			attributesToUnset = append(attributesToUnset, "retries")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Reverse.Equal(state.Reverse) {
 		tflog.Debug(ctx, fmt.Sprintf("reverse has changed for lbmonitor"))
-		hasChange = true
+		if config.Reverse.IsNull() {
+			attributesToUnset = append(attributesToUnset, "reverse")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rtsprequest.Equal(state.Rtsprequest) {
 		tflog.Debug(ctx, fmt.Sprintf("rtsprequest has changed for lbmonitor"))
@@ -502,7 +519,11 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Successretries.Equal(state.Successretries) {
 		tflog.Debug(ctx, fmt.Sprintf("successretries has changed for lbmonitor"))
-		hasChange = true
+		if config.Successretries.IsNull() {
+			attributesToUnset = append(attributesToUnset, "successretries")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Supportedvendorids.Equal(state.Supportedvendorids) {
 		tflog.Debug(ctx, fmt.Sprintf("supportedvendorids has changed for lbmonitor"))
@@ -589,6 +610,16 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated lbmonitor resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lbmonitor resource, skipping update")
+	}
+
+	// Clear attributes removed from configuration via NITRO unset
+	unsetIdPayload := map[string]interface{}{
+		"monitorname": data.Monitorname.ValueString(),
+		"type":        data.Type.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lbmonitor.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbmonitor attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

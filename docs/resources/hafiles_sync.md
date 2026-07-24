@@ -4,11 +4,7 @@ subcategory: "High Availability"
 
 # Resource: hafiles_sync
 
-Synchronizes configuration files (such as SSL certificates, Access Gateway bookmarks, application firewall imports, and license files) from the current node to its peer across a Citrix ADC high-availability (HA) pair. This keeps both HA nodes in sync so the secondary node is ready to take over with the same file-based configuration as the primary.
-
-This is an action resource: applying it performs the `sync`; it does not manage a persistent object, so re-applying re-runs the action. Changing the `mode` argument forces the resource to be re-created, which re-runs the sync.
-
-This resource requires an HA setup and operates on an HA node.
+This resource is used to synchronize configuration files to the peer node in a Citrix ADC HA pair.
 
 
 ## Example usage

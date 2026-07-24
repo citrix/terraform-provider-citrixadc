@@ -4,11 +4,9 @@ subcategory: "NS"
 
 # Resource: nstestlicense_apply
 
-The nstestlicense_apply resource applies a test/eval license on the Citrix ADC. It is an action-only resource: applying it invokes the NITRO `apply` action, which activates the test/eval license and changes the licensed feature set of the appliance.
+This resource is used to apply a test/eval license on the Citrix ADC.
 
-~> **WARNING** Applying this resource **applies a test/eval license**, changing the licensed feature set and potentially disrupting the running configuration. Use it only for deliberate, operator-initiated purposes on a disposable appliance.
-
-This is an action resource: applying it performs the license apply; it does not manage a persistent object, so re-applying re-runs the action. Use the `citrixadc_nstestlicense` data source to read the (read-only) license feature flags.
+!> **WARNING:** Applying this resource changes the licensed feature set and may disrupt the running configuration. Use only on a disposable appliance.
 
 
 ## Example usage

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -278,4 +279,100 @@ func TestAccAuthenticationazurekeyvault_clientsecret_wo_ephemeral(t *testing.T) 
 			},
 		},
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Unset acceptance test
+//
+// Eligible (unset-wired) attributes: authentication, refreshinterval, signaturealg.
+// Step 1 sets them to non-default values that apply on the appliance; step 2 removes
+// them from config so the provider issues ?action=unset and each reverts to its NITRO
+// default (authentication=ENABLED, refreshinterval=50, signaturealg=RS256), with an
+// empty post-apply plan.
+//
+// Note: signaturealg's only ADC-accepted value is "RS256", which equals its default,
+// so it cannot be varied to a distinct non-default; it is still exercised through the
+// removal path to confirm no perpetual diff.
+// ---------------------------------------------------------------------------
+
+const testAccAuthenticationazurekeyvault_unset_step1 = `
+resource "citrixadc_authenticationazurekeyvault" "tf_unset" {
+  name            = "tf_test_authenticationazurekeyvault_unset"
+  clientid        = "00000000-0000-0000-0000-000000000000"
+  clientsecret    = "tf_test_unset_secret"
+  servicekeyname  = "TestKey"
+  vaultname       = "https://tfadctest.vault.azure.net/"
+  authentication  = "DISABLED"
+  refreshinterval = 100
+  signaturealg    = "RS256"
+}
+`
+
+const testAccAuthenticationazurekeyvault_unset_step2 = `
+resource "citrixadc_authenticationazurekeyvault" "tf_unset" {
+  name           = "tf_test_authenticationazurekeyvault_unset"
+  clientid       = "00000000-0000-0000-0000-000000000000"
+  clientsecret   = "tf_test_unset_secret"
+  servicekeyname = "TestKey"
+  vaultname      = "https://tfadctest.vault.azure.net/"
+  # authentication, refreshinterval, signaturealg removed -> provider must unset them
+}
+`
+
+func TestAccAuthenticationazurekeyvault_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationazurekeyvaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAuthenticationazurekeyvault_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationazurekeyvaultExist("citrixadc_authenticationazurekeyvault.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationazurekeyvault.tf_unset", "authentication", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationazurekeyvault.tf_unset", "refreshinterval", "100"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationazurekeyvault.tf_unset", "signaturealg", "RS256"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationazurekeyvault_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationazurekeyvaultExist("citrixadc_authenticationazurekeyvault.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationazurekeyvault.tf_unset", "authentication", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationazurekeyvault.tf_unset", "refreshinterval", "50"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationazurekeyvault.tf_unset", "signaturealg", "RS256"),
+					// Independent appliance-level confirmation the unset took effect:
+					testAccCheckAuthenticationazurekeyvaultADCValue("tf_test_authenticationazurekeyvault_unset", "authentication", "ENABLED"),
+					testAccCheckAuthenticationazurekeyvaultADCValue("tf_test_authenticationazurekeyvault_unset", "refreshinterval", "50"),
+					testAccCheckAuthenticationazurekeyvaultADCValue("tf_test_authenticationazurekeyvault_unset", "signaturealg", "RS256"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationazurekeyvaultADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckAuthenticationazurekeyvaultADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationazurekeyvault.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationazurekeyvault %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationazurekeyvault %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

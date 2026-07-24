@@ -4,7 +4,7 @@ subcategory: "VideoOptimization"
 
 # Resource: videooptimizationparameter
 
-Configures the global video optimization parameters on the Citrix ADC. These settings control how the ADC samples traffic for video optimization and the pacing rate applied to QUIC video streams. This is a singleton resource: a single instance exists per ADC, so creating it tunes the global parameters rather than provisioning a new object.
+This resource is used to manage the global video optimization parameters.
 
 
 ## Example usage

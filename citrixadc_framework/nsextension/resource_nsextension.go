@@ -105,12 +105,14 @@ func (r *NsextensionResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *NsextensionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsextensionResourceModel
+	var data, state, config NsextensionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to distinguish "removed from config" from "set to default"
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -123,13 +125,20 @@ func (r *NsextensionResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	// attributesToUnset collects eligible attributes that were removed from
+	// config (their static ADC default should be restored via ?action=unset).
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, fmt.Sprintf("comment has changed for nsextension"))
 		hasChange = true
 	}
 	if !data.Trace.Equal(state.Trace) {
 		tflog.Debug(ctx, fmt.Sprintf("trace has changed for nsextension"))
-		hasChange = true
+		if config.Trace.IsNull() { // removed from config -> unset it (revert to ADC default "off")
+			attributesToUnset = append(attributesToUnset, "trace")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tracefunctions.Equal(state.Tracefunctions) {
 		tflog.Debug(ctx, fmt.Sprintf("tracefunctions has changed for nsextension"))
@@ -156,6 +165,16 @@ func (r *NsextensionResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated nsextension resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nsextension resource, skipping update")
+	}
+
+	// Clear any attributes removed from config (update-then-unset ordering, so a
+	// default carried in the update payload is superseded by the unset).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsextension.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsextension attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

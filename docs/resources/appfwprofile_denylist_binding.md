@@ -4,7 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_denylist_binding
 
-Binds a deny-list rule to an application firewall profile on the Citrix ADC. A deny-list entry tells the application firewall to block (or log, reset, or redirect) traffic that matches a specific target (for example a header, cookie, or URL pattern). Create this binding to add such a blocking rule to an existing `appfwprofile`.
+This resource is used to bind a deny-list rule to an application firewall profile.
 
 
 ## Example usage

@@ -4,11 +4,9 @@ subcategory: "NS"
 
 # Resource: nsaptlicense_change
 
-The nsaptlicense_change resource allocates Citrix ADC pooled APT/CADS license counts to the appliance against a registered license session. It is used to draw down a number of available licenses from a pooled licensing server and bind them to this instance.
+This resource is used to allocate pooled APT/CADS license counts to the Citrix ADC.
 
-!> **DISRUPTIVE / NON-IDEMPOTENT.** Applying this resource consumes pooled licenses from the licensing server and changes the licensed capacity of the appliance. It is **not idempotent** — each apply re-runs the allocation action, which can over-allocate or exhaust the pool. Review the `countavailable` value carefully before applying, and treat this resource as a one-shot operational action rather than ordinary declarative configuration.
-
-~> **Note.** This is an action resource: applying it performs the license allocation; it does not manage a persistent object, so re-applying re-runs the allocation. Every attribute is immutable, so changing any argument forces the allocation action to run again as a replacement.
+!> **DISRUPTIVE / NON-IDEMPOTENT:** Each apply consumes pooled licenses and re-runs the allocation, which can over-allocate or exhaust the pool. Review `countavailable` before applying.
 
 
 ## Example usage

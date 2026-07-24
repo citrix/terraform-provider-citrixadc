@@ -4,9 +4,7 @@ subcategory: "Policy"
 
 # Resource: policyurlset_change
 
-The policyurlset_change resource refreshes an existing URL set on the Citrix ADC by re-importing its entries from the source configured on the parent `policyurlset` object. Use it when the remote URL list backing a named url set has been updated and you want the appliance to pull the latest contents into the in-memory set without recreating the `policyurlset` itself.
-
-~> **One-shot action.** This resource maps to the NITRO `update` action (the NITRO doc labels this section `change`, but the real CLI verb is `update`); it does not manage a persistent object, so each `terraform apply` that creates or replaces this resource performs the change once, and changing `name` forces a new action (replacement).
+This resource is used to refresh an existing URL set by re-importing its entries.
 
 
 ## Example usage

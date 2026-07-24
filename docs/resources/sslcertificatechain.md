@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslcertificatechain
 
-Forming a certificate chain links an existing server certificate-key pair to its intermediate CA certificate(s) on the Citrix ADC so that the appliance presents the complete trust chain to clients during the SSL handshake. Building the chain lets clients validate the server certificate up to a trusted root without having to obtain the intermediates separately. This resource triggers the chain-building operation for a previously configured `sslcertkey`.
+This resource is used to build the SSL certificate chain for a certificate-key pair on the Citrix ADC.
 
 
 ## Example usage

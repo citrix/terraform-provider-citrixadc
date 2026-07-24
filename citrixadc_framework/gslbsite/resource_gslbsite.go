@@ -134,13 +134,18 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Backupparentlist.Equal(state.Backupparentlist) {
 		tflog.Debug(ctx, fmt.Sprintf("backupparentlist has changed for gslbsite"))
 		hasChange = true
 	}
 	if !data.Metricexchange.Equal(state.Metricexchange) {
 		tflog.Debug(ctx, fmt.Sprintf("metricexchange has changed for gslbsite"))
-		hasChange = true
+		if config.Metricexchange.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "metricexchange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Naptrreplacementsuffix.Equal(state.Naptrreplacementsuffix) {
 		tflog.Debug(ctx, fmt.Sprintf("naptrreplacementsuffix has changed for gslbsite"))
@@ -148,7 +153,11 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Nwmetricexchange.Equal(state.Nwmetricexchange) {
 		tflog.Debug(ctx, fmt.Sprintf("nwmetricexchange has changed for gslbsite"))
-		hasChange = true
+		if config.Nwmetricexchange.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nwmetricexchange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Parentsite.Equal(state.Parentsite) {
 		tflog.Debug(ctx, fmt.Sprintf("parentsite has changed for gslbsite"))
@@ -160,7 +169,11 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Sessionexchange.Equal(state.Sessionexchange) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionexchange has changed for gslbsite"))
-		hasChange = true
+		if config.Sessionexchange.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessionexchange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Siteipaddress.Equal(state.Siteipaddress) {
 		tflog.Debug(ctx, fmt.Sprintf("siteipaddress has changed for gslbsite"))
@@ -176,7 +189,11 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Triggermonitor.Equal(state.Triggermonitor) {
 		tflog.Debug(ctx, fmt.Sprintf("triggermonitor has changed for gslbsite"))
-		hasChange = true
+		if config.Triggermonitor.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "triggermonitor")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -197,6 +214,15 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated gslbsite resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for gslbsite resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config (update-then-unset ordering)
+	unsetIdPayload := map[string]interface{}{
+		"sitename": data.Sitename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Gslbsite.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset gslbsite attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

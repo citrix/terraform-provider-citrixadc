@@ -4,7 +4,7 @@ subcategory: "Load Balancing"
 
 # Resource: lbvserver_auditnslogpolicy_binding
 
-Binds an audit nslog policy to a load balancing virtual server so that traffic processed by the vserver is logged to an external nslog (syslog-style) audit server. Use this binding to enable per-vserver audit logging and to control, via priority and goto-priority expressions, the order in which audit policies are evaluated for that vserver.
+This resource is used to bind an audit nslog policy to a load balancing virtual server.
 
 
 ## Example usage

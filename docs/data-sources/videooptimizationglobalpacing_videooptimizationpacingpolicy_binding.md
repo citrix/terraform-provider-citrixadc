@@ -6,7 +6,7 @@ subcategory: "VideoOptimization"
 
 The videooptimizationglobalpacing_videooptimizationpacingpolicy_binding data source allows you to retrieve information about a video optimization pacing policy bound to the global pacing bind point.
 
-~> **Note** The video pacing feature is deprecated in current NetScaler releases. This data source remains available for backward compatibility with existing configurations.
+~> **Note:** The video pacing feature is deprecated in current NetScaler releases; retained for backward compatibility.
 
 
 ## Example usage

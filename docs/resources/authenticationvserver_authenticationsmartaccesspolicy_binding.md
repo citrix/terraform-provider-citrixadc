@@ -4,7 +4,7 @@ subcategory: "Authentication"
 
 # Resource: authenticationvserver_authenticationsmartaccesspolicy_binding
 
-Binds a SmartAccess authentication policy to an authentication virtual server so that, during authentication, the ADC evaluates the policy and applies the resulting SmartAccess (EPA/device-posture) tags. Use this resource to control which clients are granted SmartAccess based on the bound policy and its priority within the vserver's policy chain.
+This resource is used to bind a SmartAccess authentication policy to an authentication virtual server.
 
 
 ## Example usage

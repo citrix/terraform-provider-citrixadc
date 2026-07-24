@@ -4,7 +4,8 @@ subcategory: "NS"
 
 # Data Source: nsconsoleloginprompt
 
-The `citrixadc_nsconsoleloginprompt` data source allows you to retrieve information about the console login prompt configuration on the Citrix ADC. This is a global singleton configuration that controls the login prompt displayed on the console.
+The nsconsoleloginprompt data source allows you to retrieve information about the console login prompt configuration.
+
 
 ## Example usage
 

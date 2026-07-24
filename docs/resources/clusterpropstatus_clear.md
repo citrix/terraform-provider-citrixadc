@@ -4,11 +4,7 @@ subcategory: "Cluster"
 
 # Resource: clusterpropstatus_clear
 
-Resets the configuration-propagation status counters of a Citrix ADC cluster, clearing the record of how many propagation commands have failed and the associated command strings tracked per cluster node.
-
-This is an action resource: applying it performs the `clear` action (the equivalent of the `clear cluster propstatus` CLI command); it does not manage a persistent object, so re-applying re-runs the action.
-
-This resource must be applied against the cluster IP (CLIP), so a cluster must already be configured.
+This resource is used to clear the configuration-propagation status counters of a Citrix ADC cluster.
 
 
 ## Example usage

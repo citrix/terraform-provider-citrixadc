@@ -4,9 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_auditnslogpolicy_binding
 
-Binds an audit nslog policy to the global VPN bind point so that the policy is evaluated for traffic handled by the VPN (NetScaler Gateway) virtual servers globally. Use this resource to enable nslog auditing across all VPN sessions without binding the policy to individual vpnvservers.
-
-The VPN global configuration is a singleton bind point on the Citrix ADC; this resource attaches a named audit nslog policy to it.
+This resource is used to bind an audit nslog policy to the global VPN bind point.
 
 
 ## Example usage

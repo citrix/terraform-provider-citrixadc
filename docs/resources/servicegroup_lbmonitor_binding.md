@@ -4,10 +4,8 @@ subcategory: "Basic"
 
 # Resource: servicegroup_lbmonitor_binding
 
-The servicegroup_lbmonitor_binding resource is used to bind servicegroups to load balancing monitors.
+This resource is used to bind service groups to load balancing monitors.
 
-~> If you are using this resource to bind lbmonitors to a servicegroup,
-do not define the `lbmonitor` attribute in the servicegroup resource.
 
 ## Example usage
 

@@ -4,15 +4,7 @@ subcategory: "Integrated Caching"
 
 # Resource: cacheobject_save
 
-The cacheobject_save resource persists objects currently held in the Citrix ADC integrated cache to disk, so that cached content survives a reboot or can be replicated to the secondary node in a high-availability pair. It is an action-only resource: applying it invokes the NITRO `save` action against the integrated cache. This is useful for preserving a warm cache across appliance restarts or for pushing the cache contents to the secondary node.
-
-Each apply performs the save; changing any argument re-fires the action with the new inputs.
-
-Unlike the expire and flush actions, `save` has no mandatory arguments: with no arguments a save-all is performed. Optionally, `locator` and `tosecondary` may be supplied.
-
-To re-run the action (for example, to save the cache again), taint the resource or bump a distinguishing input value so Terraform re-creates it.
-
-> The integrated caching (IC) feature must be enabled on the Citrix ADC before this action can be performed (`enable ns feature IC`).
+This resource is used to save objects from the Citrix ADC integrated cache to disk.
 
 
 ## Example usage

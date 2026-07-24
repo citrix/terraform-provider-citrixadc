@@ -4,7 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_appfwconfidfield_binding
 
-Designates a form field as confidential within an application firewall profile on the Citrix ADC. Confidential fields (for example, password or credit-card input fields on a web form) are masked in the application firewall logs and traces, preventing sensitive user-submitted values from being recorded. Create this binding to attach a confidential-field rule to an existing `appfwprofile`.
+This resource is used to bind a confidential form field to an application firewall profile.
 
 
 ## Example usage

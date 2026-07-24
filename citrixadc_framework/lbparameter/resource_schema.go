@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -55,6 +56,7 @@ func (r *LbparameterResource) Schema(ctx context.Context, req resource.SchemaReq
 			"allowboundsvcremoval": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "This is used, to enable/disable the option of svc/svcgroup removal, if it is bound to one or more vserver. If it is enabled, the svc/svcgroup can be removed, even if it bound to vservers. If disabled, an error will be thrown, when the user tries to remove a svc/svcgroup without unbinding from its vservers.",
 			},
 			"computedadccookieattribute": schema.StringAttribute{
@@ -65,6 +67,7 @@ func (r *LbparameterResource) Schema(ctx context.Context, req resource.SchemaReq
 			"consolidatedlconn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "To find the service with the fewest connections, the virtual server uses the consolidated connection statistics from all the packet engines. The NO setting allows consideration of only the number of connections on the packet engine that received the new connection.",
 			},
 			"cookiepassphrase": schema.StringAttribute{
@@ -87,26 +90,31 @@ func (r *LbparameterResource) Schema(ctx context.Context, req resource.SchemaReq
 			"dbsttl": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Specify the TTL for DNS record for domain based service. The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors",
 			},
 			"dropmqttjumbomessage": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "When this option is enabled, MQTT messages of length greater than 64k will be dropped and the client/server connections will be reset.",
 			},
 			"httponlycookieflag": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Include the HttpOnly attribute in persistence cookies. The HttpOnly attribute limits the scope of a cookie to HTTP requests and helps mitigate the risk of cross-site scripting attacks.",
 			},
 			"lbhashalgorithm": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DEFAULT"),
 				Description: "This option dictates the hashing algorithm used for hash based LB methods (URLHASH, DOMAINHASH, SOURCEIPHASH, DESTINATIONIPHASH, SRCIPDESTIPHASH, SRCIPSRCPORTHASH, TOKEN, USER_TOKEN, CALLIDHASH).",
 			},
 			"lbhashfingers": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(256),
 				Description: "This option is used to specify the number of fingers to be used in PRAC and JARH algorithms for hash based LB methods. Increasing the number of fingers might give better distribution of traffic at the expense of additional memory",
 			},
 			"literaladccookieattribute": schema.StringAttribute{
@@ -122,26 +130,31 @@ func (r *LbparameterResource) Schema(ctx context.Context, req resource.SchemaReq
 			"monitorconnectionclose": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("FIN"),
 				Description: "Close monitoring connections by sending the service a connection termination message with the specified bit set.",
 			},
 			"monitorskipmaxclient": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "When a monitor initiates a connection to a service, do not check to determine whether the number of connections to the service has reached the limit specified by the service's Max Clients setting. Enables monitoring to continue even if the service has reached its connection limit.",
 			},
 			"preferdirectroute": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Perform route lookup for traffic received by the Citrix ADC, and forward the traffic according to configured routes. Do not set this parameter if you want a wildcard virtual server to direct packets received by the appliance to an intermediary device, such as a firewall, even if their destination is directly connected to the appliance. Route lookup is performed after the packets have been processed and returned by the intermediary device.",
 			},
 			"proximityfromself": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Use the ADC location instead of client IP for static proximity LB or GSLB decision.",
 			},
 			"retainservicestate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "This option is used to retain the original state of service or servicegroup member when an enable server command is issued.",
 			},
 			"startuprrfactor": schema.Int64Attribute{
@@ -152,21 +165,25 @@ func (r *LbparameterResource) Schema(ctx context.Context, req resource.SchemaReq
 			"storemqttclientidandusername": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "This option allows to store the MQTT clientid and username in transactional logs",
 			},
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NOLBACTION"),
 				Description: "Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:\n* NOLBACTION - Does not consider LB action in making LB decision.\n* RESET - Reset the request and notify the user, so that the user can resend the request.\n* DROP - Drop the request without sending a response to the user.",
 			},
 			"useencryptedpersistencecookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Encode persistence cookie values using SHA2 hash.",
 			},
 			"useportforhashlb": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Include the port number of the service when creating a hash for hash based load balancing methods. With the NO setting, only the IP address of the service is considered when creating a hash.",
 			},
 			"usesecuredpersistencecookie": schema.StringAttribute{
@@ -176,6 +193,7 @@ func (r *LbparameterResource) Schema(ctx context.Context, req resource.SchemaReq
 			"vserverspecificmac": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Allow a MAC-mode virtual server to accept traffic returned by an intermediary device, such as a firewall, to which the traffic was previously forwarded by another MAC-mode virtual server. The second virtual server can then distribute that traffic across the destination server farm. Also useful when load balancing Branch Repeater appliances.\nNote: The second virtual server can also send the traffic to another set of intermediary devices, such as another set of firewalls. If necessary, you can configure multiple MAC-mode virtual servers to pass traffic successively through multiple sets of intermediary devices.",
 			},
 		},

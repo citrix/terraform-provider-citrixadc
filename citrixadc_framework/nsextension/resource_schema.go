@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -63,6 +64,7 @@ func (r *NsextensionResource) Schema(ctx context.Context, req resource.SchemaReq
 			"trace": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("off"),
 				Description: "Enables tracing to the NS log file of extension execution:\n   off   - turns off tracing (equivalent to unset ns extension <extension-name> -trace)\n   calls - traces extension function calls with arguments and function returns with the first return value\n   lines - traces the above plus line numbers for executed extension lines\n   all   - traces the above plus local variables changed by executed extension lines\nNote that the DEBUG log level must be enabled to see extension tracing.\nThis can be done by set audit syslogParams -loglevel ALL or -loglevel DEBUG.",
 			},
 			"tracefunctions": schema.StringAttribute{

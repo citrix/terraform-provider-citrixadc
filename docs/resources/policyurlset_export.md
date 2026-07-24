@@ -4,9 +4,7 @@ subcategory: "Policy"
 
 # Resource: policyurlset_export
 
-The policyurlset_export resource exports the entries of an existing URL set on the Citrix ADC to an external CSV file. Use it when you want to back up or share the contents of a named `policyurlset` object by writing them to a remote location over HTTP, HTTPS or FTP.
-
-~> **One-shot action.** This resource maps to the NITRO `export` action; it does not manage a persistent object, so each `terraform apply` that creates or replaces this resource performs the export once, and changing `name` or `url` forces a new export (replacement).
+This resource is used to export the entries of a URL set to an external CSV file.
 
 
 ## Example usage

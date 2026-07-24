@@ -4,7 +4,7 @@ subcategory: "Load Balancing"
 
 # Data Source: lbpolicylabel
 
-The lbpolicylabel data source allows you to retrieve information about an existing LB policy label configured on the Citrix ADC. Look up a label by its name to reference its attributes (for example, its protocol type) elsewhere in your configuration.
+The lbpolicylabel data source allows you to retrieve information about an LB policy label.
 
 
 ## Example usage

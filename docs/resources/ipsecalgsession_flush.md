@@ -4,11 +4,7 @@ subcategory: "IPSECALG"
 
 # Resource: ipsecalgsession_flush
 
-The ipsecalgsession_flush resource flushes active IPSec ALG (Application Layer Gateway) sessions on the Citrix ADC. It is an action-only resource: applying it invokes the NITRO `?action=flush` action, which clears entries from the IPSec ALG session table so that new IPSec traffic re-establishes through the current configuration. This is useful for clearing stale mappings, for troubleshooting, or for forcing sessions off a particular source, NAT, or destination IP address.
-
-This is an action resource: applying it performs the flush; it does not manage a persistent object, so re-applying re-runs the action. Changing any scope argument forces the resource to be recreated, which re-runs the flush.
-
--> **Note:** The IPSec ALG feature must be in use for sessions to exist. Flushing when no sessions match the supplied scope has no effect.
+This resource is used to flush active IPSec ALG sessions on the Citrix ADC.
 
 
 ## Example usage

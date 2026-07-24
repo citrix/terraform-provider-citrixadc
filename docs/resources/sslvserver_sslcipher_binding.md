@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslvserver\_sslcipher\_binding
 
-Binds a cipher, cipher group, or predefined cipher alias to an SSL virtual server on the Citrix ADC. Use this resource to control which SSL/TLS cipher suites an SSL vserver offers during the handshake.
-
-~> **Note** Directly binding a cipher to an SSL vserver requires that the default SSL profile is **disabled** on the appliance. When the default SSL profile is enabled, ciphers must be managed through an SSL profile instead.
+This resource is used to bind a cipher, cipher group, or cipher alias to an SSL virtual server.
 
 
 ## Example usage

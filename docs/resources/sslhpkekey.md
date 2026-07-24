@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslhpkekey
 
-The sslhpkekey resource installs a Hybrid Public Key Encryption (HPKE) key on the Citrix ADC. This key is used by the Encrypted Client Hello (ECH) feature to decrypt the inner ClientHello, allowing the ADC to terminate TLS connections in which the client has concealed the server name and other handshake details.
-
-All attributes are immutable: changing any of them forces the key to be recreated.
+This resource is used to manage the HPKE key used by Encrypted Client Hello.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nsacls6_clear
 
-Removes all configured IPv6 extended ACL (ACL6) rules from the Citrix ADC in one operation. Use this resource to reset the ACL6 rule set — for example, before reloading a fresh set of rules or when tearing down an ACL6 configuration — instead of deleting each `ns acl6` entry individually.
-
-This is an action resource: applying it clears the current ACL6 rule set; it does not manage a persistent object, so re-applying re-runs the action.
+This resource is used to clear all IPv6 extended ACL (ACL6) rules.
 
 
 ## Example usage

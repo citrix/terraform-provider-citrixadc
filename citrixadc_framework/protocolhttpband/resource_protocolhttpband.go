@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -85,12 +87,14 @@ func (r *ProtocolhttpbandResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *ProtocolhttpbandResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ProtocolhttpbandResourceModel
+	var data, state, config ProtocolhttpbandResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to distinguish "removed from config" (unset) from "changed value".
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -103,13 +107,23 @@ func (r *ProtocolhttpbandResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	// Attributes removed from config are reverted to their ADC default via ?action=unset.
+	attributesToUnset := []string{}
 	if !data.Reqbandsize.Equal(state.Reqbandsize) {
 		tflog.Debug(ctx, "reqbandsize has changed for protocolhttpband")
-		hasChange = true
+		if config.Reqbandsize.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "reqbandsize")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Respbandsize.Equal(state.Respbandsize) {
 		tflog.Debug(ctx, "respbandsize has changed for protocolhttpband")
-		hasChange = true
+		if config.Respbandsize.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "respbandsize")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -125,6 +139,16 @@ func (r *ProtocolhttpbandResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated protocolhttpband resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for protocolhttpband resource, skipping update")
+	}
+
+	// Update-then-unset ordering: any default the update payload carried for a
+	// removed attribute is superseded by the unset, reverting it to the ADC default.
+	// protocolhttpband is a singleton settings resource, so the unset payload
+	// carries no identity fields.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Protocolhttpband.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset protocolhttpband attributes, got error: %s", err))
+		return
 	}
 
 	// Save updated data into Terraform state

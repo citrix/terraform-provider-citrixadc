@@ -4,7 +4,7 @@ subcategory: "LSN"
 
 # Resource: lsngroup_lsnsipalgprofile_binding
 
-Associates an LSN (Large Scale NAT) SIP ALG profile with an LSN group so that SIP traffic processed by that group is handled according to the profile's Application Layer Gateway settings (for example, NAT rewriting of SIP and SDP payloads and pinhole management). Create one binding to attach a specific `citrixadc_lsnsipalgprofile` to a `citrixadc_lsngroup`.
+This resource is used to bind an LSN SIP ALG profile to an LSN group.
 
 
 ## Example usage

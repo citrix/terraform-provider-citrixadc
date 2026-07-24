@@ -4,9 +4,8 @@ subcategory: "Application Firewall"
 
 # Data Source: appfwsignatures
 
-Use this data source to retrieve information about an existing Application Firewall Signatures object.
+The appfwsignatures data source allows you to retrieve information about an Application Firewall signatures object.
 
-The `citrixadc_appfwsignatures` data source allows you to retrieve details of an Application Firewall signatures object by its name. This is useful for referencing existing signature objects in your Terraform configurations without managing them directly.
 
 ## Example usage
 

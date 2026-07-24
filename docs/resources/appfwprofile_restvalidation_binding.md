@@ -4,7 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_restvalidation_binding
 
-Adds a REST/API schema validation relaxation rule to a Citrix ADC application firewall profile. When the profile enforces REST API schema validation, this binding exempts the REST endpoints (or any URLs) matching the configured pattern from that check, letting you whitelist known-good API paths while still protecting the rest of the application.
+This resource is used to manage REST validation bindings of an application firewall profile.
 
 
 ## Example usage

@@ -74,6 +74,7 @@ func (r *AuthenticationpushserviceResource) Schema(ctx context.Context, req reso
 			"refreshinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(50),
 				Description: "Interval at which certificates or idtoken is refreshed.",
 			},
 		},

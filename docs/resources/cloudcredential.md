@@ -4,9 +4,7 @@ subcategory: "Cloud"
 
 # Resource: cloudcredential
 
-Configures the Azure application (service principal) credentials that the Citrix ADC uses to authenticate to Azure for cloud integrations such as Azure Key Vault. Create this resource to store the tenant ID, application (client) ID, and application secret the ADC presents when requesting Azure access tokens. This is a singleton resource: only one set of cloud credentials exists on the appliance, so there is no name key and the resource is never deleted from the ADC (removing it from your configuration only removes it from Terraform state).
-
-~> **Note** The NITRO GET for `cloudcredential` returns only an "is set" flag; it does not echo back `tenantidentifier`, `applicationid`, or the secret. The provider therefore manages all configured values in Terraform state from your configuration rather than reading them back from the ADC.
+This resource is used to manage Azure cloud (service principal) credentials on the Citrix ADC.
 
 
 ## Example usage

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -47,6 +48,7 @@ func (r *MetricsprofileResource) Schema(ctx context.Context, req resource.Schema
 			"metrics": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "This option is used enable or disable metrics",
 			},
 			"metricsauthtoken": schema.StringAttribute{
@@ -74,6 +76,7 @@ func (r *MetricsprofileResource) Schema(ctx context.Context, req resource.Schema
 			"metricsexportfrequency": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(30),
 				Description: "This option is for configuring the metrics export frequency in seconds, frequency value must be in [30,300] seconds range",
 			},
 			"name": schema.StringAttribute{
@@ -86,6 +89,7 @@ func (r *MetricsprofileResource) Schema(ctx context.Context, req resource.Schema
 			"outputmode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("avro"),
 				Description: "This option indicates the format in which metrics data is generated",
 			},
 			"schemafile": schema.StringAttribute{
@@ -96,6 +100,7 @@ func (r *MetricsprofileResource) Schema(ctx context.Context, req resource.Schema
 			"servemode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("Push"),
 				Description: "This option is to configure metrics pull or push mode. In push mode metricscollector exports metrics to configured collector. In pull mode, metricscollector only generates the metrics which will be pulled by external agent. No collector configuration is required in pull mode and it is applicable only for output mode Prometheus",
 			},
 		},

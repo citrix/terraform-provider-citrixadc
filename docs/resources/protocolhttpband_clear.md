@@ -4,9 +4,7 @@ subcategory: "Protocol"
 
 # Resource: protocolhttpband_clear
 
-The protocolhttpband_clear resource clears (resets) the HTTP band statistics that the Citrix ADC accumulates for request and response payload sizes. Use it when you want to discard the previously collected size-distribution counters for a given band type so that the HTTP band statistics reports start accumulating from zero again (for example, after tuning `reqbandsize` / `respbandsize` on the `protocolhttpband` object, or before capturing a fresh measurement window).
-
-~> **One-shot action.** This resource maps to the NITRO `clear` action (CLI: `clear protocol httpBand -type <type>`); it does not manage a persistent object, so each `terraform apply` that creates or replaces this resource performs the clear once, and changing `type` forces a new clear (replacement).
+This resource is used to clear HTTP band statistics on the Citrix ADC.
 
 
 ## Example usage

@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -95,12 +97,14 @@ func (r *VideooptimizationparameterResource) Read(ctx context.Context, req resou
 }
 
 func (r *VideooptimizationparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VideooptimizationparameterResourceModel
+	var data, state, config VideooptimizationparameterResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -113,13 +117,18 @@ func (r *VideooptimizationparameterResource) Update(ctx context.Context, req res
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Quicpacingrate.Equal(state.Quicpacingrate) {
 		tflog.Debug(ctx, fmt.Sprintf("quicpacingrate has changed for videooptimizationparameter"))
 		hasChange = true
 	}
 	if !data.Randomsamplingpercentage.Equal(state.Randomsamplingpercentage) {
 		tflog.Debug(ctx, fmt.Sprintf("randomsamplingpercentage has changed for videooptimizationparameter"))
-		hasChange = true
+		if config.Randomsamplingpercentage.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "randomsamplingpercentage")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -136,6 +145,14 @@ func (r *VideooptimizationparameterResource) Update(ctx context.Context, req res
 		tflog.Trace(ctx, "Updated videooptimizationparameter resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for videooptimizationparameter resource, skipping update")
+	}
+
+	// Unset any attributes that were removed from configuration so the appliance
+	// reverts them to their defaults. Singleton resource - no identity fields.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Videooptimizationparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset videooptimizationparameter attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

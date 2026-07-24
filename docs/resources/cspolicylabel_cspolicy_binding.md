@@ -4,7 +4,7 @@ subcategory: "Content Switching"
 
 # Resource: cspolicylabel\_cspolicy\_binding
 
-Binds a content switching policy to a content switching policy label, defining the policy's evaluation priority within the label and what action (target virtual server or label invocation) to take when the policy rule matches. Policy labels let you group and reuse a sequence of content switching policies that can be invoked from a content switching virtual server or from another label.
+This resource is used to bind a content switching policy to a content switching policy label.
 
 
 ## Example usage

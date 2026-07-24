@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslvserver\_sslcacertbundle\_binding
 
-Binds a CA certificate bundle to an SSL virtual server on the Citrix ADC. Use this resource to present a chain of CA certificates during the SSL handshake, for example when validating client certificates against a trusted certificate authority bundle.
+This resource is used to manage the binding between a CA certificate bundle and an SSL virtual server.
 
 
 ## Example usage

@@ -276,17 +276,26 @@ func (r *SystemuserResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Allowedmanagementinterface.Equal(state.Allowedmanagementinterface) {
 		tflog.Debug(ctx, fmt.Sprintf("allowedmanagementinterface has changed for systemuser"))
 		hasChange = true
 	}
 	if !data.Externalauth.Equal(state.Externalauth) {
 		tflog.Debug(ctx, fmt.Sprintf("externalauth has changed for systemuser"))
-		hasChange = true
+		if config.Externalauth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "externalauth")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logging.Equal(state.Logging) {
 		tflog.Debug(ctx, fmt.Sprintf("logging has changed for systemuser"))
-		hasChange = true
+		if config.Logging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logging")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxsession.Equal(state.Maxsession) {
 		tflog.Debug(ctx, fmt.Sprintf("maxsession has changed for systemuser"))
@@ -306,7 +315,11 @@ func (r *SystemuserResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Timeout.Equal(state.Timeout) {
 		tflog.Debug(ctx, fmt.Sprintf("timeout has changed for systemuser"))
-		hasChange = true
+		if config.Timeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "timeout")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -327,6 +340,17 @@ func (r *SystemuserResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated systemuser resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for systemuser resource, skipping update")
+	}
+
+	// Issue a single batched unset for attributes removed from config, so that the
+	// appliance reverts them to their ADC defaults. Update-then-unset ordering
+	// ensures any default the update payload carried is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"username": data.Username.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Systemuser.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset systemuser attributes, got error: %s", err))
+		return
 	}
 
 	// Handle inline cmdpolicybinding changes

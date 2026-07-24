@@ -4,7 +4,7 @@ subcategory: "AAA"
 
 # Data Source: aaagroup_intranetip6_binding
 
-The `aaagroup_intranetip6_binding` data source allows you to retrieve information about an intranet IPv6 range bound to an AAA group on the Citrix ADC, such as how many addresses are allocated to the group starting from a given IPv6 address.
+The aaagroup_intranetip6_binding data source allows you to retrieve information about an intranet IPv6 address range bound to an AAA group.
 
 
 ## Example usage

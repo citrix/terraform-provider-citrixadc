@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslservice_sslcipher_binding
 
-Binds an individual cipher, a user-defined cipher group, or a predefined (built-in) cipher alias directly to an SSL service, controlling which cipher suites the service negotiates during the TLS handshake. Use this to tailor the cipher set of a single SSL service independently of the cipher list configured on its SSL profile.
-
-~> Direct cipher binding on an SSL service takes effect only when the default SSL profile feature is disabled. When the default SSL profile is enabled, ciphers are managed through the SSL profile (`sslprofile_sslcipher_binding`) rather than bound directly to the service.
+This resource is used to bind an SSL cipher to an SSL service.
 
 
 ## Example usage

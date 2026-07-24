@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -73,6 +75,98 @@ func TestAccProtocolhttpband_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// --- Unset test -------------------------------------------------------------
+//
+// protocolhttpband has unset support wired for reqbandsize (default 100) and
+// respbandsize (default 1024). Step 1 sets both to non-default values; step 2
+// removes them from config so the provider issues ?action=unset, reverting each
+// to its ADC default. The revert is asserted both in Terraform state and, for
+// independent appliance-level confirmation, directly on the ADC via the
+// stats show's `bandrange` field (keyed by the mandatory `type` filter:
+// type=REQUEST reports reqbandsize, type=RESPONSE reports respbandsize).
+
+const testAccProtocolhttpband_unset_step1 = `
+resource "citrixadc_protocolhttpband" "tf_unset" {
+  reqbandsize  = 200
+  respbandsize = 2048
+}
+`
+
+const testAccProtocolhttpband_unset_step2 = `
+resource "citrixadc_protocolhttpband" "tf_unset" {
+  # reqbandsize / respbandsize removed from config -> provider must unset them,
+  # reverting to the ADC defaults (100 / 1024).
+}
+`
+
+func TestAccProtocolhttpband_unset(t *testing.T) {
+	// The resource's other tests (TestAccProtocolhttpband_basic) run on the
+	// default standalone testbed with no skip guard, so none is added here.
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Singleton settings resource with a no-op Delete: nothing to destroy.
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccProtocolhttpband_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProtocolhttpbandExist("citrixadc_protocolhttpband.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_protocolhttpband.tf_unset", "reqbandsize", "200"),
+					resource.TestCheckResourceAttr("citrixadc_protocolhttpband.tf_unset", "respbandsize", "2048"),
+					testAccCheckProtocolhttpbandADCBandrange("REQUEST", "200"),
+					testAccCheckProtocolhttpbandADCBandrange("RESPONSE", "2048"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccProtocolhttpband_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProtocolhttpbandExist("citrixadc_protocolhttpband.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_protocolhttpband.tf_unset", "reqbandsize", "100"),
+					resource.TestCheckResourceAttr("citrixadc_protocolhttpband.tf_unset", "respbandsize", "1024"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckProtocolhttpbandADCBandrange("REQUEST", "100"),
+					testAccCheckProtocolhttpbandADCBandrange("RESPONSE", "1024"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckProtocolhttpbandADCBandrange asserts, directly on the appliance,
+// the configured band size for the given band type (REQUEST -> reqbandsize,
+// RESPONSE -> respbandsize). NITRO exposes only a stats-only `show` keyed by a
+// mandatory `type` filter whose `bandrange` field echoes the configured band
+// size for that type, so this proves the unset actually reverted the value on
+// the ADC rather than just in Terraform state.
+func testAccCheckProtocolhttpbandADCBandrange(bandType, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		findParams := service.FindParams{
+			ResourceType: service.Protocolhttpband.Type(),
+			ArgsMap:      map[string]string{"type": bandType},
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		if len(dataArr) == 0 {
+			return fmt.Errorf("protocolhttpband (type=%s) not found on appliance", bandType)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", dataArr[0]["bandrange"]))
+		if got != want {
+			return fmt.Errorf("protocolhttpband type=%s: appliance bandrange = %q, want %q (unset did not revert it)", bandType, got, want)
+		}
+		return nil
+	}
 }
 
 // testAccCheckProtocolhttpbandExist verifies the singleton is present in Terraform

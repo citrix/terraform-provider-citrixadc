@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslservice_sslpolicy_binding
 
-Binds an SSL policy to an SSL service so that the policy's rule is evaluated for traffic handled by the service, letting you apply SSL actions (such as enforcing handshake controls or rejecting connections) on a per-service basis. Use the priority and goto-priority expression to control the order in which multiple bound policies are evaluated.
+This resource is used to bind an SSL policy to an SSL service.
 
 
 ## Example usage

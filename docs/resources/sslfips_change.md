@@ -4,9 +4,9 @@ subcategory: "SSL"
 
 # Resource: sslfips_change
 
-The sslfips_change resource updates the firmware on the FIPS Hardware Security Module (HSM) of a Citrix ADC FIPS appliance by pushing a new FIPS firmware image to the card. Use it when you need to upgrade or reload the FIPS card firmware from a firmware file staged on the appliance.
+This resource is used to update the firmware on the FIPS HSM of a Citrix ADC FIPS appliance.
 
-~> **One-shot action.** This resource performs the `change` action (CLI: `update ssl fips`); it does not create a persistent object on the appliance. Each `terraform apply` that creates or replaces this resource performs the firmware change once, and changing `fipsfw` forces a new firmware change (replacement).
+~> **One-shot action:** Requires a FIPS appliance. Each apply that creates or replaces this resource performs the firmware change once; changing `fipsfw` forces a new change.
 
 
 ## Example usage

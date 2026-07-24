@@ -4,7 +4,7 @@ subcategory: "VideoOptimization"
 
 # Resource: videooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding
 
-Binds a video optimization detection policy to a video optimization detection policy label on the Citrix ADC. Use this resource to add a detection policy to a reusable policy label at a specific evaluation priority, and to control the flow of evaluation (next-priority expression and label invocation) when that policy's rule matches request or response traffic.
+This resource is used to bind a video optimization detection policy to a video optimization detection policy label.
 
 
 ## Example usage

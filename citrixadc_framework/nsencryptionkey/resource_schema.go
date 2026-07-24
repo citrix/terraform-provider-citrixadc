@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -77,6 +78,7 @@ func (r *NsencryptionkeyResource) Schema(ctx context.Context, req resource.Schem
 			"padding": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DEFAULT"),
 				Description: "Enables or disables the padding of plaintext to meet the block size requirements of block ciphers:\n   ON - For encryption, PKCS5/7 padding is used, which appends n bytes of value n on the end of the plaintext to bring it to the cipher block lnegth. If the plaintext length is alraady a multiple of the block length, an additional block with bytes of value block_length will be added. For decryption, ISO 10126 padding is accepted, which expects the last byte of the block to be the number of added pad bytes. Note that this accepts PKCS5/7 padding, as well as ANSI_X923 padding. Padding ON is the default for the ECB and CBD modes.\n   OFF - No padding. An Undef error will occur with the ECB or CBC modes if the plaintext length is not a multitple of the cipher block size. This can be used with the CFB and OFB modes, and with the ECB and CBC modes if the plaintext will always be an integral number of blocks, or if custom padding is implemented using a policy extension function. Padding OFf is the default for CFB and OFB modes.",
 			},
 		},

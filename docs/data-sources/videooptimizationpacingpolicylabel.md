@@ -4,9 +4,9 @@ subcategory: "VideoOptimization"
 
 # Data Source: videooptimizationpacingpolicylabel
 
-The videooptimizationpacingpolicylabel data source allows you to retrieve information about an existing video optimization pacing policy label configured on the Citrix ADC.
+The videooptimizationpacingpolicylabel data source allows you to retrieve information about a video optimization pacing policy label.
 
-~> **Note** Video optimization pacing functionality is deprecated on the Citrix ADC (NITRO/CLI). This data source is retained for compatibility with existing configurations.
+~> **Note:** Video optimization pacing is deprecated on the Citrix ADC; retained for backward compatibility.
 
 
 ## Example usage

@@ -4,9 +4,9 @@ subcategory: "VideoOptimization"
 
 # Data Source: videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding
 
-The videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding data source allows you to retrieve information about a video optimization pacing policy bound to a video optimization pacing policy label on the Citrix ADC.
+The videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding data source allows you to retrieve information about a video optimization pacing policy bound to a pacing policy label.
 
-~> **Note** The Citrix ADC CLI marks the video optimization pacing feature as deprecated. This data source is retained for backward compatibility.
+~> **Note:** Video optimization pacing is deprecated on the Citrix ADC; retained for backward compatibility.
 
 
 ## Example usage

@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -305,6 +307,126 @@ func TestAccRdpclientprofile_psk_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Step 1: every unset-eligible attribute set to a valid non-default value.
+const testAccRdpclientprofile_unset_step1 = `
+resource "citrixadc_rdpclientprofile" "tf_unset" {
+	name                 = "tf_test_rdpclientprofile_unset"
+	addusernameinrdpfile = "YES"
+	audiocapturemode     = "ENABLE"
+	keyboardhook         = "OnRemote"
+	multimonitorsupport  = "DISABLE"
+	randomizerdpfilename = "YES"
+	rdpcookievalidity    = 120
+	rdpurloverride       = "DISABLE"
+	rdpvalidateclientip  = "ENABLE"
+	redirectclipboard    = "DISABLE"
+	redirectcomports     = "ENABLE"
+	redirectdrives       = "ENABLE"
+	redirectpnpdevices   = "ENABLE"
+	redirectprinters     = "DISABLE"
+	videoplaybackmode    = "DISABLE"
+}
+`
+
+// Step 2: all eligible attributes removed from config -> provider must unset them,
+// reverting each to its NITRO default.
+const testAccRdpclientprofile_unset_step2 = `
+resource "citrixadc_rdpclientprofile" "tf_unset" {
+	name = "tf_test_rdpclientprofile_unset"
+}
+`
+
+func TestAccRdpclientprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRdpclientprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccRdpclientprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpclientprofileExist("citrixadc_rdpclientprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "addusernameinrdpfile", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "audiocapturemode", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "keyboardhook", "OnRemote"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "multimonitorsupport", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "randomizerdpfilename", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "rdpcookievalidity", "120"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "rdpurloverride", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "rdpvalidateclientip", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectclipboard", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectcomports", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectdrives", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectpnpdevices", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectprinters", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "videoplaybackmode", "DISABLE"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccRdpclientprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRdpclientprofileExist("citrixadc_rdpclientprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "addusernameinrdpfile", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "audiocapturemode", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "keyboardhook", "InFullScreenMode"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "multimonitorsupport", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "randomizerdpfilename", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "rdpcookievalidity", "60"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "rdpurloverride", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "rdpvalidateclientip", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectclipboard", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectcomports", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectdrives", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectpnpdevices", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "redirectprinters", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_rdpclientprofile.tf_unset", "videoplaybackmode", "ENABLE"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "addusernameinrdpfile", "NO"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "audiocapturemode", "DISABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "keyboardhook", "InFullScreenMode"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "multimonitorsupport", "ENABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "randomizerdpfilename", "NO"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "rdpcookievalidity", "60"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "rdpurloverride", "ENABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "rdpvalidateclientip", "DISABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "redirectclipboard", "ENABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "redirectcomports", "DISABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "redirectdrives", "DISABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "redirectpnpdevices", "DISABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "redirectprinters", "ENABLE"),
+					testAccCheckRdpclientprofileADCValue("tf_test_rdpclientprofile_unset", "videoplaybackmode", "ENABLE"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRdpclientprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckRdpclientprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Rdpclientprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("rdpclientprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("rdpclientprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccRdpclientprofile_sdkv2StateUpgrade(t *testing.T) {

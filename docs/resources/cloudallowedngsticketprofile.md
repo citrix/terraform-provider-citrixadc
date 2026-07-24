@@ -4,7 +4,7 @@ subcategory: "Cloud"
 
 # Resource: cloudallowedngsticketprofile
 
-Configures a profile that identifies the set of next-generation service (NGS) tickets the Citrix ADC is allowed to accept in a cloud deployment. Create one when you need to authorize a named group of allowed tickets and, optionally, record who created the profile.
+This resource is used to manage cloud allowed NGS ticket profiles.
 
 
 ## Example usage

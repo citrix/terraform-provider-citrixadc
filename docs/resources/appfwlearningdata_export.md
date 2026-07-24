@@ -4,9 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwlearningdata_export
 
-The appfwlearningdata_export resource exports the Citrix ADC Application-Firewall learned-data for a specific profile and security check to a file on the appliance. It is an action-only resource: applying it invokes the NITRO `export` action on `appfwlearningdata`. Use it to capture the rules that the App-Firewall learning engine has accumulated (for example, to review, archive, or transfer them) rather than deploying them directly.
-
-This resource is immutable, so changing any input re-runs the export action.
+This resource is used to export Application Firewall learned data for a profile and security check.
 
 
 ## Example usage

@@ -4,9 +4,8 @@ subcategory: "Cluster"
 
 # Data Source: clusternode
 
-Use this data source to retrieve information about an existing Cluster Node.
+The clusternode data source allows you to retrieve information about a cluster node.
 
-The `citrixadc_clusternode` data source allows you to retrieve details of a cluster node by its node ID. This is useful for referencing existing cluster nodes in your Terraform configurations without managing them directly.
 
 ## Example usage
 

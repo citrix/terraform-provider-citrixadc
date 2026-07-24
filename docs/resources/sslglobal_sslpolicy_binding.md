@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslglobal_sslpolicy_binding
 
-Binds an SSL policy to the global SSL bind point on the Citrix ADC. A global binding applies the policy across all SSL traffic processed by the appliance rather than to a single virtual server, which is useful for enforcing organization-wide SSL behavior such as renegotiation controls or denial-of-service protection.
+This resource is used to bind an SSL policy to the global SSL bind point.
 
 
 ## Example usage

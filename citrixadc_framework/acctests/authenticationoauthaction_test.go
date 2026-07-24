@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -317,6 +318,111 @@ func TestAccAuthenticationoauthaction_clientsecret_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset acceptance test: proves that unset-eligible attributes take effect when
+// set (step 1) and revert to their NITRO defaults when removed from config (step 2),
+// with an empty post-apply plan and direct appliance confirmation.
+//
+// tenantid is not unset-eligible; it is kept constant in both steps because it is a
+// mandatory prerequisite for oauthtype=INTUNE (the only non-default oauthtype value).
+const testAccAuthenticationoauthaction_unset_step1 = `
+
+	resource "citrixadc_authenticationoauthaction" "tf_unset" {
+		name                    = "tf_test_authenticationoauthaction_unset"
+		authorizationendpoint   = "https://example.com/"
+		tokenendpoint           = "https://example.com/"
+		clientid                = "id"
+		clientsecret            = "secret"
+		tenantid                = "my-tenant-id"
+		authentication          = "DISABLED"
+		oauthtype               = "INTUNE"
+		pkce                    = "DISABLED"
+		refreshinterval         = 100
+		skewtime                = 10
+		tokenendpointauthmethod = "client_secret_jwt"
+	}
+`
+
+const testAccAuthenticationoauthaction_unset_step2 = `
+
+	resource "citrixadc_authenticationoauthaction" "tf_unset" {
+		name                    = "tf_test_authenticationoauthaction_unset"
+		authorizationendpoint   = "https://example.com/"
+		tokenendpoint           = "https://example.com/"
+		clientid                = "id"
+		clientsecret            = "secret"
+		# eligible attributes removed from config -> provider must unset them.
+		# tenantid (a non-eligible prerequisite of oauthtype=INTUNE) is also removed
+		# because it is only needed to support the INTUNE value in step 1.
+	}
+`
+
+func TestAccAuthenticationoauthaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAuthenticationoauthaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthactionExist("citrixadc_authenticationoauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "authentication", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "oauthtype", "INTUNE"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "pkce", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "refreshinterval", "100"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "skewtime", "10"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "tokenendpointauthmethod", "client_secret_jwt"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationoauthaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthactionExist("citrixadc_authenticationoauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "authentication", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "oauthtype", "GENERIC"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "pkce", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "refreshinterval", "1440"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "skewtime", "5"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthaction.tf_unset", "tokenendpointauthmethod", "client_secret_post"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationoauthactionADCValue("tf_test_authenticationoauthaction_unset", "authentication", "ENABLED"),
+					testAccCheckAuthenticationoauthactionADCValue("tf_test_authenticationoauthaction_unset", "oauthtype", "GENERIC"),
+					testAccCheckAuthenticationoauthactionADCValue("tf_test_authenticationoauthaction_unset", "pkce", "ENABLED"),
+					testAccCheckAuthenticationoauthactionADCValue("tf_test_authenticationoauthaction_unset", "refreshinterval", "1440"),
+					testAccCheckAuthenticationoauthactionADCValue("tf_test_authenticationoauthaction_unset", "skewtime", "5"),
+					testAccCheckAuthenticationoauthactionADCValue("tf_test_authenticationoauthaction_unset", "tokenendpointauthmethod", "client_secret_post"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationoauthactionADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckAuthenticationoauthactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationoauthaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationoauthaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationoauthaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAuthenticationoauthaction_sdkv2StateUpgrade(t *testing.T) {

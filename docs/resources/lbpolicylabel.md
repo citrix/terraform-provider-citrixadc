@@ -4,7 +4,7 @@ subcategory: "Load Balancing"
 
 # Resource: lbpolicylabel
 
-An LB policy label is a named policy bank that groups one or more load balancing policies. Once created, the label can be bound with policies and invoked from a load balancing virtual server (or from another policy label) to apply a reusable, ordered set of policy evaluations. Use this resource to define the label container; bind the individual policies to it with the related binding resources.
+This resource is used to manage LB policy labels.
 
 
 ## Example usage

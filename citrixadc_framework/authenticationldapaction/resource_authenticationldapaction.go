@@ -134,6 +134,7 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Alternateemailattr.Equal(state.Alternateemailattr) {
 		tflog.Debug(ctx, fmt.Sprintf("alternateemailattr has changed for authenticationldapaction"))
 		hasChange = true
@@ -208,15 +209,27 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Authentication.Equal(state.Authentication) {
 		tflog.Debug(ctx, fmt.Sprintf("authentication has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authtimeout.Equal(state.Authtimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("authtimeout has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Authtimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authtimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cloudattributes.Equal(state.Cloudattributes) {
 		tflog.Debug(ctx, fmt.Sprintf("cloudattributes has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Cloudattributes.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cloudattributes")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for authenticationldapaction"))
@@ -224,11 +237,19 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Email.Equal(state.Email) {
 		tflog.Debug(ctx, fmt.Sprintf("email has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Email.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "email")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Followreferrals.Equal(state.Followreferrals) {
 		tflog.Debug(ctx, fmt.Sprintf("followreferrals has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Followreferrals.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "followreferrals")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Groupattrname.Equal(state.Groupattrname) {
 		tflog.Debug(ctx, fmt.Sprintf("groupattrname has changed for authenticationldapaction"))
@@ -292,7 +313,11 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Nestedgroupextraction.Equal(state.Nestedgroupextraction) {
 		tflog.Debug(ctx, fmt.Sprintf("nestedgroupextraction has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Nestedgroupextraction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nestedgroupextraction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Otpsecret.Equal(state.Otpsecret) {
 		tflog.Debug(ctx, fmt.Sprintf("otpsecret has changed for authenticationldapaction"))
@@ -300,7 +325,11 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Passwdchange.Equal(state.Passwdchange) {
 		tflog.Debug(ctx, fmt.Sprintf("passwdchange has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Passwdchange.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "passwdchange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pushservice.Equal(state.Pushservice) {
 		tflog.Debug(ctx, fmt.Sprintf("pushservice has changed for authenticationldapaction"))
@@ -308,11 +337,19 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Referraldnslookup.Equal(state.Referraldnslookup) {
 		tflog.Debug(ctx, fmt.Sprintf("referraldnslookup has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Referraldnslookup.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "referraldnslookup")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Requireuser.Equal(state.Requireuser) {
 		tflog.Debug(ctx, fmt.Sprintf("requireuser has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Requireuser.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "requireuser")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Searchfilter.Equal(state.Searchfilter) {
 		tflog.Debug(ctx, fmt.Sprintf("searchfilter has changed for authenticationldapaction"))
@@ -320,7 +357,11 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Sectype.Equal(state.Sectype) {
 		tflog.Debug(ctx, fmt.Sprintf("sectype has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Sectype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sectype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Serverip.Equal(state.Serverip) {
 		tflog.Debug(ctx, fmt.Sprintf("serverip has changed for authenticationldapaction"))
@@ -332,7 +373,11 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Serverport.Equal(state.Serverport) {
 		tflog.Debug(ctx, fmt.Sprintf("serverport has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sshpublickey.Equal(state.Sshpublickey) {
 		tflog.Debug(ctx, fmt.Sprintf("sshpublickey has changed for authenticationldapaction"))
@@ -352,7 +397,11 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Validateservercert.Equal(state.Validateservercert) {
 		tflog.Debug(ctx, fmt.Sprintf("validateservercert has changed for authenticationldapaction"))
-		hasChange = true
+		if config.Validateservercert.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "validateservercert")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -373,6 +422,17 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 		tflog.Trace(ctx, "Updated authenticationldapaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationldapaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from the configuration so the appliance
+	// reverts them to their defaults. Done after the update so that any default
+	// value carried in the update payload is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationldapaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationldapaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

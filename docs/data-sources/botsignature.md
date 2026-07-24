@@ -4,9 +4,8 @@ subcategory: "Bot"
 
 # Data Source: botsignature
 
-Use this data source to retrieve information about an existing Bot Signature.
+The botsignature data source allows you to retrieve information about a bot signature.
 
-The `citrixadc_botsignature` data source allows you to retrieve details of a bot signature by its name. This is useful for referencing existing bot signatures in your Terraform configurations without managing them directly.
 
 ## Example usage
 

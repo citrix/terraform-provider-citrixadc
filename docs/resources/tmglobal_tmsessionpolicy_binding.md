@@ -4,9 +4,7 @@ subcategory: "Traffic Management"
 
 # Resource: tmglobal_tmsessionpolicy_binding
 
-Binds a Traffic Management (TM) session policy to the global TM bind point so the policy is evaluated for all traffic, letting you enforce session settings (such as session timeout, single sign-on, and authorization) globally rather than per virtual server.
-
-This binding is immutable. Changing any attribute forces the binding to be recreated (unbind and re-bind), and there is no in-place update.
+This resource is used to bind a TM session policy to the global TM bind point.
 
 
 ## Example usage

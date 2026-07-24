@@ -4,7 +4,8 @@ subcategory: "Cluster"
 
 # Data Source: clusternode_routemonitor_binding
 
-This data source retrieves information about a specific cluster node to route monitor binding. Route monitors help track network routes associated with cluster nodes for high availability and routing decisions.
+The clusternode_routemonitor_binding data source allows you to retrieve information about a cluster node to route monitor binding.
+
 
 ## Example Usage
 

@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nsmgmtparam
 
-Configures the embedded management HTTP server (httpd) parameters on the Citrix ADC. Use this resource to change the ports the management GUI and API listen on (HTTP and HTTPS), and to tune the httpd worker capacity by setting either the maximum number of clients or the maximum number of request workers in `httpd.conf`.
-
-This is a singleton resource: a single management parameter configuration always exists on the appliance, so this resource has no create or delete operation on the ADC - applying it updates the existing configuration, and destroying it only removes the resource from Terraform state.
+This resource is used to manage the management HTTP server (httpd) parameters.
 
 
 ## Example usage

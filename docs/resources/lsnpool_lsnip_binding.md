@@ -4,7 +4,7 @@ subcategory: "LSN"
 
 # Resource: lsnpool_lsnip_binding
 
-Binds an IPv4 NAT IP address (or a range of addresses) to a Large Scale NAT (LSN) pool. The bound LSN IP addresses become the pool of public NAT IP addresses the Citrix ADC uses to translate the private source addresses of subscriber traffic, providing the address space for LSN translation.
+This resource is used to manage the binding of NAT IP addresses to an LSN pool.
 
 
 ## Example usage

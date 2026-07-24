@@ -109,12 +109,14 @@ func (r *ApiprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *ApiprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ApiprofileResourceModel
+	var data, state, config ApiprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config data to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,9 +129,14 @@ func (r *ApiprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Apivisibility.Equal(state.Apivisibility) {
 		tflog.Debug(ctx, fmt.Sprintf("apivisibility has changed for apiprofile"))
-		hasChange = true
+		if config.Apivisibility.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "apivisibility")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -147,6 +154,17 @@ func (r *ApiprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated apiprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for apiprofile resource, skipping update")
+	}
+
+	// Unset any attributes that were removed from the configuration so they
+	// revert to their appliance defaults. Update-then-unset ordering ensures
+	// any default carried by the update payload is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Apiprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset apiprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

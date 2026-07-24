@@ -4,7 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_blockkeyword_binding
 
-Binds a block keyword to an application firewall profile on the Citrix ADC. A block keyword identifies a forbidden word or pattern (literal or PCRE) that, when found in a specified form field, causes the application firewall to block or flag the request. Create this binding to attach a deny-keyword rule to an existing `appfwprofile` for a given form field and form action URL.
+This resource is used to bind a block keyword to an application firewall profile.
 
 
 ## Example usage

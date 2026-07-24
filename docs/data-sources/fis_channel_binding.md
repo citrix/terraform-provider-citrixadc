@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Data Source: fis_channel_binding
 
-The fis_channel_binding data source allows you to retrieve information about a channel bound to a Failover Interface Set (FIS) on the Citrix ADC. Look up a binding by the FIS name and the channel interface number.
+The fis_channel_binding data source allows you to retrieve information about a channel bound to a Failover Interface Set (FIS).
 
 
 ## Example usage

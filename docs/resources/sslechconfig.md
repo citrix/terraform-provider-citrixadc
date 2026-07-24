@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslechconfig
 
-The sslechconfig resource defines an Encrypted Client Hello (ECH) configuration on the Citrix ADC. ECH is a TLS 1.3 privacy extension that encrypts the sensitive parts of the ClientHello message (most notably the Server Name Indication) using an HPKE public key advertised by the server, so that on-path observers cannot see which inner host a client is connecting to. This resource ties together the HPKE key, cipher suite, public name, and config identifier that together form a single ECH configuration the ADC can publish and use.
-
-The ADC NITRO API supports add and delete for this object but no in-place update, so every attribute forces a new resource when changed.
+This resource is used to manage Encrypted Client Hello (ECH) configurations on the Citrix ADC.
 
 
 ## Example usage

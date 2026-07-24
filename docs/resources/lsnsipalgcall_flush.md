@@ -4,11 +4,7 @@ subcategory: "LSN"
 
 # Resource: lsnsipalgcall_flush
 
-The lsnsipalgcall_flush resource performs the imperative `flush` action on the Citrix ADC, clearing a Large Scale NAT (LSN) SIP ALG (Application Layer Gateway) call. Use it to forcibly tear down the signaling and media pinhole state the ADC tracks for an active SIP call — for example to recover a stuck call, free ALG resources, or reset SIP ALG state during troubleshooting. The call to clear is selected by its `callid`.
-
-This is an action resource: applying it performs the `flush` action against the SIP ALG call selected by `callid`; it does not manage a persistent object, so re-applying re-runs the flush. Every argument forces resource replacement.
-
-To inspect SIP ALG calls without clearing them, use the `citrixadc_lsnsipalgcall` data source instead.
+This resource is used to flush an LSN SIP ALG call on the Citrix ADC.
 
 
 ## Example usage

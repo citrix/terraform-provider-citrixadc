@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslservice_sslcacertbundle_binding
 
-Binds a CA certificate bundle to an SSL service so the service can present the bundled CA certificate chain during client-certificate authentication in the TLS handshake. Use this when an SSL service must request and validate client certificates issued under a set of CAs distributed as a single bundle.
+This resource is used to bind a CA certificate bundle to an SSL service.
 
 
 ## Example usage

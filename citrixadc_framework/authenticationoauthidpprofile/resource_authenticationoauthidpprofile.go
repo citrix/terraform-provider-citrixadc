@@ -134,6 +134,7 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Attributes.Equal(state.Attributes) {
 		tflog.Debug(ctx, fmt.Sprintf("attributes has changed for authenticationoauthidpprofile"))
 		hasChange = true
@@ -164,7 +165,11 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 	}
 	if !data.Encrypttoken.Equal(state.Encrypttoken) {
 		tflog.Debug(ctx, fmt.Sprintf("encrypttoken has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Encrypttoken.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "encrypttoken")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Issuer.Equal(state.Issuer) {
 		tflog.Debug(ctx, fmt.Sprintf("issuer has changed for authenticationoauthidpprofile"))
@@ -176,7 +181,11 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 	}
 	if !data.Refreshinterval.Equal(state.Refreshinterval) {
 		tflog.Debug(ctx, fmt.Sprintf("refreshinterval has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Refreshinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refreshinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Relyingpartymetadataurl.Equal(state.Relyingpartymetadataurl) {
 		tflog.Debug(ctx, fmt.Sprintf("relyingpartymetadataurl has changed for authenticationoauthidpprofile"))
@@ -184,11 +193,19 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 	}
 	if !data.Sendpassword.Equal(state.Sendpassword) {
 		tflog.Debug(ctx, fmt.Sprintf("sendpassword has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Sendpassword.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sendpassword")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Signaturealg.Equal(state.Signaturealg) {
 		tflog.Debug(ctx, fmt.Sprintf("signaturealg has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Signaturealg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "signaturealg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Signatureservice.Equal(state.Signatureservice) {
 		tflog.Debug(ctx, fmt.Sprintf("signatureservice has changed for authenticationoauthidpprofile"))
@@ -196,7 +213,11 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 	}
 	if !data.Skewtime.Equal(state.Skewtime) {
 		tflog.Debug(ctx, fmt.Sprintf("skewtime has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Skewtime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "skewtime")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -217,6 +238,15 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 		tflog.Trace(ctx, "Updated authenticationoauthidpprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationoauthidpprofile resource, skipping update")
+	}
+
+	// Unset attributes removed from config (update-then-unset ordering)
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationoauthidpprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationoauthidpprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

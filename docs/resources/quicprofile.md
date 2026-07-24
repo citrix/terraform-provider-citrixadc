@@ -4,7 +4,7 @@ subcategory: "QUIC"
 
 # Resource: quicprofile
 
-The quicprofile resource is used to configure a set of QUIC transport parameters on the Citrix ADC. A QUIC profile lets you tune flow control limits, congestion control, connection migration, idle timeouts, and address validation behavior, and can then be bound to services or virtual servers that terminate QUIC connections.
+This resource is used to manage QUIC profiles.
 
 
 ## Example usage

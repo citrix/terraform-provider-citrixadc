@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Resource: fis_channel_binding
 
-Binds an LA (link aggregation) channel to a Failover Interface Set (FIS) on the Citrix ADC. A FIS groups one or more interfaces or channels so that the failover state of the set as a whole follows the state of its members. Use this resource to add a channel (for example, `LA/1`) as a member of an existing FIS created with the `citrixadc_fis` resource.
+This resource is used to manage the binding between a channel and a Failover Interface Set (FIS).
 
 
 ## Example usage

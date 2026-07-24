@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -65,6 +66,7 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			"metricexchange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Exchange metrics with other sites. Metrics are exchanged by using Metric Exchange Protocol (MEP). The appliances in the GSLB setup exchange health information once every second.\n\nIf you disable metrics exchange, you can use only static load balancing methods (such as round robin, static proximity, or the hash-based methods), and if you disable metrics exchange when a dynamic load balancing method (such as least connection) is in operation, the appliance falls back to round robin. Also, if you disable metrics exchange, you must use a monitor to determine the state of GSLB services. Otherwise, the service is marked as DOWN.",
 			},
 			"naptrreplacementsuffix": schema.StringAttribute{
@@ -83,6 +85,7 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			"nwmetricexchange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Exchange, with other GSLB sites, network metrics such as round-trip time (RTT), learned from communications with various local DNS (LDNS) servers used by clients. RTT information is used in the dynamic RTT load balancing method, and is exchanged every 5 seconds.",
 			},
 			"parentsite": schema.StringAttribute{
@@ -106,6 +109,7 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			"sessionexchange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Exchange persistent session entries with other GSLB sites every five seconds.",
 			},
 			"siteipaddress": schema.StringAttribute{
@@ -156,6 +160,7 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			"triggermonitor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ALWAYS"),
 				Description: "Specify the conditions under which the GSLB service must be monitored by a monitor, if one is bound. Available settings function as follows:\n* ALWAYS - Monitor the GSLB service at all times.\n* MEPDOWN - Monitor the GSLB service only when the exchange of metrics through the Metrics Exchange Protocol (MEP) is disabled.\nMEPDOWN_SVCDOWN - Monitor the service in either of the following situations:\n* The exchange of metrics through MEP is disabled.\n* The exchange of metrics through MEP is enabled but the status of the service, learned through metrics exchange, is DOWN.",
 			},
 		},

@@ -4,7 +4,7 @@ subcategory: "Kafka"
 
 # Data Source: kafkacluster_servicegroup_binding
 
-Retrieves information about a service group bound to a Kafka cluster. Look the binding up by the Kafka cluster name and the bound service group name. The Kafka feature must be available and licensed on the appliance.
+The kafkacluster_servicegroup_binding data source allows you to retrieve information about a service group bound to a Kafka cluster.
 
 
 ## Example usage

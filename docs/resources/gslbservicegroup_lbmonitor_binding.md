@@ -4,7 +4,7 @@ subcategory: "GSLB"
 
 # Resource: gslbservicegroup_lbmonitor_binding
 
-Binds a load balancing monitor to a GSLB service group so that Citrix ADC can probe the health of the members of the service group. The monitor periodically tests the bound members and marks them UP or DOWN, allowing the GSLB virtual server to direct traffic away from unhealthy members. Each binding can also tune per-binding settings such as weight, port, and the initial state of the bound service.
+This resource is used to bind a load balancing monitor to a GSLB service group.
 
 
 ## Example usage

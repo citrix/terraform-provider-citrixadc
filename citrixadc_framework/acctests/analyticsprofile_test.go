@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -333,4 +335,146 @@ func TestAccAnalyticsprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The analyticsprofile unset test covers the type-independent unset-eligible
+// attributes for type "webinsight": every attribute wired into
+// attributesToUnset that applies cleanly for a webinsight profile. Six other
+// wired attributes (auditlogs, cqareporting, events, metrics, outputmode,
+// topn) are NOT type-independent -- each requires a different, non-webinsight
+// type (timeseries/tcpinsight/streaminsight) and NITRO rejects them on a
+// webinsight profile with "Argument pre-requisite missing" -- so they cannot
+// be exercised on this single-resource unset test and are excluded here.
+const testAccAnalyticsprofile_unset_step1 = `
+resource "citrixadc_analyticsprofile" "tf_unset" {
+  name                       = "tf_test_analyticsprofile_unset"
+  type                       = "webinsight"
+  allhttpheaders             = "ENABLED"
+  grpcstatus                 = "ENABLED"
+  httpauthentication         = "ENABLED"
+  httpclientsidemeasurements = "ENABLED"
+  httpcontenttype            = "ENABLED"
+  httpcookie                 = "ENABLED"
+  httpdomainname             = "ENABLED"
+  httphost                   = "ENABLED"
+  httplocation               = "ENABLED"
+  httpmethod                 = "ENABLED"
+  httppagetracking           = "ENABLED"
+  httpreferer                = "ENABLED"
+  httpsetcookie              = "ENABLED"
+  httpsetcookie2             = "ENABLED"
+  httpurl                    = "ENABLED"
+  httpurlquery               = "ENABLED"
+  httpuseragent              = "ENABLED"
+  httpvia                    = "ENABLED"
+  httpxforwardedforheader    = "ENABLED"
+  integratedcache            = "ENABLED"
+  urlcategory                = "ENABLED"
+}
+`
+
+const testAccAnalyticsprofile_unset_step2 = `
+resource "citrixadc_analyticsprofile" "tf_unset" {
+  name = "tf_test_analyticsprofile_unset"
+  type = "webinsight"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults, "DISABLED").
+}
+`
+
+func TestAccAnalyticsprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAnalyticsprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsprofileExist("citrixadc_analyticsprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "allhttpheaders", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "grpcstatus", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpauthentication", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpclientsidemeasurements", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpcontenttype", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpcookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpdomainname", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httphost", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httplocation", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpmethod", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httppagetracking", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpreferer", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpsetcookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpsetcookie2", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpurl", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpurlquery", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpuseragent", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpvia", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpxforwardedforheader", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "integratedcache", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "urlcategory", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAnalyticsprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsprofileExist("citrixadc_analyticsprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "allhttpheaders", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "grpcstatus", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpauthentication", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpclientsidemeasurements", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpcontenttype", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpcookie", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpdomainname", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httphost", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httplocation", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpmethod", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httppagetracking", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpreferer", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpsetcookie", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpsetcookie2", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpurl", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpurlquery", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpuseragent", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpvia", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "httpxforwardedforheader", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "integratedcache", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_analyticsprofile.tf_unset", "urlcategory", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAnalyticsprofileADCValue("tf_test_analyticsprofile_unset", "allhttpheaders", "DISABLED"),
+					testAccCheckAnalyticsprofileADCValue("tf_test_analyticsprofile_unset", "httpurl", "DISABLED"),
+					testAccCheckAnalyticsprofileADCValue("tf_test_analyticsprofile_unset", "integratedcache", "DISABLED"),
+					testAccCheckAnalyticsprofileADCValue("tf_test_analyticsprofile_unset", "urlcategory", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAnalyticsprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckAnalyticsprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Analyticsprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("analyticsprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("analyticsprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

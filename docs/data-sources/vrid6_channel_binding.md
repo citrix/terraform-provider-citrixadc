@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Data Source: vrid6_channel_binding
 
-The vrid6_channel_binding data source allows you to retrieve information about a channel interface bound to an IPv6 Virtual Router ID (VRID6), including the read-only flags and VLAN reported by the Citrix ADC.
+The vrid6_channel_binding data source allows you to retrieve information about a channel interface bound to an IPv6 Virtual Router ID (VRID6).
 
 
 ## Example usage

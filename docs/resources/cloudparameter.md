@@ -4,9 +4,7 @@ subcategory: "Cloud"
 
 # Resource: cloudparameter
 
-Configures the global Citrix Cloud / NGS Connector parameters on the Citrix ADC. These settings identify the appliance to Citrix Cloud (customer, instance, and resource location) and tell the SDProxy connector which controller to reach, so the ADC can register with and be managed from Citrix Cloud.
-
-This is a singleton resource: a single `cloudparameter` configuration always exists on the appliance. Creating this resource updates the existing global configuration rather than adding a new object, so there is no delete operation and no name key.
+This resource is used to manage the global Citrix Cloud connector parameters on the Citrix ADC.
 
 
 ## Example usage

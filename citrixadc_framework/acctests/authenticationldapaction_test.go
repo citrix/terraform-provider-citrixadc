@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -324,6 +325,128 @@ const testAccAuthenticationldapactionDataSource_basic = `
 		name = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
 	}
 `
+
+// Unset test: step1 sets every unset-eligible attribute to a non-default value;
+// step2 removes them from config so the provider must issue ?action=unset and the
+// appliance reverts each to its NITRO default. groupnameidentifier and
+// groupsearchattribute are kept in both steps because nestedgroupextraction=ON
+// (a step1 non-default) requires them as prerequisites; they are not unset-eligible.
+const testAccAuthenticationldapaction_unset_step1 = `
+	resource "citrixadc_authenticationldapaction" "tf_unset" {
+		name                  = "tf_test_authenticationldapaction_unset"
+		serverip              = "1.2.3.4"
+		groupnameidentifier   = "samAccountName"
+		groupsearchattribute  = "memberOf"
+		authentication        = "DISABLED"
+		authtimeout           = 10
+		cloudattributes       = "ENABLED"
+		email                 = "mail2"
+		followreferrals       = "ON"
+		nestedgroupextraction = "ON"
+		passwdchange          = "ENABLED"
+		referraldnslookup     = "SRV-REC"
+		requireuser           = "NO"
+		sectype               = "TLS"
+		serverport            = 636
+		validateservercert    = "YES"
+	}
+`
+
+const testAccAuthenticationldapaction_unset_step2 = `
+	resource "citrixadc_authenticationldapaction" "tf_unset" {
+		name                  = "tf_test_authenticationldapaction_unset"
+		serverip              = "1.2.3.4"
+		groupnameidentifier   = "samAccountName"
+		groupsearchattribute  = "memberOf"
+		# unset-eligible attributes removed from config -> provider must unset them
+	}
+`
+
+func TestAccAuthenticationldapaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationldapactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAuthenticationldapaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "authentication", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "authtimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "cloudattributes", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "email", "mail2"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "followreferrals", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "nestedgroupextraction", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "passwdchange", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "referraldnslookup", "SRV-REC"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "requireuser", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "sectype", "TLS"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "serverport", "636"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "validateservercert", "YES"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationldapaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "authentication", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "authtimeout", "3"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "cloudattributes", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "email", "mail"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "followreferrals", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "nestedgroupextraction", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "passwdchange", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "referraldnslookup", "A-REC"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "requireuser", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "sectype", "PLAINTEXT"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "serverport", "389"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationldapaction.tf_unset", "validateservercert", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "authentication", "ENABLED"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "authtimeout", "3"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "cloudattributes", "DISABLED"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "email", "mail"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "followreferrals", "OFF"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "nestedgroupextraction", "OFF"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "passwdchange", "DISABLED"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "referraldnslookup", "A-REC"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "requireuser", "YES"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "sectype", "PLAINTEXT"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "serverport", "389"),
+					testAccCheckAuthenticationldapactionADCValue("tf_test_authenticationldapaction_unset", "validateservercert", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationldapactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationldapactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationldapaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationldapaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationldapaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccAuthenticationldapactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

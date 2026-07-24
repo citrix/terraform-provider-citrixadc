@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Data Source: sslhpkekey
 
-The sslhpkekey data source allows you to retrieve information about an HPKE key configured on the Citrix ADC. The HPKE key is used by the Encrypted Client Hello (ECH) feature to decrypt the inner ClientHello.
+The sslhpkekey data source allows you to retrieve information about an HPKE key configured on the Citrix ADC.
 
 
 ## Example usage

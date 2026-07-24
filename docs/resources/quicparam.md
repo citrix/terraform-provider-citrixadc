@@ -4,9 +4,7 @@ subcategory: "QUIC"
 
 # Resource: quicparam
 
-Configures the global QUIC parameters on the Citrix ADC. QUIC uses address validation tokens (carried in Retry packets and NEW_TOKEN frames) to verify a client's source address; this resource lets you control how frequently the secret used to generate those tokens is rotated, so you can balance token security against the overhead of rotation.
-
-This is a singleton settings resource: the QUIC parameters always exist on the appliance, so creating this resource updates the existing configuration and deleting it simply removes the resource from Terraform state without changing the appliance.
+This resource is used to manage the global QUIC parameters on the Citrix ADC.
 
 
 ## Example usage

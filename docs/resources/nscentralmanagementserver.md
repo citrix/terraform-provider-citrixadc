@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nscentralmanagementserver
 
-The nscentralmanagementserver resource registers the Citrix ADC with a central management server (Citrix Application Delivery Management, ADM) so the instance can be managed centrally. Use it to onboard the ADC to either an on-premises ADM deployment or the ADM cloud service, supplying the management server address and the credentials ADM uses to create the device profile for the instance.
-
-All attributes are immutable: changing any of them forces a new resource to be created (the registration is deleted and re-added), because the NITRO API exposes only add, delete, and get operations for this resource.
+This resource is used to register the Citrix ADC with a central management server (ADM).
 
 
 ## Example usage

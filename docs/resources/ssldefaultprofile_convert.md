@@ -4,9 +4,9 @@ subcategory: "SSL"
 
 # Resource: ssldefaultprofile_convert
 
-The ssldefaultprofile_convert resource performs the NITRO `ssldefaultprofile` `convert` action, which converts the appliance to the SSL default profile mode. It is an action-only, zero-attribute resource: applying it triggers the conversion, and there are no configurable arguments.
+This resource is used to convert the Citrix ADC to SSL default profile mode.
 
-~> **WARNING** Converting to the SSL default profile mode changes how SSL settings are applied globally on the appliance. It is intended for deliberate, operator-initiated use only.
+!> **WARNING:** Converting to SSL default profile mode changes how SSL settings are applied globally on the appliance. For deliberate operator use only.
 
 
 ## Example usage

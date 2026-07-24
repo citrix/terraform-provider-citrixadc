@@ -4,11 +4,9 @@ subcategory: "Network"
 
 # Resource: vlan\_linkset\_binding
 
-Binds a network interface to a VLAN on the Citrix ADC, optionally as an 802.1q
-tagged member. Despite the resource name, this binding does **not** reference a
-linkset object: the underlying NITRO endpoint binds a single interface (`ifnum`)
-to a VLAN identified by `vlanid`. Use it to control which physical or logical
-interfaces carry traffic for a given VLAN.
+This resource is used to bind an interface to a VLAN.
+
+~> **Note:** Despite the resource name, this binding does not reference a linkset object; it binds a single interface (`ifnum`) to a VLAN identified by `vlanid`.
 
 
 ## Example usage

@@ -4,11 +4,7 @@ subcategory: "High Availability"
 
 # Resource: hasync_force
 
-Forces a configuration synchronization between the nodes of a Citrix ADC high-availability (HA) pair, copying the running configuration from the current node to its peer so both nodes stay consistent and the secondary is ready to take over. Use this when you need to trigger a sync on demand rather than relying on automatic HA propagation.
-
-This is an action resource: applying it performs the `Force` synchronization; it does not manage a persistent object, so re-applying re-runs the action. Changing the `force` or `save` argument forces the resource to be re-created, which re-runs the forced sync.
-
-This resource requires an HA setup and operates on an HA node. Applying it against a standalone node returns an error.
+This resource is used to force a configuration synchronization across a high-availability (HA) pair.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "Network"
 
 # Data Source: vridparam
 
-The vridparam data source allows you to retrieve the global VRRP (Virtual Router Redundancy Protocol) parameters configured on the Citrix ADC, such as the master-forwarding behavior and the VRRP hello and dead-peer detection intervals used in active-active high-availability deployments.
-
-Because vridparam is a singleton (one global object), no lookup attribute is required.
+The vridparam data source allows you to retrieve the global VRRP parameters.
 
 
 ## Example usage

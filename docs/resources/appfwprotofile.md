@@ -4,9 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprotofile
 
-The appfwprotofile resource is used to import a gRPC schema (proto) file into the Citrix ADC Application Firewall.
-
-This resource is immutable. Any change to `name`, `src`, `comment`, or `overwrite` forces Terraform to destroy and recreate the resource, since the NITRO API only exposes a POST `?action=Import` endpoint for this object and no compatible update path.
+This resource is used to import a gRPC schema (proto) file into the Citrix ADC Application Firewall.
 
 
 ## Example usage

@@ -4,7 +4,7 @@ subcategory: "Cloud"
 
 # Resource: cloudservice_check
 
-The cloudservice_check resource performs the NITRO `cloudservice` `check` action, which checks the cloud service configuration on the Citrix ADC. It is an action-only, zero-attribute resource: applying it triggers the check, and there are no configurable arguments.
+This resource is used to check the cloud service configuration on the Citrix ADC.
 
 
 ## Example usage

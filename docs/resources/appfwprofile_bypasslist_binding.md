@@ -4,7 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_bypasslist_binding
 
-Binds a bypass-list (relaxation) rule to an application firewall profile on the Citrix ADC. A bypass-list entry tells the application firewall to skip security checks for a specific target (for example a header, cookie, or URL) so that legitimate traffic matching that pattern is not blocked. Create this binding to add such a relaxation rule to an existing `appfwprofile`.
+This resource is used to bind a bypass-list (relaxation) rule to an application firewall profile.
 
 
 ## Example usage

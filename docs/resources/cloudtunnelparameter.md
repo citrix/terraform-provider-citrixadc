@@ -4,11 +4,9 @@ subcategory: "Cloud"
 
 # Resource: cloudtunnelparameter
 
-Configures the global cloud-tunnel parameters on the Citrix ADC. These settings identify the controller and resource-location endpoints used when the appliance establishes a management/data tunnel to a cloud service, and map on-prem subnets to their corresponding resource locations. Use this resource to point the appliance at the correct cloud controller and to advertise how local subnets are distributed across resource locations.
+This resource is used to manage the global cloud tunnel parameters on the Citrix ADC.
 
-This is a singleton resource: a single `cloudtunnelparameter` configuration always exists on the appliance. Applying this resource updates the existing global configuration rather than creating a new object, so there is no delete operation and no name key.
-
-~> **Prerequisite:** This feature is license/feature-gated. On platforms or releases where the cloud-tunnel feature is not enabled, the NITRO GET operation returns `Feature not supported in this release` (or a similar platform message). The provider tolerates this gracefully — the read is treated as non-fatal so apply is not broken — but the settable values may not be echoed back by the appliance. In that case the provider preserves the values you configured in Terraform state.
+~> **Prerequisite:** The cloud tunnel feature is license-/feature-gated; on unsupported platforms the read is tolerated but configured values may not be echoed back by the appliance.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_appfwpolicy_binding
 
-Binds an application firewall (appfw) policy to the global VPN bind point so that the policy is evaluated for traffic handled by the VPN (NetScaler Gateway) virtual servers globally. Use this resource to apply an appfw policy across all VPN sessions without binding it to individual vpnvservers.
-
-The VPN global configuration is a singleton bind point on the Citrix ADC; this resource attaches a named appfw policy to it.
+This resource is used to bind an application firewall policy to the global VPN bind point.
 
 
 ## Example usage

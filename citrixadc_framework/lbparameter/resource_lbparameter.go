@@ -133,9 +133,16 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	// Collect eligible attributes removed from config so they can be reverted
+	// to their ADC default via a single ?action=unset call.
+	attributesToUnset := []string{}
 	if !data.Allowboundsvcremoval.Equal(state.Allowboundsvcremoval) {
 		tflog.Debug(ctx, fmt.Sprintf("allowboundsvcremoval has changed for lbparameter"))
-		hasChange = true
+		if config.Allowboundsvcremoval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "allowboundsvcremoval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Computedadccookieattribute.Equal(state.Computedadccookieattribute) {
 		tflog.Debug(ctx, fmt.Sprintf("computedadccookieattribute has changed for lbparameter"))
@@ -143,7 +150,11 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Consolidatedlconn.Equal(state.Consolidatedlconn) {
 		tflog.Debug(ctx, fmt.Sprintf("consolidatedlconn has changed for lbparameter"))
-		hasChange = true
+		if config.Consolidatedlconn.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "consolidatedlconn")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute cookiepassphrase or its version tracker
 	if !data.Cookiepassphrase.Equal(state.Cookiepassphrase) {
@@ -155,23 +166,43 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Dbsttl.Equal(state.Dbsttl) {
 		tflog.Debug(ctx, fmt.Sprintf("dbsttl has changed for lbparameter"))
-		hasChange = true
+		if config.Dbsttl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dbsttl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dropmqttjumbomessage.Equal(state.Dropmqttjumbomessage) {
 		tflog.Debug(ctx, fmt.Sprintf("dropmqttjumbomessage has changed for lbparameter"))
-		hasChange = true
+		if config.Dropmqttjumbomessage.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dropmqttjumbomessage")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httponlycookieflag.Equal(state.Httponlycookieflag) {
 		tflog.Debug(ctx, fmt.Sprintf("httponlycookieflag has changed for lbparameter"))
-		hasChange = true
+		if config.Httponlycookieflag.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httponlycookieflag")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Lbhashalgorithm.Equal(state.Lbhashalgorithm) {
 		tflog.Debug(ctx, fmt.Sprintf("lbhashalgorithm has changed for lbparameter"))
-		hasChange = true
+		if config.Lbhashalgorithm.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "lbhashalgorithm")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Lbhashfingers.Equal(state.Lbhashfingers) {
 		tflog.Debug(ctx, fmt.Sprintf("lbhashfingers has changed for lbparameter"))
-		hasChange = true
+		if config.Lbhashfingers.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "lbhashfingers")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Literaladccookieattribute.Equal(state.Literaladccookieattribute) {
 		tflog.Debug(ctx, fmt.Sprintf("literaladccookieattribute has changed for lbparameter"))
@@ -183,23 +214,43 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Monitorconnectionclose.Equal(state.Monitorconnectionclose) {
 		tflog.Debug(ctx, fmt.Sprintf("monitorconnectionclose has changed for lbparameter"))
-		hasChange = true
+		if config.Monitorconnectionclose.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "monitorconnectionclose")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Monitorskipmaxclient.Equal(state.Monitorskipmaxclient) {
 		tflog.Debug(ctx, fmt.Sprintf("monitorskipmaxclient has changed for lbparameter"))
-		hasChange = true
+		if config.Monitorskipmaxclient.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "monitorskipmaxclient")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Preferdirectroute.Equal(state.Preferdirectroute) {
 		tflog.Debug(ctx, fmt.Sprintf("preferdirectroute has changed for lbparameter"))
-		hasChange = true
+		if config.Preferdirectroute.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "preferdirectroute")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Proximityfromself.Equal(state.Proximityfromself) {
 		tflog.Debug(ctx, fmt.Sprintf("proximityfromself has changed for lbparameter"))
-		hasChange = true
+		if config.Proximityfromself.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proximityfromself")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Retainservicestate.Equal(state.Retainservicestate) {
 		tflog.Debug(ctx, fmt.Sprintf("retainservicestate has changed for lbparameter"))
-		hasChange = true
+		if config.Retainservicestate.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "retainservicestate")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Startuprrfactor.Equal(state.Startuprrfactor) {
 		tflog.Debug(ctx, fmt.Sprintf("startuprrfactor has changed for lbparameter"))
@@ -207,19 +258,35 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Storemqttclientidandusername.Equal(state.Storemqttclientidandusername) {
 		tflog.Debug(ctx, fmt.Sprintf("storemqttclientidandusername has changed for lbparameter"))
-		hasChange = true
+		if config.Storemqttclientidandusername.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "storemqttclientidandusername")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, fmt.Sprintf("undefaction has changed for lbparameter"))
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Useencryptedpersistencecookie.Equal(state.Useencryptedpersistencecookie) {
 		tflog.Debug(ctx, fmt.Sprintf("useencryptedpersistencecookie has changed for lbparameter"))
-		hasChange = true
+		if config.Useencryptedpersistencecookie.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "useencryptedpersistencecookie")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Useportforhashlb.Equal(state.Useportforhashlb) {
 		tflog.Debug(ctx, fmt.Sprintf("useportforhashlb has changed for lbparameter"))
-		hasChange = true
+		if config.Useportforhashlb.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "useportforhashlb")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Usesecuredpersistencecookie.Equal(state.Usesecuredpersistencecookie) {
 		tflog.Debug(ctx, fmt.Sprintf("usesecuredpersistencecookie has changed for lbparameter"))
@@ -227,7 +294,11 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Vserverspecificmac.Equal(state.Vserverspecificmac) {
 		tflog.Debug(ctx, fmt.Sprintf("vserverspecificmac has changed for lbparameter"))
-		hasChange = true
+		if config.Vserverspecificmac.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "vserverspecificmac")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -247,6 +318,16 @@ func (r *LbparameterResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated lbparameter resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lbparameter resource, skipping update")
+	}
+
+	// Revert attributes removed from config to their ADC default via a single
+	// batched unset. Done after the update so any default carried in the update
+	// payload for a removed attribute is superseded by the unset.
+	// lbparameter is a singleton resource, so no identity fields are required.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Lbparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbparameter attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

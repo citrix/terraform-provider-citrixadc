@@ -4,7 +4,7 @@ subcategory: "Metrics"
 
 # Resource: metricsprofile_uservserver_binding
 
-Binds a user-defined virtual server (user vserver) to a metrics profile on the Citrix ADC. Creating this resource associates the named entity with the metrics profile so that the metrics collection settings defined in the profile are applied to that virtual server.
+This resource is used to bind a user vserver to a metrics profile.
 
 
 ## Example usage

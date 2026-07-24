@@ -4,10 +4,7 @@ subcategory: "Load Balancing"
 
 # Resource: lbvserver\_servicegroup\_binding
 
-The lbvserver\_servicegroup\_binding resource is used to bind servicegroups to lb vservers.
-
-If a binding between lbvserver and servicegroup is set this way the `lbvservers` option
-of `resource_citrixadc_servicegroup` should not be set for the same servicegroup.
+This resource is used to bind a servicegroup to a load balancing virtual server.
 
 
 ## Example usage

@@ -124,7 +124,7 @@ resource "citrixadc_sslprofile" "tf_sslprofile" {
 * `encryptedclienthello` - (Optional) State of TLS 1.3 Encrypted Client Hello Support
 * `maxrenegrate` - (Optional) Maximum number of renegotiation requests allowed, in one second, to each SSL entity to which this profile is bound. When set to 0, an unlimited number of renegotiation requests are allowed. Applicable only when Deny SSL renegotiation is set to a value other than ALL.
 * `sslclientlogs` - (Optional) When enabled, NetScaler will log the session ID and SNI name during SSL handshakes on both the external and internal interfaces.
-* `ecccurvebindings` - (Required) A set of ECC curve names to be bound to this SSL profile. (deprecates soon)
+* `ecccurvebindings` - (Optional) A set of ECC curve names to be bound to this SSL profile. (deprecates soon)
 
 !>
 [**DEPRECATED**] Please use `sslprofile_ecccurve_binding` to bind `ecccurve` to `sslprofile` insted of this resource. the support for binding `ecccurve` to `sslprofile` in `sslprofile` resource will get deprecated soon.

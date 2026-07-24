@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Resource: channel\_interface\_binding
 
-Binds one or more physical interfaces to an existing link aggregation (LA) channel, cluster LA channel, or link-redundant (LR) channel on the Citrix ADC. Aggregating interfaces into a channel combines their bandwidth into a single logical link and provides link-level redundancy, so traffic continues to flow if an individual member interface fails.
+This resource is used to bind physical interfaces to an LA, cluster LA, or LR channel.
 
 
 ## Example usage

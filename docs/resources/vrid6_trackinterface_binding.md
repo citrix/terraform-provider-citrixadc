@@ -4,9 +4,7 @@ subcategory: "Network"
 
 # Resource: vrid6_trackinterface_binding
 
-Binds a tracked interface to an IPv6 Virtual Router ID (VRID6). The state of a tracked interface influences the VRRP priority of the VMAC6: if a tracked interface goes down, the virtual router's effective priority is reduced, which can trigger a failover. Use this resource to make IPv6 VRRP failover decisions depend on the health of specific interfaces on the Citrix ADC.
-
-Creating this resource performs a NITRO bind operation. Both `vrid_id` and `trackifnum` force replacement, so any change recreates the binding (there is no in-place update). Deleting the resource removes the binding from the parent VRID6.
+This resource is used to bind a tracked interface to an IPv6 Virtual Router ID (VRID6).
 
 
 ## Example usage

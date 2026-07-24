@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -95,12 +97,14 @@ func (r *QuicparamResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *QuicparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state QuicparamResourceModel
+	var data, state, config QuicparamResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -113,9 +117,14 @@ func (r *QuicparamResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Quicsecrettimeout.Equal(state.Quicsecrettimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("quicsecrettimeout has changed for quicparam"))
-		hasChange = true
+		if config.Quicsecrettimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "quicsecrettimeout")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -132,6 +141,16 @@ func (r *QuicparamResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated quicparam resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for quicparam resource, skipping update")
+	}
+
+	// Issue a single batched unset for attributes removed from configuration.
+	// Update-then-unset ordering ensures any default carried in the update
+	// payload is superseded by the unset. quicparam is a singleton, so the
+	// unset carries no identity fields.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Quicparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset quicparam attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

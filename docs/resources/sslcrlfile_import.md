@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslcrlfile_import
 
-The sslcrlfile_import resource imports a Certificate Revocation List (CRL) file onto the Citrix ADC so it can be used by SSL CRL configurations to determine which certificates have been revoked. The CRL is fetched from a remote source at creation time and stored under the given name on the appliance.
-
-This resource maps to the NITRO `Import` action for `sslcrlfile`. Because the ADC exposes this object only through an import action (no in-place update), every attribute forces a new resource when changed. Managing the resource creates (imports) the CRL file and destroying it removes the stored CRL file from the appliance.
+This resource is used to import a Certificate Revocation List (CRL) file onto the Citrix ADC.
 
 
 ## Example usage

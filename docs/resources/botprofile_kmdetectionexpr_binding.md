@@ -4,7 +4,7 @@ subcategory: "Bot"
 
 # Resource: botprofile_kmdetectionexpr_binding
 
-The botprofile_kmdetectionexpr_binding resource is used to bind a keyboard-mouse (KM) based detection expression to a bot profile. The bound expression injects a JavaScript payload for keyboard-mouse detection when its condition evaluates to true, allowing the bot profile to distinguish human interaction from automated traffic.
+This resource is used to bind a keyboard-mouse detection expression to a bot profile.
 
 
 ## Example usage

@@ -133,9 +133,14 @@ func (r *AaaldapparamsResource) Update(ctx context.Context, req resource.UpdateR
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Authtimeout.Equal(state.Authtimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("authtimeout has changed for aaaldapparams"))
-		hasChange = true
+		if config.Authtimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authtimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for aaaldapparams"))
@@ -183,15 +188,27 @@ func (r *AaaldapparamsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Maxnestinglevel.Equal(state.Maxnestinglevel) {
 		tflog.Debug(ctx, fmt.Sprintf("maxnestinglevel has changed for aaaldapparams"))
-		hasChange = true
+		if config.Maxnestinglevel.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxnestinglevel")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Nestedgroupextraction.Equal(state.Nestedgroupextraction) {
 		tflog.Debug(ctx, fmt.Sprintf("nestedgroupextraction has changed for aaaldapparams"))
-		hasChange = true
+		if config.Nestedgroupextraction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nestedgroupextraction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Passwdchange.Equal(state.Passwdchange) {
 		tflog.Debug(ctx, fmt.Sprintf("passwdchange has changed for aaaldapparams"))
-		hasChange = true
+		if config.Passwdchange.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "passwdchange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Searchfilter.Equal(state.Searchfilter) {
 		tflog.Debug(ctx, fmt.Sprintf("searchfilter has changed for aaaldapparams"))
@@ -199,7 +216,11 @@ func (r *AaaldapparamsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Sectype.Equal(state.Sectype) {
 		tflog.Debug(ctx, fmt.Sprintf("sectype has changed for aaaldapparams"))
-		hasChange = true
+		if config.Sectype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sectype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Serverip.Equal(state.Serverip) {
 		tflog.Debug(ctx, fmt.Sprintf("serverip has changed for aaaldapparams"))
@@ -207,7 +228,11 @@ func (r *AaaldapparamsResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Serverport.Equal(state.Serverport) {
 		tflog.Debug(ctx, fmt.Sprintf("serverport has changed for aaaldapparams"))
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssonameattribute.Equal(state.Ssonameattribute) {
 		tflog.Debug(ctx, fmt.Sprintf("ssonameattribute has changed for aaaldapparams"))
@@ -239,6 +264,16 @@ func (r *AaaldapparamsResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated aaaldapparams resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for aaaldapparams resource, skipping update")
+	}
+
+	// Unset attributes that were removed from the config so the appliance
+	// reverts them to their defaults. Performed after the update so any default
+	// value carried in the update payload is superseded by the unset.
+	// aaaldapparams is a singleton resource, so there are no identity keys.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Aaaldapparams.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaaldapparams attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -4,9 +4,7 @@ subcategory: "QUIC"
 
 # Data Source: quicparam
 
-The quicparam data source allows you to retrieve the global QUIC parameters configured on the Citrix ADC, such as the rotation frequency of the secret used to generate QUIC address validation tokens.
-
-Because the QUIC parameters are a singleton configuration on the appliance, no lookup attribute is required.
+The quicparam data source allows you to retrieve information about the global QUIC parameters configured on the Citrix ADC.
 
 
 ## Example usage

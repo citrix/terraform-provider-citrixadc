@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -56,21 +57,25 @@ func (r *RdpclientprofileResource) Schema(ctx context.Context, req resource.Sche
 			"addusernameinrdpfile": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Add username in rdp file.",
 			},
 			"audiocapturemode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLE"),
 				Description: "This setting corresponds to the selections in the Remote audio area on the Local Resources tab under Options in RDC.",
 			},
 			"keyboardhook": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("InFullScreenMode"),
 				Description: "This setting corresponds to the selection in the Keyboard drop-down list on the Local Resources tab under Options in RDC.",
 			},
 			"multimonitorsupport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLE"),
 				Description: "Enable/Disable Multiple Monitor Support for Remote Desktop Connection (RDC).",
 			},
 			"name": schema.StringAttribute{
@@ -100,11 +105,13 @@ func (r *RdpclientprofileResource) Schema(ctx context.Context, req resource.Sche
 			"randomizerdpfilename": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Will generate unique filename everytime rdp file is downloaded by appending output of time() function in the format <rdpfileName>_<time>.rdp. This tries to avoid the pop-up for replacement of existing rdp file during each rdp connection launch, hence providing better end-user experience.",
 			},
 			"rdpcookievalidity": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(60),
 				Description: "RDP cookie validity period. RDP cookie validity time is applicable for new connection and also for any re-connection that might happen, mostly due to network disruption or during fail-over.",
 			},
 			"rdpcustomparams": schema.StringAttribute{
@@ -135,41 +142,49 @@ func (r *RdpclientprofileResource) Schema(ctx context.Context, req resource.Sche
 			"rdpurloverride": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLE"),
 				Description: "This setting determines whether the RDP parameters supplied in the vpn url override those specified in the RDP profile.",
 			},
 			"rdpvalidateclientip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLE"),
 				Description: "This setting determines whether RDC launch is initiated by the valid client IP",
 			},
 			"redirectclipboard": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLE"),
 				Description: "This setting corresponds to the Clipboard check box on the Local Resources tab under Options in RDC.",
 			},
 			"redirectcomports": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLE"),
 				Description: "This setting corresponds to the selections for comports under More on the Local Resources tab under Options in RDC.",
 			},
 			"redirectdrives": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLE"),
 				Description: "This setting corresponds to the selections for Drives under More on the Local Resources tab under Options in RDC.",
 			},
 			"redirectpnpdevices": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLE"),
 				Description: "This setting corresponds to the selections for pnpdevices under More on the Local Resources tab under Options in RDC.",
 			},
 			"redirectprinters": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLE"),
 				Description: "This setting corresponds to the selection in the Printers check box on the Local Resources tab under Options in RDC.",
 			},
 			"videoplaybackmode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLE"),
 				Description: "This setting determines if Remote Desktop Connection (RDC) will use RDP efficient multimedia streaming for video playback.",
 			},
 		},

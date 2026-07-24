@@ -4,7 +4,7 @@ subcategory: "Application Firewall"
 
 # Resource: appfwprofile_grpcvalidation_binding
 
-Binds a gRPC validation relaxation rule to an application firewall profile on the Citrix ADC. When API schema validation is enabled on an `appfwprofile`, this binding exempts gRPC methods that match a given pattern from the schema-validation check, so legitimate traffic for those methods is not blocked. Create this binding to relax validation for specific gRPC methods on an existing profile.
+This resource is used to bind a gRPC validation relaxation rule to an application firewall profile.
 
 
 ## Example usage

@@ -4,7 +4,7 @@ subcategory: "VideoOptimization"
 
 # Resource: videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding
 
-Binds a video optimization detection policy to the global detection bind point on the Citrix ADC. Use this resource to activate a detection policy across the appliance (rather than on a single virtual server or policy label) at a specific evaluation priority, and to control the flow of evaluation (next-priority expression and label invocation) when that policy's rule matches request or response traffic.
+This resource is used to bind a video optimization detection policy to the global detection bind point.
 
 
 ## Example usage

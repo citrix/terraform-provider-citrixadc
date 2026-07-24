@@ -4,9 +4,7 @@ subcategory: "System"
 
 # Resource: systemnsbtracing
 
-Controls NSB (NetScaler Buffer) tracing on the Citrix ADC. This is a lifecycle-driven toggle: **creating this resource ENABLES NSB tracing, and destroying it DISABLES it.** There is no in-place on/off attribute to set — the desired state is expressed entirely by the presence or absence of the resource in your configuration. The only configurable attribute, `nodeid`, forces replacement.
-
-This is a global singleton, so a single tracing toggle exists per appliance (or per cluster node when `nodeid` is specified).
+This resource is used to manage NSB (NetScaler Buffer) tracing on the Citrix ADC.
 
 
 ## Example usage

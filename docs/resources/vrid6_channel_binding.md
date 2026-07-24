@@ -4,9 +4,7 @@ subcategory: "Network"
 
 # Resource: vrid6_channel_binding
 
-Binds a channel (link-aggregated) interface to an IPv6 Virtual Router ID (VRID6) so that the channel participates in IPv6 VRRP for the VMAC6 identified by the VRID. Use this resource to control which aggregated interfaces carry the virtual router's IPv6 traffic on the Citrix ADC.
-
-Creating this resource performs a NITRO bind operation. Both `vrid_id` and `ifnum` force replacement, so any change recreates the binding (there is no in-place update). Deleting the resource removes the binding from the parent VRID6.
+This resource is used to bind a channel interface to an IPv6 Virtual Router ID (VRID6) on the Citrix ADC.
 
 
 ## Example usage

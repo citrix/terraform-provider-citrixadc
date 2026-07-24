@@ -71,7 +71,7 @@ resource "citrixadc_smppuser" "tf_smppuser" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the smppuser. It has the same value as the `name` attribute.
+* `id` - The id of the smppuser. It has the same value as the `username` attribute.
 
 
 ## Import

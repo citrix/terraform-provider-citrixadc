@@ -4,7 +4,7 @@ subcategory: "Cloud"
 
 # Resource: cloudawsparam
 
-Configures the AWS integration parameters used by the Citrix ADC to authenticate against AWS services. Set the IAM Role ARN that the ADC assumes when it interacts with AWS (for example, to fetch instance metadata or access other AWS resources) so that cloud integrations work without embedding long-lived credentials on the appliance. This is a singleton resource: a single configuration object always exists on the ADC, so creating this resource updates the existing settings rather than adding a new object.
+This resource is used to manage the AWS cloud parameters.
 
 
 ## Example usage

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -326,4 +327,102 @@ func TestAccAaaradiusparams_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Step 1: all unset-eligible attributes set to non-default values.
+const testAccAaaradiusparams_unset_step1 = `
+	resource "citrixadc_aaaradiusparams" "tf_unset" {
+		radkey                 = "sslvpn"
+		authentication         = "OFF"
+		authservretry          = 4
+		authtimeout            = 8
+		callingstationid       = "ENABLED"
+		messageauthenticator   = "OFF"
+		passencoding           = "pap"
+		serverport             = 1813
+		tunnelendpointclientip = "ENABLED"
+	}
+`
+
+// Step 2: the unset-eligible attributes are removed from config so the provider
+// must issue ?action=unset, reverting each to its NITRO default.
+const testAccAaaradiusparams_unset_step2 = `
+	resource "citrixadc_aaaradiusparams" "tf_unset" {
+		radkey = "sslvpn"
+	}
+`
+
+func TestAccAaaradiusparams_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil, // singleton resource - never truly deleted
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAaaradiusparams_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaradiusparamsExist("citrixadc_aaaradiusparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "authentication", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "authservretry", "4"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "authtimeout", "8"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "callingstationid", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "messageauthenticator", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "passencoding", "pap"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "serverport", "1813"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "tunnelendpointclientip", "ENABLED"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAaaradiusparams_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaradiusparamsExist("citrixadc_aaaradiusparams.tf_unset", nil),
+					// State reverted to defaults.
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "authentication", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "authservretry", "3"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "authtimeout", "3"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "callingstationid", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "messageauthenticator", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "passencoding", "mschapv2"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "serverport", "1812"),
+					resource.TestCheckResourceAttr("citrixadc_aaaradiusparams.tf_unset", "tunnelendpointclientip", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAaaradiusparamsADCValue("authentication", "ON"),
+					testAccCheckAaaradiusparamsADCValue("authservretry", "3"),
+					testAccCheckAaaradiusparamsADCValue("authtimeout", "3"),
+					testAccCheckAaaradiusparamsADCValue("callingstationid", "DISABLED"),
+					testAccCheckAaaradiusparamsADCValue("messageauthenticator", "ON"),
+					testAccCheckAaaradiusparamsADCValue("passencoding", "mschapv2"),
+					testAccCheckAaaradiusparamsADCValue("serverport", "1812"),
+					testAccCheckAaaradiusparamsADCValue("tunnelendpointclientip", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAaaradiusparamsADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. aaaradiusparams is a singleton, so the resource name is empty.
+func testAccCheckAaaradiusparamsADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaaradiusparams.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("aaaradiusparams not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("aaaradiusparams: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }

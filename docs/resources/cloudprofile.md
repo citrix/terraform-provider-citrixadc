@@ -4,9 +4,7 @@ subcategory: "Cloud"
 
 # Resource: cloudprofile
 
-The cloudprofile resource configures a cloud profile on the Citrix ADC. A cloud profile provisions a load balancing virtual server together with its bound service group in a single step, either as an autoscale front end or driven by Azure resource tags, so that the ADC can automatically balance traffic across dynamically scaled cloud back ends.
-
-~> **Note:** The cloudprofile resource is immutable. Every attribute is immutable, so changing any argument (including optional ones) destroys the existing cloud profile and creates a new one. There is no in-place update path; only create and delete operations are supported by the underlying NITRO API.
+This resource is used to manage cloud profiles on the Citrix ADC.
 
 
 ## Example usage

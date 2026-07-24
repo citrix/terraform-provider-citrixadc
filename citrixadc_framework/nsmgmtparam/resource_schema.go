@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -43,11 +44,13 @@ func (r *NsmgmtparamResource) Schema(ctx context.Context, req resource.SchemaReq
 			"mgmthttpport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(80),
 				Description: "This allow the configuration of management HTTP port.",
 			},
 			"mgmthttpsport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(443),
 				Description: "This allows the configuration of management HTTPS port.",
 			},
 		},

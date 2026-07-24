@@ -4,9 +4,7 @@ subcategory: "Utility"
 
 # Resource: ping6
 
-The ping6 resource performs the NITRO `ping6` action, which sends IPv6 ping requests from the target Citrix ADC. It is an action-only diagnostic resource: applying it runs the ping6 once. Every argument is one-shot and forces replacement when changed.
-
--> **Attribute naming** Several NITRO parameters differ only by letter case (e.g. `i`/`I`, `s`/`S`, `t`/`T`). Because Terraform attribute names must be lowercase and unique, the upper-case NITRO parameter is exposed with an `_upper` suffix (for example NITRO `I` -> `i_upper`, `S` -> `s_upper`, `T` -> `t_upper`).
+This resource is used to run the ping6 diagnostic action on the Citrix ADC.
 
 
 ## Example usage

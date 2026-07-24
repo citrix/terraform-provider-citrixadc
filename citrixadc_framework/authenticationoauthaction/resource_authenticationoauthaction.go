@@ -134,6 +134,7 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Allowedalgorithms.Equal(state.Allowedalgorithms) {
 		tflog.Debug(ctx, fmt.Sprintf("allowedalgorithms has changed for authenticationoauthaction"))
 		hasChange = true
@@ -212,7 +213,11 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Authentication.Equal(state.Authentication) {
 		tflog.Debug(ctx, fmt.Sprintf("authentication has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authorizationendpoint.Equal(state.Authorizationendpoint) {
 		tflog.Debug(ctx, fmt.Sprintf("authorizationendpoint has changed for authenticationoauthaction"))
@@ -276,15 +281,27 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Oauthtype.Equal(state.Oauthtype) {
 		tflog.Debug(ctx, fmt.Sprintf("oauthtype has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Oauthtype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "oauthtype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pkce.Equal(state.Pkce) {
 		tflog.Debug(ctx, fmt.Sprintf("pkce has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Pkce.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "pkce")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Refreshinterval.Equal(state.Refreshinterval) {
 		tflog.Debug(ctx, fmt.Sprintf("refreshinterval has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Refreshinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refreshinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Requestattribute.Equal(state.Requestattribute) {
 		tflog.Debug(ctx, fmt.Sprintf("requestattribute has changed for authenticationoauthaction"))
@@ -296,7 +313,11 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Skewtime.Equal(state.Skewtime) {
 		tflog.Debug(ctx, fmt.Sprintf("skewtime has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Skewtime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "skewtime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tenantid.Equal(state.Tenantid) {
 		tflog.Debug(ctx, fmt.Sprintf("tenantid has changed for authenticationoauthaction"))
@@ -308,7 +329,11 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Tokenendpointauthmethod.Equal(state.Tokenendpointauthmethod) {
 		tflog.Debug(ctx, fmt.Sprintf("tokenendpointauthmethod has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Tokenendpointauthmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tokenendpointauthmethod")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Userinfourl.Equal(state.Userinfourl) {
 		tflog.Debug(ctx, fmt.Sprintf("userinfourl has changed for authenticationoauthaction"))
@@ -337,6 +362,17 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 		tflog.Trace(ctx, "Updated authenticationoauthaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationoauthaction resource, skipping update")
+	}
+
+	// Issue a single batched unset for attributes removed from config so the
+	// appliance reverts them to their defaults. Update-then-unset ordering
+	// ensures any default the update payload carried is superseded.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationoauthaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationoauthaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -4,9 +4,10 @@ subcategory: "Cloud"
 
 # Data Source: cloudparaminternal
 
-The `citrixadc_cloudparaminternal` data source is used to retrieve the internal cloud parameters configuration from the Citrix ADC.
+The cloudparaminternal data source allows you to retrieve information about the internal cloud parameters configuration.
 
-Note: The underlying NITRO GET/show operation (`show cloud paramInternal`) is platform-gated. On platforms that do not support it, NITRO returns "Operation not supported on this platform", and the data source may return empty attribute values for that reason.
+~> **Note:** The underlying `show cloud paramInternal` operation is platform-gated; on unsupported platforms the read returns empty attribute values.
+
 
 ## Example usage
 

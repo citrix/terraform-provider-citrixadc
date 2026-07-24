@@ -4,9 +4,8 @@ subcategory: "Bot"
 
 # Data Source: botpolicylabel
 
-Use this data source to retrieve information about an existing Bot Policy Label.
+The botpolicylabel data source allows you to retrieve information about a bot policy label.
 
-The `citrixadc_botpolicylabel` data source allows you to retrieve details of a bot policy label by its name. This is useful for referencing existing bot policy labels in your Terraform configurations without managing them directly.
 
 ## Example usage
 

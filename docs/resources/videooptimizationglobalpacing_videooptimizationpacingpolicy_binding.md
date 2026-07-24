@@ -4,11 +4,7 @@ subcategory: "VideoOptimization"
 
 # Resource: videooptimizationglobalpacing_videooptimizationpacingpolicy_binding
 
-Binds a video optimization pacing policy to the global pacing bind point, activating the policy for video pacing evaluation across the appliance without attaching it to a specific virtual server.
-
-~> **Note** The video pacing feature is deprecated in current NetScaler releases. This resource remains available for backward compatibility with existing configurations.
-
-This is a global, singleton-scoped binding: it has no parent resource and is bound directly to the global pacing bind point.
+This resource is used to bind a video optimization pacing policy to the global pacing bind point.
 
 
 ## Example usage

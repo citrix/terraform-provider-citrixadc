@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -59,21 +60,25 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			"authentication": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Configure the RADIUS server state to accept or refuse authentication messages.",
 			},
 			"authservretry": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Number of retry by the Citrix ADC before getting response from the RADIUS server.",
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Maximum number of seconds that the Citrix ADC waits for a response from the RADIUS server.",
 			},
 			"callingstationid": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send Calling-Station-ID of the client to the RADIUS server. IP Address of the client is sent as its Calling-Station-ID.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -94,11 +99,13 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			"messageauthenticator": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.",
 			},
 			"passencoding": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("mschapv2"),
 				Description: "Enable password encoding in RADIUS packets that the Citrix ADC sends to the RADIUS server.",
 			},
 			"pwdattributetype": schema.Int64Attribute{
@@ -166,11 +173,13 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1812),
 				Description: "Port number on which the RADIUS server listens for connections.",
 			},
 			"tunnelendpointclientip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send Tunnel Endpoint Client IP address to the RADIUS server.",
 			},
 		},

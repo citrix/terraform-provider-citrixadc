@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslcacertbundle
 
-A CA certificate bundle groups a list of trusted Certificate Authority (CA) certificates into a single named entity on the Citrix ADC. Bundling the issuing-CA chain together lets you bind one object during SSL client/server certificate verification instead of binding each CA certificate individually. Use this resource to register a CA bundle file that already exists on the appliance's disk.
-
-The bundle is added from a file on the appliance and cannot be modified in place; changing either argument forces the resource to be re-created.
+This resource is used to manage CA certificate bundles.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "Network"
 
 # Resource: fis_interface_binding
 
-Binds a physical interface to a Failover Interface Set (FIS) on the Citrix ADC. A FIS groups one or more interfaces (or channels) so that the failover state of the set as a whole tracks the state of its members. Use this resource to add an interface (for example, `1/3`) as a member of an existing FIS created with the `citrixadc_fis` resource.
-
-~> **Note** This binding has no readable NITRO GET endpoint. The Citrix ADC exposes only add and delete operations for `fis_interface_binding`, and the aggregate `fis_binding/<name>` endpoint does not surface interface members (verified live on NS14.1). Terraform therefore manages the binding (create and delete) but cannot refresh it from the appliance: the plan/state values are authoritative and drift is not detected. The bound interfaces are visible on the CLI with `show fis <name>`.
+This resource is used to bind an interface to a Failover Interface Set (FIS).
 
 
 ## Example usage

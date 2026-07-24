@@ -167,9 +167,14 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Allowextendedmastersecret.Equal(state.Allowextendedmastersecret) {
 		tflog.Debug(ctx, fmt.Sprintf("allowextendedmastersecret has changed for sslprofile"))
-		hasChange = true
+		if config.Allowextendedmastersecret.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "allowextendedmastersecret")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Allowunknownsni.Equal(state.Allowunknownsni) {
 		tflog.Debug(ctx, fmt.Sprintf("allowunknownsni has changed for sslprofile"))
@@ -189,7 +194,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Cipherredirect.Equal(state.Cipherredirect) {
 		tflog.Debug(ctx, fmt.Sprintf("cipherredirect has changed for sslprofile"))
-		hasChange = true
+		if config.Cipherredirect.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cipherredirect")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cipherurl.Equal(state.Cipherurl) {
 		tflog.Debug(ctx, fmt.Sprintf("cipherurl has changed for sslprofile"))
@@ -201,11 +210,19 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Clientauth.Equal(state.Clientauth) {
 		tflog.Debug(ctx, fmt.Sprintf("clientauth has changed for sslprofile"))
-		hasChange = true
+		if config.Clientauth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientauth")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientauthuseboundcachain.Equal(state.Clientauthuseboundcachain) {
 		tflog.Debug(ctx, fmt.Sprintf("clientauthuseboundcachain has changed for sslprofile"))
-		hasChange = true
+		if config.Clientauthuseboundcachain.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientauthuseboundcachain")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientcert.Equal(state.Clientcert) {
 		tflog.Debug(ctx, fmt.Sprintf("clientcert has changed for sslprofile"))
@@ -221,11 +238,19 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Denysslreneg.Equal(state.Denysslreneg) {
 		tflog.Debug(ctx, fmt.Sprintf("denysslreneg has changed for sslprofile"))
-		hasChange = true
+		if config.Denysslreneg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "denysslreneg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dh.Equal(state.Dh) {
 		tflog.Debug(ctx, fmt.Sprintf("dh has changed for sslprofile"))
-		hasChange = true
+		if config.Dh.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dh")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dhcount.Equal(state.Dhcount) {
 		tflog.Debug(ctx, fmt.Sprintf("dhcount has changed for sslprofile"))
@@ -233,7 +258,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Dhekeyexchangewithpsk.Equal(state.Dhekeyexchangewithpsk) {
 		tflog.Debug(ctx, fmt.Sprintf("dhekeyexchangewithpsk has changed for sslprofile"))
-		hasChange = true
+		if config.Dhekeyexchangewithpsk.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dhekeyexchangewithpsk")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dhfile.Equal(state.Dhfile) {
 		tflog.Debug(ctx, fmt.Sprintf("dhfile has changed for sslprofile"))
@@ -241,19 +270,35 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Dhkeyexpsizelimit.Equal(state.Dhkeyexpsizelimit) {
 		tflog.Debug(ctx, fmt.Sprintf("dhkeyexpsizelimit has changed for sslprofile"))
-		hasChange = true
+		if config.Dhkeyexpsizelimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dhkeyexpsizelimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dropreqwithnohostheader.Equal(state.Dropreqwithnohostheader) {
 		tflog.Debug(ctx, fmt.Sprintf("dropreqwithnohostheader has changed for sslprofile"))
-		hasChange = true
+		if config.Dropreqwithnohostheader.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dropreqwithnohostheader")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Encryptedclienthello.Equal(state.Encryptedclienthello) {
 		tflog.Debug(ctx, fmt.Sprintf("encryptedclienthello has changed for sslprofile"))
-		hasChange = true
+		if config.Encryptedclienthello.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "encryptedclienthello")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Encrypttriggerpktcount.Equal(state.Encrypttriggerpktcount) {
 		tflog.Debug(ctx, fmt.Sprintf("encrypttriggerpktcount has changed for sslprofile"))
-		hasChange = true
+		if config.Encrypttriggerpktcount.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "encrypttriggerpktcount")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ersa.Equal(state.Ersa) {
 		tflog.Debug(ctx, fmt.Sprintf("ersa has changed for sslprofile"))
@@ -265,11 +310,19 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Hsts.Equal(state.Hsts) {
 		tflog.Debug(ctx, fmt.Sprintf("hsts has changed for sslprofile"))
-		hasChange = true
+		if config.Hsts.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "hsts")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Includesubdomains.Equal(state.Includesubdomains) {
 		tflog.Debug(ctx, fmt.Sprintf("includesubdomains has changed for sslprofile"))
-		hasChange = true
+		if config.Includesubdomains.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "includesubdomains")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Insertionencoding.Equal(state.Insertionencoding) {
 		tflog.Debug(ctx, fmt.Sprintf("insertionencoding has changed for sslprofile"))
@@ -277,7 +330,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Maxage.Equal(state.Maxage) {
 		tflog.Debug(ctx, fmt.Sprintf("maxage has changed for sslprofile"))
-		hasChange = true
+		if config.Maxage.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxage")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxrenegrate.Equal(state.Maxrenegrate) {
 		tflog.Debug(ctx, fmt.Sprintf("maxrenegrate has changed for sslprofile"))
@@ -289,15 +346,27 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Ocspstapling.Equal(state.Ocspstapling) {
 		tflog.Debug(ctx, fmt.Sprintf("ocspstapling has changed for sslprofile"))
-		hasChange = true
+		if config.Ocspstapling.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ocspstapling")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Preload.Equal(state.Preload) {
 		tflog.Debug(ctx, fmt.Sprintf("preload has changed for sslprofile"))
-		hasChange = true
+		if config.Preload.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "preload")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Prevsessionkeylifetime.Equal(state.Prevsessionkeylifetime) {
 		tflog.Debug(ctx, fmt.Sprintf("prevsessionkeylifetime has changed for sslprofile"))
-		hasChange = true
+		if config.Prevsessionkeylifetime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "prevsessionkeylifetime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pushenctrigger.Equal(state.Pushenctrigger) {
 		tflog.Debug(ctx, fmt.Sprintf("pushenctrigger has changed for sslprofile"))
@@ -305,7 +374,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Pushenctriggertimeout.Equal(state.Pushenctriggertimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("pushenctriggertimeout has changed for sslprofile"))
-		hasChange = true
+		if config.Pushenctriggertimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "pushenctriggertimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pushflag.Equal(state.Pushflag) {
 		tflog.Debug(ctx, fmt.Sprintf("pushflag has changed for sslprofile"))
@@ -313,19 +386,35 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Quantumsize.Equal(state.Quantumsize) {
 		tflog.Debug(ctx, fmt.Sprintf("quantumsize has changed for sslprofile"))
-		hasChange = true
+		if config.Quantumsize.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "quantumsize")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Redirectportrewrite.Equal(state.Redirectportrewrite) {
 		tflog.Debug(ctx, fmt.Sprintf("redirectportrewrite has changed for sslprofile"))
-		hasChange = true
+		if config.Redirectportrewrite.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "redirectportrewrite")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sendclosenotify.Equal(state.Sendclosenotify) {
 		tflog.Debug(ctx, fmt.Sprintf("sendclosenotify has changed for sslprofile"))
-		hasChange = true
+		if config.Sendclosenotify.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sendclosenotify")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Serverauth.Equal(state.Serverauth) {
 		tflog.Debug(ctx, fmt.Sprintf("serverauth has changed for sslprofile"))
-		hasChange = true
+		if config.Serverauth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverauth")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sessionkeylifetime.Equal(state.Sessionkeylifetime) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionkeylifetime has changed for sslprofile"))
@@ -333,7 +422,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Sessionticket.Equal(state.Sessionticket) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionticket has changed for sslprofile"))
-		hasChange = true
+		if config.Sessionticket.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessionticket")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute sessionticketkeydata or its version tracker
 	if !data.Sessionticketkeydata.Equal(state.Sessionticketkeydata) {
@@ -353,7 +446,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Sessreuse.Equal(state.Sessreuse) {
 		tflog.Debug(ctx, fmt.Sprintf("sessreuse has changed for sslprofile"))
-		hasChange = true
+		if config.Sessreuse.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessreuse")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sesstimeout.Equal(state.Sesstimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("sesstimeout has changed for sslprofile"))
@@ -365,35 +462,67 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Snienable.Equal(state.Snienable) {
 		tflog.Debug(ctx, fmt.Sprintf("snienable has changed for sslprofile"))
-		hasChange = true
+		if config.Snienable.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "snienable")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Snihttphostmatch.Equal(state.Snihttphostmatch) {
 		tflog.Debug(ctx, fmt.Sprintf("snihttphostmatch has changed for sslprofile"))
-		hasChange = true
+		if config.Snihttphostmatch.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "snihttphostmatch")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssl3.Equal(state.Ssl3) {
 		tflog.Debug(ctx, fmt.Sprintf("ssl3 has changed for sslprofile"))
-		hasChange = true
+		if config.Ssl3.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssl3")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sslclientlogs.Equal(state.Sslclientlogs) {
 		tflog.Debug(ctx, fmt.Sprintf("sslclientlogs has changed for sslprofile"))
-		hasChange = true
+		if config.Sslclientlogs.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslclientlogs")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sslimaxsessperserver.Equal(state.Sslimaxsessperserver) {
 		tflog.Debug(ctx, fmt.Sprintf("sslimaxsessperserver has changed for sslprofile"))
-		hasChange = true
+		if config.Sslimaxsessperserver.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslimaxsessperserver")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sslinterception.Equal(state.Sslinterception) {
 		tflog.Debug(ctx, fmt.Sprintf("sslinterception has changed for sslprofile"))
-		hasChange = true
+		if config.Sslinterception.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslinterception")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssliocspcheck.Equal(state.Ssliocspcheck) {
 		tflog.Debug(ctx, fmt.Sprintf("ssliocspcheck has changed for sslprofile"))
-		hasChange = true
+		if config.Ssliocspcheck.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssliocspcheck")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sslireneg.Equal(state.Sslireneg) {
 		tflog.Debug(ctx, fmt.Sprintf("sslireneg has changed for sslprofile"))
-		hasChange = true
+		if config.Sslireneg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslireneg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssllogprofile.Equal(state.Ssllogprofile) {
 		tflog.Debug(ctx, fmt.Sprintf("ssllogprofile has changed for sslprofile"))
@@ -401,15 +530,27 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Sslredirect.Equal(state.Sslredirect) {
 		tflog.Debug(ctx, fmt.Sprintf("sslredirect has changed for sslprofile"))
-		hasChange = true
+		if config.Sslredirect.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslredirect")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssltriggertimeout.Equal(state.Ssltriggertimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("ssltriggertimeout has changed for sslprofile"))
-		hasChange = true
+		if config.Ssltriggertimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssltriggertimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Strictcachecks.Equal(state.Strictcachecks) {
 		tflog.Debug(ctx, fmt.Sprintf("strictcachecks has changed for sslprofile"))
-		hasChange = true
+		if config.Strictcachecks.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "strictcachecks")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Strictsigdigestcheck.Equal(state.Strictsigdigestcheck) {
 		tflog.Debug(ctx, fmt.Sprintf("strictsigdigestcheck has changed for sslprofile"))
@@ -433,11 +574,19 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Tls13sessionticketsperauthcontext.Equal(state.Tls13sessionticketsperauthcontext) {
 		tflog.Debug(ctx, fmt.Sprintf("tls13sessionticketsperauthcontext has changed for sslprofile"))
-		hasChange = true
+		if config.Tls13sessionticketsperauthcontext.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tls13sessionticketsperauthcontext")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Zerorttearlydata.Equal(state.Zerorttearlydata) {
 		tflog.Debug(ctx, fmt.Sprintf("zerorttearlydata has changed for sslprofile"))
-		hasChange = true
+		if config.Zerorttearlydata.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "zerorttearlydata")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -458,6 +607,16 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated sslprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for sslprofile resource, skipping update")
+	}
+
+	// Clear attributes that were removed from the configuration (update-then-unset
+	// ordering, so any default carried by the update payload is superseded here).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Sslprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Handle ECC curve binding changes

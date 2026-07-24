@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Resource: rnatparam
 
-Configures the global Reverse Network Address Translation (RNAT) parameters on the Citrix ADC. These settings control how the appliance handles RNAT traffic, letting you enable TCP proxy optimization and source-IP persistency for connections that are source-NATed by the appliance. This is a singleton resource: a single RNAT parameter configuration always exists on the ADC, so creating this resource updates the existing global settings rather than creating a new object.
+This resource is used to manage the global RNAT parameters on the Citrix ADC.
 
 
 ## Example usage

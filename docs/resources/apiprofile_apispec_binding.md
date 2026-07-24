@@ -4,7 +4,7 @@ subcategory: "API Definition"
 
 # Resource: apiprofile_apispec_binding
 
-Associates an API specification (an imported OpenAPI/Swagger definition) with an API profile on the Citrix ADC. Binding an apispec to an apiprofile tells the profile which API schema to use when validating and protecting matching API traffic, so an apiprofile is only enforced against the endpoints and payloads described by the specs bound to it.
+This resource is used to bind an API specification to an API profile.
 
 
 ## Example usage

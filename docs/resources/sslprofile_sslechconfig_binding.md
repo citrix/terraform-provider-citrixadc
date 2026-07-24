@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslprofile_sslechconfig_binding
 
-Binds an Encrypted Client Hello (ECH) configuration to an SSL profile on the Citrix ADC. ECH conceals the Server Name Indication and other sensitive ClientHello fields from on-path observers; binding an echconfig to a profile enables that protection for the SSL traffic governed by the profile.
+This resource is used to bind an Encrypted Client Hello (ECH) configuration to an SSL profile.
 
 
 ## Example usage

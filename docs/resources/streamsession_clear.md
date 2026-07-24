@@ -4,9 +4,7 @@ subcategory: "Stream"
 
 # Resource: streamsession_clear
 
-Clears the accumulated stream-session records collected for a stream identifier on the Citrix ADC. Stream analytics builds up per-request session data against a named stream identifier; applying this resource performs an imperative `clear` action that discards that accumulated data, letting administrators reset counters and start a fresh collection window without reconfiguring the stream identifier itself.
-
-This is an action resource: applying it performs the clear; it does not manage a persistent object, so re-applying re-runs the action. The `name` argument is immutable, so changing it re-runs the clear action against the new stream identifier.
+This resource is used to clear accumulated stream-session records for a stream identifier.
 
 
 ## Example usage

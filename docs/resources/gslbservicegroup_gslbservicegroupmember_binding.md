@@ -4,7 +4,7 @@ subcategory: "GSLB"
 
 # Resource: gslbservicegroup_gslbservicegroupmember_binding
 
-Adds a member to a GSLB (Global Server Load Balancing) service group. Each member represents a back-end target that the service group load-balances across GSLB sites. A member is identified either by an IP address and port (the IP path) or by the name of a pre-configured server and port (the server-name path). Binding a member also lets you tune that target's relative `weight`, hash placement, public NAT address, and site prefix used for HTTP-redirect site persistence.
+This resource is used to bind a member to a GSLB service group.
 
 
 ## Example usage

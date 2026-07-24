@@ -4,9 +4,8 @@ subcategory: "Bot"
 
 # Data Source: botprofile
 
-Use this data source to retrieve information about an existing Bot Profile.
+The botprofile data source allows you to retrieve information about a bot profile.
 
-The `citrixadc_botprofile` data source allows you to retrieve details of a bot profile by its name. This is useful for referencing existing bot profiles in your Terraform configurations without managing them directly.
 
 ## Example usage
 

@@ -134,13 +134,18 @@ func (r *SslcrlResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Basedn.Equal(state.Basedn) {
 		tflog.Debug(ctx, fmt.Sprintf("basedn has changed for sslcrl"))
 		hasChange = true
 	}
 	if !data.Binary.Equal(state.Binary) {
 		tflog.Debug(ctx, fmt.Sprintf("binary has changed for sslcrl"))
-		hasChange = true
+		if config.Binary.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "binary")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Binddn.Equal(state.Binddn) {
 		tflog.Debug(ctx, fmt.Sprintf("binddn has changed for sslcrl"))
@@ -213,6 +218,16 @@ func (r *SslcrlResource) Update(ctx context.Context, req resource.UpdateRequest,
 		tflog.Trace(ctx, "Updated sslcrl resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for sslcrl resource, skipping update")
+	}
+
+	// Unset attributes removed from config (update-then-unset ordering, so any
+	// default carried by the update payload is superseded by the unset).
+	unsetIdPayload := map[string]interface{}{
+		"crlname": data.Crlname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Sslcrl.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslcrl attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

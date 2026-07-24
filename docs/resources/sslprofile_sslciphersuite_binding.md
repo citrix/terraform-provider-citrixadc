@@ -4,7 +4,7 @@ subcategory: "SSL"
 
 # Resource: sslprofile_sslciphersuite_binding
 
-Binds an individual cipher, cipher group, or cipher alias to an SSL profile on the Citrix ADC. Use this resource to control which ciphers an SSL profile offers during the TLS handshake and the order in which they are preferred.
+This resource is used to manage the binding of cipher suites to an SSL profile.
 
 
 ## Example usage

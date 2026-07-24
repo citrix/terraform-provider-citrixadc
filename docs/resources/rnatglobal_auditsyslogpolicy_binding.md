@@ -4,7 +4,7 @@ subcategory: "Network"
 
 # Resource: rnatglobal_auditsyslogpolicy_binding
 
-Binds an audit syslog policy to the global RNAT (Reverse Network Address Translation) configuration on the Citrix ADC. Binding a syslog policy at the RNAT global scope lets the appliance evaluate that policy against RNAT traffic and forward the resulting audit events to a syslog server, so you can log RNAT activity centrally without attaching the policy to an individual entity. The RNAT global object is a singleton, so the binding is keyed solely by the policy name.
+This resource is used to bind an audit syslog policy to the global RNAT configuration.
 
 
 ## Example usage

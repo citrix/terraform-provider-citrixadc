@@ -4,7 +4,7 @@ subcategory: "AAA"
 
 # Resource: aaagroup_intranetip6_binding
 
-Assigns a range of intranet IPv6 addresses to an AAA group on the Citrix ADC. Members of the group are allocated addresses from this range when they establish a VPN session, allowing the ADC to hand out predictable, group-scoped intranet IPv6 connectivity instead of per-user assignments.
+This resource is used to manage the binding of intranet IPv6 address ranges to an AAA group.
 
 
 ## Example usage

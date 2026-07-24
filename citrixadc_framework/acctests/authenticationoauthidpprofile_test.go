@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -331,4 +332,97 @@ func TestAccAuthenticationoauthidpprofile_clientsecret_wo_ephemeral(t *testing.T
 			},
 		},
 	})
+}
+
+// Step 1: unset-eligible attributes set to non-default values.
+const testAccAuthenticationoauthidpprofile_unset_step1 = `
+
+	resource "citrixadc_authenticationoauthidpprofile" "tf_unset" {
+		name            = "tf_test_authoauthidp_unset"
+		clientid        = "cliId"
+		clientsecret    = "secret"
+		redirecturl     = "http://www.example.com/1/"
+		encrypttoken    = "ON"
+		refreshinterval = 100
+		sendpassword    = "ON"
+		signaturealg    = "RS512"
+		skewtime        = 10
+	}
+`
+
+// Step 2: unset-eligible attributes removed from config -> provider must unset
+// them, reverting each to its NITRO default.
+const testAccAuthenticationoauthidpprofile_unset_step2 = `
+
+	resource "citrixadc_authenticationoauthidpprofile" "tf_unset" {
+		name         = "tf_test_authoauthidp_unset"
+		clientid     = "cliId"
+		clientsecret = "secret"
+		redirecturl  = "http://www.example.com/1/"
+	}
+`
+
+func TestAccAuthenticationoauthidpprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAuthenticationoauthidpprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthidpprofileExist("citrixadc_authenticationoauthidpprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "encrypttoken", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "refreshinterval", "100"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "sendpassword", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "signaturealg", "RS512"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "skewtime", "10"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationoauthidpprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationoauthidpprofileExist("citrixadc_authenticationoauthidpprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "encrypttoken", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "refreshinterval", "50"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "sendpassword", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "signaturealg", "RS256"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationoauthidpprofile.tf_unset", "skewtime", "5"),
+					// Independent appliance-level confirmation the unset took effect:
+					testAccCheckAuthenticationoauthidpprofileADCValue("tf_test_authoauthidp_unset", "encrypttoken", "OFF"),
+					testAccCheckAuthenticationoauthidpprofileADCValue("tf_test_authoauthidp_unset", "refreshinterval", "50"),
+					testAccCheckAuthenticationoauthidpprofileADCValue("tf_test_authoauthidp_unset", "sendpassword", "OFF"),
+					testAccCheckAuthenticationoauthidpprofileADCValue("tf_test_authoauthidp_unset", "signaturealg", "RS256"),
+					testAccCheckAuthenticationoauthidpprofileADCValue("tf_test_authoauthidp_unset", "skewtime", "5"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationoauthidpprofileADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it to the NITRO default.
+func testAccCheckAuthenticationoauthidpprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("authenticationoauthidpprofile", name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationoauthidpprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationoauthidpprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

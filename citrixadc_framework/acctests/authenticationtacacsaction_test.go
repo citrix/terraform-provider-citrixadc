@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -325,6 +326,87 @@ func TestAccAuthenticationtacacsactionDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// --- Unset support test -------------------------------------------------------
+// Eligible attributes (from attributesToUnset wiring in
+// resource_authenticationtacacsaction.go): authtimeout (default 3), serverport
+// (default 49). Step 1 sets them to non-defaults; step 2 removes them so the
+// provider issues ?action=unset and the appliance reverts them to defaults.
+
+const testAccAuthenticationtacacsaction_unset_step1 = `
+	resource "citrixadc_authenticationtacacsaction" "tf_unset" {
+		name        = "tf_test_tacacsaction_unset"
+		serverip    = "1.2.3.4"
+		authtimeout = 5
+		serverport  = 8080
+	}
+`
+
+const testAccAuthenticationtacacsaction_unset_step2 = `
+	resource "citrixadc_authenticationtacacsaction" "tf_unset" {
+		name     = "tf_test_tacacsaction_unset"
+		serverip = "1.2.3.4"
+		# authtimeout and serverport removed from config -> provider must unset them
+	}
+`
+
+func TestAccAuthenticationtacacsaction_unset(t *testing.T) {
+	// The resource's other tests (basic, datasource, secret) have no skip guard;
+	// they run on the default standalone testbed, so this test adds none either.
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationtacacsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAuthenticationtacacsaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacsactionExist("citrixadc_authenticationtacacsaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_unset", "authtimeout", "5"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_unset", "serverport", "8080"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults, and
+				// the implicit post-apply plan must be empty (no perpetual diff).
+				Config: testAccAuthenticationtacacsaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacsactionExist("citrixadc_authenticationtacacsaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_unset", "authtimeout", "3"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationtacacsaction.tf_unset", "serverport", "49"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationtacacsactionADCValue("tf_test_tacacsaction_unset", "authtimeout", "3"),
+					testAccCheckAuthenticationtacacsactionADCValue("tf_test_tacacsaction_unset", "serverport", "49"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationtacacsactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it to its default.
+func testAccCheckAuthenticationtacacsactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationtacacsaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationtacacsaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationtacacsaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAuthenticationtacacsaction_sdkv2StateUpgrade(t *testing.T) {

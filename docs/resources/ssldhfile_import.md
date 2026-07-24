@@ -4,9 +4,7 @@ subcategory: "SSL"
 
 # Resource: ssldhfile_import
 
-Imports a Diffie-Hellman (DH) parameters file onto the Citrix ADC. DH parameter files supply the key-exchange parameters used to enable forward secrecy with DHE cipher suites on SSL virtual servers and services. The file is fetched from a remote source at creation time and stored under the given name on the appliance, and it is removed from the appliance when the resource is destroyed.
-
-The Citrix ADC NITRO API exposes this object only through an import action (`POST ?action=Import`), with no in-place update endpoint. As a result, every attribute forces a new resource when changed.
+This resource is used to import a Diffie-Hellman (DH) parameters file onto the Citrix ADC.
 
 
 ## Example usage

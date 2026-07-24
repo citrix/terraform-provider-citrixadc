@@ -4,16 +4,8 @@ subcategory: "Generic"
 
 # Resource: nitro\_resource
 
-The nitro\_resource resource is used to generically create NITRO resources.
+This resource is used to generically manage NITRO resources.
 
-It will handle the creation, update and deletion of the resource in the manner
-described by the workflow map entry referenced in the configuration block.
-
-The execution is governed by the data found in the corresponding workflow entry.
-
-Browse through the workflows.yaml file to see what endpoints are available.
-
-The workflows.yaml file can be found [here](https://github.com/citrix/terraform-provider-citrixadc/blob/master/citrixadc/testdata/workflows.yaml).
 
 ## Limitations
 

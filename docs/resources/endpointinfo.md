@@ -4,7 +4,7 @@ subcategory: "Endpoint"
 
 # Resource: endpointinfo
 
-The endpointinfo resource registers an endpoint (currently an IP address) with the Citrix ADC and attaches structured metadata and labels to it. These labels and metadata qualifiers let policies and analytics reference the endpoint by descriptive attributes (for example `cluster.default.frontend`) instead of by raw address.
+This resource is used to manage endpoint registrations and their metadata on the Citrix ADC.
 
 
 ## Example usage

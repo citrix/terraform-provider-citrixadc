@@ -4,13 +4,9 @@ subcategory: "System"
 
 # Resource: systemsession_kill
 
-The systemsession_kill resource terminates administrative (NITRO/CLI/GUI) sessions on the Citrix ADC. Applying it invokes the NITRO `kill` action to forcibly log out either a single session identified by its session ID, or every administrative session on the appliance. Use it to revoke access for a stale or unauthorized session, or to clear out administrative sessions during maintenance.
+This resource is used to terminate administrative sessions on the Citrix ADC.
 
-This is a destructive, one-shot action resource: applying it performs the kill; it does not manage a persistent object. Each apply performs the kill; changing `sid` or `all` re-triggers the action (both attributes force replacement).
-
-~> **WARNING:** Setting `all = true` terminates **ALL** administrative sessions except the current one — and depending on session reuse, this can include the provider's own NITRO session, causing subsequent operations in the same apply to fail with authentication errors. Specifying a `sid` kills only that single session. Use this resource deliberately; killing sessions immediately disconnects active administrators.
-
--> **NOTE:** Exactly one of `sid` or `all` must be specified. They are mutually exclusive — supplying both, or neither, results in a configuration validation error.
+!> **WARNING:** This forcibly logs out a single admin session (by `sid`) or every admin session (`all`). Each apply re-triggers the kill.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nsconfig_diff
 
-The nsconfig_diff resource compares two Citrix ADC configuration sets and reports the differences between them. Use it to review what has changed between a saved configuration and the running configuration (or between two saved configuration locations) before promoting or auditing a change.
-
-~> **One-shot action.** This is an action resource: applying it performs the configuration diff; it does not manage a persistent object, so re-applying re-runs the diff. Each `terraform apply` that creates or replaces this resource runs the diff once, and changing any argument forces the diff to run again (replacement). Bump `timestamp` to re-run the diff when the other arguments are unchanged.
+This resource is used to compare two Citrix ADC configuration sets and report their differences.
 
 
 ## Example usage

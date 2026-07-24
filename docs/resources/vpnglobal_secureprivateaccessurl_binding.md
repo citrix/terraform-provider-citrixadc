@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnglobal_secureprivateaccessurl_binding
 
-Binds a Secure Private Access (SPA) URL to the global VPN bind point on the Citrix ADC. Use this resource to publish a Secure Private Access application URL for all VPN sessions, so that the URL is made available to users through the global VPN configuration rather than per virtual server.
+This resource is used to bind a Secure Private Access URL to the global VPN bind point.
 
 
 ## Example usage

@@ -4,9 +4,7 @@ subcategory: "Utility"
 
 # Resource: traceroute6
 
-The traceroute6 resource performs the NITRO `traceroute6` action, which runs an IPv6 traceroute from the target Citrix ADC. It is an action-only diagnostic resource: applying it runs the traceroute6 once. Every argument is one-shot and forces replacement when changed.
-
--> **Attribute naming** The NITRO parameters `I` and `T` are exposed as the lowercase Terraform attributes `i` and `t` respectively (the lowercase NITRO variants do not exist for traceroute6, so no `_upper` suffix is needed).
+This resource is used to run an IPv6 traceroute from the Citrix ADC.
 
 
 ## Example usage

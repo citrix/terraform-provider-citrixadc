@@ -4,9 +4,7 @@ subcategory: "Utility"
 
 # Resource: traceroute
 
-The traceroute resource performs the NITRO `traceroute` action, which runs a traceroute from the target Citrix ADC. It is an action-only diagnostic resource: applying it runs the traceroute once. Every argument is one-shot and forces replacement when changed.
-
--> **Attribute naming** Several NITRO parameters differ only by letter case (e.g. `s`/`S`, `m`/`M`, `p`/`P`, `t`/`T`). Because Terraform attribute names must be lowercase and unique, the upper-case NITRO parameter is exposed with an `_upper` suffix (for example NITRO `S` -> `s_upper`, `M` -> `m_upper`, `P` -> `p_upper`, `T` -> `t_upper`).
+This resource is used to run a traceroute from the Citrix ADC.
 
 
 ## Example usage

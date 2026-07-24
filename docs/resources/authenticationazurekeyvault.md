@@ -4,7 +4,7 @@ subcategory: "Authentication"
 
 # Resource: authenticationazurekeyvault
 
-The authenticationazurekeyvault resource is used to create and manage Azure Key Vault profiles on the Citrix ADC. This profile is used by the Citrix ADC to authenticate to Azure Key Vault for retrieving keys used to sign authentication transactions.
+This resource is used to manage Azure Key Vault authentication profiles on the Citrix ADC.
 
 
 ## Example usage

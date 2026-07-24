@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -367,6 +368,138 @@ func TestAccAppfwsettingsDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Unset test: proves ?action=unset support for the unset-eligible attributes.
+// Step 1 sets every eligible attribute to a valid non-default value; step 2
+// removes them from config so the provider must issue unset -> each reverts to
+// its NITRO default (asserted in state AND directly on the appliance), with an
+// empty post-apply plan.
+// ---------------------------------------------------------------------------
+const testAccAppfwsettings_unset_step1 = `
+resource "citrixadc_appfwsettings" "tf_unset" {
+  ceflogging               = "ON"
+  centralizedlearning      = "ON"
+  cookieflags              = "all"
+  defaultprofile           = "APPFW_DROP"
+  entitydecoding           = "ON"
+  geolocationlogging       = "ON"
+  importsizelimit          = 134217700
+  learnratelimit           = 300
+  proxyport                = 9090
+  sessionlifetime          = 1000
+  sessionlimit             = 50000
+  sessiontimeout           = 800
+  signatureautoupdate      = "ON"
+  signatureurl             = "https://example.com"
+  undefaction              = "APPFW_DROP"
+  useconfigurablesecretkey = "ON"
+}
+`
+
+const testAccAppfwsettings_unset_step2 = `
+resource "citrixadc_appfwsettings" "tf_unset" {
+  # All unset-eligible attributes removed from config -> provider must unset them.
+}
+`
+
+func TestAccAppfwsettings_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAppfwsettings_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "ceflogging", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "centralizedlearning", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "cookieflags", "all"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "defaultprofile", "APPFW_DROP"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "entitydecoding", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "geolocationlogging", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "importsizelimit", "134217700"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "learnratelimit", "300"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "proxyport", "9090"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "sessionlifetime", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "sessionlimit", "50000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "sessiontimeout", "800"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "signatureautoupdate", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "signatureurl", "https://example.com"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "undefaction", "APPFW_DROP"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "useconfigurablesecretkey", "ON"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAppfwsettings_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwsettingsExist("citrixadc_appfwsettings.tf_unset", nil),
+					// State reverted to defaults.
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "ceflogging", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "centralizedlearning", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "cookieflags", "none"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "defaultprofile", "APPFW_BYPASS"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "entitydecoding", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "geolocationlogging", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "importsizelimit", "134217728"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "learnratelimit", "400"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "proxyport", "8080"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "sessionlifetime", "0"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "sessionlimit", "100000"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "sessiontimeout", "900"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "signatureautoupdate", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "signatureurl", "https://s3.amazonaws.com/NSAppFwSignatures/SignaturesMapping.xml"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "undefaction", "APPFW_BLOCK"),
+					resource.TestCheckResourceAttr("citrixadc_appfwsettings.tf_unset", "useconfigurablesecretkey", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppfwsettingsADCValue("ceflogging", "OFF"),
+					testAccCheckAppfwsettingsADCValue("centralizedlearning", "OFF"),
+					testAccCheckAppfwsettingsADCValue("cookieflags", "none"),
+					testAccCheckAppfwsettingsADCValue("defaultprofile", "APPFW_BYPASS"),
+					testAccCheckAppfwsettingsADCValue("entitydecoding", "OFF"),
+					testAccCheckAppfwsettingsADCValue("geolocationlogging", "OFF"),
+					testAccCheckAppfwsettingsADCValue("importsizelimit", "134217728"),
+					testAccCheckAppfwsettingsADCValue("learnratelimit", "400"),
+					testAccCheckAppfwsettingsADCValue("proxyport", "8080"),
+					testAccCheckAppfwsettingsADCValue("sessionlifetime", "0"),
+					testAccCheckAppfwsettingsADCValue("sessionlimit", "100000"),
+					testAccCheckAppfwsettingsADCValue("sessiontimeout", "900"),
+					testAccCheckAppfwsettingsADCValue("signatureautoupdate", "OFF"),
+					testAccCheckAppfwsettingsADCValue("signatureurl", "https://s3.amazonaws.com/NSAppFwSignatures/SignaturesMapping.xml"),
+					testAccCheckAppfwsettingsADCValue("undefaction", "APPFW_BLOCK"),
+					testAccCheckAppfwsettingsADCValue("useconfigurablesecretkey", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppfwsettingsADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+// appfwsettings is a singleton, so it is fetched with an empty name.
+func testAccCheckAppfwsettingsADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appfwsettings.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("appfwsettings not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("appfwsettings: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAppfwsettings_sdkv2StateUpgrade(t *testing.T) {

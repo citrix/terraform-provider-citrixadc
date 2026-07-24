@@ -4,9 +4,7 @@ subcategory: "NS"
 
 # Resource: nsacls6_apply
 
-Commits the staged IPv6 extended ACL (ACL6) rule set so that newly added, modified, or removed `ns acl6` entries take effect on the Citrix ADC packet-processing engine. Until an apply is performed, ACL6 changes remain in a pending state and are not enforced. Use this resource as the final step in an ACL6 configuration workflow to activate the rules.
-
-This is an action resource: applying it commits the current ACL6 rule set; it does not manage a persistent object, so re-applying re-runs the action.
+This resource is used to apply the configured IPv6 extended ACL (ACL6) rules on the Citrix ADC.
 
 
 ## Example usage
