@@ -3,7 +3,6 @@ package vpnvserver_appfwpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -138,11 +137,21 @@ func (r *VpnvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req r
 
 	tflog.Debug(ctx, "Deleting vpnvserver_appfwpolicy_binding resource")
 
-	bindingId := data.Id.ValueString()
-	idSlice := strings.SplitN(bindingId, ",", 2)
-
-	name := idSlice[0]
-	policy := idSlice[1]
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
+	name, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+	policy, ok := idMap["policy"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
 
 	// Build args for delete
 	args := make([]string, 0)
@@ -155,7 +164,7 @@ func (r *VpnvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req r
 		args = append(args, fmt.Sprintf("groupextraction:%t", data.Groupextraction.ValueBool()))
 	}
 
-	err := r.client.DeleteResourceWithArgs("vpnvserver_appfwpolicy_binding", name, args)
+	err = r.client.DeleteResourceWithArgs("vpnvserver_appfwpolicy_binding", name, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_appfwpolicy_binding, got error: %s", err))
 		return
@@ -167,10 +176,21 @@ func (r *VpnvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req r
 // Helper function to read vpnvserver_appfwpolicy_binding data from API
 func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingFromApi(ctx context.Context, data *VpnvserverAppfwpolicyBindingResourceModel, diags *diag.Diagnostics) bool {
 	bindingId := data.Id.ValueString()
-	idSlice := strings.SplitN(bindingId, ",", 2)
-
-	name := idSlice[0]
-	policy := idSlice[1]
+	idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return false
+	}
+	name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return false
+	}
+	policy, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return false
+	}
 
 	findParams := service.FindParams{
 		ResourceType:             "vpnvserver_appfwpolicy_binding",
