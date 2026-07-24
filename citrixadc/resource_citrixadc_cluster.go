@@ -1636,10 +1636,12 @@ func instantiateNodeClient(d *schema.ResourceData, meta interface{}, nodeMap map
 	nodeSslVerrify = !nodeMap["insecure_skip_verify"].(bool)
 
 	params := service.NitroParams{
-		Url:       nodeEndpoint,
-		Username:  nodeUsername,
-		Password:  nodePassword,
-		SslVerify: nodeSslVerrify,
+		Url:         nodeEndpoint,
+		Username:    nodeUsername,
+		Password:    nodePassword,
+		SslVerify:   nodeSslVerrify,
+		HttpTimeout: meta.(*NetScalerNitroClient).HttpTimeout,
+		Timeout:     meta.(*NetScalerNitroClient).NsTimeout,
 	}
 
 	log.Printf("[DEBUG]  citrixadc-provider: node client params %v", params)

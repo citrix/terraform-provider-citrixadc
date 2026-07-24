@@ -19,6 +19,7 @@ package provider
 import (
 	"context"
 	"os"
+	"strconv"
 
 	adcnitrogoservice "github.com/citrix/adc-nitro-go/service"
 
@@ -972,6 +973,8 @@ type CitrixAdcFrameworkProviderModel struct {
 	Partition          types.String `tfsdk:"partition"`
 	DoLogin            types.Bool   `tfsdk:"do_login"`
 	IsCloud            types.Bool   `tfsdk:"is_cloud"`
+	HttpTimeout        types.Int64  `tfsdk:"http_timeout"`
+	NsTimeout          types.Int64  `tfsdk:"ns_timeout"`
 }
 
 // ProviderData contains the configured client for data sources and resources.
@@ -1020,6 +1023,14 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 			},
 			"is_cloud": schema.BoolAttribute{
 				Description: "Set to true when using NetScaler Console Cloud",
+				Optional:    true,
+			},
+			"http_timeout": schema.Int64Attribute{
+				Description: "Timeout in seconds for the underlying NITRO HTTP client (Go http.Client.Timeout). It bounds the total duration of each API request so that unreachable endpoints fail fast instead of hanging on the operating system's TCP connection timeout. Can be sourced from the NS_HTTP_TIMEOUT environment variable. When 0 or unset, no client-side timeout is applied.",
+				Optional:    true,
+			},
+			"ns_timeout": schema.Int64Attribute{
+				Description: "NITRO session timeout in seconds requested at login. It is sent to the ADC in the login request and controls the idle lifetime of the NITRO session; it only takes effect when 'do_login' is true. Can be sourced from the NS_TIMEOUT environment variable. When 0 or unset, the ADC applies its own default session timeout.",
 				Optional:    true,
 			},
 		},
@@ -1104,18 +1115,50 @@ func (p *CitrixAdcFrameworkProvider) Configure(ctx context.Context, req provider
 		isCloud = data.IsCloud.ValueBool()
 	}
 
+	httpTimeout := 0
+	if !data.HttpTimeout.IsNull() {
+		httpTimeout = int(data.HttpTimeout.ValueInt64())
+	} else if v := os.Getenv("NS_HTTP_TIMEOUT"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid NS_HTTP_TIMEOUT",
+				"The NS_HTTP_TIMEOUT environment variable must be an integer number of seconds.",
+			)
+			return
+		}
+		httpTimeout = n
+	}
+
+	nsTimeout := 0
+	if !data.NsTimeout.IsNull() {
+		nsTimeout = int(data.NsTimeout.ValueInt64())
+	} else if v := os.Getenv("NS_TIMEOUT"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Invalid NS_TIMEOUT",
+				"The NS_TIMEOUT environment variable must be an integer number of seconds.",
+			)
+			return
+		}
+		nsTimeout = n
+	}
+
 	userHeaders := map[string]string{
 		"User-Agent": "terraform-ctxadc",
 	}
 
 	params := adcnitrogoservice.NitroParams{
-		Url:       endpoint,
-		Username:  username,
-		Password:  password,
-		ProxiedNs: proxiedNs,
-		SslVerify: !insecureSkipVerify,
-		Headers:   userHeaders,
-		IsCloud:   isCloud,
+		Url:         endpoint,
+		Username:    username,
+		Password:    password,
+		ProxiedNs:   proxiedNs,
+		SslVerify:   !insecureSkipVerify,
+		Headers:     userHeaders,
+		IsCloud:     isCloud,
+		HttpTimeout: httpTimeout,
+		Timeout:     nsTimeout,
 	}
 
 	client, err := adcnitrogoservice.NewNitroClientFromParams(params)
