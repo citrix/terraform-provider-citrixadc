@@ -61,6 +61,15 @@ provider "citrixadc" {
   do_login   = true
 }
 
+# Fail fast when a target instance may be unreachable
+# Bound each NITRO request to 5 seconds instead of waiting on the
+# operating system's TCP connection timeout. Useful when managing many
+# instances where some may be offline.
+provider "citrixadc" {
+  endpoint     = "https://10.0.0.1"
+  http_timeout = 5
+}
+
 ```
 
 ## Argument Reference
@@ -75,5 +84,7 @@ The following arguments are supported.
 * `do_login` - (Optional) When set to true the NITRO client will perform the login operation and acquire a session token which will be used for all subsequent operations. This is required when targeting a non default admin partition.
 * `is_cloud` - (Optional) Boolean variable that defines whether NetScaler Console Service is used for proxied calls. When `true`, `username`, `password` and `endpoint` must refer to the Console Service. Defaults to `false`.
 * `partition` - (Optional) Partition to target. All resources utilizing this provider instance will reside on the target admin partition.
+* `http_timeout` - (Optional) Timeout in seconds for the underlying NITRO HTTP client (Go `http.Client.Timeout`). It bounds the total duration of each API request, so unreachable endpoints fail after this period instead of hanging on the operating system's TCP connection timeout. Can be sourced from the `NS_HTTP_TIMEOUT` environment variable. When `0` or unset (the default), no client-side timeout is applied. Because the value caps the entire request, set it high enough to accommodate any long-running operations you perform (for example, large `systemfile` uploads).
+* `ns_timeout` - (Optional) NITRO session timeout in seconds requested at login. It is sent to the ADC in the login request and controls the idle lifetime of the NITRO session; it only takes effect when `do_login` is `true`. Can be sourced from the `NS_TIMEOUT` environment variable. When `0` or unset (the default), the ADC applies its own default session timeout.
 
 !> Avoid hard coding credentials in terraform configuration files. It presents a security risk especially if they are committed and published in version control systems.

@@ -28,18 +28,25 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/go-hclog"
 )
 
-//NitroParams encapsulates options to create a NitroClient
+// NitroParams encapsulates options to create a NitroClient
 type NitroParams struct {
-	Url           string
-	Username      string
-	Password      string
-	ProxiedNs     string
-	SslVerify     bool
-	Timeout       int
+	Url       string
+	Username  string
+	Password  string
+	ProxiedNs string
+	SslVerify bool
+	Timeout   int
+	// HttpTimeout is the timeout, in seconds, applied to the underlying HTTP
+	// client (http.Client.Timeout). It bounds the total duration of each NITRO
+	// request so that unreachable endpoints fail fast instead of blocking on the
+	// operating system's TCP connection timeout. A value of 0 (the default)
+	// leaves the HTTP client without a timeout.
+	HttpTimeout   int
 	RootCAPath    string
 	ServerName    string
 	Headers       map[string]string
@@ -48,8 +55,8 @@ type NitroParams struct {
 	IsCloud       bool
 }
 
-//NitroClient has methods to configure the NetScaler
-//It abstracts the REST operations of the NITRO API
+// NitroClient has methods to configure the NetScaler
+// It abstracts the REST operations of the NITRO API
 type NitroClient struct {
 	url          string
 	statsURL     string
@@ -82,9 +89,9 @@ func (c *NitroClient) GetURL() string {
 	return baseURL
 }
 
-//NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
-//This is for backwards compatibility.
-//Please use NewNitroClientFromParams
+// NewNitroClient returns a usable NitroClient. Does not check validity of supplied parameters
+// This is for backwards compatibility.
+// Please use NewNitroClientFromParams
 func NewNitroClient(url string, username string, password string) *NitroClient {
 	c := new(NitroClient)
 	c.url = strings.Trim(url, " /") + "/nitro/v1/config/"
@@ -97,7 +104,7 @@ func NewNitroClient(url string, username string, password string) *NitroClient {
 	return c
 }
 
-//NewNitroClientFromParams returns a usable NitroClient. Does not check validity of supplied parameters
+// NewNitroClientFromParams returns a usable NitroClient. Does not check validity of supplied parameters
 func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 	u, err := url.Parse(params.Url)
 	if err != nil {
@@ -146,6 +153,12 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 		}
 		c.client = &http.Client{Transport: tr}
 	}
+	// Apply the HTTP client timeout, if configured, to whichever http.Client was
+	// constructed above. A value of 0 leaves the client without a timeout,
+	// preserving the previous default behaviour.
+	if params.HttpTimeout > 0 {
+		c.client.Timeout = time.Duration(params.HttpTimeout) * time.Second
+	}
 	level := hclog.LevelFromString(params.LogLevel)
 	if level == hclog.NoLevel {
 		level = hclog.Off
@@ -170,9 +183,9 @@ func NewNitroClientFromParams(params NitroParams) (*NitroClient, error) {
 	return c, nil
 }
 
-//NewNitroClientFromEnv returns a usable NitroClient. Parameters url, username and password can be passed in
-//as the first three positional parameters. Otherwise, it tries to read these values from
-//environment variable NS_URL, NS_LOGIN and NS_PASSWORD
+// NewNitroClientFromEnv returns a usable NitroClient. Parameters url, username and password can be passed in
+// as the first three positional parameters. Otherwise, it tries to read these values from
+// environment variable NS_URL, NS_LOGIN and NS_PASSWORD
 func NewNitroClientFromEnv() (*NitroClient, error) {
 	url := os.Getenv("NS_URL")
 	username := os.Getenv("NS_LOGIN")
@@ -199,6 +212,15 @@ func NewNitroClientFromEnv() (*NitroClient, error) {
 			return nil, fmt.Errorf("could not parse env variable NS_TIMEOUT: integer value is expected")
 		}
 	}
+	httpTimeoutStr := os.Getenv("NS_HTTP_TIMEOUT")
+	httpTimeout := 0
+	if httpTimeoutStr != "" {
+		var err error
+		httpTimeout, err = strconv.Atoi(httpTimeoutStr)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse env variable NS_HTTP_TIMEOUT: integer value is expected")
+		}
+	}
 	nitroParams := NitroParams{
 		Url:           url,
 		Username:      username,
@@ -206,6 +228,7 @@ func NewNitroClientFromEnv() (*NitroClient, error) {
 		ProxiedNs:     proxiedNs,
 		SslVerify:     sslVerify,
 		Timeout:       timeout,
+		HttpTimeout:   httpTimeout,
 		JSONLogFormat: false,
 	}
 	return NewNitroClientFromParams(nitroParams)

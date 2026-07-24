@@ -5,7 +5,7 @@ go 1.25.0
 godebug tlsrsakex=1
 
 require (
-	github.com/citrix/adc-nitro-go v0.0.0-20260722183908-3362d24e1630
+	github.com/citrix/adc-nitro-go v0.0.0-20260724204033-b9c3ca1ade34
 	github.com/gruntwork-io/terratest v0.51.0
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/terraform-plugin-framework v1.16.1
