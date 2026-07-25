@@ -350,6 +350,8 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_tmtrafficpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_transformpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_vpnvserver_binding"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/change_password"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/password_resetter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dbdbprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dbsmonitors"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dbuser"
@@ -1409,6 +1411,8 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		rdpconnections.NewRdpconnectionsKillResource,
 		subscribersessions.NewSubscribersessionsClearResource,
 		tmglobal_tmsessionpolicy_binding.NewTmglobalTmsessionpolicyBindingResource,
+		password_resetter.NewPasswordResetterResource,
+		change_password.NewChangePasswordResource,
 	}
 }
 
