@@ -96,6 +96,8 @@ The following arguments are supported.
 * `insecure_skip_verify` - (Optional, true/false) Whether to accept the untrusted certificate on the Citrix ADC when the Citrix ADC endpoint is `https`
 - `proxied_ns` - (Optional, NSIP) The target Citrix ADC NSIP for proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the MAS proxy.
 - `is_cloud` - (Optional, true/false) Whether using Console Service for proxied calls. When this option is defined, `username`, `password` and `endpoint` must refer to the Console Service.
+- `http_timeout` - (Optional, integer seconds) Timeout for the underlying NITRO HTTP client (Go `http.Client.Timeout`). Bounds the total duration of each API request so that unreachable endpoints fail fast instead of hanging on the operating system's TCP connection timeout. Can be specified in environment variable `NS_HTTP_TIMEOUT`. Defaults to `0` (no client-side timeout). Set it high enough to accommodate long-running operations such as large `systemfile` uploads.
+- `ns_timeout` - (Optional, integer seconds) NITRO session timeout requested at login; sent to the ADC and controlling the idle lifetime of the NITRO session. Only takes effect when `do_login` is `true`. Can be specified in environment variable `NS_TIMEOUT`. Defaults to `0` (ADC applies its own default).
 
 The username, password and endpoint can be provided in environment variables `NS_LOGIN`, `NS_PASSWORD` and `NS_URL`.
 

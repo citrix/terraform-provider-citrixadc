@@ -3,7 +3,6 @@ package csvserver_lbvserver_binding
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -138,17 +137,27 @@ func (r *CsvserverLbvserverBindingResource) Delete(ctx context.Context, req reso
 
 	tflog.Debug(ctx, "Deleting csvserver_lbvserver_binding resource")
 
-	bindingId := data.Id.ValueString()
-	idSlice := strings.SplitN(bindingId, ",", 2)
-
-	name_Name := idSlice[0]
-	lbvserver_Name := idSlice[1]
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "lbvserver"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
+	name_Name, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+	lbvserver_Name, ok := idMap["lbvserver"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "ID attribute 'lbvserver' not found in ID string")
+		return
+	}
 
 	// Build args for delete
 	args := make([]string, 0)
 	args = append(args, fmt.Sprintf("lbvserver:%s", lbvserver_Name))
 
-	err := r.client.DeleteResourceWithArgs(service.Csvserver_lbvserver_binding.Type(), name_Name, args)
+	err = r.client.DeleteResourceWithArgs(service.Csvserver_lbvserver_binding.Type(), name_Name, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete csvserver_lbvserver_binding, got error: %s", err))
 		return
@@ -161,11 +170,21 @@ func (r *CsvserverLbvserverBindingResource) Delete(ctx context.Context, req reso
 func (r *CsvserverLbvserverBindingResource) readCsvserverLbvserverBindingFromApi(ctx context.Context, data *CsvserverLbvserverBindingResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 4: Array filter with parent ID - parse from ID
-	bindingId := data.Id.ValueString()
-	idSlice := strings.SplitN(bindingId, ",", 2)
-
-	name_Name := idSlice[0]
-	lbvserver_Name := idSlice[1]
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "lbvserver"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return false
+	}
+	name_Name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return false
+	}
+	lbvserver_Name, ok := idMap["lbvserver"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'lbvserver' not found in ID string")
+		return false
+	}
 
 	var dataArr []map[string]interface{}
 
@@ -174,7 +193,7 @@ func (r *CsvserverLbvserverBindingResource) readCsvserverLbvserverBindingFromApi
 		ResourceName:             name_Name,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		if utils.IsNotFoundError(err) {
 			return false
