@@ -1,3 +1,212 @@
+## 2.3.0 (July 27, 2026)
+
+FEATURES
+
+* **New Resource**: citrixadc_aaaglobal_authenticationnegotiateaction_binding
+* **New Resource**: citrixadc_aaagroup_intranetip6_binding
+* **New Resource**: citrixadc_aaasession_kill
+* **New Resource**: citrixadc_apiprofile_apispec_binding
+* **New Resource**: citrixadc_appfwlearningdata_export
+* **New Resource**: citrixadc_appfwlearningdata_reset
+* **New Resource**: citrixadc_appfwprofile_appfwconfidfield_binding
+* **New Resource**: citrixadc_appfwprofile_blockkeyword_binding
+* **New Resource**: citrixadc_appfwprofile_bypasslist_binding
+* **New Resource**: citrixadc_appfwprofile_denylist_binding
+* **New Resource**: citrixadc_appfwprofile_fakeaccount_binding
+* **New Resource**: citrixadc_appfwprofile_grpcvalidation_binding
+* **New Resource**: citrixadc_appfwprofile_jsonblockkeyword_binding
+* **New Resource**: citrixadc_appfwprofile_restvalidation_binding
+* **New Resource**: citrixadc_application_export
+* **New Resource**: citrixadc_application_import
+* **New Resource**: citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding
+* **New Resource**: citrixadc_botprofile_kmdetectionexpr_binding
+* **New Resource**: citrixadc_cacheobject_expire
+* **New Resource**: citrixadc_cacheobject_flush
+* **New Resource**: citrixadc_cacheobject_save
+* **New Resource**: citrixadc_callhome
+* **New Resource**: citrixadc_channel_interface_binding
+* **New Resource**: citrixadc_cloudallowedngsticketprofile
+* **New Resource**: citrixadc_cloudawsparam
+* **New Resource**: citrixadc_cloudcredential
+* **New Resource**: citrixadc_cloudngsparameter
+* **New Resource**: citrixadc_cloudparameter
+* **New Resource**: citrixadc_cloudparaminternal
+* **New Resource**: citrixadc_cloudprofile
+* **New Resource**: citrixadc_cloudservice_check
+* **New Resource**: citrixadc_cloudtunnelparameter
+* **New Resource**: citrixadc_cloudtunnelvserver
+* **New Resource**: citrixadc_clusterpropstatus_clear
+* **New Resource**: citrixadc_clustersync_force
+* **New Resource**: citrixadc_cspolicylabel_cspolicy_binding
+* **New Resource**: citrixadc_csvserver_domain_binding
+* **New Resource**: citrixadc_dbsmonitors_restart
+* **New Resource**: citrixadc_dnscaarec
+* **New Resource**: citrixadc_dnsproxyrecords_flush
+* **New Resource**: citrixadc_dnssubnetcache_flush
+* **New Resource**: citrixadc_endpointinfo
+* **New Resource**: citrixadc_endpointinfo_clear
+* **New Resource**: citrixadc_filesystemencryption_disable
+* **New Resource**: citrixadc_filesystemencryption_enable
+* **New Resource**: citrixadc_fis_channel_binding
+* **New Resource**: citrixadc_fis_interface_binding
+* **New Resource**: citrixadc_gslbconfig_sync
+* **New Resource**: citrixadc_gslbldnsentries_clear
+* **New Resource**: citrixadc_gslbldnsentry_delete
+* **New Resource**: citrixadc_hafiles_sync
+* **New Resource**: citrixadc_hasync_force
+* **New Resource**: citrixadc_ipsecalgsession_flush
+* **New Resource**: citrixadc_kafkacluster
+* **New Resource**: citrixadc_kafkacluster_servicegroup_binding
+* **New Resource**: citrixadc_lbglobal_lbpolicy_binding
+* **New Resource**: citrixadc_lbpersistentsessions_clear
+* **New Resource**: citrixadc_lbpolicylabel
+* **New Resource**: citrixadc_lbpolicylabel_lbpolicy_binding
+* **New Resource**: citrixadc_lbvserver_auditnslogpolicy_binding
+* **New Resource**: citrixadc_linkset_interface_binding
+* **New Resource**: citrixadc_lldpneighbors_clear
+* **New Resource**: citrixadc_locationdata_clear
+* **New Resource**: citrixadc_lsngroup_ipsecalgprofile_binding
+* **New Resource**: citrixadc_lsngroup_lsnrtspalgprofile_binding
+* **New Resource**: citrixadc_lsngroup_lsnsipalgprofile_binding
+* **New Resource**: citrixadc_lsnpool_lsnip_binding
+* **New Resource**: citrixadc_lsnrtspalgsession_flush
+* **New Resource**: citrixadc_lsnsession_flush
+* **New Resource**: citrixadc_lsnsipalgcall_flush
+* **New Resource**: citrixadc_metricsprofile
+* **New Resource**: citrixadc_metricsprofile_authenticationvserver_binding
+* **New Resource**: citrixadc_metricsprofile_crvserver_binding
+* **New Resource**: citrixadc_metricsprofile_csvserver_binding
+* **New Resource**: citrixadc_metricsprofile_gslbvserver_binding
+* **New Resource**: citrixadc_metricsprofile_lbvserver_binding
+* **New Resource**: citrixadc_metricsprofile_service_binding
+* **New Resource**: citrixadc_metricsprofile_servicegroup_binding
+* **New Resource**: citrixadc_metricsprofile_uservserver_binding
+* **New Resource**: citrixadc_metricsprofile_vpnvserver_binding
+* **New Resource**: citrixadc_nsacls6_apply
+* **New Resource**: citrixadc_nsacls6_clear
+* **New Resource**: citrixadc_nsacls6_renumber
+* **New Resource**: citrixadc_nsaptlicense_change
+* **New Resource**: citrixadc_nscentralmanagementserver
+* **New Resource**: citrixadc_nschannelparam
+* **New Resource**: citrixadc_nsconfig_convert
+* **New Resource**: citrixadc_nsconfig_diff
+* **New Resource**: citrixadc_nsdhcpip_release
+* **New Resource**: citrixadc_nsextension
+* **New Resource**: citrixadc_nsextension_change
+* **New Resource**: citrixadc_nskeymanagerproxy
+* **New Resource**: citrixadc_nslaslicense_apply
+* **New Resource**: citrixadc_nslimitsessions_clear
+* **New Resource**: citrixadc_nsmgmtparam
+* **New Resource**: citrixadc_nssourceroutecachetable_flush
+* **New Resource**: citrixadc_nsstats_clear
+* **New Resource**: citrixadc_nssurgeq_flush
+* **New Resource**: citrixadc_nstestlicense_apply
+* **New Resource**: citrixadc_nstimer_autoscalepolicy_binding
+* **New Resource**: citrixadc_ping6
+* **New Resource**: citrixadc_policypatsetfile
+* **New Resource**: citrixadc_policypatsetfile_change
+* **New Resource**: citrixadc_policytracing_clear
+* **New Resource**: citrixadc_policyurlset
+* **New Resource**: citrixadc_policyurlset_change
+* **New Resource**: citrixadc_policyurlset_export
+* **New Resource**: citrixadc_protocolhttpband
+* **New Resource**: citrixadc_protocolhttpband_clear
+* **New Resource**: citrixadc_quicparam
+* **New Resource**: citrixadc_quicprofile
+* **New Resource**: citrixadc_rdpconnections_kill
+* **New Resource**: citrixadc_rnat_retainsourceportset_binding
+* **New Resource**: citrixadc_rnatsession_flush
+* **New Resource**: citrixadc_servicegroup_servicegroupmemberlist_binding
+* **New Resource**: citrixadc_shutdown
+* **New Resource**: citrixadc_sslcacertbundle
+* **New Resource**: citrixadc_sslcertbundle_import
+* **New Resource**: citrixadc_sslcertificatechain
+* **New Resource**: citrixadc_sslcertkeybundle
+* **New Resource**: citrixadc_sslcertkeybundle_change
+* **New Resource**: citrixadc_sslcrlfile_import
+* **New Resource**: citrixadc_ssldefaultprofile_convert
+* **New Resource**: citrixadc_ssldhfile_import
+* **New Resource**: citrixadc_sslechconfig
+* **New Resource**: citrixadc_sslfips
+* **New Resource**: citrixadc_sslfips_change
+* **New Resource**: citrixadc_sslfips_reset
+* **New Resource**: citrixadc_sslfipssimsource_enable
+* **New Resource**: citrixadc_sslfipssimsource_init
+* **New Resource**: citrixadc_sslfipssimtarget_enable
+* **New Resource**: citrixadc_sslfipssimtarget_init
+* **New Resource**: citrixadc_sslglobal_sslpolicy_binding
+* **New Resource**: citrixadc_sslhpkekey
+* **New Resource**: citrixadc_sslkeyfile_import
+* **New Resource**: citrixadc_sslpkcs12_convert
+* **New Resource**: citrixadc_sslpkcs8_convert
+* **New Resource**: citrixadc_sslprofile_sslciphersuite_binding
+* **New Resource**: citrixadc_sslprofile_sslechconfig_binding
+* **New Resource**: citrixadc_sslservice_sslcacertbundle_binding
+* **New Resource**: citrixadc_sslservice_sslcipher_binding
+* **New Resource**: citrixadc_sslservice_sslpolicy_binding
+* **New Resource**: citrixadc_sslservicegroup_sslcacertbundle_binding
+* **New Resource**: citrixadc_sslservicegroup_sslcipher_binding
+* **New Resource**: citrixadc_sslvserver_sslcacertbundle_binding
+* **New Resource**: citrixadc_sslvserver_sslcertkeybundle_binding
+* **New Resource**: citrixadc_sslvserver_sslcipher_binding
+* **New Resource**: citrixadc_sslwrapkey_create
+* **New Resource**: citrixadc_streamidentifier_analyticsprofile_binding
+* **New Resource**: citrixadc_streamsession_clear
+* **New Resource**: citrixadc_subscribersessions_clear
+* **New Resource**: citrixadc_systemadmuserinfo
+* **New Resource**: citrixadc_systemautorestorefeature_disable
+* **New Resource**: citrixadc_systemautorestorefeature_enable
+* **New Resource**: citrixadc_systemcpuparam
+* **New Resource**: citrixadc_systemglobal_auditsyslogpolicy_binding
+* **New Resource**: citrixadc_systemhwerror_check
+* **New Resource**: citrixadc_systemkek_change
+* **New Resource**: citrixadc_systemnsbtracing
+* **New Resource**: citrixadc_systemrestorepoint_create
+* **New Resource**: citrixadc_systemsession_kill
+* **New Resource**: citrixadc_systemsignedexereport_disable
+* **New Resource**: citrixadc_systemsignedexereport_enable
+* **New Resource**: citrixadc_systemsshkey_import
+* **New Resource**: citrixadc_tmglobal_tmsessionpolicy_binding
+* **New Resource**: citrixadc_traceroute
+* **New Resource**: citrixadc_traceroute6
+* **New Resource**: citrixadc_videooptimizationdetectionpolicylabel
+* **New Resource**: citrixadc_videooptimizationdetectionpolicylabel_videooptimizationdetectionpolicy_binding
+* **New Resource**: citrixadc_videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding
+* **New Resource**: citrixadc_videooptimizationglobalpacing_videooptimizationpacingpolicy_binding
+* **New Resource**: citrixadc_videooptimizationpacingpolicylabel
+* **New Resource**: citrixadc_videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding
+* **New Resource**: citrixadc_videooptimizationparameter
+* **New Resource**: citrixadc_vlan_linkset_binding
+* **New Resource**: citrixadc_vpnglobal_appfwpolicy_binding
+* **New Resource**: citrixadc_vpnglobal_auditnslogpolicy_binding
+* **New Resource**: citrixadc_vpnglobal_authenticationpolicy_binding
+* **New Resource**: citrixadc_vpnglobal_secureprivateaccessurl_binding
+* **New Resource**: citrixadc_vpnicaconnection_kill
+* **New Resource**: citrixadc_vpnpcoipconnection_kill
+* **New Resource**: citrixadc_vpnvserver_authenticationpolicy_binding
+* **New Resource**: citrixadc_vpnvserver_secureprivateaccessurl_binding
+* **New Resource**: citrixadc_vrid6_channel_binding
+* **New Resource**: citrixadc_vrid6_interface_binding
+* **New Resource**: citrixadc_vrid6_trackinterface_binding
+* **New Resource**: citrixadc_vrid_channel_binding
+* **New Resource**: citrixadc_vrid_interface_binding
+* **New Resource**: citrixadc_vrid_trackinterface_binding
+* **Data Sources**: Added 101 new data sources corresponding to the new resources listed above.
+
+ENHANCEMENTS
+
+* **provider**: Added `http_timeout` (env `NS_HTTP_TIMEOUT`) to bound the total duration of each NITRO HTTP request, and `ns_timeout` (env `NS_TIMEOUT`) to control the idle lifetime of the NITRO session requested at login (`do_login = true`). Both default to `0` (no client-side timeout / ADC default). [#1324]
+* **provider**: Added ephemeral (write-only) support for the `change_password` and `password_resetter` resources. [#1427]
+
+UPDATES
+
+* **google.golang.org/grpc**: Version upgrade from 1.79.3 to 1.82.1.
+* **golang.org/x/crypto**: Version upgrade from 0.46.0 to 0.52.0.
+* **golang.org/x/net**: Version upgrade from 0.48.0 to 0.55.0.
+
+[#1324]: https://github.com/citrix/terraform-provider-citrixadc/issues/1324
+[#1427]: https://github.com/citrix/terraform-provider-citrixadc/issues/1427
+
 ## 2.2.2 (July 9, 2026)
 
 BUG FIXES
