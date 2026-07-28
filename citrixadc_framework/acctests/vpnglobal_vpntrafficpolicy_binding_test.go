@@ -315,3 +315,35 @@ func TestAccVpnglobal_vpntrafficpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnglobal_vpntrafficpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpntrafficpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpntrafficpolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpntrafficpolicy_binding.Type(), "", []string{"policyname:tf_vpntrafficpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpntrafficpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpntrafficpolicy_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

@@ -380,3 +380,31 @@ func TestAccCsvserver_cspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_cspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_cspolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_cspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_cspolicy_binding.Type(), "tf_csvserver", map[string]string{"policyname": "tf_cspolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_cspolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_cspolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

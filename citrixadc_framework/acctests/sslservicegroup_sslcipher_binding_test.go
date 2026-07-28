@@ -283,3 +283,34 @@ func TestAccSslservicegroup_sslcipher_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslservicegroup_sslcipher_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservicegroup_sslcipher_binding.tf_sslservicegroup_sslcipher_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservicegroup_sslcipher_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservicegroup_sslcipher_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservicegroup_sslcipher_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslservicegroup_sslcipher_binding.Type(), "tf_servicegroup", map[string]string{"ciphername": "DEFAULT"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslservicegroup_sslcipher_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservicegroup_sslcipher_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

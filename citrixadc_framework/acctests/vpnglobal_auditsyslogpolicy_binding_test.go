@@ -328,3 +328,31 @@ func TestAccVpnglobal_auditsyslogpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnglobal_auditsyslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_auditsyslogpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_auditsyslogpolicy_binding.Type(), "", []string{"policyname:new_auditsyslogpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

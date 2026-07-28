@@ -383,3 +383,41 @@ func TestAccAppfwprofile_cmdinjection_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccAppfwprofile_cmdinjection_binding_selfHealing verifies drift recovery: after
+// the binding is deleted out-of-band on the ADC, the next refresh's Read must detect
+// it is gone and drop it from state so the same config recreates it. The delete arg
+// values with reserved characters are URL-encoded, mirroring the resource's Delete.
+func TestAccAppfwprofile_cmdinjection_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_cmdinjection_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_cmdinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_cmdinjection_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_cmdinjection_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_cmdinjection_binding.Type(), "tf_appfwprofile", map[string]string{
+						"as_scan_location_cmd": "HEADER",
+						"as_value_expr_cmd":    utils.UrlEncode("[a-z]+grep"),
+						"as_value_type_cmd":    utils.UrlEncode("Keyword"),
+						"cmdinjection":         "tf_cmdinjection",
+						"formactionurl_cmd":    utils.UrlEncode(`^https://sd2\-zgw\.test\.ctxns\.com/api/document/content$`),
+					}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_cmdinjection_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_cmdinjection_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

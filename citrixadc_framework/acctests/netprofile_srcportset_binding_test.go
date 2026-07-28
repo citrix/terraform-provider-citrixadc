@@ -307,3 +307,31 @@ func TestAccNetprofile_srcportset_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNetprofile_srcportset_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netprofile_srcportset_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofile_srcportset_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetprofile_srcportset_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofile_srcportset_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Netprofile_srcportset_binding.Type(), "tf_netprofile", map[string]string{"srcportrange": "2000"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetprofile_srcportset_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofile_srcportset_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

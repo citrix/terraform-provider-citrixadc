@@ -323,3 +323,34 @@ func TestAccIpset_nsip6_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccIpset_nsip6_binding_selfHealing verifies drift recovery: after the binding is
+// created, it is deleted out-of-band on the ADC; the next apply of the same config must
+// detect the missing binding and recreate it.
+func TestAccIpset_nsip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipset_nsip6_binding.tf_ipset_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpset_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpset_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpset_nsip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Ipset_nsip6_binding.Type(), "tf_ipset", []string{"ipaddress:" + utils.UrlEncode("2003:db8:100::fb/64")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpset_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpset_nsip6_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

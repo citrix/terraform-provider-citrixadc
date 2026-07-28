@@ -426,3 +426,31 @@ func testAccCheckAuthenticationoauthidpprofileADCValue(name, attr, want string) 
 		return nil
 	}
 }
+
+func TestAccAuthenticationoauthidpprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationoauthidpprofile.tf_idpprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthidpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationoauthidpprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("authenticationoauthidpprofile", "tf_idpprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationoauthidpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationoauthidpprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

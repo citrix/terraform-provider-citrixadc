@@ -323,3 +323,33 @@ func TestAccbridgegroup_vlan_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccBridgegroup_vlan_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccBridgegroup_vlan_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_bridgegroup_vlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroup_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBridgegroup_vlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgegroup_vlan_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Bridgegroup_vlan_binding.Type(), "2", map[string]string{"vlan": "20"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBridgegroup_vlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgegroup_vlan_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

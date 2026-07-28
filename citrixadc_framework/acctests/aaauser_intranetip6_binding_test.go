@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -292,6 +293,34 @@ func TestAccAaauser_intranetip6_binding_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: testAccAaauser_intranetip6_binding_basic},
 			{Config: testAccAaauser_intranetip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAaauser_intranetip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_intranetip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_intranetip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaauser_intranetip6_binding.Type(), "user1", map[string]string{"intranetip6": url.PathEscape("2003:db8:100::fb/128")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaauser_intranetip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_intranetip6_bindingExist(resAddr, nil)),
+			},
 		},
 	})
 }

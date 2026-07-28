@@ -179,3 +179,34 @@ func TestAccKafkacluster_DataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccKafkacluster_selfHealing verifies drift recovery: after the resource is
+// created, it is deleted out-of-band on the ADC; the next apply of the same config
+// must detect the missing resource and recreate it.
+func TestAccKafkacluster_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_kafkacluster.tf_kafkacluster"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckKafkaclusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKafkacluster_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckKafkaclusterExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Kafkacluster.Type(), "tf_kafkacluster"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccKafkacluster_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckKafkaclusterExist(resAddr, nil)),
+			},
+		},
+	})
+}

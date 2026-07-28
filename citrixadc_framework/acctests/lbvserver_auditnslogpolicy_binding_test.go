@@ -301,3 +301,31 @@ func TestAccLbvserver_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbvserver_auditnslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_auditnslogpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_auditnslogpolicy_binding.Type(), "tf_lbvserver_audit", map[string]string{"policyname": "tf_auditnslogpolicy_bind"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_auditnslogpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -613,3 +613,31 @@ func TestAccSslcertkeyDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslcertkey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkey.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertkeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcertkey.Type(), "sample_ssl_cert"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcertkey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertkeyExist(resAddr, nil)),
+			},
+		},
+	})
+}

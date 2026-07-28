@@ -328,3 +328,31 @@ func TestAccAppfwprofile_xmlwsiurl_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_xmlwsiurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_xmlwsiurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_xmlwsiurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_xmlwsiurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmlwsiurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_xmlwsiurl_binding.Type(), "tf_appfwprofile", []string{"xmlwsiurl:.%2A"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_xmlwsiurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmlwsiurl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

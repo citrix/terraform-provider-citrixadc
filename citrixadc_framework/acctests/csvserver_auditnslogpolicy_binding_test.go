@@ -363,3 +363,31 @@ func TestAccCsvserver_auditnslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_auditnslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_auditnslogpolicy_binding.tf_csvserver_auditnslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_auditnslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_auditnslogpolicy_binding.Type(), "tf_csvserver", map[string]string{"policyname": "tf_auditnslogpolicy", "priority": "5"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_auditnslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

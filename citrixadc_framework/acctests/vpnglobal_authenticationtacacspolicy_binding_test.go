@@ -91,6 +91,34 @@ func TestAccVpnglobal_authenticationtacacspolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobal_authenticationtacacspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationtacacspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationtacacspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationtacacspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationtacacspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_authenticationtacacspolicy_binding.Type(), "", []string{"policyname:tf_tacacspolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_authenticationtacacspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationtacacspolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckVpnglobal_authenticationtacacspolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

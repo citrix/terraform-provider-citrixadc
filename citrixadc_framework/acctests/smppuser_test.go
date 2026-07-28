@@ -313,3 +313,31 @@ func TestAccSmppuser_password_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSmppuser_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_smppuser.tf_smppuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSmppuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmppuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSmppuserExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("smppuser", "user1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSmppuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSmppuserExist(resAddr, nil)),
+			},
+		},
+	})
+}

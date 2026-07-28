@@ -338,3 +338,31 @@ func TestAccCsvserver_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_responderpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_responderpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_responderpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_responderpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_responderpolicy_binding.Type(), "tf_csvserver", map[string]string{"policyname": "tf_responder_policy", "bindpoint": "REQUEST", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_responderpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_responderpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

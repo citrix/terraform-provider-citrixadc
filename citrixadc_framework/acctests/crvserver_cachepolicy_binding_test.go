@@ -83,6 +83,34 @@ func TestAccCrvserver_cachepolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCrvserver_cachepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_cachepolicy_binding.crvserver_cachepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_cachepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_cachepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Crvserver_cachepolicy_binding.Type(), "my_vserver", map[string]string{"policyname": "my_cachepolicy", "bindpoint": "REQUEST", "priority": "10"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_cachepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_cachepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccCrvserver_cachepolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_crvserver_cachepolicy_binding.crvserver_cachepolicy_binding"
 	resource.Test(t, resource.TestCase{

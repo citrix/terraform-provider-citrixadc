@@ -318,3 +318,31 @@ func TestAccAaassoprofile_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaassoprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaassoprofile.tf_aaassoprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaassoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaassoprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaassoprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("aaassoprofile", "myssoprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaassoprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaassoprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

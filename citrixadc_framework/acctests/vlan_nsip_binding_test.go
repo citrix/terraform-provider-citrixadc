@@ -343,3 +343,31 @@ func TestAccVlan_nsip_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVlan_nsip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vlan_nsip_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_nsip_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_nsip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vlan_nsip_binding.Type(), "40", map[string]string{"ipaddress": "10.222.74.145", "netmask": "255.255.255.0", "td": "0"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVlan_nsip_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_nsip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -435,3 +435,31 @@ func TestAccServicegroup_lbmonitor_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccServicegroup_lbmonitor_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_servicegroup_lbmonitor_binding.bind1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroup_lbmonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicegroup_lbmonitor_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroup_lbmonitor_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Servicegroup_lbmonitor_binding.Type(), "tf_servicegroup", []string{"monitor_name:tf-monitor1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccServicegroup_lbmonitor_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroup_lbmonitor_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

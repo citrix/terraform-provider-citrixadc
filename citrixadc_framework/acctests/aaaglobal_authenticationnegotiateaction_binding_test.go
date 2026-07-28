@@ -260,3 +260,32 @@ func TestAccAaaglobalAuthenticationnegotiateactionBindingDataSource_basic(t *tes
 		},
 	})
 }
+
+func TestAccAaaglobalAuthenticationnegotiateactionBinding_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_aaaglobal_authenticationnegotiateaction_binding.tf_aaaglobal_authenticationnegotiateaction_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaaglobalAuthenticationnegotiateactionBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaaglobalAuthenticationnegotiateactionBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaaglobalAuthenticationnegotiateactionBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Aaaglobal_authenticationnegotiateaction_binding.Type(), "", []string{"windowsprofile:tf_negotiateaction_binding"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaaglobalAuthenticationnegotiateactionBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaaglobalAuthenticationnegotiateactionBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -312,6 +312,34 @@ func TestAccVpnglobal_authenticationradiuspolicy_binding_sdkv2StateUpgrade(t *te
 	})
 }
 
+func TestAccVpnglobal_authenticationradiuspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationradiuspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationradiuspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationradiuspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_authenticationradiuspolicy_binding.Type(), "", []string{"policyname:tf_radiuspolicy", "secondary:false", "groupextraction:false"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_authenticationradiuspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationradiuspolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnglobal_authenticationradiuspolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_vpnglobal_authenticationradiuspolicy_binding.tf_bind"
 	resource.Test(t, resource.TestCase{

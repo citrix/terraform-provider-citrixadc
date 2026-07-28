@@ -349,3 +349,31 @@ func TestAccAppfwprofileJsonblockkeywordBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofileJsonblockkeywordBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_jsonblockkeyword_binding.tf_appfwprofile_jsonblockkeyword_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileJsonblockkeywordBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileJsonblockkeywordBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileJsonblockkeywordBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_jsonblockkeyword_binding.Type(), "tf_appfwprofile_jsonblockkeyword", map[string]string{"jsonblockkeyword": "tf_jsonblockkeyword", "jsonblockkeywordurl": utils.UrlEncode("http://www.example.com"), "keyname_json_blockkeyword": "tf_keyname"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileJsonblockkeywordBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileJsonblockkeywordBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -86,6 +86,34 @@ func TestAccVpnglobal_sslcertkey_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobal_sslcertkey_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { PreCheckSslceriKey(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_sslcertkey_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_sslcertkey_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_sslcertkey_binding.Type(), "", []string{"certkeyname:" + url.QueryEscape("sample_ssl_cert")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_sslcertkey_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_sslcertkey_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnglobal_sslcertkey_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding"
 	resource.Test(t, resource.TestCase{

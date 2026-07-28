@@ -339,3 +339,31 @@ func TestAccAppfwprofile_csrftag_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_csrftag_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_csrftag_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_csrftag_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_csrftag_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_csrftag_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_csrftag_binding.Type(), "tf_appfwprofile", []string{"csrftag:" + utils.UrlEncode("www.source.com"), "csrfformactionurl:" + utils.UrlEncode("^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_csrftag_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_csrftag_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -374,3 +374,31 @@ func TestAccAppfwprofile_jsondosurl_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_jsondosurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_jsondosurl_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_jsondosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_jsondosurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_jsondosurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_jsondosurl_binding.Type(), "tf_appfwprofile", []string{fmt.Sprintf("jsondosurl:%s", utils.UrlEncode(".*"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_jsondosurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_jsondosurl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

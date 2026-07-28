@@ -323,3 +323,31 @@ func TestAccDbuser_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDbuser_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dbuser.tf_dbuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDbuserExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dbuser.Type(), "user1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDbuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDbuserExist(resAddr, nil)),
+			},
+		},
+	})
+}

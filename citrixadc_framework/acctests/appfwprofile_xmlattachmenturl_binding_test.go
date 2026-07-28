@@ -333,3 +333,31 @@ func TestAccAppfwprofile_xmlattachmenturl_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_xmlattachmenturl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_xmlattachmenturl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_xmlattachmenturl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_xmlattachmenturl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmlattachmenturl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_xmlattachmenturl_binding.Type(), "tf_appfwprofile", map[string]string{"xmlattachmenturl": ".%2A"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_xmlattachmenturl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmlattachmenturl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

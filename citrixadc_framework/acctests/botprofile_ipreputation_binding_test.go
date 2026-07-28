@@ -359,3 +359,31 @@ func TestAccBotprofile_ipreputation_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBotprofile_ipreputation_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_ipreputation_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_ipreputation_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_ipreputation_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_ipreputation_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Botprofile_ipreputation_binding.Type(), "tf_botprofile", map[string]string{"bot_ipreputation": "true", "category": "BOTNETS"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_ipreputation_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_ipreputation_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

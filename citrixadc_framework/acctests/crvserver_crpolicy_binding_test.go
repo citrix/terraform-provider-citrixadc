@@ -90,6 +90,34 @@ func TestAccCrvserver_crpolicy_binding_basic(t *testing.T) {
 // ImportStateVerify compares the imported instance attribute-by-attribute against
 // the applied state; attributes the ADC does not echo back on the binding GET are
 // listed in ImportStateVerifyIgnore.
+func TestAccCrvserver_crpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_crpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_crpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_crpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Crvserver_crpolicy_binding.Type(), "my_vserver", map[string]string{"policyname": "crpolicy1", "priority": "10"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_crpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_crpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccCrvserver_crpolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_crvserver_crpolicy_binding.crvserver_crpolicy_binding"
 	resource.Test(t, resource.TestCase{

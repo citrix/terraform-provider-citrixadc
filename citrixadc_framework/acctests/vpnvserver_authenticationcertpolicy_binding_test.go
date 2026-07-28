@@ -366,3 +366,31 @@ func TestAccVpnvserver_authenticationcertpolicy_bindingDataSource_basic(t *testi
 		},
 	})
 }
+
+func TestAccVpnvserver_authenticationcertpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationcertpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationcertpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_authenticationcertpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_authenticationcertpolicy_binding.Type(), "tf_vserver", map[string]string{"policy": "tf_certpolicy", "bindpoint": "REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_authenticationcertpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_authenticationcertpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

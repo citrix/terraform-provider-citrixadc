@@ -336,3 +336,33 @@ func TestAcccachepolicylabel_cachepolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccCachepolicylabel_cachepolicy_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccCachepolicylabel_cachepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cachepolicylabel_cachepolicy_binding.tf_cachepolicylabel_cachepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachepolicylabel_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachepolicylabel_cachepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabel_cachepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Cachepolicylabel_cachepolicy_binding.Type(), "my_cachepolicylabel", []string{"policyname:my_cachepolicy", "priority:100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCachepolicylabel_cachepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabel_cachepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

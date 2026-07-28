@@ -344,3 +344,31 @@ func TestAccLsngroup_lsnappsprofile_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLsngroup_lsnappsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnappsprofile_binding.tf_lsngroup_lsnappsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnappsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsnappsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroup_lsnappsprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lsngroup_lsnappsprofile_binding.Type(), "my_lsngroup", map[string]string{"appsprofilename": "my_lsn_appsprofile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsngroup_lsnappsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroup_lsnappsprofile_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

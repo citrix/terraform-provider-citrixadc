@@ -305,3 +305,37 @@ func TestAccHanode_routemonitor_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+// TestAccHanode_routemonitor_binding_selfHealing verifies drift recovery: after the
+// binding is created, it is deleted out-of-band on the ADC; the next apply of the same
+// config must detect the missing binding and recreate it.
+func TestAccHanode_routemonitor_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA.", adcTestbed)
+	}
+	const resAddr = "citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckHanode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHanode_routemonitor_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckHanode_routemonitor_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Hanode_routemonitor_binding.Type(), "0", []string{"routemonitor:" + utils.UrlEncode("10.222.74.128"), "netmask:" + utils.UrlEncode("255.255.255.192")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccHanode_routemonitor_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckHanode_routemonitor_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

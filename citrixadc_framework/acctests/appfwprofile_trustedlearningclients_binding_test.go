@@ -325,3 +325,31 @@ func TestAccAppfwprofile_trustedlearningclients_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_trustedlearningclients_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_trustedlearningclients_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_trustedlearningclients_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_trustedlearningclients_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_trustedlearningclients_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_trustedlearningclients_binding.Type(), "tf_appfwprofile", []string{fmt.Sprintf("trustedlearningclients:%s", utils.UrlEncode("1.2.31.1/32"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_trustedlearningclients_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_trustedlearningclients_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -313,3 +313,35 @@ func TestAccSystemglobal_auditsyslogpolicy_bindingDataSource_basic(t *testing.T)
 		},
 	})
 }
+
+func TestAccSystemglobal_auditsyslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_auditsyslogpolicy_binding.tf_systemglobal_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t); setupAuditsyslogpolicyBindingParticipants(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			err := testAccCheckSystemglobal_auditsyslogpolicy_bindingDestroy(s)
+			teardownAuditsyslogpolicyBindingParticipants(t)
+			return err
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Systemglobal_auditsyslogpolicy_binding.Type(), "", []string{"policyname:" + tfAuditsyslogpolicyBindingPolicyName}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -328,3 +328,31 @@ func TestAccAppfwprofile_xmlvalidationurl_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_xmlvalidationurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_xmlvalidationurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_xmlvalidationurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmlvalidationurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_xmlvalidationurl_binding.Type(), "tf_appfwprofile", map[string]string{"xmlvalidationurl": ".%2A"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_xmlvalidationurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmlvalidationurl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

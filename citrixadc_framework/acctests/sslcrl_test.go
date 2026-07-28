@@ -477,3 +477,31 @@ func testAccCheckSslcrlADCValue(name, attr, want string) resource.TestCheckFunc 
 		return nil
 	}
 }
+
+func TestAccSslcrl_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcrl.tf_sslcrl"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcrlPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcrlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcrl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcrlExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcrl.Type(), "tf_sslcrl"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcrl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcrlExist(resAddr, nil)),
+			},
+		},
+	})
+}

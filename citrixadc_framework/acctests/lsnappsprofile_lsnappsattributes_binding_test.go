@@ -375,3 +375,33 @@ func TestAccLsnappsprofile_lsnappsattributes_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLsnappsprofile_lsnappsattributes_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLsnappsprofile_lsnappsattributes_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnappsprofile_lsnappsattributes_binding.tf_lsnappsprofile_lsnappsattributes_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnappsprofile_lsnappsattributes_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnappsprofile_lsnappsattributes_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnappsprofile_lsnappsattributes_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lsnappsprofile_lsnappsattributes_binding.Type(), "my_lsn_profile", map[string]string{"appsattributesname": "my_lsn_appattributes"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnappsprofile_lsnappsattributes_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnappsprofile_lsnappsattributes_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

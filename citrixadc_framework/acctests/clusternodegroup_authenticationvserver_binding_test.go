@@ -366,3 +366,38 @@ func TestAccClusternodegroup_authenticationvserver_binding_import(t *testing.T) 
 		},
 	})
 }
+
+func TestAccClusternodegroup_authenticationvserver_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_authenticationvserver_binding.tf_clusternodegroup_authenticationvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_authenticationvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_authenticationvserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_authenticationvserver_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Clusternodegroup_authenticationvserver_binding.Type(), "my_tf_group", map[string]string{"vserver": "my_authentication_server"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternodegroup_authenticationvserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_authenticationvserver_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

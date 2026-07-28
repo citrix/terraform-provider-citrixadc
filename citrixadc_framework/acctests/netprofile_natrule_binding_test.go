@@ -301,3 +301,31 @@ func TestAccNetprofile_natrule_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNetprofile_natrule_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netprofile_natrule_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofile_natrule_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetprofile_natrule_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofile_natrule_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Netprofile_natrule_binding.Type(), "tf_netprofile", map[string]string{"natrule": "10.10.10.10", "netmask": "255.255.255.255"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetprofile_natrule_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofile_natrule_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

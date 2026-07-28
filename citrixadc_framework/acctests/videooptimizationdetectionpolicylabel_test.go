@@ -168,3 +168,31 @@ func TestAccVideooptimizationdetectionpolicylabelDataSource_basic(t *testing.T) 
 		},
 	})
 }
+
+func TestAccVideooptimizationdetectionpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionpolicylabel_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Videooptimizationdetectionpolicylabel.Type(), "tf_videoopt_detection_pl"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationdetectionpolicylabel_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}

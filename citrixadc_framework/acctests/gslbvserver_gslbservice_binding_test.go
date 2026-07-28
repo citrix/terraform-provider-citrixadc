@@ -398,3 +398,31 @@ func TestAccGslbvserver_gslbservice_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccGslbvserver_gslbservice_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_gslbservice_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_gslbservice_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserver_gslbservice_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Gslbvserver_gslbservice_binding.Type(), "gslb_vserver", map[string]string{"servicename": "gslb1vservice"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbvserver_gslbservice_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserver_gslbservice_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

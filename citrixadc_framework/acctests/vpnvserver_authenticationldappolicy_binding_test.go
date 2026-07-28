@@ -359,3 +359,31 @@ func TestAccVpnvserver_authenticationldappolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnvserver_authenticationldappolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationldappolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationldappolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_authenticationldappolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnvserver_authenticationldappolicy_binding.Type(), "vpn_vserver", []string{"policy:tf_ldappolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_authenticationldappolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_authenticationldappolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -362,3 +362,31 @@ func TestAccLbvserver_auditsyslogpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbvserver_auditsyslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_auditsyslogpolicy_binding.demo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_auditsyslogpolicy_binding.Type(), "tf_lbvserver3", map[string]string{"policyname": "tf_syslogpolicy2"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -319,3 +319,31 @@ func TestAccAppfwprofileRestvalidationBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofileRestvalidationBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_restvalidation_binding.tf_appfwprofile_restvalidation_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileRestvalidationBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileRestvalidationBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileRestvalidationBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_restvalidation_binding.Type(), "tf_appfwprofile_restvalidation", map[string]string{"rest_validation_action": "log", "restvalidation": utils.UrlEncode("GET:/v1/bookstore/viewbooks")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileRestvalidationBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileRestvalidationBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

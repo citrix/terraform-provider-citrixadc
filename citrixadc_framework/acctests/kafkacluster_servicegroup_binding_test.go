@@ -298,3 +298,34 @@ func TestAccKafkacluster_servicegroup_binding_DataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccKafkacluster_servicegroup_binding_selfHealing verifies drift recovery: after the
+// binding is created, it is deleted out-of-band on the ADC; the next apply of the same
+// config must detect the missing binding and recreate it.
+func TestAccKafkacluster_servicegroup_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_kafkacluster_servicegroup_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckKafkacluster_servicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKafkacluster_servicegroup_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckKafkacluster_servicegroup_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Kafkacluster_servicegroup_binding.Type(), "tf_kafkacluster", map[string]string{"servicegroupname": "tf_kafka_servicegroup"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccKafkacluster_servicegroup_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckKafkacluster_servicegroup_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

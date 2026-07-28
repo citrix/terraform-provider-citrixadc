@@ -385,3 +385,31 @@ func TestAccVpnvserver_appflowpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnvserver_appflowpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_appflowpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_appflowpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_appflowpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnvserver_appflowpolicy_binding.Type(), "tf_vpnvserver", []string{"policy:tf_appflowpolicy", "bindpoint:ICA_REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_appflowpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_appflowpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

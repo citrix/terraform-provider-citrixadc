@@ -317,6 +317,34 @@ func TestAcccrvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccCrvserver_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Crvserver_analyticsprofile_binding.Type(), "my_vserver", map[string]string{"analyticsprofile": "new_profile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccCrvserver_analyticsprofile_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_crvserver_analyticsprofile_binding.crvserver_analyticsprofile_binding"
 	resource.Test(t, resource.TestCase{

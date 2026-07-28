@@ -349,3 +349,31 @@ func TestAccBotprofile_logexpression_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBotprofile_logexpression_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_logexpression_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_logexpression_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_logexpression_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_logexpression_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Botprofile_logexpression_binding.Type(), "tf_botprofile", map[string]string{"bot_log_expression_name": "tf_logname", "logexpression": "true"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_logexpression_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_logexpression_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -352,3 +352,31 @@ func TestAccAuthenticationpolicylabel_authenticationpolicy_binding_import(t *tes
 		},
 	})
 }
+
+func TestAccAuthenticationpolicylabel_authenticationpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Authenticationpolicylabel_authenticationpolicy_binding.Type(), "tf_authenticationpolicylabel", map[string]string{"policyname": "tf_authenticationpolicy", "priority": "20"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

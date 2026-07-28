@@ -373,3 +373,31 @@ func TestAccCsvserver_appqoepolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_appqoepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_appqoepolicy_binding.tf_csvserver_appqoepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_appqoepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_appqoepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_appqoepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_appqoepolicy_binding.Type(), "tf_csvserver", map[string]string{"policyname": "tf_appqoepolicy", "bindpoint": "REQUEST", "priority": "5"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_appqoepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_appqoepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

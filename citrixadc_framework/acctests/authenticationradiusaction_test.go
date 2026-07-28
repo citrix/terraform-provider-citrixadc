@@ -467,3 +467,31 @@ func TestAccAuthenticationradiusactionDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationradiusaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationradiusaction.tf_radiusaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationradiusaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationradiusactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationradiusaction.Type(), "tf_radiusaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationradiusaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationradiusactionExist(resAddr, nil)),
+			},
+		},
+	})
+}

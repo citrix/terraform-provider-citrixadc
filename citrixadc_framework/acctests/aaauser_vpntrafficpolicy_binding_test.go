@@ -353,3 +353,31 @@ func TestAccAaauser_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaauser_vpntrafficpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_vpntrafficpolicy_binding.tf_aaauser_vpntrafficpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_vpntrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpntrafficpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_vpntrafficpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaauser_vpntrafficpolicy_binding.Type(), "user1", map[string]string{"policy": "tf_vpntrafficpolicy", "type": "REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaauser_vpntrafficpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_vpntrafficpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

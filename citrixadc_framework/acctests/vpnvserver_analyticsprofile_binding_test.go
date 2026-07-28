@@ -330,3 +330,35 @@ func TestAccVpnvserver_analyticsprofile_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnvserver_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_analyticsprofile_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_analyticsprofile_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_analyticsprofile_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_analyticsprofile_binding.Type(), "tf_vserver", map[string]string{"analyticsprofile": "new_profile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_analyticsprofile_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_analyticsprofile_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

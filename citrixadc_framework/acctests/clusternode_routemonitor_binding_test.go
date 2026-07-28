@@ -302,3 +302,36 @@ func TestAccClusternode_routemonitor_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+// TestAccClusternode_routemonitor_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccClusternode_routemonitor_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternode_routemonitor_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternode_routemonitor_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Clusternode_routemonitor_binding.Type(), "0", map[string]string{"netmask": "255.255.255.192", "routemonitor": "10.222.74.128"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternode_routemonitor_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternode_routemonitor_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

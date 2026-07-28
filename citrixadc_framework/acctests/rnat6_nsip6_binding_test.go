@@ -328,3 +328,34 @@ func TestAccRnat6_nsip6_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccRnat6_nsip6_binding_selfHealing verifies the provider re-creates the binding
+// when it is deleted out-of-band between apply steps (drift recovery). The natip6 delete
+// arg is URL-encoded to match the resource's Delete (IPv6 ':' are NITRO arg delimiters).
+func TestAccRnat6_nsip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnat6_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnat6_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat6_nsip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Rnat6_nsip6_binding.Type(), "my_rnat6", []string{"natip6:2001%3Adb8%3A85a3%3A%3A8a2e%3A370%3A7334"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRnat6_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat6_nsip6_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

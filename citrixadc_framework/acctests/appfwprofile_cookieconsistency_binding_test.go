@@ -318,3 +318,31 @@ func TestAccAppfwprofile_cookieconsistency_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_cookieconsistency_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_cookieconsistency_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_cookieconsistency_binding.Type(), "demo_appfwprofile", map[string]string{"cookieconsistency": utils.UrlEncode("^logon_[0-9A-Za-z]{2,15}$")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_cookieconsistency_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

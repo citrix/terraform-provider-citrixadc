@@ -333,3 +333,31 @@ func TestAccSystemuser_nspartition_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSystemuser_nspartition_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuser_nspartition_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemuser_nspartition_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemuser_nspartition_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Systemuser_nspartition_binding.Type(), "george", map[string]string{"partitionname": "tf_nspartition"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemuser_nspartition_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemuser_nspartition_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

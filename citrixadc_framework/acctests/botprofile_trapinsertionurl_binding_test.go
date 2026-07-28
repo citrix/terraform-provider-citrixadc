@@ -358,3 +358,33 @@ func TestAccBotprofile_trapinsertionurl_binding_sdkv2StateUpgrade(t *testing.T) 
 		},
 	})
 }
+
+// TestAccBotprofile_trapinsertionurl_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccBotprofile_trapinsertionurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_trapinsertionurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_trapinsertionurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_trapinsertionurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_trapinsertionurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Botprofile_trapinsertionurl_binding.Type(), "tf_botprofile", map[string]string{"bot_trap_url": "www.example.com"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_trapinsertionurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_trapinsertionurl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

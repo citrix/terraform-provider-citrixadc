@@ -181,3 +181,31 @@ func TestAccAuthenticationsmartaccessprofileDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationsmartaccessprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsmartaccessprofile.tf_authenticationsmartaccessprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsmartaccessprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsmartaccessprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsmartaccessprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationsmartaccessprofile.Type(), "tf_authenticationsmartaccessprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationsmartaccessprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsmartaccessprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

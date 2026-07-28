@@ -339,3 +339,31 @@ func TestAccSystemgroup_systemuser_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSystemgroup_systemuser_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemgroup_systemuser_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemgroup_systemuser_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemgroup_systemuser_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroup_systemuser_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Systemgroup_systemuser_binding.Type(), "tf_systemgroup", map[string]string{"username": "tf_user"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemgroup_systemuser_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroup_systemuser_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

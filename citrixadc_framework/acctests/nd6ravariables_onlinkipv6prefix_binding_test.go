@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -298,6 +299,34 @@ func TestAccNd6ravariables_onlinkipv6prefix_binding_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: testAccNd6ravariables_onlinkipv6prefix_binding_basic},
 			{Config: testAccNd6ravariables_onlinkipv6prefix_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNd6ravariables_onlinkipv6prefix_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNd6ravariables_onlinkipv6prefix_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6ravariables_onlinkipv6prefix_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6ravariables_onlinkipv6prefix_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Nd6ravariables_onlinkipv6prefix_binding.Type(), "1", map[string]string{"ipv6prefix": url.PathEscape("2003::/64")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNd6ravariables_onlinkipv6prefix_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6ravariables_onlinkipv6prefix_bindingExist(resAddr, nil)),
+			},
 		},
 	})
 }

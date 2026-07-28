@@ -254,3 +254,31 @@ func TestAccLbpolicylabelDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbpolicylabel.tf_lbpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbpolicylabel_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lbpolicylabel.Type(), "tf_lbpolicylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbpolicylabel_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}

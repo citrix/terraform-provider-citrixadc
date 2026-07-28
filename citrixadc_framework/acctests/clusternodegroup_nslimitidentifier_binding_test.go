@@ -363,3 +363,38 @@ func TestAccClusternodegroup_nslimitidentifier_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccClusternodegroup_nslimitidentifier_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_nslimitidentifier_binding.tf_clusternodegroup_nslimitidentifier_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_nslimitidentifier_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_nslimitidentifier_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_nslimitidentifier_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Clusternodegroup_nslimitidentifier_binding.Type(), "my_tf_group", map[string]string{"identifiername": "my_ns_limit_identifier_ds"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternodegroup_nslimitidentifier_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_nslimitidentifier_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

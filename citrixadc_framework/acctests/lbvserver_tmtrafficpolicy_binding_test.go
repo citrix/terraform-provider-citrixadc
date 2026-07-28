@@ -346,3 +346,33 @@ func TestAccLbvserver_tmtrafficpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLbvserver_tmtrafficpolicy_binding_selfHealing verifies drift recovery: after the
+// binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLbvserver_tmtrafficpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_tmtrafficpolicy_binding.tf_lbvserver_tmtrafficpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_tmtrafficpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_tmtrafficpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_tmtrafficpolicy_binding.Type(), "tf_lbvserver", map[string]string{"policyname": "tf_tmttrafficpolicy", "priority": "1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_tmtrafficpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_tmtrafficpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -292,3 +292,33 @@ func TestAccLsnclient_network6_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLsnclient_network6_binding_selfHealing verifies drift recovery: after the
+// binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLsnclient_network6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient_network6_binding.tf_lsnclient_network6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclient_network6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_network6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclient_network6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Lsnclient_network6_binding.Type(), "my_lsnclient", []string{"network6:2001%3Adb8%3A5001%3A%3A%2F96"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnclient_network6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclient_network6_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -344,3 +344,31 @@ func TestAccVrid_channel_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVrid_channel_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vrid_channel_binding.tf_vrid_channel_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVrid_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVrid_channel_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVrid_channel_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vrid_channel_binding.Type(), "100", []string{fmt.Sprintf("ifnum:%s", utils.UrlEncode("LA/1"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVrid_channel_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVrid_channel_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

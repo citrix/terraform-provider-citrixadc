@@ -320,3 +320,31 @@ func TestAccAppfwprofile_denyurl_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_denyurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_denyurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_denyurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_denyurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_denyurl_binding.Type(), "tfAcc_appfwprofile", map[string]string{"denyurl": utils.UrlEncode("debug[.][^/?]*(|[?].*)$")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_denyurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_denyurl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

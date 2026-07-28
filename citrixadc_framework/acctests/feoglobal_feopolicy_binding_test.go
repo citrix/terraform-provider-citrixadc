@@ -301,3 +301,31 @@ func TestAccFeoglobal_feopolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccFeoglobal_feopolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeoglobal_feopolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeoglobal_feopolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoglobal_feopolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Feoglobal_feopolicy_binding.Type(), "", []string{"policyname:tf_feopolicy", "priority:100", "type:REQ_DEFAULT"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccFeoglobal_feopolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoglobal_feopolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

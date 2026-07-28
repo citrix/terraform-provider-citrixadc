@@ -453,3 +453,31 @@ func testAccCheckLbprofileADCValue(name, attr, want string) resource.TestCheckFu
 		return nil
 	}
 }
+
+func TestAccLbprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbprofile.tf_lbprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("lbprofile", "tf_lbprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

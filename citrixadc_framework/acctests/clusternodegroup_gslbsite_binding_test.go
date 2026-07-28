@@ -367,3 +367,38 @@ func TestAccClusternodegroup_gslbsite_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccClusternodegroup_gslbsite_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_gslbsite_binding.tf_clusternodegroup_gslbsite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_gslbsite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_gslbsite_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_gslbsite_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Clusternodegroup_gslbsite_binding.Type(), "my_tf_group", map[string]string{"gslbsite": utils.UrlEncode("my_local_site")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternodegroup_gslbsite_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_gslbsite_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

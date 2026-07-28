@@ -288,3 +288,31 @@ func TestAccLbmonitor_metric_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbmonitor_metric_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitor_metric_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_metric_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitor_metric_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbmonitor_metric_binding.Type(), "tf-monitor1", map[string]string{"metric": "metric1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbmonitor_metric_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitor_metric_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

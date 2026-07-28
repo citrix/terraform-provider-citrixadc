@@ -370,3 +370,32 @@ func TestAccMetricsprofile_uservserver_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccMetricsprofile_uservserver_binding_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires adding new ns extension for the uservserver participating entity. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
+	const resAddr = "citrixadc_metricsprofile_uservserver_binding.tf_metricsprofile_uservserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_uservserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_uservserver_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_uservserver_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Metricsprofile_uservserver_binding.Type(), "tf_metricsprofile_uservbind", map[string]string{"entityname": "my_user_vserver", "entitytype": "uservserver"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMetricsprofile_uservserver_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_uservserver_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

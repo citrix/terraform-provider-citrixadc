@@ -314,3 +314,31 @@ func TestAccSslcipher_sslciphersuite_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslcipher_sslciphersuite_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher_sslciphersuite_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipher_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcipher_sslciphersuite_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipher_sslciphersuite_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Sslcipher_sslciphersuite_binding.Type(), "tfsslcipher", []string{"ciphername:TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcipher_sslciphersuite_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipher_sslciphersuite_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -227,3 +227,31 @@ func TestAccVpnglobal_appcontroller_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnglobal_appcontroller_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_appcontroller_binding.tf_vpnglobal_appcontroller_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_appcontroller_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_appcontroller_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_appcontroller_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_appcontroller_binding.Type(), "", []string{fmt.Sprintf("appcontroller:%s", url.QueryEscape("http://www.citrix.com"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_appcontroller_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_appcontroller_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

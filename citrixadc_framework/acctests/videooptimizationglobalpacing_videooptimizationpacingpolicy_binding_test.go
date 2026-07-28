@@ -349,3 +349,31 @@ func TestAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_bindingD
 		},
 	})
 }
+
+func TestAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationglobalpacing_videooptimizationpacingpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationglobalpacing_videooptimizationpacingpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationglobalpacing_videooptimizationpacingpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Videooptimizationglobalpacing_videooptimizationpacingpolicy_binding.Type(), "", map[string]string{"policyname": "tf_videooptimizationpacingpolicy", "priority": "100", "type": "REQ_DEFAULT"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationglobalpacing_videooptimizationpacingpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

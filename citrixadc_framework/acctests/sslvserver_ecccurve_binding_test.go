@@ -318,3 +318,34 @@ func TestAccSslvserver_ecccurve_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslvserver_ecccurve_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslvserver_ecccurve_binding.tf_sslvserver_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_ecccurve_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslvserver_ecccurve_binding.Type(), "tf_sslvserver", map[string]string{"ecccurvename": "P_256"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslvserver_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_ecccurve_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

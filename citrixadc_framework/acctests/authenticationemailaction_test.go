@@ -425,3 +425,31 @@ func TestAccAuthenticationemailaction_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationemailaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationemailaction.tf_emailaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationemailaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationemailactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationemailaction.Type(), "tf_emailaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationemailaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationemailactionExist(resAddr, nil)),
+			},
+		},
+	})
+}

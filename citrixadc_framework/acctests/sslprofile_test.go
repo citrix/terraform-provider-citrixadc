@@ -626,3 +626,31 @@ func testAccCheckSslprofileADCValue(name, attr, want string) resource.TestCheckF
 		return nil
 	}
 }
+
+func TestAccSslprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslprofile.Type(), "tfAcc_sslprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

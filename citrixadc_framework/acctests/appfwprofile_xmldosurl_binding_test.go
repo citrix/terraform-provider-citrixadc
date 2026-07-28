@@ -398,3 +398,31 @@ func TestAccAppfwprofile_xmldosurl_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_xmldosurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_xmldosurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_xmldosurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_xmldosurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmldosurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_xmldosurl_binding.Type(), "tf_appfwprofile", map[string]string{"xmldosurl": ".%2A"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_xmldosurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_xmldosurl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

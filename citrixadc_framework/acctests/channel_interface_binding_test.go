@@ -356,3 +356,35 @@ func TestAccChannel_interface_binding_DataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccChannel_interface_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+// Reuses the _basic (step1) config; the out-of-band delete mirrors the resource Delete
+// (raw channel id "LA/1" as the URL name, ifnum passed URL-encoded as the only arg).
+func TestAccChannel_interface_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_channel_interface_binding.tf_channel_interface_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckChannel_interface_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannel_interface_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckChannel_interface_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Channel_interface_binding.Type(), "LA/1", []string{"ifnum:" + utils.UrlEncode("1/2")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccChannel_interface_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckChannel_interface_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -319,6 +319,34 @@ func TestAcccmppolicylabel_cmppolicy_bindingDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccCmppolicylabel_cmppolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicylabel_cmppolicy_binding.tf_cmppolicylabel_cmppolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicylabel_cmppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmppolicylabel_cmppolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabel_cmppolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Cmppolicylabel_cmppolicy_binding.Type(), "my_cmppolicy_label", map[string]string{"policyname": "tf_cmppolicy", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCmppolicylabel_cmppolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabel_cmppolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccCmppolicylabel_cmppolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_cmppolicylabel_cmppolicy_binding.tf_cmppolicylabel_cmppolicy_binding"
 	resource.Test(t, resource.TestCase{

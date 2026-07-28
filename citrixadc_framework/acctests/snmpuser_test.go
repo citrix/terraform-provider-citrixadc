@@ -382,3 +382,31 @@ func TestAccSnmpuser_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSnmpuser_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_snmpuser.tf_snmpuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpuserExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Snmpuser.Type(), "test_user"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSnmpuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpuserExist(resAddr, nil)),
+			},
+		},
+	})
+}

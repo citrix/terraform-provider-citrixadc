@@ -313,3 +313,31 @@ func TestAccCsvserver_analyticsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_analyticsprofile_binding.Type(), "tf_csvserver", map[string]string{"analyticsprofile": "ns_analytics_global_profile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

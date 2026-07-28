@@ -317,3 +317,31 @@ func TestAccLsnpool_lsnip_binding_DataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLsnpool_lsnip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnpool_lsnip_binding.tf_lsnpool_lsnip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnpool_lsnip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnpool_lsnip_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnpool_lsnip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Lsnpool_lsnip_binding.Type(), "my_lsn_pool", []string{"lsnip:10.20.30.40-10.20.30.50"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnpool_lsnip_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnpool_lsnip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

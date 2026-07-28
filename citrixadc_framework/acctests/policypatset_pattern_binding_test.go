@@ -260,3 +260,33 @@ func TestAccPolicypatset_pattern_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccPolicypatset_pattern_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policypatset_pattern_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatset_pattern_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicypatset_pattern_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatset_pattern_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					// Mirrors the resource Delete: the pattern string is url.QueryEscape'd
+					// ("pattern1,/postfix" -> "pattern1%2C%2Fpostfix") and passed as the "String" arg.
+					if err := client.DeleteResourceWithArgsMap(service.Policypatset_pattern_binding.Type(), "tf_patset", map[string]string{"String": "pattern1%2C%2Fpostfix"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicypatset_pattern_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatset_pattern_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

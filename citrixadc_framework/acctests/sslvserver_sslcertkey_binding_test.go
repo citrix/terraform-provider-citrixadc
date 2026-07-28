@@ -490,3 +490,31 @@ func TestAccSslvserver_sslcertkey_bindingDataSource(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslvserver_sslcertkey_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslvserver_sslcertkey_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslcertkey_binding_lb_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslcertkey_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslcertkey_binding.Type(), "tf_lbvserver", map[string]string{"certkeyname": "tf_cacertkey", "ca": "true"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslvserver_sslcertkey_binding_lb_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslcertkey_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

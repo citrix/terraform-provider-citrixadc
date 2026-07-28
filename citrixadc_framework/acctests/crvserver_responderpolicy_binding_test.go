@@ -336,3 +336,31 @@ func TestAccCrvserver_responderpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCrvserver_responderpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_responderpolicy_binding.crvserver_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_responderpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Crvserver_responderpolicy_binding.Type(), "my_vserver", []string{"policyname:tf_responderpolicy1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_responderpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

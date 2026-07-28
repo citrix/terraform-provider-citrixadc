@@ -256,3 +256,31 @@ func TestAccEndpointinfoDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccEndpointinfo_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_endpointinfo.tf_endpointinfo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointinfoDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointinfo_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckEndpointinfoExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Endpointinfo.Type(), "IP", []string{"endpointname:10.222.74.100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccEndpointinfo_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckEndpointinfoExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -322,3 +322,40 @@ func TestAccPolicydataset_value_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccPolicydataset_value_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policydataset_value_binding.tf_value1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicydataset_value_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicydataset_value_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil),
+					testAccCheckPolicydatasetValue(resAddr),
+					testAccCheckPolicydatasetValue("citrixadc_policydataset_value_binding.tf_value2"),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					// Delete the tf_value1 binding out of band (value=100, endrange=150).
+					if err := client.DeleteResourceWithArgsMap(service.Policydataset_value_binding.Type(), "tf_dataset", map[string]string{"endrange": "150", "value": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicydataset_value_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil),
+					testAccCheckPolicydatasetValue(resAddr),
+					testAccCheckPolicydatasetValue("citrixadc_policydataset_value_binding.tf_value2"),
+				),
+			},
+		},
+	})
+}

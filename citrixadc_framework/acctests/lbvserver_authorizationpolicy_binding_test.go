@@ -344,3 +344,31 @@ func TestAccLbvserver_authorizationpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbvserver_authorizationpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_authorizationpolicy_binding.tf_lbvserver_authorizationpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_authorizationpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_authorizationpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_authorizationpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_authorizationpolicy_binding.Type(), "tf_lbvserver", map[string]string{"policyname": "tf_authorizationpolicy", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_authorizationpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_authorizationpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

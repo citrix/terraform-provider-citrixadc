@@ -376,3 +376,31 @@ func TestAccBotprofile_ratelimit_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBotprofile_ratelimit_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_ratelimit_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_ratelimit_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_ratelimit_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_ratelimit_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Botprofile_ratelimit_binding.Type(), "tf_botprofile", []string{"bot_rate_limit_type:SESSION", "bot_ratelimit:true", "cookiename:name"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_ratelimit_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_ratelimit_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -350,3 +350,31 @@ func TestAccAppfwprofile_safeobject_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_safeobject_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_safeobject_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_safeobject_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_safeobject_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_safeobject_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_safeobject_binding.Type(), "tf_appfwprofile", []string{fmt.Sprintf("safeobject:%s", utils.UrlEncode("tf_safeobject"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_safeobject_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_safeobject_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

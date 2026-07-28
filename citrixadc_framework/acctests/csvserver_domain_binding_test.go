@@ -276,3 +276,31 @@ func TestAccCsvserver_domain_binding_DataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_domain_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_domain_binding.tf_csvserver_domain_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_domain_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_domain_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_domain_binding.Type(), "tf_csvserver_domain", map[string]string{"domainname": "example.com"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_domain_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_domain_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

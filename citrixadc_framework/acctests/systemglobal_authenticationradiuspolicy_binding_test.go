@@ -329,3 +329,31 @@ func TestAccSystemglobal_authenticationradiuspolicy_binding_import(t *testing.T)
 		},
 	})
 }
+
+func TestAccSystemglobal_authenticationradiuspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_authenticationradiuspolicy_binding.tf_systemglobal_authenticationradiuspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_authenticationradiuspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_authenticationradiuspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Systemglobal_authenticationradiuspolicy_binding.Type(), "", []string{"policyname:tf_radiuspolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemglobal_authenticationradiuspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_authenticationradiuspolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

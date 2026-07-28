@@ -346,3 +346,35 @@ func TestAccAppfwprofileDenylistBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofileDenylistBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_denylist_binding.tf_appfwprofile_denylist_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileDenylistBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileDenylistBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileDenylistBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_denylist_binding.Type(), "tf_appfwprofile_denylist", map[string]string{
+						"as_deny_list":            utils.UrlEncode("http://www.example.com/deny"),
+						"as_deny_list_location":   "URL",
+						"as_deny_list_value_type": "literal",
+					}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileDenylistBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileDenylistBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

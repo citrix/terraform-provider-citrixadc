@@ -327,3 +327,31 @@ func TestAccNspartition_vxlan_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNspartition_vxlan_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_vxlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspartition_vxlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartition_vxlan_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Nspartition_vxlan_binding.Type(), "tf_nspartition", map[string]string{"vxlan": "123"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNspartition_vxlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartition_vxlan_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

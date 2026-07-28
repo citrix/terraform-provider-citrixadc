@@ -327,3 +327,31 @@ func TestAccNshmackey_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNshmackey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nshmackey.tf_nshmackey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNshmackeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNshmackey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNshmackeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("nshmackey", "tf_nshmackey"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNshmackey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNshmackeyExist(resAddr, nil)),
+			},
+		},
+	})
+}

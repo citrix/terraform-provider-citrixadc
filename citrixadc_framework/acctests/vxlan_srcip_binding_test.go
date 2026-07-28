@@ -329,3 +329,31 @@ func TestAccVxlan_srcip_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVxlan_srcip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vxlan_srcip_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlan_srcip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlan_srcip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlan_srcip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vxlan_srcip_binding.Type(), "123", map[string]string{"srcip": "11.22.33.44"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVxlan_srcip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlan_srcip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

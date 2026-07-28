@@ -310,3 +310,31 @@ func TestAccApiprofileApispecBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccApiprofileApispecBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_apiprofile_apispec_binding.tf_apiprofile_apispec_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doApiSpecPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApiprofileApispecBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApiprofileApispecBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApiprofileApispecBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Apiprofile_apispec_binding.Type(), "test_apiprofile", map[string]string{"apispec": "tf_apispec"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccApiprofileApispecBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApiprofileApispecBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

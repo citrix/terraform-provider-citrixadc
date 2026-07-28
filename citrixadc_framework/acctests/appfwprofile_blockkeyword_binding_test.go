@@ -347,3 +347,34 @@ func TestAccAppfwprofileBlockkeywordBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccAppfwprofileBlockkeywordBinding_selfHealing verifies drift recovery: after
+// the binding is deleted out-of-band on the ADC, the next refresh's Read must detect
+// it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwprofileBlockkeywordBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_blockkeyword_binding.tf_appfwprofile_blockkeyword_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileBlockkeywordBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileBlockkeywordBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileBlockkeywordBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_blockkeyword_binding.Type(), "tf_appfwprofile_blockkeyword", map[string]string{"as_blockkeyword_formurl": utils.UrlEncode("http://www.example.com"), "blockkeyword": "tf_blockkeyword", "fieldname": "tf_fieldname"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileBlockkeywordBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileBlockkeywordBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

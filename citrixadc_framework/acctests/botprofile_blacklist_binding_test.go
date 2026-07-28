@@ -370,3 +370,31 @@ func TestAccBotprofile_blacklist_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBotprofile_blacklist_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_blacklist_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_blacklist_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_blacklist_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_blacklist_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Botprofile_blacklist_binding.Type(), "tf_botprofile", []string{"bot_blacklist_value:1.3.5.7", "bot_blacklist:true"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_blacklist_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_blacklist_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

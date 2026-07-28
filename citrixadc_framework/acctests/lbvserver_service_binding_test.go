@@ -324,3 +324,33 @@ func testAccCheckLbvserver_service_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+// TestAccLbvserver_service_binding_selfHealing verifies drift recovery: after the
+// binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLbvserver_service_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_service_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_service_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_service_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_service_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_service_binding.Type(), "tf_lbvserver", map[string]string{"servicename": "tf_service"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_service_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_service_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

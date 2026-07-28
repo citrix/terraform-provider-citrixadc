@@ -292,3 +292,34 @@ func TestAccLbglobal_lbpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLbglobal_lbpolicy_binding_selfHealing verifies drift recovery: after the binding
+// is created, it is deleted out-of-band on the ADC; the next apply of the same config must
+// detect the missing binding and recreate it.
+func TestAccLbglobal_lbpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbglobal_lbpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbglobal_lbpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbglobal_lbpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbglobal_lbpolicy_binding.Type(), "", map[string]string{"policyname": "tf_pol", "type": "REQ_DEFAULT"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbglobal_lbpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbglobal_lbpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

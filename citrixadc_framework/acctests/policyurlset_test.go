@@ -311,3 +311,35 @@ func TestAccPolicyurlset_url_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+// TestAccPolicyurlset_selfHealing verifies the provider re-imports the urlset when it
+// is deleted out-of-band between apply steps (drift recovery). policyurlset is an
+// import-as-create resource, so re-apply re-issues the NITRO Import action; the
+// doPolicyUrlSetPreChecks PreCheck uploads the local: source the import needs.
+func TestAccPolicyurlset_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policyurlset.tf_policyurlset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doPolicyUrlSetPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyurlsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyurlset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyurlsetExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policyurlset.Type(), "tf_policyurlset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicyurlset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyurlsetExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -331,3 +331,31 @@ func TestAccAppfwprofile_excluderescontenttype_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_excluderescontenttype_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_excluderescontenttype_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_excluderescontenttype_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_excluderescontenttype_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_excluderescontenttype_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_excluderescontenttype_binding.Type(), "tf_appfwprofile", map[string]string{"excluderescontenttype": "expressionexample"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_excluderescontenttype_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_excluderescontenttype_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -324,3 +324,31 @@ func TestAccSystemgroup_systemcmdpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSystemgroup_systemcmdpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemgroup_systemcmdpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemgroup_systemcmdpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemgroup_systemcmdpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroup_systemcmdpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Systemgroup_systemcmdpolicy_binding.Type(), "tf_systemgroup", map[string]string{"policyname": "tf_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemgroup_systemcmdpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroup_systemcmdpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

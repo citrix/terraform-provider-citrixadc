@@ -199,3 +199,34 @@ func TestAccCloudtunnelvserverDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccCloudtunnelvserver_selfHealing verifies drift recovery:
+// after the resource is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccCloudtunnelvserver_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudtunnelvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudtunnelvserver_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCloudtunnelvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cloudtunnelvserver.Type(), "tf_cloudtunnelvserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCloudtunnelvserver_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCloudtunnelvserverExist(resAddr, nil)),
+			},
+		},
+	})
+}

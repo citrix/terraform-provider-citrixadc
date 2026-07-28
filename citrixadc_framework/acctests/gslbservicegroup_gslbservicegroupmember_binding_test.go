@@ -124,6 +124,39 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_import(t *testing.T)
 	})
 }
 
+// TestAccGslbservicegroup_gslbservicegroupmember_binding_selfHealing verifies drift
+// recovery: after the binding is deleted out-of-band on the ADC, the next refresh's Read
+// must detect it is gone (data.Id -> null) and drop it from state so the same config
+// recreates it.
+func TestAccGslbservicegroup_gslbservicegroupmember_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: failed to get client: %v", err)
+					}
+					// Out-of-band delete of just the bound member (parent servicegroup remains).
+					if err := client.DeleteResourceWithArgs(service.Gslbservicegroup_gslbservicegroupmember_binding.Type(), "test_gslbvservicegroup", []string{"servername:tf_server", "port:60"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

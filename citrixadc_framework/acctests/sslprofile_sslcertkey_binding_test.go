@@ -338,3 +338,31 @@ func TestAccSslprofile_sslcertkey_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslprofile_sslcertkey_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_sslcertkey_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofile_sslcertkey_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslprofile_sslcertkey_binding.Type(), "tfUnit_sslprofile-hello", map[string]string{"sslicacertkey": "tf_sslcertkey"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslprofile_sslcertkey_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofile_sslcertkey_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

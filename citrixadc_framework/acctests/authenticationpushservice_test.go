@@ -415,3 +415,31 @@ func testAccCheckAuthenticationpushserviceADCValue(name, attr, want string) reso
 		return nil
 	}
 }
+
+func TestAccAuthenticationpushservice_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpushservice.tf_pushservice"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpushserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpushservice_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpushserviceExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("authenticationpushservice", "tf_pushservice"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationpushservice_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpushserviceExist(resAddr, nil)),
+			},
+		},
+	})
+}

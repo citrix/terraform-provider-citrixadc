@@ -370,3 +370,31 @@ func TestAccSnmptrap_snmpuser_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSnmptrap_snmpuser_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_snmptrap_snmpuser_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmptrap_snmpuser_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmptrap_snmpuser_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmptrap_snmpuser_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Snmptrap_snmpuser_binding.Type(), "generic", []string{"trapdestination:10.50.50.10", "username:tf_snmpuser", "version:V3", "td:0"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSnmptrap_snmpuser_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmptrap_snmpuser_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

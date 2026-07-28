@@ -271,3 +271,34 @@ func TestAccSslprofileSslciphersuiteBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslprofileSslciphersuiteBinding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslprofile_sslciphersuite_binding.tf_sslprofile_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofileSslciphersuiteBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofileSslciphersuiteBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofileSslciphersuiteBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Sslprofile_sslciphersuite_binding.Type(), "tf_sslprofile_cs", []string{"ciphername:HIGH"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslprofileSslciphersuiteBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofileSslciphersuiteBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

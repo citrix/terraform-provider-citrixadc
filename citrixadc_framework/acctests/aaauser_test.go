@@ -87,6 +87,41 @@ func TestAccAaauser_import(t *testing.T) {
 	})
 }
 
+// TestAccAaauser_selfHealing verifies the SDK v2 d.SetId("")-parity drift recovery:
+// after the resource is deleted out-of-band on the ADC, the next refresh's Read must
+// detect it is gone and drop it from state so the same config recreates it.
+func TestAccAaauser_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaauser.tf_aaauser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauserDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the resource.
+			{
+				Config: testAccAaauser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauserExist(resAddr, nil)),
+			},
+			// Step 2: delete it out-of-band, then re-apply the SAME config. The refresh
+			// at the start of this step must self-heal (Read detects gone -> RemoveResource),
+			// so the plan recreates it and the apply succeeds.
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: failed to get client: %v", err)
+					}
+					if err := client.DeleteResource(service.Aaauser.Type(), "john"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaauser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauserExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAaauserExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

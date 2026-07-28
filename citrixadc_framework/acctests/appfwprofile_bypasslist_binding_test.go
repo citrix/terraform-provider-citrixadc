@@ -343,3 +343,34 @@ func TestAccAppfwprofileBypasslistBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccAppfwprofileBypasslistBinding_selfHealing verifies drift recovery: after
+// the binding is deleted out-of-band on the ADC, the next refresh's Read must detect
+// it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwprofileBypasslistBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_bypasslist_binding.tf_appfwprofile_bypasslist_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileBypasslistBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileBypasslistBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileBypasslistBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_bypasslist_binding.Type(), "tf_appfwprofile_bypasslist", map[string]string{"as_bypass_list": utils.UrlEncode("http://www.example.com/bypass"), "as_bypass_list_location": "URL", "as_bypass_list_value_type": "literal"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileBypasslistBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileBypasslistBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

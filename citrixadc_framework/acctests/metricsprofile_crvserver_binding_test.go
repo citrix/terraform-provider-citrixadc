@@ -314,3 +314,31 @@ func TestAccMetricsprofile_crvserver_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccMetricsprofile_crvserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile_crvserver_binding.tf_metricsprofile_crvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_crvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_crvserver_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_crvserver_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Metricsprofile_crvserver_binding.Type(), "tf_metricsprofile", map[string]string{"entityname": "tf_crvserver", "entitytype": "crvserver"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMetricsprofile_crvserver_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_crvserver_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

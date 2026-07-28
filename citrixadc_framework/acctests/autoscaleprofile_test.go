@@ -460,3 +460,31 @@ func TestAccAutoscaleprofile_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAutoscaleprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_autoscaleprofile.tf_autoscaleprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscaleprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscaleprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Autoscaleprofile.Type(), "my_autoscaleprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAutoscaleprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscaleprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

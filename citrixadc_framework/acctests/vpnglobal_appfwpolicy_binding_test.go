@@ -282,3 +282,32 @@ func TestAccVpnglobalAppfwpolicyBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnglobalAppfwpolicyBinding_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_vpnglobal_appfwpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobalAppfwpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobalAppfwpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobalAppfwpolicyBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_appfwpolicy_binding.Type(), "", []string{"policyname:tf_appfwpolicy", "secondary:false"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobalAppfwpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobalAppfwpolicyBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

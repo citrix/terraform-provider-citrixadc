@@ -347,3 +347,34 @@ func TestAccAppfwpolicylabel_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccAppfwpolicylabel_appfwpolicy_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band on the ADC, the next refresh's Read must
+// detect it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwpolicylabel_appfwpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwpolicylabel_appfwpolicy_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwpolicylabel_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwpolicylabel_appfwpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabel_appfwpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwpolicylabel_appfwpolicy_binding.Type(), "tf_appfwpolicylabel", map[string]string{"policyname": "tf_appfwpolicy1", "priority": "90"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwpolicylabel_appfwpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabel_appfwpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

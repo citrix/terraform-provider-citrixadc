@@ -249,3 +249,31 @@ func TestAccLbvserver_analyticsprofile_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbvserver_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_analyticsprofile_binding.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_analyticsprofile_binding.Type(), "test_server", map[string]string{"analyticsprofile": "ns_analytics_global_profile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

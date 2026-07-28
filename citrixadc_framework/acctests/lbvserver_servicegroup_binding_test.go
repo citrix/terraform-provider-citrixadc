@@ -317,3 +317,33 @@ func TestAccLbvserver_servicegroup_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLbvserver_servicegroup_binding_selfHealing verifies drift recovery: after the
+// binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLbvserver_servicegroup_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_servicegroup_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_servicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_servicegroup_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_servicegroup_bindingExist(resAddr, nil, map[string]interface{}{})),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_servicegroup_binding.Type(), "tf_lbvserver", map[string]string{"servicegroupname": "tf_servicegroup"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_servicegroup_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_servicegroup_bindingExist(resAddr, nil, map[string]interface{}{})),
+			},
+		},
+	})
+}

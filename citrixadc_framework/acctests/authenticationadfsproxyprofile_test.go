@@ -317,3 +317,32 @@ func TestAccAuthenticationadfsproxyprofile_password_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationadfsproxyprofile_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationadfsproxyprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationadfsproxyprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationadfsproxyprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationadfsproxyprofile.Type(), "tf_adfsproxy_profile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationadfsproxyprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationadfsproxyprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

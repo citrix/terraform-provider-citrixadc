@@ -315,3 +315,35 @@ func TestAccVpnvserver_vpnportaltheme_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnvserver_vpnportaltheme_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_vpnportaltheme_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_vpnportaltheme_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_vpnportaltheme_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_vpnportaltheme_binding.Type(), "tf_exampleserver", map[string]string{"portaltheme": "tf_vpnportaltheme"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_vpnportaltheme_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_vpnportaltheme_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

@@ -358,3 +358,31 @@ func TestAccBotprofile_captcha_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBotprofile_captcha_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_captcha_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_captcha_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_captcha_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_captcha_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Botprofile_captcha_binding.Type(), "tf_botprofile", []string{"bot_captcha_url:www.example.com", "captcharesource:true"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_captcha_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_captcha_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

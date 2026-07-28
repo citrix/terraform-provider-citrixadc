@@ -297,3 +297,35 @@ func TestAccResponderglobal_responderpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccResponderglobal_responderpolicy_binding_selfHealing verifies the provider
+// re-creates the global binding when it is deleted out-of-band between apply steps
+// (drift recovery). The delete args (policyname/type/priority) match the resource's
+// own Delete; REQ_DEFAULT is the default bind point for this binding.
+func TestAccResponderglobal_responderpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderglobal_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderglobal_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderglobal_responderpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Responderglobal_responderpolicy_binding.Type(), "", []string{"policyname:tf_responderpolicy", "type:REQ_DEFAULT", "priority:50"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderglobal_responderpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderglobal_responderpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

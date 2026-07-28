@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -217,6 +218,37 @@ func TestAccPolicypatsetfileDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_policypatsetfile.tf_policypatsetfile", "name", "tf_policypatsetfile"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccPolicypatsetfile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policypatsetfile.tf_policypatsetfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doPolicyPatSetFilePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatsetfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicypatsetfile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetfileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					// Plain DELETE /policypatsetfile/<name>. NITRO reports a spurious
+					// errorcode 258 "No such resource" even on a successful delete, so
+					// tolerate that specific response (mirrors the resource Delete).
+					if err := client.DeleteResource(service.Policypatsetfile.Type(), "tf_policypatsetfile"); err != nil && !strings.Contains(err.Error(), "No such resource") {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicypatsetfile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetfileExist(resAddr, nil)),
 			},
 		},
 	})

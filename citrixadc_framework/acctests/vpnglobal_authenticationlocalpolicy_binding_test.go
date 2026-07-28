@@ -205,6 +205,34 @@ func testAccCheckVpnglobal_authenticationlocalpolicy_bindingNotExist(n string, i
 	}
 }
 
+func TestAccVpnglobal_authenticationlocalpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationlocalpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationlocalpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationlocalpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationlocalpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_authenticationlocalpolicy_binding.Type(), "", []string{"policyname:tf_localpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_authenticationlocalpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationlocalpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnglobal_authenticationlocalpolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_vpnglobal_authenticationlocalpolicy_binding.tf_bind"
 	resource.Test(t, resource.TestCase{

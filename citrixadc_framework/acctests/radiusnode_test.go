@@ -290,3 +290,34 @@ func TestAccRadiusnode_radkey_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+// TestAccRadiusnode_selfHealing verifies the provider re-creates the radiusnode when it
+// is deleted out-of-band between apply steps (drift recovery). The resource type string
+// "radiusnode" matches the resource's own Delete (service.Radiusnode.Type()).
+func TestAccRadiusnode_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_radiusnode.tf_radiusnode"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRadiusnodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRadiusnode_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRadiusnodeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("radiusnode", "10.10.10.10/32"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRadiusnode_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRadiusnodeExist(resAddr, nil)),
+			},
+		},
+	})
+}

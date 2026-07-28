@@ -200,3 +200,34 @@ func TestAccCloudprofileDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+// TestAccCloudprofile_selfHealing verifies drift recovery:
+// after the resource is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccCloudprofile_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudprofile.tf_cloudprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCloudprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cloudprofile.Type(), "tf_cloudprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCloudprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCloudprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

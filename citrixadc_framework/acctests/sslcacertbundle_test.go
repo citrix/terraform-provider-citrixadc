@@ -166,3 +166,31 @@ func TestAccSslcacertbundleDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslcacertbundle_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcacertbundle.tf_sslcacertbundle"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcacertbundlePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcacertbundleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcacertbundle_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertbundleExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcacertbundle.Type(), "tf_sslcacertbundle"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcacertbundle_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertbundleExist(resAddr, nil)),
+			},
+		},
+	})
+}

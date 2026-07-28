@@ -196,3 +196,31 @@ func TestAccSslechconfigDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslechconfig_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslechconfig.tf_sslechconfig"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslechconfigDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslechconfig_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslechconfigExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslechconfig.Type(), "tf_sslechconfig"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslechconfig_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslechconfigExist(resAddr, nil)),
+			},
+		},
+	})
+}

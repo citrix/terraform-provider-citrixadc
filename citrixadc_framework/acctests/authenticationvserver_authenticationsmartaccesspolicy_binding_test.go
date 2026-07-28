@@ -337,3 +337,35 @@ func TestAccAuthenticationvserverAuthenticationsmartaccesspolicyBindingDataSourc
 		},
 	})
 }
+
+func TestAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationsmartaccesspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationsmartaccesspolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationsmartaccesspolicy_binding.Type(), "tf_authenticationvserver", map[string]string{"policy": "tf_authenticationsmartaccesspolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationsmartaccesspolicy_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

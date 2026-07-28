@@ -348,3 +348,31 @@ func TestAccCsvserver_vpnvserver_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_vpnvserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_vpnvserver_binding.tf_csvserver_vpnvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_vpnvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_vpnvserver_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_vpnvserver_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_vpnvserver_binding.Type(), "tf_csvserver", map[string]string{"vserver": "tf_vpnvserver"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_vpnvserver_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_vpnvserver_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

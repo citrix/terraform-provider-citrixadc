@@ -319,3 +319,31 @@ func TestAccTmglobalAuditsyslogpolicyBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccTmglobal_auditsyslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmglobal_auditsyslogpolicy_binding.tf_tmglobal_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Tmglobal_auditsyslogpolicy_binding.Type(), "", []string{"policyname:tf_auditsyslogpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

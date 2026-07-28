@@ -58,6 +58,34 @@ func TestAccAuditsyslogaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditsyslogaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_auditsyslogaction.tf_syslogaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogactionExist(resAddr, nil, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Auditsyslogaction.Type(), "tf_syslogaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuditsyslogaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogactionExist(resAddr, nil, nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuditsyslogaction_import(t *testing.T) {
 	const resAddr = "citrixadc_auditsyslogaction.tf_syslogaction"
 	resource.Test(t, resource.TestCase{

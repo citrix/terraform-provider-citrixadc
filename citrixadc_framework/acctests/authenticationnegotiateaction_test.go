@@ -339,3 +339,31 @@ func TestAccAuthenticationnegotiateactionDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationnegotiateaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationnegotiateaction.tf_negotiateaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnegotiateactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnegotiateaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationnegotiateactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationnegotiateaction.Type(), "tf_negotiateaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationnegotiateaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationnegotiateactionExist(resAddr, nil)),
+			},
+		},
+	})
+}

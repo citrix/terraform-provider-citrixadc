@@ -354,6 +354,36 @@ func TestAccAuthenticationazurekeyvault_unset(t *testing.T) {
 	})
 }
 
+// TestAccAuthenticationazurekeyvault_selfHealing reuses the (non-skipped) _unset test's
+// step-1 config as the base config, since this resource has no plain _basic config.
+func TestAccAuthenticationazurekeyvault_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationazurekeyvault.tf_unset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationazurekeyvaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationazurekeyvault_unset_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationazurekeyvaultExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationazurekeyvault.Type(), "tf_test_authenticationazurekeyvault_unset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationazurekeyvault_unset_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationazurekeyvaultExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 // testAccCheckAuthenticationazurekeyvaultADCValue asserts an attribute's value directly
 // on the appliance (not just in Terraform state), proving the unset actually reverted it.
 func testAccCheckAuthenticationazurekeyvaultADCValue(name, attr, want string) resource.TestCheckFunc {

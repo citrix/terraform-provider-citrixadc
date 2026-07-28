@@ -399,3 +399,38 @@ func TestAccLsngroup_lsnsipalgprofile_binding_DataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLsngroup_lsnsipalgprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnsipalgprofile_binding.tf_sipbind_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnsipalgprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create the managed prerequisite parents.
+				Config: testAccLsngroup_lsnsipalgprofile_binding_basic_step0,
+			},
+			{
+				// Provision broken-Read child bindings out-of-band, then create the ALG binding.
+				PreConfig: func() { provisionLsnAlgOutOfBandPrereq(t, sipAlgPrereqParams) },
+				Config:    testAccLsngroup_lsnsipalgprofile_binding_basic_step1,
+				Check:     resource.ComposeTestCheckFunc(testAccCheckLsngroup_lsnsipalgprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				// Delete the binding out-of-band, then re-apply to verify self-healing recreates it.
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Lsngroup_lsnsipalgprofile_binding.Type(), "my_sipbind_lsngroup", []string{"sipalgprofilename:my_sipbind_lsnsipalgprofile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsngroup_lsnsipalgprofile_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroup_lsnsipalgprofile_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

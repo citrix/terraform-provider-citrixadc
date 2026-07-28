@@ -329,3 +329,32 @@ func testAccCheckNsextensionADCValue(name, attr, want string) resource.TestCheck
 		return nil
 	}
 }
+
+func TestAccNsextension_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_nsextension.tf_nsextension"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsextensionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsextension_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsextensionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsextension.Type(), "tf_nsextension"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsextension_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsextensionExist(resAddr, nil)),
+			},
+		},
+	})
+}

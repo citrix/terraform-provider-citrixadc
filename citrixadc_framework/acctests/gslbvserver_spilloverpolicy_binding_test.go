@@ -382,3 +382,34 @@ func TestAccGslbvserver_spilloverpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccGslbvserver_spilloverpolicy_binding_selfHealing verifies drift recovery: after the
+// binding is created, it is deleted out-of-band on the ADC; the next apply of the same
+// config must detect the missing binding and recreate it.
+func TestAccGslbvserver_spilloverpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_spilloverpolicy_binding.tf_gslbvserver_spilloverpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_spilloverpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_spilloverpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserver_spilloverpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Gslbvserver_spilloverpolicy_binding.Type(), "gslb_vserver", map[string]string{"policyname": "tf_spilloverpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbvserver_spilloverpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserver_spilloverpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

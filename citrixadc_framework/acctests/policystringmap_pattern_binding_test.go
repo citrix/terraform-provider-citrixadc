@@ -293,3 +293,33 @@ func TestAccPolicystringmap_pattern_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccPolicystringmap_pattern_binding_selfHealing verifies the provider re-creates
+// the binding when it is deleted out-of-band between apply steps (drift recovery).
+func TestAccPolicystringmap_pattern_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policystringmap_pattern_binding.tf_bind1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicystringmap_pattern_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicystringmap_pattern_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicystringmap_pattern_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Policystringmap_pattern_binding.Type(), "tf_policystringmap", []string{"key:key1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicystringmap_pattern_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicystringmap_pattern_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

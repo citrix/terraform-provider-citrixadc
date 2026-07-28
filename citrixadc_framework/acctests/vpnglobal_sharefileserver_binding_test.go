@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -242,6 +243,34 @@ const testAccVpnglobal_sharefileserver_bindingDataSource_basic = `
 		sharefile = citrixadc_vpnglobal_sharefileserver_binding.tf_bind.sharefile
 	}
 `
+
+func TestAccVpnglobal_sharefileserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_sharefileserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_sharefileserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_sharefileserver_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_sharefileserver_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_sharefileserver_binding.Type(), "", []string{"sharefile:" + url.QueryEscape("3.4.5.2:8080")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_sharefileserver_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_sharefileserver_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
 
 func TestAccVpnglobal_sharefileserver_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_vpnglobal_sharefileserver_binding.tf_bind"

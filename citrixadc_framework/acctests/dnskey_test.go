@@ -458,3 +458,31 @@ func TestAccDnskey_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDnskey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnskey.dnskey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnskey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnskeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnskey.Type(), "adckey_1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnskey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnskeyExist(resAddr, nil)),
+			},
+		},
+	})
+}

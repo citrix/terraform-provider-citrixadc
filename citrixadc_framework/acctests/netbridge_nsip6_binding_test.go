@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -337,6 +338,34 @@ func TestAccNetbridge_nsip6_binding_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: testAccNetbridge_nsip6_binding_basic},
 			{Config: testAccNetbridge_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNetbridge_nsip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_nsip6_binding.tf_netbridge_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridge_nsip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Netbridge_nsip6_binding.Type(), "my_netbridge", []string{fmt.Sprintf("ipaddress:%s", url.QueryEscape("dea:97c5:d381:e72b::/64"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetbridge_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridge_nsip6_bindingExist(resAddr, nil)),
+			},
 		},
 	})
 }

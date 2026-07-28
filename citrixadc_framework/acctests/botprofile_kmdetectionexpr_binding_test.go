@@ -304,3 +304,31 @@ func TestAccBotprofileKmdetectionexprBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBotprofile_kmdetectionexpr_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_kmdetectionexpr_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_kmdetectionexpr_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_kmdetectionexpr_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_kmdetectionexpr_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Botprofile_kmdetectionexpr_binding.Type(), "tf_botprofile", map[string]string{"bot_km_expression_name": "tf_kmname", "kmdetectionexpr": "true"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_kmdetectionexpr_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_kmdetectionexpr_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

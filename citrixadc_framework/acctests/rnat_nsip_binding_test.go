@@ -344,3 +344,34 @@ func TestAccRnat_nsip_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccRnat_nsip_binding_selfHealing verifies the provider re-creates the binding when
+// it is deleted out-of-band between apply steps (drift recovery). The natip delete arg
+// matches the resource's own Delete.
+func TestAccRnat_nsip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnat_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnat_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat_nsip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Rnat_nsip_binding.Type(), "my_rnat", map[string]string{"natip": "10.222.74.200"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRnat_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat_nsip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

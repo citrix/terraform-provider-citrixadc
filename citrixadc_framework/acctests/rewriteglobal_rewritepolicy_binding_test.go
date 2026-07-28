@@ -388,3 +388,34 @@ func TestAccRewriteglobal_rewritepolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccRewriteglobal_rewritepolicy_binding_selfHealing verifies the provider re-creates
+// the global binding when it is deleted out-of-band between apply steps (drift recovery).
+// The delete policyname/priority/type args match the resource's own Delete.
+func TestAccRewriteglobal_rewritepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewriteglobal_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewriteglobal_rewritepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteglobal_rewritepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Rewriteglobal_rewritepolicy_binding.Type(), "", map[string]string{"policyname": "tf_rewrite_policy", "priority": "5", "type": "REQ_DEFAULT"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRewriteglobal_rewritepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteglobal_rewritepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

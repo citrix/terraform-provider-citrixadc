@@ -254,3 +254,31 @@ func testAccCheckAuthenticationprotecteduseractionADCValue(name, attr, want stri
 		return nil
 	}
 }
+
+func TestAccAuthenticationprotecteduseraction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationprotecteduseraction.tf_authenticationprotecteduseraction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationprotecteduseractionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationprotecteduseraction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationprotecteduseractionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationprotecteduseraction.Type(), "tf_authenticationprotecteduseraction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationprotecteduseraction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationprotecteduseractionExist(resAddr, nil)),
+			},
+		},
+	})
+}

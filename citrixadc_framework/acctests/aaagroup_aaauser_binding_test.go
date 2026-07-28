@@ -313,3 +313,31 @@ func TestAccAaagroup_aaauser_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaagroup_aaauser_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_aaauser_binding.tf_aaagroup_aaauser_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_aaauser_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_aaauser_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_aaauser_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaagroup_aaauser_binding.Type(), "my_group", map[string]string{"username": "user1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaagroup_aaauser_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_aaauser_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

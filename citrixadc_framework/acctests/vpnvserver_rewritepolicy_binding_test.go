@@ -326,3 +326,35 @@ func TestAccVpnvserver_rewritepolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnvserver_rewritepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_rewritepolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_rewritepolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_rewritepolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_rewritepolicy_binding.Type(), "tf_example_server", map[string]string{"bindpoint": "REQUEST", "policy": "tf_test_rewrite_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_rewritepolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_rewritepolicy_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

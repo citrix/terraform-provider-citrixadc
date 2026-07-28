@@ -581,3 +581,31 @@ func TestAccServicegroup_servicegroupmember_binding_sdkv2StateUpgrade(t *testing
 		},
 	})
 }
+
+func TestAccServicegroup_servicegroupmember_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_servicegroup_servicegroupmember_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroup_servicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicegroup_servicegroupmember_binding_ipv4_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroup_servicegroupmember_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Servicegroup_servicegroupmember_binding.Type(), "tf_servicegroup", []string{"servername:10.78.22.33", "port:80"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccServicegroup_servicegroupmember_binding_ipv4_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroup_servicegroupmember_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

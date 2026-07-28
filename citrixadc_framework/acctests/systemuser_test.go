@@ -426,3 +426,31 @@ func TestAccSystemuser_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSystemuser_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemuser.tf_user"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemuser_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemuserExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Systemuser.Type(), "tf_user"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemuser_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemuserExist(resAddr, nil)),
+			},
+		},
+	})
+}

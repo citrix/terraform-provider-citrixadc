@@ -267,3 +267,35 @@ func TestAccVpnglobal_vpneula_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnglobal_vpneula_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpneula_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpneula_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpneula_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpneula_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpneula_binding.Type(), "", []string{"eula:tf_vpneula"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpneula_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpneula_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

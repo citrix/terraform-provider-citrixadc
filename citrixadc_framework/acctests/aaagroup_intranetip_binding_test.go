@@ -298,3 +298,31 @@ func testAccCheckAaagroup_intranetip_bindingDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccAaagroup_intranetip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup_intranetip_binding.tf_aaagroup_intranetip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroup_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_intranetip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_intranetip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaagroup_intranetip_binding.Type(), "my_group", map[string]string{"intranetip": "10.222.73.160", "netmask": "255.255.255.192"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaagroup_intranetip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroup_intranetip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

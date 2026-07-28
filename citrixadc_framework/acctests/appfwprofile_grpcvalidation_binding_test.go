@@ -321,3 +321,31 @@ func TestAccAppfwprofileGrpcvalidationBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofileGrpcvalidationBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_grpcvalidation_binding.tf_appfwprofile_grpcvalidation_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileGrpcvalidationBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofileGrpcvalidationBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileGrpcvalidationBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_grpcvalidation_binding.Type(), "tf_appfwprofile_grpcvalidation", map[string]string{"grpcvalidation": "bookstore.api.doc.AddBook", "grpc_relax_validation_action": "log"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofileGrpcvalidationBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileGrpcvalidationBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

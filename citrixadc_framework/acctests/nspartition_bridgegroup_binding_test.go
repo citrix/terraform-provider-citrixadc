@@ -326,3 +326,31 @@ func TestAccNspartition_bridgegroup_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNspartition_bridgegroup_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_bridgegroup_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_bridgegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspartition_bridgegroup_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartition_bridgegroup_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Nspartition_bridgegroup_binding.Type(), "tf_nspartition", map[string]string{"bridgegroup": "2"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNspartition_bridgegroup_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartition_bridgegroup_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

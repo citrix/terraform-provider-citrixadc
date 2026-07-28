@@ -230,3 +230,33 @@ func TestAccAzurekeyvaultDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAzurekeyvault_selfHealing(t *testing.T) {
+	t.Skip("Requires valid Azure credentials")
+	t.Setenv("TF_VAR_azureapplication_clientsecret", "<clientsecret>")
+	const resAddr = "citrixadc_azurekeyvault.tf_azurekeyvault"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAzurekeyvaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzurekeyvault_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAzurekeyvaultExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Azurekeyvault.Type(), "tf_azurekeyvault"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAzurekeyvault_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAzurekeyvaultExist(resAddr, nil)),
+			},
+		},
+	})
+}

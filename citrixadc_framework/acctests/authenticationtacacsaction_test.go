@@ -433,3 +433,31 @@ func TestAccAuthenticationtacacsaction_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationtacacsaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationtacacsaction.tf_tacacsaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationtacacsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationtacacsaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationtacacsactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationtacacsaction.Type(), "tf_tacacsaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationtacacsaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationtacacsactionExist(resAddr, nil)),
+			},
+		},
+	})
+}

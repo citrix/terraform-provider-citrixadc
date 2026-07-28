@@ -382,3 +382,31 @@ func TestAccAuthenticationvserver_authenticationnegotiatepolicy_binding_import(t
 		},
 	})
 }
+
+func TestAccAuthenticationvserver_authenticationnegotiatepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationvserver_authenticationnegotiatepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationnegotiatepolicy_binding.Type(), "tf_authenticationvserver", map[string]string{"policy": "tf_negotiatepolicy", "groupextraction": "false", "bindpoint": "REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationvserver_authenticationnegotiatepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

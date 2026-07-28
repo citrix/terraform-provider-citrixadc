@@ -359,3 +359,33 @@ func TestAccLbvserver_videooptimizationpacingpolicy_binding_import(t *testing.T)
 		},
 	})
 }
+
+// TestAccLbvserver_videooptimizationpacingpolicy_binding_selfHealing verifies drift
+// recovery: after the binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLbvserver_videooptimizationpacingpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_videooptimizationpacingpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_videooptimizationpacingpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_videooptimizationpacingpolicy_binding.Type(), "tf_lbvserver", map[string]string{"bindpoint": "REQUEST", "policyname": "tf_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_videooptimizationpacingpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

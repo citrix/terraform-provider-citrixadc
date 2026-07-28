@@ -369,3 +369,31 @@ func TestAccAppfwprofile_fieldconsistency_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_fieldconsistency_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fieldconsistency_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_fieldconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_fieldconsistency_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_fieldconsistency_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_fieldconsistency_binding.Type(), "tf_appfwprofile", []string{"fieldconsistency:" + utils.UrlEncode("tf_field"), "formactionurl_ffc:" + utils.UrlEncode("^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_fieldconsistency_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_fieldconsistency_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

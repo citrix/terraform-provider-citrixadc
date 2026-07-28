@@ -259,3 +259,32 @@ func testAccCheckCsvserver_filterpolicy_bindingDestroy(s *terraform.State) error
 
 	return nil
 }
+
+func TestAccCsvserver_filterpolicy_binding_selfHealing(t *testing.T) {
+	t.Skip("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_csvserver_filterpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_filterpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_filterpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_filterpolicy_binding.Type(), "tf_csvserver", map[string]string{"policyname": "tf_filterpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_filterpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_filterpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

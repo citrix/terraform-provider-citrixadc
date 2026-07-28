@@ -329,3 +329,31 @@ func TestAccDnspolicylabel_dnspolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDnspolicylabel_dnspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnspolicylabel_dnspolicy_binding.dnspolicylabel_dnspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnspolicylabel_dnspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnspolicylabel_dnspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabel_dnspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Dnspolicylabel_dnspolicy_binding.Type(), "blue_label", map[string]string{"policyname": "policy_A", "priority": "10"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnspolicylabel_dnspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabel_dnspolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

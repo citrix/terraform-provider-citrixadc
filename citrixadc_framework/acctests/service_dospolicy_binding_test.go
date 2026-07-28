@@ -277,3 +277,32 @@ func TestAccService_dospolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccService_dospolicy_binding_selfHealing(t *testing.T) {
+	t.Skipf("citrixadc_service_dospolicy_binding is not supported in 13.1")
+	const resAddr = "citrixadc_service_dospolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckService_dospolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccService_dospolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckService_dospolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Service_dospolicy_binding.Type(), "tf_service", map[string]string{"policyname": "tf_dospolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccService_dospolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckService_dospolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

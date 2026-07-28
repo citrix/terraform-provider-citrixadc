@@ -402,3 +402,31 @@ func TestAccAppfwprofile_jsoncmdurl_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_jsoncmdurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_jsoncmdurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_jsoncmdurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_jsoncmdurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_jsoncmdurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_jsoncmdurl_binding.Type(), "tf_appfwprofile", map[string]string{"jsoncmdurl": utils.UrlEncode("^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_jsoncmdurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_jsoncmdurl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -318,3 +318,34 @@ func TestAccSslhsmkey_password_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslhsmkey_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslhsmkey.tf_hsmkey1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslhsmkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslhsmkey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslhsmkeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslhsmkey.Type(), "hsmkey1", map[string]string{"hsmtype": "Fillme", "password": "Fillme", "serialnum": "Fillme"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslhsmkey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslhsmkeyExist(resAddr, nil)),
+			},
+		},
+	})
+}

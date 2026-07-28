@@ -478,3 +478,31 @@ func testAccCheckAnalyticsprofileADCValue(name, attr, want string) resource.Test
 		return nil
 	}
 }
+
+func TestAccAnalyticsprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_analyticsprofile.tf_analyticsprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyticsprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAnalyticsprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Analyticsprofile.Type(), "my_analyticsprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAnalyticsprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAnalyticsprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

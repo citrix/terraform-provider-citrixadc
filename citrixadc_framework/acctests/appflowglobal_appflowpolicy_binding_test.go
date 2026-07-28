@@ -358,3 +358,31 @@ func TestAccAppflowglobal_appflowpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppflowglobal_appflowpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowglobal_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowglobal_appflowpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowglobal_appflowpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appflowglobal_appflowpolicy_binding.Type(), "", map[string]string{"policyname": "test_policy", "type": "REQ_OVERRIDE", "priority": "55"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowglobal_appflowpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowglobal_appflowpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

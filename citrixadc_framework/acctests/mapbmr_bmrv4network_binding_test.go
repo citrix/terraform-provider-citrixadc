@@ -311,3 +311,31 @@ func TestAccMapbmr_bmrv4network_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccMapbmr_bmrv4network_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_mapbmr_bmrv4network_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMapbmr_bmrv4network_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMapbmr_bmrv4network_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMapbmr_bmrv4network_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Mapbmr_bmrv4network_binding.Type(), "tf_mapbmr", map[string]string{"network": "1.2.3.0", "netmask": "255.255.255.0"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMapbmr_bmrv4network_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMapbmr_bmrv4network_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

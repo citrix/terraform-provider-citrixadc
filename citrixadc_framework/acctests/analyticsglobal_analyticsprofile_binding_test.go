@@ -291,3 +291,31 @@ func TestAccAnalyticsglobal_analyticsprofile_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAnalyticsglobal_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_analyticsglobal_analyticsprofile_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyticsglobal_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Analyticsglobal_analyticsprofile_binding.Type(), "", []string{"analyticsprofile:new"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAnalyticsglobal_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

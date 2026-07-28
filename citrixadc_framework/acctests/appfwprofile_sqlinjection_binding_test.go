@@ -366,3 +366,31 @@ func TestAccAppfwprofile_sqlinjection_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_sqlinjection_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_sqlinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_sqlinjection_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_sqlinjection_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_sqlinjection_binding.Type(), "demo_appfwprofile", map[string]string{"as_scan_location_sql": utils.UrlEncode("FORMFIELD"), "as_value_expr_sql": utils.UrlEncode(".*"), "as_value_type_sql": utils.UrlEncode("Keyword"), "formactionurl_sql": utils.UrlEncode("^https://citrix.csg.com/analytics/saw.dll$"), "sqlinjection": utils.UrlEncode("data")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_sqlinjection_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_sqlinjection_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

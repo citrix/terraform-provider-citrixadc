@@ -268,3 +268,31 @@ func TestAccStreamidentifier_analyticsprofile_bindingDataSource_basic(t *testing
 		},
 	})
 }
+
+func TestAccStreamidentifier_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_streamidentifier_analyticsprofile_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckStreamidentifier_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamidentifier_analyticsprofile_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamidentifier_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Streamidentifier_analyticsprofile_binding.Type(), "my_streamidentifier", map[string]string{"analyticsprofile": "my_analyticsprofile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccStreamidentifier_analyticsprofile_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamidentifier_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -299,6 +299,34 @@ func TestAccVpnglobal_authenticationnegotiatepolicy_bindingDataSource_basic(t *t
 	})
 }
 
+func TestAccVpnglobal_authenticationnegotiatepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_authenticationnegotiatepolicy_binding.Type(), "", []string{"policyname:tf_negotiatepolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnglobal_authenticationnegotiatepolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding"
 	resource.Test(t, resource.TestCase{

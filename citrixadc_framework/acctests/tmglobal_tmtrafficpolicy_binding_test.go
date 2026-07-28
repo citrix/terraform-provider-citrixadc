@@ -307,3 +307,31 @@ func TestAccTmglobal_tmtrafficpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccTmglobal_tmtrafficpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmglobal_tmtrafficpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmglobal_tmtrafficpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmglobal_tmtrafficpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Tmglobal_tmtrafficpolicy_binding.Type(), "", []string{"policyname:my_tmtrafficpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmglobal_tmtrafficpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmglobal_tmtrafficpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

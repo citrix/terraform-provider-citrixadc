@@ -360,3 +360,31 @@ func TestAccCsvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCsvserver_lbvserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_lbvserver_binding.tf_csvserver_lbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_lbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_lbvserver_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_lbvserver_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Csvserver_lbvserver_binding.Type(), "tf_csvserver", []string{"lbvserver:tf_lbvserver"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_lbvserver_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_lbvserver_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

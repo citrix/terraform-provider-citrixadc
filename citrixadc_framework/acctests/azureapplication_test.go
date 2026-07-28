@@ -280,3 +280,33 @@ func TestAccAzureapplicationDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAzureapplication_selfHealing(t *testing.T) {
+	t.Skip("Requires valid Azure credentials")
+	t.Setenv("TF_VAR_azureapplication_clientsecret", "<clientsecret>")
+	const resAddr = "citrixadc_azureapplication.tf_azureapplication"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAzureapplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureapplication_clientsecret_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAzureapplicationExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Azureapplication.Type(), "tf_azureapplication"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAzureapplication_clientsecret_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAzureapplicationExist(resAddr, nil)),
+			},
+		},
+	})
+}

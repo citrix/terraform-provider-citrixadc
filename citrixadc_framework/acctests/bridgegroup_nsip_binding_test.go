@@ -329,3 +329,33 @@ func TestAccBridgegroup_nsip_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccBridgegroup_nsip_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccBridgegroup_nsip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_bridgegroup_nsip_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroup_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBridgegroup_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgegroup_nsip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Bridgegroup_nsip_binding.Type(), "2", []string{"ipaddress:2.2.2.3", "netmask:255.255.255.0"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBridgegroup_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgegroup_nsip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

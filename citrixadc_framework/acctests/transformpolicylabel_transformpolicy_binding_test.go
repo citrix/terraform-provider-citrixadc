@@ -325,3 +325,31 @@ func TestAccTransformpolicylabel_transformpolicy_binding_sdkv2StateUpgrade(t *te
 		},
 	})
 }
+
+func TestAccTransformpolicylabel_transformpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_transformpolicylabel_transformpolicy_binding.transformpolicylabel_transformpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformpolicylabel_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformpolicylabel_transformpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformpolicylabel_transformpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Transformpolicylabel_transformpolicy_binding.Type(), "label_1", map[string]string{"policyname": "tf_trans_policy", "priority": "2"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTransformpolicylabel_transformpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformpolicylabel_transformpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

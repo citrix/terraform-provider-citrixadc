@@ -411,3 +411,31 @@ func TestAccCrvserver_policymap_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCrvserver_policymap_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_policymap_binding.crvserver_policymap_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_policymap_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_policymap_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_policymap_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Crvserver_policymap_binding.Type(), "my_vserver", []string{"policyname:ia_mappol123"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_policymap_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_policymap_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

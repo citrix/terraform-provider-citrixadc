@@ -351,3 +351,31 @@ func TestAccAaauser_tmsessionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaauser_tmsessionpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_tmsessionpolicy_binding.tf_aaauser_tmsessionpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_tmsessionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_tmsessionpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_tmsessionpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaauser_tmsessionpolicy_binding.Type(), "user1", map[string]string{"policy": "my_tmsession_policy", "type": "REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaauser_tmsessionpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_tmsessionpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

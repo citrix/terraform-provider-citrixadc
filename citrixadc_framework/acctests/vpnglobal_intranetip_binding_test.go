@@ -252,6 +252,34 @@ func TestAccVpnglobal_intranetip_bindingDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnglobal_intranetip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_intranetip_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_intranetip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_intranetip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_intranetip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnglobal_intranetip_binding.Type(), "", map[string]string{"intranetip": "2.3.4.5", "netmask": "255.255.255.0"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_intranetip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_intranetip_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnglobal_intranetip_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_vpnglobal_intranetip_binding.tf_bind"
 	resource.Test(t, resource.TestCase{

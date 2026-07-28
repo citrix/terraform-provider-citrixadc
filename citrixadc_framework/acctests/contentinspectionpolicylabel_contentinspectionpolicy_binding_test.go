@@ -324,6 +324,34 @@ func TestAccContentinspectionpolicylabel_contentinspectionpolicy_binding_sdkv2St
 	})
 }
 
+func TestAccContentinspectionpolicylabel_contentinspectionpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionpolicylabel_contentinspectionpolicy_binding.tf_ci_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionpolicylabel_contentinspectionpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicylabel_contentinspectionpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Contentinspectionpolicylabel_contentinspectionpolicy_binding.Type(), "my_ci_label", map[string]string{"policyname": "my_ci_policy", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicylabel_contentinspectionpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccContentinspectionpolicylabel_contentinspectionpolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_contentinspectionpolicylabel_contentinspectionpolicy_binding.tf_ci_binding"
 	resource.Test(t, resource.TestCase{

@@ -329,3 +329,31 @@ func TestAccSystemglobal_authenticationtacacspolicy_bindingDataSource_basic(t *t
 		},
 	})
 }
+
+func TestAccSystemglobal_authenticationtacacspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemglobal_authenticationtacacspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_authenticationtacacspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_authenticationtacacspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Systemglobal_authenticationtacacspolicy_binding.Type(), "", []string{"policyname:tf_tacacspolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemglobal_authenticationtacacspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_authenticationtacacspolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

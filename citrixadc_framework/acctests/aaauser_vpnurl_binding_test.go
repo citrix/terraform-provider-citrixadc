@@ -341,3 +341,31 @@ func TestAccAaauser_vpnurl_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaauser_vpnurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_vpnurl_binding.tf_aaauser_vpnurl_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_vpnurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpnurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_vpnurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaauser_vpnurl_binding.Type(), "user1", map[string]string{"urlname": "Firsturl"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaauser_vpnurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_vpnurl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

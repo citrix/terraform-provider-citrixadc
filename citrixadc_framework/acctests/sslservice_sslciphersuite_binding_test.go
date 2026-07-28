@@ -530,3 +530,34 @@ func testAccCheckSslservice_sslciphersuite_bindingDestroy(s *terraform.State) er
 
 	return nil
 }
+
+func TestAccSslservice_sslciphersuite_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservice_sslciphersuite_binding.tf_sslservice_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservice_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservice_sslciphersuite_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservice_sslciphersuite_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Sslservice_sslciphersuite_binding.Type(), "tf_service", []string{"ciphername:tfAccsslcipher"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslservice_sslciphersuite_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservice_sslciphersuite_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

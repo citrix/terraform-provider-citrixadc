@@ -356,3 +356,33 @@ func TestAccLsnappsprofile_port_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLsnappsprofile_port_binding_selfHealing verifies drift recovery: after the
+// binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLsnappsprofile_port_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnappsprofile_port_binding.tf_lsnappsprofile_port_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnappsprofile_port_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnappsprofile_port_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnappsprofile_port_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lsnappsprofile_port_binding.Type(), "my_lsn_appsprofile", map[string]string{"lsnport": "80"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnappsprofile_port_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnappsprofile_port_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

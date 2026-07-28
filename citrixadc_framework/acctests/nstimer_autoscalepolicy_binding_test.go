@@ -306,3 +306,32 @@ func testAccCheckNstimer_autoscalepolicy_bindingDestroy(s *terraform.State) erro
 
 	return nil
 }
+
+func TestAccNstimer_autoscalepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nstimer_autoscalepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstimer_autoscalepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstimer_autoscalepolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimer_autoscalepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					// DELETE .../<name>?args=policyname:<policyname> (mirrors the resource Delete).
+					if err := client.DeleteResourceWithArgs(service.Nstimer_autoscalepolicy_binding.Type(), "tf_nstimer_binding", []string{"policyname:tf_binding_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNstimer_autoscalepolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimer_autoscalepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

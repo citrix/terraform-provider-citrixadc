@@ -297,3 +297,31 @@ func TestAccLsnclient_network_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLsnclient_network_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclient_network_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_network_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclient_network_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Lsnclient_network_binding.Type(), "my_lsnclient", []string{"network:10.222.74.160"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnclient_network_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclient_network_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -333,3 +333,34 @@ func TestAccAppfwglobal_auditnslogpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+// TestAccAppfwglobal_auditnslogpolicy_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band on the ADC, the next refresh's Read must
+// detect it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwglobal_auditnslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwglobal_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwglobal_auditnslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwglobal_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwglobal_auditnslogpolicy_binding.Type(), "", map[string]string{"policyname": "my_auditnslogpolicy", "priority": "80"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwglobal_auditnslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwglobal_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -321,3 +321,31 @@ func TestAccGslbvserver_domain_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccGslbvserver_domain_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_domain_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserver_domain_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Gslbvserver_domain_binding.Type(), "GSLB-East-Coast-Vserver", []string{"domainname:www.exampledomain.com"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbvserver_domain_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserver_domain_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -296,3 +296,31 @@ func TestAccLbmetrictable_metric_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbmetrictable_metric_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbmetrictable_metric_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmetrictable_metric_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmetrictable_metric_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmetrictable_metric_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbmetrictable_metric_binding.Type(), "Table-Custom", map[string]string{"metric": "2.3.6.4.5"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbmetrictable_metric_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmetrictable_metric_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

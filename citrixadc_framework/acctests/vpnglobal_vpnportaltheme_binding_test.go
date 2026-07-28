@@ -281,3 +281,35 @@ func TestAccVpnglobal_vpnportaltheme_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnglobal_vpnportaltheme_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnportaltheme_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnportaltheme_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnportaltheme_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpnportaltheme_binding.Type(), "", []string{"portaltheme:tf_vpnportaltheme"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpnportaltheme_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnportaltheme_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

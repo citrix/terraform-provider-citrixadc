@@ -361,3 +361,35 @@ func TestAccAppfwprofile_fileuploadtype_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_fileuploadtype_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_fileuploadtype_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_fileuploadtype_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_fileuploadtype_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_fileuploadtype_binding.Type(), "tf_appfwprofile", map[string]string{
+						"as_fileuploadtypes_url": "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$",
+						"filetype":               "pdf;text",
+						"fileuploadtype":         "tf_uploadtype",
+					}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_fileuploadtype_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_fileuploadtype_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

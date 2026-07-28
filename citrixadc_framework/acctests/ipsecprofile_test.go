@@ -360,3 +360,34 @@ func TestAccIpsecprofile_psk_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+// TestAccIpsecprofile_selfHealing verifies drift recovery: after the resource is
+// created, it is deleted out-of-band on the ADC; the next apply of the same config
+// must detect the missing resource and recreate it.
+func TestAccIpsecprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipsecprofile.tf_ipsecprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ipsecprofile.Type(), "my_ipsecprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpsecprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

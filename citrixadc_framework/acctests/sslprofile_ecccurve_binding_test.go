@@ -304,3 +304,36 @@ func TestAccSslprofile_ecccurve_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslprofile_ecccurve_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofile_ecccurve_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					for _, curve := range []string{"X_25519", "P_521", "P_384"} {
+						if err := client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), "tf_sslprofile", []string{"ecccurvename:" + curve}); err != nil {
+							t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+						}
+					}
+				},
+				Config: testAccSslprofile_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofile_ecccurve_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

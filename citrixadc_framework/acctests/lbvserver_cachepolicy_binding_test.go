@@ -343,3 +343,31 @@ func TestAccLbvserver_cachepolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbvserver_cachepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_cachepolicy_binding.tf_citrixadc_lbvserver_cachepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_cachepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_cachepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_cachepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_cachepolicy_binding.Type(), "tf_lbvserver", map[string]string{"bindpoint": "REQUEST", "policyname": "tf_cachepolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_cachepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_cachepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

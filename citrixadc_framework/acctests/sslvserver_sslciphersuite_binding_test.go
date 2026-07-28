@@ -351,3 +351,34 @@ func TestAccSslvserver_sslciphersuite_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslvserver_sslciphersuite_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslciphersuite_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslciphersuite_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslciphersuite_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslciphersuite_binding.Type(), "tf_sslvserver", map[string]string{"ciphername": "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslvserver_sslciphersuite_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslciphersuite_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -281,3 +281,31 @@ func TestAccSslglobalSslpolicyBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslglobalSslpolicyBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslglobal_sslpolicy_binding.tf_sslglobal_sslpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslglobalSslpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslglobalSslpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslglobalSslpolicyBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Sslglobal_sslpolicy_binding.Type(), "", []string{"policyname:tf_sslpolicy_glb", "type:CONTROL_OVERRIDE", "priority:100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslglobalSslpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslglobalSslpolicyBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

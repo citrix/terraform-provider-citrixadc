@@ -466,3 +466,31 @@ func TestAccAuthenticationldapactionDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationldapaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationldapaction.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationldapactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationldapaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationldapactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationldapaction.Type(), "ldapaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationldapaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationldapactionExist(resAddr, nil)),
+			},
+		},
+	})
+}

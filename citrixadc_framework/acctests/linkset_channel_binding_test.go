@@ -334,3 +334,34 @@ func TestAccLinkset_channel_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLinkset_channel_binding_selfHealing verifies drift recovery: after the
+// binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLinkset_channel_binding_selfHealing(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_linkset_channel_binding.tf_linkset_channel_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLinkset_channel_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLinkset_channel_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLinkset_channel_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Linkset_channel_binding.Type(), "LS/3", map[string]string{"ifnum": "LA%2F3"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLinkset_channel_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLinkset_channel_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

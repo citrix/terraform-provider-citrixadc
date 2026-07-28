@@ -300,3 +300,34 @@ func TestAccSslprofileSslechconfigBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslprofileSslechconfigBinding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslprofile_sslechconfig_binding.tf_sslprofile_sslechconfig_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofileSslechconfigBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofileSslechconfigBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofileSslechconfigBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Sslprofile_sslechconfig_binding.Type(), "tf_sslprofile_ech", []string{"echconfigname:tf_echconfig"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslprofileSslechconfigBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofileSslechconfigBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

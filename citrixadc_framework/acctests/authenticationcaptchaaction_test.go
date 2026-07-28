@@ -551,3 +551,31 @@ func TestAccAuthenticationcaptchaaction_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAuthenticationcaptchaaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationcaptchaaction.tf_captchaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcaptchaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcaptchaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcaptchaactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationcaptchaaction.Type(), "tf_captchaaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationcaptchaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcaptchaactionExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -254,6 +255,38 @@ func TestAccVpnglobal_staserver_binding_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: testAccVpnglobal_staserver_binding_basic},
 			{Config: testAccVpnglobal_staserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnglobal_staserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_staserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_staserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_staserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_staserver_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_staserver_binding.Type(), "", []string{fmt.Sprintf("staserver:%s", url.QueryEscape("http://www.example.com/"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_staserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_staserver_bindingExist(resAddr, nil),
+				),
+			},
 		},
 	})
 }

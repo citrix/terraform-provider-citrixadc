@@ -458,3 +458,31 @@ func TestAccGslbsite_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccGslbsite_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbsite.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbsite_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbsiteExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Gslbsite.Type(), "Site-GSLB-East-Coast"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbsite_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbsiteExist(resAddr, nil)),
+			},
+		},
+	})
+}

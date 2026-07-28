@@ -335,3 +335,31 @@ func TestAccLsnclient_nsacl_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLsnclient_nsacl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient_nsacl_binding.tf_lsnclient_nsacl_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclient_nsacl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_nsacl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclient_nsacl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lsnclient_nsacl_binding.Type(), "my_lsn_client", map[string]string{"aclname": "test_acl"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnclient_nsacl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclient_nsacl_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

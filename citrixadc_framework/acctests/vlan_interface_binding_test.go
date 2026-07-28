@@ -323,3 +323,31 @@ func TestAccVlan_interface_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVlan_interface_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vlan_interface_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_interface_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_interface_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_interface_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vlan_interface_binding.Type(), "50", []string{fmt.Sprintf("ifnum:%s", utils.UrlEncode("1/1"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVlan_interface_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_interface_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -347,3 +347,31 @@ func TestAccLbvserver_feopolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbvserver_feopolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_feopolicy_binding.tf_lbvserver_feopolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_feopolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_feopolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_feopolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_feopolicy_binding.Type(), "tf_lbvserver", map[string]string{"policyname": "tf_feopolicy", "bindpoint": "REQUEST", "priority": "1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_feopolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_feopolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

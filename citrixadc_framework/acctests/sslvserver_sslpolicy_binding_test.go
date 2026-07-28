@@ -391,3 +391,31 @@ func TestAccSslvserver_sslpolicy_bindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslvserver_sslpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserver_sslpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslvserver_sslpolicy_binding.Type(), "tf_lbvserver", map[string]string{"policyname": "tf_sslpolicy", "priority": "333", "type": "REQUEST"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslvserver_sslpolicy_binding_lbvserver_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserver_sslpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

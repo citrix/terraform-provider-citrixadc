@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -58,6 +59,34 @@ func TestAccVpnglobalSecureprivateaccessurlBinding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobalSecureprivateaccessurlBindingNotExist("citrixadc_vpnglobal_secureprivateaccessurl_binding.tf_binding", "https://app.example.com/"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobalSecureprivateaccessurlBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_secureprivateaccessurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobalSecureprivateaccessurlBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobalSecureprivateaccessurlBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobalSecureprivateaccessurlBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_secureprivateaccessurl_binding.Type(), "", []string{"secureprivateaccessurl:" + url.QueryEscape("https://app.example.com/")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobalSecureprivateaccessurlBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobalSecureprivateaccessurlBindingExist(resAddr, nil)),
 			},
 		},
 	})

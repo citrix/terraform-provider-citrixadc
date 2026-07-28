@@ -357,3 +357,31 @@ func TestAccGslbservice_dnsview_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccGslbservice_dnsview_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservice_dnsview_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservice_dnsview_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbservice_dnsview_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Gslbservice_dnsview_binding.Type(), "gslb1vservice", []string{"viewname:view4"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbservice_dnsview_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbservice_dnsview_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

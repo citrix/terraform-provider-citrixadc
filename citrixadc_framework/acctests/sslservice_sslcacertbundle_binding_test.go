@@ -313,3 +313,31 @@ func TestAccSslserviceSslcacertbundleBindingDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslserviceSslcacertbundleBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslservice_sslcacertbundle_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcacertbundlePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslserviceSslcacertbundleBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslserviceSslcacertbundleBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslserviceSslcacertbundleBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslservice_sslcacertbundle_binding.Type(), "tf_sslsvc_cacert", map[string]string{"cacertbundlename": "tf_sslsvc_cacertbundle"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslserviceSslcacertbundleBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslserviceSslcacertbundleBindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -322,6 +322,34 @@ func TestAccCrvserver_cmppolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+func TestAccCrvserver_cmppolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_cmppolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_cmppolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_cmppolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Crvserver_cmppolicy_binding.Type(), "my_vserver", []string{"policyname:tf_cmppolicy", "bindpoint:REQUEST", "priority:10"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_cmppolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_cmppolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccCrvserver_cmppolicy_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding"
 	resource.Test(t, resource.TestCase{

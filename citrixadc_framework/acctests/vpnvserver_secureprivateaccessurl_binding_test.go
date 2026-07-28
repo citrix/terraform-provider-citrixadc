@@ -278,3 +278,35 @@ func TestAccVpnvserver_secureprivateaccessurl_binding_DataSource_basic(t *testin
 		},
 	})
 }
+
+func TestAccVpnvserver_secureprivateaccessurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_secureprivateaccessurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_secureprivateaccessurl_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_secureprivateaccessurl_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_secureprivateaccessurl_binding.Type(), "tf.citrix.example.com", map[string]string{"secureprivateaccessurl": utils.UrlEncode("https://app.example.com/")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_secureprivateaccessurl_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_secureprivateaccessurl_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

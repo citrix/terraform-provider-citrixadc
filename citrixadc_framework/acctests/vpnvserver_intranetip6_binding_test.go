@@ -308,3 +308,31 @@ func TestAccVpnvserver_intranetip6_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnvserver_intranetip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_intranetip6_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_intranetip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_intranetip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_intranetip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnvserver_intranetip6_binding.Type(), "tf_vserverexample", []string{"intranetip6:2.3.4.5", "numaddr:45"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_intranetip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_intranetip6_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -314,3 +314,31 @@ func TestAccBotpolicylabel_botpolicy_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccBotpolicylabel_botpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botpolicylabel_botpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotpolicylabel_botpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotpolicylabel_botpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicylabel_botpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Botpolicylabel_botpolicy_binding.Type(), "tf_botpolicylabel", map[string]string{"policyname": "tf_botpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotpolicylabel_botpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicylabel_botpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

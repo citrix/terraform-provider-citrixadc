@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -236,6 +237,34 @@ func TestAccVpnglobal_domain_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_domain_binding.tf_bind", "intranetdomain", "http://www.example.com/"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_domain_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_domain_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_domain_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_domain_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_domain_binding.Type(), "", []string{"intranetdomain:" + url.QueryEscape("http://www.example.com/")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_domain_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_domain_bindingExist(resAddr, nil)),
 			},
 		},
 	})

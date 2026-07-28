@@ -299,3 +299,35 @@ func TestAccVpnglobal_vpnurl_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccVpnglobal_vpnurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnurl_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnurl_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnurl_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpnurl_binding.Type(), "", []string{"urlname:Firsturl"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpnurl_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnurl_bindingExist(resAddr, nil),
+				),
+			},
+		},
+	})
+}

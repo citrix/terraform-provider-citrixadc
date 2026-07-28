@@ -350,3 +350,31 @@ func TestAccLsngroup_lsnpool_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLsngroup_lsnpool_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnpool_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsnpool_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroup_lsnpool_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lsngroup_lsnpool_binding.Type(), "my_lsngroup", map[string]string{"poolname": "my_lsn_pool"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsngroup_lsnpool_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroup_lsnpool_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

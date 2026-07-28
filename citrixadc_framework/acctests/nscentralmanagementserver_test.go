@@ -324,3 +324,33 @@ func TestAccNscentralmanagementserver_adcpassword_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNscentralmanagementserver_selfHealing(t *testing.T) {
+	t.Skip("Requires valid NetScaler Console Credentials.")
+	t.Setenv("TF_VAR_nscentralmanagementserver_password", "admpassword123")
+	const resAddr = "citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNscentralmanagementserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNscentralmanagementserver_password_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNscentralmanagementserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nscentralmanagementserver.Type(), "ONPREM"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNscentralmanagementserver_password_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNscentralmanagementserverExist(resAddr, nil)),
+			},
+		},
+	})
+}

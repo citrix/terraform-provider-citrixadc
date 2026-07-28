@@ -418,3 +418,31 @@ func TestAccNsencryptionkey_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNsencryptionkey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsencryptionkey.tf_encryptionkey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsencryptionkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsencryptionkey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsencryptionkeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsencryptionkey.Type(), "tf_encryptionkey"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsencryptionkey_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsencryptionkeyExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -1066,3 +1066,31 @@ func testAccCheckLbmonitorADCValue(monitorName, attr, want string) resource.Test
 		return nil
 	}
 }
+
+func TestAccLbmonitor_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbmonitor.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitorExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbmonitor.Type(), "sample_lb_monitor", map[string]string{"type": "HTTP"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbmonitor_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitorExist(resAddr, nil)),
+			},
+		},
+	})
+}

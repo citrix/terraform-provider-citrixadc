@@ -177,3 +177,31 @@ func TestAccSslhpkekeyDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslhpkekey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslhpkekey.tf_sslhpkekey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslhpkekeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslhpkekeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslhpkekey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslhpkekeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslhpkekey.Type(), "tf_sslhpkekey"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslhpkekey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslhpkekeyExist(resAddr, nil)),
+			},
+		},
+	})
+}

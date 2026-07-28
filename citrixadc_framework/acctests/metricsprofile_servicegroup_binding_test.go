@@ -337,3 +337,31 @@ func TestAccMetricsprofile_servicegroup_binding_DataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccMetricsprofile_servicegroup_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile_servicegroup_binding.tf_metricsprofile_servicegroup_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_servicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_servicegroup_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_servicegroup_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Metricsprofile_servicegroup_binding.Type(), "tf_metricsprofile", map[string]string{"entityname": "tf_servicegroup", "entitytype": "servicegroup"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMetricsprofile_servicegroup_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_servicegroup_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

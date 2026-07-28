@@ -142,6 +142,35 @@ func TestAccFilterglobal_filterpolicy_binding_import(t *testing.T) {
 	})
 }
 
+func TestAccFilterglobal_filterpolicy_binding_selfHealing(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	const resAddr = "citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFilterglobal_filterpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFilterglobal_filterpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Filterglobal_filterpolicy_binding.Type(), "", map[string]string{"policyname": "tf_filterpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFilterglobal_filterpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckFilterglobal_filterpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -409,3 +409,34 @@ func testAccCheckRdpserverprofileADCValue(name, attr, want string) resource.Test
 		return nil
 	}
 }
+
+// TestAccRdpserverprofile_selfHealing verifies the provider re-creates the profile when
+// it is deleted out-of-band between apply steps (drift recovery). The resource type
+// string "rdpserverprofile" matches the resource's own Delete (service.Rdpserverprofile.Type()).
+func TestAccRdpserverprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rdpserverprofile.tf_rdpserverprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRdpserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRdpserverprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRdpserverprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("rdpserverprofile", "my_rdpserverprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRdpserverprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRdpserverprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -342,3 +342,34 @@ func TestAccRewritepolicylabel_rewritepolicy_binding_sdkv2StateUpgrade(t *testin
 		},
 	})
 }
+
+// TestAccRewritepolicylabel_rewritepolicy_binding_selfHealing verifies the provider
+// re-creates the binding when it is deleted out-of-band between apply steps (drift
+// recovery). The delete labelname/policyname/priority args match the resource's Delete.
+func TestAccRewritepolicylabel_rewritepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rewritepolicylabel_rewritepolicy_binding.tf_rewritepolicylabel_rewritepolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicylabel_rewritepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicylabel_rewritepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabel_rewritepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Rewritepolicylabel_rewritepolicy_binding.Type(), "tf_rewritepolicylabel", map[string]string{"policyname": "tf_rewrite_policy", "priority": "5"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRewritepolicylabel_rewritepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabel_rewritepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}

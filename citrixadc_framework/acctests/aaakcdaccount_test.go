@@ -327,3 +327,31 @@ func TestAccAaakcdaccount_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaakcdaccount_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaakcdaccount.tf_aaakcdaccount"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaakcdaccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaakcdaccount_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaakcdaccountExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Aaakcdaccount.Type(), "my_kcdaccount"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaakcdaccount_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaakcdaccountExist(resAddr, nil)),
+			},
+		},
+	})
+}

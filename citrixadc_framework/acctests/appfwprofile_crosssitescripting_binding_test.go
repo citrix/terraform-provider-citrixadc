@@ -307,3 +307,37 @@ func TestAccAppfwprofile_crosssitescripting_binding_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwprofile_crosssitescripting_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_crosssitescripting_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_crosssitescripting_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_crosssitescripting_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_crosssitescripting_binding.Type(), "demo_appfwprofile", map[string]string{
+						"as_scan_location_xss": utils.UrlEncode("FORMFIELD"),
+						"as_value_expr_xss":    utils.UrlEncode(".*"),
+						"as_value_type_xss":    utils.UrlEncode("Tag"),
+						"crosssitescripting":   utils.UrlEncode("file"),
+						"formactionurl_xss":    utils.UrlEncode("^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_crosssitescripting_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_crosssitescripting_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
