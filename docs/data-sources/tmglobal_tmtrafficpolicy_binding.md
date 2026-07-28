@@ -4,7 +4,8 @@ subcategory: "Traffic Management"
 
 # Data Source: tmglobal_tmtrafficpolicy_binding
 
-The `citrixadc_tmglobal_tmtrafficpolicy_binding` data source allows you to retrieve information about a specific binding between the global traffic management configuration and a traffic policy. This binding determines which traffic policies are applied globally and their priority order.
+The tmglobal_tmtrafficpolicy_binding data source allows you to retrieve information about the binding between the global traffic management configuration and a traffic policy.
+
 
 ## Example usage
 

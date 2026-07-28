@@ -4,9 +4,7 @@ subcategory: "API Definition"
 
 # Resource: apispecfile
 
-The apispecfile resource is used to import an API specification file from a remote URL onto the Citrix ADC. The imported spec file can subsequently be referenced by other API-Definition resources (e.g. `citrixadc_apispec`) for schema validation, routing, and protection.
-
-The underlying NITRO operation is an `Import` action: the appliance downloads the spec from the supplied URL and stores it locally under the given name. NITRO exposes no update endpoint for this object, so every attribute forces resource replacement when changed.
+This resource is used to import an API specification file onto the Citrix ADC.
 
 
 ## Example usage

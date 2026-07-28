@@ -124,6 +124,32 @@ func TestAccSslcertkey_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslcertkey_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkey.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkey_basic,
+			},
+			{
+				Config:            testAccSslcertkey_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// passplain_wo_version is a Terraform-only version tracker for the
+				// write-only passplain_wo attribute. NITRO does not return it (confirmed
+				// against the live GET response), and its schema Default(1) is only applied
+				// during Create/Update planning, not during import's Read. It therefore
+				// cannot be reconstructed on import and is genuinely non-round-trippable.
+				ImportStateVerifyIgnore: []string{"passplain_wo_version"},
+			},
+		},
+	})
+}
+
 const testAccSslcertkey_linkcert_nolink = `
 
 resource "citrixadc_sslcertkey" "client" {

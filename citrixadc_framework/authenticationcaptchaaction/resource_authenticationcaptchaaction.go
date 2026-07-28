@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -103,7 +104,12 @@ func (r *AuthenticationcaptchaactionResource) Create(ctx context.Context, req re
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationcaptchaactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationcaptchaactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationcaptchaaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -121,7 +127,14 @@ func (r *AuthenticationcaptchaactionResource) Read(ctx context.Context, req reso
 
 	tflog.Debug(ctx, "Reading authenticationcaptchaaction resource")
 
-	r.readAuthenticationcaptchaactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationcaptchaactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -148,13 +161,18 @@ func (r *AuthenticationcaptchaactionResource) Update(ctx context.Context, req re
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for authenticationcaptchaaction"))
 		hasChange = true
 	}
 	if !data.Scorethreshold.Equal(state.Scorethreshold) {
 		tflog.Debug(ctx, fmt.Sprintf("scorethreshold has changed for authenticationcaptchaaction"))
-		hasChange = true
+		if config.Scorethreshold.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "scorethreshold")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute secretkey or its version tracker
 	if !data.Secretkey.Equal(state.Secretkey) {
@@ -180,7 +198,7 @@ func (r *AuthenticationcaptchaactionResource) Update(ctx context.Context, req re
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		authenticationcaptchaaction := authenticationcaptchaactionGetThePayloadFromthePlan(ctx, &data)
+		authenticationcaptchaaction := authenticationcaptchaactionGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		authenticationcaptchaactionGetThePayloadFromtheConfig(ctx, &config, &authenticationcaptchaaction)
 		// Make API call
@@ -197,8 +215,24 @@ func (r *AuthenticationcaptchaactionResource) Update(ctx context.Context, req re
 		tflog.Debug(ctx, "No changes detected for authenticationcaptchaaction resource, skipping update")
 	}
 
+	// Unset attributes that were removed from the configuration so the appliance
+	// reverts them to their defaults. Update-then-unset ordering ensures any
+	// default carried in the update payload is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationcaptchaaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationcaptchaaction attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readAuthenticationcaptchaactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationcaptchaactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationcaptchaaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -227,7 +261,7 @@ func (r *AuthenticationcaptchaactionResource) Delete(ctx context.Context, req re
 }
 
 // Helper function to read authenticationcaptchaaction data from API
-func (r *AuthenticationcaptchaactionResource) readAuthenticationcaptchaactionFromApi(ctx context.Context, data *AuthenticationcaptchaactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationcaptchaactionResource) readAuthenticationcaptchaactionFromApi(ctx context.Context, data *AuthenticationcaptchaactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -237,10 +271,14 @@ func (r *AuthenticationcaptchaactionResource) readAuthenticationcaptchaactionFro
 
 	getResponseData, err = r.client.FindResource(service.Authenticationcaptchaaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationcaptchaaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationcaptchaactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

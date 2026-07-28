@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *AaakcdaccountResource) Create(ctx context.Context, req resource.CreateR
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Kcdaccount.ValueString()))
 
 	// Read the updated state back
-	r.readAaakcdaccountFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaakcdaccountFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaakcdaccount not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *AaakcdaccountResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading aaakcdaccount resource")
 
-	r.readAaakcdaccountFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaakcdaccountFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -165,7 +178,7 @@ func (r *AaakcdaccountResource) Update(ctx context.Context, req resource.UpdateR
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		aaakcdaccount := aaakcdaccountGetThePayloadFromthePlan(ctx, &data)
+		aaakcdaccount := aaakcdaccountGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		aaakcdaccountGetThePayloadFromtheConfig(ctx, &config, &aaakcdaccount)
 		// Make API call
@@ -183,7 +196,12 @@ func (r *AaakcdaccountResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// Read the updated state back
-	r.readAaakcdaccountFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaakcdaccountFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaakcdaccount not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -212,7 +230,7 @@ func (r *AaakcdaccountResource) Delete(ctx context.Context, req resource.DeleteR
 }
 
 // Helper function to read aaakcdaccount data from API
-func (r *AaakcdaccountResource) readAaakcdaccountFromApi(ctx context.Context, data *AaakcdaccountResourceModel, diags *diag.Diagnostics) {
+func (r *AaakcdaccountResource) readAaakcdaccountFromApi(ctx context.Context, data *AaakcdaccountResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	kcdaccount_Name := data.Id.ValueString()
@@ -222,10 +240,14 @@ func (r *AaakcdaccountResource) readAaakcdaccountFromApi(ctx context.Context, da
 
 	getResponseData, err = r.client.FindResource(service.Aaakcdaccount.Type(), kcdaccount_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaakcdaccount, got error: %s", err))
-		return
+		return false
 	}
 
 	aaakcdaccountSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

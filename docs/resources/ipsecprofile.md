@@ -38,7 +38,7 @@ resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
 
 ### Using psk_wo (write-only/ephemeral - NOT persisted in state)
 
-The `psk_wo` attribute provides an ephemeral path for the pre-shared key. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the key changes, increment `psk_wo_version`.
+The `psk_wo` attribute provides an ephemeral path for the pre-shared key. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the key, increment `psk_wo_version`; because the pre-shared key is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "ipsecprofile_psk" {
@@ -61,7 +61,7 @@ resource "citrixadc_ipsecprofile" "tf_ipsecprofile" {
   name           = "my_ipsecprofile"
   ikeversion     = "V2"
   psk_wo         = var.ipsecprofile_psk
-  psk_wo_version = 2  # Bumped to trigger update
+  psk_wo_version = 2  # Bumped: forces destroy & recreate
 }
 ```
 

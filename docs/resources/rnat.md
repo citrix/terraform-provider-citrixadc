@@ -4,11 +4,10 @@ subcategory: "Network"
 
 # Resource: rnat
 
-The rnat resource is used to create rnat.
+This resource is used to manage RNAT (reverse NAT) configuration on the Citrix ADC.
 
-~>
-* This is updated `rnat` resource which supports add, update and delete operation for latest Citrix ADC versions(from 13.0 and above). 
-* For versions 12.1 and below, to continue using older rnat resource operation `clear` refer and use the resource `citrixadc_rnat_clear`
+~> **Note:** This resource supports add/update/delete on Citrix ADC 13.0 and above. For 12.1 and below, use `citrixadc_rnat_clear`.
+
 
 ## Example usage
 

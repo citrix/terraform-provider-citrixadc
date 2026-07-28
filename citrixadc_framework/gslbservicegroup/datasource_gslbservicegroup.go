@@ -38,25 +38,20 @@ func (d *GslbservicegroupDataSource) Read(ctx context.Context, req datasource.Re
 	var data GslbservicegroupResourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Named resource - GET by servicegroupname.
 	servicegroupname_Name := data.Servicegroupname.ValueString()
 
-	var getResponseData map[string]interface{}
-	var err error
-
-	getResponseData, err = d.client.FindResource(service.Gslbservicegroup.Type(), servicegroupname_Name)
+	getResponseData, err := d.client.FindResource(service.Gslbservicegroup.Type(), servicegroupname_Name)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read gslbservice, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read gslbservicegroup, got error: %s", err))
 		return
 	}
 
-	gslbservicegroupSetAttrFromGet(ctx, &data, getResponseData)
-
+	gslbservicegroupSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

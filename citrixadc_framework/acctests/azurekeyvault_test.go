@@ -102,6 +102,27 @@ func TestAccAzurekeyvault_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzurekeyvault_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	t.Setenv("TF_VAR_azureapplication_clientsecret", "<clientsecret>")
+	const resAddr = "citrixadc_azurekeyvault.tf_azurekeyvault"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAzurekeyvaultDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAzurekeyvault_basic_step1},
+			{
+				Config:                  testAccAzurekeyvault_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAzurekeyvaultExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

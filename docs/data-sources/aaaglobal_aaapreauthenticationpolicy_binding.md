@@ -4,7 +4,8 @@ subcategory: "AAA"
 
 # Data Source: aaaglobal_aaapreauthenticationpolicy_binding
 
-The `aaaglobal_aaapreauthenticationpolicy_binding` data source allows you to retrieve information about a specific binding between the global AAA configuration and a preauthentication policy. This binding determines which preauthentication policies are applied globally and their priority order.
+The aaaglobal_aaapreauthenticationpolicy_binding data source allows you to retrieve information about the binding between the global AAA configuration and a preauthentication policy.
+
 
 ## Example usage
 

@@ -65,9 +65,8 @@ func rnatglobal_auditsyslogpolicy_bindingGetThePayloadFromthePlan(ctx context.Co
 
 	// Create API request body from the model
 	rnatglobal_auditsyslogpolicy_binding := network.Rnatglobalauditsyslogpolicybinding{}
-	if !data.All.IsNull() && !data.All.IsUnknown() {
-		rnatglobal_auditsyslogpolicy_binding.All = data.All.ValueBool()
-	}
+	// 'all' is a DELETE-ONLY flag (remove all rnatglobal config); it is not part of the
+	// bind/add payload per NITRO doc, so it is excluded here (Pattern 15).
 	if !data.Policy.IsNull() && !data.Policy.IsUnknown() {
 		rnatglobal_auditsyslogpolicy_binding.Policy = data.Policy.ValueString()
 	}
@@ -101,7 +100,7 @@ func rnatglobal_auditsyslogpolicy_bindingSetAttrFromGet(ctx context.Context, dat
 	}
 
 	// Set ID for the resource
-	// Single unique key (policy) - plain value ID (matches SDK v2 d.SetId(policy))
+	// Single unique attribute (policy) - plain value ID
 	data.Id = types.StringValue(data.Policy.ValueString())
 
 	return data

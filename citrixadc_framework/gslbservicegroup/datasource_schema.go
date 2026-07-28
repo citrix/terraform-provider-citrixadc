@@ -77,7 +77,6 @@ func GslbservicegroupDataSourceSchema() schema.Schema {
 			},
 			"includemembers": schema.BoolAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "Display the members of the listed GSLB service groups in addition to their settings. Can be specified when no service group name is provided in the command. In that case, the details displayed for each service group are identical to the details displayed when a service group name is provided, except that bound monitors are not displayed.",
 			},
 			"maxbandwidth": schema.Int64Attribute{

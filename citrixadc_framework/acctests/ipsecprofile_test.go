@@ -82,6 +82,28 @@ func TestAccIpsecprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccIpsecprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_ipsecprofile.tf_ipsecprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpsecprofile_basic},
+			{
+				Config:            testAccIpsecprofile_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// psk is a sensitive value that NITRO never echoes back, and
+				// psk_wo_version is a computed version tracker not returned by the
+				// API; neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"psk", "psk_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckIpsecprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -240,6 +262,31 @@ func TestAccIpsecprofile_psk_backward_compat(t *testing.T) {
 					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile_psk", nil),
 					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk", "name", "my_ipsecprofile_psk"),
 					resource.TestCheckResourceAttr("citrixadc_ipsecprofile.tf_ipsecprofile_psk", "ikeversion", "V2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIpsecprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpsecprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIpsecprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIpsecprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecprofileExist("citrixadc_ipsecprofile.tf_ipsecprofile", nil),
 				),
 			},
 		},

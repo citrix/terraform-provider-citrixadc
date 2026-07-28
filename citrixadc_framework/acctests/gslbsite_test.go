@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
@@ -42,6 +43,27 @@ func TestAccGslbsite_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"citrixadc_gslbsite.foo", "sitename", "Site-GSLB-East-Coast"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccGslbsite_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+
+	const resAddr = "citrixadc_gslbsite.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbsite_basic},
+			{
+				Config:                  testAccGslbsite_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -319,6 +341,118 @@ func TestAccGslbsite_sitepassword_wo_ephemeral(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbsiteExist("citrixadc_gslbsite.test_wo", nil),
 					resource.TestCheckResourceAttr("citrixadc_gslbsite.test_wo", "sitepassword_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// --- Unset test: eligible attributes metricexchange, nwmetricexchange,
+// sessionexchange, triggermonitor revert to their NITRO defaults when removed
+// from configuration (?action=unset). ---
+
+const testAccGslbsite_unset_step1 = `
+resource "citrixadc_gslbsite" "tf_unset" {
+  sitename         = "tf_test_gslbsite_unset"
+  siteipaddress    = "172.31.11.40"
+  sitepassword     = "password123"
+  metricexchange   = "DISABLED"
+  nwmetricexchange = "DISABLED"
+  sessionexchange  = "DISABLED"
+  triggermonitor   = "MEPDOWN"
+}
+`
+
+const testAccGslbsite_unset_step2 = `
+resource "citrixadc_gslbsite" "tf_unset" {
+  sitename      = "tf_test_gslbsite_unset"
+  siteipaddress = "172.31.11.40"
+  sitepassword  = "password123"
+  # metricexchange, nwmetricexchange, sessionexchange, triggermonitor removed
+  # from config -> provider must unset them, reverting to NITRO defaults.
+}
+`
+
+func TestAccGslbsite_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccGslbsite_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.tf_unset", "metricexchange", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.tf_unset", "nwmetricexchange", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.tf_unset", "sessionexchange", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.tf_unset", "triggermonitor", "MEPDOWN"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccGslbsite_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.tf_unset", "metricexchange", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.tf_unset", "nwmetricexchange", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.tf_unset", "sessionexchange", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbsite.tf_unset", "triggermonitor", "ALWAYS"),
+					// Independent appliance-level confirmation the unset took effect:
+					testAccCheckGslbsiteADCValue("tf_test_gslbsite_unset", "metricexchange", "ENABLED"),
+					testAccCheckGslbsiteADCValue("tf_test_gslbsite_unset", "nwmetricexchange", "ENABLED"),
+					testAccCheckGslbsiteADCValue("tf_test_gslbsite_unset", "sessionexchange", "ENABLED"),
+					testAccCheckGslbsiteADCValue("tf_test_gslbsite_unset", "triggermonitor", "ALWAYS"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckGslbsiteADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckGslbsiteADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbsite.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("gslbsite %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("gslbsite %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccGslbsite_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbsiteDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccGslbsite_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.foo", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbsite_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbsiteExist("citrixadc_gslbsite.foo", nil),
 				),
 			},
 		},

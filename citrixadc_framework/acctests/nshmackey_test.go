@@ -280,3 +280,50 @@ func TestAccNshmackey_keyvalue_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNshmackey_import(t *testing.T) {
+	const resAddr = "citrixadc_nshmackey.tf_nshmackey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNshmackeyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNshmackey_add},
+			{
+				Config:            testAccNshmackey_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// keyvalue is a secret the NITRO API never echoes back, and
+				// keyvalue_wo_version is a computed version tracker not populated on import;
+				// neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"keyvalue", "keyvalue_wo_version"},
+			},
+		},
+	})
+}
+
+func TestAccNshmackey_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNshmackeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNshmackey_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshmackeyExist("citrixadc_nshmackey.tf_nshmackey", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNshmackey_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNshmackeyExist("citrixadc_nshmackey.tf_nshmackey", nil),
+				),
+			},
+		},
+	})
+}

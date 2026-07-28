@@ -10,21 +10,10 @@ The appflowpolicylabel_appflowpolicy_binding resource is used to create appflowp
 ## Example usage
 
 ```hcl
-resource "citrixadc_appflowpolicylabel_appflowpolicy_binding" "tf_appflowpolicylabel_appflowpolicy_binding" {
-  labelname  = citrixadc_appflowpolicylabel.tf_appflowpolicylabel.labelname
-  policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
-  priority   = 30
-}
-
-resource "citrixadc_appflowpolicylabel" "tf_appflowpolicylabel" {
-  labelname       = "tf_policylabel"
-  policylabeltype = "OTHERTCP"
-}
-
-resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
-  name   = "test_policy"
-  action = citrixadc_appflowaction.tf_appflowaction.name
-  rule   = "client.TCP.DSTPORT.EQ(22)"
+resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+  name      = "tf_collector"
+  ipaddress = "192.168.2.2"
+  port      = 80
 }
 
 resource "citrixadc_appflowaction" "tf_appflowaction" {
@@ -35,10 +24,21 @@ resource "citrixadc_appflowaction" "tf_appflowaction" {
   videoanalytics  = "ENABLED"
 }
 
-resource "citrixadc_appflowcollector" "tf_appflowcollector" {
-  name      = "tf_collector"
-  ipaddress = "192.168.2.2"
-  port      = 80
+resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+  name   = "test_policy"
+  action = citrixadc_appflowaction.tf_appflowaction.name
+  rule   = "client.TCP.DSTPORT.EQ(22)"
+}
+
+resource "citrixadc_appflowpolicylabel" "tf_appflowpolicylabel" {
+  labelname       = "tf_policylabel"
+  policylabeltype = "OTHERTCP"
+}
+
+resource "citrixadc_appflowpolicylabel_appflowpolicy_binding" "tf_appflowpolicylabel_appflowpolicy_binding" {
+  labelname  = citrixadc_appflowpolicylabel.tf_appflowpolicylabel.labelname
+  policyname = citrixadc_appflowpolicy.tf_appflowpolicy.name
+  priority   = 30
 }
 ```
 
@@ -49,7 +49,7 @@ resource "citrixadc_appflowcollector" "tf_appflowcollector" {
 * `policyname` - (Required) Name of the AppFlow policy.
 * `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - (Optional) Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.
-* `invokelabelname` - (Optional) Name of the label to invoke if the current policy evaluates to TRUE.
+* `invoke_labelname` - (Optional) Name of the label to invoke if the current policy evaluates to TRUE.
 * `labeltype` - (Optional) Type of policy label to be invoked.
 * `priority` - (Optional) Specifies the priority of the policy.
 
@@ -58,7 +58,7 @@ resource "citrixadc_appflowcollector" "tf_appflowcollector" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appflowpolicylabel_appflowpolicy_binding. It is the concatenation of `labelname` and `policyname` attributes separated by a comma.
+* `id` - The id of the appflowpolicylabel_appflowpolicy_binding is the concatenation of `labelname` and `policyname` attributes separated by comma.
 
 
 ## Import

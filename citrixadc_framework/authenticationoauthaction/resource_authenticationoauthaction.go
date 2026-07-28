@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *AuthenticationoauthactionResource) Create(ctx context.Context, req reso
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationoauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationoauthactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationoauthaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *AuthenticationoauthactionResource) Read(ctx context.Context, req resour
 
 	tflog.Debug(ctx, "Reading authenticationoauthaction resource")
 
-	r.readAuthenticationoauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationoauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -121,6 +134,7 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Allowedalgorithms.Equal(state.Allowedalgorithms) {
 		tflog.Debug(ctx, fmt.Sprintf("allowedalgorithms has changed for authenticationoauthaction"))
 		hasChange = true
@@ -199,7 +213,11 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Authentication.Equal(state.Authentication) {
 		tflog.Debug(ctx, fmt.Sprintf("authentication has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authorizationendpoint.Equal(state.Authorizationendpoint) {
 		tflog.Debug(ctx, fmt.Sprintf("authorizationendpoint has changed for authenticationoauthaction"))
@@ -263,15 +281,27 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Oauthtype.Equal(state.Oauthtype) {
 		tflog.Debug(ctx, fmt.Sprintf("oauthtype has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Oauthtype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "oauthtype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pkce.Equal(state.Pkce) {
 		tflog.Debug(ctx, fmt.Sprintf("pkce has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Pkce.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "pkce")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Refreshinterval.Equal(state.Refreshinterval) {
 		tflog.Debug(ctx, fmt.Sprintf("refreshinterval has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Refreshinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refreshinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Requestattribute.Equal(state.Requestattribute) {
 		tflog.Debug(ctx, fmt.Sprintf("requestattribute has changed for authenticationoauthaction"))
@@ -283,7 +313,11 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Skewtime.Equal(state.Skewtime) {
 		tflog.Debug(ctx, fmt.Sprintf("skewtime has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Skewtime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "skewtime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tenantid.Equal(state.Tenantid) {
 		tflog.Debug(ctx, fmt.Sprintf("tenantid has changed for authenticationoauthaction"))
@@ -295,7 +329,11 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 	}
 	if !data.Tokenendpointauthmethod.Equal(state.Tokenendpointauthmethod) {
 		tflog.Debug(ctx, fmt.Sprintf("tokenendpointauthmethod has changed for authenticationoauthaction"))
-		hasChange = true
+		if config.Tokenendpointauthmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tokenendpointauthmethod")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Userinfourl.Equal(state.Userinfourl) {
 		tflog.Debug(ctx, fmt.Sprintf("userinfourl has changed for authenticationoauthaction"))
@@ -326,8 +364,24 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 		tflog.Debug(ctx, "No changes detected for authenticationoauthaction resource, skipping update")
 	}
 
+	// Issue a single batched unset for attributes removed from config so the
+	// appliance reverts them to their defaults. Update-then-unset ordering
+	// ensures any default the update payload carried is superseded.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationoauthaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationoauthaction attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readAuthenticationoauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationoauthactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationoauthaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -356,7 +410,7 @@ func (r *AuthenticationoauthactionResource) Delete(ctx context.Context, req reso
 }
 
 // Helper function to read authenticationoauthaction data from API
-func (r *AuthenticationoauthactionResource) readAuthenticationoauthactionFromApi(ctx context.Context, data *AuthenticationoauthactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationoauthactionResource) readAuthenticationoauthactionFromApi(ctx context.Context, data *AuthenticationoauthactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -366,10 +420,14 @@ func (r *AuthenticationoauthactionResource) readAuthenticationoauthactionFromApi
 
 	getResponseData, err = r.client.FindResource(service.Authenticationoauthaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationoauthaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationoauthactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

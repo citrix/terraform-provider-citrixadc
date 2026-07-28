@@ -58,6 +58,29 @@ func TestAccAuditsyslogaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditsyslogaction_import(t *testing.T) {
+	const resAddr = "citrixadc_auditsyslogaction.tf_syslogaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogaction_basic_step1,
+			},
+			{
+				Config:            testAccAuditsyslogaction_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// httpauthtoken_wo_version is a write-only version tracker held only
+				// in state; NITRO never echoes it back, so it cannot round-trip on import.
+				ImportStateVerifyIgnore: []string{"httpauthtoken_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuditsyslogactionExist(n string, id *string, expectedValues map[string]interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -279,6 +302,31 @@ func TestAccAuditsyslogaction_httpauthtoken_backward_compat(t *testing.T) {
 				Config: testAccAuditsyslogaction_httpauthtoken_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_secret", nil, map[string]interface{}{"name": "tf_syslogaction_secret", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuditsyslogaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuditsyslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuditsyslogaction_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuditsyslogaction_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, nil),
 				),
 			},
 		},

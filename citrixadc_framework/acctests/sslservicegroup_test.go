@@ -34,7 +34,6 @@ const testAccSslservicegroup_basic = `
 		serverauth = "ENABLED"
 		sendclosenotify = "YES"
 		strictsigdigestcheck = "ENABLED"
-		sslclientlogs = "ENABLED"
 	}
 
 	resource "citrixadc_servicegroup" "tf_servicegroup" {
@@ -64,7 +63,6 @@ func TestAccSslservicegroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_sslservicegroup", "serverauth", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_sslservicegroup", "sendclosenotify", "YES"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_sslservicegroup", "strictsigdigestcheck", "ENABLED"),
-					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_sslservicegroup", "sslclientlogs", "ENABLED"),
 				),
 			},
 		},
@@ -145,7 +143,6 @@ const testAccSslservicegroupDataSource_basic = `
 		serverauth = "ENABLED"
 		sendclosenotify = "YES"
 		strictsigdigestcheck = "ENABLED"
-		sslclientlogs = "ENABLED"
 	}
 
 	resource "citrixadc_servicegroup" "tf_servicegroup" {
@@ -177,7 +174,6 @@ func TestAccSslservicegroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "serverauth", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "sendclosenotify", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "strictsigdigestcheck", "ENABLED"),
-					resource.TestCheckResourceAttr("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "sslclientlogs", "ENABLED"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_sslservicegroup.tf_sslservicegroup_datasource", "id"),
 				),
 			},

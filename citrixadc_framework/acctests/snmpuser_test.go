@@ -89,6 +89,28 @@ func TestAccSnmpuser_basic(t *testing.T) {
 	})
 }
 
+func TestAccSnmpuser_import(t *testing.T) {
+	const resAddr = "citrixadc_snmpuser.tf_snmpuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmpuser_basic},
+			{
+				Config:            testAccSnmpuser_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Secret attributes (authpasswd/privpasswd) are never returned by the
+				// NITRO API, and their write-only version trackers are not populated on
+				// import, so none of these can round-trip through import.
+				ImportStateVerifyIgnore: []string{"authpasswd", "privpasswd", "authpasswd_wo_version", "privpasswd_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckSnmpuserExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -335,3 +357,28 @@ data "citrixadc_snmpuser" "tf_snmpuser_ds" {
 	depends_on = [citrixadc_snmpuser.tf_snmpuser_ds]
 }
 `
+
+func TestAccSnmpuser_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmpuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmpuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpuserExist("citrixadc_snmpuser.tf_snmpuser", nil),
+				),
+			},
+		},
+	})
+}

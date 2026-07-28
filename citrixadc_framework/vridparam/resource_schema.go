@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,45 +31,73 @@ func (r *VridparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"deadinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Number of seconds after which a peer node in active-active mode is marked down if vrrp advertisements are not received from the peer node.",
 			},
 			"hellointerval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1000),
+				Computed:    true,
 				Description: "Interval, in milliseconds, between vrrp advertisement messages sent to the peer node in active-active mode.",
 			},
 			"sendtomaster": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Forward packets to the master node, in an active-active mode configuration, if the virtual server is in the backup state and sharing is disabled.",
 			},
 		},
 	}
 }
 
-func vridparamGetThePayloadFromtheConfig(ctx context.Context, data *VridparamResourceModel) network.Vridparam {
-	tflog.Debug(ctx, "In vridparamGetThePayloadFromtheConfig Function")
+func vridparamGetThePayloadFromthePlan(ctx context.Context, data *VridparamResourceModel) network.Vridparam {
+	tflog.Debug(ctx, "In vridparamGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vridparam := network.Vridparam{}
-	if !data.Deadinterval.IsNull() {
+	if !data.Deadinterval.IsNull() && !data.Deadinterval.IsUnknown() {
 		vridparam.Deadinterval = utils.IntPtr(int(data.Deadinterval.ValueInt64()))
 	}
-	if !data.Hellointerval.IsNull() {
+	if !data.Hellointerval.IsNull() && !data.Hellointerval.IsUnknown() {
 		vridparam.Hellointerval = utils.IntPtr(int(data.Hellointerval.ValueInt64()))
 	}
-	if !data.Sendtomaster.IsNull() {
+	if !data.Sendtomaster.IsNull() && !data.Sendtomaster.IsUnknown() {
 		vridparam.Sendtomaster = data.Sendtomaster.ValueString()
 	}
 
 	return vridparam
 }
 
+// vridparamSetAttrFromGet populates the resource model from the GET response.
+// This is a settable singleton: the three attributes are Optional+Computed and the
+// GET (get-all) response always echoes the server-applied values (or defaults), so
+// we faithfully copy them. The synthetic ID is set exactly once in Create (Pattern 6),
+// so it is NOT recomputed here.
 func vridparamSetAttrFromGet(ctx context.Context, data *VridparamResourceModel, getResponseData map[string]interface{}) *VridparamResourceModel {
 	tflog.Debug(ctx, "In vridparamSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["deadinterval"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Deadinterval = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["hellointerval"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Hellointerval = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["sendtomaster"]; ok && val != nil {
+		data.Sendtomaster = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// vridparamSetAttrFromGetForDatasource faithfully copies every field from the GET
+// response and sets the synthetic ID, because the datasource never calls Create
+// (Pattern 7).
+func vridparamSetAttrFromGetForDatasource(ctx context.Context, data *VridparamResourceModel, getResponseData map[string]interface{}) *VridparamResourceModel {
+	tflog.Debug(ctx, "In vridparamSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["deadinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Deadinterval = types.Int64Value(intVal)
@@ -92,8 +118,7 @@ func vridparamSetAttrFromGet(ctx context.Context, data *VridparamResourceModel, 
 		data.Sendtomaster = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Datasource has no Create, so set the synthetic ID here.
 	data.Id = types.StringValue("vridparam-config")
 
 	return data

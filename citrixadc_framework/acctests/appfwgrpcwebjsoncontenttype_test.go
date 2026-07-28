@@ -66,6 +66,27 @@ func TestAccAppfwgrpcwebjsoncontenttype_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwgrpcwebjsoncontenttype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwgrpcwebjsoncontenttype.tf_appfwgrpcwebjsoncontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwgrpcwebjsoncontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwgrpcwebjsoncontenttype_basic_step1,
+			},
+			{
+				Config:                  testAccAppfwgrpcwebjsoncontenttype_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwgrpcwebjsoncontenttypeExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

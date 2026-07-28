@@ -10,8 +10,8 @@ The gslbservicegroup_lbmonitor_binding data source allows you to retrieve inform
 
 ```terraform
 data "citrixadc_gslbservicegroup_lbmonitor_binding" "tf_gslbservicegroup_lbmonitor_binding" {
-  servicegroupname = "test_gslbvservicegroup"
-  monitor_name     = "tf_monitor"
+  servicegroupname = "gslb_sg1"
+  monitor_name     = "http_mon1"
 }
 
 output "servicegroupname" {
@@ -47,4 +47,4 @@ In addition to the arguments, the following attributes are available:
 * `siteprefix` - The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 * `state` - Initial state of the service after binding.
 * `weight` - Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
-* `id` - The id of the gslbservicegroup_lbmonitor_binding. It is a system-generated identifier.
+* `id` - The ID of the gslbservicegroup_lbmonitor_binding. It is the concatenation of the `servicegroupname` and `monitor_name` attributes separated by a comma.

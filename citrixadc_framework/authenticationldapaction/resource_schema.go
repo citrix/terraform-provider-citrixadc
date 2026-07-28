@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -180,16 +181,19 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			"authentication": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Perform LDAP authentication.\nIf authentication is disabled, any LDAP authentication attempt returns authentication success if the user is found.\nCAUTION! Authentication should be disabled only for authorization group extraction or where other (non-LDAP) authentication methods are in use and either bound to a primary list or flagged as secondary.",
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Number of seconds the Citrix ADC waits for a response from the RADIUS server.",
 			},
 			"cloudattributes": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "The Citrix ADC uses the cloud attributes to extract additional attributes from LDAP servers required for Citrix Cloud operations",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -200,11 +204,13 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			"email": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("mail"),
 				Description: "The Citrix ADC uses the email attribute to query the Active Directory for the email id of a user",
 			},
 			"followreferrals": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Setting this option to ON enables following LDAP referrals received from the LDAP server.",
 			},
 			"groupattrname": schema.StringAttribute{
@@ -299,6 +305,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			"nestedgroupextraction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Allow nested group extraction, in which the Citrix ADC queries external LDAP servers to determine whether a group is part of another group.",
 			},
 			"otpsecret": schema.StringAttribute{
@@ -309,6 +316,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			"passwdchange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Allow password change requests.",
 			},
 			"pushservice": schema.StringAttribute{
@@ -319,11 +327,13 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			"referraldnslookup": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("A-REC"),
 				Description: "Specifies the DNS Record lookup Type for the referrals",
 			},
 			"requireuser": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Require a successful user search for authentication.\nCAUTION!  This field should be set to NO only if usersearch not required [Both username validation as well as password validation skipped] and (non-LDAP) authentication methods are in use and either bound to a primary list or flagged as secondary.",
 			},
 			"searchfilter": schema.StringAttribute{
@@ -334,6 +344,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			"sectype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PLAINTEXT"),
 				Description: "Type of security used for communications between the Citrix ADC and the LDAP server. For the PLAINTEXT setting, no encryption is required.",
 			},
 			"serverip": schema.StringAttribute{
@@ -349,6 +360,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(389),
 				Description: "Port on which the LDAP server accepts connections.",
 			},
 			"sshpublickey": schema.StringAttribute{
@@ -374,6 +386,7 @@ func (r *AuthenticationldapactionResource) Schema(ctx context.Context, req resou
 			"validateservercert": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "When to validate LDAP server certs",
 			},
 		},

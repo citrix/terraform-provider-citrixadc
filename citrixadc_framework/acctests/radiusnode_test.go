@@ -47,6 +47,28 @@ func TestAccRadiusnode_basic(t *testing.T) {
 	})
 }
 
+func TestAccRadiusnode_import(t *testing.T) {
+	const resAddr = "citrixadc_radiusnode.tf_radiusnode"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRadiusnodeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRadiusnode_basic},
+			{
+				Config:            testAccRadiusnode_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// radkey is a Sensitive secret that NITRO never echoes back, and
+				// radkey_wo_version is a client-side version tracker that is not
+				// returned by the API - neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"radkey", "radkey_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckRadiusnodeExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -183,6 +205,31 @@ func TestAccRadiusnode_radkey_backward_compat(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode_ephem", nil),
 					resource.TestCheckResourceAttr("citrixadc_radiusnode.tf_radiusnode_ephem", "nodeprefix", "10.20.30.0/24"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRadiusnode_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRadiusnodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRadiusnode_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRadiusnode_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRadiusnodeExist("citrixadc_radiusnode.tf_radiusnode", nil),
 				),
 			},
 		},

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -69,11 +70,13 @@ func (r *RdpserverprofileResource) Schema(ctx context.Context, req resource.Sche
 			"rdpport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3389),
 				Description: "TCP port on which the RDP connection is established.",
 			},
 			"rdpredirection": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLE"),
 				Description: "Enable/Disable RDP redirection support. This needs to be enabled in presence of connection broker or session directory with IP cookie(msts cookie) based redirection support",
 			},
 		},
@@ -93,6 +96,30 @@ func rdpserverprofileGetThePayloadFromthePlan(ctx context.Context, data *Rdpserv
 	}
 	// Skip write-only attribute: psk_wo
 	// Skip version tracker attribute: psk_wo_version
+	if !data.Rdpip.IsNull() && !data.Rdpip.IsUnknown() {
+		rdpserverprofile.Rdpip = data.Rdpip.ValueString()
+	}
+	if !data.Rdpport.IsNull() && !data.Rdpport.IsUnknown() {
+		rdpserverprofile.Rdpport = utils.IntPtr(int(data.Rdpport.ValueInt64()))
+	}
+	if !data.Rdpredirection.IsNull() && !data.Rdpredirection.IsUnknown() {
+		rdpserverprofile.Rdpredirection = data.Rdpredirection.ValueString()
+	}
+
+	return rdpserverprofile
+}
+
+func rdpserverprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *RdpserverprofileResourceModel) rdp.Rdpserverprofile {
+	tflog.Debug(ctx, "In rdpserverprofileGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model (NITRO-updatable fields only)
+	rdpserverprofile := rdp.Rdpserverprofile{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		rdpserverprofile.Name = data.Name.ValueString()
+	}
+	if !data.Psk.IsNull() && !data.Psk.IsUnknown() {
+		rdpserverprofile.Psk = data.Psk.ValueString()
+	}
 	if !data.Rdpip.IsNull() && !data.Rdpip.IsUnknown() {
 		rdpserverprofile.Rdpip = data.Rdpip.ValueString()
 	}

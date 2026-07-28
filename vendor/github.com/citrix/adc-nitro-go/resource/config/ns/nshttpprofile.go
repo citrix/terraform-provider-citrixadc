@@ -264,6 +264,10 @@ type Nshttpprofile struct {
 	* Choose whether to enable HTTP/2 Extended CONNECT mechanism.
 	*/
 	Http2extendedconnect string `json:"http2extendedconnect,omitempty"`
+	/**
+	* Timeout (in seconds) for HTTP/2 small-window stalled streams. Required to mitigate CVE-2026-13474.
+	*/
+	Http2smallwndtimeout *int `json:"http2smallwndtimeout,omitempty"`
 
 	//------- Read only Parameter ---------;
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *SnmpuserResource) Create(ctx context.Context, req resource.CreateReques
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readSnmpuserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpuserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpuser not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *SnmpuserResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading snmpuser resource")
 
-	r.readSnmpuserFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSnmpuserFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -171,7 +184,12 @@ func (r *SnmpuserResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	// Read the updated state back
-	r.readSnmpuserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpuserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpuser not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -200,7 +218,7 @@ func (r *SnmpuserResource) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 // Helper function to read snmpuser data from API
-func (r *SnmpuserResource) readSnmpuserFromApi(ctx context.Context, data *SnmpuserResourceModel, diags *diag.Diagnostics) {
+func (r *SnmpuserResource) readSnmpuserFromApi(ctx context.Context, data *SnmpuserResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -210,10 +228,14 @@ func (r *SnmpuserResource) readSnmpuserFromApi(ctx context.Context, data *Snmpus
 
 	getResponseData, err = r.client.FindResource(service.Snmpuser.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmpuser, got error: %s", err))
-		return
+		return false
 	}
 
 	snmpuserSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

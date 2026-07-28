@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -92,6 +93,7 @@ func (r *AuthenticationemailactionResource) Schema(ctx context.Context, req reso
 			"type": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("SMTP"),
 				Description: "Type of the email action. Default type is SMTP.",
 			},
 			"username": schema.StringAttribute{
@@ -104,6 +106,44 @@ func (r *AuthenticationemailactionResource) Schema(ctx context.Context, req reso
 
 func authenticationemailactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationemailactionResourceModel) authentication.Authenticationemailaction {
 	tflog.Debug(ctx, "In authenticationemailactionGetThePayloadFromthePlan Function")
+
+	// Create API request body from the model
+	authenticationemailaction := authentication.Authenticationemailaction{}
+	if !data.Content.IsNull() && !data.Content.IsUnknown() {
+		authenticationemailaction.Content = data.Content.ValueString()
+	}
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
+		authenticationemailaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
+	}
+	if !data.Emailaddress.IsNull() && !data.Emailaddress.IsUnknown() {
+		authenticationemailaction.Emailaddress = data.Emailaddress.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		authenticationemailaction.Name = data.Name.ValueString()
+	}
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
+		authenticationemailaction.Password = data.Password.ValueString()
+	}
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Serverurl.IsNull() && !data.Serverurl.IsUnknown() {
+		authenticationemailaction.Serverurl = data.Serverurl.ValueString()
+	}
+	if !data.Timeout.IsNull() && !data.Timeout.IsUnknown() {
+		authenticationemailaction.Timeout = utils.IntPtr(int(data.Timeout.ValueInt64()))
+	}
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
+		authenticationemailaction.Type = data.Type.ValueString()
+	}
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
+		authenticationemailaction.Username = data.Username.ValueString()
+	}
+
+	return authenticationemailaction
+}
+
+func authenticationemailactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationemailactionResourceModel) authentication.Authenticationemailaction {
+	tflog.Debug(ctx, "In authenticationemailactionGetTheUpdatablePayloadFromThePlan Function")
 
 	// Create API request body from the model
 	authenticationemailaction := authentication.Authenticationemailaction{}

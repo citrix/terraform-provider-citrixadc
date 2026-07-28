@@ -25,6 +25,7 @@ type GslbservicegroupLbmonitorBindingResourceModel struct {
 	Hashid           types.Int64  `tfsdk:"hashid"`
 	MonitorName      types.String `tfsdk:"monitor_name"`
 	Monstate         types.String `tfsdk:"monstate"`
+	Order            types.Int64  `tfsdk:"order"`
 	Passive          types.Bool   `tfsdk:"passive"`
 	Port             types.Int64  `tfsdk:"port"`
 	Publicip         types.String `tfsdk:"publicip"`
@@ -65,6 +66,14 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Monitor state.",
+			},
+			"order": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
+				Description: "Order number to be assigned to the gslb servicegroup member",
 			},
 			"passive": schema.BoolAttribute{
 				Optional: true,
@@ -147,6 +156,9 @@ func gslbservicegroup_lbmonitor_bindingGetThePayloadFromthePlan(ctx context.Cont
 	if !data.Monstate.IsNull() && !data.Monstate.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Monstate = data.Monstate.ValueString()
 	}
+	if !data.Order.IsNull() && !data.Order.IsUnknown() {
+		gslbservicegroup_lbmonitor_binding.Order = utils.IntPtr(int(data.Order.ValueInt64()))
+	}
 	if !data.Passive.IsNull() && !data.Passive.IsUnknown() {
 		gslbservicegroup_lbmonitor_binding.Passive = data.Passive.ValueBool()
 	}
@@ -196,6 +208,13 @@ func gslbservicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data 
 	} else {
 		data.Monstate = types.StringNull()
 	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	} else {
+		data.Order = types.Int64Null()
+	}
 	if val, ok := getResponseData["passive"]; ok && val != nil {
 		data.Passive = types.BoolValue(val.(bool))
 	} else {
@@ -206,10 +225,7 @@ func gslbservicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data 
 			data.Port = types.Int64Value(intVal)
 		}
 	} else {
-		// NITRO omits port when it is 0/default. Resolve to 0 so a user-configured
-		// "port = 0" matches and the Computed (unconfigured) case is satisfied,
-		// avoiding "inconsistent result after apply" / "still unknown" errors.
-		data.Port = types.Int64Value(0)
+		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["publicip"]; ok && val != nil {
 		data.Publicip = types.StringValue(val.(string))
@@ -246,8 +262,88 @@ func gslbservicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data 
 		data.Weight = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Composite ID order matches the legacy SDK v2 comma ID ("servicegroupname,monitor_name").
+	// ID is set once in Create / datasource Read, not here.
+
+	return data
+}
+
+// gslbservicegroup_lbmonitor_bindingSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response and sets the composite ID (the datasource has no Create).
+func gslbservicegroup_lbmonitor_bindingSetAttrFromGetForDatasource(ctx context.Context, data *GslbservicegroupLbmonitorBindingResourceModel, getResponseData map[string]interface{}) *GslbservicegroupLbmonitorBindingResourceModel {
+	tflog.Debug(ctx, "In gslbservicegroup_lbmonitor_bindingSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["hashid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Hashid = types.Int64Value(intVal)
+		}
+	} else {
+		data.Hashid = types.Int64Null()
+	}
+	if val, ok := getResponseData["monitor_name"]; ok && val != nil {
+		data.MonitorName = types.StringValue(val.(string))
+	} else {
+		data.MonitorName = types.StringNull()
+	}
+	if val, ok := getResponseData["monstate"]; ok && val != nil {
+		data.Monstate = types.StringValue(val.(string))
+	} else {
+		data.Monstate = types.StringNull()
+	}
+	if val, ok := getResponseData["order"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Order = types.Int64Value(intVal)
+		}
+	} else {
+		data.Order = types.Int64Null()
+	}
+	if val, ok := getResponseData["passive"]; ok && val != nil {
+		data.Passive = types.BoolValue(val.(bool))
+	} else {
+		data.Passive = types.BoolNull()
+	}
+	if val, ok := getResponseData["port"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Port = types.Int64Value(intVal)
+		}
+	} else {
+		data.Port = types.Int64Null()
+	}
+	if val, ok := getResponseData["publicip"]; ok && val != nil {
+		data.Publicip = types.StringValue(val.(string))
+	} else {
+		data.Publicip = types.StringNull()
+	}
+	if val, ok := getResponseData["publicport"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Publicport = types.Int64Value(intVal)
+		}
+	} else {
+		data.Publicport = types.Int64Null()
+	}
+	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+		data.Servicegroupname = types.StringValue(val.(string))
+	} else {
+		data.Servicegroupname = types.StringNull()
+	}
+	if val, ok := getResponseData["siteprefix"]; ok && val != nil {
+		data.Siteprefix = types.StringValue(val.(string))
+	} else {
+		data.Siteprefix = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["weight"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Weight = types.Int64Value(intVal)
+		}
+	} else {
+		data.Weight = types.Int64Null()
+	}
+
+	// Set ID for the datasource: servicegroupname,monitor_name
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))

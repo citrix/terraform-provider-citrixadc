@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -71,7 +72,12 @@ func (r *ApiprofileResource) Create(ctx context.Context, req resource.CreateRequ
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readApiprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readApiprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "apiprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,19 +95,28 @@ func (r *ApiprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading apiprofile resource")
 
-	r.readApiprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readApiprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ApiprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ApiprofileResourceModel
+	var data, state, config ApiprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config data to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -114,9 +129,14 @@ func (r *ApiprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Apivisibility.Equal(state.Apivisibility) {
 		tflog.Debug(ctx, fmt.Sprintf("apivisibility has changed for apiprofile"))
-		hasChange = true
+		if config.Apivisibility.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "apivisibility")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -136,8 +156,24 @@ func (r *ApiprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Debug(ctx, "No changes detected for apiprofile resource, skipping update")
 	}
 
+	// Unset any attributes that were removed from the configuration so they
+	// revert to their appliance defaults. Update-then-unset ordering ensures
+	// any default carried by the update payload is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Apiprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset apiprofile attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readApiprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readApiprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "apiprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -166,7 +202,7 @@ func (r *ApiprofileResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 // Helper function to read apiprofile data from API
-func (r *ApiprofileResource) readApiprofileFromApi(ctx context.Context, data *ApiprofileResourceModel, diags *diag.Diagnostics) {
+func (r *ApiprofileResource) readApiprofileFromApi(ctx context.Context, data *ApiprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -176,10 +212,15 @@ func (r *ApiprofileResource) readApiprofileFromApi(ctx context.Context, data *Ap
 
 	getResponseData, err = r.client.FindResource(service.Apiprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read apiprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	apiprofileSetAttrFromGet(ctx, data, getResponseData)
+
+	return true
 
 }

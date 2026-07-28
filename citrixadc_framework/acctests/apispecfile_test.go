@@ -71,6 +71,28 @@ func TestAccApispecfile_basic(t *testing.T) {
 	})
 }
 
+func TestAccApispecfile_import(t *testing.T) {
+	const resAddr = "citrixadc_apispecfile.tf_apispecfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doApiSpecPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApispecfileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccApispecfile_basic_step1},
+			{
+				Config:            testAccApispecfile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// `src` and `overwrite` are write-only Import-action inputs that
+				// NITRO does not echo back on GET, so they cannot round-trip
+				// through import.
+				ImportStateVerifyIgnore: []string{"overwrite", "src"},
+			},
+		},
+	})
+}
+
 func testAccCheckApispecfileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

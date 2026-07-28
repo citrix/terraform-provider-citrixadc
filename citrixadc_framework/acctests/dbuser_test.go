@@ -88,6 +88,28 @@ func TestAccDbuser_basic(t *testing.T) {
 	})
 }
 
+func TestAccDbuser_import(t *testing.T) {
+	const resAddr = "citrixadc_dbuser.tf_dbuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbuserDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDbuser_basic},
+			{
+				Config:            testAccDbuser_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password_wo_version is a write-only version tracker that NITRO
+				// does not return; on import there is no config to retain it from,
+				// so it cannot round-trip.
+				ImportStateVerifyIgnore: []string{"password_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckDbuserExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -258,6 +280,44 @@ func TestAccDbuser_password_wo_ephemeral(t *testing.T) {
 					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser_password_wo", nil),
 					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser_password_wo", "username", "tf_test_dbuser_password_wo"),
 					resource.TestCheckResourceAttr("citrixadc_dbuser.tf_dbuser_password_wo", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// testAccDbuser_upgrade_basic is the fixture for the SDK v2 -> Framework upgrade test.
+// It sets a password because password_wo_version is Optional+Computed with a default of 1:
+// upgrading from 2.2.0 state (which has no password_wo_version) resolves it null->1, which
+// triggers an in-place dbuser Update. The ADC requires a password on a dbuser update
+// (errorcode 1095 otherwise), so the upgrade fixture must carry one. (testAccDbuser_basic is
+// intentionally password-less and is used by the create/import tests.)
+const testAccDbuser_upgrade_basic = `
+	resource "citrixadc_dbuser" "tf_dbuser" {
+		username = "user1"
+		password = "1234"
+	}
+`
+
+func TestAccDbuser_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDbuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDbuser_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDbuser_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser", nil),
 				),
 			},
 		},

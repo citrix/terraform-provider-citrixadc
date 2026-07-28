@@ -21,6 +21,9 @@ func resourceCitrixAdcRnatparam() *schema.Resource {
 		ReadContext:   readRnatparamFunc,
 		UpdateContext: updateRnatparamFunc,
 		DeleteContext: deleteRnatparamFunc,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"srcippersistency": {
 				Type:     schema.TypeString,

@@ -68,6 +68,27 @@ func TestAccAaassoprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaassoprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_aaassoprofile.tf_aaassoprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaassoprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaassoprofile_basic},
+			{
+				Config:            testAccAaassoprofile_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// `password` is a sensitive attribute that NITRO does not echo back,
+				// so it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
 func testAccCheckAaassoprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -267,6 +288,31 @@ func TestAccAaassoprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaassoprofile.tf_aaassoprofile", "name", "myssoprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaassoprofile.tf_aaassoprofile", "username", "john"),
 					// password is not checked as it may be returned encrypted by the API
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaassoprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaassoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaassoprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaassoprofileExist("citrixadc_aaassoprofile.tf_aaassoprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaassoprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaassoprofileExist("citrixadc_aaassoprofile.tf_aaassoprofile", nil),
 				),
 			},
 		},

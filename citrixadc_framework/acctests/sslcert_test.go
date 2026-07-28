@@ -26,7 +26,7 @@ import (
 const testAccSslcert_basic = `
 
 	resource "citrixadc_sslcert" "tf_sslcert_ephem" {
-		certfile = "/nsconfig/ssl/rootcert21.cert"
+		certfile = "/nsconfig/ssl/rootcert211.cert"
 		reqfile  = "/nsconfig/ssl/rootcert2.req"
 		certtype = "ROOT_CERT"
 		keyfile  = "/nsconfig/ssl/rootcert2.key"
@@ -136,6 +136,31 @@ func TestAccSslcert_pempassphrase_wo_ephemeral(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcertExist("citrixadc_sslcert.tf_sslcert_ephem", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslcert.tf_sslcert_ephem", "pempassphrase_wo_version", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslcert_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of certfile at ADC!")
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { doSslcertkeyPreChecks(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslcert_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertExist("citrixadc_sslcert.tf_sslcert_ephem", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslcert_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertExist("citrixadc_sslcert.tf_sslcert_ephem", nil),
 				),
 			},
 		},

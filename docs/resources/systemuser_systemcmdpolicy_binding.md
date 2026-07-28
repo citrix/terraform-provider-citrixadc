@@ -4,9 +4,7 @@ subcategory: "System"
 
 # Resource: systemuser_systemcmdpolicy_binding
 
-The systemuser_systemcmdpolicy_binding resource is used to bind systemuser and systemcmdpolicy.
-
-~>  If you are using this resource to bind systemcmdpolicy to a systemuser, do not define the `cmdpolicybinding` attribute in the systemuser resource.
+This resource is used to bind systemuser and systemcmdpolicy.
 
 
 ## Example usage

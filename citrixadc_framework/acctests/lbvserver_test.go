@@ -249,6 +249,12 @@ func TestAccLbvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	// if isCluster {
 	// 	t.Skip("cluster ADC deployment")
 	// }
+	// Direct sslvserver_sslciphersuite bindings are only permitted when the SSL
+	// default profile is disabled; on a default-profile ADC the bind fails with
+	// errorcode 3740. Gate this test to the non-default-SSL-profile testbed.
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,

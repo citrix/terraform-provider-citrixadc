@@ -154,6 +154,27 @@ func TestAccCsvserver_lbvserver_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_lbvserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_lbvserver_binding.tf_csvserver_lbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_lbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_lbvserver_binding_basic,
+			},
+			{
+				Config:                  testAccCsvserver_lbvserver_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCsvserver_lbvserver_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -322,7 +343,7 @@ const testAccCsvserver_lbvserver_bindingDataSource_basic = `
 	}
 `
 
-func TestAcccsvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
+func TestAccCsvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -336,19 +357,6 @@ func TestAcccsvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver_lbvserver_binding.tf_csvserver_lbvserver_binding_ds_read", "id"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccCsvserver_lbvserver_binding_import(t *testing.T) {
-	const resAddr = "citrixadc_csvserver_lbvserver_binding.tf_csvserver_lbvserver_binding"
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckCsvserver_lbvserver_bindingDestroy,
-		Steps: []resource.TestStep{
-			{Config: testAccCsvserver_lbvserver_binding_basic},
-			{Config: testAccCsvserver_lbvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

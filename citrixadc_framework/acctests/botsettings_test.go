@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -86,6 +87,28 @@ func TestAccBotsettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "trapurllength", "33"),
 					resource.TestCheckResourceAttr("citrixadc_botsettings.default", "proxyusername", "testuser1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBotsettings_import(t *testing.T) {
+	const resAddr = "citrixadc_botsettings.default"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// botsettings resource do not have DELETE operation
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{Config: testAccBotsettings_basic},
+			{
+				Config:            testAccBotsettings_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// proxypassword_wo_version is a write-only version tracker stored in
+				// state but never returned by NITRO, so it cannot round-trip on import.
+				ImportStateVerifyIgnore: []string{"proxypassword_wo_version"},
 			},
 		},
 	})
@@ -284,4 +307,122 @@ func TestAccBotsettings_proxypassword_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccBotsettings_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccBotsettings_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotsettingsExist("citrixadc_botsettings.default", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotsettings_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotsettingsExist("citrixadc_botsettings.default", nil),
+				),
+			},
+		},
+	})
+}
+
+// Step 1: all unset-eligible attributes set to non-default values.
+const testAccBotsettings_unset_step1 = `
+	resource "citrixadc_botsettings" "tf_unset" {
+		defaultnonintrusiveprofile = "BOT_BYPASS"
+		proxyport                  = "3128"
+		signatureautoupdate        = "ON"
+		signatureurl               = "https://example.com/BotSignatureMapping.json"
+		trapurlautogenerate        = "ON"
+		trapurlinterval            = "7200"
+		trapurllength              = "64"
+	}
+`
+
+// Step 2: eligible attributes removed from config -> provider must unset them,
+// so the appliance reverts each to its NITRO default.
+const testAccBotsettings_unset_step2 = `
+	resource "citrixadc_botsettings" "tf_unset" {
+		# unset-eligible attributes removed from config -> provider issues ?action=unset
+	}
+`
+
+func TestAccBotsettings_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// botsettings resource has no DELETE operation
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccBotsettings_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotsettingsExist("citrixadc_botsettings.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "defaultnonintrusiveprofile", "BOT_BYPASS"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "proxyport", "3128"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "signatureautoupdate", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "signatureurl", "https://example.com/BotSignatureMapping.json"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "trapurlautogenerate", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "trapurlinterval", "7200"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "trapurllength", "64"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccBotsettings_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotsettingsExist("citrixadc_botsettings.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "defaultnonintrusiveprofile", "BOT_STATS"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "proxyport", "8080"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "signatureautoupdate", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "signatureurl", "https://nsbotsignatures.s3.amazonaws.com/BotSignatureMapping.json"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "trapurlautogenerate", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "trapurlinterval", "3600"),
+					resource.TestCheckResourceAttr("citrixadc_botsettings.tf_unset", "trapurllength", "32"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckBotsettingsADCValue("defaultnonintrusiveprofile", "BOT_STATS"),
+					testAccCheckBotsettingsADCValue("proxyport", "8080"),
+					testAccCheckBotsettingsADCValue("signatureautoupdate", "OFF"),
+					testAccCheckBotsettingsADCValue("signatureurl", "https://nsbotsignatures.s3.amazonaws.com/BotSignatureMapping.json"),
+					testAccCheckBotsettingsADCValue("trapurlautogenerate", "OFF"),
+					testAccCheckBotsettingsADCValue("trapurlinterval", "3600"),
+					testAccCheckBotsettingsADCValue("trapurllength", "32"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckBotsettingsADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+// botsettings is a singleton, so it is fetched with an empty resource name.
+func testAccCheckBotsettingsADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("botsettings", "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("botsettings not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("botsettings: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }

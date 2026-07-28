@@ -41,7 +41,7 @@ resource "citrixadc_sslcertreq" "tf_sslcertreq" {
 
 ### Using pempassphrase_wo (write-only/ephemeral - NOT persisted in state)
 
-The `pempassphrase_wo` attribute provides an ephemeral path for the PEM pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `pempassphrase_wo_version`.
+The `pempassphrase_wo` attribute provides an ephemeral path for the PEM pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `pempassphrase_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslcertreq_pempassphrase" {
@@ -80,7 +80,7 @@ resource "citrixadc_sslcertreq" "tf_sslcertreq" {
 
 ### Using challengepassword_wo (write-only/ephemeral - NOT persisted in state)
 
-The `challengepassword_wo` attribute provides an ephemeral path for the challenge password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `challengepassword_wo_version`.
+The `challengepassword_wo` attribute provides an ephemeral path for the challenge password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `challengepassword_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslcertreq_challengepassword" {

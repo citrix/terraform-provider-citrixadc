@@ -73,6 +73,30 @@ func TestAccAuthenticationnegotiateaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationnegotiateaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationnegotiateaction.tf_negotiateaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnegotiateactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnegotiateaction_add,
+			},
+			{
+				Config:            testAccAuthenticationnegotiateaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// domainuserpasswd is sensitive and never echoed back by NITRO;
+				// domainuserpasswd_wo_version is a config-only version tracker not
+				// populated from the API. Neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"domainuserpasswd", "domainuserpasswd_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationnegotiateactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -266,6 +290,31 @@ func TestAccAuthenticationnegotiateaction_domainuserpasswd_wo_ephemeral(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction_wo", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationnegotiateaction.tf_negotiateaction_wo", "domainuserpasswd_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationnegotiateaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationnegotiateactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationnegotiateaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationnegotiateaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction", nil),
 				),
 			},
 		},

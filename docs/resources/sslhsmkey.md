@@ -36,7 +36,7 @@ resource "citrixadc_sslhsmkey" "demo_sslhsmkey" {
 
 ### Using password_wo (write-only/ephemeral - NOT persisted in state)
 
-The `password_wo` attribute provides an ephemeral path for the HSM partition password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `password_wo_version`.
+The `password_wo` attribute provides an ephemeral path for the HSM partition password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `password_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslhsmkey_password" {
@@ -71,3 +71,12 @@ resource "citrixadc_sslhsmkey" "demo_sslhsmkey" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslhsmkey. It has the same value as the `hsmkeyname` attribute.
+
+
+## Import
+
+A sslhsmkey can be imported using its hsmkeyname, e.g.
+
+```shell
+terraform import citrixadc_sslhsmkey.tf_sslhsmkey hsmk1
+```

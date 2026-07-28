@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *RdpserverprofileResource) Create(ctx context.Context, req resource.Crea
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readRdpserverprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readRdpserverprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "rdpserverprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *RdpserverprofileResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading rdpserverprofile resource")
 
-	r.readRdpserverprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readRdpserverprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,6 +152,7 @@ func (r *RdpserverprofileResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	// Check secret attribute psk or its version tracker
 	if !data.Psk.Equal(state.Psk) {
 		tflog.Debug(ctx, fmt.Sprintf("psk has changed for rdpserverprofile"))
@@ -153,17 +167,25 @@ func (r *RdpserverprofileResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Rdpport.Equal(state.Rdpport) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpport has changed for rdpserverprofile"))
-		hasChange = true
+		if config.Rdpport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rdpport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rdpredirection.Equal(state.Rdpredirection) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpredirection has changed for rdpserverprofile"))
-		hasChange = true
+		if config.Rdpredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rdpredirection")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		rdpserverprofile := rdpserverprofileGetThePayloadFromthePlan(ctx, &data)
+		rdpserverprofile := rdpserverprofileGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		rdpserverprofileGetThePayloadFromtheConfig(ctx, &config, &rdpserverprofile)
 		// Make API call
@@ -180,8 +202,24 @@ func (r *RdpserverprofileResource) Update(ctx context.Context, req resource.Upda
 		tflog.Debug(ctx, "No changes detected for rdpserverprofile resource, skipping update")
 	}
 
+	// Issue a single batched unset for attributes removed from config so the
+	// appliance reverts them to their defaults. Update-then-unset ordering
+	// ensures any default the update payload carried is superseded.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Rdpserverprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset rdpserverprofile attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readRdpserverprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readRdpserverprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "rdpserverprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -210,7 +248,7 @@ func (r *RdpserverprofileResource) Delete(ctx context.Context, req resource.Dele
 }
 
 // Helper function to read rdpserverprofile data from API
-func (r *RdpserverprofileResource) readRdpserverprofileFromApi(ctx context.Context, data *RdpserverprofileResourceModel, diags *diag.Diagnostics) {
+func (r *RdpserverprofileResource) readRdpserverprofileFromApi(ctx context.Context, data *RdpserverprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -220,10 +258,14 @@ func (r *RdpserverprofileResource) readRdpserverprofileFromApi(ctx context.Conte
 
 	getResponseData, err = r.client.FindResource(service.Rdpserverprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read rdpserverprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	rdpserverprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

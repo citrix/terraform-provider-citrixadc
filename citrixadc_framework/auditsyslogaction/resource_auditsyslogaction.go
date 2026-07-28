@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *AuditsyslogactionResource) Create(ctx context.Context, req resource.Cre
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuditsyslogactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuditsyslogactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "auditsyslogaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *AuditsyslogactionResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading auditsyslogaction resource")
 
-	r.readAuditsyslogactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuditsyslogactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -273,7 +286,12 @@ func (r *AuditsyslogactionResource) Update(ctx context.Context, req resource.Upd
 	}
 
 	// Read the updated state back
-	r.readAuditsyslogactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuditsyslogactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "auditsyslogaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -302,7 +320,7 @@ func (r *AuditsyslogactionResource) Delete(ctx context.Context, req resource.Del
 }
 
 // Helper function to read auditsyslogaction data from API
-func (r *AuditsyslogactionResource) readAuditsyslogactionFromApi(ctx context.Context, data *AuditsyslogactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuditsyslogactionResource) readAuditsyslogactionFromApi(ctx context.Context, data *AuditsyslogactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -312,10 +330,15 @@ func (r *AuditsyslogactionResource) readAuditsyslogactionFromApi(ctx context.Con
 
 	getResponseData, err = r.client.FindResource(service.Auditsyslogaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read auditsyslogaction, got error: %s", err))
-		return
+		return false
 	}
 
 	auditsyslogactionSetAttrFromGet(ctx, data, getResponseData)
+
+	return true
 
 }

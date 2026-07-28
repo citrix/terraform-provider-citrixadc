@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -99,6 +100,30 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_basic(t *testing.T) 
 	})
 }
 
+func TestAccGslbservicegroup_gslbservicegroupmember_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic,
+			},
+			{
+				Config:            testAccGslbservicegroup_gslbservicegroupmember_binding_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// The resource Read/SetAttrFromGet preserves identity fields from prior
+				// state and does not repopulate them from the ID during import, so these
+				// RequiresReplace identity attributes cannot round-trip on a bare import.
+				ImportStateVerifyIgnore: []string{"port", "servername", "servicegroupname"},
+			},
+		},
+	})
+}
+
 func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -125,16 +150,17 @@ func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(n string, 
 		}
 
 		bindingId := rs.Primary.ID
-		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicegroupname", "servername", "ip", "port"}, []string{"servername", "ip", "port"})
 		if err != nil {
-			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
+			return err
 		}
 		servicegroupname := idMap["servicegroupname"]
+
 		servername := idMap["servername"]
 
 		port := 0
-		if p, ok := idMap["port"]; ok && p != "" {
-			if port, err = strconv.Atoi(p); err != nil {
+		if portStr, ok := idMap["port"]; ok && portStr != "" {
+			if port, err = strconv.Atoi(portStr); err != nil {
 				return err
 			}
 		}
@@ -187,16 +213,18 @@ func testAccCheckGslbservicegroup_gslbservicegroupmember_bindingNotExist(n strin
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		idMap, _, err := utils.ParseIdString(id, []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
-		if err != nil {
-			return fmt.Errorf("Error parsing ID %v: %v", id, err)
+		if !strings.Contains(id, ",") {
+			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		servicegroupname := idMap["servicegroupname"]
-		servername := idMap["servername"]
+
+		idSlice := strings.SplitN(id, ",", 3)
+		servicegroupname := idSlice[0]
+
+		servername := idSlice[1]
 
 		port := 0
-		if p, ok := idMap["port"]; ok && p != "" {
-			if port, err = strconv.Atoi(p); err != nil {
+		if len(idSlice) == 3 {
+			if port, err = strconv.Atoi(idSlice[2]); err != nil {
 				return err
 			}
 		}
@@ -294,71 +322,6 @@ const testAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic = `
 	}
 `
 
-const testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_basic = `
-
-	resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
-		servicegroupname = "test_gslbvservicegroup"
-		servicetype      = "HTTP"
-		cip              = "DISABLED"
-		healthmonitor    = "NO"
-		sitename         = citrixadc_gslbsite.site_local.sitename
-	}
-	resource "citrixadc_gslbsite" "site_local" {
-		sitename        = "Site-Local"
-		siteipaddress   = "172.31.96.234"
-		sessionexchange = "DISABLED"
-		sitepassword = "password123"
-	}
-	resource "citrixadc_server" "tf_server" {
-		name = "tf_server"
-		ipaddress = "192.168.11.13"
-	}
-
-	resource "citrixadc_gslbservicegroup_gslbservicegroupmember_binding" "tf_binding" {
-		servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
-		servername       = citrixadc_server.tf_server.name
-		port             = 60
-	}
-
-`
-
-// TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade verifies that a
-// resource created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
-// correctly refreshed/planned/applied by the current (framework-muxed) provider, and that
-// the ID is upgraded to the new key:value format on Read.
-func TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		CheckDestroy: testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
-		Steps: []resource.TestStep{
-			{
-				// Step 1: create with the last SDK v2 release -> legacy comma-separated ID.
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {
-						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
-					},
-				},
-				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_basic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist("citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", nil),
-					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "id", "test_gslbvservicegroup,tf_server,60"),
-				),
-			},
-			{
-				// Step 2: same config through the current (framework) provider. Read exercises
-				// ParseIdString on the legacy ID and recomputes the ID to the new key:value format.
-				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_basic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist("citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", nil),
-					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "id", "servicegroupname:test_gslbvservicegroup,servername:tf_server,port:60"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -377,15 +340,167 @@ func TestAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic(t *t
 	})
 }
 
-func TestAccGslbservicegroup_gslbservicegroupmember_binding_import(t *testing.T) {
+// ---------------------------------------------------------------------------
+// SDK v2 -> Framework state-upgrade tests.
+//
+// The last SDK v2 release (citrix/citrixadc 2.2.0) wrote a legacy 3-part
+// positional id "servicegroupname,<servername-or-ip>,port". These tests verify
+// the current Framework provider upgrades that state cleanly: it parses the
+// legacy id, locates the member, rewrites the id to the new key:value form, and
+// produces an empty follow-up plan (no spurious replace / NITRO 273). Both the
+// servername-bound and ip-bound (ADC auto-names server == ip) paths are covered.
+// ---------------------------------------------------------------------------
+
+const testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_servername = `
+	resource "citrixadc_gslbsite" "site_local" {
+		sitename        = "Site-Local"
+		siteipaddress   = "172.31.96.234"
+		sessionexchange = "DISABLED"
+		sitepassword    = "password123"
+	}
+	resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+		servicegroupname = "test_gslbvservicegroup"
+		servicetype      = "HTTP"
+		cip              = "DISABLED"
+		healthmonitor    = "NO"
+		sitename         = citrixadc_gslbsite.site_local.sitename
+	}
+	resource "citrixadc_server" "tf_server" {
+		name      = "tf_server"
+		ipaddress = "192.168.11.13"
+	}
+	resource "citrixadc_gslbservicegroup_gslbservicegroupmember_binding" "tf_binding" {
+		servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+		servername       = citrixadc_server.tf_server.name
+		port             = 60
+	}
+`
+
+func TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade(t *testing.T) {
 	const resAddr = "citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy:             testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
 		Steps: []resource.TestStep{
-			{Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic},
-			{Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{
+				// Step 1: create with the last SDK v2 release -> legacy 3-part id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_servername,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resAddr, "id", "test_gslbvservicegroup,tf_server,60"),
+				),
+			},
+			{
+				// Step 2: manage the SAME config with the current Framework provider.
+				// Read parses the legacy id, locates the member, and rewrites the id to
+				// the new key:value form. Plan must be empty (no replace / 273).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_servername,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(resAddr, nil),
+					resource.TestCheckResourceAttr(resAddr, "id", "ip:,port:60,servername:tf_server,servicegroupname:test_gslbvservicegroup"),
+					resource.TestCheckResourceAttr(resAddr, "servername", "tf_server"),
+					resource.TestCheckResourceAttr(resAddr, "port", "60"),
+				),
+			},
 		},
 	})
+}
+
+const testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_ip = `
+	resource "citrixadc_gslbsite" "site_local" {
+		sitename        = "Site-Local"
+		siteipaddress   = "172.31.96.234"
+		sessionexchange = "DISABLED"
+		sitepassword    = "password123"
+	}
+	resource "citrixadc_gslbservicegroup" "tf_gslbservicegroup" {
+		servicegroupname = "test_gslbvservicegroup"
+		servicetype      = "HTTP"
+		cip              = "DISABLED"
+		healthmonitor    = "NO"
+		sitename         = citrixadc_gslbsite.site_local.sitename
+	}
+	resource "citrixadc_gslbservicegroup_gslbservicegroupmember_binding" "tf_binding" {
+		servicegroupname = citrixadc_gslbservicegroup.tf_gslbservicegroup.servicegroupname
+		ip               = "192.168.11.14"
+		port             = 61
+	}
+`
+
+func TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade_ipBound(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbservicegroup_gslbservicegroupmember_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create by IP with the last SDK v2 release. ADC auto-names the
+				// server == ip; the legacy id is "servicegroupname,<ip>,port".
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_ip,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resAddr, "id", "test_gslbvservicegroup,192.168.11.14,61"),
+				),
+			},
+			{
+				// Step 2: manage the SAME config with the current Framework provider.
+				// The legacy token equals the member's ip, so Read resolves it to ip
+				// (servername null) and rewrites the id. Plan must be empty.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_ip,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbmemberExistByIp(resAddr, "192.168.11.14", 61),
+					resource.TestCheckResourceAttr(resAddr, "id", "ip:192.168.11.14,port:61,servername:,servicegroupname:test_gslbvservicegroup"),
+					resource.TestCheckResourceAttr(resAddr, "ip", "192.168.11.14"),
+					resource.TestCheckResourceAttr(resAddr, "port", "61"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckGslbmemberExistByIp verifies (via the NITRO client) that a member
+// with the given ip and port exists under the binding's servicegroupname. Used by
+// the ip-bound upgrade test, where the canonical id carries an empty servername
+// segment and the generic servername-based Exist helper would not match.
+func testAccCheckGslbmemberExistByIp(n, ip string, port int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No gslbservicegroup_gslbservicegroupmember_binding id is set")
+		}
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"servicegroupname", "servername", "ip", "port"}, []string{"servername", "ip", "port"})
+		if err != nil {
+			return err
+		}
+		findParams := service.FindParams{
+			ResourceType:             "gslbservicegroup_gslbservicegroupmember_binding",
+			ResourceName:             idMap["servicegroupname"],
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		for _, v := range dataArr {
+			portEqual := int(v["port"].(float64)) == port
+			ipEqual := v["ip"] == ip || v["servername"] == ip
+			if portEqual && ipEqual {
+				return nil
+			}
+		}
+		return fmt.Errorf("gslbservicegroup_gslbservicegroupmember_binding ip=%s port=%d not found", ip, port)
+	}
 }

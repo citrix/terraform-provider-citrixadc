@@ -55,6 +55,7 @@ func (r *AuthenticationcaptchaactionResource) Schema(ctx context.Context, req re
 			"scorethreshold": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "This is the score threshold value for recaptcha v3.",
 			},
 			"secretkey": schema.StringAttribute{
@@ -102,6 +103,37 @@ func (r *AuthenticationcaptchaactionResource) Schema(ctx context.Context, req re
 
 func authenticationcaptchaactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationcaptchaactionResourceModel) authentication.Authenticationcaptchaaction {
 	tflog.Debug(ctx, "In authenticationcaptchaactionGetThePayloadFromthePlan Function")
+
+	// Create API request body from the model
+	authenticationcaptchaaction := authentication.Authenticationcaptchaaction{}
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
+		authenticationcaptchaaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		authenticationcaptchaaction.Name = data.Name.ValueString()
+	}
+	if !data.Scorethreshold.IsNull() && !data.Scorethreshold.IsUnknown() {
+		authenticationcaptchaaction.Scorethreshold = utils.IntPtr(int(data.Scorethreshold.ValueInt64()))
+	}
+	if !data.Secretkey.IsNull() && !data.Secretkey.IsUnknown() {
+		authenticationcaptchaaction.Secretkey = data.Secretkey.ValueString()
+	}
+	// Skip write-only attribute: secretkey_wo
+	// Skip version tracker attribute: secretkey_wo_version
+	if !data.Serverurl.IsNull() && !data.Serverurl.IsUnknown() {
+		authenticationcaptchaaction.Serverurl = data.Serverurl.ValueString()
+	}
+	if !data.Sitekey.IsNull() && !data.Sitekey.IsUnknown() {
+		authenticationcaptchaaction.Sitekey = data.Sitekey.ValueString()
+	}
+	// Skip write-only attribute: sitekey_wo
+	// Skip version tracker attribute: sitekey_wo_version
+
+	return authenticationcaptchaaction
+}
+
+func authenticationcaptchaactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationcaptchaactionResourceModel) authentication.Authenticationcaptchaaction {
+	tflog.Debug(ctx, "In authenticationcaptchaactionGetTheUpdatablePayloadFromThePlan Function")
 
 	// Create API request body from the model
 	authenticationcaptchaaction := authentication.Authenticationcaptchaaction{}

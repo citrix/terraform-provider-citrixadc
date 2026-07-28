@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -67,6 +69,28 @@ func TestAccAuthenticationemailaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "username", "username1@abc.com"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "serverurl", "www.example1.com"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationemailaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationemailaction.tf_emailaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationemailaction_add},
+			{
+				Config:            testAccAuthenticationemailaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password is a secret NITRO never echoes back; password_wo_version is a
+				// local write-only version tracker; timeout is not returned by the NITRO
+				// GET for this action, so none of them can round-trip through import.
+				ImportStateVerifyIgnore: []string{"password", "password_wo_version", "timeout"},
 			},
 		},
 	})
@@ -291,6 +315,111 @@ func TestAccAuthenticationemailaction_password_wo_ephemeral(t *testing.T) {
 					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "name", "tf_emailaction"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_emailaction", "password_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+// The only unset-eligible attribute for this resource is `type` (default SMTP).
+// Valid NITRO values are SMTP and ATHENA. ATHENA (and SMTP) require an http(s)
+// serverurl, so https://graph.microsoft.com is used for both steps.
+const testAccAuthenticationemailaction_unset_step1 = `
+	resource "citrixadc_authenticationemailaction" "tf_unset" {
+		name      = "tf_test_authenticationemailaction_unset"
+		username  = "username@abc.com"
+		password  = "secret"
+		serverurl = "https://graph.microsoft.com"
+		timeout   = 100
+		type      = "ATHENA"
+	}
+`
+
+const testAccAuthenticationemailaction_unset_step2 = `
+	resource "citrixadc_authenticationemailaction" "tf_unset" {
+		name      = "tf_test_authenticationemailaction_unset"
+		username  = "username@abc.com"
+		password  = "secret"
+		serverurl = "https://graph.microsoft.com"
+		timeout   = 100
+		# type removed from config -> provider must unset it (reverts to SMTP)
+	}
+`
+
+func TestAccAuthenticationemailaction_unset(t *testing.T) {
+	// The resource's other tests have no skip guard (they run on the default
+	// standalone testbed), so none is added here.
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applies and persists.
+				Config: testAccAuthenticationemailaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_unset", "type", "ATHENA"),
+				),
+			},
+			{
+				// Removing it must unset -> state reverts to the NITRO default (SMTP),
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationemailaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationemailaction.tf_unset", "type", "SMTP"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationemailactionADCValue("tf_test_authenticationemailaction_unset", "type", "SMTP"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationemailactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationemailactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationemailaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationemailaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationemailaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccAuthenticationemailaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationemailactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationemailaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationemailaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationemailactionExist("citrixadc_authenticationemailaction.tf_emailaction", nil),
 				),
 			},
 		},

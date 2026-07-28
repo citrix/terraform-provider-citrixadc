@@ -4,31 +4,31 @@ subcategory: "Network"
 
 # Data Source: vridparam
 
-The vridparam data source allows you to retrieve information about VRID (Virtual Router ID) global parameters.
+The vridparam data source allows you to retrieve the global VRRP parameters.
+
 
 ## Example usage
 
 ```terraform
-data "citrixadc_vridparam" "example" {
+data "citrixadc_vridparam" "tf_vridparam" {
 }
 
-output "hellointerval" {
-  value = data.citrixadc_vridparam.example.hellointerval
-}
-
-output "deadinterval" {
-  value = data.citrixadc_vridparam.example.deadinterval
+output "vrrp_hellointerval" {
+  value = data.citrixadc_vridparam.tf_vridparam.hellointerval
 }
 ```
 
+
 ## Argument Reference
 
-This datasource does not require any arguments.
+This data source has no required lookup arguments; it always refers to the single global vridparam object.
+
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `deadinterval` - Number of seconds after which a peer node in active-active mode is marked down if vrrp advertisements are not received from the peer node.
-* `hellointerval` - Interval, in milliseconds, between vrrp advertisement messages sent to the peer node in active-active mode.
-* `sendtomaster` - Forward packets to the master node, in an active-active mode configuration, if the virtual server is in the backup state and sharing is disabled.
+* `id` - The ID of the vridparam resource. It is the synthetic constant string `vridparam-config`.
+* `sendtomaster` - Forward packets to the master node, in an active-active mode configuration, if the virtual server is in the backup state and sharing is disabled. Possible values: [ ENABLED, DISABLED ].
+* `hellointerval` - Interval, in milliseconds, between VRRP advertisement messages sent to the peer node in active-active mode.
+* `deadinterval` - Number of seconds after which a peer node in active-active mode is marked down if VRRP advertisements are not received from the peer node.

@@ -8,8 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -61,11 +63,13 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"autorollover": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Flag to enable/disable key rollover automatically.\nNote:\n* Key name will be appended with _AR1 for successor key. For e.g. current key=k1, successor key=k1_AR1.\n* Key name can be truncated if current name length is more than 58 bytes to accomodate the suffix.",
 			},
 			"expires": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(120),
 				Description: "Time period for which to consider the key valid, after the key is used to sign a zone.",
 			},
 			"filenameprefix": schema.StringAttribute{
@@ -102,6 +106,7 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"notificationperiod": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(7),
 				Description: "Time at which to generate notification of key expiration, specified as number of days, hours, or minutes before expiry. Must be less than the expiry period. The notification is an SNMP trap sent to an SNMP manager. To enable the appliance to send the trap, enable the DNSKEY-EXPIRY SNMP alarm. \nIn case autorollover option is enabled, rollover for successor key will be intiated at this time. No notification trap will be sent.",
 			},
 			"password": schema.StringAttribute{
@@ -163,16 +168,19 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"ttl": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3600),
 				Description: "Time to Live (TTL), in seconds, for the DNSKEY resource record created in the zone. TTL is the time for which the record must be cached by the DNS proxies. If the TTL is not specified, either the DNS zone's minimum TTL or the default value of 3600 is used.",
 			},
 			"units1": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DAYS"),
 				Description: "Units for the expiry period.",
 			},
 			"units2": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DAYS"),
 				Description: "Units for the notification period.",
 			},
 			"zonename": schema.StringAttribute{
@@ -247,6 +255,42 @@ func dnskeyGetThePayloadFromthePlan(ctx context.Context, data *DnskeyResourceMod
 	}
 	if !data.Zonename.IsNull() && !data.Zonename.IsUnknown() {
 		dnskey.Zonename = data.Zonename.ValueString()
+	}
+
+	return dnskey
+}
+
+func dnskeyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *DnskeyResourceModel) dns.Dnskey {
+	tflog.Debug(ctx, "In dnskeyGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	dnskey := dns.Dnskey{}
+	if !data.Autorollover.IsNull() && !data.Autorollover.IsUnknown() {
+		dnskey.Autorollover = data.Autorollover.ValueString()
+	}
+	if !data.Expires.IsNull() && !data.Expires.IsUnknown() {
+		dnskey.Expires = utils.IntPtr(int(data.Expires.ValueInt64()))
+	}
+	if !data.Keyname.IsNull() && !data.Keyname.IsUnknown() {
+		dnskey.Keyname = data.Keyname.ValueString()
+	}
+	if !data.Notificationperiod.IsNull() && !data.Notificationperiod.IsUnknown() {
+		dnskey.Notificationperiod = utils.IntPtr(int(data.Notificationperiod.ValueInt64()))
+	}
+	if !data.Revoke.IsNull() && !data.Revoke.IsUnknown() {
+		dnskey.Revoke = data.Revoke.ValueBool()
+	}
+	if !data.Rollovermethod.IsNull() && !data.Rollovermethod.IsUnknown() {
+		dnskey.Rollovermethod = data.Rollovermethod.ValueString()
+	}
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
+		dnskey.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
+	}
+	if !data.Units1.IsNull() && !data.Units1.IsUnknown() {
+		dnskey.Units1 = data.Units1.ValueString()
+	}
+	if !data.Units2.IsNull() && !data.Units2.IsUnknown() {
+		dnskey.Units2 = data.Units2.ValueString()
 	}
 
 	return dnskey

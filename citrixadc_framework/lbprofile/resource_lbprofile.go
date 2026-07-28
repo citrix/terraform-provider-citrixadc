@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *LbprofileResource) Create(ctx context.Context, req resource.CreateReque
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Lbprofilename.ValueString()))
 
 	// Read the updated state back
-	r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *LbprofileResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading lbprofile resource")
 
-	r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -121,6 +134,7 @@ func (r *LbprofileResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Computedadccookieattribute.Equal(state.Computedadccookieattribute) {
 		tflog.Debug(ctx, fmt.Sprintf("computedadccookieattribute has changed for lbprofile"))
 		hasChange = true
@@ -135,19 +149,35 @@ func (r *LbprofileResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Dbslb.Equal(state.Dbslb) {
 		tflog.Debug(ctx, fmt.Sprintf("dbslb has changed for lbprofile"))
-		hasChange = true
+		if config.Dbslb.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dbslb")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httponlycookieflag.Equal(state.Httponlycookieflag) {
 		tflog.Debug(ctx, fmt.Sprintf("httponlycookieflag has changed for lbprofile"))
-		hasChange = true
+		if config.Httponlycookieflag.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httponlycookieflag")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Lbhashalgorithm.Equal(state.Lbhashalgorithm) {
 		tflog.Debug(ctx, fmt.Sprintf("lbhashalgorithm has changed for lbprofile"))
-		hasChange = true
+		if config.Lbhashalgorithm.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "lbhashalgorithm")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Lbhashfingers.Equal(state.Lbhashfingers) {
 		tflog.Debug(ctx, fmt.Sprintf("lbhashfingers has changed for lbprofile"))
-		hasChange = true
+		if config.Lbhashfingers.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "lbhashfingers")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Literaladccookieattribute.Equal(state.Literaladccookieattribute) {
 		tflog.Debug(ctx, fmt.Sprintf("literaladccookieattribute has changed for lbprofile"))
@@ -155,19 +185,35 @@ func (r *LbprofileResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Processlocal.Equal(state.Processlocal) {
 		tflog.Debug(ctx, fmt.Sprintf("processlocal has changed for lbprofile"))
-		hasChange = true
+		if config.Processlocal.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "processlocal")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Proximityfromself.Equal(state.Proximityfromself) {
 		tflog.Debug(ctx, fmt.Sprintf("proximityfromself has changed for lbprofile"))
-		hasChange = true
+		if config.Proximityfromself.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proximityfromself")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Storemqttclientidandusername.Equal(state.Storemqttclientidandusername) {
 		tflog.Debug(ctx, fmt.Sprintf("storemqttclientidandusername has changed for lbprofile"))
-		hasChange = true
+		if config.Storemqttclientidandusername.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "storemqttclientidandusername")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Useencryptedpersistencecookie.Equal(state.Useencryptedpersistencecookie) {
 		tflog.Debug(ctx, fmt.Sprintf("useencryptedpersistencecookie has changed for lbprofile"))
-		hasChange = true
+		if config.Useencryptedpersistencecookie.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "useencryptedpersistencecookie")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Usesecuredpersistencecookie.Equal(state.Usesecuredpersistencecookie) {
 		tflog.Debug(ctx, fmt.Sprintf("usesecuredpersistencecookie has changed for lbprofile"))
@@ -194,8 +240,22 @@ func (r *LbprofileResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Debug(ctx, "No changes detected for lbprofile resource, skipping update")
 	}
 
+	// Unset attributes that were removed from the configuration (revert to ADC default)
+	unsetIdPayload := map[string]interface{}{
+		"lbprofilename": data.Lbprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lbprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbprofile attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -224,7 +284,7 @@ func (r *LbprofileResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 // Helper function to read lbprofile data from API
-func (r *LbprofileResource) readLbprofileFromApi(ctx context.Context, data *LbprofileResourceModel, diags *diag.Diagnostics) {
+func (r *LbprofileResource) readLbprofileFromApi(ctx context.Context, data *LbprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	lbprofilename_Name := data.Id.ValueString()
@@ -234,10 +294,14 @@ func (r *LbprofileResource) readLbprofileFromApi(ctx context.Context, data *Lbpr
 
 	getResponseData, err = r.client.FindResource(service.Lbprofile.Type(), lbprofilename_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	lbprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

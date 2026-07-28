@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -59,21 +60,25 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			"authentication": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Configure the RADIUS server state to accept or refuse authentication messages.",
 			},
 			"authservretry": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Number of retry by the Citrix ADC before getting response from the RADIUS server.",
 			},
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Maximum number of seconds that the Citrix ADC waits for a response from the RADIUS server.",
 			},
 			"callingstationid": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send Calling-Station-ID of the client to the RADIUS server. IP Address of the client is sent as its Calling-Station-ID.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -94,11 +99,13 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			"messageauthenticator": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.",
 			},
 			"passencoding": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("mschapv2"),
 				Description: "Enable password encoding in RADIUS packets that the Citrix ADC sends to the RADIUS server.",
 			},
 			"pwdattributetype": schema.Int64Attribute{
@@ -166,11 +173,13 @@ func (r *AaaradiusparamsResource) Schema(ctx context.Context, req resource.Schem
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1812),
 				Description: "Port number on which the RADIUS server listens for connections.",
 			},
 			"tunnelendpointclientip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send Tunnel Endpoint Client IP address to the RADIUS server.",
 			},
 		},
@@ -181,6 +190,83 @@ func aaaradiusparamsGetThePayloadFromthePlan(ctx context.Context, data *Aaaradiu
 	tflog.Debug(ctx, "In aaaradiusparamsGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
+	aaaradiusparams := aaa.Aaaradiusparams{}
+	if !data.Accounting.IsNull() && !data.Accounting.IsUnknown() {
+		aaaradiusparams.Accounting = data.Accounting.ValueString()
+	}
+	if !data.Authentication.IsNull() && !data.Authentication.IsUnknown() {
+		aaaradiusparams.Authentication = data.Authentication.ValueString()
+	}
+	if !data.Authservretry.IsNull() && !data.Authservretry.IsUnknown() {
+		aaaradiusparams.Authservretry = utils.IntPtr(int(data.Authservretry.ValueInt64()))
+	}
+	if !data.Authtimeout.IsNull() && !data.Authtimeout.IsUnknown() {
+		aaaradiusparams.Authtimeout = utils.IntPtr(int(data.Authtimeout.ValueInt64()))
+	}
+	if !data.Callingstationid.IsNull() && !data.Callingstationid.IsUnknown() {
+		aaaradiusparams.Callingstationid = data.Callingstationid.ValueString()
+	}
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
+		aaaradiusparams.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
+	}
+	if !data.Ipattributetype.IsNull() && !data.Ipattributetype.IsUnknown() {
+		aaaradiusparams.Ipattributetype = utils.IntPtr(int(data.Ipattributetype.ValueInt64()))
+	}
+	if !data.Ipvendorid.IsNull() && !data.Ipvendorid.IsUnknown() {
+		aaaradiusparams.Ipvendorid = utils.IntPtr(int(data.Ipvendorid.ValueInt64()))
+	}
+	if !data.Messageauthenticator.IsNull() && !data.Messageauthenticator.IsUnknown() {
+		aaaradiusparams.Messageauthenticator = data.Messageauthenticator.ValueString()
+	}
+	if !data.Passencoding.IsNull() && !data.Passencoding.IsUnknown() {
+		aaaradiusparams.Passencoding = data.Passencoding.ValueString()
+	}
+	if !data.Pwdattributetype.IsNull() && !data.Pwdattributetype.IsUnknown() {
+		aaaradiusparams.Pwdattributetype = utils.IntPtr(int(data.Pwdattributetype.ValueInt64()))
+	}
+	if !data.Pwdvendorid.IsNull() && !data.Pwdvendorid.IsUnknown() {
+		aaaradiusparams.Pwdvendorid = utils.IntPtr(int(data.Pwdvendorid.ValueInt64()))
+	}
+	if !data.Radattributetype.IsNull() && !data.Radattributetype.IsUnknown() {
+		aaaradiusparams.Radattributetype = utils.IntPtr(int(data.Radattributetype.ValueInt64()))
+	}
+	if !data.Radgroupseparator.IsNull() && !data.Radgroupseparator.IsUnknown() {
+		aaaradiusparams.Radgroupseparator = data.Radgroupseparator.ValueString()
+	}
+	if !data.Radgroupsprefix.IsNull() && !data.Radgroupsprefix.IsUnknown() {
+		aaaradiusparams.Radgroupsprefix = data.Radgroupsprefix.ValueString()
+	}
+	if !data.Radkey.IsNull() && !data.Radkey.IsUnknown() {
+		aaaradiusparams.Radkey = data.Radkey.ValueString()
+	}
+	// Skip write-only attribute: radkey_wo
+	// Skip version tracker attribute: radkey_wo_version
+	if !data.Radnasid.IsNull() && !data.Radnasid.IsUnknown() {
+		aaaradiusparams.Radnasid = data.Radnasid.ValueString()
+	}
+	if !data.Radnasip.IsNull() && !data.Radnasip.IsUnknown() {
+		aaaradiusparams.Radnasip = data.Radnasip.ValueString()
+	}
+	if !data.Radvendorid.IsNull() && !data.Radvendorid.IsUnknown() {
+		aaaradiusparams.Radvendorid = utils.IntPtr(int(data.Radvendorid.ValueInt64()))
+	}
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
+		aaaradiusparams.Serverip = data.Serverip.ValueString()
+	}
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
+		aaaradiusparams.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
+	}
+	if !data.Tunnelendpointclientip.IsNull() && !data.Tunnelendpointclientip.IsUnknown() {
+		aaaradiusparams.Tunnelendpointclientip = data.Tunnelendpointclientip.ValueString()
+	}
+
+	return aaaradiusparams
+}
+
+func aaaradiusparamsGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AaaradiusparamsResourceModel) aaa.Aaaradiusparams {
+	tflog.Debug(ctx, "In aaaradiusparamsGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model (NITRO-updatable fields only)
 	aaaradiusparams := aaa.Aaaradiusparams{}
 	if !data.Accounting.IsNull() && !data.Accounting.IsUnknown() {
 		aaaradiusparams.Accounting = data.Accounting.ValueString()

@@ -80,7 +80,12 @@ func (r *LbmonitorResource) Create(ctx context.Context, req resource.CreateReque
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
-	r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbmonitor not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -98,7 +103,14 @@ func (r *LbmonitorResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading lbmonitor resource")
 
-	r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -128,7 +140,7 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 	// identity (monitorname + the mandatory type). For each attribute that genuinely changed we
 	// copy just that field from `full`, so the PUT carries monitorname + type + changed fields
 	// only. Rebuilding the whole struct instead re-sends type-specific/interdependent args and
-	// breaks both the v2 -> Framework upgrade (ec1094 "too few arguments" when computed attrs are
+	// breaks both the v2 -> Framework upgrade ("too few arguments" when computed attrs are
 	// unknown) and steady-state updates. type is Required (the monitor's identity) so NITRO needs
 	// it on every lbmonitor PUT.
 	full := lbmonitorGetThePayloadFromthePlan(ctx, &data)
@@ -140,6 +152,7 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Acctapplicationid.IsUnknown() && !data.Acctapplicationid.IsNull() && !data.Acctapplicationid.Equal(state.Acctapplicationid) {
 		tflog.Debug(ctx, fmt.Sprintf("acctapplicationid has changed for lbmonitor"))
 		lbmonitor.Acctapplicationid = full.Acctapplicationid
@@ -285,10 +298,14 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 		lbmonitor.Inbandsecurityid = full.Inbandsecurityid
 		hasChange = true
 	}
-	if !data.Interval.IsUnknown() && !data.Interval.IsNull() && !data.Interval.Equal(state.Interval) {
+	if !data.Interval.Equal(state.Interval) {
 		tflog.Debug(ctx, fmt.Sprintf("interval has changed for lbmonitor"))
-		lbmonitor.Interval = full.Interval
-		hasChange = true
+		if config.Interval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "interval")
+		} else if !data.Interval.IsUnknown() && !data.Interval.IsNull() {
+			lbmonitor.Interval = full.Interval
+			hasChange = true
+		}
 	}
 	if !data.Ipaddress.IsUnknown() && !data.Ipaddress.IsNull() && !data.Ipaddress.Equal(state.Ipaddress) {
 		tflog.Debug(ctx, fmt.Sprintf("ipaddress has changed for lbmonitor"))
@@ -466,25 +483,37 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 		lbmonitor.Respcode = full.Respcode
 		hasChange = true
 	}
-	if !data.Resptimeout.IsUnknown() && !data.Resptimeout.IsNull() && !data.Resptimeout.Equal(state.Resptimeout) {
+	if !data.Resptimeout.Equal(state.Resptimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("resptimeout has changed for lbmonitor"))
-		lbmonitor.Resptimeout = full.Resptimeout
-		hasChange = true
+		if config.Resptimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "resptimeout")
+		} else if !data.Resptimeout.IsUnknown() && !data.Resptimeout.IsNull() {
+			lbmonitor.Resptimeout = full.Resptimeout
+			hasChange = true
+		}
 	}
 	if !data.Resptimeoutthresh.IsUnknown() && !data.Resptimeoutthresh.IsNull() && !data.Resptimeoutthresh.Equal(state.Resptimeoutthresh) {
 		tflog.Debug(ctx, fmt.Sprintf("resptimeoutthresh has changed for lbmonitor"))
 		lbmonitor.Resptimeoutthresh = full.Resptimeoutthresh
 		hasChange = true
 	}
-	if !data.Retries.IsUnknown() && !data.Retries.IsNull() && !data.Retries.Equal(state.Retries) {
+	if !data.Retries.Equal(state.Retries) {
 		tflog.Debug(ctx, fmt.Sprintf("retries has changed for lbmonitor"))
-		lbmonitor.Retries = full.Retries
-		hasChange = true
+		if config.Retries.IsNull() {
+			attributesToUnset = append(attributesToUnset, "retries")
+		} else if !data.Retries.IsUnknown() && !data.Retries.IsNull() {
+			lbmonitor.Retries = full.Retries
+			hasChange = true
+		}
 	}
-	if !data.Reverse.IsUnknown() && !data.Reverse.IsNull() && !data.Reverse.Equal(state.Reverse) {
+	if !data.Reverse.Equal(state.Reverse) {
 		tflog.Debug(ctx, fmt.Sprintf("reverse has changed for lbmonitor"))
-		lbmonitor.Reverse = full.Reverse
-		hasChange = true
+		if config.Reverse.IsNull() {
+			attributesToUnset = append(attributesToUnset, "reverse")
+		} else if !data.Reverse.IsUnknown() && !data.Reverse.IsNull() {
+			lbmonitor.Reverse = full.Reverse
+			hasChange = true
+		}
 	}
 	if !data.Rtsprequest.IsUnknown() && !data.Rtsprequest.IsNull() && !data.Rtsprequest.Equal(state.Rtsprequest) {
 		tflog.Debug(ctx, fmt.Sprintf("rtsprequest has changed for lbmonitor"))
@@ -607,10 +636,14 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 		lbmonitor.Storename = full.Storename
 		hasChange = true
 	}
-	if !data.Successretries.IsUnknown() && !data.Successretries.IsNull() && !data.Successretries.Equal(state.Successretries) {
+	if !data.Successretries.Equal(state.Successretries) {
 		tflog.Debug(ctx, fmt.Sprintf("successretries has changed for lbmonitor"))
-		lbmonitor.Successretries = full.Successretries
-		hasChange = true
+		if config.Successretries.IsNull() {
+			attributesToUnset = append(attributesToUnset, "successretries")
+		} else if !data.Successretries.IsUnknown() && !data.Successretries.IsNull() {
+			lbmonitor.Successretries = full.Successretries
+			hasChange = true
+		}
 	}
 	if !data.Supportedvendorids.IsUnknown() && !data.Supportedvendorids.IsNull() && !data.Supportedvendorids.Equal(state.Supportedvendorids) {
 		tflog.Debug(ctx, fmt.Sprintf("supportedvendorids has changed for lbmonitor"))
@@ -712,8 +745,23 @@ func (r *LbmonitorResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Debug(ctx, "No changes detected for lbmonitor resource, skipping update")
 	}
 
+	// Clear attributes removed from configuration via NITRO unset
+	unsetIdPayload := map[string]interface{}{
+		"monitorname": data.Monitorname.ValueString(),
+		"type":        data.Type.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lbmonitor.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbmonitor attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbmonitorFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbmonitor not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -731,9 +779,6 @@ func (r *LbmonitorResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting lbmonitor resource")
 	// Binding with parent - delete using DeleteResourceWithArgs
-	// Legacy SDK v2 id is the plain monitorname (d.SetId(monitorname)); pass the
-	// legacyOrder so a legacy id parses. New-format ids ("monitorname:..,type:..")
-	// are auto-detected and parsed by key regardless.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"monitorname"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -761,22 +806,19 @@ func (r *LbmonitorResource) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 // Helper function to read lbmonitor data from API
-func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *LbmonitorResourceModel, diags *diag.Diagnostics) {
+func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *LbmonitorResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 4: Array filter with parent ID - parse from ID
-	// Legacy SDK v2 id is the plain monitorname (d.SetId(monitorname)); pass the
-	// legacyOrder so a legacy id parses. New-format ids ("monitorname:..,type:..")
-	// are auto-detected and parsed by key regardless.
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"monitorname"}, nil)
 	if err != nil {
 		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
+		return false
 	}
 
 	monitorname_Name, ok := idMap["monitorname"]
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'monitorname' not found in ID string")
-		return
+		return false
 	}
 
 	var dataArr []map[string]interface{}
@@ -788,14 +830,16 @@ func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *Lbmo
 	}
 	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbmonitor, got error: %s", err))
-		return
+		return false
 	}
 
 	// Resource is missing
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "lbmonitor returned empty array.")
-		return
+		return false
 	}
 
 	// Iterate through results to find the one with the right id
@@ -818,9 +862,9 @@ func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *Lbmo
 
 	//  Resource is missing
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("lbmonitor not found with the provided ID attributes"))
-		return
+		return false
 	}
 
 	lbmonitorSetAttrFromGet(ctx, data, dataArr[foundIndex])
+	return true
 }

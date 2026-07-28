@@ -37,6 +37,11 @@ resource "citrixadc_csvserver" "foo" {
   port = 8080
   servicetype = "HTTP"
   v6persistmasklen = 128
+  # timeout is the persistence-session timeout; the ADC only honors a
+  # non-default value when a persistence type is configured. Without
+  # persistencetype the ADC silently resets timeout to its default (2),
+  # producing a perpetual diff. Configure persistence so timeout sticks.
+  persistencetype = "SOURCEIP"
   timeout = 180
   probesuccessresponsecode = "200-399"
   probeprotocol = "HTTP"
@@ -85,6 +90,8 @@ func TestAccCsvserver_basic(t *testing.T) {
 						"citrixadc_csvserver.foo", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_csvserver.foo", "v6persistmasklen", "128"),
+					resource.TestCheckResourceAttr(
+						"citrixadc_csvserver.foo", "persistencetype", "SOURCEIP"),
 					resource.TestCheckResourceAttr(
 						"citrixadc_csvserver.foo", "timeout", "180"),
 					resource.TestCheckResourceAttr(

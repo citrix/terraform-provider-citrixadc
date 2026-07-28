@@ -124,7 +124,7 @@ func (d *SnmptrapDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("snmptrap with td %s not found", td_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("snmptrap with td %d not found", td_Name))
 		return
 	}
 

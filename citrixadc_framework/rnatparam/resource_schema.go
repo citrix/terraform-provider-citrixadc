@@ -29,11 +29,13 @@ func (r *RnatparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"srcippersistency": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable source ip persistency, which enables the Citrix ADC to use the RNAT ips using source ip.",
 			},
 			"tcpproxy": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable TCP proxy, which enables the Citrix ADC to optimize the RNAT TCP traffic by using Layer 4 features.",
 			},
@@ -41,15 +43,15 @@ func (r *RnatparamResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func rnatparamGetThePayloadFromtheConfig(ctx context.Context, data *RnatparamResourceModel) network.Rnatparam {
-	tflog.Debug(ctx, "In rnatparamGetThePayloadFromtheConfig Function")
+func rnatparamGetThePayloadFromthePlan(ctx context.Context, data *RnatparamResourceModel) network.Rnatparam {
+	tflog.Debug(ctx, "In rnatparamGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	rnatparam := network.Rnatparam{}
-	if !data.Srcippersistency.IsNull() {
+	if !data.Srcippersistency.IsNull() && !data.Srcippersistency.IsUnknown() {
 		rnatparam.Srcippersistency = data.Srcippersistency.ValueString()
 	}
-	if !data.Tcpproxy.IsNull() {
+	if !data.Tcpproxy.IsNull() && !data.Tcpproxy.IsUnknown() {
 		rnatparam.Tcpproxy = data.Tcpproxy.ValueString()
 	}
 

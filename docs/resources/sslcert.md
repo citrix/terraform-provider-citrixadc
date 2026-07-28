@@ -49,7 +49,7 @@ resource "citrixadc_sslcert" "tf_sslcert" {
 
 ### Using pempassphrase_wo (write-only/ephemeral - NOT persisted in state)
 
-The `pempassphrase_wo` attribute provides an ephemeral path for the PEM pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `pempassphrase_wo_version`.
+The `pempassphrase_wo` attribute provides an ephemeral path for the PEM pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `pempassphrase_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslcert_pempassphrase" {

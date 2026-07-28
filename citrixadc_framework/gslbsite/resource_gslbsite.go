@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *GslbsiteResource) Create(ctx context.Context, req resource.CreateReques
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Sitename.ValueString()))
 
 	// Read the updated state back
-	r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "gslbsite not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *GslbsiteResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading gslbsite resource")
 
-	r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -121,13 +134,18 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Backupparentlist.Equal(state.Backupparentlist) {
 		tflog.Debug(ctx, fmt.Sprintf("backupparentlist has changed for gslbsite"))
 		hasChange = true
 	}
 	if !data.Metricexchange.Equal(state.Metricexchange) {
 		tflog.Debug(ctx, fmt.Sprintf("metricexchange has changed for gslbsite"))
-		hasChange = true
+		if config.Metricexchange.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "metricexchange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Naptrreplacementsuffix.Equal(state.Naptrreplacementsuffix) {
 		tflog.Debug(ctx, fmt.Sprintf("naptrreplacementsuffix has changed for gslbsite"))
@@ -135,7 +153,11 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Nwmetricexchange.Equal(state.Nwmetricexchange) {
 		tflog.Debug(ctx, fmt.Sprintf("nwmetricexchange has changed for gslbsite"))
-		hasChange = true
+		if config.Nwmetricexchange.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nwmetricexchange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Parentsite.Equal(state.Parentsite) {
 		tflog.Debug(ctx, fmt.Sprintf("parentsite has changed for gslbsite"))
@@ -147,7 +169,11 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Sessionexchange.Equal(state.Sessionexchange) {
 		tflog.Debug(ctx, fmt.Sprintf("sessionexchange has changed for gslbsite"))
-		hasChange = true
+		if config.Sessionexchange.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessionexchange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Siteipaddress.Equal(state.Siteipaddress) {
 		tflog.Debug(ctx, fmt.Sprintf("siteipaddress has changed for gslbsite"))
@@ -163,13 +189,17 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Triggermonitor.Equal(state.Triggermonitor) {
 		tflog.Debug(ctx, fmt.Sprintf("triggermonitor has changed for gslbsite"))
-		hasChange = true
+		if config.Triggermonitor.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "triggermonitor")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		gslbsite := gslbsiteGetThePayloadFromthePlan(ctx, &data)
+		gslbsite := gslbsiteGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		gslbsiteGetThePayloadFromtheConfig(ctx, &config, &gslbsite)
 		// Make API call
@@ -186,8 +216,22 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Debug(ctx, "No changes detected for gslbsite resource, skipping update")
 	}
 
+	// Unset attributes that were removed from config (update-then-unset ordering)
+	unsetIdPayload := map[string]interface{}{
+		"sitename": data.Sitename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Gslbsite.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset gslbsite attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readGslbsiteFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "gslbsite not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -216,7 +260,7 @@ func (r *GslbsiteResource) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 // Helper function to read gslbsite data from API
-func (r *GslbsiteResource) readGslbsiteFromApi(ctx context.Context, data *GslbsiteResourceModel, diags *diag.Diagnostics) {
+func (r *GslbsiteResource) readGslbsiteFromApi(ctx context.Context, data *GslbsiteResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	sitename_Name := data.Id.ValueString()
@@ -226,10 +270,14 @@ func (r *GslbsiteResource) readGslbsiteFromApi(ctx context.Context, data *Gslbsi
 
 	getResponseData, err = r.client.FindResource(service.Gslbsite.Type(), sitename_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read gslbsite, got error: %s", err))
-		return
+		return false
 	}
 
 	gslbsiteSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

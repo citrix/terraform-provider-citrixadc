@@ -4,7 +4,7 @@ subcategory: "Authentication"
 
 # Resource: authenticationprotecteduseraction
 
-The authenticationprotecteduseraction resource is used to configure a protected-user action on the Citrix ADC. A protected-user action limits the number of concurrent user sessions allowed for a given Kerberos realm.
+This resource is used to manage protected-user actions on the Citrix ADC.
 
 
 ## Example usage

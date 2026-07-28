@@ -36,7 +36,7 @@ resource "citrixadc_sslecdsakey" "tf_sslecdsakey" {
 
 ### Using password_wo (write-only/ephemeral - NOT persisted in state)
 
-The `password_wo` attribute provides an ephemeral path for the key encryption pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `password_wo_version`.
+The `password_wo` attribute provides an ephemeral path for the key encryption pass phrase. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `password_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "sslecdsakey_password" {

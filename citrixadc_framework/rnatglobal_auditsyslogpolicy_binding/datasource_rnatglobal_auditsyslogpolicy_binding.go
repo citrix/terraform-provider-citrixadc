@@ -42,7 +42,7 @@ func (d *RnatglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context,
 		return
 	}
 
-	// Single unique key (policy) - look up the binding by policy name.
+	// Singleton-parent binding lookup keyed on policy (rnatglobal has no parent name).
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -64,12 +64,14 @@ func (d *RnatglobalAuditsyslogpolicyBindingDataSource) Read(ctx context.Context,
 		return
 	}
 
-	// Iterate through results to find the one with the matching policy
+	// Iterate through results to find the one matching policy
 	foundIndex := -1
 	for i, v := range dataArr {
-		if val, ok := v["policy"].(string); ok && !policy_Name.IsNull() && val == policy_Name.ValueString() {
-			foundIndex = i
-			break
+		if val, ok := v["policy"].(string); ok {
+			if !policy_Name.IsNull() && val == policy_Name.ValueString() {
+				foundIndex = i
+				break
+			}
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -93,7 +94,12 @@ func (r *AaaradiusparamsResource) Create(ctx context.Context, req resource.Creat
 	data.Id = types.StringValue("aaaradiusparams-config")
 
 	// Read the updated state back
-	r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaaradiusparams not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -111,7 +117,14 @@ func (r *AaaradiusparamsResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading aaaradiusparams resource")
 
-	r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -138,25 +151,42 @@ func (r *AaaradiusparamsResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Accounting.Equal(state.Accounting) {
 		tflog.Debug(ctx, fmt.Sprintf("accounting has changed for aaaradiusparams"))
 		hasChange = true
 	}
 	if !data.Authentication.Equal(state.Authentication) {
 		tflog.Debug(ctx, fmt.Sprintf("authentication has changed for aaaradiusparams"))
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authservretry.Equal(state.Authservretry) {
 		tflog.Debug(ctx, fmt.Sprintf("authservretry has changed for aaaradiusparams"))
-		hasChange = true
+		if config.Authservretry.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authservretry")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authtimeout.Equal(state.Authtimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("authtimeout has changed for aaaradiusparams"))
-		hasChange = true
+		if config.Authtimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authtimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Callingstationid.Equal(state.Callingstationid) {
 		tflog.Debug(ctx, fmt.Sprintf("callingstationid has changed for aaaradiusparams"))
-		hasChange = true
+		if config.Callingstationid.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "callingstationid")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for aaaradiusparams"))
@@ -172,11 +202,19 @@ func (r *AaaradiusparamsResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Messageauthenticator.Equal(state.Messageauthenticator) {
 		tflog.Debug(ctx, fmt.Sprintf("messageauthenticator has changed for aaaradiusparams"))
-		hasChange = true
+		if config.Messageauthenticator.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "messageauthenticator")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Passencoding.Equal(state.Passencoding) {
 		tflog.Debug(ctx, fmt.Sprintf("passencoding has changed for aaaradiusparams"))
-		hasChange = true
+		if config.Passencoding.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "passencoding")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pwdattributetype.Equal(state.Pwdattributetype) {
 		tflog.Debug(ctx, fmt.Sprintf("pwdattributetype has changed for aaaradiusparams"))
@@ -224,17 +262,25 @@ func (r *AaaradiusparamsResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Serverport.Equal(state.Serverport) {
 		tflog.Debug(ctx, fmt.Sprintf("serverport has changed for aaaradiusparams"))
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tunnelendpointclientip.Equal(state.Tunnelendpointclientip) {
 		tflog.Debug(ctx, fmt.Sprintf("tunnelendpointclientip has changed for aaaradiusparams"))
-		hasChange = true
+		if config.Tunnelendpointclientip.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tunnelendpointclientip")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		aaaradiusparams := aaaradiusparamsGetThePayloadFromthePlan(ctx, &data)
+		aaaradiusparams := aaaradiusparamsGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		aaaradiusparamsGetThePayloadFromtheConfig(ctx, &config, &aaaradiusparams)
 		// Make API call
@@ -250,8 +296,23 @@ func (r *AaaradiusparamsResource) Update(ctx context.Context, req resource.Updat
 		tflog.Debug(ctx, "No changes detected for aaaradiusparams resource, skipping update")
 	}
 
+	// Clear any attributes removed from config by reverting them to their
+	// appliance defaults via ?action=unset. Done after the update so that any
+	// default value the update payload carried is superseded by the unset.
+	// Singleton resource - no identity fields required in the unset payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Aaaradiusparams.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaaradiusparams attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaaradiusparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaaradiusparams not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -273,7 +334,7 @@ func (r *AaaradiusparamsResource) Delete(ctx context.Context, req resource.Delet
 }
 
 // Helper function to read aaaradiusparams data from API
-func (r *AaaradiusparamsResource) readAaaradiusparamsFromApi(ctx context.Context, data *AaaradiusparamsResourceModel, diags *diag.Diagnostics) {
+func (r *AaaradiusparamsResource) readAaaradiusparamsFromApi(ctx context.Context, data *AaaradiusparamsResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -281,10 +342,14 @@ func (r *AaaradiusparamsResource) readAaaradiusparamsFromApi(ctx context.Context
 
 	getResponseData, err = r.client.FindResource(service.Aaaradiusparams.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaaradiusparams, got error: %s", err))
-		return
+		return false
 	}
 
 	aaaradiusparamsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

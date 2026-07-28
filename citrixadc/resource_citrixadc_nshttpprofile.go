@@ -323,6 +323,11 @@ func resourceCitrixAdcNshttpprofile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"http2smallwndtimeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -453,6 +458,9 @@ func createNshttpprofileFunc(ctx context.Context, d *schema.ResourceData, meta i
 	if raw := d.GetRawConfig().GetAttr("maxduplicateheaderfields"); !raw.IsNull() {
 		nshttpprofile.Maxduplicateheaderfields = intPtr(d.Get("maxduplicateheaderfields").(int))
 	}
+	if raw := d.GetRawConfig().GetAttr("http2smallwndtimeout"); !raw.IsNull() {
+		nshttpprofile.Http2smallwndtimeout = intPtr(d.Get("http2smallwndtimeout").(int))
+	}
 
 	_, err := client.AddResource(service.Nshttpprofile.Type(), nshttpprofileName, &nshttpprofile)
 	if err != nil {
@@ -536,6 +544,7 @@ func readNshttpprofileFunc(ctx context.Context, d *schema.ResourceData, meta int
 	setToInt("maxduplicateheaderfields", d, data["maxduplicateheaderfields"])
 	d.Set("passprotocolupgrade", data["passprotocolupgrade"])
 	d.Set("http2extendedconnect", data["http2extendedconnect"])
+	setToInt("http2smallwndtimeout", d, data["http2smallwndtimeout"])
 
 	return nil
 
@@ -848,6 +857,11 @@ func updateNshttpprofileFunc(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("http2extendedconnect") {
 		log.Printf("[DEBUG]  citrixadc-provider: Http2extendedconnect has changed for nshttpprofile %s, starting update", nshttpprofileName)
 		nshttpprofile.Http2extendedconnect = d.Get("http2extendedconnect").(string)
+		hasChange = true
+	}
+	if d.HasChange("http2smallwndtimeout") {
+		log.Printf("[DEBUG]  citrixadc-provider: Http2smallwndtimeout has changed for nshttpprofile %s, starting update", nshttpprofileName)
+		nshttpprofile.Http2smallwndtimeout = intPtr(d.Get("http2smallwndtimeout").(int))
 		hasChange = true
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -71,7 +72,12 @@ func (r *AppfwgrpccontenttypeResource) Create(ctx context.Context, req resource.
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Grpccontenttypevalue.ValueString()))
 
 	// Read the updated state back
-	r.readAppfwgrpccontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwgrpccontenttypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwgrpccontenttype not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,7 +95,14 @@ func (r *AppfwgrpccontenttypeResource) Read(ctx context.Context, req resource.Re
 
 	tflog.Debug(ctx, "Reading appfwgrpccontenttype resource")
 
-	r.readAppfwgrpccontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwgrpccontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -113,7 +126,12 @@ func (r *AppfwgrpccontenttypeResource) Update(ctx context.Context, req resource.
 	tflog.Debug(ctx, "Update is a no-op for appfwgrpccontenttype; NITRO exposes no update endpoint and all attributes are RequiresReplace")
 
 	// Read the updated state back
-	r.readAppfwgrpccontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwgrpccontenttypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwgrpccontenttype not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -142,7 +160,7 @@ func (r *AppfwgrpccontenttypeResource) Delete(ctx context.Context, req resource.
 }
 
 // Helper function to read appfwgrpccontenttype data from API
-func (r *AppfwgrpccontenttypeResource) readAppfwgrpccontenttypeFromApi(ctx context.Context, data *AppfwgrpccontenttypeResourceModel, diags *diag.Diagnostics) {
+func (r *AppfwgrpccontenttypeResource) readAppfwgrpccontenttypeFromApi(ctx context.Context, data *AppfwgrpccontenttypeResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	grpccontenttypevalue_Name := data.Id.ValueString()
@@ -152,10 +170,14 @@ func (r *AppfwgrpccontenttypeResource) readAppfwgrpccontenttypeFromApi(ctx conte
 
 	getResponseData, err = r.client.FindResource(service.Appfwgrpccontenttype.Type(), grpccontenttypevalue_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwgrpccontenttype, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwgrpccontenttypeSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

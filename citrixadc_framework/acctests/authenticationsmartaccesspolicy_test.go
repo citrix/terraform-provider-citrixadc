@@ -85,6 +85,27 @@ func TestAccAuthenticationsmartaccesspolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationsmartaccesspolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsmartaccesspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsmartaccesspolicy_basic_step1,
+			},
+			{
+				Config:                  testAccAuthenticationsmartaccesspolicy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationsmartaccesspolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

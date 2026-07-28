@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -106,6 +107,29 @@ func TestAccDnskey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "rollovermethod", "DoubleSignature"),
 					resource.TestCheckResourceAttr("citrixadc_dnskey.dnskey", "autorollover", "DISABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDnskey_import(t *testing.T) {
+	const resAddr = "citrixadc_dnskey.dnskey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnskey_add,
+			},
+			{
+				Config:            testAccDnskey_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password_wo_version is a write-only version tracker that NITRO
+				// does not echo back, so it cannot round-trip through import.
+				ImportStateVerifyIgnore: []string{"password_wo_version"},
 			},
 		},
 	})
@@ -309,6 +333,126 @@ func TestAccDnskeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "notificationperiod", "7"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "units2", "DAYS"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "ttl", "3600"),
+				),
+			},
+		},
+	})
+}
+
+// Step 1: eligible unset attributes set to valid non-default values.
+const testAccDnskey_unset_step1 = `
+
+resource "citrixadc_dnskey" "tf_unset" {
+	keyname            = "tf_test_dnskey_unset"
+	publickey          = "/nsconfig/dns/dnskey_test.key"
+	privatekey         = "/nsconfig/dns/dnskey_test.private"
+	autorollover       = "ENABLED"
+	rollovermethod     = "PrePublication"
+	expires            = 121
+	units1             = "HOURS"
+	notificationperiod = 12
+	units2             = "HOURS"
+	ttl                = 3601
+}
+`
+
+// Step 2: eligible unset attributes removed from config -> provider must unset
+// them so the appliance reverts each to its NITRO default.
+const testAccDnskey_unset_step2 = `
+
+resource "citrixadc_dnskey" "tf_unset" {
+	keyname    = "tf_test_dnskey_unset"
+	publickey  = "/nsconfig/dns/dnskey_test.key"
+	privatekey = "/nsconfig/dns/dnskey_test.private"
+}
+`
+
+func TestAccDnskey_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doDnskeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccDnskey_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "autorollover", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "expires", "121"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "units1", "HOURS"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "notificationperiod", "12"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "units2", "HOURS"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "ttl", "3601"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccDnskey_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "autorollover", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "expires", "120"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "units1", "DAYS"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "notificationperiod", "7"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "units2", "DAYS"),
+					resource.TestCheckResourceAttr("citrixadc_dnskey.tf_unset", "ttl", "3600"),
+					// Independent appliance-level confirmation the unset took effect:
+					testAccCheckDnskeyADCValue("tf_test_dnskey_unset", "autorollover", "DISABLED"),
+					testAccCheckDnskeyADCValue("tf_test_dnskey_unset", "expires", "120"),
+					testAccCheckDnskeyADCValue("tf_test_dnskey_unset", "notificationperiod", "7"),
+					testAccCheckDnskeyADCValue("tf_test_dnskey_unset", "ttl", "3600"),
+					testAccCheckDnskeyADCValue("tf_test_dnskey_unset", "units1", "DAYS"),
+					testAccCheckDnskeyADCValue("tf_test_dnskey_unset", "units2", "DAYS"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDnskeyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckDnskeyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnskey.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("dnskey %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("dnskey %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccDnskey_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnskey_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.dnskey", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnskey_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnskeyExist("citrixadc_dnskey.dnskey", nil),
 				),
 			},
 		},

@@ -4,7 +4,8 @@ subcategory: "Basic"
 
 # Data Source: locationparameter
 
-The `citrixadc_locationparameter` data source allows you to retrieve information about the global location parameters configuration. These parameters control the behavior of location-based policy evaluation on the Citrix ADC.
+The locationparameter data source allows you to retrieve information about the global location parameters configuration.
+
 
 ## Example usage
 

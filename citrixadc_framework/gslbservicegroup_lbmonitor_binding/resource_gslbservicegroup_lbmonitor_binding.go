@@ -69,8 +69,7 @@ func (r *GslbservicegroupLbmonitorBindingResource) Create(ctx context.Context, r
 	tflog.Trace(ctx, "Created gslbservicegroup_lbmonitor_binding resource")
 
 	// Set ID for the resource before reading state
-	// Composite ID order matches the legacy SDK v2 comma ID ("servicegroupname,monitor_name")
-	// so existing configurations remain importable.
+	// Composite ID = servicegroupname,monitor_name (port is a delete arg / read filter, not part of the ID)
 	idParts := []string{}
 	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
@@ -78,13 +77,6 @@ func (r *GslbservicegroupLbmonitorBindingResource) Create(ctx context.Context, r
 
 	// Read the updated state back
 	r.readGslbservicegroupLbmonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if data.Id.IsNull() {
-		resp.Diagnostics.AddError("Client Error", "gslbservicegroup_lbmonitor_binding not found on the ADC immediately after create")
-		return
-	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -103,11 +95,11 @@ func (r *GslbservicegroupLbmonitorBindingResource) Read(ctx context.Context, req
 	tflog.Debug(ctx, "Reading gslbservicegroup_lbmonitor_binding resource")
 
 	r.readGslbservicegroupLbmonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
-	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+
 	if data.Id.IsNull() {
 		resp.State.RemoveResource(ctx)
 		return
@@ -132,36 +124,12 @@ func (r *GslbservicegroupLbmonitorBindingResource) Update(ctx context.Context, r
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating gslbservicegroup_lbmonitor_binding resource")
+	// Update is a no-op for gslbservicegroup_lbmonitor_binding: NITRO exposes no update
+	// endpoint for this binding and every schema attribute is RequiresReplace.
+	tflog.Debug(ctx, "Update is a no-op for gslbservicegroup_lbmonitor_binding; all attributes are RequiresReplace")
 
-	// All attributes force replacement, so there are no in-place updates.
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		gslbservicegroup_lbmonitor_binding := gslbservicegroup_lbmonitor_bindingGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Binding resource - use UpdateUnnamedResource
-		err := r.client.UpdateUnnamedResource(service.Gslbservicegroup_lbmonitor_binding.Type(), &gslbservicegroup_lbmonitor_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbservicegroup_lbmonitor_binding, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated gslbservicegroup_lbmonitor_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for gslbservicegroup_lbmonitor_binding resource, skipping update")
-	}
-
-	// Read the updated state back
+	// Read the current state back
 	r.readGslbservicegroupLbmonitorBindingFromApi(ctx, &data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if data.Id.IsNull() {
-		resp.Diagnostics.AddError("Client Error", "gslbservicegroup_lbmonitor_binding not found on the ADC immediately after update")
-		return
-	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -178,7 +146,7 @@ func (r *GslbservicegroupLbmonitorBindingResource) Delete(ctx context.Context, r
 	}
 
 	tflog.Debug(ctx, "Deleting gslbservicegroup_lbmonitor_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgsMap
+	// Binding with parent - delete using DeleteResourceWithArgs
 	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "monitor_name"}, nil)
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
@@ -191,13 +159,16 @@ func (r *GslbservicegroupLbmonitorBindingResource) Delete(ctx context.Context, r
 		return
 	}
 
-	// Build delete args. NITRO expects the monitor name under "monitor_name" (SDK v2 parity).
-	argsMap := make(map[string]string)
+	// Delete key (URL id) = servicegroupname; delete args = monitor_name (+ port when set), values UrlEncoded
+	args := []string{}
 	if val, ok := idMap["monitor_name"]; ok && val != "" {
-		argsMap["monitor_name"] = val
+		args = append(args, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(val)))
+	}
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		args = append(args, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
 	}
 
-	err = r.client.DeleteResourceWithArgsMap(service.Gslbservicegroup_lbmonitor_binding.Type(), servicegroupname_value, argsMap)
+	err = r.client.DeleteResourceWithArgs(service.Gslbservicegroup_lbmonitor_binding.Type(), servicegroupname_value, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete gslbservicegroup_lbmonitor_binding, got error: %s", err))
 		return
@@ -235,30 +206,53 @@ func (r *GslbservicegroupLbmonitorBindingResource) readGslbservicegroupLbmonitor
 		return
 	}
 
-	// Resource is missing
+	// Resource is missing (deleted out-of-band) - signal removal from state.
 	if len(dataArr) == 0 {
-		// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
-		// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
 		data.Id = types.StringNull()
 		return
 	}
 
-	// Iterate through results to find the one with the right monitor name.
-	// NITRO returns the monitor name under the "monitor_name" key.
-	monitorname_value, ok := idMap["monitor_name"]
-	if !ok {
-		diags.AddError("Parse Error", "ID attribute 'monitor_name' not found in ID string")
-		return
-	}
+	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		if val, ok := v["monitor_name"].(string); ok && val == monitorname_value {
+		match := true
+
+		// Check monitor_name
+		if idVal, ok := idMap["monitor_name"]; ok {
+			if val, ok := v["monitor_name"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["monitor_name"].(string); ok {
+			match = false
+			continue
+		}
+
+		// Check port only when it is populated in state (port is not part of the ID)
+		if !data.Port.IsNull() && !data.Port.IsUnknown() {
+			if val, ok := v["port"]; ok {
+				val, _ := utils.ConvertToInt64(val)
+				if val != data.Port.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		if match {
 			foundIndex = i
 			break
 		}
 	}
 
-	//  Resource is missing
+	//  Resource is missing (deleted out-of-band) - signal removal from state.
 	if foundIndex == -1 {
 		data.Id = types.StringNull()
 		return

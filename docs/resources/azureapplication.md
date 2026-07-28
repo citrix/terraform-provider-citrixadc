@@ -4,7 +4,7 @@ subcategory: "Azure"
 
 # Resource: azureapplication
 
-The azureapplication resource is used to configure an Azure Active Directory application registration on the Citrix ADC. The application is used by the ADC to authenticate to Azure and obtain access tokens for Azure resources such as Azure Key Vault.
+This resource is used to manage Azure Active Directory application registrations on the Citrix ADC.
 
 
 ## Example usage
@@ -40,7 +40,7 @@ resource "citrixadc_azureapplication" "tf_azureapplication" {
 
 ### Using clientsecret_wo (write-only/ephemeral - NOT persisted in state)
 
-The `clientsecret_wo` attribute provides an ephemeral path for the Azure application client secret. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the client secret value changes, increment `clientsecret_wo_version`.
+The `clientsecret_wo` attribute provides an ephemeral path for the Azure application client secret. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the client secret, increment `clientsecret_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "azureapplication_clientsecret" {
@@ -65,7 +65,7 @@ resource "citrixadc_azureapplication" "tf_azureapplication" {
   name                    = "my_azure_app"
   clientid                = "11111111-2222-3333-4444-555555555555"
   clientsecret_wo         = var.azureapplication_clientsecret
-  clientsecret_wo_version = 2  # Bumped to trigger update
+  clientsecret_wo_version = 2  # Bumped: forces destroy & recreate
   tenantid                = "66666666-7777-8888-9999-000000000000"
   vaultresource           = "vault.azure.net"
 }

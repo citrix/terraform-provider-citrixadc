@@ -4,9 +4,8 @@ subcategory: "Audit"
 
 # Data Source: auditnslogaction
 
-Use this data source to retrieve information about an existing Audit NS Log Action.
+The auditnslogaction data source allows you to retrieve information about an audit nslog action.
 
-The `citrixadc_auditnslogaction` data source allows you to retrieve details of an audit nslog action by its name. This is useful for referencing existing audit nslog actions in your Terraform configurations without managing them directly.
 
 ## Example usage
 

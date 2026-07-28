@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *SmppuserResource) Create(ctx context.Context, req resource.CreateReques
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Username.ValueString()))
 
 	// Read the updated state back
-	r.readSmppuserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSmppuserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "smppuser not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *SmppuserResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading smppuser resource")
 
-	r.readSmppuserFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSmppuserFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -133,7 +146,7 @@ func (r *SmppuserResource) Update(ctx context.Context, req resource.UpdateReques
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		smppuser := smppuserGetThePayloadFromthePlan(ctx, &data)
+		smppuser := smppuserGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		smppuserGetThePayloadFromtheConfig(ctx, &config, &smppuser)
 		// Make API call
@@ -151,7 +164,12 @@ func (r *SmppuserResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	// Read the updated state back
-	r.readSmppuserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSmppuserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "smppuser not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -180,7 +198,7 @@ func (r *SmppuserResource) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 // Helper function to read smppuser data from API
-func (r *SmppuserResource) readSmppuserFromApi(ctx context.Context, data *SmppuserResourceModel, diags *diag.Diagnostics) {
+func (r *SmppuserResource) readSmppuserFromApi(ctx context.Context, data *SmppuserResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	username_Name := data.Id.ValueString()
@@ -190,10 +208,14 @@ func (r *SmppuserResource) readSmppuserFromApi(ctx context.Context, data *Smppus
 
 	getResponseData, err = r.client.FindResource(service.Smppuser.Type(), username_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read smppuser, got error: %s", err))
-		return
+		return false
 	}
 
 	smppuserSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

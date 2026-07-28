@@ -80,3 +80,12 @@ resource "citrixadc_aaatacacsparams" "tf_aaatacacsparams" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the aaatacacsparams. It is a unique string prefixed with `aaatacacsparams-config`.
+
+
+## Import
+
+A aaatacacsparams can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_aaatacacsparams.tf_aaatacacsparams aaatacacsparams-config
+```

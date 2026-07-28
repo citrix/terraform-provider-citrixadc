@@ -24,7 +24,7 @@ import (
 )
 
 func TestAccNscapacity_basic(t *testing.T) {
-	t.Skip("NS capacity")
+	t.Skip("Requires License Server Configuration.")
 	// if isCpxRun {
 	// 	t.Skip("Feature not supported in CPX")
 	// }
@@ -108,6 +108,7 @@ const testAccNscapacityDataSource_basic = `
 `
 
 func TestAccNscapacityDataSource_basic(t *testing.T) {
+	t.Skip("Requires License Server Configuration.")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -117,6 +118,32 @@ func TestAccNscapacityDataSource_basic(t *testing.T) {
 				Config: testAccNscapacityDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.citrixadc_nscapacity.tf_nscapacity", "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNscapacity_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("Requires License Server Configuration.")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNscapacity_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNscapacity_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_capacity", nil),
 				),
 			},
 		},

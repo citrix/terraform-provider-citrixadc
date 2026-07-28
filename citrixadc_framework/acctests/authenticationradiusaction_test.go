@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -78,6 +79,30 @@ func TestAccAuthenticationradiusaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "transport", "TCP"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_radiusaction", "messageauthenticator", "ON"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationradiusaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationradiusaction.tf_radiusaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationradiusaction_add,
+			},
+			{
+				Config:            testAccAuthenticationradiusaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// radkey is a sensitive secret NITRO never echoes back, and
+				// radkey_wo_version is a write-only version tracker; neither can
+				// round-trip through import.
+				ImportStateVerifyIgnore: []string{"radkey", "radkey_wo_version"},
 			},
 		},
 	})
@@ -275,6 +300,131 @@ func TestAccAuthenticationradiusaction_radkey_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAuthenticationradiusaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationradiusaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_radiusaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationradiusaction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_radiusaction", nil),
+				),
+			},
+		},
+	})
+}
+
+// Unset test: step 1 sets all unset-eligible attributes to non-default values;
+// step 2 removes them from config so the provider issues ?action=unset and the
+// appliance reverts each to its NITRO default.
+const testAccAuthenticationradiusaction_unset_step1 = `
+	resource "citrixadc_authenticationradiusaction" "tf_unset" {
+		name                   = "tf_test_radiusaction_unset"
+		radkey                 = "secret"
+		serverip               = "1.2.3.4"
+		serverport             = 8080
+		authentication         = "OFF"
+		authservretry          = 5
+		authtimeout            = 10
+		callingstationid       = "ENABLED"
+		messageauthenticator   = "OFF"
+		passencoding           = "chap"
+		tunnelendpointclientip = "ENABLED"
+	}
+`
+
+const testAccAuthenticationradiusaction_unset_step2 = `
+	resource "citrixadc_authenticationradiusaction" "tf_unset" {
+		name       = "tf_test_radiusaction_unset"
+		radkey     = "secret"
+		serverip   = "1.2.3.4"
+		serverport = 8080
+		# unset-eligible attributes removed from config -> provider must unset them
+	}
+`
+
+func TestAccAuthenticationradiusaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values apply and persist.
+				Config: testAccAuthenticationradiusaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "authentication", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "authservretry", "5"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "authtimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "callingstationid", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "messageauthenticator", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "passencoding", "chap"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "tunnelendpointclientip", "ENABLED"),
+				),
+			},
+			{
+				// Removing them must unset -> state reverts to NITRO defaults,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationradiusaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationradiusactionExist("citrixadc_authenticationradiusaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "authentication", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "authservretry", "3"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "authtimeout", "3"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "callingstationid", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "messageauthenticator", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "passencoding", "pap"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationradiusaction.tf_unset", "tunnelendpointclientip", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationradiusactionADCValue("tf_test_radiusaction_unset", "authentication", "ON"),
+					testAccCheckAuthenticationradiusactionADCValue("tf_test_radiusaction_unset", "authservretry", "3"),
+					testAccCheckAuthenticationradiusactionADCValue("tf_test_radiusaction_unset", "authtimeout", "3"),
+					testAccCheckAuthenticationradiusactionADCValue("tf_test_radiusaction_unset", "callingstationid", "DISABLED"),
+					testAccCheckAuthenticationradiusactionADCValue("tf_test_radiusaction_unset", "messageauthenticator", "ON"),
+					testAccCheckAuthenticationradiusactionADCValue("tf_test_radiusaction_unset", "passencoding", "pap"),
+					testAccCheckAuthenticationradiusactionADCValue("tf_test_radiusaction_unset", "tunnelendpointclientip", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationradiusactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationradiusactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationradiusaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationradiusaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationradiusaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccAuthenticationradiusactionDataSource_basic = `

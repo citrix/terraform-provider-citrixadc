@@ -34,7 +34,7 @@ resource "citrixadc_gslbsite" "example" {
 
 ### Using sitepassword_wo (write-only/ephemeral - NOT persisted in state)
 
-The `sitepassword_wo` attribute provides an ephemeral path for the MEP communication password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `sitepassword_wo_version`.
+The `sitepassword_wo` attribute provides an ephemeral path for the MEP communication password. The value is sent to the ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `sitepassword_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "gslbsite_sitepassword" {
@@ -57,16 +57,16 @@ resource "citrixadc_gslbsite" "example" {
   sitename             = "tf_site_local"
   siteipaddress        = "172.31.96.234"
   sitepassword_wo      = var.gslbsite_sitepassword
-  sitepassword_wo_version = 2  # Bumped to trigger update
+  sitepassword_wo_version = 2  # Bumped: forces destroy & recreate
 }
 ```
 
 
 ## Argument Reference
 
-* `sitename` - (Optional) Name for the GSLB site.
+* `sitename` - (Required) Name for the GSLB site. Changing this forces a new resource to be created.
 * `sitetype` - (Optional) Type of site to create. If the type is not specified, the appliance automatically detects and sets the type on the basis of the IP address being assigned to the site. If the specified site IP address is owned by the appliance (for example, a MIP address or SNIP address), the site is a local site. Otherwise, it is a remote site. Possible values: [ REMOTE, LOCAL ]
-* `siteipaddress` - (Optional) IP address for the GSLB site. The GSLB site uses this IP address to communicate with other GSLB sites. For a local site, use any IP address that is owned by the appliance (for example, a SNIP or MIP address, or the IP address of the ADNS service).
+* `siteipaddress` - (Required) IP address for the GSLB site. The GSLB site uses this IP address to communicate with other GSLB sites. For a local site, use any IP address that is owned by the appliance (for example, a SNIP or MIP address, or the IP address of the ADNS service).
 * `publicip` - (Optional) Public IP address for the local site. Required only if the appliance is deployed in a private address space and the site has a public IP address hosted on an external firewall or a NAT device.
 * `metricexchange` - (Optional) Exchange metrics with other sites. Metrics are exchanged by using Metric Exchange Protocol (MEP). The appliances in the GSLB setup exchange health information once every second.
 

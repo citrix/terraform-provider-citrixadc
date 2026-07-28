@@ -3,9 +3,9 @@ package vpnvserver_appfwpolicy_binding
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -72,7 +72,12 @@ func (r *VpnvserverAppfwpolicyBindingResource) Create(ctx context.Context, req r
 	tflog.Trace(ctx, "Created vpnvserver_appfwpolicy_binding resource")
 
 	// Read the updated state back
-	r.readVpnvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnvserver_appfwpolicy_binding not found immediately after create/update")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -90,7 +95,14 @@ func (r *VpnvserverAppfwpolicyBindingResource) Read(ctx context.Context, req res
 
 	tflog.Debug(ctx, "Reading vpnvserver_appfwpolicy_binding resource")
 
-	r.readVpnvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnvserverAppfwpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -125,11 +137,21 @@ func (r *VpnvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req r
 
 	tflog.Debug(ctx, "Deleting vpnvserver_appfwpolicy_binding resource")
 
-	bindingId := data.Id.ValueString()
-	idSlice := strings.SplitN(bindingId, ",", 2)
-
-	name := idSlice[0]
-	policy := idSlice[1]
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"name", "policy"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
+	name, ok := idMap["name"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return
+	}
+	policy, ok := idMap["policy"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return
+	}
 
 	// Build args for delete
 	args := make([]string, 0)
@@ -142,7 +164,7 @@ func (r *VpnvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req r
 		args = append(args, fmt.Sprintf("groupextraction:%t", data.Groupextraction.ValueBool()))
 	}
 
-	err := r.client.DeleteResourceWithArgs("vpnvserver_appfwpolicy_binding", name, args)
+	err = r.client.DeleteResourceWithArgs("vpnvserver_appfwpolicy_binding", name, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver_appfwpolicy_binding, got error: %s", err))
 		return
@@ -152,12 +174,23 @@ func (r *VpnvserverAppfwpolicyBindingResource) Delete(ctx context.Context, req r
 }
 
 // Helper function to read vpnvserver_appfwpolicy_binding data from API
-func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingFromApi(ctx context.Context, data *VpnvserverAppfwpolicyBindingResourceModel, diags *diag.Diagnostics) {
+func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingFromApi(ctx context.Context, data *VpnvserverAppfwpolicyBindingResourceModel, diags *diag.Diagnostics) bool {
 	bindingId := data.Id.ValueString()
-	idSlice := strings.SplitN(bindingId, ",", 2)
-
-	name := idSlice[0]
-	policy := idSlice[1]
+	idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return false
+	}
+	name, ok := idMap["name"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")
+		return false
+	}
+	policy, ok := idMap["policy"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'policy' not found in ID string")
+		return false
+	}
 
 	findParams := service.FindParams{
 		ResourceType:             "vpnvserver_appfwpolicy_binding",
@@ -167,15 +200,18 @@ func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingF
 
 	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnvserver_appfwpolicy_binding, got error: %s", err))
-		return
+		return false
 	}
 
 	// Resource is missing
 	if len(dataArr) == 0 {
 		tflog.Warn(ctx, fmt.Sprintf("Clearing vpnvserver_appfwpolicy_binding state %s - not found", bindingId))
 		data.Id = types.StringNull()
-		return
+		return false
 	}
 
 	// Iterate through results to find the one with the right policy
@@ -191,10 +227,12 @@ func (r *VpnvserverAppfwpolicyBindingResource) readVpnvserverAppfwpolicyBindingF
 	if foundIndex == -1 {
 		tflog.Warn(ctx, fmt.Sprintf("Clearing vpnvserver_appfwpolicy_binding state %s - policy not found", bindingId))
 		data.Id = types.StringNull()
-		return
+		return false
 	}
 
 	getResponseData := dataArr[foundIndex]
 
 	vpnvserverAppfwpolicyBindingSetAttrFromGet(ctx, data, getResponseData)
+
+	return true
 }

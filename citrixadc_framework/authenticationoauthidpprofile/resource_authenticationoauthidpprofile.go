@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *AuthenticationoauthidpprofileResource) Create(ctx context.Context, req 
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationoauthidpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationoauthidpprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationoauthidpprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *AuthenticationoauthidpprofileResource) Read(ctx context.Context, req re
 
 	tflog.Debug(ctx, "Reading authenticationoauthidpprofile resource")
 
-	r.readAuthenticationoauthidpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationoauthidpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -121,6 +134,7 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Attributes.Equal(state.Attributes) {
 		tflog.Debug(ctx, fmt.Sprintf("attributes has changed for authenticationoauthidpprofile"))
 		hasChange = true
@@ -151,7 +165,11 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 	}
 	if !data.Encrypttoken.Equal(state.Encrypttoken) {
 		tflog.Debug(ctx, fmt.Sprintf("encrypttoken has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Encrypttoken.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "encrypttoken")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Issuer.Equal(state.Issuer) {
 		tflog.Debug(ctx, fmt.Sprintf("issuer has changed for authenticationoauthidpprofile"))
@@ -163,7 +181,11 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 	}
 	if !data.Refreshinterval.Equal(state.Refreshinterval) {
 		tflog.Debug(ctx, fmt.Sprintf("refreshinterval has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Refreshinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refreshinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Relyingpartymetadataurl.Equal(state.Relyingpartymetadataurl) {
 		tflog.Debug(ctx, fmt.Sprintf("relyingpartymetadataurl has changed for authenticationoauthidpprofile"))
@@ -171,11 +193,19 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 	}
 	if !data.Sendpassword.Equal(state.Sendpassword) {
 		tflog.Debug(ctx, fmt.Sprintf("sendpassword has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Sendpassword.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sendpassword")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Signaturealg.Equal(state.Signaturealg) {
 		tflog.Debug(ctx, fmt.Sprintf("signaturealg has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Signaturealg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "signaturealg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Signatureservice.Equal(state.Signatureservice) {
 		tflog.Debug(ctx, fmt.Sprintf("signatureservice has changed for authenticationoauthidpprofile"))
@@ -183,7 +213,11 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 	}
 	if !data.Skewtime.Equal(state.Skewtime) {
 		tflog.Debug(ctx, fmt.Sprintf("skewtime has changed for authenticationoauthidpprofile"))
-		hasChange = true
+		if config.Skewtime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "skewtime")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -206,8 +240,22 @@ func (r *AuthenticationoauthidpprofileResource) Update(ctx context.Context, req 
 		tflog.Debug(ctx, "No changes detected for authenticationoauthidpprofile resource, skipping update")
 	}
 
+	// Unset attributes removed from config (update-then-unset ordering)
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationoauthidpprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationoauthidpprofile attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readAuthenticationoauthidpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationoauthidpprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationoauthidpprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -236,7 +284,7 @@ func (r *AuthenticationoauthidpprofileResource) Delete(ctx context.Context, req 
 }
 
 // Helper function to read authenticationoauthidpprofile data from API
-func (r *AuthenticationoauthidpprofileResource) readAuthenticationoauthidpprofileFromApi(ctx context.Context, data *AuthenticationoauthidpprofileResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationoauthidpprofileResource) readAuthenticationoauthidpprofileFromApi(ctx context.Context, data *AuthenticationoauthidpprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -246,10 +294,14 @@ func (r *AuthenticationoauthidpprofileResource) readAuthenticationoauthidpprofil
 
 	getResponseData, err = r.client.FindResource(service.Authenticationoauthidpprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationoauthidpprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationoauthidpprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *AaatacacsparamsResource) Create(ctx context.Context, req resource.Creat
 	data.Id = types.StringValue("aaatacacsparams-config")
 
 	// Read the updated state back
-	r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaatacacsparams not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *AaatacacsparamsResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading aaatacacsparams resource")
 
-	r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -120,6 +133,7 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Accounting.Equal(state.Accounting) {
 		tflog.Debug(ctx, fmt.Sprintf("accounting has changed for aaatacacsparams"))
 		hasChange = true
@@ -134,7 +148,11 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Authtimeout.Equal(state.Authtimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("authtimeout has changed for aaatacacsparams"))
-		hasChange = true
+		if config.Authtimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authtimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for aaatacacsparams"))
@@ -150,7 +168,11 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Serverport.Equal(state.Serverport) {
 		tflog.Debug(ctx, fmt.Sprintf("serverport has changed for aaatacacsparams"))
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute tacacssecret or its version tracker
 	if !data.Tacacssecret.Equal(state.Tacacssecret) {
@@ -180,8 +202,23 @@ func (r *AaatacacsparamsResource) Update(ctx context.Context, req resource.Updat
 		tflog.Debug(ctx, "No changes detected for aaatacacsparams resource, skipping update")
 	}
 
+	// Issue a single batched unset for attributes removed from config so the
+	// appliance reverts them to their defaults. Update-then-unset ordering
+	// ensures any default carried in the update payload is superseded.
+	// aaatacacsparams is a singleton (params) resource with no identity fields.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Aaatacacsparams.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaatacacsparams attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaatacacsparamsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaatacacsparams not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -203,7 +240,7 @@ func (r *AaatacacsparamsResource) Delete(ctx context.Context, req resource.Delet
 }
 
 // Helper function to read aaatacacsparams data from API
-func (r *AaatacacsparamsResource) readAaatacacsparamsFromApi(ctx context.Context, data *AaatacacsparamsResourceModel, diags *diag.Diagnostics) {
+func (r *AaatacacsparamsResource) readAaatacacsparamsFromApi(ctx context.Context, data *AaatacacsparamsResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -211,10 +248,14 @@ func (r *AaatacacsparamsResource) readAaatacacsparamsFromApi(ctx context.Context
 
 	getResponseData, err = r.client.FindResource(service.Aaatacacsparams.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaatacacsparams, got error: %s", err))
-		return
+		return false
 	}
 
 	aaatacacsparamsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

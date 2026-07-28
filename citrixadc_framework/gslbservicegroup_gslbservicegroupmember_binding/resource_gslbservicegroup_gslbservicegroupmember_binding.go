@@ -3,7 +3,6 @@ package gslbservicegroup_gslbservicegroupmember_binding
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -20,6 +19,7 @@ import (
 var _ resource.Resource = &GslbservicegroupGslbservicegroupmemberBindingResource{}
 var _ resource.ResourceWithConfigure = (*GslbservicegroupGslbservicegroupmemberBindingResource)(nil)
 var _ resource.ResourceWithImportState = (*GslbservicegroupGslbservicegroupmemberBindingResource)(nil)
+var _ resource.ResourceWithValidateConfig = (*GslbservicegroupGslbservicegroupmemberBindingResource)(nil)
 
 func NewGslbservicegroupGslbservicegroupmemberBindingResource() resource.Resource {
 	return &GslbservicegroupGslbservicegroupmemberBindingResource{}
@@ -47,6 +47,34 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Configure(ctx co
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
+// ValidateConfig enforces the NITRO mutually-exclusive mandatory choice between the IP-path member
+// (ip) and the server-name-path member (servername): exactly one must be set.
+func (r *GslbservicegroupGslbservicegroupmemberBindingResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data GslbservicegroupGslbservicegroupmemberBindingResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// At-least-one-of(ip, servername)
+	if data.Ip.IsNull() && data.Servername.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("ip"),
+			"Missing Required Attribute",
+			"Exactly one of \"ip\" or \"servername\" must be specified.",
+		)
+	}
+
+	// Mutually exclusive: ip and servername cannot both be set
+	if !data.Ip.IsNull() && !data.Servername.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("ip"),
+			"Conflicting Attributes",
+			"Only one of \"ip\" or \"servername\" may be specified, not both.",
+		)
+	}
+}
+
 func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data GslbservicegroupGslbservicegroupmemberBindingResourceModel
 
@@ -58,27 +86,11 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Create(ctx conte
 	}
 
 	tflog.Debug(ctx, "Creating gslbservicegroup_gslbservicegroupmember_binding resource")
-	gslbservicegroup_gslbservicegroupmember_binding := gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Build the NITRO binding id exactly as the SDK v2 resource does:
-	// servicegroupname + (servername OR ip) + optional port, joined by commas.
-	// When the user binds by ip, the ADC creates a server named after the ip, so
-	// servername is always a valid search key.
-	bindingIdSlice := make([]string, 0, 3)
-	bindingIdSlice = append(bindingIdSlice, data.Servicegroupname.ValueString())
-	if !data.Servername.IsNull() && !data.Servername.IsUnknown() && data.Servername.ValueString() != "" {
-		bindingIdSlice = append(bindingIdSlice, data.Servername.ValueString())
-	} else if !data.Ip.IsNull() && !data.Ip.IsUnknown() && data.Ip.ValueString() != "" {
-		bindingIdSlice = append(bindingIdSlice, data.Ip.ValueString())
-	}
-	if !data.Port.IsNull() && !data.Port.IsUnknown() {
-		bindingIdSlice = append(bindingIdSlice, strconv.Itoa(int(data.Port.ValueInt64())))
-	}
-	bindingId := strings.Join(bindingIdSlice, ",")
+	gslbservicegroup_gslbservicegroupmember_binding := gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Binding resource with parent - use AddResource with the binding id (SDK v2 parity).
-	_, err := r.client.AddResource(service.Gslbservicegroup_gslbservicegroupmember_binding.Type(), bindingId, &gslbservicegroup_gslbservicegroupmember_binding)
+	// Binding resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Gslbservicegroup_gslbservicegroupmember_binding.Type(), &gslbservicegroup_gslbservicegroupmember_binding)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create gslbservicegroup_gslbservicegroupmember_binding, got error: %s", err))
 		return
@@ -86,32 +98,16 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Create(ctx conte
 
 	tflog.Trace(ctx, "Created gslbservicegroup_gslbservicegroupmember_binding resource")
 
-	// Set ID for the resource before reading state.
-	// Mirrors the SDK v2 ID semantics: the member is identified by
-	// servicegroupname + (servername OR ip) + optional port. When the user binds
-	// by ip, the ADC creates a server named after the ip, so servername always
-	// resolves to a valid search key -- use ip as the effective servername here.
-	effectiveServername := data.Servername.ValueString()
-	if effectiveServername == "" {
-		effectiveServername = data.Ip.ValueString()
-	}
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(data.Servicegroupname.ValueString())))
-	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(effectiveServername)))
-	if !data.Port.IsNull() && !data.Port.IsUnknown() {
-		idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
-	}
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(gslbservicegroup_gslbservicegroupmember_bindingBuildId(
+		data.Servicegroupname.ValueString(),
+		data.Servername.ValueString(),
+		data.Ip.ValueString(),
+		data.Port.ValueInt64(),
+	))
 
-	// Read the updated state back.
+	// Read the updated state back
 	r.readGslbservicegroupGslbservicegroupmemberBindingFromApi(ctx, &data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if data.Id.IsNull() {
-		resp.Diagnostics.AddError("Client Error", "gslbservicegroup_gslbservicegroupmember_binding not found on the ADC immediately after create")
-		return
-	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -130,11 +126,11 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Read(ctx context
 	tflog.Debug(ctx, "Reading gslbservicegroup_gslbservicegroupmember_binding resource")
 
 	r.readGslbservicegroupGslbservicegroupmemberBindingFromApi(ctx, &data, &resp.Diagnostics)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// Binding is gone on the ADC (readFromApi nulled the Id): drop it from state so a
-	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+
 	if data.Id.IsNull() {
 		resp.State.RemoveResource(ctx)
 		return
@@ -159,33 +155,12 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Update(ctx conte
 	// Preserve ID from prior state
 	data.Id = state.Id
 
-	tflog.Debug(ctx, "Updating gslbservicegroup_gslbservicegroupmember_binding resource")
+	// Update is a no-op for this binding: NITRO exposes only add (bind) / delete (unbind),
+	// there is no update/set endpoint, and every schema attribute is RequiresReplace.
+	tflog.Debug(ctx, "Update is a no-op for gslbservicegroup_gslbservicegroupmember_binding; all attributes are RequiresReplace (bind/unbind only)")
 
-	// All attributes are ForceNew (RequiresReplace) mirroring SDK v2, so there are no
-	// in-place updatable attributes; changes trigger a replace instead of Update.
-	hasChange := false
-
-	if hasChange {
-		gslbservicegroup_gslbservicegroupmember_binding := gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromtheConfig(ctx, &data)
-		_, err := r.client.AddResource(service.Gslbservicegroup_gslbservicegroupmember_binding.Type(), data.Id.ValueString(), &gslbservicegroup_gslbservicegroupmember_binding)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbservicegroup_gslbservicegroupmember_binding, got error: %s", err))
-			return
-		}
-		tflog.Trace(ctx, "Updated gslbservicegroup_gslbservicegroupmember_binding resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for gslbservicegroup_gslbservicegroupmember_binding resource, skipping update")
-	}
-
-	// Read the updated state back.
+	// Read the current state back
 	r.readGslbservicegroupGslbservicegroupmemberBindingFromApi(ctx, &data, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if data.Id.IsNull() {
-		resp.Diagnostics.AddError("Client Error", "gslbservicegroup_gslbservicegroupmember_binding not found on the ADC immediately after update")
-		return
-	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -202,11 +177,35 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Delete(ctx conte
 	}
 
 	tflog.Debug(ctx, "Deleting gslbservicegroup_gslbservicegroupmember_binding resource")
-	// Binding with parent - delete using DeleteResourceWithArgs.
-	// Mirrors SDK v2: delete by servername (== ip for ip-based members) and,
-	// when present, port. ParseIdString handles both the new key:value form and the
-	// legacy positional "servicegroupname,servername,port" form.
-	idMap, optionalAbsent, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
+
+	// Legacy SDK v2 positional id ("servicegroupname,<servername-or-ip>,port"): delete the
+	// way SDK v2 did (servername:token,port). This works for both servername- and ip-bound
+	// members because ADC auto-names an ip-bound server == ip. Handled explicitly because the
+	// 4-element ParseIdString order mis-maps a 3-token id (port -> ip). (A prior Read normally
+	// rewrites the id to the new format first; this is defense-in-depth for destroy -refresh=false.)
+	if utils.IsLegacyIdFormat(data.Id.ValueString()) {
+		parts := strings.SplitN(data.Id.ValueString(), ",", 3)
+		if len(parts) < 1 || parts[0] == "" {
+			resp.Diagnostics.AddError("Parse Error", "Parent attribute 'servicegroupname' not found in ID")
+			return
+		}
+		var legacyArgs []string
+		if len(parts) > 1 && parts[1] != "" {
+			legacyArgs = append(legacyArgs, fmt.Sprintf("servername:%s", utils.UrlEncode(parts[1])))
+		}
+		if len(parts) > 2 && parts[2] != "" {
+			legacyArgs = append(legacyArgs, fmt.Sprintf("port:%s", utils.UrlEncode(parts[2])))
+		}
+		if err := r.client.DeleteResourceWithArgs(service.Gslbservicegroup_gslbservicegroupmember_binding.Type(), parts[0], legacyArgs); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete gslbservicegroup_gslbservicegroupmember_binding, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Deleted gslbservicegroup_gslbservicegroupmember_binding binding")
+		return
+	}
+
+	// Binding with parent - delete using DeleteResourceWithArgs
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "servername", "ip", "port"}, []string{"servername", "ip", "port"})
 	if err != nil {
 		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
 		return
@@ -218,13 +217,17 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Delete(ctx conte
 		return
 	}
 
-	args := make([]string, 0, 2)
-	if val, ok := idMap["servername"]; ok && val != "" {
-		// URL-encode the value so slashy/special chars survive the query string.
-		args = append(args, fmt.Sprintf("servername:%s", url.QueryEscape(val)))
+	// Build delete args; UrlEncode the values since ip may be an IPv6 address containing colons,
+	// which would otherwise break the args=ip:..,servername:..,port:.. parsing.
+	var args []string
+	if val, ok := idMap["ip"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("ip:%s", utils.UrlEncode(val)))
 	}
-	if val, ok := idMap["port"]; ok && val != "" && !optionalAbsent["port"] {
-		args = append(args, fmt.Sprintf("port:%s", url.QueryEscape(val)))
+	if val, ok := idMap["servername"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("servername:%s", utils.UrlEncode(val)))
+	}
+	if val, ok := idMap["port"]; ok && val != "" {
+		args = append(args, fmt.Sprintf("port:%s", utils.UrlEncode(val)))
 	}
 
 	err = r.client.DeleteResourceWithArgs(service.Gslbservicegroup_gslbservicegroupmember_binding.Type(), servicegroupname_value, args)
@@ -239,32 +242,41 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Delete(ctx conte
 // Helper function to read gslbservicegroup_gslbservicegroupmember_binding data from API
 func (r *GslbservicegroupGslbservicegroupmemberBindingResource) readGslbservicegroupGslbservicegroupmemberBindingFromApi(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel, diags *diag.Diagnostics) {
 
-	// Binding with parent ID - parse from ID. Mirrors the SDK v2 identity:
-	// servicegroupname + (servername OR ip, stored under "servername") + optional
-	// port. ParseIdString handles both the new key:value form and the legacy
-	// positional "servicegroupname,servername,port" form.
-	idMap, optionalAbsent, err := utils.ParseIdString(data.Id.ValueString(), []string{"servicegroupname", "servername", "port"}, []string{"servername", "port"})
-	if err != nil {
-		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
-		return
+	idStr := data.Id.ValueString()
+
+	// legacy marks an SDK v2 positional id ("servicegroupname,<servername-or-ip>,port").
+	// The 4-element ParseIdString order [servicegroupname,servername,ip,port] mis-maps a
+	// 3-token legacy id (the port lands in the ip slot), so parse it explicitly here and
+	// resolve the ambiguous middle token to servername/ip after the GET.
+	var idMap map[string]string
+	var legacyToken string
+	legacy := utils.IsLegacyIdFormat(idStr)
+	if legacy {
+		parts := strings.SplitN(idStr, ",", 3)
+		idMap = map[string]string{}
+		if len(parts) > 0 {
+			idMap["servicegroupname"] = parts[0]
+		}
+		if len(parts) > 1 {
+			legacyToken = parts[1]
+		}
+		if len(parts) > 2 {
+			idMap["port"] = parts[2]
+		}
+	} else {
+		// Case 4: Array filter with parent ID - parse from ID
+		var err error
+		idMap, _, err = utils.ParseIdString(idStr, []string{"servicegroupname", "servername", "ip", "port"}, []string{"servername", "ip", "port"})
+		if err != nil {
+			diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+			return
+		}
 	}
 
 	servicegroupname_Name, ok := idMap["servicegroupname"]
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'servicegroupname' not found in ID string")
 		return
-	}
-
-	// The ADC creates a server named after the bound ip, so "servername" in the ID
-	// is the effective member key whether the user bound by servername or by ip.
-	idServername := idMap["servername"]
-
-	idPort := 0
-	if portStr, ok := idMap["port"]; ok && portStr != "" && !optionalAbsent["port"] {
-		if idPort, err = strconv.Atoi(portStr); err != nil {
-			diags.AddError("Parse Error", fmt.Sprintf("Unable to parse port from ID: %s", err))
-			return
-		}
 	}
 
 	var dataArr []map[string]interface{}
@@ -274,46 +286,157 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) readGslbserviceg
 		ResourceName:             servicegroupname_Name,
 		ResourceMissingErrorCode: 258,
 	}
-	dataArr, err = r.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read gslbservicegroup_gslbservicegroupmember_binding, got error: %s", err))
 		return
 	}
 
-	// Binding (or its parent) no longer exists on the ADC. Signal removal via a null Id
-	// (matches SDK v2 d.SetId("")) so the Read caller drops it from state instead of erroring.
+	// Resource is missing (deleted out-of-band) - signal removal from state.
 	if len(dataArr) == 0 {
 		data.Id = types.StringNull()
 		return
 	}
 
-	// Iterate through results to find the matching member, matching on
-	// servername (== ip for ip-based members) and, when supplied, port.
+	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-		servernameVal, _ := v["servername"].(string)
-		if servernameVal != idServername {
+		if legacy {
+			// Legacy match: port must match and the ambiguous token must equal either the
+			// member's servername or its ip. (ADC auto-names an ip-bound server == ip, so a
+			// servername match covers most ip bindings; the ip clause covers pure ip/autoscale
+			// members whose servername is empty.)
+			if portStr, ok := idMap["port"]; ok && portStr != "" {
+				vp, ok := v["port"]
+				if !ok {
+					continue
+				}
+				vpInt, _ := utils.ConvertToInt64(vp)
+				tokenPort, _ := strconv.ParseInt(portStr, 10, 64)
+				if vpInt != tokenPort {
+					continue
+				}
+			}
+			vServername, _ := v["servername"].(string)
+			vIp, _ := v["ip"].(string)
+			if vServername == legacyToken || vIp == legacyToken {
+				foundIndex = i
+				break
+			}
 			continue
 		}
-		if idPort != 0 {
-			if pv, ok := v["port"]; ok {
-				portVal, _ := utils.ConvertToInt64(pv)
-				if portVal != int64(idPort) {
+
+		match := true
+
+		// Check ip (ip/servername are a mutually-exclusive choice; the unused one is empty in the ID,
+		// so only filter on ip when the ID actually carries a non-empty ip value)
+		if idVal, ok := idMap["ip"]; ok && idVal != "" {
+			if val, ok := v["ip"].(string); ok {
+				if val != idVal {
+					match = false
 					continue
 				}
 			} else {
+				match = false
 				continue
 			}
 		}
-		foundIndex = i
-		break
+
+		// Check port
+		if idVal, ok := idMap["port"]; ok {
+			if val, ok := v["port"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				idValInt64, _ := strconv.ParseInt(idVal, 10, 64)
+				if val != idValInt64 {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		} else if _, ok := v["port"]; ok {
+			match = false
+			continue
+		}
+
+		// Check servername (mutually-exclusive with ip; only filter when the ID carries a non-empty value)
+		if idVal, ok := idMap["servername"]; ok && idVal != "" {
+			if val, ok := v["servername"].(string); ok {
+				if val != idVal {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		if match {
+			foundIndex = i
+			break
+		}
 	}
 
-	// Binding not present in the returned set: signal removal via a null Id (see above).
+	//  Resource is missing (deleted out-of-band) - signal removal from state.
 	if foundIndex == -1 {
 		data.Id = types.StringNull()
 		return
 	}
 
-	gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])
+	member := dataArr[foundIndex]
+	gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet(ctx, data, member)
+
+	if legacy {
+		// Normalize legacy SDK v2 (v2.2.x) state to the Framework model and rewrite the id
+		// to the new key:value format, so subsequent plans take the fast (non-legacy) path.
+		var memberPort int64
+		if portStr, ok := idMap["port"]; ok && portStr != "" {
+			memberPort, _ = strconv.ParseInt(portStr, 10, 64)
+		} else if vp, ok := member["port"]; ok {
+			memberPort, _ = utils.ConvertToInt64(vp)
+		}
+
+		// Resolve the ambiguous token: if it equals the member's ip, the user bound by ip
+		// (ADC created a server named == ip); otherwise they bound by servername. Populate
+		// exactly one of servername/ip (mirroring Create) so the refreshed state matches a
+		// config that sets only that field (both are RequiresReplace).
+		memberIp, _ := member["ip"].(string)
+		if memberIp == legacyToken {
+			data.Ip = types.StringValue(legacyToken)
+			data.Servername = types.StringNull()
+		} else {
+			data.Servername = types.StringValue(legacyToken)
+			data.Ip = types.StringNull()
+		}
+		data.Port = types.Int64Value(memberPort)
+		data.Servicegroupname = types.StringValue(servicegroupname_Name)
+
+		// SDK v2 marked several optional attrs Computed and stored server-echoed zero/empty
+		// values; the Framework treats them as plain Optional (RequiresReplace). Coerce those
+		// empties to null so an upgrade against a config that omits them does not force a
+		// spurious replace.
+		if data.Hashid.ValueInt64() == 0 {
+			data.Hashid = types.Int64Null()
+		}
+		if data.Order.ValueInt64() == 0 {
+			data.Order = types.Int64Null()
+		}
+		if data.Publicport.ValueInt64() == 0 {
+			data.Publicport = types.Int64Null()
+		}
+		if data.Publicip.ValueString() == "" {
+			data.Publicip = types.StringNull()
+		}
+		if data.Siteprefix.ValueString() == "" {
+			data.Siteprefix = types.StringNull()
+		}
+
+		data.Id = types.StringValue(gslbservicegroup_gslbservicegroupmember_bindingBuildId(
+			data.Servicegroupname.ValueString(),
+			data.Servername.ValueString(),
+			data.Ip.ValueString(),
+			memberPort,
+		))
+	}
 }

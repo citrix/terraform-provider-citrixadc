@@ -110,3 +110,12 @@ resource "citrixadc_lbparameter" "tf_lbparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the lbparameter. It is a unique string prefixed with "tf-lbparameter"
+
+
+## Import
+
+A lbparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_lbparameter.tf_lbparameter lbparameter-config
+```

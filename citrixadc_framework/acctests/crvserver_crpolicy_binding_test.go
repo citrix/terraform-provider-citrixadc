@@ -84,8 +84,9 @@ func TestAccCrvserver_crpolicy_binding_basic(t *testing.T) {
 // TestAccCrvserver_crpolicy_binding_import verifies `terraform import` for the
 // binding. The binding implements ImportStatePassthroughID(id), so Read must
 // reconstruct the full state from the id alone. Two import shapes are exercised:
-//   1. the canonical new-format id that the resource stores (default: prior state's id)
-//   2. the legacy SDK v2 positional id "name,policyname" (via ImportStateIdFunc)
+//  1. the canonical new-format id that the resource stores (default: prior state's id)
+//  2. the legacy SDK v2 positional id "name,policyname" (via ImportStateIdFunc)
+//
 // ImportStateVerify compares the imported instance attribute-by-attribute against
 // the applied state; attributes the ADC does not echo back on the binding GET are
 // listed in ImportStateVerifyIgnore.

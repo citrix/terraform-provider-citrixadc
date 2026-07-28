@@ -33,7 +33,7 @@ resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 * `certkeynames` - (Optional) Name of the certificate key that was bound to the corresponding SSL virtual server as the Certificate Authority for the device certificate
 * `cginfrahomepageredirect` - (Optional) When client requests ShareFile resources and Citrix Gateway detects that the user is unauthenticated or the user session has expired, disabling this option takes the user to the originally requested ShareFile resource after authentication (instead of taking the user to the default VPN home page)
 * `comment` - (Optional) Any comments associated with the virtual server.
-* `deploymenttype` - (Optional) 0
+* `deploymenttype` - (Optional) Deployment type of the VPN virtual server. Possible values: [ NONE, ICA_WEBINTERFACE, ICA_STOREFRONT, MOBILITY ]
 * `devicecert` - (Optional) Indicates whether device certificate check as a part of EPA is on or off.
 * `doublehop` - (Optional) Use the Citrix Gateway appliance in a double-hop configuration. A double-hop deployment provides an extra layer of security for the internal network by using three firewalls to divide the DMZ into two stages. Such a deployment can have one appliance in the DMZ and one appliance in the secure network.
 * `downstateflush` - (Optional) Close existing connections when the virtual server is marked DOWN, which means the server might have timed out. Disconnecting existing connections frees resources and in certain cases speeds recovery of overloaded load balancing setups. Enable this setting on servers in which the connections can safely be closed when they are marked DOWN.  Do not enable DOWN state flush on servers that must complete their transactions.
@@ -52,8 +52,8 @@ resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 * `loginonce` - (Optional) This option enables/disables seamless SSO for this Vserver.
 * `logoutonsmartcardremoval` - (Optional) Option to VPN plugin behavior when smartcard or its reader is removed
 * `macepapluginupgrade` - (Optional) Option to set plugin upgrade behaviour for Mac
-* `maxaaausers` - (Optional)
-* `maxloginattempts` - (Optional)
+* `maxaaausers` - (Optional) Maximum number of concurrent user sessions allowed on this virtual server. The actual number of users allowed to log on to this virtual server depends on the total number of user licenses.
+* `maxloginattempts` - (Optional) Maximum number of logon attempts. Minimum value =  1 Maximum value =  255
 * `netprofile` - (Optional) The name of the network profile.
 * `pcoipvserverprofilename` - (Optional) Name of the PCoIP vserver profile associated with the vserver.
 * `port` - (Optional) TCP port on which the virtual server listens.
@@ -83,5 +83,5 @@ In addition to the arguments, the following attributes are available:
 A vpnvserver can be imported using its name, e.g.
 
 ```shell
-terraform import citrixadc_vpnvserver.tf_vpnserver tf.citrix.example.com
+terraform import citrixadc_vpnvserver.tf_vpnvserver tf.citrix.example.com
 ```

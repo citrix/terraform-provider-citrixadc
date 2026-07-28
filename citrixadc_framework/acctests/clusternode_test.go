@@ -24,11 +24,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+// NOTE: These tests manage actual cluster membership and are gated to the CLUSTER testbed.
+// They add a *self-contained, non-destructive* spare node definition (an UNUSED nodeid with a
+// phantom NSIP that is not a live appliance). nodeid=2 is used deliberately: on the CLUSTER
+// testbed nodeids 0 and 1 are the existing UP members (node 1 = local config-coordinator that
+// carries the management/CLIP connection), so touching them would break quorum and sever the
+// test's own connection. Adding nodeid=2 with a phantom IP creates a config-only node that never
+// joins (stays DOWN) and is cleanly removable, leaving the live cluster untouched.
 const testAccClusternode_basic_nogroup_config = `
 
 
 resource "citrixadc_clusternode" "tf_clusternode" {
-	nodeid             = 1
+	nodeid             = 2
 	ipaddress          = "10.101.132.153"
 	state              = "PASSIVE"
 	}
@@ -38,7 +45,7 @@ const testAccClusternode_update_nogroup_config = `
 
 
 resource "citrixadc_clusternode" "tf_clusternode" {
-	nodeid             = 1
+	nodeid             = 2
 	ipaddress          = "10.101.132.153"
 	state              = "ACTIVE"  
 	}
@@ -78,7 +85,7 @@ const testAccClusternode_basic_group_config_yes = `
 
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
-		nodeid               = 1
+		nodeid               = 2
 		ipaddress            = "10.101.132.153"
 		state                = "PASSIVE"
 		clearnodegroupconfig = "YES"
@@ -88,7 +95,7 @@ const testAccClusternode_update_group_config_yes = `
 
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
-		nodeid               = 1
+		nodeid               = 2
 		ipaddress            = "10.101.132.153"
 		state                = "ACTIVE"
 		clearnodegroupconfig = "YES"
@@ -129,7 +136,7 @@ const testAccClusternode_basic_group_config_no = `
 
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
-		nodeid               = 1
+		nodeid               = 2
 		ipaddress            = "10.101.132.153"
 		state                = "PASSIVE"
 		clearnodegroupconfig = "NO"
@@ -139,7 +146,7 @@ const testAccClusternode_update_group_config_no = `
 
 
 	resource "citrixadc_clusternode" "tf_clusternode" {
-		nodeid               = 1
+		nodeid               = 2
 		ipaddress            = "10.101.132.153"
 		state                = "ACTIVE"
 		clearnodegroupconfig = "NO"

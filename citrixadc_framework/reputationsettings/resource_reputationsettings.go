@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -75,7 +76,12 @@ func (r *ReputationsettingsResource) Create(ctx context.Context, req resource.Cr
 	data.Id = types.StringValue("reputationsettings-config")
 
 	// Read the updated state back
-	r.readReputationsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readReputationsettingsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "reputationsettings not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -93,7 +99,14 @@ func (r *ReputationsettingsResource) Read(ctx context.Context, req resource.Read
 
 	tflog.Debug(ctx, "Reading reputationsettings resource")
 
-	r.readReputationsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readReputationsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -161,7 +174,12 @@ func (r *ReputationsettingsResource) Update(ctx context.Context, req resource.Up
 	}
 
 	// Read the updated state back
-	r.readReputationsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readReputationsettingsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "reputationsettings not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -183,7 +201,7 @@ func (r *ReputationsettingsResource) Delete(ctx context.Context, req resource.De
 }
 
 // Helper function to read reputationsettings data from API
-func (r *ReputationsettingsResource) readReputationsettingsFromApi(ctx context.Context, data *ReputationsettingsResourceModel, diags *diag.Diagnostics) {
+func (r *ReputationsettingsResource) readReputationsettingsFromApi(ctx context.Context, data *ReputationsettingsResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 1: Simple find without ID
 	var getResponseData map[string]interface{}
@@ -191,10 +209,14 @@ func (r *ReputationsettingsResource) readReputationsettingsFromApi(ctx context.C
 
 	getResponseData, err = r.client.FindResource(service.Reputationsettings.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read reputationsettings, got error: %s", err))
-		return
+		return false
 	}
 
 	reputationsettingsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

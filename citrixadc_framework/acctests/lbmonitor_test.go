@@ -842,6 +842,107 @@ resource "citrixadc_lbmonitor" "tf_lbmonitor_secureargs_wo" {
 }
 `
 
+// ============================================================
+// SDK v2 -> Plugin Framework state upgrade (backward compatibility)
+//
+// In v2.2.0 (and earlier) citrixadc_lbmonitor was an SDK v2 resource that stored
+// its state id as the bare monitorname (d.SetId(monitorname)). In v2.2.1 it was
+// migrated to the Plugin Framework, which stores a self-describing composite id
+// ("monitorname:<name>,type:<type>"). This test proves that the current
+// (framework) provider can read a resource whose state was written by the old
+// SDK provider WITHOUT the "cannot parse legacy ID ... no attribute order
+// provided" error, and that the id is transparently normalized to the new format.
+// ============================================================
+
+const testAccLbmonitor_upgrade_basic = `
+resource "citrixadc_lbmonitor" "upgrade" {
+  monitorname = "tf_test_lbmonitor_upgrade"
+  type        = "HTTP"
+}
+`
+
+func TestAccLbmonitor_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the monitor with the last SDK-v2 provider release
+			// (v2.2.0). It writes state with the legacy bare-monitorname id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccLbmonitor_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.upgrade", nil),
+					// Legacy format: id is exactly the monitorname (no "key:value" pairs).
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbmonitor.upgrade", "id", "tf_test_lbmonitor_upgrade"),
+				),
+			},
+			// Step 2: same config, now served by the CURRENT (framework) provider.
+			// Terraform refreshes the legacy-id state through the new provider's
+			// Read (exercising ParseIdString with the legacy attr order) and then
+			// plans/applies. The step fails automatically if Read returns the
+			// parse error. We also assert the id is upgraded to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbmonitor_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.upgrade", nil),
+					resource.TestCheckResourceAttr(
+						"citrixadc_lbmonitor.upgrade", "id",
+						"monitorname:tf_test_lbmonitor_upgrade,type:HTTP"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccLbmonitor_legacyIdImport is a registry-INDEPENDENT backward-compatibility
+// test. It imports an existing monitor using the LEGACY bare-"monitorname" id that
+// the SDK v2 provider stored (d.SetId(monitorname)), which drives ParseIdString's
+// legacy-format path in Read. Before the fix this failed with
+// "cannot parse legacy ID ... no attribute order provided". Unlike
+// TestAccLbmonitor_sdkv2StateUpgrade this needs NO external provider download, so it
+// runs in environments without Terraform Registry access (only a live ADC required).
+func TestAccLbmonitor_legacyIdImport(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.upgrade", nil),
+				),
+			},
+			{
+				// Import with the legacy bare-monitorname id (no "key:value" pairs).
+				ResourceName:      "citrixadc_lbmonitor.upgrade",
+				ImportState:       true,
+				ImportStateId:     "tf_test_lbmonitor_upgrade",
+				ImportStateVerify: false,
+				ImportStateCheck: func(states []*terraform.InstanceState) error {
+					if len(states) != 1 {
+						return fmt.Errorf("expected 1 imported state, got %d", len(states))
+					}
+					got := states[0].ID
+					want := "monitorname:tf_test_lbmonitor_upgrade,type:HTTP"
+					if got != want {
+						return fmt.Errorf("legacy id not normalized on import: got %q, want %q", got, want)
+					}
+					return nil
+				},
+			},
+		},
+	})
+}
+
 func TestAccLbmonitor_secureargs_wo_ephemeral(t *testing.T) {
 	t.Setenv("TF_VAR_lbmonitor_secureargs_wo", "secret1=val1")
 	t.Setenv("TF_VAR_lbmonitor_secureargs_wo_2", "secret2=val2")
@@ -870,4 +971,98 @@ func TestAccLbmonitor_secureargs_wo_ephemeral(t *testing.T) {
 			},
 		},
 	})
+}
+
+// ============================================================
+// Unset test (NSNETAUTO-1153): attributes removed from config are
+// reverted to their NITRO defaults via a batched ?action=unset.
+//
+// step1 sets six type-independent attributes to non-default values;
+// step2 removes them from config. The provider must unset them so the
+// appliance reverts each to its default. The post-apply plan is verified
+// empty (no perpetual diff); a broken unset would instead surface as a
+// "provider produced inconsistent result after apply" error.
+// ============================================================
+
+const testAccLbmonitor_unset_step1 = `
+resource "citrixadc_lbmonitor" "tf_unset" {
+  monitorname    = "tf_test_lbmonitor_unset"
+  type           = "HTTP"
+  interval       = 10
+  resptimeout    = 5
+  retries        = 5
+  successretries = 3
+  reverse        = "YES"
+}
+`
+
+const testAccLbmonitor_unset_step2 = `
+resource "citrixadc_lbmonitor" "tf_unset" {
+  monitorname = "tf_test_lbmonitor_unset"
+  type        = "HTTP"
+  # interval, resptimeout, retries, successretries, reverse removed
+  # from config -> the provider must unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccLbmonitor_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLbmonitor_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "interval", "10"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "resptimeout", "5"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "retries", "5"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "successretries", "3"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "reverse", "YES"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccLbmonitor_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "interval", "5"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "resptimeout", "2"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "retries", "3"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "successretries", "1"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.tf_unset", "reverse", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLbmonitorADCValue("tf_test_lbmonitor_unset", "interval", "5"),
+					testAccCheckLbmonitorADCValue("tf_test_lbmonitor_unset", "reverse", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLbmonitorADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckLbmonitorADCValue(monitorName, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbmonitor.Type(), monitorName)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lbmonitor %s not found on appliance", monitorName)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lbmonitor %s: appliance attr %q = %q, want %q (unset did not revert it)", monitorName, attr, got, want)
+		}
+		return nil
+	}
 }

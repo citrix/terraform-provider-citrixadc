@@ -156,6 +156,28 @@ func BoolPtr(b bool) *bool {
 	return &b
 }
 
+// ExecuteUnset clears the given attributes on a NITRO resource in a single
+// ?action=unset call. idPayload carries the resource's identifying fields
+// (e.g. {"monitorname": name, "type": t}); each attribute in attrs is sent as
+// "true" so the appliance reverts it to its default. It is a no-op when attrs
+// is empty.
+func ExecuteUnset(client *service.NitroClient, resourceType string, idPayload map[string]interface{}, attrs []string) error {
+	if len(attrs) == 0 {
+		return nil
+	}
+	payload := map[string]interface{}{}
+	for k, v := range idPayload {
+		payload[k] = v
+	}
+	for _, a := range attrs {
+		payload[a] = "true"
+	}
+	if err := client.ActOnResource(resourceType, payload, "unset"); err != nil {
+		return fmt.Errorf("error unsetting attributes %v on %s: %w", attrs, resourceType, err)
+	}
+	return nil
+}
+
 // Helper function to convert interface{} to int64
 func ConvertToInt64(value interface{}) (int64, error) {
 	switch v := value.(type) {
@@ -218,6 +240,18 @@ func isNewIdFormat(parts []string) bool {
 		}
 	}
 	return true
+}
+
+// IsLegacyIdFormat reports whether id is a legacy SDK v2 positional ID
+// (comma-separated bare values) rather than the new Framework "attr:value,..."
+// format. An empty id is treated as non-legacy. Resources use this to route
+// state written by an older SDK v2 release through a compatibility parse before
+// normalizing the id to the new key:value format.
+func IsLegacyIdFormat(id string) bool {
+	if id == "" {
+		return false
+	}
+	return !isNewIdFormat(strings.Split(id, ","))
 }
 
 // ParseIdString parses a resource ID string into a map of attribute name → value,
@@ -295,4 +329,24 @@ func ParseIdString(idStr string, legacyAttrOrder []string, legacyOptionalAttrs [
 	}
 
 	return result, optionalAbsent, nil
+}
+
+// IsNotFoundError reports whether err represents a NITRO "resource not found"
+// condition. Read handlers use this to drop a resource from Terraform state
+// (instead of erroring) when its backing object has been deleted out-of-band,
+// matching the SDKv2 self-healing behavior. Transient errors (auth/network/5xx)
+// are deliberately NOT treated as not-found so they continue to surface as hard
+// errors.
+func IsNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	m := strings.ToLower(err.Error())
+	return strings.Contains(m, "404") ||
+		strings.Contains(m, "not found") ||
+		strings.Contains(m, "no such resource") ||
+		// adc-nitro-go FindResource returns "No resource <name> of type <type> found" on not-found.
+		strings.Contains(m, "no resource") ||
+		// Some NITRO objects report not-found as "<X> does not exist" (e.g. "Profile does not exist").
+		strings.Contains(m, "does not exist")
 }

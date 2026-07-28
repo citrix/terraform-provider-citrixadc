@@ -60,6 +60,27 @@ func TestAccNsencryptionparams_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsencryptionparams_import(t *testing.T) {
+	const resAddr = "citrixadc_nsencryptionparams.tf_nsencryptionparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsencryptionparams_basic},
+			{
+				Config:            testAccNsencryptionparams_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// keyvalue_wo_version is a write-only version tracker (defaults to 1);
+				// it is not populated from the NITRO GET response on import.
+				ImportStateVerifyIgnore: []string{"keyvalue_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckNsencryptionparamsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -224,6 +245,31 @@ func TestAccNsencryptionparams_keyvalue_wo_ephemeral(t *testing.T) {
 					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "method", "AES256"),
 					resource.TestCheckResourceAttr("citrixadc_nsencryptionparams.tf_nsencryptionparams", "keyvalue_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNsencryptionparams_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsencryptionparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsencryptionparams_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsencryptionparamsExist("citrixadc_nsencryptionparams.tf_nsencryptionparams", nil),
 				),
 			},
 		},

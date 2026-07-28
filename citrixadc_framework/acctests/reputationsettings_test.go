@@ -70,6 +70,30 @@ func TestAccReputationsettings_basic(t *testing.T) {
 	})
 }
 
+func TestAccReputationsettings_import(t *testing.T) {
+	const resAddr = "citrixadc_reputationsettings.tf_reputationsettings"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReputationsettings_basic,
+			},
+			{
+				Config:            testAccReputationsettings_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// proxypassword_wo_version is a config-only version tracker for the
+				// write-only proxypassword_wo; it is not returned by NITRO and cannot
+				// round-trip through import.
+				ImportStateVerifyIgnore: []string{"proxypassword_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckReputationsettingsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -247,6 +271,31 @@ func TestAccReputationsettings_proxypassword_wo_ephemeral(t *testing.T) {
 					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
 					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxyserver", "my_proxyserver"),
 					resource.TestCheckResourceAttr("citrixadc_reputationsettings.tf_reputationsettings", "proxypassword_wo_version", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccReputationsettings_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccReputationsettings_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccReputationsettings_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReputationsettingsExist("citrixadc_reputationsettings.tf_reputationsettings", nil),
 				),
 			},
 		},

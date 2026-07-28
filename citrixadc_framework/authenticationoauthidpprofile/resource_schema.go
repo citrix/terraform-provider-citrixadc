@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -93,6 +94,7 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 			"encrypttoken": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to encrypt token when Citrix ADC IDP sends one.",
 			},
 			"issuer": schema.StringAttribute{
@@ -115,6 +117,7 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 			"refreshinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(50),
 				Description: "Interval at which Relying Party metadata is refreshed.",
 			},
 			"relyingpartymetadataurl": schema.StringAttribute{
@@ -125,11 +128,13 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 			"sendpassword": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to send encrypted password in idtoken.",
 			},
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("RS256"),
 				Description: "Algorithm to be used to sign OpenID tokens.",
 			},
 			"signatureservice": schema.StringAttribute{
@@ -140,6 +145,7 @@ func (r *AuthenticationoauthidpprofileResource) Schema(ctx context.Context, req 
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "This option specifies the duration for which the token sent by Citrix ADC IdP is valid. For example, if skewTime is 10, then token would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
 		},

@@ -117,3 +117,12 @@ resource "citrixadc_appfwsettings" "example" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The ID of the appfwsettings resource. It is a unique string prefixed with `appfwsettings-config`.
+
+
+## Import
+
+A appfwsettings can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appfwsettings.tf_appfwsettings appfwsettings-config
+```

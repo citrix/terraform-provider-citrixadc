@@ -4,9 +4,8 @@ subcategory: "Audit"
 
 # Data Source: auditnslogpolicy
 
-Use this data source to retrieve information about an existing Audit NS Log Policy.
+The auditnslogpolicy data source allows you to retrieve information about an audit nslog policy.
 
-The `citrixadc_auditnslogpolicy` data source allows you to retrieve details of an audit nslog policy by its name. This is useful for referencing existing audit nslog policies in your Terraform configurations without managing them directly.
 
 ## Example usage
 

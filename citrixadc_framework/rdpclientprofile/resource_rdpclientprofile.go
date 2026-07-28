@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *RdpclientprofileResource) Create(ctx context.Context, req resource.Crea
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readRdpclientprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readRdpclientprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "rdpclientprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *RdpclientprofileResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading rdpclientprofile resource")
 
-	r.readRdpclientprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readRdpclientprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -121,21 +134,39 @@ func (r *RdpclientprofileResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	// Collect eligible attributes that were removed from config so they can be unset on the appliance
+	attributesToUnset := []string{}
 	if !data.Addusernameinrdpfile.Equal(state.Addusernameinrdpfile) {
 		tflog.Debug(ctx, fmt.Sprintf("addusernameinrdpfile has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Addusernameinrdpfile.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "addusernameinrdpfile")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Audiocapturemode.Equal(state.Audiocapturemode) {
 		tflog.Debug(ctx, fmt.Sprintf("audiocapturemode has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Audiocapturemode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "audiocapturemode")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Keyboardhook.Equal(state.Keyboardhook) {
 		tflog.Debug(ctx, fmt.Sprintf("keyboardhook has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Keyboardhook.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "keyboardhook")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Multimonitorsupport.Equal(state.Multimonitorsupport) {
 		tflog.Debug(ctx, fmt.Sprintf("multimonitorsupport has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Multimonitorsupport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "multimonitorsupport")
+		} else {
+			hasChange = true
+		}
 	}
 	// Check secret attribute psk or its version tracker
 	if !data.Psk.Equal(state.Psk) {
@@ -147,11 +178,19 @@ func (r *RdpclientprofileResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Randomizerdpfilename.Equal(state.Randomizerdpfilename) {
 		tflog.Debug(ctx, fmt.Sprintf("randomizerdpfilename has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Randomizerdpfilename.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "randomizerdpfilename")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rdpcookievalidity.Equal(state.Rdpcookievalidity) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpcookievalidity has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Rdpcookievalidity.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rdpcookievalidity")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rdpcustomparams.Equal(state.Rdpcustomparams) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpcustomparams has changed for rdpclientprofile"))
@@ -175,35 +214,67 @@ func (r *RdpclientprofileResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Rdpurloverride.Equal(state.Rdpurloverride) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpurloverride has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Rdpurloverride.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rdpurloverride")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rdpvalidateclientip.Equal(state.Rdpvalidateclientip) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpvalidateclientip has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Rdpvalidateclientip.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rdpvalidateclientip")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Redirectclipboard.Equal(state.Redirectclipboard) {
 		tflog.Debug(ctx, fmt.Sprintf("redirectclipboard has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Redirectclipboard.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "redirectclipboard")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Redirectcomports.Equal(state.Redirectcomports) {
 		tflog.Debug(ctx, fmt.Sprintf("redirectcomports has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Redirectcomports.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "redirectcomports")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Redirectdrives.Equal(state.Redirectdrives) {
 		tflog.Debug(ctx, fmt.Sprintf("redirectdrives has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Redirectdrives.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "redirectdrives")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Redirectpnpdevices.Equal(state.Redirectpnpdevices) {
 		tflog.Debug(ctx, fmt.Sprintf("redirectpnpdevices has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Redirectpnpdevices.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "redirectpnpdevices")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Redirectprinters.Equal(state.Redirectprinters) {
 		tflog.Debug(ctx, fmt.Sprintf("redirectprinters has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Redirectprinters.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "redirectprinters")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Videoplaybackmode.Equal(state.Videoplaybackmode) {
 		tflog.Debug(ctx, fmt.Sprintf("videoplaybackmode has changed for rdpclientprofile"))
-		hasChange = true
+		if config.Videoplaybackmode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "videoplaybackmode")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -226,8 +297,23 @@ func (r *RdpclientprofileResource) Update(ctx context.Context, req resource.Upda
 		tflog.Debug(ctx, "No changes detected for rdpclientprofile resource, skipping update")
 	}
 
+	// Unset attributes that were removed from config so the appliance reverts them to their defaults.
+	// Update-then-unset ordering ensures any default carried in the update payload is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Rdpclientprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset rdpclientprofile attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readRdpclientprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readRdpclientprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "rdpclientprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -256,7 +342,7 @@ func (r *RdpclientprofileResource) Delete(ctx context.Context, req resource.Dele
 }
 
 // Helper function to read rdpclientprofile data from API
-func (r *RdpclientprofileResource) readRdpclientprofileFromApi(ctx context.Context, data *RdpclientprofileResourceModel, diags *diag.Diagnostics) {
+func (r *RdpclientprofileResource) readRdpclientprofileFromApi(ctx context.Context, data *RdpclientprofileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -266,10 +352,14 @@ func (r *RdpclientprofileResource) readRdpclientprofileFromApi(ctx context.Conte
 
 	getResponseData, err = r.client.FindResource(service.Rdpclientprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read rdpclientprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	rdpclientprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

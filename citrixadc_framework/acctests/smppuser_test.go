@@ -66,6 +66,30 @@ func TestAccSmppuser_basic(t *testing.T) {
 	})
 }
 
+func TestAccSmppuser_import(t *testing.T) {
+	const resAddr = "citrixadc_smppuser.tf_smppuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSmppuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSmppuser_basic,
+			},
+			{
+				Config:            testAccSmppuser_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password is a secret NITRO does not echo back; password_wo_version
+				// is a client-side version tracker not returned by the API. Neither
+				// can round-trip through import.
+				ImportStateVerifyIgnore: []string{"password", "password_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckSmppuserExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -204,6 +228,31 @@ func TestAccSmppuser_password_backward_compat(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser_ephem", nil),
 					resource.TestCheckResourceAttr("citrixadc_smppuser.tf_smppuser_ephem", "username", "tf_smppuser_ephem"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSmppuser_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSmppuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSmppuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSmppuser_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppuserExist("citrixadc_smppuser.tf_smppuser", nil),
 				),
 			},
 		},

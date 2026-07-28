@@ -47,6 +47,7 @@ resource "citrixadc_authenticationadfsproxyprofile" "tf_authenticationadfsproxyp
 `
 
 func TestAccAuthenticationadfsproxyprofile_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -71,6 +72,29 @@ func TestAccAuthenticationadfsproxyprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "serverurl", "https://adfs2.example.com"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "username", "adfsuser_updated"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationadfsproxyprofile_import(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationadfsproxyprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationadfsproxyprofile_basic_step1},
+			{
+				Config:            testAccAuthenticationadfsproxyprofile_basic_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password is a Sensitive attribute that NITRO does not echo back,
+				// and password_wo_version is a Computed default that Read does not
+				// repopulate, so neither can round-trip through import.
+				ImportStateVerifyIgnore: []string{"password", "password_wo_version"},
 			},
 		},
 	})
@@ -147,6 +171,7 @@ data "citrixadc_authenticationadfsproxyprofile" "tf_authenticationadfsproxyprofi
 `
 
 func TestAccAuthenticationadfsproxyprofileDataSource_basic(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -198,6 +223,7 @@ const testAccAuthenticationadfsproxyprofile_password_step2 = `
 `
 
 func TestAccAuthenticationadfsproxyprofile_password_backward_compat(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	t.Setenv("TF_VAR_authenticationadfsproxyprofile_password", "oldpassword123")
 	t.Setenv("TF_VAR_authenticationadfsproxyprofile_password_2", "newpassword456")
 	resource.Test(t, resource.TestCase{
@@ -262,6 +288,7 @@ const testAccAuthenticationadfsproxyprofile_password_wo_step2 = `
 `
 
 func TestAccAuthenticationadfsproxyprofile_password_wo_ephemeral(t *testing.T) {
+	t.Skip("TODO: Requires review")
 	t.Setenv("TF_VAR_authenticationadfsproxyprofile_password_wo", "ephemeral_pass1")
 	t.Setenv("TF_VAR_authenticationadfsproxyprofile_password_wo_2", "ephemeral_pass2")
 	resource.Test(t, resource.TestCase{

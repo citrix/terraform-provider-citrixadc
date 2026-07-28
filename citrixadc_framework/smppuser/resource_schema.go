@@ -77,6 +77,23 @@ func smppuserGetThePayloadFromthePlan(ctx context.Context, data *SmppuserResourc
 	return smppuser
 }
 
+func smppuserGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *SmppuserResourceModel) smpp.Smppuser {
+	tflog.Debug(ctx, "In smppuserGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model
+	smppuser := smpp.Smppuser{}
+	if !data.Password.IsNull() && !data.Password.IsUnknown() {
+		smppuser.Password = data.Password.ValueString()
+	}
+	// Skip write-only attribute: password_wo
+	// Skip version tracker attribute: password_wo_version
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
+		smppuser.Username = data.Username.ValueString()
+	}
+
+	return smppuser
+}
+
 func smppuserGetThePayloadFromtheConfig(ctx context.Context, data *SmppuserResourceModel, payload *smpp.Smppuser) {
 	tflog.Debug(ctx, "In smppuserGetThePayloadFromtheConfig Function")
 

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -58,11 +59,13 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			"ceflogging": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable CEF format logs.",
 			},
 			"centralizedlearning": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Flag used to enable/disable ADM centralized learning",
 			},
 			"clientiploggingheader": schema.StringAttribute{
@@ -73,6 +76,7 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			"cookieflags": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("none"),
 				Description: "Add the specified flags to AppFW cookies. Available setttings function as follows:\n* None - Do not add flags to AppFW cookies.\n* HTTP Only - Add the HTTP Only flag to AppFW cookies, which prevent scripts from accessing them.\n* Secure - Add Secure flag to AppFW cookies.\n* All - Add both HTTPOnly and Secure flag to AppFW cookies.",
 			},
 			"cookiepostencryptprefix": schema.StringAttribute{
@@ -83,26 +87,31 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			"defaultprofile": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("APPFW_BYPASS"),
 				Description: "Profile to use when a connection does not match any policy. Default setting is APPFW_BYPASS, which sends unmatched connections back to the Citrix ADC without attempting to filter them further.",
 			},
 			"entitydecoding": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Transform multibyte (double- or half-width) characters to single width characters.",
 			},
 			"geolocationlogging": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable Geo-Location Logging in CEF format logs.",
 			},
 			"importsizelimit": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(134217728),
 				Description: "Maximum cumulative size in bytes of all objects imported to Netscaler. The user is not allowed to import an object if the operation exceeds the currently configured limit.",
 			},
 			"learnratelimit": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(400),
 				Description: "Maximum number of connections per second that the application firewall learning engine examines to generate new relaxations for learning-enabled security checks. The application firewall drops any connections above this limit from the list of connections used by the learning engine.",
 			},
 			"logmalformedreq": schema.StringAttribute{
@@ -139,6 +148,7 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			"proxyport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(8080),
 				Description: "Proxy Server Port to get updated signatures from AWS.",
 			},
 			"proxyserver": schema.StringAttribute{
@@ -159,36 +169,43 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 			"sessionlifetime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Maximum amount of time (in seconds) that the application firewall allows a user session to remain active, regardless of user activity. After this time, the user session is terminated. Before continuing to use the protected web site, the user must establish a new session by opening a designated start URL. A value of 0 represents infinite time.",
 			},
 			"sessionlimit": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(100000),
 				Description: "Maximum number of sessions that the application firewall allows to be active, regardless of user activity. After the max_limit reaches, No more user session will be created .",
 			},
 			"sessiontimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(900),
 				Description: "Timeout, in seconds, after which a user session is terminated. Before continuing to use the protected web site, the user must establish a new session by opening a designated start URL.",
 			},
 			"signatureautoupdate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Flag used to enable/disable auto update signatures",
 			},
 			"signatureurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("https://s3.amazonaws.com/NSAppFwSignatures/SignaturesMapping.xml"),
 				Description: "URL to download the mapping file from server",
 			},
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("APPFW_BLOCK"),
 				Description: "Profile to use when an application firewall policy evaluates to undefined (UNDEF).\nAn UNDEF event indicates an internal error condition. The APPFW_BLOCK built-in profile is the default setting. You can specify a different built-in or user-created profile as the UNDEF profile.",
 			},
 			"useconfigurablesecretkey": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Use configurable secret key in AppFw operations",
 			},
 		},

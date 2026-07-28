@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -61,6 +62,25 @@ func TestAccApiprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_apiprofile.tf_apiprofile", "name", "test_apiprofile"),
 					resource.TestCheckResourceAttr("citrixadc_apiprofile.tf_apiprofile", "apivisibility", "DISABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccApiprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_apiprofile.tf_apiprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApiprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccApiprofile_basic_step1},
+			{
+				Config:                  testAccApiprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -126,6 +146,76 @@ func testAccCheckApiprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccApiprofile_unset_step1 = `
+resource "citrixadc_apiprofile" "tf_unset" {
+  name          = "tf_test_apiprofile_unset"
+  apivisibility = "ENABLED"
+}
+`
+
+const testAccApiprofile_unset_step2 = `
+resource "citrixadc_apiprofile" "tf_unset" {
+  name = "tf_test_apiprofile_unset"
+  # apivisibility removed from config -> provider must unset it (revert to DISABLED)
+}
+`
+
+func TestAccApiprofile_unset(t *testing.T) {
+	// The resource's other tests have no skip guard (they run on the default
+	// standalone testbed), so add none here.
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApiprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applies and persists.
+				Config: testAccApiprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApiprofileExist("citrixadc_apiprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_apiprofile.tf_unset", "name", "tf_test_apiprofile_unset"),
+					resource.TestCheckResourceAttr("citrixadc_apiprofile.tf_unset", "apivisibility", "ENABLED"),
+				),
+			},
+			{
+				// Removing it must unset -> state reverts to NITRO default (DISABLED),
+				// and the implicit post-apply plan must be empty.
+				Config: testAccApiprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApiprofileExist("citrixadc_apiprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_apiprofile.tf_unset", "name", "tf_test_apiprofile_unset"),
+					resource.TestCheckResourceAttr("citrixadc_apiprofile.tf_unset", "apivisibility", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckApiprofileADCValue("tf_test_apiprofile_unset", "apivisibility", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckApiprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckApiprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Apiprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("apiprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("apiprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccApiprofileDataSource_basic = `

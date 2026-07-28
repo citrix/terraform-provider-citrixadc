@@ -21,7 +21,7 @@ resource "citrixadc_dnspolicy" "dnspolicy" {
 ## Argument Reference
 
 * `name` - (Required) Name for the DNS policy.
-* `rule` - (Required) Expression against which DNS traffic is evaluated. Note: * On the command line interface, if the expression includes blank spaces, the entire expression must be enclosed in double quotation marks. * If the expression itself includes double quotation marks, you must escape the quotations by using the  character.  * Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.  Example: CLIENT.UDP.DNS.DOMAIN.EQ("domainname")
+* `rule` - (Required) Expression against which DNS traffic is evaluated. Note: * On the command line interface, if the expression includes blank spaces, the entire expression must be enclosed in double quotation marks. * If the expression itself includes double quotation marks, you must escape the quotations by using the \ character.  * Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.  Example: CLIENT.UDP.DNS.DOMAIN.EQ("domainname")
 * `actionname` - (Optional) Name of the DNS action to perform when the rule evaluates to TRUE. The built in actions function as follows: * dns_default_act_Drop. Drop the DNS request. * dns_default_act_Cachebypass. Bypass the DNS cache and forward the request to the name server. You can create custom actions by using the add dns action command in the CLI or the DNS > Actions > Create DNS Action dialog box in the Citrix ADC configuration utility.
 * `cachebypass` - (Optional) By pass dns cache for this.
 * `drop` - (Optional) The dns packet must be dropped.

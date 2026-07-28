@@ -66,6 +66,27 @@ func TestAccAppfwgrpccontenttype_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwgrpccontenttype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwgrpccontenttype.tf_appfwgrpccontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwgrpccontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwgrpccontenttype_basic_step1,
+			},
+			{
+				Config:                  testAccAppfwgrpccontenttype_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwgrpccontenttypeExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -70,7 +71,12 @@ func (r *ApispecfileResource) Create(ctx context.Context, req resource.CreateReq
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readApispecfileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readApispecfileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "apispecfile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,7 +94,14 @@ func (r *ApispecfileResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading apispecfile resource")
 
-	r.readApispecfileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readApispecfileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -111,7 +124,12 @@ func (r *ApispecfileResource) Update(ctx context.Context, req resource.UpdateReq
 	data.Id = state.Id
 	tflog.Debug(ctx, "Update is a no-op for apispecfile; NITRO has no update endpoint and all attributes are RequiresReplace")
 
-	r.readApispecfileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readApispecfileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "apispecfile not found immediately after update")
+		}
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -138,7 +156,7 @@ func (r *ApispecfileResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 // Helper function to read apispecfile data from API
-func (r *ApispecfileResource) readApispecfileFromApi(ctx context.Context, data *ApispecfileResourceModel, diags *diag.Diagnostics) {
+func (r *ApispecfileResource) readApispecfileFromApi(ctx context.Context, data *ApispecfileResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -148,10 +166,14 @@ func (r *ApispecfileResource) readApispecfileFromApi(ctx context.Context, data *
 
 	getResponseData, err = r.client.FindResource(service.Apispecfile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read apispecfile, got error: %s", err))
-		return
+		return false
 	}
 
 	apispecfileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

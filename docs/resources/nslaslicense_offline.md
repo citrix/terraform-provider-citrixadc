@@ -4,7 +4,7 @@ subcategory: "NS"
 
 # Resource: nslaslicense_offline
 
-The nslaslicense_offline resource is used to generate and apply offline LAS licenses for NetScaler VPX and MPX appliances. This resource orchestrates the complete offline licensing workflow including request generation, LAS service interaction, and license application to the device.
+This resource is used to generate and apply offline LAS licenses for NetScaler VPX and MPX appliances.
 
 
 ## Example usage

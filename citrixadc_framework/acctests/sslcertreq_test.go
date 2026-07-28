@@ -213,3 +213,28 @@ func TestAccSslcertreq_pempassphrase_wo_ephemeral(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslcertreq_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Requires cleanup of reqfile at ADC!")
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslcertreq_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertreqExist("citrixadc_sslcertreq.tf_sslcertreq", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslcertreq_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertreqExist("citrixadc_sslcertreq.tf_sslcertreq", nil),
+				),
+			},
+		},
+	})
+}

@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -45,7 +44,6 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			},
 			"hashid": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -53,7 +51,6 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			},
 			"ip": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -61,15 +58,13 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			},
 			"order": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Order number to be assigned to the gslb servicegroup member",
 			},
 			"port": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -77,7 +72,6 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			},
 			"publicip": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -85,7 +79,6 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			},
 			"publicport": schema.Int64Attribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
@@ -93,7 +86,6 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			},
 			"servername": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -108,7 +100,6 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			},
 			"siteprefix": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -117,7 +108,6 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			"state": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  stringdefault.StaticString("ENABLED"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -135,8 +125,8 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 	}
 }
 
-func gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromtheConfig(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel) gslb.Gslbservicegroupgslbservicegroupmemberbinding {
-	tflog.Debug(ctx, "In gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromtheConfig Function")
+func gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromthePlan(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel) gslb.Gslbservicegroupgslbservicegroupmemberbinding {
+	tflog.Debug(ctx, "In gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	gslbservicegroup_gslbservicegroupmember_binding := gslb.Gslbservicegroupgslbservicegroupmemberbinding{}
@@ -177,109 +167,34 @@ func gslbservicegroup_gslbservicegroupmember_bindingGetThePayloadFromtheConfig(c
 	return gslbservicegroup_gslbservicegroupmember_binding
 }
 
-// gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet is the RESOURCE-side
-// state setter. It preserves the prior plan/state value for attributes the NITRO GET
-// response does not echo back so that an Optional+Computed input the user supplied is
-// not nulled and does not trigger an "inconsistent result after apply" error.
-// It re-derives data.Id in the new key:value format so a legacy SDK v2 id is upgraded
-// on Read.
+// gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet is used by the resource Read/Create flow.
+// It preserves the plan/state-supplied identity and config values (all RequiresReplace) and only adopts the
+// server-echoed values that have a reliable server default (weight, state). It does NOT recompute the ID,
+// which is set exactly once in Create.
 func gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *GslbservicegroupGslbservicegroupmemberBindingResourceModel {
 	tflog.Debug(ctx, "In gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGet Function")
 
-	// Convert API response to model. Every Optional+Computed attribute MUST end up
-	// with a KNOWN value after apply, otherwise Terraform errors with "provider still
-	// indicated an unknown value". So assign the echoed value when present, and a typed
-	// Null when the GET response omits it -- never leave a Computed attribute unknown.
-	if val, ok := getResponseData["hashid"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Hashid = types.Int64Value(intVal)
-		}
-	} else {
-		data.Hashid = types.Int64Null()
-	}
-	if val, ok := getResponseData["ip"]; ok && val != nil {
-		data.Ip = types.StringValue(val.(string))
-	} else {
-		data.Ip = types.StringNull()
-	}
-	if val, ok := getResponseData["order"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Order = types.Int64Value(intVal)
-		}
-	} else {
-		data.Order = types.Int64Null()
-	}
-	if val, ok := getResponseData["port"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Port = types.Int64Value(intVal)
-		}
-	} else {
-		data.Port = types.Int64Null()
-	}
-	if val, ok := getResponseData["publicip"]; ok && val != nil {
-		data.Publicip = types.StringValue(val.(string))
-	} else {
-		data.Publicip = types.StringNull()
-	}
-	if val, ok := getResponseData["publicport"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Publicport = types.Int64Value(intVal)
-		}
-	} else {
-		data.Publicport = types.Int64Null()
-	}
-	if val, ok := getResponseData["servername"]; ok && val != nil {
-		data.Servername = types.StringValue(val.(string))
-	} else {
-		data.Servername = types.StringNull()
-	}
-	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
-		data.Servicegroupname = types.StringValue(val.(string))
-	} else {
-		data.Servicegroupname = types.StringNull()
-	}
-	if val, ok := getResponseData["siteprefix"]; ok && val != nil {
-		data.Siteprefix = types.StringValue(val.(string))
-	} else {
-		data.Siteprefix = types.StringNull()
-	}
-	if val, ok := getResponseData["state"]; ok && val != nil {
-		data.State = types.StringValue(val.(string))
-	} else {
-		data.State = types.StringNull()
-	}
+	// Only weight and state are Optional+Computed (reliable server defaults: weight=1, state=ENABLED).
+	// Identity (servicegroupname, ip, servername, port) and the remaining plain-Optional attrs are
+	// preserved from plan/state to avoid clobbering user input or introducing unknown-after-apply churn.
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Weight = types.Int64Value(intVal)
 		}
-	} else {
-		data.Weight = types.Int64Null()
 	}
-
-	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
-	// Identity mirrors SDK v2: servicegroupname + (servername OR ip) + optional port.
-	effectiveServername := data.Servername.ValueString()
-	if effectiveServername == "" {
-		effectiveServername = data.Ip.ValueString()
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
 	}
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(data.Servicegroupname.ValueString())))
-	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(effectiveServername)))
-	if !data.Port.IsNull() && !data.Port.IsUnknown() {
-		idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
-	}
-	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }
 
-// gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource is the
-// DATASOURCE-side setter. The datasource has no prior plan/state to preserve, so it
-// faithfully copies every field from the GET response (nulling absent fields) and
-// computes data.Id itself.
+// gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response and composes the ID, since the datasource has no Create to seed those values.
 func gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource(ctx context.Context, data *GslbservicegroupGslbservicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *GslbservicegroupGslbservicegroupmemberBindingResourceModel {
 	tflog.Debug(ctx, "In gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource Function")
 
+	// Convert API response to model
 	if val, ok := getResponseData["hashid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Hashid = types.Int64Value(intVal)
@@ -346,13 +261,28 @@ func gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource(
 		data.Weight = types.Int64Null()
 	}
 
-	// Set ID for the datasource (no Create to set it).
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ip.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servername.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	// Set ID for the datasource
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	data.Id = types.StringValue(gslbservicegroup_gslbservicegroupmember_bindingBuildId(
+		data.Servicegroupname.ValueString(),
+		data.Servername.ValueString(),
+		data.Ip.ValueString(),
+		data.Port.ValueInt64(),
+	))
 
 	return data
+}
+
+// gslbservicegroup_gslbservicegroupmember_bindingBuildId composes the canonical
+// Framework ID as comma-separated key:UrlEncode(value) pairs, in the same order
+// Create emits. Exactly one of servername/ip is populated for a given member; the
+// unused one is written as an empty segment (the Read matcher skips empty segments),
+// so the id round-trips against a config that sets only that field.
+func gslbservicegroup_gslbservicegroupmember_bindingBuildId(servicegroupname, servername, ip string, port int64) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("ip:%s", utils.UrlEncode(ip)))
+	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", port))))
+	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(servername)))
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(servicegroupname)))
+	return strings.Join(idParts, ",")
 }

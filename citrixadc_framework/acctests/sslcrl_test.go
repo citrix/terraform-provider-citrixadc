@@ -16,9 +16,20 @@ limitations under the License.
 package citrixadc
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/base64"
+	"encoding/pem"
 	"fmt"
+	"math/big"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ssl"
+	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -46,7 +57,7 @@ const testAccSslcrlDataSource_basic = `
 
 func TestAccSslcrl_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcrlPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslcrlDestroy,
 		Steps: []resource.TestStep{
@@ -55,6 +66,142 @@ func TestAccSslcrl_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl", nil),
 				),
+			},
+		},
+	})
+}
+
+// doSslcrlPreChecks stages the prerequisites the basic sslcrl config depends on.
+// `add ssl crl` requires (a) the CRL file to be present under the partition's
+// default CRL directory (/var/netscaler/ssl) and (b) an installed CA certificate
+// (certkey) whose subject matches the CRL issuer, or NITRO rejects the CRL with
+// errorcode 1583 "Unable to find the CA certificate for the CRL".
+//
+// Rather than depend on a fixed testdata CRL/CA pair, this precheck generates a
+// fresh self-signed CA and a matching (empty) CRL in-process, uploads the CA cert
+// to /nsconfig/ssl and creates certkey "rootrsa_cert1" from it, then uploads the
+// CRL to /var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem. All three artifacts
+// are cleaned up after the test so the appliance is left clean.
+func doSslcrlPreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	const (
+		certkeyName  = "rootrsa_cert1"
+		caFileName   = "rootrsa_cert1.pem"
+		caFileDir    = "/nsconfig/ssl"
+		crlFileName  = "crl_config_clnt_rsa1_1cert.pem"
+		crlFileDir   = "/var/netscaler/ssl"
+		crlFileDeEnc = "%2Fvar%2Fnetscaler%2Fssl"
+	)
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v", err)
+	}
+	client := c.client
+
+	// 1. Generate a self-signed CA (used to sign, and to validate, the CRL).
+	caKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("Failed to generate CA key: %v", err)
+	}
+	caSubject := pkix.Name{Country: []string{"in"}, Organization: []string{"citrix"}, CommonName: "crlca"}
+	caTemplate := &x509.Certificate{
+		SerialNumber:          big.NewInt(1),
+		Subject:               caSubject,
+		NotBefore:             time.Now().Add(-1 * time.Hour),
+		NotAfter:              time.Now().AddDate(10, 0, 0),
+		IsCA:                  true,
+		BasicConstraintsValid: true,
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
+	}
+	caDER, err := x509.CreateCertificate(rand.Reader, caTemplate, caTemplate, &caKey.PublicKey, caKey)
+	if err != nil {
+		t.Fatalf("Failed to create CA certificate: %v", err)
+	}
+	caCert, err := x509.ParseCertificate(caDER)
+	if err != nil {
+		t.Fatalf("Failed to parse CA certificate: %v", err)
+	}
+	caCertPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: caDER})
+
+	// 2. Generate an (empty) CRL signed by that CA - its issuer therefore matches
+	//    the CA certificate's subject.
+	crlTemplate := &x509.RevocationList{
+		Number:     big.NewInt(1),
+		ThisUpdate: time.Now().Add(-1 * time.Hour),
+		NextUpdate: time.Now().AddDate(10, 0, 0),
+	}
+	crlDER, err := x509.CreateRevocationList(rand.Reader, crlTemplate, caCert, caKey)
+	if err != nil {
+		t.Fatalf("Failed to create CRL: %v", err)
+	}
+	crlPEM := pem.EncodeToMemory(&pem.Block{Type: "X509 CRL", Bytes: crlDER})
+
+	// 3. Upload the CA cert and create the certkey referenced by cacert.
+	if err := uploadSystemfileContent(client, caFileName, caFileDir, caCertPEM); err != nil {
+		t.Fatalf("Failed to upload CA cert file: %v", err)
+	}
+	// Recreate the certkey so it reads the freshly-generated CA cert.
+	_ = client.DeleteResource(service.Sslcertkey.Type(), certkeyName)
+	certkey := ssl.Sslcertkey{Certkey: certkeyName, Cert: caFileName}
+	if _, err := client.AddResource(service.Sslcertkey.Type(), certkeyName, &certkey); err != nil {
+		t.Fatalf("Failed to add certkey %s: %v", certkeyName, err)
+	}
+
+	// 4. Upload the CRL file into the default CRL directory.
+	if err := uploadSystemfileContent(client, crlFileName, crlFileDir, crlPEM); err != nil {
+		t.Fatalf("Failed to upload CRL file: %v", err)
+	}
+
+	// 5. Leave the appliance clean once the test completes.
+	t.Cleanup(func() {
+		_ = client.DeleteResource(service.Sslcertkey.Type(), certkeyName)
+		_ = client.DeleteResourceWithArgsMap(service.Systemfile.Type(), caFileName,
+			map[string]string{"filelocation": strings.Replace(caFileDir, "/", "%2F", -1)})
+		_ = client.DeleteResourceWithArgsMap(service.Systemfile.Type(), crlFileName,
+			map[string]string{"filelocation": crlFileDeEnc})
+	})
+}
+
+// uploadSystemfileContent writes the given bytes to a systemfile at targetDir,
+// overwriting any existing file of the same name.
+func uploadSystemfileContent(client *service.NitroClient, filename, targetDir string, content []byte) error {
+	sf := system.Systemfile{
+		Filename:     filename,
+		Filecontent:  base64.StdEncoding.EncodeToString(content),
+		Filelocation: targetDir,
+	}
+	_, err := client.AddResource(service.Systemfile.Type(), filename, &sf)
+	if err != nil && strings.Contains(err.Error(), "File already exists") {
+		urlArgs := map[string]string{"filelocation": strings.Replace(targetDir, "/", "%2F", -1)}
+		if derr := client.DeleteResourceWithArgsMap(service.Systemfile.Type(), filename, urlArgs); derr != nil {
+			return derr
+		}
+		_, err = client.AddResource(service.Systemfile.Type(), filename, &sf)
+	}
+	return err
+}
+
+func TestAccSslcrl_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcrl.tf_sslcrl"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcrlPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcrlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcrl_basic,
+			},
+			{
+				Config:            testAccSslcrl_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// password_wo_version is a Computed write-only version tracker that
+				// NITRO does not return; on import it cannot be repopulated from the
+				// API, so it legitimately cannot round-trip.
+				ImportStateVerifyIgnore: []string{"password_wo_version"},
 			},
 		},
 	})
@@ -124,10 +271,9 @@ func testAccCheckSslcrlDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccSslcrlDataSource_basic(t *testing.T) {
-	t.Skipf("Find  a way to upload a CRL file to the ADC instance before running this test")
+func TestAccSslcrl_DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcrlPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -158,26 +304,12 @@ const testAccSslcrl_password_step1 = `
 	}
 `
 
-const testAccSslcrl_password_step2 = `
-	variable "sslcrl_password_2" {
-	  type      = string
-	  sensitive = true
-	}
-
-	resource "citrixadc_sslcrl" "tf_sslcrl_ephem" {
-		crlname  = "tf_sslcrl_ephem"
-		crlpath  = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
-		cacert   = "rootrsa_cert1"
-		password = var.sslcrl_password_2
-	}
-`
-
 func TestAccSslcrl_password_backward_compat(t *testing.T) {
 	t.Skipf("Need a valid CRL file on the ADC instance before running this test")
 	t.Setenv("TF_VAR_sslcrl_password", "crlldappass1")
 	t.Setenv("TF_VAR_sslcrl_password_2", "crlldappass2")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcrlPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslcrlDestroy,
 		Steps: []resource.TestStep{
@@ -188,11 +320,29 @@ func TestAccSslcrl_password_backward_compat(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "crlname", "tf_sslcrl_ephem"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccSslcrl_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcrlPreChecks(t) },
+		CheckDestroy: testAccCheckSslcrlDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccSslcrl_password_step2,
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslcrl_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl_ephem", nil),
-					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "crlname", "tf_sslcrl_ephem"),
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslcrl_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl", nil),
 				),
 			},
 		},
@@ -215,27 +365,11 @@ const testAccSslcrl_password_wo_step1 = `
 	}
 `
 
-const testAccSslcrl_password_wo_step2 = `
-	variable "sslcrl_password_wo_2" {
-	  type      = string
-	  sensitive = true
-	}
-
-	resource "citrixadc_sslcrl" "tf_sslcrl_ephem" {
-		crlname             = "tf_sslcrl_ephem"
-		crlpath             = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
-		cacert              = "rootrsa_cert1"
-		password_wo         = var.sslcrl_password_wo_2
-		password_wo_version = 2
-	}
-`
-
 func TestAccSslcrl_password_wo_ephemeral(t *testing.T) {
 	t.Skipf("Need a valid CRL file on the ADC instance before running this test")
 	t.Setenv("TF_VAR_sslcrl_password_wo", "ephem_crlpass1")
-	t.Setenv("TF_VAR_sslcrl_password_wo_2", "ephem_crlpass2")
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doSslcrlPreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslcrlDestroy,
 		Steps: []resource.TestStep{
@@ -247,14 +381,99 @@ func TestAccSslcrl_password_wo_ephemeral(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "password_wo_version", "1"),
 				),
 			},
+		},
+	})
+}
+
+// Unset test: the only unset-eligible attribute wired for sslcrl is `binary`
+// (default "NO"). Step 1 sets it to a non-default ("YES"); step 2 removes it
+// from config so the provider issues ?action=unset and it reverts to "NO".
+//
+// `binary` ("LDAP-based CRL retrieval mode to binary") only takes effect on an
+// LDAP auto-refresh CRL, so both steps must carry the LDAP prerequisites
+// (method=LDAP, cacert, server, port, basedn, refresh=ENABLED, interval);
+// otherwise NITRO silently ignores binary=YES and returns NO on create, and the
+// non-default value in step 1 never persists. Only `binary` differs between the
+// two steps so its removal is the sole change that must trigger the unset.
+const testAccSslcrl_unset_step1 = `
+	resource "citrixadc_sslcrl" "tf_unset" {
+		crlname  = "tf_test_sslcrl_unset"
+		crlpath  = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert   = "rootrsa_cert1"
+		method   = "LDAP"
+		server   = "1.2.3.4"
+		port     = 389
+		basedn   = "cn=crl"
+		refresh  = "ENABLED"
+		interval = "DAILY"
+		binary   = "YES"
+	}
+`
+
+const testAccSslcrl_unset_step2 = `
+	resource "citrixadc_sslcrl" "tf_unset" {
+		crlname  = "tf_test_sslcrl_unset"
+		crlpath  = "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"
+		cacert   = "rootrsa_cert1"
+		method   = "LDAP"
+		server   = "1.2.3.4"
+		port     = 389
+		basedn   = "cn=crl"
+		refresh  = "ENABLED"
+		interval = "DAILY"
+		# binary removed from config -> provider must unset it (revert to "NO")
+	}
+`
+
+func TestAccSslcrl_unset(t *testing.T) {
+	// Mirror the basic test: no skip guard (runs on the default standalone testbed).
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcrlPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcrlDestroy,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccSslcrl_password_wo_step2,
+				// Non-default value applies and persists.
+				Config: testAccSslcrl_unset_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_sslcrl_ephem", nil),
-					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "crlname", "tf_sslcrl_ephem"),
-					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_sslcrl_ephem", "password_wo_version", "2"),
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_unset", "binary", "YES"),
+				),
+			},
+			{
+				// Removing it must unset -> state reverts to NITRO default,
+				// and the implicit post-apply plan must be empty.
+				Config: testAccSslcrl_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcrlExist("citrixadc_sslcrl.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslcrl.tf_unset", "binary", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSslcrlADCValue("tf_test_sslcrl_unset", "binary", "NO"),
 				),
 			},
 		},
 	})
+}
+
+// testAccCheckSslcrlADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckSslcrlADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslcrl.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("sslcrl %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("sslcrl %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

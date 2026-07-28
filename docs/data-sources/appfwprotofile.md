@@ -4,11 +4,9 @@ subcategory: "Application Firewall"
 
 # Data Source: appfwprotofile
 
-The `citrixadc_appfwprotofile` data source is used to retrieve information about an existing Application Firewall gRPC schema (proto) file imported on the Citrix ADC.
+The appfwprotofile data source allows you to retrieve information about an Application Firewall gRPC schema (proto) file.
 
-The underlying NITRO `get` endpoint only echoes back the `name` and `src` fields; the original `comment` and `overwrite` inputs are not returned by the ADC and therefore are not available through this data source.
-
-The configured `name` must refer to a gRPC schema object that already exists on the ADC. Reference the corresponding `citrixadc_appfwprotofile` resource attribute (as shown below) so Terraform creates the dependency before the data source is read.
+~> **Note:** The NITRO GET endpoint returns only `name` and `src`; the `comment` and `overwrite` inputs are not read back from the ADC.
 
 
 ## Example usage

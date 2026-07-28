@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -53,6 +54,7 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			"authtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Maximum number of seconds that the Citrix ADC waits for a response from the LDAP server.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
@@ -120,16 +122,19 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			"maxnestinglevel": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(2),
 				Description: "Number of levels up to which the system can query nested LDAP groups.",
 			},
 			"nestedgroupextraction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Queries the external LDAP server to determine whether the specified group belongs to another group.",
 			},
 			"passwdchange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Accept password change requests.",
 			},
 			"searchfilter": schema.StringAttribute{
@@ -140,6 +145,7 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			"sectype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("TLS"),
 				Description: "Type of security used for communications between the Citrix ADC and the LDAP server. For the PLAINTEXT setting, no encryption is required.",
 			},
 			"serverip": schema.StringAttribute{
@@ -150,6 +156,7 @@ func (r *AaaldapparamsResource) Schema(ctx context.Context, req resource.SchemaR
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(389),
 				Description: "Port number on which the LDAP server listens for connections.",
 			},
 			"ssonameattribute": schema.StringAttribute{

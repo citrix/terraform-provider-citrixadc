@@ -42,7 +42,7 @@ resource "citrixadc_dnskey" "example" {
 
 ### Using password_wo (write-only/ephemeral - NOT persisted in state)
 
-The `password_wo` attribute provides an ephemeral path for the passphrase used to read the encrypted public/private DNS keys. The value is sent to the Citrix ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To trigger an update when the value changes, increment `password_wo_version`.
+The `password_wo` attribute provides an ephemeral path for the passphrase used to read the encrypted public/private DNS keys. The value is sent to the Citrix ADC but is **not stored in Terraform state**, reducing the risk of secret exposure. To change the value, increment `password_wo_version`; because the secret is immutable on the ADC, this **destroys and recreates** the resource.
 
 ```hcl
 variable "dnskey_password" {
@@ -67,7 +67,7 @@ resource "citrixadc_dnskey" "example" {
   publickey           = "/nsconfig/dns/demo.key"
   privatekey          = "/nsconfig/dns/demo.private"
   password_wo         = var.dnskey_password
-  password_wo_version = 2  # Bumped to trigger update
+  password_wo_version = 2  # Bumped: forces destroy & recreate
 }
 ```
 

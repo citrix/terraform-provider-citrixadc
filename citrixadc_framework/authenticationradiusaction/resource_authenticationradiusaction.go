@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *AuthenticationradiusactionResource) Create(ctx context.Context, req res
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationradiusaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *AuthenticationradiusactionResource) Read(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Reading authenticationradiusaction resource")
 
-	r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,25 +152,42 @@ func (r *AuthenticationradiusactionResource) Update(ctx context.Context, req res
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Accounting.Equal(state.Accounting) {
 		tflog.Debug(ctx, fmt.Sprintf("accounting has changed for authenticationradiusaction"))
 		hasChange = true
 	}
 	if !data.Authentication.Equal(state.Authentication) {
 		tflog.Debug(ctx, fmt.Sprintf("authentication has changed for authenticationradiusaction"))
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authservretry.Equal(state.Authservretry) {
 		tflog.Debug(ctx, fmt.Sprintf("authservretry has changed for authenticationradiusaction"))
-		hasChange = true
+		if config.Authservretry.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authservretry")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authtimeout.Equal(state.Authtimeout) {
 		tflog.Debug(ctx, fmt.Sprintf("authtimeout has changed for authenticationradiusaction"))
-		hasChange = true
+		if config.Authtimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authtimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Callingstationid.Equal(state.Callingstationid) {
 		tflog.Debug(ctx, fmt.Sprintf("callingstationid has changed for authenticationradiusaction"))
-		hasChange = true
+		if config.Callingstationid.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "callingstationid")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, fmt.Sprintf("defaultauthenticationgroup has changed for authenticationradiusaction"))
@@ -173,11 +203,19 @@ func (r *AuthenticationradiusactionResource) Update(ctx context.Context, req res
 	}
 	if !data.Messageauthenticator.Equal(state.Messageauthenticator) {
 		tflog.Debug(ctx, fmt.Sprintf("messageauthenticator has changed for authenticationradiusaction"))
-		hasChange = true
+		if config.Messageauthenticator.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "messageauthenticator")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Passencoding.Equal(state.Passencoding) {
 		tflog.Debug(ctx, fmt.Sprintf("passencoding has changed for authenticationradiusaction"))
-		hasChange = true
+		if config.Passencoding.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "passencoding")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pwdattributetype.Equal(state.Pwdattributetype) {
 		tflog.Debug(ctx, fmt.Sprintf("pwdattributetype has changed for authenticationradiusaction"))
@@ -241,7 +279,11 @@ func (r *AuthenticationradiusactionResource) Update(ctx context.Context, req res
 	}
 	if !data.Tunnelendpointclientip.Equal(state.Tunnelendpointclientip) {
 		tflog.Debug(ctx, fmt.Sprintf("tunnelendpointclientip has changed for authenticationradiusaction"))
-		hasChange = true
+		if config.Tunnelendpointclientip.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tunnelendpointclientip")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -264,8 +306,24 @@ func (r *AuthenticationradiusactionResource) Update(ctx context.Context, req res
 		tflog.Debug(ctx, "No changes detected for authenticationradiusaction resource, skipping update")
 	}
 
+	// Unset attributes that were removed from the configuration so the appliance
+	// reverts them to their defaults. Done after the update so any default value
+	// carried in the update payload is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationradiusaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationradiusaction attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationradiusactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationradiusaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -294,7 +352,7 @@ func (r *AuthenticationradiusactionResource) Delete(ctx context.Context, req res
 }
 
 // Helper function to read authenticationradiusaction data from API
-func (r *AuthenticationradiusactionResource) readAuthenticationradiusactionFromApi(ctx context.Context, data *AuthenticationradiusactionResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationradiusactionResource) readAuthenticationradiusactionFromApi(ctx context.Context, data *AuthenticationradiusactionResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -304,10 +362,14 @@ func (r *AuthenticationradiusactionResource) readAuthenticationradiusactionFromA
 
 	getResponseData, err = r.client.FindResource(service.Authenticationradiusaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationradiusaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationradiusactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

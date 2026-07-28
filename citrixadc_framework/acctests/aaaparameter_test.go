@@ -30,11 +30,14 @@ const testAccAaaparameter_basic = `
 		enablestaticpagecaching    = "NO"
 		enableenhancedauthfeedback = "YES"
 		defaultauthtype            = "LOCAL"
-		maxaaausers                = 3
+		// maxaaausers is intentionally omitted: this appliance's license caps it at
+		// "Unlimited" (NITRO reports 4294967295 = 2^32-1). Any value below the
+		// license limit is silently ignored by the ADC ("MaxAAAUsers value less
+		// than allowed by license, ignored"), so setting it produces a perpetual diff.
 		maxloginattempts           = 5
 		failedlogintimeout         = 15
 	}
-  
+
 `
 const testAccAaaparameter_update = `
 
@@ -42,7 +45,7 @@ const testAccAaaparameter_update = `
 		enablestaticpagecaching    = "YES"
 		enableenhancedauthfeedback = "NO"
 		defaultauthtype            = "LOCAL"
-		maxaaausers                = 4
+		// maxaaausers intentionally omitted (license-capped, see basic step above).
 		maxloginattempts           = 10
 		failedlogintimeout         = 20
 	}
@@ -62,7 +65,7 @@ func TestAccAaaparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enablestaticpagecaching", "NO"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enableenhancedauthfeedback", "YES"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "defaultauthtype", "LOCAL"),
-					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "maxaaausers", "3"),
+					// maxaaausers is license-capped ("Unlimited") on this appliance; not asserted.
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "maxloginattempts", "5"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "failedlogintimeout", "15"),
 				),
@@ -74,7 +77,7 @@ func TestAccAaaparameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enablestaticpagecaching", "YES"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enableenhancedauthfeedback", "NO"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "defaultauthtype", "LOCAL"),
-					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "maxaaausers", "4"),
+					// maxaaausers is license-capped ("Unlimited") on this appliance; not asserted.
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "maxloginattempts", "10"),
 					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "failedlogintimeout", "20"),
 				),

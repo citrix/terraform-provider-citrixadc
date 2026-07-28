@@ -85,6 +85,25 @@ func TestAccApispec_basic(t *testing.T) {
 	})
 }
 
+func TestAccApispec_import(t *testing.T) {
+	const resAddr = "citrixadc_apispec.tf_apispec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doApiSpecPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApispecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccApispec_basic_step1},
+			{
+				Config:                  testAccApispec_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckApispecExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -1,0 +1,133 @@
+/*
+Copyright 2016 Citrix Systems, Inc
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package citrixadc
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+)
+
+// NOTE on the subscribersessions_clear resource (refactor of the former
+// citrixadc_subscribersessions action-only resource):
+//   - subscribersessions is an ACTION-ONLY runtime object. NITRO exposes ONLY
+//     get(all), count, and the POST action ?action=clear. There is NO add, NO
+//     update/set, and NO delete. The subscriber session table is populated by
+//     the live Subscriber/Gx/PCRF (Telco) engine, not by the config API.
+//   - The subscribersessions_clear RESOURCE therefore fires ?action=clear on
+//     Create (optionally scoped by ip and/or vlan; a BARE clear with no scope
+//     flushes the ENTIRE subscriber session DB and is always valid) and treats
+//     Read/Update/Delete as no-ops. There is NO GET-by-id endpoint, so the
+//     resource CANNOT be verified by reading it back; the Exist check below only
+//     asserts the synthetic Terraform state ID is set (mirrors
+//     ipsecalgsession_test.go / rdpconnections_test.go).
+//   - There is NO CheckDestroy: clear has no inverse on NITRO and there is no
+//     GET-by-id to confirm absence; Delete is a state-only removal (no-op).
+//   - The resource has NO Required attributes. ip (String) and vlan (Int64) are
+//     Optional RequiresReplace clear selectors.
+//   - Synthetic ID (from the refactored resource code Create) is the static
+//     literal "subscribersessions_clear" regardless of scope.
+//
+// !!! CAUTION — DESTRUCTIVE ACTION !!!
+// TODO_PLACEHOLDER (destructive-action warning): The basic test below applies a
+//   BARE clear (no ip/vlan), which flushes the ENTIRE subscriber session DB on
+//   the target ADC. This is SAFE on a fresh/test appliance whose subscriber DB
+//   is empty, but DO NOT run this test against any appliance carrying live
+//   subscriber sessions you care about — every session will be cleared. To scope
+//   the clear to a single subscriber instead, set ip (and optionally vlan) to a
+//   live subscriber's values (see the scoped variant TODO below).
+//
+// TODO_PLACEHOLDER (prereq): The Subscriber / Gx / PCRF (Telco) feature must be
+//   LICENSED and ENABLED on the target ADC for subscriber sessions to ever exist.
+//   A bare clear is expected to succeed regardless of session-table contents, so
+//   the resource test below does NOT strictly require this prereq; it only
+//   matters for populating the datasource with a non-empty session table.
+//
+// TODO_PLACEHOLDER (variant not covered): a SCOPED clear (ip / vlan) targeting a
+//   live session requires an actual subscriber session to exist on the appliance
+//   (created by real Gx/PCRF subscriber traffic). Those ip/vlan values are
+//   testbed-specific and non-deterministic, so the scoped-clear variant is
+//   intentionally omitted. To exercise it manually, drive subscriber traffic,
+//   read an active session's ip from the datasource, then apply:
+//       resource "citrixadc_subscribersessions_clear" "clear_one" {
+//         ip   = <TODO_PLACEHOLDER: live subscriber IP, e.g. "10.0.0.5">
+//         vlan = <TODO_PLACEHOLDER: live subscriber vlan, e.g. 10>
+//       }
+
+// clear-all: no scope attributes set. This is the safest testable path on a
+// fresh appliance — a bare clear succeeds without any prerequisite subscriber
+// sessions. See the DESTRUCTIVE ACTION caution above before running.
+const testAccSubscribersessionsClear_basic_step1 = `
+resource "citrixadc_subscribersessions_clear" "tf_subscribersessions_clear" {
+}
+
+`
+
+func TestAccSubscribersessionsClear_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// No CheckDestroy: subscribersessions_clear has no delete/GET-by-id endpoint (action-only).
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscribersessionsClear_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscribersessionsClearExist("citrixadc_subscribersessions_clear.tf_subscribersessions_clear", nil),
+					// Synthetic ID recorded after a successful bare clear (?action=clear,
+					// no ip/vlan). Per the refactored resource code this is the static
+					// literal "subscribersessions_clear".
+					resource.TestCheckResourceAttrSet("citrixadc_subscribersessions_clear.tf_subscribersessions_clear", "id"),
+					resource.TestCheckResourceAttr("citrixadc_subscribersessions_clear.tf_subscribersessions_clear", "id", "subscribersessions_clear"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSubscribersessionsClearExist is a state-only existence check.
+//
+// subscribersessions_clear is an action-only resource: Read is a no-op and there
+// is no GET-by-id endpoint, so we CANNOT verify the fired clear via NITRO. We
+// only assert that Terraform recorded the resource in state with a non-empty ID
+// (the synthetic "subscribersessions_clear" after a successful POST
+// ?action=clear). This mirrors testAccCheckIpsecalgsessionExist /
+// testAccCheckRdpconnectionsExist.
+func testAccCheckSubscribersessionsClearExist(n string, id *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No subscribersessions_clear ID is set")
+		}
+
+		if id != nil {
+			if *id != "" && *id != rs.Primary.ID {
+				return fmt.Errorf("Resource ID has changed!")
+			}
+
+			*id = rs.Primary.ID
+		}
+
+		// No NITRO GET-by-id to verify against; presence of the synthetic state
+		// ID is the only confirmation we can make for an action-only resource.
+		return nil
+	}
+}

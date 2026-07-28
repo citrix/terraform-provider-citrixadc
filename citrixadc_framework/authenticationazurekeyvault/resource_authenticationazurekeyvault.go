@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -94,7 +95,12 @@ func (r *AuthenticationazurekeyvaultResource) Create(ctx context.Context, req re
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationazurekeyvault not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -112,7 +118,14 @@ func (r *AuthenticationazurekeyvaultResource) Read(ctx context.Context, req reso
 
 	tflog.Debug(ctx, "Reading authenticationazurekeyvault resource")
 
-	r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,9 +152,14 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Authentication.Equal(state.Authentication) {
 		tflog.Debug(ctx, fmt.Sprintf("authentication has changed for authenticationazurekeyvault"))
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientid.Equal(state.Clientid) {
 		tflog.Debug(ctx, fmt.Sprintf("clientid has changed for authenticationazurekeyvault"))
@@ -165,7 +183,11 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 	}
 	if !data.Refreshinterval.Equal(state.Refreshinterval) {
 		tflog.Debug(ctx, fmt.Sprintf("refreshinterval has changed for authenticationazurekeyvault"))
-		hasChange = true
+		if config.Refreshinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refreshinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Servicekeyname.Equal(state.Servicekeyname) {
 		tflog.Debug(ctx, fmt.Sprintf("servicekeyname has changed for authenticationazurekeyvault"))
@@ -173,7 +195,11 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 	}
 	if !data.Signaturealg.Equal(state.Signaturealg) {
 		tflog.Debug(ctx, fmt.Sprintf("signaturealg has changed for authenticationazurekeyvault"))
-		hasChange = true
+		if config.Signaturealg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "signaturealg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tenantid.Equal(state.Tenantid) {
 		tflog.Debug(ctx, fmt.Sprintf("tenantid has changed for authenticationazurekeyvault"))
@@ -208,8 +234,22 @@ func (r *AuthenticationazurekeyvaultResource) Update(ctx context.Context, req re
 		tflog.Debug(ctx, "No changes detected for authenticationazurekeyvault resource, skipping update")
 	}
 
+	// Unset attributes that were removed from configuration (update-then-unset ordering)
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationazurekeyvault.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationazurekeyvault attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationazurekeyvaultFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationazurekeyvault not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -238,7 +278,7 @@ func (r *AuthenticationazurekeyvaultResource) Delete(ctx context.Context, req re
 }
 
 // Helper function to read authenticationazurekeyvault data from API
-func (r *AuthenticationazurekeyvaultResource) readAuthenticationazurekeyvaultFromApi(ctx context.Context, data *AuthenticationazurekeyvaultResourceModel, diags *diag.Diagnostics) {
+func (r *AuthenticationazurekeyvaultResource) readAuthenticationazurekeyvaultFromApi(ctx context.Context, data *AuthenticationazurekeyvaultResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -248,10 +288,14 @@ func (r *AuthenticationazurekeyvaultResource) readAuthenticationazurekeyvaultFro
 
 	getResponseData, err = r.client.FindResource(service.Authenticationazurekeyvault.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationazurekeyvault, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationazurekeyvaultSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *AzureapplicationResource) Create(ctx context.Context, req resource.Crea
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
-	r.readAzureapplicationFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAzureapplicationFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "azureapplication not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *AzureapplicationResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading azureapplication resource")
 
-	r.readAzureapplicationFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAzureapplicationFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -151,7 +164,12 @@ func (r *AzureapplicationResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	// Read the updated state back
-	r.readAzureapplicationFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAzureapplicationFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "azureapplication not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -180,7 +198,7 @@ func (r *AzureapplicationResource) Delete(ctx context.Context, req resource.Dele
 }
 
 // Helper function to read azureapplication data from API
-func (r *AzureapplicationResource) readAzureapplicationFromApi(ctx context.Context, data *AzureapplicationResourceModel, diags *diag.Diagnostics) {
+func (r *AzureapplicationResource) readAzureapplicationFromApi(ctx context.Context, data *AzureapplicationResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	name_Name := data.Id.ValueString()
@@ -190,10 +208,14 @@ func (r *AzureapplicationResource) readAzureapplicationFromApi(ctx context.Conte
 
 	getResponseData, err = r.client.FindResource(service.Azureapplication.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read azureapplication, got error: %s", err))
-		return
+		return false
 	}
 
 	azureapplicationSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

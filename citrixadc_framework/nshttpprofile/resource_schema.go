@@ -49,6 +49,7 @@ type NshttpprofileResourceModel struct {
 	Http2maxrxresetframespermin      types.Int64  `tfsdk:"http2maxrxresetframespermin"`
 	Http2maxsettingsframespermin     types.Int64  `tfsdk:"http2maxsettingsframespermin"`
 	Http2minseverconn                types.Int64  `tfsdk:"http2minseverconn"`
+	Http2smallwndtimeout             types.Int64  `tfsdk:"http2smallwndtimeout"`
 	Http2strictcipher                types.String `tfsdk:"http2strictcipher"`
 	Http3                            types.String `tfsdk:"http3"`
 	Http3maxheaderblockedstreams     types.Int64  `tfsdk:"http3maxheaderblockedstreams"`
@@ -232,6 +233,11 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional:    true,
 				Computed:    true,
 				Description: "Maximum number of incoming RST_STREAM frames allowed in HTTP/2 connection per minute",
+			},
+			"http2smallwndtimeout": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Timeout (in seconds) for HTTP/2 small-window stalled streams. Required to mitigate CVE-2026-13474.",
 			},
 			"http2maxsettingsframespermin": schema.Int64Attribute{
 				Optional:    true,
@@ -754,6 +760,13 @@ func nshttpprofileSetAttrFromGet(ctx context.Context, data *NshttpprofileResourc
 		}
 	} else {
 		data.Http2maxrxresetframespermin = types.Int64Null()
+	}
+	if val, ok := getResponseData["http2smallwndtimeout"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Http2smallwndtimeout = types.Int64Value(intVal)
+		}
+	} else {
+		data.Http2smallwndtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["http2maxsettingsframespermin"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

@@ -105,6 +105,27 @@ func TestAccVpnvserverAppfwpolicyBinding_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnvserverAppfwpolicyBinding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_appfwpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserverAppfwpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserverAppfwpolicyBinding_basic,
+			},
+			{
+				Config:                  testAccVpnvserverAppfwpolicyBinding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVpnvserverAppfwpolicyBindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

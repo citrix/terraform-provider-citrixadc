@@ -136,7 +136,12 @@ func (r *SslCertKeyResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Read the updated state back
-	r.readSslCertKeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslCertKeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslcertkey not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -153,9 +158,14 @@ func (r *SslCertKeyResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	tflog.Debug(ctx, "Reading sslcertkey resource")
-	r.readSslCertKeyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslCertKeyFromApi(ctx, &data, &resp.Diagnostics)
 
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !found {
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
@@ -330,7 +340,12 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 	plan.Id = state.Id
 
 	// Read the updated state back - update plan with fresh API data
-	r.readSslCertKeyFromApi(ctx, &plan, &resp.Diagnostics)
+	if !r.readSslCertKeyFromApi(ctx, &plan, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslcertkey not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -376,17 +391,21 @@ func (r *SslCertKeyResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 // Helper function to read sslcertkey data from API
-func (r *SslCertKeyResource) readSslCertKeyFromApi(ctx context.Context, data *SslCertKeyResourceModel, diags *diag.Diagnostics) {
+func (r *SslCertKeyResource) readSslCertKeyFromApi(ctx context.Context, data *SslCertKeyResourceModel, diags *diag.Diagnostics) bool {
 	sslcertkeyName := data.Id.ValueString()
 
 	getResponseData, err := r.client.FindResource(service.Sslcertkey.Type(), sslcertkeyName)
 	if err != nil {
-		tflog.Warn(ctx, fmt.Sprintf("Clearing sslcertkey state %s", sslcertkeyName))
-		data.Id = types.StringNull()
-		return
+		if utils.IsNotFoundError(err) {
+			tflog.Warn(ctx, fmt.Sprintf("Clearing sslcertkey state %s", sslcertkeyName))
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslcertkey, got error: %s", err))
+		return false
 	}
 
 	sslcertkeySetAttrFromGet(ctx, data, getResponseData)
+	return true
 }
 
 // Helper function to handle linked certificate

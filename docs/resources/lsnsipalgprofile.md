@@ -41,7 +41,7 @@ resource "citrixadc_lsnsipalgprofile" "tf_lsnsipalgprofile" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lsnsipalgprofile. It has the same value as the `name` attribute.
+* `id` - The id of the lsnsipalgprofile. It has the same value as the `sipalgprofilename` attribute.
 
 
 ## Import

@@ -4,18 +4,7 @@ subcategory: "Cluster"
 
 # Resource: cluster
 
-The resource is used to create and modify Citrix ADC in cluster deployment.
-
-If there is no cluster instantiated the resource will bootstrap
-the first node so that the Cluster IP address is reachable
-and then add cluster nodes according to the terraform execution plan.
-
-If there already exists a cluster deployment with the Cluster IP address
-reachable the resource will add, remove or modify cluster nodes
-according to the terraform execution plan.
-
-In both cases the Citrix ADC provider configuration should point to the
-Cluster IP address.
+This resource is used to create and manage Citrix ADC cluster deployments.
 
 
 ## Example usage

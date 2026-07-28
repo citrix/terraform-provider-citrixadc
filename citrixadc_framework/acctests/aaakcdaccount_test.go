@@ -71,6 +71,28 @@ func TestAccAaakcdaccount_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaakcdaccount_import(t *testing.T) {
+	const resAddr = "citrixadc_aaakcdaccount.tf_aaakcdaccount"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaakcdaccountDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaakcdaccount_basic},
+			{
+				Config:            testAccAaakcdaccount_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// kcdpassword is a secret NITRO does not echo back, and
+				// kcdpassword_wo_version is a config-only version tracker; neither
+				// can round-trip through import.
+				ImportStateVerifyIgnore: []string{"kcdpassword", "kcdpassword_wo_version"},
+			},
+		},
+	})
+}
+
 func testAccCheckAaakcdaccountExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -275,6 +297,31 @@ func TestAccAaakcdaccount_kcdpassword_wo_ephemeral(t *testing.T) {
 					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
 					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "kcdpassword_wo_version", "2"),
 					resource.TestCheckResourceAttr("citrixadc_aaakcdaccount.tf_aaakcdaccount", "delegateduser", "john"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaakcdaccount_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaakcdaccountDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaakcdaccount_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaakcdaccount_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaakcdaccountExist("citrixadc_aaakcdaccount.tf_aaakcdaccount", nil),
 				),
 			},
 		},

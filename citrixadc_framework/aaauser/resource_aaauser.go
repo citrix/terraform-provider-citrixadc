@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -76,7 +77,12 @@ func (r *AaauserResource) Create(ctx context.Context, req resource.CreateRequest
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Username.ValueString()))
 
 	// Read the updated state back
-	r.readAaauserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaauserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaauser not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -94,7 +100,14 @@ func (r *AaauserResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tflog.Debug(ctx, "Reading aaauser resource")
 
-	r.readAaauserFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaauserFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -132,8 +145,8 @@ func (r *AaauserResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	if hasChange {
 		// Create API request body from the model
-		// Get payload from plan (regular attributes)
-		aaauser := aaauserGetThePayloadFromthePlan(ctx, &data)
+		// Get payload from plan (updatable attributes only)
+		aaauser := aaauserGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		aaauserGetThePayloadFromtheConfig(ctx, &config, &aaauser)
 		// Make API call
@@ -151,7 +164,12 @@ func (r *AaauserResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	// Read the updated state back
-	r.readAaauserFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaauserFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaauser not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -180,7 +198,7 @@ func (r *AaauserResource) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 // Helper function to read aaauser data from API
-func (r *AaauserResource) readAaauserFromApi(ctx context.Context, data *AaauserResourceModel, diags *diag.Diagnostics) {
+func (r *AaauserResource) readAaauserFromApi(ctx context.Context, data *AaauserResourceModel, diags *diag.Diagnostics) bool {
 
 	// Case 2: Find with single ID attribute - ID is the plain value
 	username_Name := data.Id.ValueString()
@@ -190,10 +208,14 @@ func (r *AaauserResource) readAaauserFromApi(ctx context.Context, data *AaauserR
 
 	getResponseData, err = r.client.FindResource(service.Aaauser.Type(), username_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaauser, got error: %s", err))
-		return
+		return false
 	}
 
 	aaauserSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }
