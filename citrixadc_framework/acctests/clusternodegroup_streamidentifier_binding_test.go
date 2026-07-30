@@ -250,6 +250,16 @@ func testAccCheckClusternodegroup_streamidentifier_bindingDestroy(s *terraform.S
 
 const testAccClusternodegroup_streamidentifier_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_streamselector" "tf_streamselector" {
 		name = "my_streamselector"
 		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
@@ -266,8 +276,9 @@ const testAccClusternodegroup_streamidentifier_bindingDataSource_basic = `
 	}
 
 resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
-name           = "my_tf_group"
+name           = citrixadc_clusternodegroup.tf_clusternodegroup.name
 identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
+depends_on     = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 }
 
 data "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {

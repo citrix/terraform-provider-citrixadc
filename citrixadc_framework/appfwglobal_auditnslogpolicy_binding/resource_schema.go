@@ -188,6 +188,18 @@ func appfwglobal_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, dat
 	// binding never echoes 'type' (it surfaces 'bindpolicytype' instead), so copying
 	// from the response would null out the user's configured value and cause an
 	// "inconsistent result after apply". Preserve the configured/prior-state value.
+	//
+	// However, when the config OMITS state/type they are Optional+Computed with no
+	// default, so the plan leaves them Unknown and the branches above never resolve them.
+	// Resolve that Unknown to Null here (an explicitly-configured value is not Unknown, so
+	// it is preserved) - otherwise Create persists an unknown value and Terraform rejects
+	// the apply with "invalid result object after apply".
+	if data.State.IsUnknown() {
+		data.State = types.StringNull()
+	}
+	if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
+	}
 
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs

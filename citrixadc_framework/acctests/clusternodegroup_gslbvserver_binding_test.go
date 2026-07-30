@@ -301,14 +301,25 @@ func testAccCheckClusternodegroup_gslbvserver_bindingDestroy(s *terraform.State)
 
 const testAccClusternodegroup_gslbvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 		name        = "my_gslb_vserver_ds"
 		servicetype = "HTTP"
 	}
 
 	resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
-		name    = "my_tf_group"
+		name    = citrixadc_clusternodegroup.tf_clusternodegroup.name
 		vserver = citrixadc_gslbvserver.tf_gslbvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {

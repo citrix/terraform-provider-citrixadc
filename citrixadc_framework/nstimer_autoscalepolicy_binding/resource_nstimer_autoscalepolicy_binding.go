@@ -181,8 +181,20 @@ func (r *NstimerAutoscalepolicyBindingResource) Delete(ctx context.Context, req 
 
 	err = r.client.DeleteResourceWithArgs(service.Nstimer_autoscalepolicy_binding.Type(), name_value, args)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nstimer_autoscalepolicy_binding, got error: %s", err))
-		return
+		// Make Delete idempotent: on this firmware the typed binding GET returns an empty
+		// body, so the nitro client's pre-delete existence guard is bypassed and DELETE is
+		// issued even when the binding is already gone. NITRO then reports "Cannot unbind a
+		// policy that is not bound" (errorcode 3093) / "No such resource" (258). Treat an
+		// already-absent binding as a successful delete instead of failing the apply.
+		errStr := err.Error()
+		if !strings.Contains(errStr, "Cannot unbind a policy that is not bound") &&
+			!strings.Contains(errStr, "errorcode 3093") &&
+			!strings.Contains(errStr, "errorcode 258") &&
+			!strings.Contains(errStr, "No such resource") {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nstimer_autoscalepolicy_binding, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "nstimer_autoscalepolicy_binding already absent on delete; treating as success")
 	}
 
 	tflog.Trace(ctx, "Deleted nstimer_autoscalepolicy_binding binding")

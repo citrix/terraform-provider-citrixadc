@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -244,6 +245,27 @@ func (r *FeoglobalFeopolicyBindingResource) readFeoglobalFeopolicyBindingFromApi
 	if foundIndex == -1 {
 		data.Id = types.StringNull()
 		return
+	}
+
+	// On import only the id (=policyname) is passed through; policyname, type and priority
+	// arrive null, and SetAttrFromGet intentionally does not read them back. Without this,
+	// the recomputed id would be empty (policyname null) and ImportStateVerify (which compares
+	// every attribute here) would mismatch on type/priority. Backfill each null identity attr:
+	// policyname from the id, type from the (defaulted) bind-point filter, priority from the
+	// matched GET row. Create/Update/refresh already carry these from plan/state (guard skips them).
+	row := dataArr[foundIndex]
+	if data.Policyname.IsNull() || data.Policyname.IsUnknown() {
+		data.Policyname = types.StringValue(policyname)
+	}
+	if data.Type.IsNull() || data.Type.IsUnknown() {
+		data.Type = types.StringValue(typeVal)
+	}
+	if data.Priority.IsNull() || data.Priority.IsUnknown() {
+		if pv, ok := row["priority"]; ok && pv != nil {
+			if iv, err := utils.ConvertToInt64(pv); err == nil {
+				data.Priority = types.Int64Value(iv)
+			}
+		}
 	}
 
 	feoglobal_feopolicy_bindingSetAttrFromGet(ctx, data, dataArr[foundIndex])

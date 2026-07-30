@@ -306,6 +306,9 @@ func TestAccVpnvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Verify the binding is unbound/destroyed on teardown so a leftover cannot leave the
+		// analyticsprofile "in use" (errorcode 3940) and poison later analyticsprofile tests.
+		CheckDestroy: testAccCheckVpnvserver_analyticsprofile_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnvserver_analyticsprofile_bindingDataSource_basic,

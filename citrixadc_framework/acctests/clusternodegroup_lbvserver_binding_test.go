@@ -312,14 +312,25 @@ func testAccCheckClusternodegroup_lbvserver_bindingDestroy(s *terraform.State) e
 
 const testAccClusternodegroup_lbvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_lbvserver" "tf_lbvserver" {
 		name        = "my_lb_vserver_ds"
 		servicetype = "HTTP"
 	}
 
 	resource "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {
-		name    = "my_tf_group"
-		vserver = citrixadc_lbvserver.tf_lbvserver.name
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver    = citrixadc_lbvserver.tf_lbvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_lbvserver_binding" "tf_clusternodegroup_lbvserver_binding" {

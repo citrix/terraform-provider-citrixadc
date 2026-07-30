@@ -248,14 +248,25 @@ func testAccCheckClusternodegroup_crvserver_bindingDestroy(s *terraform.State) e
 
 const testAccClusternodegroup_crvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_crvserver" "tf_crvserver" {
 		name        = "my_cache_redirection_server_ds"
 		servicetype = "HTTP"
 	}
 
 	resource "citrixadc_clusternodegroup_crvserver_binding" "tf_clusternodegroup_crvserver_binding" {
-		name    = "my_tf_group"
-		vserver = citrixadc_crvserver.tf_crvserver.name
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver    = citrixadc_crvserver.tf_crvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_crvserver_binding" "tf_clusternodegroup_crvserver_binding" {

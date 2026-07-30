@@ -123,7 +123,7 @@ const testAccAuditsyslogpolicy_basic_step1 = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
     name = "tf_syslogaction"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.51"
     serverport = 514
     loglevel = [
         "ERROR",
@@ -144,7 +144,7 @@ const testAccAuditsyslogpolicy_basic_step2 = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
     name = "tf_syslogaction"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.51"
     serverport = 514
     loglevel = [
         "ERROR",
@@ -170,7 +170,7 @@ const testAccAuditsyslogpolicy_basic_step3 = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
     name = "tf_syslogaction"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.51"
     serverport = 514
     loglevel = [
         "ERROR",
@@ -217,7 +217,7 @@ const testAccAuditsyslogpolicyDataSource_basic = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction_ds" {
     name = "tf_syslogaction_ds"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.51"
     serverport = 514
     loglevel = [
         "ERROR",

@@ -2,6 +2,8 @@ package appflowglobal_appflowpolicy_binding
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/appflow"
 
@@ -184,10 +186,14 @@ func appflowglobal_appflowpolicy_bindingSetAttrFromGet(ctx context.Context, data
 		data.Type = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Backward-compatible with SDK v2: ID is the plain policyname value
-	// (resource_id_mapping.json legacy order: "policyname").
-	data.Id = types.StringValue(data.Policyname.ValueString())
+	// Re-derive the canonical composite id (policyname:<v>,type:<v>). A single appflowpolicy
+	// can be bound at multiple bind points (type) simultaneously, so policyname alone is not
+	// a unique key. This also upgrades a legacy SDK v2 plain-policyname id to the composite
+	// form on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(data.Policyname.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(data.Type.ValueString())))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

@@ -1,6 +1,8 @@
 package citrixadc
 
 import (
+	"archive/tar"
+	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -391,6 +393,46 @@ func uploadTestdataFile(c *NetScalerNitroClient, t *testing.T, filename, targetD
 		}
 	}
 	return nil
+}
+
+// uploadAppfwarchiveFixture builds a minimal, well-formed tar in memory and
+// uploads it to targetDir on the ADC as filename, so that an appfwarchive Import
+// with src="local:<filename>" resolves to a real, importable archive. NITRO's
+// Import accepts any well-formed tar (it does not validate AppFW-specific archive
+// contents), which is what lets the appfwarchive / appfwarchive_export acceptance
+// tests be self-contained instead of depending on an external archive host or a
+// pre-seeded archive on the box. The upload mirrors uploadTestdataFile's
+// "File already exists" delete-then-retry handling so reruns are idempotent.
+func uploadAppfwarchiveFixture(c *NetScalerNitroClient, t *testing.T, filename, targetDir string) error {
+	client := c.client
+
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	content := []byte("terraform-provider-citrixadc appfwarchive self-test fixture\n")
+	if err := tw.WriteHeader(&tar.Header{Name: "manifest.txt", Mode: 0o644, Size: int64(len(content))}); err != nil {
+		return err
+	}
+	if _, err := tw.Write(content); err != nil {
+		return err
+	}
+	if err := tw.Close(); err != nil {
+		return err
+	}
+
+	sf := system.Systemfile{
+		Filename:     filename,
+		Filecontent:  base64.StdEncoding.EncodeToString(buf.Bytes()),
+		Filelocation: targetDir,
+	}
+	_, err := client.AddResource(service.Systemfile.Type(), filename, &sf)
+	if err != nil && strings.Contains(err.Error(), "File already exists") {
+		url_args := map[string]string{"filelocation": strings.Replace(targetDir, "/", "%2F", -1)}
+		if derr := client.DeleteResourceWithArgsMap(service.Systemfile.Type(), filename, url_args); derr != nil {
+			return derr
+		}
+		_, err = client.AddResource(service.Systemfile.Type(), filename, &sf)
+	}
+	return err
 }
 
 var helperClient *NetScalerNitroClient

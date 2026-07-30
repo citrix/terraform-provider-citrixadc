@@ -208,7 +208,9 @@ func TestAccAnalyticsglobal_analyticsprofile_bindingDataSource_basic(t *testing.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy:             nil,
+		// Verify the binding is unbound/destroyed on teardown so a leftover cannot leave the
+		// analyticsprofile "in use" (errorcode 3940) and poison later analyticsprofile tests.
+		CheckDestroy: testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyticsglobal_analyticsprofile_bindingDataSource_basic,

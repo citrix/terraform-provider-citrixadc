@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -123,7 +124,12 @@ func testAccCheckAppflowglobal_appflowpolicy_bindingExist(n string, id *string) 
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
+		// ID is the composite policyname:<v>,type:<v>; parse the policyname out of it.
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", rs.Primary.ID, err)
+		}
+		policyname := idMap["policyname"]
 		typename := rs.Primary.Attributes["type"]
 
 		findParams := service.FindParams{
@@ -309,8 +315,9 @@ const testAccAppflowglobal_appflowpolicy_binding_upgrade_basic = `
 // with citrix/citrixadc 2.2.0 (writes the legacy id "test_policy" — the SDK v2
 // d.SetId(policyname)). Step 2 refreshes/plans/applies the same config through the
 // Framework provider, exercising ParseIdString on the legacy id; the Framework
-// recomputes the id on Read (SetAttrFromGet). For this single-key resource the
-// canonical new-format id is the plain policyname, so it stays "test_policy".
+// recomputes the id on Read (SetAttrFromGet) into the composite key:value form. A single
+// appflowpolicy can be bound at multiple bind points (type), so the id is upgraded from the
+// legacy plain "test_policy" to "policyname:test_policy,type:REQ_OVERRIDE".
 func TestAccAppflowglobal_appflowpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 	resourceAddr := "citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding"
 	resource.Test(t, resource.TestCase{
@@ -333,13 +340,13 @@ func TestAccAppflowglobal_appflowpolicy_binding_sdkv2StateUpgrade(t *testing.T) 
 			},
 			// Step 2: refresh/plan/apply the SAME config through the current Framework
 			// provider. The legacy-id state is read via ParseIdString and the id is
-			// recomputed on Read; for this single-key resource it remains "test_policy".
+			// recomputed on Read into the composite form (policyname:...,type:...).
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccAppflowglobal_appflowpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppflowglobal_appflowpolicy_bindingExist(resourceAddr, nil),
-					resource.TestCheckResourceAttr(resourceAddr, "id", "test_policy"),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "policyname:test_policy,type:REQ_OVERRIDE"),
 				),
 			},
 		},

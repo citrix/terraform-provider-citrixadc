@@ -259,7 +259,14 @@ const testAccSslprofile_ecccurve_binding_upgrade_basic = `
 // current Framework provider, which recomputes the id to the new canonical form on Read.
 func TestAccSslprofile_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the _basic/_import/_selfHealing gate).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
 		CheckDestroy: testAccCheckSslprofile_ecccurve_bindingDestroy,
 		Steps: []resource.TestStep{
 			// Step 1: create with the last SDK v2 release (2.2.0). State carries the
@@ -295,7 +302,14 @@ func TestAccSslprofile_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
 func TestAccSslprofile_ecccurve_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the sibling _basic gate).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslprofile_ecccurve_bindingDestroy,
 		Steps: []resource.TestStep{

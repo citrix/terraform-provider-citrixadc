@@ -295,7 +295,14 @@ resource "citrixadc_sslprofile_sslcertkey_binding" "demo_sslprofile_sslcertkey_b
 
 func TestAccSslprofile_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the sibling _basic gate on this resource family).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
 		CheckDestroy: testAccCheckSslprofile_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{
 			// Step 1: Create the resource with the last SDK v2 release (writes legacy-format id).
@@ -329,7 +336,14 @@ func TestAccSslprofile_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
 func TestAccSslprofile_sslcertkey_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the sibling gate on this resource family).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslprofile_sslcertkey_bindingDestroy,
 		Steps: []resource.TestStep{

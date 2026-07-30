@@ -65,9 +65,36 @@ const testAccNshttpprofile_update = `
 	}
 `
 
+// nshttpprofileSupportsHttp2smallwndtimeout reports whether the ADC firmware
+// recognizes the http2smallwndtimeout attribute (added for CVE-2026-13474 by a
+// recent 14.1 build). Older builds reject it on create with errorcode 278
+// ("Invalid argument [http2smallwndtimeout]"). The attribute's presence as a key
+// in the GET of the built-in nshttp_default_profile is a reliable, version-number-
+// free firmware capability probe.
+func nshttpprofileSupportsHttp2smallwndtimeout(t *testing.T) bool {
+	client, err := testAccGetFrameworkClient()
+	if err != nil {
+		t.Fatalf("Failed to get test client: %v", err)
+	}
+	data, err := client.FindResource(service.Nshttpprofile.Type(), "nshttp_default_profile")
+	if err != nil {
+		t.Fatalf("Failed to read nshttp_default_profile for firmware probe: %v", err)
+	}
+	_, ok := data["http2smallwndtimeout"]
+	return ok
+}
+
 func TestAccNshttpprofile_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// The _add/_update configs set http2smallwndtimeout, which older ADC
+			// builds reject with errorcode 278. Skip on firmware that lacks it
+			// rather than reporting a spurious failure.
+			if !nshttpprofileSupportsHttp2smallwndtimeout(t) {
+				t.Skip("ADC firmware does not support http2smallwndtimeout (CVE-2026-13474 param); skipping nshttpprofile test")
+			}
+		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckNshttpprofileDestroy,
 		Steps: []resource.TestStep{

@@ -378,7 +378,7 @@ func TestAccBotprofile_trapinsertionurl_binding_selfHealing(t *testing.T) {
 					if err != nil {
 						t.Fatalf("self-healing: client: %v", err)
 					}
-					if err := client.DeleteResourceWithArgsMap(service.Botprofile_trapinsertionurl_binding.Type(), "tf_botprofile", map[string]string{"bot_trap_url": "www.example.com"}); err != nil {
+					if err := client.DeleteResourceWithArgsMap(service.Botprofile_trapinsertionurl_binding.Type(), "tf_botprofile", map[string]string{"bot_trap_url": "www.example.com", "trapinsertionurl": "true"}); err != nil {
 						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
 					}
 				},

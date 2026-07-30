@@ -235,6 +235,16 @@ func testAccCheckClusternodegroup_gslbsite_bindingDestroy(s *terraform.State) er
 
 const testAccClusternodegroup_gslbsite_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_gslbsite" "tf_gslbsite" {
 		sitename        = "my_gslb_site_ds"
 		siteipaddress   = "192.0.2.1"
@@ -244,8 +254,9 @@ const testAccClusternodegroup_gslbsite_bindingDataSource_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {
-		name     = "my_tf_group"
-		gslbsite = citrixadc_gslbsite.tf_gslbsite.sitename
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		gslbsite   = citrixadc_gslbsite.tf_gslbsite.sitename
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_gslbsite_binding" "tf_clusternodegroup_gslbsite_binding" {

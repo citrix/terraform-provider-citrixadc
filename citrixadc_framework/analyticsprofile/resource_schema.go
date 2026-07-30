@@ -468,6 +468,85 @@ func analyticsprofileGetThePayloadFromtheConfig(ctx context.Context, data *Analy
 			payload.Analyticsauthtoken = analyticsauthtokenWo
 		}
 	}
+
+	// Web-insight-only attributes: send only when the user actually set them.
+	//
+	// Each attribute below is Optional+Computed with a static Default of
+	// "DISABLED". That default makes an OMITTED attribute resolve to a known
+	// value in the plan, so the plan payload builder would include it on every
+	// create/update. NITRO accepts these attributes only when type==webinsight
+	// and rejects them for any other type with errorcode 1093 ("Argument
+	// pre-requisite missing [<attr>, type==webinsight]").
+	//
+	// `data` here is the CONFIG (nullified for anything the user did not write),
+	// so IsNull() distinguishes a user-supplied value from the schema default.
+	// Clearing the payload field (a `,omitempty` string) drops it from the wire.
+	// The schema default is retained so plan output stays stable, and the unset
+	// flow (driven separately by ExecuteUnset in Update) still reverts these to
+	// "DISABLED" when they are removed from a webinsight profile.
+	if data.Allhttpheaders.IsNull() {
+		payload.Allhttpheaders = ""
+	}
+	if data.Grpcstatus.IsNull() {
+		payload.Grpcstatus = ""
+	}
+	if data.Httpauthentication.IsNull() {
+		payload.Httpauthentication = ""
+	}
+	if data.Httpclientsidemeasurements.IsNull() {
+		payload.Httpclientsidemeasurements = ""
+	}
+	if data.Httpcontenttype.IsNull() {
+		payload.Httpcontenttype = ""
+	}
+	if data.Httpcookie.IsNull() {
+		payload.Httpcookie = ""
+	}
+	if data.Httpdomainname.IsNull() {
+		payload.Httpdomainname = ""
+	}
+	if data.Httphost.IsNull() {
+		payload.Httphost = ""
+	}
+	if data.Httplocation.IsNull() {
+		payload.Httplocation = ""
+	}
+	if data.Httpmethod.IsNull() {
+		payload.Httpmethod = ""
+	}
+	if data.Httppagetracking.IsNull() {
+		payload.Httppagetracking = ""
+	}
+	if data.Httpreferer.IsNull() {
+		payload.Httpreferer = ""
+	}
+	if data.Httpsetcookie.IsNull() {
+		payload.Httpsetcookie = ""
+	}
+	if data.Httpsetcookie2.IsNull() {
+		payload.Httpsetcookie2 = ""
+	}
+	if data.Httpurl.IsNull() {
+		payload.Httpurl = ""
+	}
+	if data.Httpurlquery.IsNull() {
+		payload.Httpurlquery = ""
+	}
+	if data.Httpuseragent.IsNull() {
+		payload.Httpuseragent = ""
+	}
+	if data.Httpvia.IsNull() {
+		payload.Httpvia = ""
+	}
+	if data.Httpxforwardedforheader.IsNull() {
+		payload.Httpxforwardedforheader = ""
+	}
+	if data.Integratedcache.IsNull() {
+		payload.Integratedcache = ""
+	}
+	if data.Urlcategory.IsNull() {
+		payload.Urlcategory = ""
+	}
 }
 
 func analyticsprofileSetAttrFromGet(ctx context.Context, data *AnalyticsprofileResourceModel, getResponseData map[string]interface{}) *AnalyticsprofileResourceModel {

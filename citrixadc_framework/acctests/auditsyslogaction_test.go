@@ -33,7 +33,7 @@ func TestAccAuditsyslogaction_basic(t *testing.T) {
 			{
 				Config: testAccAuditsyslogaction_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.33", "serverport": 514, "transport": "TCP", "loglevel": []string{"ERROR", "NOTICE"}, "protocolviolations": "NONE"}),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction", nil, map[string]interface{}{"name": "tf_syslogaction", "serverip": "10.78.60.49", "serverport": 514, "transport": "TCP", "loglevel": []string{"ERROR", "NOTICE"}, "protocolviolations": "NONE"}),
 				),
 			},
 			{
@@ -187,7 +187,7 @@ const testAccAuditsyslogaction_basic_step1 = `
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
     name = "tf_syslogaction"
-    serverip = "10.78.60.33"
+    serverip = "10.78.60.49"
     serverport = 514
     loglevel = [
         "ERROR",
@@ -250,7 +250,7 @@ func TestAccAuditsyslogactionDataSource_basic(t *testing.T) {
 				Config: testAccAuditsyslogactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "name", "tf_auditsyslogaction_ds"),
-					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "serverip", "10.78.60.33"),
+					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "serverip", "10.78.60.49"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "serverport", "514"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "transport", "TCP"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "protocolviolations", "NONE"),
@@ -264,7 +264,7 @@ const testAccAuditsyslogactionDataSource_basic = `
 
 resource "citrixadc_auditsyslogaction" "tf_auditsyslogaction_ds" {
     name      = "tf_auditsyslogaction_ds"
-    serverip  = "10.78.60.33"
+    serverip  = "10.78.60.49"
     serverport = 514
     loglevel  = ["ERROR", "NOTICE"]
     transport = "TCP"
@@ -288,7 +288,7 @@ variable "auditsyslogaction_httpauthtoken" {
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction_secret" {
     name          = "tf_syslogaction_secret"
-    serverip      = "10.78.60.33"
+    serverip      = "10.78.60.49"
     serverport    = 514
     loglevel      = ["ERROR", "NOTICE"]
     transport     = "HTTP"
@@ -304,7 +304,7 @@ variable "auditsyslogaction_httpauthtoken_2" {
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction_secret" {
     name          = "tf_syslogaction_secret"
-    serverip      = "10.78.60.33"
+    serverip      = "10.78.60.49"
     serverport    = 514
     loglevel      = ["ERROR", "NOTICE"]
     transport     = "HTTP"
@@ -323,13 +323,13 @@ func TestAccAuditsyslogaction_httpauthtoken_backward_compat(t *testing.T) {
 			{
 				Config: testAccAuditsyslogaction_httpauthtoken_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_secret", nil, map[string]interface{}{"name": "tf_syslogaction_secret", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_secret", nil, map[string]interface{}{"name": "tf_syslogaction_secret", "serverip": "10.78.60.49", "serverport": 514, "transport": "HTTP"}),
 				),
 			},
 			{
 				Config: testAccAuditsyslogaction_httpauthtoken_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_secret", nil, map[string]interface{}{"name": "tf_syslogaction_secret", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_secret", nil, map[string]interface{}{"name": "tf_syslogaction_secret", "serverip": "10.78.60.49", "serverport": 514, "transport": "HTTP"}),
 				),
 			},
 		},
@@ -369,7 +369,7 @@ variable "auditsyslogaction_httpauthtoken_wo" {
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction_wo" {
     name                    = "tf_syslogaction_wo"
-    serverip                = "10.78.60.33"
+    serverip                = "10.78.60.49"
     serverport              = 514
     loglevel                = ["ERROR", "NOTICE"]
     transport               = "HTTP"
@@ -386,7 +386,7 @@ variable "auditsyslogaction_httpauthtoken_wo_2" {
 
 resource "citrixadc_auditsyslogaction" "tf_syslogaction_wo" {
     name                    = "tf_syslogaction_wo"
-    serverip                = "10.78.60.33"
+    serverip                = "10.78.60.49"
     serverport              = 514
     loglevel                = ["ERROR", "NOTICE"]
     transport               = "HTTP"
@@ -406,14 +406,14 @@ func TestAccAuditsyslogaction_httpauthtoken_wo_ephemeral(t *testing.T) {
 			{
 				Config: testAccAuditsyslogaction_httpauthtoken_wo_step1,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_wo", nil, map[string]interface{}{"name": "tf_syslogaction_wo", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_wo", nil, map[string]interface{}{"name": "tf_syslogaction_wo", "serverip": "10.78.60.49", "serverport": 514, "transport": "HTTP"}),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogaction.tf_syslogaction_wo", "httpauthtoken_wo_version", "1"),
 				),
 			},
 			{
 				Config: testAccAuditsyslogaction_httpauthtoken_wo_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_wo", nil, map[string]interface{}{"name": "tf_syslogaction_wo", "serverip": "10.78.60.33", "serverport": 514, "transport": "HTTP"}),
+					testAccCheckAuditsyslogactionExist("citrixadc_auditsyslogaction.tf_syslogaction_wo", nil, map[string]interface{}{"name": "tf_syslogaction_wo", "serverip": "10.78.60.49", "serverport": 514, "transport": "HTTP"}),
 					resource.TestCheckResourceAttr("citrixadc_auditsyslogaction.tf_syslogaction_wo", "httpauthtoken_wo_version", "2"),
 				),
 			},

@@ -28,7 +28,7 @@ import (
 const testAccAppfwglobal_auditsyslogpolicy_binding_basic = `
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
-		serverip   = "10.78.60.33"
+		serverip   = "10.78.60.48"
 		serverport = 514
 		loglevel = [
 		"ERROR",
@@ -60,7 +60,7 @@ const testAccAppfwglobal_auditsyslogpolicy_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
-		serverip   = "10.78.60.33"
+		serverip   = "10.78.60.48"
 		serverport = 514
 		loglevel = [
 		"ERROR",
@@ -221,7 +221,7 @@ func testAccCheckAppfwglobal_auditsyslogpolicy_bindingDestroy(s *terraform.State
 const testAccAppfwglobal_auditsyslogpolicy_bindingDataSource_basic = `
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
-		serverip   = "10.78.60.33"
+		serverip   = "10.78.60.48"
 		serverport = 514
 		loglevel = [
 		"ERROR",
@@ -272,7 +272,7 @@ func TestAccAppfwglobal_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) 
 const testAccAppfwglobal_auditsyslogpolicy_binding_upgrade_basic = `
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name       = "tf_syslogaction"
-		serverip   = "10.78.60.33"
+		serverip   = "10.78.60.48"
 		serverport = 514
 		loglevel = [
 		"ERROR",

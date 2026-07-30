@@ -224,6 +224,27 @@ func (r *AppfwprofileCsrftagBindingResource) readAppfwprofileCsrftagBindingFromA
 		return
 	}
 
+	// On import only the id is passed through; the identity-key attributes arrive null.
+	// SetAttrFromGet intentionally does NOT read them back from the GET response, so
+	// without this they stay null and the recomputed id becomes "csrfformactionurl:,csrftag:,name:"
+	// (ImportStateVerify then can't correlate). Backfill each null key from the parsed id
+	// (authoritative); Create/Update/refresh already carry them from plan/state.
+	if data.Name.IsNull() || data.Name.IsUnknown() {
+		if v, ok := idMap["name"]; ok {
+			data.Name = types.StringValue(v)
+		}
+	}
+	if data.Csrftag.IsNull() || data.Csrftag.IsUnknown() {
+		if v, ok := idMap["csrftag"]; ok {
+			data.Csrftag = types.StringValue(v)
+		}
+	}
+	if data.Csrfformactionurl.IsNull() || data.Csrfformactionurl.IsUnknown() {
+		if v, ok := idMap["csrfformactionurl"]; ok {
+			data.Csrfformactionurl = types.StringValue(v)
+		}
+	}
+
 	name_Name, ok := idMap["name"]
 	if !ok {
 		diags.AddError("Parse Error", "ID attribute 'name' not found in ID string")

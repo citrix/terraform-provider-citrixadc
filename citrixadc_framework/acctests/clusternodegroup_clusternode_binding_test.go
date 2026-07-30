@@ -227,8 +227,13 @@ func testAccCheckClusternodegroup_clusternode_bindingDestroy(s *terraform.State)
 }
 
 const testAccClusternodegroup_clusternode_bindingDataSource_basic = `
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
 	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
-		name = "my_tf_group"
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
 		node = 0
 	}
 

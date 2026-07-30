@@ -318,6 +318,16 @@ func testAccCheckClusternodegroup_service_bindingDestroy(s *terraform.State) err
 
 const testAccClusternodegroup_service_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_service" "tf_service" {
 		name        = "my_service_ds"
 		servicetype = "ADNS"
@@ -326,8 +336,9 @@ const testAccClusternodegroup_service_bindingDataSource_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {
-		name    = "my_tf_group"
-		service = citrixadc_service.tf_service.name
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		service    = citrixadc_service.tf_service.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_service_binding" "tf_clusternodegroup_service_binding" {

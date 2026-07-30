@@ -60,7 +60,14 @@ func TestAccSslprofile_sslcipher_binding_basic(t *testing.T) {
 func TestAccSslprofile_sslcipher_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_sslprofile_sslcipher_binding.tf_binding"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the sibling gate on this resource family).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckSslprofile_sslcipher_bindingDestroy,
 		Steps: []resource.TestStep{
@@ -324,7 +331,14 @@ resource "citrixadc_sslprofile_sslcipher_binding" "tf_binding" {
 // so after the step-2 refresh the id becomes "name:tf_sslprofile,ciphername:HIGH".
 func TestAccSslprofile_sslcipher_binding_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the sibling _basic gate on this resource family).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
 		CheckDestroy: testAccCheckSslprofile_sslcipher_bindingDestroy,
 		Steps: []resource.TestStep{
 			// Step 1: create with the last SDK v2 release from the registry. This

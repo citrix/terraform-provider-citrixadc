@@ -3,6 +3,7 @@ package appflowglobal_appflowpolicy_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -67,9 +68,14 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Create(ctx context.Context, 
 
 	tflog.Trace(ctx, "Created appflowglobal_appflowpolicy_binding resource")
 
-	// Set ID for the resource before reading state
-	// Backward-compatible with SDK v2: ID is the plain policyname value.
-	data.Id = types.StringValue(data.Policyname.ValueString())
+	// Set ID for the resource before reading state. A single appflowpolicy can be bound at
+	// multiple bind points (type) at once, so policyname alone is not unique; the id is the
+	// composite policyname:<v>,type:<v>. (SetAttrFromGet upgrades a legacy plain-policyname
+	// id to this form on Read.)
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(data.Policyname.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(data.Type.ValueString())))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Read the updated state back
 	r.readAppflowglobalAppflowpolicyBindingFromApi(ctx, &data, &resp.Diagnostics)
@@ -186,8 +192,13 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Delete(ctx context.Context, 
 	if val, ok := idMap["policyname"]; ok && val != "" {
 		argsMap["policyname"] = val
 	}
-	if !data.Type.IsNull() && data.Type.ValueString() != "" {
-		argsMap["type"] = data.Type.ValueString()
+	// type is part of the composite id; prefer it, fall back to the state model.
+	typeVal := idMap["type"]
+	if typeVal == "" {
+		typeVal = data.Type.ValueString()
+	}
+	if typeVal != "" {
+		argsMap["type"] = typeVal
 	}
 	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		argsMap["priority"] = fmt.Sprintf("%d", data.Priority.ValueInt64())
@@ -215,11 +226,19 @@ func (r *AppflowglobalAppflowpolicyBindingResource) readAppflowglobalAppflowpoli
 		return
 	}
 	policynameId := idMap["policyname"]
+	// The bind-point "type" is required as the GET filter for NITRO to echo the per-policy
+	// records (policyname/priority). Prefer the type carried in the composite id -- this is
+	// what makes import self-contained -- and fall back to the model field for a legacy
+	// plain-policyname id being upgraded on refresh.
+	typeVal := idMap["type"]
+	if typeVal == "" {
+		typeVal = data.Type.ValueString()
+	}
 
 	var dataArr []map[string]interface{}
 	var argsMap map[string]string = make(map[string]string)
-	if !data.Type.IsNull() && data.Type.ValueString() != "" {
-		argsMap["type"] = data.Type.ValueString()
+	if typeVal != "" {
+		argsMap["type"] = typeVal
 	}
 
 	findParams := service.FindParams{

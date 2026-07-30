@@ -86,8 +86,8 @@ resource "citrixadc_service" "tf_service" {
 `
 
 func TestAccSslserviceSslcipherBinding_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -114,8 +114,8 @@ func TestAccSslserviceSslcipherBinding_basic(t *testing.T) {
 }
 
 func TestAccSslserviceSslcipherBinding_import(t *testing.T) {
-	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
 	}
 	const resAddr = "citrixadc_sslservice_sslcipher_binding.tf_binding"
 	resource.Test(t, resource.TestCase{
@@ -305,8 +305,8 @@ data "citrixadc_sslservice_sslcipher_binding" "tf_binding" {
 `
 
 func TestAccSslserviceSslcipherBindingDataSource_basic(t *testing.T) {
-	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
 	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -325,8 +325,8 @@ func TestAccSslserviceSslcipherBindingDataSource_basic(t *testing.T) {
 }
 
 func TestAccSslserviceSslcipherBinding_selfHealing(t *testing.T) {
-	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
-		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
 	}
 	const resAddr = "citrixadc_sslservice_sslcipher_binding.tf_binding"
 	resource.Test(t, resource.TestCase{

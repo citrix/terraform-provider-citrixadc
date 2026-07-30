@@ -235,6 +235,16 @@ func testAccCheckClusternodegroup_authenticationvserver_bindingDestroy(s *terraf
 
 const testAccClusternodegroup_authenticationvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
 		name           = "my_authentication_server_ds"
 		servicetype    = "SSL"
@@ -243,8 +253,9 @@ const testAccClusternodegroup_authenticationvserver_bindingDataSource_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {
-		name    = "my_tf_group"
-		vserver = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver    = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_authenticationvserver_binding" "tf_clusternodegroup_authenticationvserver_binding" {

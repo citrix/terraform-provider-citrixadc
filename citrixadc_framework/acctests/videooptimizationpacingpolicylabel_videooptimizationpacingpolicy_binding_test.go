@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -270,6 +271,12 @@ func testAccCheckVideooptimizationpacingpolicylabel_videooptimizationpacingpolic
 
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 		if err != nil {
+			// Parent videooptimizationpacingpolicylabel already deleted (errorcode 3087) =>
+			// the binding is gone too. This is the normal teardown order (terraform destroys
+			// the parent label before CheckDestroy runs against the pre-destroy state).
+			if strings.Contains(err.Error(), "errorcode 3087") {
+				continue
+			}
 			return err
 		}
 

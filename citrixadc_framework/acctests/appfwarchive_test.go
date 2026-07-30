@@ -32,14 +32,39 @@ import (
 //   - The NITRO `get (all)` response carries no per-archive identifying fields
 //     (no `name` echo); the resource's Read treats a non-empty list as
 //     existence confirmation. The exist check below mirrors that behavior.
-//   - `src` MUST be a reachable http(s) URL serving a valid AppFW tar archive
-//     for Import to succeed. Replace the TODO_PLACEHOLDER URLs with real
-//     archive URLs reachable from the ADC under test before running.
+//   - The test is self-contained: doAppfwarchivePreChecks enables the AppFw
+//     feature and uploads a minimal, well-formed tar to /var/tmp on the ADC, so
+//     Import resolves src="local:<fixture>" without any external archive host or a
+//     pre-seeded archive on the box. (NITRO's Import accepts any well-formed tar;
+//     it does not validate AppFW-specific archive contents.)
+
+// appfwarchiveFixtureFile is uploaded to /var/tmp by doAppfwarchivePreChecks and
+// referenced as src="local:tfappfwarchive.tar" by the configs below (and by the
+// appfwarchive_export test, which imports it to seed the archive it then exports).
+const appfwarchiveFixtureFile = "tfappfwarchive.tar"
+
+// doAppfwarchivePreChecks makes the appfwarchive / appfwarchive_export tests
+// self-contained: it enables the AppFw feature (idempotent) and uploads a minimal
+// tar fixture so Import (src="local:...") has a real archive to read.
+func doAppfwarchivePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v", err)
+	}
+	if err := c.client.EnableFeatures([]string{"APPFW"}); err != nil {
+		t.Fatalf("Failed to enable AppFw feature: %v", err)
+	}
+	if err := uploadAppfwarchiveFixture(c, t, appfwarchiveFixtureFile, "/var/tmp"); err != nil {
+		t.Fatalf("Failed to upload appfwarchive fixture: %v", err)
+	}
+}
 
 const testAccAppfwarchive_basic_step1 = `
 resource "citrixadc_appfwarchive" "tf_appfwarchive" {
   name    = "new_tfappfwarch"
-  src     = "local:new_tfappfwarchfile"
+  src     = "local:tfappfwarchive.tar"
   comment = "test_appfwarchive_v1"
 }
 
@@ -47,7 +72,7 @@ resource "citrixadc_appfwarchive" "tf_appfwarchive" {
 
 func TestAccAppfwarchive_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwarchivePreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAppfwarchiveDestroy,
 		Steps: []resource.TestStep{
@@ -131,7 +156,7 @@ const testAccAppfwarchiveDataSource_basic = `
 
 resource "citrixadc_appfwarchive" "tf_appfwarchive" {
   name    = "new_tfappfwarch"
-  src     = "local:new_tfappfwarchfile"
+  src     = "local:tfappfwarchive.tar"
   comment = "test_appfwarchive_ds"
 }
 
@@ -143,6 +168,7 @@ data "citrixadc_appfwarchive" "tf_appfwarchive" {
 
 func TestAccAppfwarchiveDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwarchivePreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +187,7 @@ func TestAccAppfwarchiveDataSource_basic(t *testing.T) {
 func TestAccAppfwarchive_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_appfwarchive.tf_appfwarchive"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwarchivePreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckAppfwarchiveDestroy,
 		Steps: []resource.TestStep{

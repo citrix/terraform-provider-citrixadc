@@ -110,13 +110,18 @@ func lsnclient_network_bindingSetAttrFromGet(ctx context.Context, data *Lsnclien
 		data.Network = types.StringNull()
 	}
 	// Pattern 7: The NITRO GET response for this binding does NOT echo back the
-	// configured `td` value. Preserve the value already present in plan/state
-	// (set in Create) instead of nulling it, which would otherwise cause an
+	// `td` value. Preserve a value already present in plan/state (set explicitly
+	// in the config) instead of nulling it, which would otherwise cause an
 	// "inconsistent result after apply" for a config that sets td explicitly.
+	// But when the config omits td, td is Optional+Computed with no default, so
+	// the plan leaves it Unknown; resolve that Unknown to Null here, otherwise
+	// Create would persist an unknown value ("invalid result object after apply").
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
 	}
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.

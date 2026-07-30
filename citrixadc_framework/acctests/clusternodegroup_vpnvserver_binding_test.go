@@ -231,14 +231,26 @@ func testAccCheckClusternodegroup_vpnvserver_bindingDestroy(s *terraform.State) 
 
 const testAccClusternodegroup_vpnvserver_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+		sticky = "YES"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 		name        = "my_vpn_vserver_ds"
 		servicetype = "SSL"
 	}
 
 	resource "citrixadc_clusternodegroup_vpnvserver_binding" "tf_clusternodegroup_vpnvserver_binding" {
-		name    = "my_tf_group"
+		name    = citrixadc_clusternodegroup.tf_clusternodegroup.name
 		vserver = citrixadc_vpnvserver.tf_vpnvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_vpnvserver_binding" "tf_clusternodegroup_vpnvserver_binding" {

@@ -56,7 +56,7 @@ func setupAuditsyslogpolicyBindingParticipants(t *testing.T) {
 	port := 514
 	action := audit.Auditsyslogaction{
 		Name:       tfAuditsyslogpolicyBindingActionName,
-		Serverip:   "10.78.60.33",
+		Serverip:   "10.78.60.55",
 		Serverport: &port,
 		Loglevel:   []string{"ERROR", "NOTICE"},
 	}
