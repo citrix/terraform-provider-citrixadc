@@ -158,9 +158,22 @@ func responderpolicylabel_responderpolicy_bindingSetAttrFromGet(ctx context.Cont
 		data.Labeltype = types.StringNull()
 	}
 
-	// gotopriorityexpression / invoke / priority: preserve the existing plan/state
-	// value (these are user-driven inputs that the server may not echo or may
-	// normalize — avoid "inconsistent result after apply"). Do NOT null them out.
+	// gotopriorityexpression / invoke: resolve from the GET response so the Computed
+	// value is always KNOWN after apply (fall back to null only when the value is
+	// currently unknown and absent from the response).
+	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
+		data.Gotopriorityexpression = types.StringValue(val.(string))
+	} else if data.Gotopriorityexpression.IsUnknown() {
+		data.Gotopriorityexpression = types.StringNull()
+	}
+	if val, ok := getResponseData["invoke"]; ok && val != nil {
+		data.Invoke = types.BoolValue(val.(bool))
+	} else if data.Invoke.IsUnknown() {
+		data.Invoke = types.BoolNull()
+	}
+
+	// priority: preserve the existing plan/state value (user-driven input the server
+	// may not echo or may normalize — avoid "inconsistent result after apply").
 
 	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new format on Read.
 	idParts := []string{}

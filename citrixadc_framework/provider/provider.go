@@ -275,6 +275,7 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudservice"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelparameter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/cloudtunnelvserver"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterfiles"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusterinstance"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternode"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/clusternode_routemonitor_binding"
@@ -354,7 +355,15 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_transformpolicy_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/csvserver_vpnvserver_binding"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/change_password"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/filteraction"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/filterpolicy"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/installer"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/nitro_resource"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/opoption"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/password_resetter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/pinger"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/rebooter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/systemcollectionparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dbdbprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dbsmonitors"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dbuser"
@@ -1802,6 +1811,23 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 		tmglobal_tmsessionpolicy_binding.NewTmglobalTmsessionpolicyBindingResource,
 		password_resetter.NewPasswordResetterResource,
 		change_password.NewChangePasswordResource,
+		clusterfiles.NewClusterfilesSyncerResource,
+		locationfile.NewLocationfileImportResource,
+		locationfile6.NewLocationfile6ImportResource,
+		nsconfig.NewNsconfigClearResource,
+		nsconfig.NewNsconfigSaveResource,
+		nsconfig.NewNsconfigUpdateResource,
+		rnat.NewRnatClearResource,
+		systembackup.NewSystembackupCreateResource,
+		systembackup.NewSystembackupRestoreResource,
+		filteraction.NewFilteractionResource,
+		filterpolicy.NewFilterpolicyResource,
+		installer.NewInstallerResource,
+		nitro_resource.NewNitroResourceResource,
+		opoption.NewOpoptionResource,
+		pinger.NewPingerResource,
+		rebooter.NewRebooterResource,
+		systemcollectionparam.NewSystemcollectionparamResource,
 	}
 }
 

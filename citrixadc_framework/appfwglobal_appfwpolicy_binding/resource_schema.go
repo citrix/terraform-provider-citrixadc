@@ -200,6 +200,9 @@ func appfwglobal_appfwpolicy_bindingSetAttrFromGet(ctx context.Context, data *Ap
 	// ENABLED is reported back as DISABLED by appfwglobal_appfwpolicy_binding GET),
 	// matching the SDK v2 resource which deliberately did not d.Set("state", ...).
 	// Preserve the configured/prior-state value to avoid "inconsistent result after apply".
+	if data.State.IsUnknown() {
+		data.State = types.StringNull()
+	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
 	} else {

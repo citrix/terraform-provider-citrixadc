@@ -1,0 +1,14 @@
+# Resource        : rebooter
+# Primary ADC     : 155
+# Alternate ADCs  : 
+# Planned tests   : 1
+# Result          : PASS_first=0 PASS_alt=0 FAILED=0 SKIPPED=1
+
+## PASS (on primary ADC 155)
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED
+  SKIP  TestAccReboot_basic  :: Cluster does not support reboot operation

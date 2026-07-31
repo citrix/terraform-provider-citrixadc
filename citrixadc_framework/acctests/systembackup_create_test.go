@@ -96,7 +96,7 @@ func testAccCheckSystembackupCreateDestroy(s *terraform.State) error {
 	}
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "citrixadc_systembackup" {
+		if rs.Type != "citrixadc_systembackup_create" {
 			continue
 		}
 

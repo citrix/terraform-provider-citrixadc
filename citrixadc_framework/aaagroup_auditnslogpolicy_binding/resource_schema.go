@@ -132,6 +132,8 @@ func aaagroup_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 	// Nulling would cause "inconsistent result after apply" when the user sets type.
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
+	} else if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
 	}
 
 	// Set ID for the resource

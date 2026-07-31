@@ -127,6 +127,8 @@ func aaauser_auditnslogpolicy_bindingSetAttrFromGet(ctx context.Context, data *A
 	// Nulling would cause "inconsistent result after apply" when the user sets type.
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
+	} else if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["username"]; ok && val != nil {
 		data.Username = types.StringValue(val.(string))

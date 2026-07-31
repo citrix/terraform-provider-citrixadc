@@ -158,6 +158,14 @@ func appfwprofile_creditcardnumber_bindingSetAttrFromGet(ctx context.Context, da
 	// the configured values the same way (its d.Set calls for these were commented out).
 	// The datasource setter (xxxSetAttrFromGetForDatasource) copies them faithfully.
 
+	// Preserve the planned value for these; if the value was omitted (Unknown), resolve to Null.
+	if data.Alertonly.IsUnknown() {
+		data.Alertonly = types.StringNull()
+	}
+	if data.Isautodeployed.IsUnknown() {
+		data.Isautodeployed = types.StringNull()
+	}
+
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))

@@ -199,6 +199,9 @@ func appfwprofile_safeobject_bindingSetAttrFromGet(ctx context.Context, data *Ap
 		data.Action = types.ListNull(types.StringType)
 	}
 	// alertonly: server-overridden, not reliably echoed by GET. Preserve existing value.
+	if data.Alertonly.IsUnknown() {
+		data.Alertonly = types.StringNull()
+	}
 	if val, ok := getResponseData["as_expression"]; ok && val != nil {
 		data.AsExpression = types.StringValue(val.(string))
 	} else {
@@ -210,6 +213,9 @@ func appfwprofile_safeobject_bindingSetAttrFromGet(ctx context.Context, data *Ap
 		data.Comment = types.StringNull()
 	}
 	// isautodeployed: server-overridden, not reliably echoed by GET. Preserve existing value.
+	if data.Isautodeployed.IsUnknown() {
+		data.Isautodeployed = types.StringNull()
+	}
 	if val, ok := getResponseData["maxmatchlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxmatchlength = types.Int64Value(intVal)

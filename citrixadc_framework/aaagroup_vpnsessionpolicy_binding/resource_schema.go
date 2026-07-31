@@ -128,6 +128,8 @@ func aaagroup_vpnsessionpolicy_bindingSetAttrFromGet(ctx context.Context, data *
 	// priority is Required (RequiresReplace); if GET omits it, preserve the existing value
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
+	} else if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
 	}
 	// type (bindpoint) is not echoed back by the binding GET response; preserve the
 	// configured/state value instead of nulling it (Pattern 7).

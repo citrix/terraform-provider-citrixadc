@@ -207,10 +207,18 @@ func appfwprofile_jsoncmdurl_bindingSetAttrFromGet(ctx context.Context, data *Ap
 	tflog.Debug(ctx, "In appfwprofile_jsoncmdurl_bindingSetAttrFromGet Function")
 
 	// alertonly and isautodeployed are intentionally NOT set from GET (server overrides
-	// the configured value) — preserve the existing plan/state value.
+	// the configured value) — preserve the existing plan/state value. If the planned
+	// value is unknown, fall back to null so a Computed attribute is never left unknown.
 	//
 	// For all other (Optional+Computed) attributes, set the GET value when present,
 	// otherwise set null — a Computed attribute must never be left unknown after apply.
+
+	if data.Alertonly.IsUnknown() {
+		data.Alertonly = types.StringNull()
+	}
+	if data.Isautodeployed.IsUnknown() {
+		data.Isautodeployed = types.StringNull()
+	}
 
 	if val, ok := getResponseData["as_value_expr_json_cmd"]; ok && val != nil {
 		data.AsValueExprJsonCmd = types.StringValue(val.(string))

@@ -160,6 +160,12 @@ func authenticationvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(c
 	// priority is set from the GET response when present, otherwise preserved (the
 	// configured value), since a missing priority in GET would otherwise null a
 	// user-supplied value.
+	// bindpoint is create-only and ADC-normalized (the SDK v2 Read left d.Set
+	// commented out): do NOT adopt the GET value; only resolve an unknown plan
+	// value to null so Terraform has a known value after apply.
+	if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
+	}
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
 	} else {

@@ -136,7 +136,9 @@ func vpnvserver_authenticationnegotiatepolicy_bindingGetThePayloadFromthePlan(ct
 func vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet(ctx context.Context, data *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel, getResponseData map[string]interface{}) *VpnvserverAuthenticationnegotiatepolicyBindingResourceModel {
 	tflog.Debug(ctx, "In vpnvserver_authenticationnegotiatepolicy_bindingSetAttrFromGet Function")
 
-	// bindpoint: preserved from plan/state (server-normalized; SDK v2 did not read it back).
+	if data.Bindpoint.IsUnknown() {
+		data.Bindpoint = types.StringNull()
+	}
 
 	if val, ok := getResponseData["gotopriorityexpression"]; ok && val != nil {
 		data.Gotopriorityexpression = types.StringValue(val.(string))
