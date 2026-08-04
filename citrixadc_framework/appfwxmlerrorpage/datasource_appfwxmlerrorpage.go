@@ -55,7 +55,7 @@ func (d *AppfwxmlerrorpageDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	appfwxmlerrorpageSetAttrFromGet(ctx, &data, getResponseData)
+	appfwxmlerrorpageSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

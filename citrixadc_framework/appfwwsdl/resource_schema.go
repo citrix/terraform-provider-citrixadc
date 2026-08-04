@@ -7,8 +7,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -31,9 +33,13 @@ func (r *AppfwwsdlResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:    true,
 				Description: "The ID of the appfwwsdl resource.",
 			},
+			// SDK v2: Optional + Computed + ForceNew. NITRO never echoes `comment`
+			// back on GET, so a Default keeps the planned value known and avoids an
+			// "inconsistent result after apply" when the attribute is unset.
 			"comment": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -46,9 +52,13 @@ func (r *AppfwwsdlResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Description: "Name of the WSDL file to remove.",
 			},
+			// SDK v2: Optional + Computed + ForceNew. NITRO never echoes `overwrite`
+			// back on GET, so a Default keeps the planned value known and avoids an
+			// "inconsistent result after apply" when the attribute is unset.
 			"overwrite": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -65,21 +75,21 @@ func (r *AppfwwsdlResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func appfwwsdlGetThePayloadFromtheConfig(ctx context.Context, data *AppfwwsdlResourceModel) appfw.Appfwwsdl {
-	tflog.Debug(ctx, "In appfwwsdlGetThePayloadFromtheConfig Function")
+func appfwwsdlGetThePayloadFromthePlan(ctx context.Context, data *AppfwwsdlResourceModel) appfw.Appfwwsdl {
+	tflog.Debug(ctx, "In appfwwsdlGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwwsdl := appfw.Appfwwsdl{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwwsdl.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwwsdl.Name = data.Name.ValueString()
 	}
-	if !data.Overwrite.IsNull() {
+	if !data.Overwrite.IsNull() && !data.Overwrite.IsUnknown() {
 		appfwwsdl.Overwrite = data.Overwrite.ValueBool()
 	}
-	if !data.Src.IsNull() {
+	if !data.Src.IsNull() && !data.Src.IsUnknown() {
 		appfwwsdl.Src = data.Src.ValueString()
 	}
 
@@ -89,30 +99,19 @@ func appfwwsdlGetThePayloadFromtheConfig(ctx context.Context, data *AppfwwsdlRes
 func appfwwsdlSetAttrFromGet(ctx context.Context, data *AppfwwsdlResourceModel, getResponseData map[string]interface{}) *AppfwwsdlResourceModel {
 	tflog.Debug(ctx, "In appfwwsdlSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
-	} else {
-		data.Comment = types.StringNull()
-	}
+	// NITRO's appfwwsdl `get` response payload only carries `name`, `response`,
+	// and `_nextgenapiresource`. The user-supplied Import inputs `comment`,
+	// `overwrite`, and `src` are NEVER echoed back. Touching them here would null
+	// them on every Read and cause a perpetual diff / "inconsistent result after
+	// apply", so only update `name` (the response-side field) from the API and
+	// preserve the existing plan/state values for the rest. This mirrors the
+	// SDK v2 read, which only did d.Set("name", ...).
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
-	}
-	if val, ok := getResponseData["overwrite"]; ok && val != nil {
-		data.Overwrite = types.BoolValue(val.(bool))
-	} else {
-		data.Overwrite = types.BoolNull()
-	}
-	if val, ok := getResponseData["src"]; ok && val != nil {
-		data.Src = types.StringValue(val.(string))
-	} else {
-		data.Src = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID (matches SDK v2 d.SetId(name))
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

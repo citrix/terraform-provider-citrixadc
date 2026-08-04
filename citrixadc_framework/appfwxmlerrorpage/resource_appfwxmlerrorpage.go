@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *AppfwxmlerrorpageResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Debug(ctx, "Creating appfwxmlerrorpage resource")
 
-	// appfwxmlerrorpage := appfwxmlerrorpageGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appfwxmlerrorpage := appfwxmlerrorpageGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwxmlerrorpage.Type(), &appfwxmlerrorpage)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwxmlerrorpage, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwxmlerrorpage-config")
+	// Named resource imported via the "Import" NITRO action (matches SDK v2)
+	err := r.client.ActOnResource(service.Appfwxmlerrorpage.Type(), &appfwxmlerrorpage, "Import")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwxmlerrorpage, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwxmlerrorpage resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(data.Name.ValueString())
+
 	// Read the updated state back
-	r.readAppfwxmlerrorpageFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwxmlerrorpageFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwxmlerrorpage not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppfwxmlerrorpageResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading appfwxmlerrorpage resource")
 
-	r.readAppfwxmlerrorpageFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwxmlerrorpageFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwxmlerrorpageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwxmlerrorpageResourceModel
+	var data, state AppfwxmlerrorpageResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,22 @@ func (r *AppfwxmlerrorpageResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwxmlerrorpage resource")
 
-	// Create API request body from the model
-	// appfwxmlerrorpage := appfwxmlerrorpageGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwxmlerrorpage.Type(), &appfwxmlerrorpage)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwxmlerrorpage, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated appfwxmlerrorpage resource")
+	// All configurable attributes are ForceNew (RequiresReplace), matching the
+	// SDK v2 resource which has no update operation, so no in-place NITRO call is
+	// made here; the state is simply refreshed.
 
 	// Read the updated state back
-	r.readAppfwxmlerrorpageFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwxmlerrorpageFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwxmlerrorpage not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +153,33 @@ func (r *AppfwxmlerrorpageResource) Delete(ctx context.Context, req resource.Del
 	}
 
 	tflog.Debug(ctx, "Deleting appfwxmlerrorpage resource")
+	// Named resource - delete using DeleteResource
+	name := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Appfwxmlerrorpage.Type(), name)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwxmlerrorpage, got error: %s", err))
+		return
+	}
 
-	// For appfwxmlerrorpage, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwxmlerrorpage resource from state")
+	tflog.Trace(ctx, "Deleted appfwxmlerrorpage resource")
 }
 
 // Helper function to read appfwxmlerrorpage data from API
-func (r *AppfwxmlerrorpageResource) readAppfwxmlerrorpageFromApi(ctx context.Context, data *AppfwxmlerrorpageResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwxmlerrorpage.Type(), "")
+func (r *AppfwxmlerrorpageResource) readAppfwxmlerrorpageFromApi(ctx context.Context, data *AppfwxmlerrorpageResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Appfwxmlerrorpage.Type(), name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwxmlerrorpage, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwxmlerrorpageSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

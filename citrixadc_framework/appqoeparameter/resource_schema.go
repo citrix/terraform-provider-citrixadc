@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,22 +32,22 @@ func (r *AppqoeparameterResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"avgwaitingclient": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1000000),
+				Computed:    true,
 				Description: "average number of client connections, that can sit in service waiting queue",
 			},
 			"dosattackthresh": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2000),
+				Computed:    true,
 				Description: "average number of client connection that can queue up on vserver level without triggering DoS mitigation module",
 			},
 			"maxaltrespbandwidth": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(100),
+				Computed:    true,
 				Description: "maximum bandwidth which will determine whether to send alternate content response",
 			},
 			"sessionlife": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(300),
+				Computed:    true,
 				Description: "Time, in seconds, between the first time and the next time the AppQoE alternative content window is displayed. The alternative content window is displayed only once during a session for the same browser accessing a configured URL, so this parameter determines the length of a session.",
 			},
 		},
@@ -60,16 +59,16 @@ func appqoeparameterGetThePayloadFromtheConfig(ctx context.Context, data *Appqoe
 
 	// Create API request body from the model
 	appqoeparameter := appqoe.Appqoeparameter{}
-	if !data.Avgwaitingclient.IsNull() {
+	if !data.Avgwaitingclient.IsNull() && !data.Avgwaitingclient.IsUnknown() {
 		appqoeparameter.Avgwaitingclient = utils.IntPtr(int(data.Avgwaitingclient.ValueInt64()))
 	}
-	if !data.Dosattackthresh.IsNull() {
+	if !data.Dosattackthresh.IsNull() && !data.Dosattackthresh.IsUnknown() {
 		appqoeparameter.Dosattackthresh = utils.IntPtr(int(data.Dosattackthresh.ValueInt64()))
 	}
-	if !data.Maxaltrespbandwidth.IsNull() {
+	if !data.Maxaltrespbandwidth.IsNull() && !data.Maxaltrespbandwidth.IsUnknown() {
 		appqoeparameter.Maxaltrespbandwidth = utils.IntPtr(int(data.Maxaltrespbandwidth.ValueInt64()))
 	}
-	if !data.Sessionlife.IsNull() {
+	if !data.Sessionlife.IsNull() && !data.Sessionlife.IsUnknown() {
 		appqoeparameter.Sessionlife = utils.IntPtr(int(data.Sessionlife.ValueInt64()))
 	}
 

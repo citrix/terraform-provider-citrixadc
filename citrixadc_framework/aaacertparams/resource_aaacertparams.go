@@ -55,22 +55,26 @@ func (r *AaacertparamsResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating aaacertparams resource")
 
-	// aaacertparams := aaacertparamsGetThePayloadFromtheConfig(ctx, &data)
+	aaacertparams := aaacertparamsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaacertparams, got error: %s", err))
-	//	 return
-	// }
+	// aaacertparams is an unnamed (singleton) resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaacertparams, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Generate stable ID for this singleton configuration resource
 	data.Id = types.StringValue("aaacertparams-config")
 
 	tflog.Trace(ctx, "Created aaacertparams resource")
 
 	// Read the updated state back
 	r.readAaacertparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -107,19 +111,23 @@ func (r *AaacertparamsResource) Update(ctx context.Context, req resource.UpdateR
 	tflog.Debug(ctx, "Updating aaacertparams resource")
 
 	// Create API request body from the model
-	// aaacertparams := aaacertparamsGetThePayloadFromtheConfig(ctx, &data)
+	aaacertparams := aaacertparamsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaacertparams, got error: %s", err))
-	//	 return
-	// }
+	// aaacertparams is an unnamed (singleton) resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaacertparams.Type(), &aaacertparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaacertparams, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated aaacertparams resource")
 
 	// Read the updated state back
 	r.readAaacertparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

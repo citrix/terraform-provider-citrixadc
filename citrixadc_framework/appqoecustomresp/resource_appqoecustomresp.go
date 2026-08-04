@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *AppqoecustomrespResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating appqoecustomresp resource")
 
-	// appqoecustomresp := appqoecustomrespGetThePayloadFromtheConfig(ctx, &data)
+	appqoecustomresp := appqoecustomrespGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appqoecustomresp.Type(), &appqoecustomresp)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appqoecustomresp, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appqoecustomresp-config")
+	// Named resource created via the NITRO "import" action (POST ?action=Import).
+	// Mirror the SDK v2 verb casing exactly: lower-case "import".
+	err := r.client.ActOnResource(service.Appqoecustomresp.Type(), &appqoecustomresp, "import")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appqoecustomresp, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appqoecustomresp resource")
 
+	// Set ID for the resource before reading state (matches SDK v2 d.SetId(name))
+	data.Id = types.StringValue(data.Name.ValueString())
+
 	// Read the updated state back
-	r.readAppqoecustomrespFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppqoecustomrespFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appqoecustomresp not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *AppqoecustomrespResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading appqoecustomresp resource")
 
-	r.readAppqoecustomrespFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppqoecustomrespFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppqoecustomrespResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppqoecustomrespResourceModel
+	var data, state AppqoecustomrespResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,20 @@ func (r *AppqoecustomrespResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	tflog.Debug(ctx, "Updating appqoecustomresp resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// appqoecustomresp := appqoecustomrespGetThePayloadFromtheConfig(ctx, &data)
+	// name and src are both RequiresReplace and NITRO exposes no in-place update
+	// for the imported page (SDK v2 declared no Update), so Terraform never
+	// invokes Update for a real attribute change; just refresh from the API.
+	tflog.Debug(ctx, "Update is a no-op for appqoecustomresp; all attributes are RequiresReplace")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appqoecustomresp.Type(), &appqoecustomresp)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appqoecustomresp, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated appqoecustomresp resource")
-
-	// Read the updated state back
-	r.readAppqoecustomrespFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppqoecustomrespFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appqoecustomresp not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +150,48 @@ func (r *AppqoecustomrespResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleting appqoecustomresp resource")
-
-	// For appqoecustomresp, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appqoecustomresp resource from state")
-}
-
-// Helper function to read appqoecustomresp data from API
-func (r *AppqoecustomrespResource) readAppqoecustomrespFromApi(ctx context.Context, data *AppqoecustomrespResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appqoecustomresp.Type(), "")
+	// Named resource - delete using DeleteResource (matches SDK v2)
+	appqoecustomrespName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Appqoecustomresp.Type(), appqoecustomrespName)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read appqoecustomresp, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appqoecustomresp, got error: %s", err))
 		return
 	}
 
-	appqoecustomrespSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted appqoecustomresp resource")
+}
 
+// Helper function to read appqoecustomresp data from API.
+//
+// appqoecustomresp has no GET-by-name endpoint (only "get (all)"), so mirror the
+// SDK v2 resource: fetch all instances and match by name.
+func (r *AppqoecustomrespResource) readAppqoecustomrespFromApi(ctx context.Context, data *AppqoecustomrespResourceModel, diags *diag.Diagnostics) bool {
+	appqoecustomrespName := data.Id.ValueString()
+
+	dataArr, err := r.client.FindAllResources(service.Appqoecustomresp.Type())
+	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read appqoecustomresp, got error: %s", err))
+		return false
+	}
+	if len(dataArr) == 0 {
+		return false
+	}
+
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["name"].(string) == appqoecustomrespName {
+			foundIndex = i
+			break
+		}
+	}
+	if foundIndex == -1 {
+		return false
+	}
+
+	appqoecustomrespSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	return true
 }

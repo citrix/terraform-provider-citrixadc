@@ -122,7 +122,7 @@ func (d *ArpDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 		return
 	}
 
-	arpSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	arpSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

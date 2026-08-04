@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AppflowactionResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	tflog.Debug(ctx, "Creating appflowaction resource")
-
-	// appflowaction := appflowactionGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appflowaction := appflowactionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appflowaction.Type(), &appflowaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appflowaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appflowaction-config")
+	// Named resource - use AddResource
+	appflowactionName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Appflowaction.Type(), appflowactionName, &appflowaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appflowaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appflowaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", appflowactionName))
+
 	// Read the updated state back
-	r.readAppflowactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppflowactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appflowaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppflowactionResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading appflowaction resource")
 
-	r.readAppflowactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppflowactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppflowactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppflowactionResourceModel
+	var data, state AppflowactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,78 @@ func (r *AppflowactionResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appflowaction resource")
 
-	// Create API request body from the model
-	// appflowaction := appflowactionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Botinsight.Equal(state.Botinsight) {
+		tflog.Debug(ctx, "botinsight has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Ciinsight.Equal(state.Ciinsight) {
+		tflog.Debug(ctx, "ciinsight has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Clientsidemeasurements.Equal(state.Clientsidemeasurements) {
+		tflog.Debug(ctx, "clientsidemeasurements has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Collectors.Equal(state.Collectors) {
+		tflog.Debug(ctx, "collectors has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Distributionalgorithm.Equal(state.Distributionalgorithm) {
+		tflog.Debug(ctx, "distributionalgorithm has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Pagetracking.Equal(state.Pagetracking) {
+		tflog.Debug(ctx, "pagetracking has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Securityinsight.Equal(state.Securityinsight) {
+		tflog.Debug(ctx, "securityinsight has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Videoanalytics.Equal(state.Videoanalytics) {
+		tflog.Debug(ctx, "videoanalytics has changed for appflowaction")
+		hasChange = true
+	}
+	if !data.Webinsight.Equal(state.Webinsight) {
+		tflog.Debug(ctx, "webinsight has changed for appflowaction")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appflowaction.Type(), &appflowaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appflowaction, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model, restricted to NITRO-updatable fields
+		appflowaction := appflowactionGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		appflowactionName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Appflowaction.Type(), appflowactionName, &appflowaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appflowaction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated appflowaction resource")
+		tflog.Trace(ctx, "Updated appflowaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appflowaction resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAppflowactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppflowactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appflowaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +209,36 @@ func (r *AppflowactionResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	tflog.Debug(ctx, "Deleting appflowaction resource")
+	// Named resource - delete using DeleteResource
+	appflowactionName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Appflowaction.Type(), appflowactionName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appflowaction, got error: %s", err))
+		return
+	}
 
-	// For appflowaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appflowaction resource from state")
+	tflog.Trace(ctx, "Deleted appflowaction resource")
 }
 
 // Helper function to read appflowaction data from API
-func (r *AppflowactionResource) readAppflowactionFromApi(ctx context.Context, data *AppflowactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appflowaction.Type(), "")
+func (r *AppflowactionResource) readAppflowactionFromApi(ctx context.Context, data *AppflowactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	appflowactionName := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Appflowaction.Type(), appflowactionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appflowaction, got error: %s", err))
-		return
+		return false
 	}
 
 	appflowactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

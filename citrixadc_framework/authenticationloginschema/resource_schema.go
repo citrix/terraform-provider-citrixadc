@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -44,7 +46,10 @@ func (r *AuthenticationloginschemaResource) Schema(ctx context.Context, req reso
 				Description: "Weight of the current authentication",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new login schema. Login schema defines the way login form is rendered. It provides a way to customize the fields that are shown to the user. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"passwdexpression": schema.StringAttribute{
@@ -81,28 +86,28 @@ func authenticationloginschemaGetThePayloadFromtheConfig(ctx context.Context, da
 
 	// Create API request body from the model
 	authenticationloginschema := authentication.Authenticationloginschema{}
-	if !data.Authenticationschema.IsNull() {
+	if !data.Authenticationschema.IsNull() && !data.Authenticationschema.IsUnknown() {
 		authenticationloginschema.Authenticationschema = data.Authenticationschema.ValueString()
 	}
-	if !data.Authenticationstrength.IsNull() {
+	if !data.Authenticationstrength.IsNull() && !data.Authenticationstrength.IsUnknown() {
 		authenticationloginschema.Authenticationstrength = utils.IntPtr(int(data.Authenticationstrength.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationloginschema.Name = data.Name.ValueString()
 	}
-	if !data.Passwdexpression.IsNull() {
+	if !data.Passwdexpression.IsNull() && !data.Passwdexpression.IsUnknown() {
 		authenticationloginschema.Passwdexpression = data.Passwdexpression.ValueString()
 	}
-	if !data.Passwordcredentialindex.IsNull() {
+	if !data.Passwordcredentialindex.IsNull() && !data.Passwordcredentialindex.IsUnknown() {
 		authenticationloginschema.Passwordcredentialindex = utils.IntPtr(int(data.Passwordcredentialindex.ValueInt64()))
 	}
-	if !data.Ssocredentials.IsNull() {
+	if !data.Ssocredentials.IsNull() && !data.Ssocredentials.IsUnknown() {
 		authenticationloginschema.Ssocredentials = data.Ssocredentials.ValueString()
 	}
-	if !data.Usercredentialindex.IsNull() {
+	if !data.Usercredentialindex.IsNull() && !data.Usercredentialindex.IsUnknown() {
 		authenticationloginschema.Usercredentialindex = utils.IntPtr(int(data.Usercredentialindex.ValueInt64()))
 	}
-	if !data.Userexpression.IsNull() {
+	if !data.Userexpression.IsNull() && !data.Userexpression.IsUnknown() {
 		authenticationloginschema.Userexpression = data.Userexpression.ValueString()
 	}
 
@@ -161,7 +166,7 @@ func authenticationloginschemaSetAttrFromGet(ctx context.Context, data *Authenti
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

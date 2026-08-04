@@ -55,14 +55,16 @@ func (r *AuditnslogparamsResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating auditnslogparams resource")
 
-	// auditnslogparams := auditnslogparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	auditnslogparams := auditnslogparamsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create auditnslogparams, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed (singleton) resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create auditnslogparams, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("auditnslogparams-config")
@@ -71,6 +73,9 @@ func (r *AuditnslogparamsResource) Create(ctx context.Context, req resource.Crea
 
 	// Read the updated state back
 	r.readAuditnslogparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,8 +100,10 @@ func (r *AuditnslogparamsResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *AuditnslogparamsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuditnslogparamsResourceModel
+	var data, state AuditnslogparamsResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +111,29 @@ func (r *AuditnslogparamsResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating auditnslogparams resource")
 
 	// Create API request body from the model
-	// auditnslogparams := auditnslogparamsGetThePayloadFromtheConfig(ctx, &data)
+	auditnslogparams := auditnslogparamsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update auditnslogparams, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed (singleton) resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Auditnslogparams.Type(), &auditnslogparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update auditnslogparams, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated auditnslogparams resource")
 
 	// Read the updated state back
 	r.readAuditnslogparamsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -55,14 +55,15 @@ func (r *AaapreauthenticationparameterResource) Create(ctx context.Context, req 
 
 	tflog.Debug(ctx, "Creating aaapreauthenticationparameter resource")
 
-	// aaapreauthenticationparameter := aaapreauthenticationparameterGetThePayloadFromtheConfig(ctx, &data)
+	aaapreauthenticationparameter := aaapreauthenticationparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationparameter.Type(), &aaapreauthenticationparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaapreauthenticationparameter, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed/singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationparameter.Type(), &aaapreauthenticationparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaapreauthenticationparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("aaapreauthenticationparameter-config")
@@ -107,14 +108,15 @@ func (r *AaapreauthenticationparameterResource) Update(ctx context.Context, req 
 	tflog.Debug(ctx, "Updating aaapreauthenticationparameter resource")
 
 	// Create API request body from the model
-	// aaapreauthenticationparameter := aaapreauthenticationparameterGetThePayloadFromtheConfig(ctx, &data)
+	aaapreauthenticationparameter := aaapreauthenticationparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationparameter.Type(), &aaapreauthenticationparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaapreauthenticationparameter, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed/singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationparameter.Type(), &aaapreauthenticationparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaapreauthenticationparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated aaapreauthenticationparameter resource")
 

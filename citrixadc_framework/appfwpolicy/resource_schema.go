@@ -43,7 +43,10 @@ func (r *AppfwpolicyResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Where to log information for connections that match this policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the policy.\nMust begin with a letter, number, or the underscore character \\(_\\), and must contain only letters, numbers, and the hyphen \\(-\\), period \\(.\\) pound \\(\\#\\), space \\( \\), at (@), equals \\(=\\), colon \\(:\\), and underscore characters. Can be changed after the policy is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks \\(for example, \"my policy\" or 'my policy'\\).",
 			},
 			"newname": schema.StringAttribute{
@@ -66,27 +69,50 @@ func (r *AppfwpolicyResource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func appfwpolicyGetThePayloadFromtheConfig(ctx context.Context, data *AppfwpolicyResourceModel) appfw.Appfwpolicy {
-	tflog.Debug(ctx, "In appfwpolicyGetThePayloadFromtheConfig Function")
+func appfwpolicyGetThePayloadFromthePlan(ctx context.Context, data *AppfwpolicyResourceModel) appfw.Appfwpolicy {
+	tflog.Debug(ctx, "In appfwpolicyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwpolicy := appfw.Appfwpolicy{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwpolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Logaction.IsNull() {
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
 		appfwpolicy.Logaction = data.Logaction.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appfwpolicy.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		appfwpolicy.Newname = data.Newname.ValueString()
-	}
-	if !data.Profilename.IsNull() {
+	// Skip newname: rename-only parameter, not part of the add/update body
+	if !data.Profilename.IsNull() && !data.Profilename.IsUnknown() {
 		appfwpolicy.Profilename = data.Profilename.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
+		appfwpolicy.Rule = data.Rule.ValueString()
+	}
+
+	return appfwpolicy
+}
+
+func appfwpolicyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AppfwpolicyResourceModel) appfw.Appfwpolicy {
+	tflog.Debug(ctx, "In appfwpolicyGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields
+	appfwpolicy := appfw.Appfwpolicy{}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		appfwpolicy.Comment = data.Comment.ValueString()
+	}
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
+		appfwpolicy.Logaction = data.Logaction.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		appfwpolicy.Name = data.Name.ValueString()
+	}
+	// Skip newname: rename-only parameter, not part of the add/update body
+	if !data.Profilename.IsNull() && !data.Profilename.IsUnknown() {
+		appfwpolicy.Profilename = data.Profilename.ValueString()
+	}
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		appfwpolicy.Rule = data.Rule.ValueString()
 	}
 

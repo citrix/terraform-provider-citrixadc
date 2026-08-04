@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -80,7 +81,7 @@ func (r *AuditnslogactionResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"domainresolveretry": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Computed:    true,
 				Description: "Time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the audit server if the last query failed.",
 			},
 			"logfacility": schema.StringAttribute{
@@ -90,7 +91,8 @@ func (r *AuditnslogactionResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"loglevel": schema.ListAttribute{
 				ElementType: types.StringType,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Audit log level, which specifies the types of events to log.\nAvailable settings function as follows:\n* ALL - All events.\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.\n* NONE - No events.",
 			},
 			"lsn": schema.StringAttribute{
@@ -99,7 +101,10 @@ func (r *AuditnslogactionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Log the LSN messages",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the nslog action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the nslog action is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my nslog action\" or 'my nslog action').",
 			},
 			"protocolviolations": schema.StringAttribute{
@@ -161,64 +166,69 @@ func auditnslogactionGetThePayloadFromtheConfig(ctx context.Context, data *Audit
 
 	// Create API request body from the model
 	auditnslogaction := audit.Auditnslogaction{}
-	if !data.Acl.IsNull() {
+	if !data.Acl.IsNull() && !data.Acl.IsUnknown() {
 		auditnslogaction.Acl = data.Acl.ValueString()
 	}
-	if !data.Alg.IsNull() {
+	if !data.Alg.IsNull() && !data.Alg.IsUnknown() {
 		auditnslogaction.Alg = data.Alg.ValueString()
 	}
-	if !data.Appflowexport.IsNull() {
+	if !data.Appflowexport.IsNull() && !data.Appflowexport.IsUnknown() {
 		auditnslogaction.Appflowexport = data.Appflowexport.ValueString()
 	}
-	if !data.Contentinspectionlog.IsNull() {
+	if !data.Contentinspectionlog.IsNull() && !data.Contentinspectionlog.IsUnknown() {
 		auditnslogaction.Contentinspectionlog = data.Contentinspectionlog.ValueString()
 	}
-	if !data.Dateformat.IsNull() {
+	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditnslogaction.Dateformat = data.Dateformat.ValueString()
 	}
-	if !data.Domainresolvenow.IsNull() {
+	if !data.Domainresolvenow.IsNull() && !data.Domainresolvenow.IsUnknown() {
 		auditnslogaction.Domainresolvenow = data.Domainresolvenow.ValueBool()
 	}
-	if !data.Domainresolveretry.IsNull() {
+	if !data.Domainresolveretry.IsNull() && !data.Domainresolveretry.IsUnknown() {
 		auditnslogaction.Domainresolveretry = utils.IntPtr(int(data.Domainresolveretry.ValueInt64()))
 	}
-	if !data.Logfacility.IsNull() {
+	if !data.Logfacility.IsNull() && !data.Logfacility.IsUnknown() {
 		auditnslogaction.Logfacility = data.Logfacility.ValueString()
 	}
-	if !data.Lsn.IsNull() {
+	if !data.Loglevel.IsNull() && !data.Loglevel.IsUnknown() {
+		var loglevelList []string
+		data.Loglevel.ElementsAs(ctx, &loglevelList, false)
+		auditnslogaction.Loglevel = loglevelList
+	}
+	if !data.Lsn.IsNull() && !data.Lsn.IsUnknown() {
 		auditnslogaction.Lsn = data.Lsn.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		auditnslogaction.Name = data.Name.ValueString()
 	}
-	if !data.Protocolviolations.IsNull() {
+	if !data.Protocolviolations.IsNull() && !data.Protocolviolations.IsUnknown() {
 		auditnslogaction.Protocolviolations = data.Protocolviolations.ValueString()
 	}
-	if !data.Serverdomainname.IsNull() {
+	if !data.Serverdomainname.IsNull() && !data.Serverdomainname.IsUnknown() {
 		auditnslogaction.Serverdomainname = data.Serverdomainname.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		auditnslogaction.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		auditnslogaction.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Sslinterception.IsNull() {
+	if !data.Sslinterception.IsNull() && !data.Sslinterception.IsUnknown() {
 		auditnslogaction.Sslinterception = data.Sslinterception.ValueString()
 	}
-	if !data.Subscriberlog.IsNull() {
+	if !data.Subscriberlog.IsNull() && !data.Subscriberlog.IsUnknown() {
 		auditnslogaction.Subscriberlog = data.Subscriberlog.ValueString()
 	}
-	if !data.Tcp.IsNull() {
+	if !data.Tcp.IsNull() && !data.Tcp.IsUnknown() {
 		auditnslogaction.Tcp = data.Tcp.ValueString()
 	}
-	if !data.Timezone.IsNull() {
+	if !data.Timezone.IsNull() && !data.Timezone.IsUnknown() {
 		auditnslogaction.Timezone = data.Timezone.ValueString()
 	}
-	if !data.Urlfiltering.IsNull() {
+	if !data.Urlfiltering.IsNull() && !data.Urlfiltering.IsUnknown() {
 		auditnslogaction.Urlfiltering = data.Urlfiltering.ValueString()
 	}
-	if !data.Userdefinedauditlog.IsNull() {
+	if !data.Userdefinedauditlog.IsNull() && !data.Userdefinedauditlog.IsUnknown() {
 		auditnslogaction.Userdefinedauditlog = data.Userdefinedauditlog.ValueString()
 	}
 
@@ -270,6 +280,21 @@ func auditnslogactionSetAttrFromGet(ctx context.Context, data *AuditnslogactionR
 		data.Logfacility = types.StringValue(val.(string))
 	} else {
 		data.Logfacility = types.StringNull()
+	}
+	if val, ok := getResponseData["loglevel"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Loglevel = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Loglevel = listValue
+		default:
+			data.Loglevel = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Loglevel = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["lsn"]; ok && val != nil {
 		data.Lsn = types.StringValue(val.(string))

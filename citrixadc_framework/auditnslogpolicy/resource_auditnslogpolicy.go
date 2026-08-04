@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AuditnslogpolicyResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	tflog.Debug(ctx, "Creating auditnslogpolicy resource")
-
-	// auditnslogpolicy := auditnslogpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	auditnslogpolicy := auditnslogpolicyGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Auditnslogpolicy.Type(), &auditnslogpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create auditnslogpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("auditnslogpolicy-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Auditnslogpolicy.Type(), name_value, &auditnslogpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create auditnslogpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created auditnslogpolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readAuditnslogpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuditnslogpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "auditnslogpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AuditnslogpolicyResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading auditnslogpolicy resource")
 
-	r.readAuditnslogpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuditnslogpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuditnslogpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuditnslogpolicyResourceModel
+	var data, state AuditnslogpolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,45 @@ func (r *AuditnslogpolicyResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating auditnslogpolicy resource")
 
-	// Create API request body from the model
-	// auditnslogpolicy := auditnslogpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for auditnslogpolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for auditnslogpolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Auditnslogpolicy.Type(), &auditnslogpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update auditnslogpolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		auditnslogpolicy := auditnslogpolicyGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// auditnslogpolicy update is an unnamed PUT (name is carried in the payload)
+		err := r.client.UpdateUnnamedResource(service.Auditnslogpolicy.Type(), &auditnslogpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update auditnslogpolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated auditnslogpolicy resource")
+		tflog.Trace(ctx, "Updated auditnslogpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for auditnslogpolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAuditnslogpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuditnslogpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "auditnslogpolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +176,36 @@ func (r *AuditnslogpolicyResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleting auditnslogpolicy resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Auditnslogpolicy.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete auditnslogpolicy, got error: %s", err))
+		return
+	}
 
-	// For auditnslogpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted auditnslogpolicy resource from state")
+	tflog.Trace(ctx, "Deleted auditnslogpolicy resource")
 }
 
 // Helper function to read auditnslogpolicy data from API
-func (r *AuditnslogpolicyResource) readAuditnslogpolicyFromApi(ctx context.Context, data *AuditnslogpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Auditnslogpolicy.Type(), "")
+func (r *AuditnslogpolicyResource) readAuditnslogpolicyFromApi(ctx context.Context, data *AuditnslogpolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Auditnslogpolicy.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read auditnslogpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	auditnslogpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

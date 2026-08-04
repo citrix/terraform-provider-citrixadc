@@ -83,7 +83,7 @@ func (d *AppqoecustomrespDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	appqoecustomrespSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appqoecustomrespSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

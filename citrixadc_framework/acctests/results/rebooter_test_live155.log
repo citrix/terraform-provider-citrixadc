@@ -1,4 +1,0 @@
-2026/07/31 14:19:13 [DEBUG]  citrixadc-provider-test: In init
-=== RUN   TestAccReboot_basic
---- PASS: TestAccReboot_basic (64.17s)
-PASS

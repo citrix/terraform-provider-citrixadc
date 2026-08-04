@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AuthenticationcitrixauthactionResource) Create(ctx context.Context, req
 	}
 
 	tflog.Debug(ctx, "Creating authenticationcitrixauthaction resource")
-
-	// authenticationcitrixauthaction := authenticationcitrixauthactionGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	authenticationcitrixauthaction := authenticationcitrixauthactionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationcitrixauthaction.Type(), &authenticationcitrixauthaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationcitrixauthaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationcitrixauthaction-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationcitrixauthaction.Type(), name_value, &authenticationcitrixauthaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationcitrixauthaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationcitrixauthaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readAuthenticationcitrixauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationcitrixauthactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationcitrixauthaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AuthenticationcitrixauthactionResource) Read(ctx context.Context, req r
 
 	tflog.Debug(ctx, "Reading authenticationcitrixauthaction resource")
 
-	r.readAuthenticationcitrixauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationcitrixauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuthenticationcitrixauthactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationcitrixauthactionResourceModel
+	var data, state AuthenticationcitrixauthactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,46 @@ func (r *AuthenticationcitrixauthactionResource) Update(ctx context.Context, req
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationcitrixauthaction resource")
 
-	// Create API request body from the model
-	// authenticationcitrixauthaction := authenticationcitrixauthactionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Authentication.Equal(state.Authentication) {
+		tflog.Debug(ctx, "authentication has changed for authenticationcitrixauthaction")
+		hasChange = true
+	}
+	if !data.Authenticationtype.Equal(state.Authenticationtype) {
+		tflog.Debug(ctx, "authenticationtype has changed for authenticationcitrixauthaction")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationcitrixauthaction.Type(), &authenticationcitrixauthaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationcitrixauthaction, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		authenticationcitrixauthaction := authenticationcitrixauthactionGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Authenticationcitrixauthaction.Type(), name_value, &authenticationcitrixauthaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationcitrixauthaction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationcitrixauthaction resource")
+		tflog.Trace(ctx, "Updated authenticationcitrixauthaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationcitrixauthaction resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAuthenticationcitrixauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationcitrixauthactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationcitrixauthaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +177,36 @@ func (r *AuthenticationcitrixauthactionResource) Delete(ctx context.Context, req
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationcitrixauthaction resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Authenticationcitrixauthaction.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationcitrixauthaction, got error: %s", err))
+		return
+	}
 
-	// For authenticationcitrixauthaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationcitrixauthaction resource from state")
+	tflog.Trace(ctx, "Deleted authenticationcitrixauthaction resource")
 }
 
 // Helper function to read authenticationcitrixauthaction data from API
-func (r *AuthenticationcitrixauthactionResource) readAuthenticationcitrixauthactionFromApi(ctx context.Context, data *AuthenticationcitrixauthactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationcitrixauthaction.Type(), "")
+func (r *AuthenticationcitrixauthactionResource) readAuthenticationcitrixauthactionFromApi(ctx context.Context, data *AuthenticationcitrixauthactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Authenticationcitrixauthaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationcitrixauthaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationcitrixauthactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

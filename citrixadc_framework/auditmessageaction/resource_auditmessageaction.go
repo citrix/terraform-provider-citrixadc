@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AuditmessageactionResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	tflog.Debug(ctx, "Creating auditmessageaction resource")
-
-	// auditmessageaction := auditmessageactionGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	auditmessageaction := auditmessageactionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Auditmessageaction.Type(), &auditmessageaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create auditmessageaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("auditmessageaction-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Auditmessageaction.Type(), name_value, &auditmessageaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create auditmessageaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created auditmessageaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readAuditmessageactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuditmessageactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "auditmessageaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AuditmessageactionResource) Read(ctx context.Context, req resource.Read
 
 	tflog.Debug(ctx, "Reading auditmessageaction resource")
 
-	r.readAuditmessageactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuditmessageactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuditmessageactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuditmessageactionResourceModel
+	var data, state AuditmessageactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,54 @@ func (r *AuditmessageactionResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating auditmessageaction resource")
 
-	// Create API request body from the model
-	// auditmessageaction := auditmessageactionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Bypasssafetycheck.Equal(state.Bypasssafetycheck) {
+		tflog.Debug(ctx, "bypasssafetycheck has changed for auditmessageaction")
+		hasChange = true
+	}
+	if !data.Loglevel.Equal(state.Loglevel) {
+		tflog.Debug(ctx, "loglevel has changed for auditmessageaction")
+		hasChange = true
+	}
+	if !data.Logtonewnslog.Equal(state.Logtonewnslog) {
+		tflog.Debug(ctx, "logtonewnslog has changed for auditmessageaction")
+		hasChange = true
+	}
+	if !data.Stringbuilderexpr.Equal(state.Stringbuilderexpr) {
+		tflog.Debug(ctx, "stringbuilderexpr has changed for auditmessageaction")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Auditmessageaction.Type(), &auditmessageaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update auditmessageaction, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model, restricted to updatable fields
+		auditmessageaction := auditmessageactionGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Auditmessageaction.Type(), name_value, &auditmessageaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update auditmessageaction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated auditmessageaction resource")
+		tflog.Trace(ctx, "Updated auditmessageaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for auditmessageaction resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAuditmessageactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuditmessageactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "auditmessageaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +185,36 @@ func (r *AuditmessageactionResource) Delete(ctx context.Context, req resource.De
 	}
 
 	tflog.Debug(ctx, "Deleting auditmessageaction resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Auditmessageaction.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete auditmessageaction, got error: %s", err))
+		return
+	}
 
-	// For auditmessageaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted auditmessageaction resource from state")
+	tflog.Trace(ctx, "Deleted auditmessageaction resource")
 }
 
 // Helper function to read auditmessageaction data from API
-func (r *AuditmessageactionResource) readAuditmessageactionFromApi(ctx context.Context, data *AuditmessageactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Auditmessageaction.Type(), "")
+func (r *AuditmessageactionResource) readAuditmessageactionFromApi(ctx context.Context, data *AuditmessageactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Auditmessageaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read auditmessageaction, got error: %s", err))
-		return
+		return false
 	}
 
 	auditmessageactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

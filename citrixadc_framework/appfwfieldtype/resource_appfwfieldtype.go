@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AppfwfieldtypeResource) Create(ctx context.Context, req resource.Create
 	}
 
 	tflog.Debug(ctx, "Creating appfwfieldtype resource")
-
-	// appfwfieldtype := appfwfieldtypeGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appfwfieldtype := appfwfieldtypeGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwfieldtype.Type(), &appfwfieldtype)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwfieldtype, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwfieldtype-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Appfwfieldtype.Type(), name_value, &appfwfieldtype)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwfieldtype, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwfieldtype resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readAppfwfieldtypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwfieldtypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwfieldtype not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppfwfieldtypeResource) Read(ctx context.Context, req resource.ReadRequ
 
 	tflog.Debug(ctx, "Reading appfwfieldtype resource")
 
-	r.readAppfwfieldtypeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwfieldtypeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwfieldtypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwfieldtypeResourceModel
+	var data, state AppfwfieldtypeResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,54 @@ func (r *AppfwfieldtypeResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwfieldtype resource")
 
-	// Create API request body from the model
-	// appfwfieldtype := appfwfieldtypeGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for appfwfieldtype")
+		hasChange = true
+	}
+	if !data.Nocharmaps.Equal(state.Nocharmaps) {
+		tflog.Debug(ctx, "nocharmaps has changed for appfwfieldtype")
+		hasChange = true
+	}
+	if !data.Priority.Equal(state.Priority) {
+		tflog.Debug(ctx, "priority has changed for appfwfieldtype")
+		hasChange = true
+	}
+	if !data.Regex.Equal(state.Regex) {
+		tflog.Debug(ctx, "regex has changed for appfwfieldtype")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwfieldtype.Type(), &appfwfieldtype)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwfieldtype, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		appfwfieldtype := appfwfieldtypeGetThePayloadFromtheConfig(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Appfwfieldtype.Type(), name_value, &appfwfieldtype)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwfieldtype, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated appfwfieldtype resource")
+		tflog.Trace(ctx, "Updated appfwfieldtype resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appfwfieldtype resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAppfwfieldtypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwfieldtypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwfieldtype not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +185,33 @@ func (r *AppfwfieldtypeResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	tflog.Debug(ctx, "Deleting appfwfieldtype resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Appfwfieldtype.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwfieldtype, got error: %s", err))
+		return
+	}
 
-	// For appfwfieldtype, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwfieldtype resource from state")
+	tflog.Trace(ctx, "Deleted appfwfieldtype resource")
 }
 
 // Helper function to read appfwfieldtype data from API
-func (r *AppfwfieldtypeResource) readAppfwfieldtypeFromApi(ctx context.Context, data *AppfwfieldtypeResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwfieldtype.Type(), "")
+func (r *AppfwfieldtypeResource) readAppfwfieldtypeFromApi(ctx context.Context, data *AppfwfieldtypeResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	appfwfieldtype_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Appfwfieldtype.Type(), appfwfieldtype_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwfieldtype, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwfieldtypeSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

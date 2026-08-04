@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,29 @@ func (r *AppfwlearningsettingsResource) Create(ctx context.Context, req resource
 	}
 
 	tflog.Debug(ctx, "Creating appfwlearningsettings resource")
-
-	// appfwlearningsettings := appfwlearningsettingsGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appfwlearningsettings := appfwlearningsettingsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwlearningsettings.Type(), &appfwlearningsettings)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwlearningsettings, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwlearningsettings-config")
+	// Unnamed resource - use UpdateUnnamedResource (NITRO only supports update/unset/get)
+	err := r.client.UpdateUnnamedResource(service.Appfwlearningsettings.Type(), &appfwlearningsettings)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwlearningsettings, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwlearningsettings resource")
 
+	// Set ID for the resource before reading state (ID is the profilename, matching SDK v2 d.SetId(profilename))
+	data.Id = types.StringValue(data.Profilename.ValueString())
+
 	// Read the updated state back
-	r.readAppfwlearningsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwlearningsettingsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwlearningsettings not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *AppfwlearningsettingsResource) Read(ctx context.Context, req resource.R
 
 	tflog.Debug(ctx, "Reading appfwlearningsettings resource")
 
-	r.readAppfwlearningsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwlearningsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwlearningsettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwlearningsettingsResourceModel
+	var data, state AppfwlearningsettingsResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,31 @@ func (r *AppfwlearningsettingsResource) Update(ctx context.Context, req resource
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwlearningsettings resource")
 
 	// Create API request body from the model
-	// appfwlearningsettings := appfwlearningsettingsGetThePayloadFromtheConfig(ctx, &data)
+	appfwlearningsettings := appfwlearningsettingsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwlearningsettings.Type(), &appfwlearningsettings)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwlearningsettings, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Appfwlearningsettings.Type(), &appfwlearningsettings)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwlearningsettings, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated appfwlearningsettings resource")
 
 	// Read the updated state back
-	r.readAppfwlearningsettingsFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwlearningsettingsFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwlearningsettings not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +162,27 @@ func (r *AppfwlearningsettingsResource) Delete(ctx context.Context, req resource
 
 	tflog.Debug(ctx, "Deleting appfwlearningsettings resource")
 
-	// For appfwlearningsettings, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// appfwlearningsettings has no NITRO delete operation (only update/unset/get).
+	// Matching SDK v2 behavior (d.SetId("")), we simply drop it from Terraform state.
 	tflog.Trace(ctx, "Deleted appfwlearningsettings resource from state")
 }
 
 // Helper function to read appfwlearningsettings data from API
-func (r *AppfwlearningsettingsResource) readAppfwlearningsettingsFromApi(ctx context.Context, data *AppfwlearningsettingsResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwlearningsettings.Type(), "")
+func (r *AppfwlearningsettingsResource) readAppfwlearningsettingsFromApi(ctx context.Context, data *AppfwlearningsettingsResourceModel, diags *diag.Diagnostics) bool {
+
+	// The ID is the profilename (matching SDK v2 d.SetId(profilename)).
+	appfwlearningsettingsName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Appfwlearningsettings.Type(), appfwlearningsettingsName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwlearningsettings, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwlearningsettingsSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

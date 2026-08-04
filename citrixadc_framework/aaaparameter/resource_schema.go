@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -54,7 +53,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"aaadloglevel": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("INFORMATIONAL"),
+				Computed:    true,
 				Description: "AAAD log level, which specifies the types of AAAD events to log in nsvpn.log.\nAvailable values function as follows:\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.",
 			},
 			"aaadnatip": schema.StringAttribute{
@@ -64,22 +63,22 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"aaasessionloglevel": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DEFAULT_LOGLEVEL_AAA"),
+				Computed:    true,
 				Description: "Audit log level, which specifies the types of events to log for cli executed commands.\nAvailable values function as follows:\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.",
 			},
 			"apitokencache": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Option to enable/disable API cache feature.",
 			},
 			"defaultauthtype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("LOCAL"),
+				Computed:    true,
 				Description: "The default authentication server type.",
 			},
 			"defaultcspheader": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Parameter to enable/disable default CSP header",
 			},
 			"dynaddr": schema.StringAttribute{
@@ -99,12 +98,12 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"enablestaticpagecaching": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "The default state of VPN Static Page caching. Static Page caching is enabled by default.",
 			},
 			"enhancedepa": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Parameter to enable/disable EPA v2 functionality",
 			},
 			"failedlogintimeout": schema.Int64Attribute{
@@ -114,17 +113,17 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"ftmode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "First time user mode determines which configuration options are shown by default when logging in to the GUI. This setting is controlled by the GUI.",
 			},
 			"httponlycookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Parameter to set/reset HttpOnly Flag for NSC_AAAC/NSC_TMAS cookies in nfactor",
 			},
 			"loginencryption": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Parameter to encrypt login information for nFactor flow",
 			},
 			"maxaaausers": schema.Int64Attribute{
@@ -149,7 +148,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"persistentloginattempts": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Persistent storage of unsuccessful user login attempts",
 			},
 			"pwdexpirynotificationdays": schema.Int64Attribute{
@@ -164,7 +163,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"securityinsights": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will send the security insight records to the configured collectors when request comes to Authentication endpoint.\n* If cs vserver is frontend with Authentication vserver as target for cs action, then record is sent using Authentication vserver name.\n* If vpn/lb/cs vserver are configured with Authentication ON, then then record is sent using vpn/lb/cs vserver name accordingly.\n* If authentication vserver is frontend, then record is sent using Authentication vserver name.",
 			},
 			"tokenintrospectioninterval": schema.Int64Attribute{
@@ -175,6 +174,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"wafprotection": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Entities for which WAF Protection need to be applied.\nAvailable settings function as follows:\n* DEFAULT - No Endpoint WAF protection.\n* AUTH - Endpoints used for Authentication applicable for both AAATM, IDP, GATEWAY use cases.\n* VPN - Endpoints used for Gateway use cases.\n* PORTAL - Endpoints related to web portal.\n* DISABLED - No Endpoint WAF protection.\nCurrently supported only in default partition",
 			},
 		},
@@ -186,77 +186,82 @@ func aaaparameterGetThePayloadFromtheConfig(ctx context.Context, data *Aaaparame
 
 	// Create API request body from the model
 	aaaparameter := aaa.Aaaparameter{}
-	if !data.Aaadloglevel.IsNull() {
+	if !data.Aaadloglevel.IsNull() && !data.Aaadloglevel.IsUnknown() {
 		aaaparameter.Aaadloglevel = data.Aaadloglevel.ValueString()
 	}
-	if !data.Aaadnatip.IsNull() {
+	if !data.Aaadnatip.IsNull() && !data.Aaadnatip.IsUnknown() {
 		aaaparameter.Aaadnatip = data.Aaadnatip.ValueString()
 	}
-	if !data.Aaasessionloglevel.IsNull() {
+	if !data.Aaasessionloglevel.IsNull() && !data.Aaasessionloglevel.IsUnknown() {
 		aaaparameter.Aaasessionloglevel = data.Aaasessionloglevel.ValueString()
 	}
-	if !data.Apitokencache.IsNull() {
+	if !data.Apitokencache.IsNull() && !data.Apitokencache.IsUnknown() {
 		aaaparameter.Apitokencache = data.Apitokencache.ValueString()
 	}
-	if !data.Defaultauthtype.IsNull() {
+	if !data.Defaultauthtype.IsNull() && !data.Defaultauthtype.IsUnknown() {
 		aaaparameter.Defaultauthtype = data.Defaultauthtype.ValueString()
 	}
-	if !data.Defaultcspheader.IsNull() {
+	if !data.Defaultcspheader.IsNull() && !data.Defaultcspheader.IsUnknown() {
 		aaaparameter.Defaultcspheader = data.Defaultcspheader.ValueString()
 	}
-	if !data.Dynaddr.IsNull() {
+	if !data.Dynaddr.IsNull() && !data.Dynaddr.IsUnknown() {
 		aaaparameter.Dynaddr = data.Dynaddr.ValueString()
 	}
-	if !data.Enableenhancedauthfeedback.IsNull() {
+	if !data.Enableenhancedauthfeedback.IsNull() && !data.Enableenhancedauthfeedback.IsUnknown() {
 		aaaparameter.Enableenhancedauthfeedback = data.Enableenhancedauthfeedback.ValueString()
 	}
-	if !data.Enablesessionstickiness.IsNull() {
+	if !data.Enablesessionstickiness.IsNull() && !data.Enablesessionstickiness.IsUnknown() {
 		aaaparameter.Enablesessionstickiness = data.Enablesessionstickiness.ValueString()
 	}
-	if !data.Enablestaticpagecaching.IsNull() {
+	if !data.Enablestaticpagecaching.IsNull() && !data.Enablestaticpagecaching.IsUnknown() {
 		aaaparameter.Enablestaticpagecaching = data.Enablestaticpagecaching.ValueString()
 	}
-	if !data.Enhancedepa.IsNull() {
+	if !data.Enhancedepa.IsNull() && !data.Enhancedepa.IsUnknown() {
 		aaaparameter.Enhancedepa = data.Enhancedepa.ValueString()
 	}
-	if !data.Failedlogintimeout.IsNull() {
+	if !data.Failedlogintimeout.IsNull() && !data.Failedlogintimeout.IsUnknown() {
 		aaaparameter.Failedlogintimeout = utils.IntPtr(int(data.Failedlogintimeout.ValueInt64()))
 	}
-	if !data.Ftmode.IsNull() {
+	if !data.Ftmode.IsNull() && !data.Ftmode.IsUnknown() {
 		aaaparameter.Ftmode = data.Ftmode.ValueString()
 	}
-	if !data.Httponlycookie.IsNull() {
+	if !data.Httponlycookie.IsNull() && !data.Httponlycookie.IsUnknown() {
 		aaaparameter.Httponlycookie = data.Httponlycookie.ValueString()
 	}
-	if !data.Loginencryption.IsNull() {
+	if !data.Loginencryption.IsNull() && !data.Loginencryption.IsUnknown() {
 		aaaparameter.Loginencryption = data.Loginencryption.ValueString()
 	}
-	if !data.Maxaaausers.IsNull() {
+	if !data.Maxaaausers.IsNull() && !data.Maxaaausers.IsUnknown() {
 		aaaparameter.Maxaaausers = utils.IntPtr(int(data.Maxaaausers.ValueInt64()))
 	}
-	if !data.Maxkbquestions.IsNull() {
+	if !data.Maxkbquestions.IsNull() && !data.Maxkbquestions.IsUnknown() {
 		aaaparameter.Maxkbquestions = utils.IntPtr(int(data.Maxkbquestions.ValueInt64()))
 	}
-	if !data.Maxloginattempts.IsNull() {
+	if !data.Maxloginattempts.IsNull() && !data.Maxloginattempts.IsUnknown() {
 		aaaparameter.Maxloginattempts = utils.IntPtr(int(data.Maxloginattempts.ValueInt64()))
 	}
-	if !data.Maxsamldeflatesize.IsNull() {
+	if !data.Maxsamldeflatesize.IsNull() && !data.Maxsamldeflatesize.IsUnknown() {
 		aaaparameter.Maxsamldeflatesize = utils.IntPtr(int(data.Maxsamldeflatesize.ValueInt64()))
 	}
-	if !data.Persistentloginattempts.IsNull() {
+	if !data.Persistentloginattempts.IsNull() && !data.Persistentloginattempts.IsUnknown() {
 		aaaparameter.Persistentloginattempts = data.Persistentloginattempts.ValueString()
 	}
-	if !data.Pwdexpirynotificationdays.IsNull() {
+	if !data.Pwdexpirynotificationdays.IsNull() && !data.Pwdexpirynotificationdays.IsUnknown() {
 		aaaparameter.Pwdexpirynotificationdays = utils.IntPtr(int(data.Pwdexpirynotificationdays.ValueInt64()))
 	}
-	if !data.Samesite.IsNull() {
+	if !data.Samesite.IsNull() && !data.Samesite.IsUnknown() {
 		aaaparameter.Samesite = data.Samesite.ValueString()
 	}
-	if !data.Securityinsights.IsNull() {
+	if !data.Securityinsights.IsNull() && !data.Securityinsights.IsUnknown() {
 		aaaparameter.Securityinsights = data.Securityinsights.ValueString()
 	}
-	if !data.Tokenintrospectioninterval.IsNull() {
+	if !data.Tokenintrospectioninterval.IsNull() && !data.Tokenintrospectioninterval.IsUnknown() {
 		aaaparameter.Tokenintrospectioninterval = utils.IntPtr(int(data.Tokenintrospectioninterval.ValueInt64()))
+	}
+	if !data.Wafprotection.IsNull() && !data.Wafprotection.IsUnknown() {
+		var wafprotectionList []string
+		data.Wafprotection.ElementsAs(ctx, &wafprotectionList, false)
+		aaaparameter.Wafprotection = wafprotectionList
 	}
 
 	return aaaparameter
@@ -400,9 +405,20 @@ func aaaparameterSetAttrFromGet(ctx context.Context, data *AaaparameterResourceM
 	} else {
 		data.Tokenintrospectioninterval = types.Int64Null()
 	}
+	if val, ok := getResponseData["wafprotection"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Wafprotection = listValue
+		} else {
+			data.Wafprotection = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Wafprotection = types.ListNull(types.StringType)
+	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Case 1: No unique attributes - static ID (singleton)
 	data.Id = types.StringValue("aaaparameter-config")
 
 	return data

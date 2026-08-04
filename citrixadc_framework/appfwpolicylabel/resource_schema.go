@@ -45,7 +45,8 @@ func (r *AppfwpolicylabelResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The new name of the application firewall policylabel.",
 			},
 			"policylabeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -60,13 +61,13 @@ func appfwpolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *Appfw
 
 	// Create API request body from the model
 	appfwpolicylabel := appfw.Appfwpolicylabel{}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		appfwpolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
+	if !data.Newname.IsNull() && !data.Newname.IsUnknown() {
 		appfwpolicylabel.Newname = data.Newname.ValueString()
 	}
-	if !data.Policylabeltype.IsNull() {
+	if !data.Policylabeltype.IsNull() && !data.Policylabeltype.IsUnknown() {
 		appfwpolicylabel.Policylabeltype = data.Policylabeltype.ValueString()
 	}
 

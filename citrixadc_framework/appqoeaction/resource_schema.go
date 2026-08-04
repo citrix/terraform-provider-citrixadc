@@ -2,12 +2,12 @@ package appqoeaction
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/resource/config/appqoe"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,7 +27,7 @@ type AppqoeactionResourceModel struct {
 	Dostrigexpression types.String `tfsdk:"dostrigexpression"`
 	Maxconn           types.Int64  `tfsdk:"maxconn"`
 	Name              types.String `tfsdk:"name"`
-	Numretries        types.Int64  `tfsdk:"numretries"`
+	Numretries        types.String `tfsdk:"numretries"`
 	Polqdepth         types.Int64  `tfsdk:"polqdepth"`
 	Priority          types.String `tfsdk:"priority"`
 	Priqdepth         types.Int64  `tfsdk:"priqdepth"`
@@ -56,11 +56,8 @@ func (r *AppqoeactionResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Name of the alternative content service to be used in the ACS",
 			},
 			"customfile": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "name of the HTML page object to use as the response",
 			},
 			"delay": schema.Int64Attribute{
@@ -84,12 +81,15 @@ func (r *AppqoeactionResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Maximum number of concurrent connections that can be open for requests that matches with rule.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the AppQoE action. Must begin with a letter, number, or the underscore symbol (_). Other characters allowed, after the first character, are the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), and colon (:) characters. This is a mandatory argument",
 			},
-			"numretries": schema.Int64Attribute{
+			"numretries": schema.StringAttribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Retry count",
 			},
 			"polqdepth": schema.Int64Attribute{
@@ -108,11 +108,8 @@ func (r *AppqoeactionResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Queue depth threshold value per priorirty level. If the queue size (number of requests in the queue of that particular priorirty) on the virtual server to which this policy is bound, increases to the specified qDepth value, subsequent requests are dropped to the lowest priority level.",
 			},
 			"respondwith": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Responder action to be taken when the threshold is reached. Available settings function as follows:\n            ACS - Serve content from an alternative content service\n                  Threshold : maxConn or delay\n            NS - Serve from the Citrix ADC (built-in response)\n                 Threshold : maxConn or delay",
 			},
 			"retryonreset": schema.StringAttribute{
@@ -134,57 +131,113 @@ func (r *AppqoeactionResource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func appqoeactionGetThePayloadFromtheConfig(ctx context.Context, data *AppqoeactionResourceModel) appqoe.Appqoeaction {
-	tflog.Debug(ctx, "In appqoeactionGetThePayloadFromtheConfig Function")
+func appqoeactionGetThePayloadFromthePlan(ctx context.Context, data *AppqoeactionResourceModel) appqoe.Appqoeaction {
+	tflog.Debug(ctx, "In appqoeactionGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model (full payload used on create)
 	appqoeaction := appqoe.Appqoeaction{}
-	if !data.Altcontentpath.IsNull() {
+	if !data.Altcontentpath.IsNull() && !data.Altcontentpath.IsUnknown() {
 		appqoeaction.Altcontentpath = data.Altcontentpath.ValueString()
 	}
-	if !data.Altcontentsvcname.IsNull() {
+	if !data.Altcontentsvcname.IsNull() && !data.Altcontentsvcname.IsUnknown() {
 		appqoeaction.Altcontentsvcname = data.Altcontentsvcname.ValueString()
 	}
-	if !data.Customfile.IsNull() {
+	if !data.Customfile.IsNull() && !data.Customfile.IsUnknown() {
 		appqoeaction.Customfile = data.Customfile.ValueString()
 	}
-	if !data.Delay.IsNull() {
+	if !data.Delay.IsNull() && !data.Delay.IsUnknown() {
 		appqoeaction.Delay = utils.IntPtr(int(data.Delay.ValueInt64()))
 	}
-	if !data.Dosaction.IsNull() {
+	if !data.Dosaction.IsNull() && !data.Dosaction.IsUnknown() {
 		appqoeaction.Dosaction = data.Dosaction.ValueString()
 	}
-	if !data.Dostrigexpression.IsNull() {
+	if !data.Dostrigexpression.IsNull() && !data.Dostrigexpression.IsUnknown() {
 		appqoeaction.Dostrigexpression = data.Dostrigexpression.ValueString()
 	}
-	if !data.Maxconn.IsNull() {
+	if !data.Maxconn.IsNull() && !data.Maxconn.IsUnknown() {
 		appqoeaction.Maxconn = utils.IntPtr(int(data.Maxconn.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		appqoeaction.Name = data.Name.ValueString()
 	}
-	if !data.Numretries.IsNull() {
-		appqoeaction.Numretries = utils.IntPtr(int(data.Numretries.ValueInt64()))
+	if !data.Numretries.IsNull() && !data.Numretries.IsUnknown() {
+		if v, err := strconv.Atoi(data.Numretries.ValueString()); err == nil {
+			appqoeaction.Numretries = utils.IntPtr(v)
+		}
 	}
-	if !data.Polqdepth.IsNull() {
+	if !data.Polqdepth.IsNull() && !data.Polqdepth.IsUnknown() {
 		appqoeaction.Polqdepth = utils.IntPtr(int(data.Polqdepth.ValueInt64()))
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		appqoeaction.Priority = data.Priority.ValueString()
 	}
-	if !data.Priqdepth.IsNull() {
+	if !data.Priqdepth.IsNull() && !data.Priqdepth.IsUnknown() {
 		appqoeaction.Priqdepth = utils.IntPtr(int(data.Priqdepth.ValueInt64()))
 	}
-	if !data.Respondwith.IsNull() {
+	if !data.Respondwith.IsNull() && !data.Respondwith.IsUnknown() {
 		appqoeaction.Respondwith = data.Respondwith.ValueString()
 	}
-	if !data.Retryonreset.IsNull() {
+	if !data.Retryonreset.IsNull() && !data.Retryonreset.IsUnknown() {
 		appqoeaction.Retryonreset = data.Retryonreset.ValueString()
 	}
-	if !data.Retryontimeout.IsNull() {
+	if !data.Retryontimeout.IsNull() && !data.Retryontimeout.IsUnknown() {
 		appqoeaction.Retryontimeout = utils.IntPtr(int(data.Retryontimeout.ValueInt64()))
 	}
-	if !data.Tcpprofile.IsNull() {
+	if !data.Tcpprofile.IsNull() && !data.Tcpprofile.IsUnknown() {
+		appqoeaction.Tcpprofile = data.Tcpprofile.ValueString()
+	}
+
+	return appqoeaction
+}
+
+func appqoeactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AppqoeactionResourceModel) appqoe.Appqoeaction {
+	tflog.Debug(ctx, "In appqoeactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// customfile and respondwith are add-only (not updatable via NITRO), so they are omitted here.
+	appqoeaction := appqoe.Appqoeaction{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		appqoeaction.Name = data.Name.ValueString()
+	}
+	if !data.Altcontentpath.IsNull() && !data.Altcontentpath.IsUnknown() {
+		appqoeaction.Altcontentpath = data.Altcontentpath.ValueString()
+	}
+	if !data.Altcontentsvcname.IsNull() && !data.Altcontentsvcname.IsUnknown() {
+		appqoeaction.Altcontentsvcname = data.Altcontentsvcname.ValueString()
+	}
+	if !data.Delay.IsNull() && !data.Delay.IsUnknown() {
+		appqoeaction.Delay = utils.IntPtr(int(data.Delay.ValueInt64()))
+	}
+	if !data.Dosaction.IsNull() && !data.Dosaction.IsUnknown() {
+		appqoeaction.Dosaction = data.Dosaction.ValueString()
+	}
+	if !data.Dostrigexpression.IsNull() && !data.Dostrigexpression.IsUnknown() {
+		appqoeaction.Dostrigexpression = data.Dostrigexpression.ValueString()
+	}
+	if !data.Maxconn.IsNull() && !data.Maxconn.IsUnknown() {
+		appqoeaction.Maxconn = utils.IntPtr(int(data.Maxconn.ValueInt64()))
+	}
+	if !data.Numretries.IsNull() && !data.Numretries.IsUnknown() {
+		if v, err := strconv.Atoi(data.Numretries.ValueString()); err == nil {
+			appqoeaction.Numretries = utils.IntPtr(v)
+		}
+	}
+	if !data.Polqdepth.IsNull() && !data.Polqdepth.IsUnknown() {
+		appqoeaction.Polqdepth = utils.IntPtr(int(data.Polqdepth.ValueInt64()))
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		appqoeaction.Priority = data.Priority.ValueString()
+	}
+	if !data.Priqdepth.IsNull() && !data.Priqdepth.IsUnknown() {
+		appqoeaction.Priqdepth = utils.IntPtr(int(data.Priqdepth.ValueInt64()))
+	}
+	if !data.Retryonreset.IsNull() && !data.Retryonreset.IsUnknown() {
+		appqoeaction.Retryonreset = data.Retryonreset.ValueString()
+	}
+	if !data.Retryontimeout.IsNull() && !data.Retryontimeout.IsUnknown() {
+		appqoeaction.Retryontimeout = utils.IntPtr(int(data.Retryontimeout.ValueInt64()))
+	}
+	if !data.Tcpprofile.IsNull() && !data.Tcpprofile.IsUnknown() {
 		appqoeaction.Tcpprofile = data.Tcpprofile.ValueString()
 	}
 
@@ -214,7 +267,7 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Delay = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Delay.IsUnknown() {
 		data.Delay = types.Int64Null()
 	}
 	if val, ok := getResponseData["dosaction"]; ok && val != nil {
@@ -231,7 +284,7 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxconn = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxconn.IsUnknown() {
 		data.Maxconn = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
@@ -240,17 +293,21 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["numretries"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Numretries = types.Int64Value(intVal)
+		if strVal, isStr := val.(string); isStr {
+			data.Numretries = types.StringValue(strVal)
+		} else if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Numretries = types.StringValue(strconv.FormatInt(intVal, 10))
+		} else {
+			data.Numretries = types.StringNull()
 		}
 	} else {
-		data.Numretries = types.Int64Null()
+		data.Numretries = types.StringNull()
 	}
 	if val, ok := getResponseData["polqdepth"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Polqdepth = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Polqdepth.IsUnknown() {
 		data.Polqdepth = types.Int64Null()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
@@ -262,7 +319,7 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priqdepth = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priqdepth.IsUnknown() {
 		data.Priqdepth = types.Int64Null()
 	}
 	if val, ok := getResponseData["respondwith"]; ok && val != nil {
@@ -279,7 +336,7 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Retryontimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Retryontimeout.IsUnknown() {
 		data.Retryontimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["tcpprofile"]; ok && val != nil {
@@ -289,7 +346,7 @@ func appqoeactionSetAttrFromGet(ctx context.Context, data *AppqoeactionResourceM
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

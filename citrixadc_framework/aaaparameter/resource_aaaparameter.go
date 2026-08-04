@@ -54,20 +54,20 @@ func (r *AaaparameterResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	tflog.Debug(ctx, "Creating aaaparameter resource")
-
-	// aaaparameter := aaaparameterGetThePayloadFromtheConfig(ctx, &data)
+	aaaparameter := aaaparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaaparameter, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("aaaparameter-config")
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaaparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created aaaparameter resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue("aaaparameter-config")
 
 	// Read the updated state back
 	r.readAaaparameterFromApi(ctx, &data, &resp.Diagnostics)
@@ -95,8 +95,10 @@ func (r *AaaparameterResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *AaaparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaaparameterResourceModel
+	var data, state AaaparameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +106,21 @@ func (r *AaaparameterResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating aaaparameter resource")
 
 	// Create API request body from the model
-	// aaaparameter := aaaparameterGetThePayloadFromtheConfig(ctx, &data)
+	aaaparameter := aaaparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaaparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Aaaparameter.Type(), &aaaparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaaparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated aaaparameter resource")
 
@@ -137,13 +143,14 @@ func (r *AaaparameterResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting aaaparameter resource")
 
-	// For aaaparameter, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted aaaparameter resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed aaaparameter from Terraform state")
 }
 
 // Helper function to read aaaparameter data from API
 func (r *AaaparameterResource) readAaaparameterFromApi(ctx context.Context, data *AaaparameterResourceModel, diags *diag.Diagnostics) {
+
+	// Case 1: Simple find without ID (singleton)
 	getResponseData, err := r.client.FindResource(service.Aaaparameter.Type(), "")
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaaparameter, got error: %s", err))

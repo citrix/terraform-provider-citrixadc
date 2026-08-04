@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *AppfwprofileResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating appfwprofile resource")
 
-	// appfwprofile := appfwprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appfwprofile := appfwprofileGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwprofile.Type(), &appfwprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwprofile-config")
+	// Named resource - use AddResource
+	appfwprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(appfwprofileName)
+
 	// Read the updated state back
-	r.readAppfwprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *AppfwprofileResource) Read(ctx context.Context, req resource.ReadReques
 
 	tflog.Debug(ctx, "Reading appfwprofile resource")
 
-	r.readAppfwprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwprofileResourceModel
+	var data, state AppfwprofileResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,35 @@ func (r *AppfwprofileResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwprofile resource")
 
-	// Create API request body from the model
-	// appfwprofile := appfwprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Build payload restricted to updatable fields that actually changed
+	appfwprofile, hasChange := appfwprofileGetTheUpdatablePayloadFromThePlan(ctx, &data, &state)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwprofile.Type(), &appfwprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Named resource - use UpdateResource
+		appfwprofileName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Appfwprofile.Type(), appfwprofileName, &appfwprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated appfwprofile resource")
+		tflog.Trace(ctx, "Updated appfwprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appfwprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAppfwprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +167,33 @@ func (r *AppfwprofileResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	tflog.Debug(ctx, "Deleting appfwprofile resource")
+	// Named resource - delete using DeleteResource
+	appfwprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Appfwprofile.Type(), appfwprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwprofile, got error: %s", err))
+		return
+	}
 
-	// For appfwprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwprofile resource from state")
+	tflog.Trace(ctx, "Deleted appfwprofile resource")
 }
 
 // Helper function to read appfwprofile data from API
-func (r *AppfwprofileResource) readAppfwprofileFromApi(ctx context.Context, data *AppfwprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwprofile.Type(), "")
+func (r *AppfwprofileResource) readAppfwprofileFromApi(ctx context.Context, data *AppfwprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain profile name
+	appfwprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Appfwprofile.Type(), appfwprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

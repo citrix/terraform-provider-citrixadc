@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -47,10 +46,10 @@ func (r *AppflowpolicylabelResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"policylabeltype": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("HTTP"),
 				Description: "Type of traffic evaluated by the policies bound to the policy label.",
 			},
 		},
@@ -62,13 +61,13 @@ func appflowpolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *App
 
 	// Create API request body from the model
 	appflowpolicylabel := appflow.Appflowpolicylabel{}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		appflowpolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
+	if !data.Newname.IsNull() && !data.Newname.IsUnknown() {
 		appflowpolicylabel.Newname = data.Newname.ValueString()
 	}
-	if !data.Policylabeltype.IsNull() {
+	if !data.Policylabeltype.IsNull() && !data.Policylabeltype.IsUnknown() {
 		appflowpolicylabel.Policylabeltype = data.Policylabeltype.ValueString()
 	}
 

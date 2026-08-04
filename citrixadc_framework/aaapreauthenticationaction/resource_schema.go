@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -45,7 +47,10 @@ func (r *AaapreauthenticationactionResource) Schema(ctx context.Context, req res
 				Description: "String specifying the name of a process to be terminated by the endpoint analysis (EPA) tool.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the preauthentication action. Must begin with a letter, number, or the underscore character (_), and must consist only of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after preauthentication action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my aaa action\" or 'my aaa action').",
 			},
 			"preauthenticationaction": schema.StringAttribute{
@@ -57,24 +62,49 @@ func (r *AaapreauthenticationactionResource) Schema(ctx context.Context, req res
 	}
 }
 
-func aaapreauthenticationactionGetThePayloadFromtheConfig(ctx context.Context, data *AaapreauthenticationactionResourceModel) aaa.Aaapreauthenticationaction {
-	tflog.Debug(ctx, "In aaapreauthenticationactionGetThePayloadFromtheConfig Function")
+func aaapreauthenticationactionGetThePayloadFromthePlan(ctx context.Context, data *AaapreauthenticationactionResourceModel) aaa.Aaapreauthenticationaction {
+	tflog.Debug(ctx, "In aaapreauthenticationactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaapreauthenticationaction := aaa.Aaapreauthenticationaction{}
-	if !data.Defaultepagroup.IsNull() {
+	if !data.Defaultepagroup.IsNull() && !data.Defaultepagroup.IsUnknown() {
 		aaapreauthenticationaction.Defaultepagroup = data.Defaultepagroup.ValueString()
 	}
-	if !data.Deletefiles.IsNull() {
+	if !data.Deletefiles.IsNull() && !data.Deletefiles.IsUnknown() {
 		aaapreauthenticationaction.Deletefiles = data.Deletefiles.ValueString()
 	}
-	if !data.Killprocess.IsNull() {
+	if !data.Killprocess.IsNull() && !data.Killprocess.IsUnknown() {
 		aaapreauthenticationaction.Killprocess = data.Killprocess.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		aaapreauthenticationaction.Name = data.Name.ValueString()
 	}
-	if !data.Preauthenticationaction.IsNull() {
+	if !data.Preauthenticationaction.IsNull() && !data.Preauthenticationaction.IsUnknown() {
+		aaapreauthenticationaction.Preauthenticationaction = data.Preauthenticationaction.ValueString()
+	}
+
+	return aaapreauthenticationaction
+}
+
+func aaapreauthenticationactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AaapreauthenticationactionResourceModel) aaa.Aaapreauthenticationaction {
+	tflog.Debug(ctx, "In aaapreauthenticationactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields
+	aaapreauthenticationaction := aaa.Aaapreauthenticationaction{}
+	if !data.Defaultepagroup.IsNull() && !data.Defaultepagroup.IsUnknown() {
+		aaapreauthenticationaction.Defaultepagroup = data.Defaultepagroup.ValueString()
+	}
+	if !data.Deletefiles.IsNull() && !data.Deletefiles.IsUnknown() {
+		aaapreauthenticationaction.Deletefiles = data.Deletefiles.ValueString()
+	}
+	if !data.Killprocess.IsNull() && !data.Killprocess.IsUnknown() {
+		aaapreauthenticationaction.Killprocess = data.Killprocess.ValueString()
+	}
+	// name is the primary key and cannot be updated; it is sent to identify the resource
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		aaapreauthenticationaction.Name = data.Name.ValueString()
+	}
+	if !data.Preauthenticationaction.IsNull() && !data.Preauthenticationaction.IsUnknown() {
 		aaapreauthenticationaction.Preauthenticationaction = data.Preauthenticationaction.ValueString()
 	}
 
@@ -112,7 +142,7 @@ func aaapreauthenticationactionSetAttrFromGet(ctx context.Context, data *Aaaprea
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

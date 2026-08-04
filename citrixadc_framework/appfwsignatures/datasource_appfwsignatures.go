@@ -55,7 +55,7 @@ func (d *AppfwsignaturesDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	appfwsignaturesSetAttrFromGet(ctx, &data, getResponseData)
+	appfwsignaturesSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -55,10 +55,10 @@ func aaagroupGetThePayloadFromtheConfig(ctx context.Context, data *AaagroupResou
 
 	// Create API request body from the model
 	aaagroup := aaa.Aaagroup{}
-	if !data.Groupname.IsNull() {
+	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		aaagroup.Groupname = data.Groupname.ValueString()
 	}
-	if !data.Weight.IsNull() {
+	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		aaagroup.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
 
@@ -83,6 +83,7 @@ func aaagroupSetAttrFromGet(ctx context.Context, data *AaagroupResourceModel, ge
 	}
 
 	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Groupname.ValueString())
 
 	return data

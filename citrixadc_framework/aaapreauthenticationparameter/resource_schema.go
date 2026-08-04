@@ -57,16 +57,16 @@ func aaapreauthenticationparameterGetThePayloadFromtheConfig(ctx context.Context
 
 	// Create API request body from the model
 	aaapreauthenticationparameter := aaa.Aaapreauthenticationparameter{}
-	if !data.Deletefiles.IsNull() {
+	if !data.Deletefiles.IsNull() && !data.Deletefiles.IsUnknown() {
 		aaapreauthenticationparameter.Deletefiles = data.Deletefiles.ValueString()
 	}
-	if !data.Killprocess.IsNull() {
+	if !data.Killprocess.IsNull() && !data.Killprocess.IsUnknown() {
 		aaapreauthenticationparameter.Killprocess = data.Killprocess.ValueString()
 	}
-	if !data.Preauthenticationaction.IsNull() {
+	if !data.Preauthenticationaction.IsNull() && !data.Preauthenticationaction.IsUnknown() {
 		aaapreauthenticationparameter.Preauthenticationaction = data.Preauthenticationaction.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		aaapreauthenticationparameter.Rule = data.Rule.ValueString()
 	}
 

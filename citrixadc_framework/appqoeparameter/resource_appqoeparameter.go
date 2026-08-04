@@ -55,22 +55,26 @@ func (r *AppqoeparameterResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating appqoeparameter resource")
 
-	// appqoeparameter := appqoeparameterGetThePayloadFromtheConfig(ctx, &data)
+	appqoeparameter := appqoeparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appqoeparameter, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed/singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appqoeparameter, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Set a fixed synthetic ID for this singleton configuration resource
 	data.Id = types.StringValue("appqoeparameter-config")
 
 	tflog.Trace(ctx, "Created appqoeparameter resource")
 
 	// Read the updated state back
 	r.readAppqoeparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,8 +99,10 @@ func (r *AppqoeparameterResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *AppqoeparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppqoeparameterResourceModel
+	var data, state AppqoeparameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +110,29 @@ func (r *AppqoeparameterResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appqoeparameter resource")
 
 	// Create API request body from the model
-	// appqoeparameter := appqoeparameterGetThePayloadFromtheConfig(ctx, &data)
+	appqoeparameter := appqoeparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appqoeparameter, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed/singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appqoeparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated appqoeparameter resource")
 
 	// Read the updated state back
 	r.readAppqoeparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

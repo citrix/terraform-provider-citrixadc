@@ -55,14 +55,15 @@ func (r *ArpparamResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating arpparam resource")
 
-	// arpparam := arpparamGetThePayloadFromtheConfig(ctx, &data)
+	arpparam := arpparamGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Arpparam.Type(), &arpparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create arpparam, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed/singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Arpparam.Type(), &arpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create arpparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("arpparam-config")
@@ -107,14 +108,15 @@ func (r *ArpparamResource) Update(ctx context.Context, req resource.UpdateReques
 	tflog.Debug(ctx, "Updating arpparam resource")
 
 	// Create API request body from the model
-	// arpparam := arpparamGetThePayloadFromtheConfig(ctx, &data)
+	arpparam := arpparamGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Arpparam.Type(), &arpparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update arpparam, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed/singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Arpparam.Type(), &arpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update arpparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated arpparam resource")
 

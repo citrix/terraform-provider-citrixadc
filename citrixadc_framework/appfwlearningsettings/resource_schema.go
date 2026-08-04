@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -60,12 +61,12 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"contenttypeautodeploygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10080),
+				Computed:    true,
 				Description: "The number of minutes after the threshold hit alert the learned rule will be deployed",
 			},
 			"contenttypeminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum threshold to learn Content Type information.",
 			},
 			"contenttypepercentthreshold": schema.Int64Attribute{
@@ -75,12 +76,12 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"cookieconsistencyautodeploygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10080),
+				Computed:    true,
 				Description: "The number of minutes after the threshold hit alert the learned rule will be deployed",
 			},
 			"cookieconsistencyminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn cookies.",
 			},
 			"cookieconsistencypercentthreshold": schema.Int64Attribute{
@@ -90,7 +91,7 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"creditcardnumberminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum threshold to learn Credit Card information.",
 			},
 			"creditcardnumberpercentthreshold": schema.Int64Attribute{
@@ -100,12 +101,12 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"crosssitescriptingautodeploygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10080),
+				Computed:    true,
 				Description: "The number of minutes after the threshold hit alert the learned rule will be deployed",
 			},
 			"crosssitescriptingminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn HTML cross-site scripting patterns.",
 			},
 			"crosssitescriptingpercentthreshold": schema.Int64Attribute{
@@ -115,12 +116,12 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"csrftagautodeploygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10080),
+				Computed:    true,
 				Description: "The number of minutes after the threshold hit alert the learned rule will be deployed",
 			},
 			"csrftagminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn cross-site request forgery (CSRF) tags.",
 			},
 			"csrftagpercentthreshold": schema.Int64Attribute{
@@ -130,12 +131,12 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"fieldconsistencyautodeploygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10080),
+				Computed:    true,
 				Description: "The number of minutes after the threshold hit alert the learned rule will be deployed",
 			},
 			"fieldconsistencyminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn field consistency information.",
 			},
 			"fieldconsistencypercentthreshold": schema.Int64Attribute{
@@ -145,12 +146,12 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"fieldformatautodeploygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10080),
+				Computed:    true,
 				Description: "The number of minutes after the threshold hit alert the learned rule will be deployed",
 			},
 			"fieldformatminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn field formats.",
 			},
 			"fieldformatpercentthreshold": schema.Int64Attribute{
@@ -159,17 +160,20 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 				Description: "Minimum percentage of application firewall sessions that must contain a particular web form field pattern for the learning engine to recommend a field format for that form field.",
 			},
 			"profilename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the profile.",
 			},
 			"sqlinjectionautodeploygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10080),
+				Computed:    true,
 				Description: "The number of minutes after the threshold hit alert the learned rule will be deployed",
 			},
 			"sqlinjectionminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn HTML SQL injection patterns.",
 			},
 			"sqlinjectionpercentthreshold": schema.Int64Attribute{
@@ -179,12 +183,12 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"starturlautodeploygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10080),
+				Computed:    true,
 				Description: "The number of minutes after the threshold hit alert the learned rule will be deployed",
 			},
 			"starturlminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn start URLs.",
 			},
 			"starturlpercentthreshold": schema.Int64Attribute{
@@ -194,7 +198,7 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"xmlattachmentminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn XML attachment patterns.",
 			},
 			"xmlattachmentpercentthreshold": schema.Int64Attribute{
@@ -204,7 +208,7 @@ func (r *AppfwlearningsettingsResource) Schema(ctx context.Context, req resource
 			},
 			"xmlwsiminthreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Minimum number of application firewall sessions that the learning engine must observe to learn web services interoperability (WSI) information.",
 			},
 			"xmlwsipercentthreshold": schema.Int64Attribute{
@@ -221,97 +225,97 @@ func appfwlearningsettingsGetThePayloadFromtheConfig(ctx context.Context, data *
 
 	// Create API request body from the model
 	appfwlearningsettings := appfw.Appfwlearningsettings{}
-	if !data.Contenttypeautodeploygraceperiod.IsNull() {
+	if !data.Contenttypeautodeploygraceperiod.IsNull() && !data.Contenttypeautodeploygraceperiod.IsUnknown() {
 		appfwlearningsettings.Contenttypeautodeploygraceperiod = utils.IntPtr(int(data.Contenttypeautodeploygraceperiod.ValueInt64()))
 	}
-	if !data.Contenttypeminthreshold.IsNull() {
+	if !data.Contenttypeminthreshold.IsNull() && !data.Contenttypeminthreshold.IsUnknown() {
 		appfwlearningsettings.Contenttypeminthreshold = utils.IntPtr(int(data.Contenttypeminthreshold.ValueInt64()))
 	}
-	if !data.Contenttypepercentthreshold.IsNull() {
+	if !data.Contenttypepercentthreshold.IsNull() && !data.Contenttypepercentthreshold.IsUnknown() {
 		appfwlearningsettings.Contenttypepercentthreshold = utils.IntPtr(int(data.Contenttypepercentthreshold.ValueInt64()))
 	}
-	if !data.Cookieconsistencyautodeploygraceperiod.IsNull() {
+	if !data.Cookieconsistencyautodeploygraceperiod.IsNull() && !data.Cookieconsistencyautodeploygraceperiod.IsUnknown() {
 		appfwlearningsettings.Cookieconsistencyautodeploygraceperiod = utils.IntPtr(int(data.Cookieconsistencyautodeploygraceperiod.ValueInt64()))
 	}
-	if !data.Cookieconsistencyminthreshold.IsNull() {
+	if !data.Cookieconsistencyminthreshold.IsNull() && !data.Cookieconsistencyminthreshold.IsUnknown() {
 		appfwlearningsettings.Cookieconsistencyminthreshold = utils.IntPtr(int(data.Cookieconsistencyminthreshold.ValueInt64()))
 	}
-	if !data.Cookieconsistencypercentthreshold.IsNull() {
+	if !data.Cookieconsistencypercentthreshold.IsNull() && !data.Cookieconsistencypercentthreshold.IsUnknown() {
 		appfwlearningsettings.Cookieconsistencypercentthreshold = utils.IntPtr(int(data.Cookieconsistencypercentthreshold.ValueInt64()))
 	}
-	if !data.Creditcardnumberminthreshold.IsNull() {
+	if !data.Creditcardnumberminthreshold.IsNull() && !data.Creditcardnumberminthreshold.IsUnknown() {
 		appfwlearningsettings.Creditcardnumberminthreshold = utils.IntPtr(int(data.Creditcardnumberminthreshold.ValueInt64()))
 	}
-	if !data.Creditcardnumberpercentthreshold.IsNull() {
+	if !data.Creditcardnumberpercentthreshold.IsNull() && !data.Creditcardnumberpercentthreshold.IsUnknown() {
 		appfwlearningsettings.Creditcardnumberpercentthreshold = utils.IntPtr(int(data.Creditcardnumberpercentthreshold.ValueInt64()))
 	}
-	if !data.Crosssitescriptingautodeploygraceperiod.IsNull() {
+	if !data.Crosssitescriptingautodeploygraceperiod.IsNull() && !data.Crosssitescriptingautodeploygraceperiod.IsUnknown() {
 		appfwlearningsettings.Crosssitescriptingautodeploygraceperiod = utils.IntPtr(int(data.Crosssitescriptingautodeploygraceperiod.ValueInt64()))
 	}
-	if !data.Crosssitescriptingminthreshold.IsNull() {
+	if !data.Crosssitescriptingminthreshold.IsNull() && !data.Crosssitescriptingminthreshold.IsUnknown() {
 		appfwlearningsettings.Crosssitescriptingminthreshold = utils.IntPtr(int(data.Crosssitescriptingminthreshold.ValueInt64()))
 	}
-	if !data.Crosssitescriptingpercentthreshold.IsNull() {
+	if !data.Crosssitescriptingpercentthreshold.IsNull() && !data.Crosssitescriptingpercentthreshold.IsUnknown() {
 		appfwlearningsettings.Crosssitescriptingpercentthreshold = utils.IntPtr(int(data.Crosssitescriptingpercentthreshold.ValueInt64()))
 	}
-	if !data.Csrftagautodeploygraceperiod.IsNull() {
+	if !data.Csrftagautodeploygraceperiod.IsNull() && !data.Csrftagautodeploygraceperiod.IsUnknown() {
 		appfwlearningsettings.Csrftagautodeploygraceperiod = utils.IntPtr(int(data.Csrftagautodeploygraceperiod.ValueInt64()))
 	}
-	if !data.Csrftagminthreshold.IsNull() {
+	if !data.Csrftagminthreshold.IsNull() && !data.Csrftagminthreshold.IsUnknown() {
 		appfwlearningsettings.Csrftagminthreshold = utils.IntPtr(int(data.Csrftagminthreshold.ValueInt64()))
 	}
-	if !data.Csrftagpercentthreshold.IsNull() {
+	if !data.Csrftagpercentthreshold.IsNull() && !data.Csrftagpercentthreshold.IsUnknown() {
 		appfwlearningsettings.Csrftagpercentthreshold = utils.IntPtr(int(data.Csrftagpercentthreshold.ValueInt64()))
 	}
-	if !data.Fieldconsistencyautodeploygraceperiod.IsNull() {
+	if !data.Fieldconsistencyautodeploygraceperiod.IsNull() && !data.Fieldconsistencyautodeploygraceperiod.IsUnknown() {
 		appfwlearningsettings.Fieldconsistencyautodeploygraceperiod = utils.IntPtr(int(data.Fieldconsistencyautodeploygraceperiod.ValueInt64()))
 	}
-	if !data.Fieldconsistencyminthreshold.IsNull() {
+	if !data.Fieldconsistencyminthreshold.IsNull() && !data.Fieldconsistencyminthreshold.IsUnknown() {
 		appfwlearningsettings.Fieldconsistencyminthreshold = utils.IntPtr(int(data.Fieldconsistencyminthreshold.ValueInt64()))
 	}
-	if !data.Fieldconsistencypercentthreshold.IsNull() {
+	if !data.Fieldconsistencypercentthreshold.IsNull() && !data.Fieldconsistencypercentthreshold.IsUnknown() {
 		appfwlearningsettings.Fieldconsistencypercentthreshold = utils.IntPtr(int(data.Fieldconsistencypercentthreshold.ValueInt64()))
 	}
-	if !data.Fieldformatautodeploygraceperiod.IsNull() {
+	if !data.Fieldformatautodeploygraceperiod.IsNull() && !data.Fieldformatautodeploygraceperiod.IsUnknown() {
 		appfwlearningsettings.Fieldformatautodeploygraceperiod = utils.IntPtr(int(data.Fieldformatautodeploygraceperiod.ValueInt64()))
 	}
-	if !data.Fieldformatminthreshold.IsNull() {
+	if !data.Fieldformatminthreshold.IsNull() && !data.Fieldformatminthreshold.IsUnknown() {
 		appfwlearningsettings.Fieldformatminthreshold = utils.IntPtr(int(data.Fieldformatminthreshold.ValueInt64()))
 	}
-	if !data.Fieldformatpercentthreshold.IsNull() {
+	if !data.Fieldformatpercentthreshold.IsNull() && !data.Fieldformatpercentthreshold.IsUnknown() {
 		appfwlearningsettings.Fieldformatpercentthreshold = utils.IntPtr(int(data.Fieldformatpercentthreshold.ValueInt64()))
 	}
-	if !data.Profilename.IsNull() {
+	if !data.Profilename.IsNull() && !data.Profilename.IsUnknown() {
 		appfwlearningsettings.Profilename = data.Profilename.ValueString()
 	}
-	if !data.Sqlinjectionautodeploygraceperiod.IsNull() {
+	if !data.Sqlinjectionautodeploygraceperiod.IsNull() && !data.Sqlinjectionautodeploygraceperiod.IsUnknown() {
 		appfwlearningsettings.Sqlinjectionautodeploygraceperiod = utils.IntPtr(int(data.Sqlinjectionautodeploygraceperiod.ValueInt64()))
 	}
-	if !data.Sqlinjectionminthreshold.IsNull() {
+	if !data.Sqlinjectionminthreshold.IsNull() && !data.Sqlinjectionminthreshold.IsUnknown() {
 		appfwlearningsettings.Sqlinjectionminthreshold = utils.IntPtr(int(data.Sqlinjectionminthreshold.ValueInt64()))
 	}
-	if !data.Sqlinjectionpercentthreshold.IsNull() {
+	if !data.Sqlinjectionpercentthreshold.IsNull() && !data.Sqlinjectionpercentthreshold.IsUnknown() {
 		appfwlearningsettings.Sqlinjectionpercentthreshold = utils.IntPtr(int(data.Sqlinjectionpercentthreshold.ValueInt64()))
 	}
-	if !data.Starturlautodeploygraceperiod.IsNull() {
+	if !data.Starturlautodeploygraceperiod.IsNull() && !data.Starturlautodeploygraceperiod.IsUnknown() {
 		appfwlearningsettings.Starturlautodeploygraceperiod = utils.IntPtr(int(data.Starturlautodeploygraceperiod.ValueInt64()))
 	}
-	if !data.Starturlminthreshold.IsNull() {
+	if !data.Starturlminthreshold.IsNull() && !data.Starturlminthreshold.IsUnknown() {
 		appfwlearningsettings.Starturlminthreshold = utils.IntPtr(int(data.Starturlminthreshold.ValueInt64()))
 	}
-	if !data.Starturlpercentthreshold.IsNull() {
+	if !data.Starturlpercentthreshold.IsNull() && !data.Starturlpercentthreshold.IsUnknown() {
 		appfwlearningsettings.Starturlpercentthreshold = utils.IntPtr(int(data.Starturlpercentthreshold.ValueInt64()))
 	}
-	if !data.Xmlattachmentminthreshold.IsNull() {
+	if !data.Xmlattachmentminthreshold.IsNull() && !data.Xmlattachmentminthreshold.IsUnknown() {
 		appfwlearningsettings.Xmlattachmentminthreshold = utils.IntPtr(int(data.Xmlattachmentminthreshold.ValueInt64()))
 	}
-	if !data.Xmlattachmentpercentthreshold.IsNull() {
+	if !data.Xmlattachmentpercentthreshold.IsNull() && !data.Xmlattachmentpercentthreshold.IsUnknown() {
 		appfwlearningsettings.Xmlattachmentpercentthreshold = utils.IntPtr(int(data.Xmlattachmentpercentthreshold.ValueInt64()))
 	}
-	if !data.Xmlwsiminthreshold.IsNull() {
+	if !data.Xmlwsiminthreshold.IsNull() && !data.Xmlwsiminthreshold.IsUnknown() {
 		appfwlearningsettings.Xmlwsiminthreshold = utils.IntPtr(int(data.Xmlwsiminthreshold.ValueInt64()))
 	}
-	if !data.Xmlwsipercentthreshold.IsNull() {
+	if !data.Xmlwsipercentthreshold.IsNull() && !data.Xmlwsipercentthreshold.IsUnknown() {
 		appfwlearningsettings.Xmlwsipercentthreshold = utils.IntPtr(int(data.Xmlwsipercentthreshold.ValueInt64()))
 	}
 
@@ -539,7 +543,7 @@ func appfwlearningsettingsSetAttrFromGet(ctx context.Context, data *Appfwlearnin
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value (profilename) as ID
 	data.Id = types.StringValue(data.Profilename.ValueString())
 
 	return data

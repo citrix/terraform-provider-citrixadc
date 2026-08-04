@@ -51,13 +51,13 @@ func aaacertparamsGetThePayloadFromtheConfig(ctx context.Context, data *Aaacertp
 
 	// Create API request body from the model
 	aaacertparams := aaa.Aaacertparams{}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		aaacertparams.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Groupnamefield.IsNull() {
+	if !data.Groupnamefield.IsNull() && !data.Groupnamefield.IsUnknown() {
 		aaacertparams.Groupnamefield = data.Groupnamefield.ValueString()
 	}
-	if !data.Usernamefield.IsNull() {
+	if !data.Usernamefield.IsNull() && !data.Usernamefield.IsUnknown() {
 		aaacertparams.Usernamefield = data.Usernamefield.ValueString()
 	}
 

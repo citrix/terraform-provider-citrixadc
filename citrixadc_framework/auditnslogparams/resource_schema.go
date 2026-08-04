@@ -138,52 +138,57 @@ func auditnslogparamsGetThePayloadFromtheConfig(ctx context.Context, data *Audit
 
 	// Create API request body from the model
 	auditnslogparams := audit.Auditnslogparams{}
-	if !data.Acl.IsNull() {
+	if !data.Acl.IsNull() && !data.Acl.IsUnknown() {
 		auditnslogparams.Acl = data.Acl.ValueString()
 	}
-	if !data.Alg.IsNull() {
+	if !data.Alg.IsNull() && !data.Alg.IsUnknown() {
 		auditnslogparams.Alg = data.Alg.ValueString()
 	}
-	if !data.Appflowexport.IsNull() {
+	if !data.Appflowexport.IsNull() && !data.Appflowexport.IsUnknown() {
 		auditnslogparams.Appflowexport = data.Appflowexport.ValueString()
 	}
-	if !data.Contentinspectionlog.IsNull() {
+	if !data.Contentinspectionlog.IsNull() && !data.Contentinspectionlog.IsUnknown() {
 		auditnslogparams.Contentinspectionlog = data.Contentinspectionlog.ValueString()
 	}
-	if !data.Dateformat.IsNull() {
+	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditnslogparams.Dateformat = data.Dateformat.ValueString()
 	}
-	if !data.Logfacility.IsNull() {
+	if !data.Logfacility.IsNull() && !data.Logfacility.IsUnknown() {
 		auditnslogparams.Logfacility = data.Logfacility.ValueString()
 	}
-	if !data.Lsn.IsNull() {
+	if !data.Loglevel.IsNull() && !data.Loglevel.IsUnknown() {
+		var loglevelList []string
+		data.Loglevel.ElementsAs(ctx, &loglevelList, false)
+		auditnslogparams.Loglevel = loglevelList
+	}
+	if !data.Lsn.IsNull() && !data.Lsn.IsUnknown() {
 		auditnslogparams.Lsn = data.Lsn.ValueString()
 	}
-	if !data.Protocolviolations.IsNull() {
+	if !data.Protocolviolations.IsNull() && !data.Protocolviolations.IsUnknown() {
 		auditnslogparams.Protocolviolations = data.Protocolviolations.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		auditnslogparams.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		auditnslogparams.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Sslinterception.IsNull() {
+	if !data.Sslinterception.IsNull() && !data.Sslinterception.IsUnknown() {
 		auditnslogparams.Sslinterception = data.Sslinterception.ValueString()
 	}
-	if !data.Subscriberlog.IsNull() {
+	if !data.Subscriberlog.IsNull() && !data.Subscriberlog.IsUnknown() {
 		auditnslogparams.Subscriberlog = data.Subscriberlog.ValueString()
 	}
-	if !data.Tcp.IsNull() {
+	if !data.Tcp.IsNull() && !data.Tcp.IsUnknown() {
 		auditnslogparams.Tcp = data.Tcp.ValueString()
 	}
-	if !data.Timezone.IsNull() {
+	if !data.Timezone.IsNull() && !data.Timezone.IsUnknown() {
 		auditnslogparams.Timezone = data.Timezone.ValueString()
 	}
-	if !data.Urlfiltering.IsNull() {
+	if !data.Urlfiltering.IsNull() && !data.Urlfiltering.IsUnknown() {
 		auditnslogparams.Urlfiltering = data.Urlfiltering.ValueString()
 	}
-	if !data.Userdefinedauditlog.IsNull() {
+	if !data.Userdefinedauditlog.IsNull() && !data.Userdefinedauditlog.IsUnknown() {
 		auditnslogparams.Userdefinedauditlog = data.Userdefinedauditlog.ValueString()
 	}
 
@@ -223,6 +228,17 @@ func auditnslogparamsSetAttrFromGet(ctx context.Context, data *AuditnslogparamsR
 		data.Logfacility = types.StringValue(val.(string))
 	} else {
 		data.Logfacility = types.StringNull()
+	}
+	if val, ok := getResponseData["loglevel"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Loglevel = listValue
+		} else {
+			data.Loglevel = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Loglevel = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["lsn"]; ok && val != nil {
 		data.Lsn = types.StringValue(val.(string))

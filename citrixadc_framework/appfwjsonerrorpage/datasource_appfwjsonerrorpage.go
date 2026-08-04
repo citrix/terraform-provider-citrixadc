@@ -55,7 +55,7 @@ func (d *AppfwjsonerrorpageDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	appfwjsonerrorpageSetAttrFromGet(ctx, &data, getResponseData)
+	appfwjsonerrorpageSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

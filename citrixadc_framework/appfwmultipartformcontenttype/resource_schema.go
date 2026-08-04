@@ -31,6 +31,7 @@ func (r *AppfwmultipartformcontenttypeResource) Schema(ctx context.Context, req 
 			},
 			"isregex": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -53,10 +54,10 @@ func appfwmultipartformcontenttypeGetThePayloadFromtheConfig(ctx context.Context
 
 	// Create API request body from the model
 	appfwmultipartformcontenttype := appfw.Appfwmultipartformcontenttype{}
-	if !data.Isregex.IsNull() {
+	if !data.Isregex.IsNull() && !data.Isregex.IsUnknown() {
 		appfwmultipartformcontenttype.Isregex = data.Isregex.ValueString()
 	}
-	if !data.Multipartformcontenttypevalue.IsNull() {
+	if !data.Multipartformcontenttypevalue.IsNull() && !data.Multipartformcontenttypevalue.IsUnknown() {
 		appfwmultipartformcontenttype.Multipartformcontenttypevalue = data.Multipartformcontenttypevalue.ValueString()
 	}
 

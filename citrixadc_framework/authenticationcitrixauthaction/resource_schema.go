@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -30,34 +31,37 @@ func (r *AuthenticationcitrixauthactionResource) Schema(ctx context.Context, req
 			},
 			"authentication": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Authentication needs to be disabled for searching user object without performing authentication.",
 			},
 			"authenticationtype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("CITRIXCONNECTOR"),
+				Computed:    true,
 				Description: "Type of the Citrix Authentication implementation. Default implementation uses Citrix Cloud Connector.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new Citrix Authentication action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the NetScaler CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 		},
 	}
 }
 
-func authenticationcitrixauthactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationcitrixauthactionResourceModel) authentication.Authenticationcitrixauthaction {
-	tflog.Debug(ctx, "In authenticationcitrixauthactionGetThePayloadFromtheConfig Function")
+func authenticationcitrixauthactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationcitrixauthactionResourceModel) authentication.Authenticationcitrixauthaction {
+	tflog.Debug(ctx, "In authenticationcitrixauthactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationcitrixauthaction := authentication.Authenticationcitrixauthaction{}
-	if !data.Authentication.IsNull() {
+	if !data.Authentication.IsNull() && !data.Authentication.IsUnknown() {
 		authenticationcitrixauthaction.Authentication = data.Authentication.ValueString()
 	}
-	if !data.Authenticationtype.IsNull() {
+	if !data.Authenticationtype.IsNull() && !data.Authenticationtype.IsUnknown() {
 		authenticationcitrixauthaction.Authenticationtype = data.Authenticationtype.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationcitrixauthaction.Name = data.Name.ValueString()
 	}
 
@@ -85,7 +89,7 @@ func authenticationcitrixauthactionSetAttrFromGet(ctx context.Context, data *Aut
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

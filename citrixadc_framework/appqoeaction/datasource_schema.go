@@ -49,7 +49,7 @@ func AppqoeactionDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name for the AppQoE action. Must begin with a letter, number, or the underscore symbol (_). Other characters allowed, after the first character, are the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), and colon (:) characters. This is a mandatory argument",
 			},
-			"numretries": schema.Int64Attribute{
+			"numretries": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Retry count",

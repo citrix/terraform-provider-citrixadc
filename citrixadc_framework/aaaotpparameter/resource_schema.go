@@ -36,6 +36,7 @@ func (r *AaaotpparameterResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"maxotpdevices": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(4),
 				Description: "Maximum number of otp devices user can register. Default value is 4. Max value is 255",
 			},
@@ -48,10 +49,10 @@ func aaaotpparameterGetThePayloadFromtheConfig(ctx context.Context, data *Aaaotp
 
 	// Create API request body from the model
 	aaaotpparameter := aaa.Aaaotpparameter{}
-	if !data.Encryption.IsNull() {
+	if !data.Encryption.IsNull() && !data.Encryption.IsUnknown() {
 		aaaotpparameter.Encryption = data.Encryption.ValueString()
 	}
-	if !data.Maxotpdevices.IsNull() {
+	if !data.Maxotpdevices.IsNull() && !data.Maxotpdevices.IsUnknown() {
 		aaaotpparameter.Maxotpdevices = utils.IntPtr(int(data.Maxotpdevices.ValueInt64()))
 	}
 

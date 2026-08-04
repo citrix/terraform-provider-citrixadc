@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AaapreauthenticationpolicyResource) Create(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Creating aaapreauthenticationpolicy resource")
-
-	// aaapreauthenticationpolicy := aaapreauthenticationpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	aaapreauthenticationpolicy := aaapreauthenticationpolicyGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationpolicy.Type(), &aaapreauthenticationpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaapreauthenticationpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("aaapreauthenticationpolicy-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Aaapreauthenticationpolicy.Type(), name_value, &aaapreauthenticationpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaapreauthenticationpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created aaapreauthenticationpolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readAaapreauthenticationpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaapreauthenticationpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaapreauthenticationpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AaapreauthenticationpolicyResource) Read(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Reading aaapreauthenticationpolicy resource")
 
-	r.readAaapreauthenticationpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaapreauthenticationpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AaapreauthenticationpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaapreauthenticationpolicyResourceModel
+	var data, state AaapreauthenticationpolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,45 @@ func (r *AaapreauthenticationpolicyResource) Update(ctx context.Context, req res
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating aaapreauthenticationpolicy resource")
 
-	// Create API request body from the model
-	// aaapreauthenticationpolicy := aaapreauthenticationpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Reqaction.Equal(state.Reqaction) {
+		tflog.Debug(ctx, "reqaction has changed for aaapreauthenticationpolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for aaapreauthenticationpolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationpolicy.Type(), &aaapreauthenticationpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaapreauthenticationpolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model, restricted to NITRO-updatable fields
+		aaapreauthenticationpolicy := aaapreauthenticationpolicyGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Make API call
+		// NITRO update is an unnamed PUT (name is carried in the payload)
+		err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationpolicy.Type(), &aaapreauthenticationpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaapreauthenticationpolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated aaapreauthenticationpolicy resource")
+		tflog.Trace(ctx, "Updated aaapreauthenticationpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for aaapreauthenticationpolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAaapreauthenticationpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaapreauthenticationpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaapreauthenticationpolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +176,36 @@ func (r *AaapreauthenticationpolicyResource) Delete(ctx context.Context, req res
 	}
 
 	tflog.Debug(ctx, "Deleting aaapreauthenticationpolicy resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Aaapreauthenticationpolicy.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete aaapreauthenticationpolicy, got error: %s", err))
+		return
+	}
 
-	// For aaapreauthenticationpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted aaapreauthenticationpolicy resource from state")
+	tflog.Trace(ctx, "Deleted aaapreauthenticationpolicy resource")
 }
 
 // Helper function to read aaapreauthenticationpolicy data from API
-func (r *AaapreauthenticationpolicyResource) readAaapreauthenticationpolicyFromApi(ctx context.Context, data *AaapreauthenticationpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Aaapreauthenticationpolicy.Type(), "")
+func (r *AaapreauthenticationpolicyResource) readAaapreauthenticationpolicyFromApi(ctx context.Context, data *AaapreauthenticationpolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Aaapreauthenticationpolicy.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaapreauthenticationpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	aaapreauthenticationpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

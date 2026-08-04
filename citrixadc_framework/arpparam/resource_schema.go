@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,12 +30,12 @@ func (r *ArpparamResource) Schema(ctx context.Context, req resource.SchemaReques
 			},
 			"spoofvalidation": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "enable/disable arp spoofing validation",
 			},
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1200),
+				Computed:    true,
 				Description: "Time-out value (aging time) for the dynamically learned ARP entries, in seconds. The new value applies only to ARP entries that are dynamically learned after the new value is set. Previously existing ARP entries expire after the previously configured aging time.",
 			},
 		},
@@ -49,10 +47,10 @@ func arpparamGetThePayloadFromtheConfig(ctx context.Context, data *ArpparamResou
 
 	// Create API request body from the model
 	arpparam := network.Arpparam{}
-	if !data.Spoofvalidation.IsNull() {
+	if !data.Spoofvalidation.IsNull() && !data.Spoofvalidation.IsUnknown() {
 		arpparam.Spoofvalidation = data.Spoofvalidation.ValueString()
 	}
-	if !data.Timeout.IsNull() {
+	if !data.Timeout.IsNull() && !data.Timeout.IsUnknown() {
 		arpparam.Timeout = utils.IntPtr(int(data.Timeout.ValueInt64()))
 	}
 
