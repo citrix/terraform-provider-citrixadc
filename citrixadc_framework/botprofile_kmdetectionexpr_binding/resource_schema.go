@@ -42,7 +42,9 @@ func (r *BotprofileKmdetectionexprBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about this binding.",
 			},
@@ -50,7 +52,9 @@ func (r *BotprofileKmdetectionexprBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enable or disable the keyboard-mouse based binding.",
 			},
@@ -79,7 +83,9 @@ func (r *BotprofileKmdetectionexprBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Message to be logged for this binding.",
 			},

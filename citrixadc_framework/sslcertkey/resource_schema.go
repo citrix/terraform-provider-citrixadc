@@ -199,6 +199,45 @@ func sslcertkeyGetThePayloadFromtheConfig(ctx context.Context, data *SslCertKeyR
 	return sslcertkey
 }
 
+// sslcertkeyGetTheUpdatePayloadFromthePlan builds the SET (update/PUT) payload.
+// Pattern 9 (add-vs-set payload drift): the NITRO sslcertkey "update" Request
+// Payload accepts only certkey, expirymonitor, notificationperiod and
+// deletecertkeyfilesonremoval. It therefore EXCLUDES the create-only attributes
+// that appear in the "add" payload but not the "update" payload: cert, key,
+// password, fipskey, hsmkey, inform, passplain and bundle. Those create-only
+// attributes are (re)applied through the separate change (?action=update)
+// operation in Update, not through this PUT. The certkey name key is kept because
+// it is required to address the resource in the PUT.
+func sslcertkeyGetTheUpdatePayloadFromthePlan(ctx context.Context, data *SslCertKeyResourceModel) ssl.Sslcertkey {
+	tflog.Debug(ctx, "In sslcertkeyGetTheUpdatePayloadFromthePlan Function")
+
+	sslcertkey := ssl.Sslcertkey{}
+
+	// certkey is the name key, required to address the resource in PUT.
+	if !data.Certkey.IsNull() {
+		sslcertkey.Certkey = data.Certkey.ValueString()
+	}
+	// cert is create-only (absent from the NITRO update payload) - excluded.
+	// key is create-only (absent from the NITRO update payload) - excluded.
+	// password is create-only (absent from the NITRO update payload) - excluded.
+	// fipskey is create-only (absent from the NITRO update payload) - excluded.
+	// hsmkey is create-only (absent from the NITRO update payload) - excluded.
+	// inform is create-only (absent from the NITRO update payload) - excluded.
+	if !data.Expirymonitor.IsNull() {
+		sslcertkey.Expirymonitor = data.Expirymonitor.ValueString()
+	}
+	if !data.NotificationPeriod.IsNull() {
+		sslcertkey.Notificationperiod = utils.IntPtr(int(data.NotificationPeriod.ValueInt64()))
+	}
+	// bundle is create-only (absent from the NITRO update payload) - excluded.
+	if !data.DeleteCertKeyFilesOnRemoval.IsNull() {
+		sslcertkey.Deletecertkeyfilesonremoval = data.DeleteCertKeyFilesOnRemoval.ValueString()
+	}
+	// passplain is create-only (absent from the NITRO update payload) - excluded.
+
+	return sslcertkey
+}
+
 func sslcertkeySetAttrFromGet(ctx context.Context, data *SslCertKeyResourceModel, getResponseData map[string]interface{}) *SslCertKeyResourceModel {
 	tflog.Debug(ctx, "In sslcertkeySetAttrFromGet Function")
 

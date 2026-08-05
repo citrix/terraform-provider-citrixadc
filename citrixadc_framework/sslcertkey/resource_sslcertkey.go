@@ -194,9 +194,6 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 	needsChange := false
 	needsClear := false
 
-	sslcertkeyUpdate := ssl.Sslcertkey{
-		Certkey: sslcertkeyName,
-	}
 	sslcertkeyChange := ssl.Sslcertkey{
 		Certkey: sslcertkeyName,
 	}
@@ -207,19 +204,14 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 	// Check for changes that require Update API
 	if !plan.Expirymonitor.Equal(state.Expirymonitor) {
 		tflog.Debug(ctx, "Expirymonitor has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
-		sslcertkeyUpdate.Expirymonitor = plan.Expirymonitor.ValueString()
 		needsUpdate = true
 	}
 	if !plan.NotificationPeriod.Equal(state.NotificationPeriod) {
 		tflog.Debug(ctx, "Notificationperiod has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
-		if !plan.NotificationPeriod.IsNull() {
-			sslcertkeyUpdate.Notificationperiod = utils.IntPtr(int(plan.NotificationPeriod.ValueInt64()))
-		}
 		needsUpdate = true
 	}
 	if !plan.DeleteCertKeyFilesOnRemoval.Equal(state.DeleteCertKeyFilesOnRemoval) {
 		tflog.Debug(ctx, "DeleteCertKeyFilesOnRemoval has changed for sslcertkey", map[string]interface{}{"certkey": sslcertkeyName})
-		sslcertkeyUpdate.Deletecertkeyfilesonremoval = plan.DeleteCertKeyFilesOnRemoval.ValueString()
 		needsUpdate = true
 	}
 
@@ -275,6 +267,12 @@ func (r *SslCertKeyResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Execute Update API if needed
 	if needsUpdate {
+		// Build the PUT/set payload from the plan using the update builder, which
+		// carries only the update-settable attributes (certkey, expirymonitor,
+		// notificationperiod, deletecertkeyfilesonremoval) and EXCLUDES the
+		// create-only attributes (cert, key, password, fipskey, hsmkey, inform,
+		// passplain, bundle) that the NITRO update payload does not accept.
+		sslcertkeyUpdate := sslcertkeyGetTheUpdatePayloadFromthePlan(ctx, &plan)
 		// Expirymonitor is always expected by NITRO API
 		if !plan.Expirymonitor.IsNull() {
 			sslcertkeyUpdate.Expirymonitor = plan.Expirymonitor.ValueString()

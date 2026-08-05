@@ -40,7 +40,9 @@ func (r *AppfwgrpcwebtextcontenttypeResource) Schema(ctx context.Context, req re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is gRPC-web-text content type a regular expression?",
 			},

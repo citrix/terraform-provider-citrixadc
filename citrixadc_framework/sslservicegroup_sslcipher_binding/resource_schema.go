@@ -38,7 +38,9 @@ func (r *SslservicegroupSslcipherBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The name of the cipher group/alias/name configured for the SSL service group.",
 			},
@@ -53,7 +55,9 @@ func (r *SslservicegroupSslcipherBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The description of the cipher.",
 			},

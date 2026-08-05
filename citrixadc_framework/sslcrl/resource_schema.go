@@ -80,7 +80,8 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Name of and, optionally, path to the CA certificate file.\n/nsconfig/ssl/ is the default path.",
 			},
@@ -88,7 +89,8 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Name of and, optionally, path to the CA key file. /nsconfig/ssl/ is the default path",
 			},
@@ -115,7 +117,8 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Name of and, optionally, path to the CRL file to be generated. The list of certificates that have been revoked is obtained from the index file. /nsconfig/ssl/ is the default path.",
 			},
@@ -123,7 +126,8 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Name of and, optionally, path to the file containing the serial numbers of all the certificates that are revoked. Revoked certificates are appended to the file. /nsconfig/ssl/ is the default path",
 			},
@@ -131,7 +135,8 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Input format of the CRL file. The two formats supported on the appliance are:\nPEM - Privacy Enhanced Mail.\nDER - Distinguished Encoding Rule.",
 			},
@@ -176,7 +181,8 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Name of and, optionally, path to the certificate to be revoked. /nsconfig/ssl/ is the default path.",
 			},
@@ -281,11 +287,24 @@ func sslcrlGetThePayloadFromthePlan(ctx context.Context, data *SslcrlResourceMod
 	return sslcrl
 }
 
-func sslcrlGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *SslcrlResourceModel) ssl.Sslcrl {
-	tflog.Debug(ctx, "In sslcrlGetTheUpdatablePayloadFromThePlan Function")
+// sslcrlGetTheUpdatePayloadFromthePlan builds the SET (update/PUT) payload.
+// Per nitro_rest/ssl/sslcrl.html the add (POST) payload carries crlpath and
+// inform, but the update (PUT) payload does NOT. Those two attributes are
+// therefore create-only and are EXCLUDED here. The crlname key is retained so
+// the PUT can address the resource.
+func sslcrlGetTheUpdatePayloadFromthePlan(ctx context.Context, data *SslcrlResourceModel) ssl.Sslcrl {
+	tflog.Debug(ctx, "In sslcrlGetTheUpdatePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// SET (update/PUT) payload. Per nitro_rest/ssl/sslcrl.html the update operation
+	// accepts ONLY: crlname, refresh, cacert, server, method, url, port, basedn,
+	// scope, interval, day, time, binddn, password, binary. Create-only fields are
+	// EXCLUDED to avoid errorcode 278 "Invalid argument": crlpath/inform (add op)
+	// and cacertfile/cakeyfile/indexfile/gencrl/revoke (create/generate op).
 	sslcrl := ssl.Sslcrl{}
+	// crlname is the name key, required to address the resource in PUT.
+	if !data.Crlname.IsNull() && !data.Crlname.IsUnknown() {
+		sslcrl.Crlname = data.Crlname.ValueString()
+	}
 	if !data.Basedn.IsNull() && !data.Basedn.IsUnknown() {
 		sslcrl.Basedn = data.Basedn.ValueString()
 	}
@@ -297,9 +316,6 @@ func sslcrlGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *SslcrlRe
 	}
 	if !data.Cacert.IsNull() && !data.Cacert.IsUnknown() {
 		sslcrl.Cacert = data.Cacert.ValueString()
-	}
-	if !data.Crlname.IsNull() && !data.Crlname.IsUnknown() {
-		sslcrl.Crlname = data.Crlname.ValueString()
 	}
 	if !data.Day.IsNull() && !data.Day.IsUnknown() {
 		sslcrl.Day = utils.IntPtr(int(data.Day.ValueInt64()))

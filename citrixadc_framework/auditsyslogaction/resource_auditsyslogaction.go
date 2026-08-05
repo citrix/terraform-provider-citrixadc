@@ -265,12 +265,11 @@ func (r *AuditsyslogactionResource) Update(ctx context.Context, req resource.Upd
 
 	if hasChange {
 		// Create API request body from the model
-		// Get payload from plan (regular attributes)
-		auditsyslogaction := auditsyslogactionGetThePayloadFromthePlan(ctx, &data)
+		// Get payload from plan (update-settable attributes; create-only fields such as
+		// transport are excluded by the update builder)
+		auditsyslogaction := auditsyslogactionGetTheUpdatePayloadFromthePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		auditsyslogactionGetThePayloadFromtheConfig(ctx, &config, &auditsyslogaction)
-		// Clear immutable fields: transport cannot be sent in update requests (ADC error 278)
-		auditsyslogaction.Transport = ""
 		// Make API call
 		// Named resource - use UpdateResource
 		name_value := data.Name.ValueString()

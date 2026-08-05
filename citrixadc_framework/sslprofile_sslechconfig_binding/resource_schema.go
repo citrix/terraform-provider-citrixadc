@@ -38,7 +38,9 @@ func (r *SslprofileSslechconfigBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Priority of the cipher binding",
 			},

@@ -203,7 +203,7 @@ func (r *DnskeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		dnskey := dnskeyGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		dnskey := dnskeyGetTheUpdatePayloadFromthePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		dnskeyGetThePayloadFromtheConfig(ctx, &config, &dnskey)
 		// Make API call

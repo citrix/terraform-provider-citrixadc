@@ -82,6 +82,32 @@ func cloudtunnelvserverGetThePayloadFromthePlan(ctx context.Context, data *Cloud
 	return cloudtunnelvserver
 }
 
+// cloudtunnelvserverGetTheUpdatePayloadFromthePlan builds the SET (update/PUT) payload.
+// Pattern 9 (add-vs-set payload drift): it EXCLUDES the create-only attr
+// (servicetype), which is present in the NITRO add Request Payload but ABSENT from
+// the update Request Payload. It carries only the genuinely updateable attributes
+// plus the name key needed to address the PUT.
+func cloudtunnelvserverGetTheUpdatePayloadFromthePlan(ctx context.Context, data *CloudtunnelvserverResourceModel) cloudtunnel.Cloudtunnelvserver {
+	tflog.Debug(ctx, "In cloudtunnelvserverGetTheUpdatePayloadFromthePlan Function")
+
+	// Create API request body from the model
+	cloudtunnelvserver := cloudtunnel.Cloudtunnelvserver{}
+	// name is the name key, required to address the resource in PUT.
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		cloudtunnelvserver.Name = data.Name.ValueString()
+	}
+	if !data.Listenpolicy.IsNull() && !data.Listenpolicy.IsUnknown() {
+		cloudtunnelvserver.Listenpolicy = data.Listenpolicy.ValueString()
+	}
+	if !data.Listenpriority.IsNull() && !data.Listenpriority.IsUnknown() {
+		cloudtunnelvserver.Listenpriority = utils.IntPtr(int(data.Listenpriority.ValueInt64()))
+	}
+	// servicetype is create-only (RequiresReplace; present in add but ABSENT from the
+	// update Request Payload) - excluded from the set payload.
+
+	return cloudtunnelvserver
+}
+
 func cloudtunnelvserverSetAttrFromGet(ctx context.Context, data *CloudtunnelvserverResourceModel, getResponseData map[string]interface{}) *CloudtunnelvserverResourceModel {
 	tflog.Debug(ctx, "In cloudtunnelvserverSetAttrFromGet Function")
 

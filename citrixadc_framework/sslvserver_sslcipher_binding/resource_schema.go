@@ -34,7 +34,9 @@ func (r *SslvserverSslcipherBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The name of the cipher group/alias/individual cipheri bindings.",
 			},
@@ -49,7 +51,9 @@ func (r *SslvserverSslcipherBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The cipher suite description.",
 			},

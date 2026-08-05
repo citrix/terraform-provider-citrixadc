@@ -138,7 +138,7 @@ func (r *CloudtunnelvserverResource) Update(ctx context.Context, req resource.Up
 
 	if hasChange {
 		// Create API request body from the model
-		cloudtunnelvserver := cloudtunnelvserverGetThePayloadFromthePlan(ctx, &data)
+		cloudtunnelvserver := cloudtunnelvserverGetTheUpdatePayloadFromthePlan(ctx, &data)
 		// Make API call
 		// Named resource - use UpdateResource
 		name_value := data.Name.ValueString()
