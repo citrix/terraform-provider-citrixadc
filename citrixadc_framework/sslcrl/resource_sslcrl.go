@@ -203,7 +203,7 @@ func (r *SslcrlResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		sslcrl := sslcrlGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		sslcrl := sslcrlGetTheUpdatePayloadFromthePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		sslcrlGetThePayloadFromtheConfig(ctx, &config, &sslcrl)
 		// Make API call

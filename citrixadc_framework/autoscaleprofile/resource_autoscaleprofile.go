@@ -185,11 +185,10 @@ func (r *AutoscaleprofileResource) Update(ctx context.Context, req resource.Upda
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		autoscaleprofile := autoscaleprofileGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		autoscaleprofile := autoscaleprofileGetTheUpdatePayloadFromthePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		autoscaleprofileGetThePayloadFromtheConfig(ctx, &config, &autoscaleprofile)
 
-		autoscaleprofile.Type = ""
 		// Make API call
 		// Named resource - use UpdateResource
 		name_value := data.Name.ValueString()

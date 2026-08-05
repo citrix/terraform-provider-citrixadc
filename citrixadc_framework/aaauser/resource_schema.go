@@ -38,7 +38,8 @@ func (r *AaauserResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					boolplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Show whether the user is logged in or not.",
 			},

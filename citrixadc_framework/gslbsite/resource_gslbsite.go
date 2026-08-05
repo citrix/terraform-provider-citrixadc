@@ -199,7 +199,7 @@ func (r *GslbsiteResource) Update(ctx context.Context, req resource.UpdateReques
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		gslbsite := gslbsiteGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		gslbsite := gslbsiteGetTheUpdatePayloadFromthePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		gslbsiteGetThePayloadFromtheConfig(ctx, &config, &gslbsite)
 		// Make API call

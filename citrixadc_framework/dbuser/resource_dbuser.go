@@ -149,16 +149,27 @@ func (r *DbuserResource) Update(ctx context.Context, req resource.UpdateRequest,
 		dbuser := dbuserGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		dbuserGetThePayloadFromtheConfig(ctx, &config, &dbuser)
-		// Make API call
-		// Named resource - use UpdateResource
-		username_value := data.Username.ValueString()
-		_, err := r.client.UpdateResource(service.Dbuser.Type(), username_value, &dbuser)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dbuser, got error: %s", err))
-			return
-		}
+		// NITRO "set dbuser" requires the password argument. password is write-only
+		// and never returned by GET, so it is only available when the user actually
+		// provides it (via password or password_wo). Skip the update when no password
+		// is present — e.g. a passwordless user, or an SDKv2->Framework upgrade whose
+		// password_wo_version default spuriously flags a change — to avoid errorcode
+		// 1095 "Required argument missing [password]". password is the only
+		// user-updatable dbuser attribute, so there is nothing else to push.
+		if dbuser.Password != "" {
+			// Make API call
+			// Named resource - use UpdateResource
+			username_value := data.Username.ValueString()
+			_, err := r.client.UpdateResource(service.Dbuser.Type(), username_value, &dbuser)
+			if err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dbuser, got error: %s", err))
+				return
+			}
 
-		tflog.Trace(ctx, "Updated dbuser resource")
+			tflog.Trace(ctx, "Updated dbuser resource")
+		} else {
+			tflog.Debug(ctx, "dbuser update skipped: no password provided (nothing updatable)")
+		}
 	} else {
 		tflog.Debug(ctx, "No changes detected for dbuser resource, skipping update")
 	}

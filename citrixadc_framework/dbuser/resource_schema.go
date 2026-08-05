@@ -38,7 +38,8 @@ func (r *DbuserResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					boolplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Display the names of all database users currently logged on to the Citrix ADC.",
 			},
