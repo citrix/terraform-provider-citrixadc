@@ -55,14 +55,15 @@ func (r *GslbparameterResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating gslbparameter resource")
 
-	// gslbparameter := gslbparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	gslbparameter := gslbparameterGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create gslbparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create gslbparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("gslbparameter-config")
@@ -95,8 +96,10 @@ func (r *GslbparameterResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *GslbparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data GslbparameterResourceModel
+	var data, state GslbparameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +107,20 @@ func (r *GslbparameterResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating gslbparameter resource")
 
-	// Create API request body from the model
-	// gslbparameter := gslbparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	gslbparameter := gslbparameterGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Gslbparameter.Type(), &gslbparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated gslbparameter resource")
 

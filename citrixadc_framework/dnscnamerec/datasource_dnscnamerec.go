@@ -43,44 +43,16 @@ func (d *DnscnamerecDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Named resource - look up by the plain aliasname value.
 	aliasname_Name := data.Aliasname.ValueString()
 
-	var dataArr []map[string]interface{}
-	var err error
-
-	findParams := service.FindParams{
-		ResourceType:             service.Dnscnamerec.Type(),
-		ResourceMissingErrorCode: 258,
-	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	getResponseData, err := d.client.FindResource(service.Dnscnamerec.Type(), aliasname_Name)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read dnscnamerec, got error: %s", err))
 		return
 	}
 
-	// Resource is missing
-	if len(dataArr) == 0 {
-		resp.Diagnostics.AddError("Client Error", "dnscnamerec returned empty array.")
-		return
-	}
-
-	// Iterate through results to find the one with the right aliasname
-	foundIndex := -1
-	for i, v := range dataArr {
-		if aliasnameVal, ok := v["aliasname"].(string); ok && aliasnameVal == aliasname_Name {
-			foundIndex = i
-			break
-		}
-	}
-
-	// Resource is missing
-	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("dnscnamerec with aliasname %s not found", aliasname_Name))
-		return
-	}
-
-	dnscnamerecSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	dnscnamerecSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

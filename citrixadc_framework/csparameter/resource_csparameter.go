@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *CsparameterResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating csparameter resource")
 
-	// csparameter := csparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	csparameter := csparameterGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Csparameter.Type(), &csparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csparameter, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("csparameter-config")
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Csparameter.Type(), &csparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create csparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created csparameter resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue("csparameter-config")
+
 	// Read the updated state back
-	r.readCsparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readCsparameterFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "csparameter not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *CsparameterResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading csparameter resource")
 
-	r.readCsparameterFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readCsparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *CsparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CsparameterResourceModel
+	var data, state CsparameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,41 @@ func (r *CsparameterResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating csparameter resource")
 
-	// Create API request body from the model
-	// csparameter := csparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Stateupdate.Equal(state.Stateupdate) {
+		tflog.Debug(ctx, "stateupdate has changed for csparameter")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Csparameter.Type(), &csparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csparameter, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		csparameter := csparameterGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Csparameter.Type(), &csparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update csparameter, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated csparameter resource")
+		tflog.Trace(ctx, "Updated csparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for csparameter resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readCsparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readCsparameterFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "csparameter not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +172,24 @@ func (r *CsparameterResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	tflog.Debug(ctx, "Deleting csparameter resource")
-
-	// For csparameter, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted csparameter resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed csparameter from Terraform state")
 }
 
 // Helper function to read csparameter data from API
-func (r *CsparameterResource) readCsparameterFromApi(ctx context.Context, data *CsparameterResourceModel, diags *diag.Diagnostics) {
+func (r *CsparameterResource) readCsparameterFromApi(ctx context.Context, data *CsparameterResourceModel, diags *diag.Diagnostics) bool {
+
+	// Singleton resource - simple find without ID
 	getResponseData, err := r.client.FindResource(service.Csparameter.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read csparameter, got error: %s", err))
-		return
+		return false
 	}
 
 	csparameterSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -2,6 +2,7 @@ package csvserver
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func CsvserverDataSourceSchema() schema.Schema {
@@ -418,6 +419,55 @@ func CsvserverDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of virtual server IP and port header, for use with the VServer IP Port Insertion parameter.",
+			},
+			"sslcertkey": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the SSL certificate-key pair bound to the (SSL) content switching virtual server.",
+			},
+			"snisslcertkeys": schema.SetAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Names of the SNI SSL certificate-key pairs bound to the (SSL) content switching virtual server.",
+			},
+			"sslprofile": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the SSL profile bound to the (SSL) content switching virtual server.",
+			},
+			"ciphers": schema.ListAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Cipher alias names bound to the (SSL) content switching virtual server.",
+			},
+			"ciphersuites": schema.ListAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Individual cipher suite names bound to the (SSL) content switching virtual server.",
+			},
+			"lbvserverbinding": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the default load balancing virtual server bound to the content switching virtual server.",
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"sslpolicybinding": schema.SetNestedBlock{
+				Description: "SSL policies bound to the (SSL) content switching virtual server.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"gotopriorityexpression": schema.StringAttribute{Optional: true, Computed: true},
+						"invoke":                 schema.BoolAttribute{Optional: true, Computed: true},
+						"labelname":              schema.StringAttribute{Optional: true, Computed: true},
+						"labeltype":              schema.StringAttribute{Optional: true, Computed: true},
+						"policyname":             schema.StringAttribute{Optional: true, Computed: true},
+						"priority":               schema.Int64Attribute{Optional: true, Computed: true},
+						"type":                   schema.StringAttribute{Optional: true, Computed: true},
+					},
+				},
 			},
 		},
 	}

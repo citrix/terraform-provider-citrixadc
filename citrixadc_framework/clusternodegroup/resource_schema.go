@@ -2,6 +2,7 @@ package clusternodegroup
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cluster"
 
@@ -34,7 +35,11 @@ func (r *ClusternodegroupResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the clusternodegroup resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 marked name as ForceNew.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.",
 			},
 			"priority": schema.Int64Attribute{
@@ -50,6 +55,7 @@ func (r *ClusternodegroupResource) Schema(ctx context.Context, req resource.Sche
 			"sticky": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				// SDK v2 marked sticky as ForceNew.
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -64,24 +70,48 @@ func (r *ClusternodegroupResource) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func clusternodegroupGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodegroupResourceModel) cluster.Clusternodegroup {
-	tflog.Debug(ctx, "In clusternodegroupGetThePayloadFromtheConfig Function")
+func clusternodegroupGetThePayloadFromthePlan(ctx context.Context, data *ClusternodegroupResourceModel) cluster.Clusternodegroup {
+	tflog.Debug(ctx, "In clusternodegroupGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	clusternodegroup := cluster.Clusternodegroup{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		clusternodegroup.Name = data.Name.ValueString()
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		clusternodegroup.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		clusternodegroup.State = data.State.ValueString()
 	}
-	if !data.Sticky.IsNull() {
+	if !data.Sticky.IsNull() && !data.Sticky.IsUnknown() {
 		clusternodegroup.Sticky = data.Sticky.ValueString()
 	}
-	if !data.Strict.IsNull() {
+	if !data.Strict.IsNull() && !data.Strict.IsUnknown() {
+		clusternodegroup.Strict = data.Strict.ValueString()
+	}
+
+	return clusternodegroup
+}
+
+func clusternodegroupGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *ClusternodegroupResourceModel) cluster.Clusternodegroup {
+	tflog.Debug(ctx, "In clusternodegroupGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// The NITRO update is an unnamed PUT to /config/clusternodegroup, so "name" must be
+	// carried in the body to identify the target nodegroup. "sticky" is ForceNew and is
+	// not part of the NITRO update payload, so it is excluded here.
+	clusternodegroup := cluster.Clusternodegroup{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		clusternodegroup.Name = data.Name.ValueString()
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		clusternodegroup.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
+	}
+	if !data.State.IsNull() && !data.State.IsUnknown() {
+		clusternodegroup.State = data.State.ValueString()
+	}
+	if !data.Strict.IsNull() && !data.Strict.IsUnknown() {
 		clusternodegroup.Strict = data.Strict.ValueString()
 	}
 
@@ -101,7 +131,10 @@ func clusternodegroupSetAttrFromGet(ctx context.Context, data *ClusternodegroupR
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
+		// NITRO may omit priority (e.g. its default) from GET. Only null it out when the
+		// value was never configured; preserve a configured value to avoid
+		// "inconsistent result after apply".
 		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
@@ -121,8 +154,8 @@ func clusternodegroupSetAttrFromGet(ctx context.Context, data *ClusternodegroupR
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

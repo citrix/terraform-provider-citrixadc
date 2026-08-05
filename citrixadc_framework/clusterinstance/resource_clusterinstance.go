@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *ClusterinstanceResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating clusterinstance resource")
 
-	// clusterinstance := clusterinstanceGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	clusterinstance := clusterinstanceGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Clusterinstance.Type(), &clusterinstance)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusterinstance, got error: %s", err))
-	//	 return
-	// }
+	// Named resource keyed on clid - use AddResource (POST)
+	clidValue := fmt.Sprintf("%d", data.Clid.ValueInt64())
+	_, err := r.client.AddResource(service.Clusterinstance.Type(), clidValue, &clusterinstance)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusterinstance, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("clusterinstance-config")
+	// The ID is the clid value (backward-compatible with SDK v2 d.SetId(strconv.Itoa(clid)))
+	data.Id = types.StringValue(clidValue)
 
 	tflog.Trace(ctx, "Created clusterinstance resource")
 
 	// Read the updated state back
-	r.readClusterinstanceFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readClusterinstanceFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "clusterinstance not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *ClusterinstanceResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading clusterinstance resource")
 
-	r.readClusterinstanceFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readClusterinstanceFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ClusterinstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ClusterinstanceResourceModel
+	var data, state ClusterinstanceResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,89 @@ func (r *ClusterinstanceResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating clusterinstance resource")
 
-	// Create API request body from the model
-	// clusterinstance := clusterinstanceGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes (clid is RequiresReplace)
+	hasChange := false
+	if !data.Backplanebasedview.Equal(state.Backplanebasedview) {
+		tflog.Debug(ctx, "backplanebasedview has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Clusterproxyarp.Equal(state.Clusterproxyarp) {
+		tflog.Debug(ctx, "clusterproxyarp has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Deadinterval.Equal(state.Deadinterval) {
+		tflog.Debug(ctx, "deadinterval has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Dfdretainl2params.Equal(state.Dfdretainl2params) {
+		tflog.Debug(ctx, "dfdretainl2params has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Hellointerval.Equal(state.Hellointerval) {
+		tflog.Debug(ctx, "hellointerval has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Inc.Equal(state.Inc) {
+		tflog.Debug(ctx, "inc has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Nodegroup.Equal(state.Nodegroup) {
+		tflog.Debug(ctx, "nodegroup has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Preemption.Equal(state.Preemption) {
+		tflog.Debug(ctx, "preemption has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Processlocal.Equal(state.Processlocal) {
+		tflog.Debug(ctx, "processlocal has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Quorumtype.Equal(state.Quorumtype) {
+		tflog.Debug(ctx, "quorumtype has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Retainconnectionsoncluster.Equal(state.Retainconnectionsoncluster) {
+		tflog.Debug(ctx, "retainconnectionsoncluster has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Secureheartbeats.Equal(state.Secureheartbeats) {
+		tflog.Debug(ctx, "secureheartbeats has changed for clusterinstance")
+		hasChange = true
+	}
+	if !data.Syncstatusstrictmode.Equal(state.Syncstatusstrictmode) {
+		tflog.Debug(ctx, "syncstatusstrictmode has changed for clusterinstance")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Clusterinstance.Type(), &clusterinstance)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update clusterinstance, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		clusterinstance := clusterinstanceGetThePayloadFromthePlan(ctx, &data)
 
-	tflog.Trace(ctx, "Updated clusterinstance resource")
+		// Update is PUT /clusterinstance (clid in body) - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Clusterinstance.Type(), &clusterinstance)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update clusterinstance, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated clusterinstance resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for clusterinstance resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readClusterinstanceFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readClusterinstanceFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "clusterinstance not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +221,31 @@ func (r *ClusterinstanceResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting clusterinstance resource")
 
-	// For clusterinstance, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted clusterinstance resource from state")
+	// Named resource - delete via DELETE /clusterinstance/{clid}
+	err := r.client.DeleteResource(service.Clusterinstance.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete clusterinstance, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted clusterinstance resource")
 }
 
 // Helper function to read clusterinstance data from API
-func (r *ClusterinstanceResource) readClusterinstanceFromApi(ctx context.Context, data *ClusterinstanceResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Clusterinstance.Type(), "")
+func (r *ClusterinstanceResource) readClusterinstanceFromApi(ctx context.Context, data *ClusterinstanceResourceModel, diags *diag.Diagnostics) bool {
+	// Named resource keyed on clid - the ID is the plain clid value
+	clidName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Clusterinstance.Type(), clidName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read clusterinstance, got error: %s", err))
-		return
+		return false
 	}
 
 	clusterinstanceSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

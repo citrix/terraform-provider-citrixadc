@@ -2,6 +2,7 @@ package authenticationsamlidppolicy
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 
@@ -48,15 +49,19 @@ func (r *AuthenticationsamlidppolicyResource) Schema(ctx context.Context, req re
 				Description: "Name of messagelog action to use when a request matches this policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 marked name ForceNew - the primary key cannot be changed in
+				// place, so a change forces recreation.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the SAML Identity Provider (IdP) authentication policy. This is used for configuring Citrix ADC as SAML Identity Provider. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the policy is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my policy\" or 'my policy').",
 			},
 			"newname": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// newname is the rename trigger (NITRO ?action=rename). Changing it
+				// must NOT force replacement - it drives an in-place rename via Update.
+				// Not Computed: it is a pure user input, never echoed back by GET.
 				Description: "New name for the SAML IdentityProvider policy.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my samlidppolicy policy\" or 'my samlidppolicy policy').",
 			},
 			"rule": schema.StringAttribute{
@@ -72,30 +77,54 @@ func (r *AuthenticationsamlidppolicyResource) Schema(ctx context.Context, req re
 	}
 }
 
-func authenticationsamlidppolicyGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationsamlidppolicyResourceModel) authentication.Authenticationsamlidppolicy {
-	tflog.Debug(ctx, "In authenticationsamlidppolicyGetThePayloadFromtheConfig Function")
+func authenticationsamlidppolicyGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationsamlidppolicyResourceModel) authentication.Authenticationsamlidppolicy {
+	tflog.Debug(ctx, "In authenticationsamlidppolicyGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model (used for the add/create POST).
 	authenticationsamlidppolicy := authentication.Authenticationsamlidppolicy{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		authenticationsamlidppolicy.Action = data.Action.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		authenticationsamlidppolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Logaction.IsNull() {
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
 		authenticationsamlidppolicy.Logaction = data.Logaction.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationsamlidppolicy.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		authenticationsamlidppolicy.Newname = data.Newname.ValueString()
-	}
-	if !data.Rule.IsNull() {
+	// newname is a rename-only argument (NITRO ?action=rename). It is NOT part of
+	// the add payload, so it is deliberately excluded from the create POST body.
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		authenticationsamlidppolicy.Rule = data.Rule.ValueString()
 	}
-	if !data.Undefaction.IsNull() {
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
+		authenticationsamlidppolicy.Undefaction = data.Undefaction.ValueString()
+	}
+
+	return authenticationsamlidppolicy
+}
+
+func authenticationsamlidppolicyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationsamlidppolicyResourceModel) authentication.Authenticationsamlidppolicy {
+	tflog.Debug(ctx, "In authenticationsamlidppolicyGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// The Name (primary key) is set by the caller to the current live name.
+	authenticationsamlidppolicy := authentication.Authenticationsamlidppolicy{}
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
+		authenticationsamlidppolicy.Action = data.Action.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		authenticationsamlidppolicy.Comment = data.Comment.ValueString()
+	}
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
+		authenticationsamlidppolicy.Logaction = data.Logaction.ValueString()
+	}
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
+		authenticationsamlidppolicy.Rule = data.Rule.ValueString()
+	}
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		authenticationsamlidppolicy.Undefaction = data.Undefaction.ValueString()
 	}
 
@@ -105,7 +134,55 @@ func authenticationsamlidppolicyGetThePayloadFromtheConfig(ctx context.Context, 
 func authenticationsamlidppolicySetAttrFromGet(ctx context.Context, data *AuthenticationsamlidppolicyResourceModel, getResponseData map[string]interface{}) *AuthenticationsamlidppolicyResourceModel {
 	tflog.Debug(ctx, "In authenticationsamlidppolicySetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. action and rule are Required and always echoed
+	// by GET; only overwrite when present so a transient omission never nulls a
+	// Required, in-config value.
+	if val, ok := getResponseData["action"]; ok && val != nil {
+		data.Action = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["rule"]; ok && val != nil {
+		data.Rule = types.StringValue(val.(string))
+	}
+	// comment, logaction and undefaction are Optional+Computed. NITRO omits them from
+	// the GET response when empty, so set Null when absent to resolve the
+	// known-after-apply (unknown) plan value.
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["logaction"]; ok && val != nil {
+		data.Logaction = types.StringValue(val.(string))
+	} else {
+		data.Logaction = types.StringNull()
+	}
+	if val, ok := getResponseData["undefaction"]; ok && val != nil {
+		data.Undefaction = types.StringValue(val.(string))
+	} else {
+		data.Undefaction = types.StringNull()
+	}
+	// name is the user-facing key. Once a rename has happened (via newname), the live
+	// object name (tracked by data.Id) diverges from the configured name, and GET
+	// returns the live (new) name. Overwriting name from GET would clobber the user's
+	// configured value and trigger a spurious RequiresReplace diff. So only adopt the
+	// GET value when we don't already have one (e.g. on import, where state carries
+	// only the ID); otherwise preserve.
+	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve the plan/state value.
+
+	return data
+}
+
+// authenticationsamlidppolicySetAttrFromGetForDatasource faithfully copies every
+// field from the GET response. The datasource has no prior plan/state to preserve,
+// so it must populate the model directly from the API response and set the ID itself.
+func authenticationsamlidppolicySetAttrFromGetForDatasource(ctx context.Context, data *AuthenticationsamlidppolicyResourceModel, getResponseData map[string]interface{}) *AuthenticationsamlidppolicyResourceModel {
+	tflog.Debug(ctx, "In authenticationsamlidppolicySetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
 	} else {
@@ -142,9 +219,8 @@ func authenticationsamlidppolicySetAttrFromGet(ctx context.Context, data *Authen
 		data.Undefaction = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

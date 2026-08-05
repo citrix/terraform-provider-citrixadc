@@ -55,7 +55,7 @@ func (d *AuthenticationpolicylabelDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	authenticationpolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	authenticationpolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

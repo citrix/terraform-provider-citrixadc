@@ -55,7 +55,7 @@ func (d *BotsignatureDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	botsignatureSetAttrFromGet(ctx, &data, getResponseData)
+	botsignatureSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -2,6 +2,7 @@ package inat
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -45,12 +45,12 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"connfailover": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Synchronize connection information with the secondary appliance in a high availability (HA) pair. That is, synchronize all connection-related information for the INAT session",
 			},
 			"ftp": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable the FTP protocol on the server for transferring files between the client and the server.",
 			},
 			"mode": schema.StringAttribute{
@@ -59,11 +59,15 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Description: "Stateless translation.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the Inbound NAT (INAT) entry. Leading character must be a number or letter. Other characters allowed, after the first character, are @ _ - . (period) : (colon) # and space ( ).",
 			},
 			"privateip": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "IP address of the server to which the packet is sent by the Citrix ADC. Can be an IPv4 or IPv6 address.",
 			},
 			"proxyip": schema.StringAttribute{
@@ -72,7 +76,8 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Description: "Unique IP address used as the source IP address in packets sent to the server. Must be a MIP or SNIP address.",
 			},
 			"publicip": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -80,7 +85,7 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"tcpproxy": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable TCP proxy, which enables the Citrix ADC to optimize the RNAT TCP traffic by using Layer 4 features.",
 			},
 			"td": schema.Int64Attribute{
@@ -93,12 +98,12 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"tftp": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "To enable/disable TFTP (Default DISABLED).",
 			},
 			"useproxyport": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Enable the Citrix ADC to proxy the source port of packets before sending the packets to the server.",
 			},
 			"usip": schema.StringAttribute{
@@ -115,48 +120,94 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
-func inatGetThePayloadFromtheConfig(ctx context.Context, data *InatResourceModel) network.Inat {
-	tflog.Debug(ctx, "In inatGetThePayloadFromtheConfig Function")
+// inatGetThePayloadFromthePlan builds the full add payload (create).
+func inatGetThePayloadFromthePlan(ctx context.Context, data *InatResourceModel) network.Inat {
+	tflog.Debug(ctx, "In inatGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	inat := network.Inat{}
-	if !data.Connfailover.IsNull() {
+	if !data.Connfailover.IsNull() && !data.Connfailover.IsUnknown() {
 		inat.Connfailover = data.Connfailover.ValueString()
 	}
-	if !data.Ftp.IsNull() {
+	if !data.Ftp.IsNull() && !data.Ftp.IsUnknown() {
 		inat.Ftp = data.Ftp.ValueString()
 	}
-	if !data.Mode.IsNull() {
+	if !data.Mode.IsNull() && !data.Mode.IsUnknown() {
 		inat.Mode = data.Mode.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		inat.Name = data.Name.ValueString()
 	}
-	if !data.Privateip.IsNull() {
+	if !data.Privateip.IsNull() && !data.Privateip.IsUnknown() {
 		inat.Privateip = data.Privateip.ValueString()
 	}
-	if !data.Proxyip.IsNull() {
+	if !data.Proxyip.IsNull() && !data.Proxyip.IsUnknown() {
 		inat.Proxyip = data.Proxyip.ValueString()
 	}
-	if !data.Publicip.IsNull() {
+	if !data.Publicip.IsNull() && !data.Publicip.IsUnknown() {
 		inat.Publicip = data.Publicip.ValueString()
 	}
-	if !data.Tcpproxy.IsNull() {
+	if !data.Tcpproxy.IsNull() && !data.Tcpproxy.IsUnknown() {
 		inat.Tcpproxy = data.Tcpproxy.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		inat.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Tftp.IsNull() {
+	if !data.Tftp.IsNull() && !data.Tftp.IsUnknown() {
 		inat.Tftp = data.Tftp.ValueString()
 	}
-	if !data.Useproxyport.IsNull() {
+	if !data.Useproxyport.IsNull() && !data.Useproxyport.IsUnknown() {
 		inat.Useproxyport = data.Useproxyport.ValueString()
 	}
-	if !data.Usip.IsNull() {
+	if !data.Usip.IsNull() && !data.Usip.IsUnknown() {
 		inat.Usip = data.Usip.ValueString()
 	}
-	if !data.Usnip.IsNull() {
+	if !data.Usnip.IsNull() && !data.Usnip.IsUnknown() {
+		inat.Usnip = data.Usnip.ValueString()
+	}
+
+	return inat
+}
+
+// inatGetTheUpdatablePayloadFromThePlan builds the update (PUT) payload restricted
+// to the NITRO-updatable fields. publicip and td are ForceNew/RequiresReplace and
+// are NOT accepted by the inat update operation, so they are deliberately excluded.
+func inatGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *InatResourceModel) network.Inat {
+	tflog.Debug(ctx, "In inatGetTheUpdatablePayloadFromThePlan Function")
+
+	inat := network.Inat{}
+	// name is the primary key and is required in the update payload.
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		inat.Name = data.Name.ValueString()
+	}
+	if !data.Connfailover.IsNull() && !data.Connfailover.IsUnknown() {
+		inat.Connfailover = data.Connfailover.ValueString()
+	}
+	if !data.Ftp.IsNull() && !data.Ftp.IsUnknown() {
+		inat.Ftp = data.Ftp.ValueString()
+	}
+	if !data.Mode.IsNull() && !data.Mode.IsUnknown() {
+		inat.Mode = data.Mode.ValueString()
+	}
+	if !data.Privateip.IsNull() && !data.Privateip.IsUnknown() {
+		inat.Privateip = data.Privateip.ValueString()
+	}
+	if !data.Proxyip.IsNull() && !data.Proxyip.IsUnknown() {
+		inat.Proxyip = data.Proxyip.ValueString()
+	}
+	if !data.Tcpproxy.IsNull() && !data.Tcpproxy.IsUnknown() {
+		inat.Tcpproxy = data.Tcpproxy.ValueString()
+	}
+	if !data.Tftp.IsNull() && !data.Tftp.IsUnknown() {
+		inat.Tftp = data.Tftp.ValueString()
+	}
+	if !data.Useproxyport.IsNull() && !data.Useproxyport.IsUnknown() {
+		inat.Useproxyport = data.Useproxyport.ValueString()
+	}
+	if !data.Usip.IsNull() && !data.Usip.IsUnknown() {
+		inat.Usip = data.Usip.ValueString()
+	}
+	if !data.Usnip.IsNull() && !data.Usnip.IsUnknown() {
 		inat.Usnip = data.Usnip.ValueString()
 	}
 
@@ -211,7 +262,10 @@ func inatSetAttrFromGet(ctx context.Context, data *InatResourceModel, getRespons
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
+		// td default (0) is omitted from GET; only null-out when unresolved (plan
+		// unknown). A configured td=0 held in state is preserved to avoid an
+		// "inconsistent result after apply" error.
 		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["tftp"]; ok && val != nil {
@@ -236,8 +290,8 @@ func inatSetAttrFromGet(ctx context.Context, data *InatResourceModel, getRespons
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID (matches SDK v2 d.SetId(name))
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

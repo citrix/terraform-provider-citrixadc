@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *ContentinspectioncalloutResource) Create(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Creating contentinspectioncallout resource")
 
-	// contentinspectioncallout := contentinspectioncalloutGetThePayloadFromtheConfig(ctx, &data)
+	contentinspectioncallout := contentinspectioncalloutGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Contentinspectioncallout.Type(), &contentinspectioncallout)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create contentinspectioncallout, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("contentinspectioncallout-config")
+	// Named resource - use AddResource
+	contentinspectioncalloutName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Contentinspectioncallout.Type(), contentinspectioncalloutName, &contentinspectioncallout)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create contentinspectioncallout, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created contentinspectioncallout resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", contentinspectioncalloutName))
+
 	// Read the updated state back
-	r.readContentinspectioncalloutFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readContentinspectioncalloutFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "contentinspectioncallout not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *ContentinspectioncalloutResource) Read(ctx context.Context, req resourc
 
 	tflog.Debug(ctx, "Reading contentinspectioncallout resource")
 
-	r.readContentinspectioncalloutFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readContentinspectioncalloutFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ContentinspectioncalloutResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ContentinspectioncalloutResourceModel
+	var data, state ContentinspectioncalloutResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,65 @@ func (r *ContentinspectioncalloutResource) Update(ctx context.Context, req resou
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating contentinspectioncallout resource")
 
-	// Create API request body from the model
-	// contentinspectioncallout := contentinspectioncalloutGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for contentinspectioncallout")
+		hasChange = true
+	}
+	if !data.Profilename.Equal(state.Profilename) {
+		tflog.Debug(ctx, "profilename has changed for contentinspectioncallout")
+		hasChange = true
+	}
+	if !data.Resultexpr.Equal(state.Resultexpr) {
+		tflog.Debug(ctx, "resultexpr has changed for contentinspectioncallout")
+		hasChange = true
+	}
+	if !data.Returntype.Equal(state.Returntype) {
+		tflog.Debug(ctx, "returntype has changed for contentinspectioncallout")
+		hasChange = true
+	}
+	if !data.Serverip.Equal(state.Serverip) {
+		tflog.Debug(ctx, "serverip has changed for contentinspectioncallout")
+		hasChange = true
+	}
+	if !data.Servername.Equal(state.Servername) {
+		tflog.Debug(ctx, "servername has changed for contentinspectioncallout")
+		hasChange = true
+	}
+	if !data.Serverport.Equal(state.Serverport) {
+		tflog.Debug(ctx, "serverport has changed for contentinspectioncallout")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Contentinspectioncallout.Type(), &contentinspectioncallout)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update contentinspectioncallout, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model (updatable fields only)
+		contentinspectioncallout := contentinspectioncalloutGetTheUpdatablePayloadFromThePlan(ctx, &data)
 
-	tflog.Trace(ctx, "Updated contentinspectioncallout resource")
+		// NITRO update verb is an unnamed PUT (name is carried in the payload).
+		err := r.client.UpdateUnnamedResource(service.Contentinspectioncallout.Type(), &contentinspectioncallout)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update contentinspectioncallout, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated contentinspectioncallout resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for contentinspectioncallout resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readContentinspectioncalloutFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readContentinspectioncalloutFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "contentinspectioncallout not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +196,33 @@ func (r *ContentinspectioncalloutResource) Delete(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Deleting contentinspectioncallout resource")
 
-	// For contentinspectioncallout, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted contentinspectioncallout resource from state")
+	// Named resource - delete using DeleteResource keyed on the ID (name)
+	contentinspectioncalloutName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Contentinspectioncallout.Type(), contentinspectioncalloutName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete contentinspectioncallout, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted contentinspectioncallout resource")
 }
 
 // Helper function to read contentinspectioncallout data from API
-func (r *ContentinspectioncalloutResource) readContentinspectioncalloutFromApi(ctx context.Context, data *ContentinspectioncalloutResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Contentinspectioncallout.Type(), "")
+func (r *ContentinspectioncalloutResource) readContentinspectioncalloutFromApi(ctx context.Context, data *ContentinspectioncalloutResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	contentinspectioncalloutName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Contentinspectioncallout.Type(), contentinspectioncalloutName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read contentinspectioncallout, got error: %s", err))
-		return
+		return false
 	}
 
 	contentinspectioncalloutSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/cr"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,29 @@ func (r *CrpolicyResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating crpolicy resource")
 
-	// crpolicy := crpolicyGetThePayloadFromtheConfig(ctx, &data)
+	crpolicy := crpolicyGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Crpolicy.Type(), &crpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("crpolicy-config")
+	// Named resource - use AddResource
+	policyname_value := data.Policyname.ValueString()
+	_, err := r.client.AddResource(service.Crpolicy.Type(), policyname_value, &crpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create crpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created crpolicy resource")
 
+	// Set ID for the resource before reading state (single unique attr -> plain value)
+	data.Id = types.StringValue(data.Policyname.ValueString())
+
 	// Read the updated state back
-	r.readCrpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readCrpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "crpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *CrpolicyResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading crpolicy resource")
 
-	r.readCrpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readCrpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *CrpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CrpolicyResourceModel
+	var data, state CrpolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,81 @@ func (r *CrpolicyResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating crpolicy resource")
 
-	// Create API request body from the model
-	// crpolicy := crpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Rename support (NITRO ?action=rename). policyname is RequiresReplace so a key
+	// change recreates the resource and never reaches Update; the only change that
+	// drives an in-place rename here is `newname`. Mirrors the SDK v2 convention
+	// (see citrixadc/resource_citrixadc_appfwpolicy.go).
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		// The rename SOURCE is the CURRENT LIVE name, tracked by the ID - NOT
+		// state.Policyname (which stays pinned to the originally configured value and
+		// would point at the wrong name on a second rename).
+		oldName := state.Id.ValueString()
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("Renaming crpolicy from %q to %q", oldName, newName))
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Crpolicy.Type(), &crpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crpolicy, got error: %s", err))
-	//	 return
-	// }
+		renamePayload := cr.Crpolicy{
+			Policyname: oldName,
+			Newname:    newName,
+		}
+		if err := r.client.ActOnResource(service.Crpolicy.Type(), &renamePayload, "rename"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename crpolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated crpolicy resource")
+		// The live object is now named newName. Point the ID at it so the update and
+		// read below (and all future reads) address the renamed resource.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Read the updated state back
-	r.readCrpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	// Regular update for the mutable, non-key attributes (PUT /crpolicy).
+	hasChange := false
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for crpolicy")
+		hasChange = true
+	}
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for crpolicy")
+		hasChange = true
+	}
+	if !data.Logaction.Equal(state.Logaction) {
+		tflog.Debug(ctx, "logaction has changed for crpolicy")
+		hasChange = true
+	}
+
+	if hasChange {
+		crpolicy := crpolicyGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Key on the CURRENT LIVE name (data.Id) so an update after a rename targets
+		// the renamed object rather than the old configured policyname.
+		liveName := data.Id.ValueString()
+		crpolicy.Policyname = liveName
+		_, err := r.client.UpdateResource(service.Crpolicy.Type(), liveName, &crpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update crpolicy, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated crpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for crpolicy resource, skipping update")
+	}
+
+	// Read the current state back. The resource may now be physically named newName,
+	// so preserve the user-facing key + newname across the read-back to avoid an
+	// inconsistent-result / perpetual diff.
+	planPolicyname := data.Policyname
+	planNewname := data.Newname
+	if !r.readCrpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "crpolicy not found immediately after update")
+		}
+		return
+	}
+	data.Policyname = planPolicyname
+	data.Newname = planNewname
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +213,37 @@ func (r *CrpolicyResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	tflog.Debug(ctx, "Deleting crpolicy resource")
+	// Named resource - delete using DeleteResource. The ID holds the CURRENT LIVE
+	// name (== policyname at create, == newname after a rename), so delete by
+	// data.Id, NOT data.Policyname (which stays at the originally configured value
+	// and would target a non-existent name after a rename).
+	liveName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Crpolicy.Type(), liveName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete crpolicy, got error: %s", err))
+		return
+	}
 
-	// For crpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted crpolicy resource from state")
+	tflog.Trace(ctx, "Deleted crpolicy resource")
 }
 
-// Helper function to read crpolicy data from API
-func (r *CrpolicyResource) readCrpolicyFromApi(ctx context.Context, data *CrpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Crpolicy.Type(), "")
+// Helper function to read crpolicy data from API. Returns false if the resource
+// no longer exists on the ADC.
+func (r *CrpolicyResource) readCrpolicyFromApi(ctx context.Context, data *CrpolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain (live) name
+	policyname_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Crpolicy.Type(), policyname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read crpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	crpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

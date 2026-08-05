@@ -2,6 +2,7 @@ package cspolicy
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func CspolicyDataSourceSchema() schema.Schema {
@@ -33,6 +34,27 @@ func CspolicyDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Expression, or name of a named expression, against which traffic is evaluated.\nThe following requirements apply only to the Citrix ADC CLI:\n*  If the expression includes one or more spaces, enclose the entire expression in double quotation marks.\n*  If the expression itself includes double quotation marks, escape the quotations by using the  character.\n*  Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.",
+			},
+			"csvserver": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The content switching vserver to which the cspolicy should be bound.",
+			},
+			"targetlbvserver": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The target load balancing vserver for the csvserver policy binding.",
+			},
+			"forcenew_id_set": schema.SetAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Auxiliary set attribute used to force recreation of the resource.",
+			},
+			"priority": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Priority for the csvserver policy binding.",
 			},
 		},
 	}

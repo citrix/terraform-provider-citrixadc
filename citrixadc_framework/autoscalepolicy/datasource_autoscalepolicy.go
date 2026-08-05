@@ -11,6 +11,9 @@ import (
 
 var _ datasource.DataSource = (*AutoscalepolicyDataSource)(nil)
 
+// AUtoscalepolicyDataSource keeps its (historically misspelled) name because the
+// provider registration in citrixadc_framework/provider/provider.go references it
+// verbatim; renaming would break the muxed provider build.
 func AUtoscalepolicyDataSource() datasource.DataSource {
 	return &AutoscalepolicyDataSource{}
 }
@@ -46,16 +49,13 @@ func (d *AutoscalepolicyDataSource) Read(ctx context.Context, req datasource.Rea
 	// Case 2: Find with single ID attribute
 	name_Name := data.Name.ValueString()
 
-	var getResponseData map[string]interface{}
-	var err error
-
-	getResponseData, err = d.client.FindResource(service.Autoscalepolicy.Type(), name_Name)
+	getResponseData, err := d.client.FindResource(service.Autoscalepolicy.Type(), name_Name)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read autoscalepolicy, got error: %s", err))
 		return
 	}
 
-	autoscalepolicySetAttrFromGet(ctx, &data, getResponseData)
+	autoscalepolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

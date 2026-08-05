@@ -2,14 +2,12 @@ package ip6tunnel
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -47,11 +45,14 @@ func (r *Ip6tunnelResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Name for the IPv6 Tunnel. Cannot be changed after the service group is created. Must begin with a number or letter, and can consist of letters, numbers, and the @ _ - . (period) : (colon) # and space ( ) characters.",
 			},
 			"ownergroup": schema.StringAttribute{
+				// SDK v2: Optional + Computed + ForceNew. NITRO defaults this to
+				// "DEFAULT_NG" server-side, so it is Computed rather than carrying a
+				// framework Default (a Default without Computed panics at schema build).
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("DEFAULT_NG"),
 				Description: "The owner node group in a Cluster for the tunnel.",
 			},
 			"remote": schema.StringAttribute{
@@ -70,16 +71,16 @@ func ip6tunnelGetThePayloadFromtheConfig(ctx context.Context, data *Ip6tunnelRes
 
 	// Create API request body from the model
 	ip6tunnel := network.Ip6tunnel{}
-	if !data.Local.IsNull() {
+	if !data.Local.IsNull() && !data.Local.IsUnknown() {
 		ip6tunnel.Local = data.Local.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		ip6tunnel.Name = data.Name.ValueString()
 	}
-	if !data.Ownergroup.IsNull() {
+	if !data.Ownergroup.IsNull() && !data.Ownergroup.IsUnknown() {
 		ip6tunnel.Ownergroup = data.Ownergroup.ValueString()
 	}
-	if !data.Remote.IsNull() {
+	if !data.Remote.IsNull() && !data.Remote.IsUnknown() {
 		ip6tunnel.Remote = data.Remote.ValueString()
 	}
 
@@ -102,9 +103,15 @@ func ip6tunnelSetAttrFromGet(ctx context.Context, data *Ip6tunnelResourceModel, 
 	}
 	if val, ok := getResponseData["ownergroup"]; ok && val != nil {
 		data.Ownergroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Ownergroup.IsUnknown() {
+		// Only resolve an unknown (unconfigured) value to null. Preserve any
+		// configured/prior value when the ADC omits ownergroup from the GET
+		// response, to avoid "inconsistent result after apply".
 		data.Ownergroup = types.StringNull()
 	}
+	// NITRO echoes the configured "remote" write property back as the read-only
+	// "remoteip" property, so map state's "remote" from "remoteip" first
+	// (matching the SDK v2 resource), falling back to "remote".
 	if val, ok := getResponseData["remoteip"]; ok && val != nil {
 		data.Remote = types.StringValue(val.(string))
 	} else if val, ok := getResponseData["remote"]; ok && val != nil {
@@ -113,9 +120,10 @@ func ip6tunnelSetAttrFromGet(ctx context.Context, data *Ip6tunnelResourceModel, 
 		data.Remote = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Name.ValueString(), data.Remote.ValueString()))
+	// Set ID for the resource.
+	// Named resource keyed on "name" - the ID is the plain name value
+	// (matches SDK v2 d.SetId(name)).
+	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data
 }

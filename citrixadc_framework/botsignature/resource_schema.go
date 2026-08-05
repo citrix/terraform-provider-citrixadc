@@ -40,7 +40,10 @@ func (r *BotsignatureResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Any comments to preserve information about the signature file object.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name to assign to the bot signature file object on the Citrix ADC.",
 			},
 			"overwrite": schema.BoolAttribute{
@@ -63,31 +66,70 @@ func (r *BotsignatureResource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func botsignatureGetThePayloadFromtheConfig(ctx context.Context, data *BotsignatureResourceModel) bot.Botsignature {
-	tflog.Debug(ctx, "In botsignatureGetThePayloadFromtheConfig Function")
+func botsignatureGetThePayloadFromthePlan(ctx context.Context, data *BotsignatureResourceModel) bot.Botsignature {
+	tflog.Debug(ctx, "In botsignatureGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	botsignature := bot.Botsignature{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		botsignature.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		botsignature.Name = data.Name.ValueString()
 	}
-	if !data.Overwrite.IsNull() {
+	if !data.Overwrite.IsNull() && !data.Overwrite.IsUnknown() {
 		botsignature.Overwrite = data.Overwrite.ValueBool()
 	}
-	if !data.Src.IsNull() {
+	if !data.Src.IsNull() && !data.Src.IsUnknown() {
 		botsignature.Src = data.Src.ValueString()
 	}
 
 	return botsignature
 }
 
+// botsignatureSetAttrFromGet updates the resource state from a NITRO GET response.
+// The GET response only exposes name/src/response/_nextgenapiresource; comment and
+// overwrite are never returned by NITRO. To mirror the SDK v2 resource (whose read
+// only refreshed "name") and to avoid "inconsistent result after apply", configured
+// values are preserved and only unknown (Computed, unconfigured) values are resolved.
 func botsignatureSetAttrFromGet(ctx context.Context, data *BotsignatureResourceModel, getResponseData map[string]interface{}) *BotsignatureResourceModel {
 	tflog.Debug(ctx, "In botsignatureSetAttrFromGet Function")
 
-	// Convert API response to model
+	// name is always returned by GET; it is Required so never nulled.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	// src is returned by GET, but preserve the configured value to avoid a spurious
+	// RequiresReplace diff caused by ADC-side normalization; only resolve if unknown.
+	if data.Src.IsUnknown() {
+		if val, ok := getResponseData["src"]; ok && val != nil {
+			data.Src = types.StringValue(val.(string))
+		} else {
+			data.Src = types.StringNull()
+		}
+	}
+	// comment is NOT returned by GET; preserve configured value, resolve unknown to null.
+	if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
+	}
+	// overwrite is NOT returned by GET; preserve configured value, resolve unknown to null.
+	if data.Overwrite.IsUnknown() {
+		data.Overwrite = types.BoolNull()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain name value as ID
+	data.Id = types.StringValue(data.Name.ValueString())
+
+	return data
+}
+
+// botsignatureSetAttrFromGetForDatasource populates the datasource model from a NITRO
+// GET response. Unlike the resource setter it copies every field straight from the
+// response (config never carries prior state to preserve) and always sets the ID.
+func botsignatureSetAttrFromGetForDatasource(ctx context.Context, data *BotsignatureResourceModel, getResponseData map[string]interface{}) *BotsignatureResourceModel {
+	tflog.Debug(ctx, "In botsignatureSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
@@ -109,8 +151,7 @@ func botsignatureSetAttrFromGet(ctx context.Context, data *BotsignatureResourceM
 		data.Src = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the datasource
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

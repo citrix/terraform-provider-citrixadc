@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *DnspolicyResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating dnspolicy resource")
 
-	// dnspolicy := dnspolicyGetThePayloadFromtheConfig(ctx, &data)
+	dnspolicy := dnspolicyGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnspolicy.Type(), &dnspolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnspolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnspolicy-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Dnspolicy.Type(), name_value, &dnspolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnspolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnspolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readDnspolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnspolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnspolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *DnspolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading dnspolicy resource")
 
-	r.readDnspolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnspolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnspolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnspolicyResourceModel
+	var data, state DnspolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,70 @@ func (r *DnspolicyResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnspolicy resource")
 
-	// Create API request body from the model
-	// dnspolicy := dnspolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Actionname.Equal(state.Actionname) {
+		tflog.Debug(ctx, "actionname has changed for dnspolicy")
+		hasChange = true
+	}
+	if !data.Cachebypass.Equal(state.Cachebypass) {
+		tflog.Debug(ctx, "cachebypass has changed for dnspolicy")
+		hasChange = true
+	}
+	if !data.Drop.Equal(state.Drop) {
+		tflog.Debug(ctx, "drop has changed for dnspolicy")
+		hasChange = true
+	}
+	if !data.Logaction.Equal(state.Logaction) {
+		tflog.Debug(ctx, "logaction has changed for dnspolicy")
+		hasChange = true
+	}
+	if !data.Preferredlocation.Equal(state.Preferredlocation) {
+		tflog.Debug(ctx, "preferredlocation has changed for dnspolicy")
+		hasChange = true
+	}
+	if !data.Preferredloclist.Equal(state.Preferredloclist) {
+		tflog.Debug(ctx, "preferredloclist has changed for dnspolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for dnspolicy")
+		hasChange = true
+	}
+	if !data.Viewname.Equal(state.Viewname) {
+		tflog.Debug(ctx, "viewname has changed for dnspolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnspolicy.Type(), &dnspolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnspolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		dnspolicy := dnspolicyGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Dnspolicy.Type(), name_value, &dnspolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnspolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated dnspolicy resource")
+		tflog.Trace(ctx, "Updated dnspolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for dnspolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readDnspolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnspolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnspolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +201,33 @@ func (r *DnspolicyResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	tflog.Debug(ctx, "Deleting dnspolicy resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Dnspolicy.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnspolicy, got error: %s", err))
+		return
+	}
 
-	// For dnspolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnspolicy resource from state")
+	tflog.Trace(ctx, "Deleted dnspolicy resource")
 }
 
 // Helper function to read dnspolicy data from API
-func (r *DnspolicyResource) readDnspolicyFromApi(ctx context.Context, data *DnspolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnspolicy.Type(), "")
+func (r *DnspolicyResource) readDnspolicyFromApi(ctx context.Context, data *DnspolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_value := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Dnspolicy.Type(), name_value)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnspolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	dnspolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

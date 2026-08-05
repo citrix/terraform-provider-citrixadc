@@ -55,14 +55,14 @@ func (r *FeoparameterResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating feoparameter resource")
 
-	// feoparameter := feoparameterGetThePayloadFromtheConfig(ctx, &data)
+	feoparameter := feoparameterGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Feoparameter.Type(), &feoparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feoparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton (unnamed) resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Feoparameter.Type(), &feoparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feoparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("feoparameter-config")
@@ -89,14 +89,19 @@ func (r *FeoparameterResource) Read(ctx context.Context, req resource.ReadReques
 	tflog.Debug(ctx, "Reading feoparameter resource")
 
 	r.readFeoparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *FeoparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data FeoparameterResourceModel
+	var data, state FeoparameterResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +109,43 @@ func (r *FeoparameterResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating feoparameter resource")
 
-	// Create API request body from the model
-	// feoparameter := feoparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Cssinlinethressize.Equal(state.Cssinlinethressize) {
+		tflog.Debug(ctx, "cssinlinethressize has changed for feoparameter")
+		hasChange = true
+	}
+	if !data.Imginlinethressize.Equal(state.Imginlinethressize) {
+		tflog.Debug(ctx, "imginlinethressize has changed for feoparameter")
+		hasChange = true
+	}
+	if !data.Jpegqualitypercent.Equal(state.Jpegqualitypercent) {
+		tflog.Debug(ctx, "jpegqualitypercent has changed for feoparameter")
+		hasChange = true
+	}
+	if !data.Jsinlinethressize.Equal(state.Jsinlinethressize) {
+		tflog.Debug(ctx, "jsinlinethressize has changed for feoparameter")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Feoparameter.Type(), &feoparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feoparameter, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		feoparameter := feoparameterGetThePayloadFromthePlan(ctx, &data)
 
-	tflog.Trace(ctx, "Updated feoparameter resource")
+		// Singleton (unnamed) resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Feoparameter.Type(), &feoparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feoparameter, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated feoparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for feoparameter resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readFeoparameterFromApi(ctx, &data, &resp.Diagnostics)
@@ -137,8 +166,8 @@ func (r *FeoparameterResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting feoparameter resource")
 
-	// For feoparameter, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// feoparameter is a global configuration singleton and does not support a
+	// NITRO DELETE operation (matches SDK v2). Just remove it from state.
 	tflog.Trace(ctx, "Deleted feoparameter resource from state")
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -57,22 +58,27 @@ func (r *DnsptrrecResource) Create(ctx context.Context, req resource.CreateReque
 
 	dnsptrrec := dnsptrrecGetThePayloadFromtheConfig(ctx, &data)
 
+	// Named resource keyed on reversedomain - use AddResource
 	dnsptrrecName := data.Reversedomain.ValueString()
 
-	// Make API call
 	_, err := r.client.AddResource(service.Dnsptrrec.Type(), dnsptrrecName, &dnsptrrec)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsptrrec, got error: %s", err))
 		return
 	}
 
-	// Set ID to reversedomain
+	// Set ID to reversedomain before reading state back
 	data.Id = types.StringValue(dnsptrrecName)
 
 	tflog.Trace(ctx, "Created dnsptrrec resource")
 
 	// Read the updated state back
-	r.readDnsptrrecFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsptrrecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsptrrec not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -90,15 +96,24 @@ func (r *DnsptrrecResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading dnsptrrec resource")
 
-	r.readDnsptrrecFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnsptrrecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsptrrecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsptrrecResourceModel
+	var data, state DnsptrrecResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -106,22 +121,23 @@ func (r *DnsptrrecResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnsptrrec resource")
 
-	// Create API request body from the model
-	// dnsptrrec := dnsptrrecGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsptrrec.Type(), &dnsptrrec)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsptrrec, got error: %s", err))
-	//	 return
-	// }
+	// NITRO exposes no set/update operation for dnsptrrec and every attribute is
+	// ForceNew (RequiresReplace), so any attribute change is handled by Terraform via
+	// destroy+recreate and this Update path is never reached with a real change.
+	// Simply refresh state from the ADC.
+	if !r.readDnsptrrecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsptrrec not found during update")
+		}
+		return
+	}
 
 	tflog.Trace(ctx, "Updated dnsptrrec resource")
-
-	// Read the updated state back
-	r.readDnsptrrecFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -139,6 +155,7 @@ func (r *DnsptrrecResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting dnsptrrec resource")
 
+	// Named resource - delete by reversedomain (the resource ID)
 	dnsptrrecName := data.Id.ValueString()
 	err := r.client.DeleteResource(service.Dnsptrrec.Type(), dnsptrrecName)
 	if err != nil {
@@ -149,15 +166,20 @@ func (r *DnsptrrecResource) Delete(ctx context.Context, req resource.DeleteReque
 	tflog.Trace(ctx, "Deleted dnsptrrec resource")
 }
 
-// Helper function to read dnsptrrec data from API
-func (r *DnsptrrecResource) readDnsptrrecFromApi(ctx context.Context, data *DnsptrrecResourceModel, diags *diag.Diagnostics) {
+// Helper function to read dnsptrrec data from API.
+// Returns false (without adding an error) when the resource no longer exists.
+func (r *DnsptrrecResource) readDnsptrrecFromApi(ctx context.Context, data *DnsptrrecResourceModel, diags *diag.Diagnostics) bool {
 	dnsptrrecName := data.Id.ValueString()
 	getResponseData, err := r.client.FindResource(service.Dnsptrrec.Type(), dnsptrrecName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsptrrec, got error: %s", err))
-		return
+		return false
 	}
 
 	dnsptrrecSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

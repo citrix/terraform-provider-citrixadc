@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *DnsnsrecResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating dnsnsrec resource")
 
-	// dnsnsrec := dnsnsrecGetThePayloadFromtheConfig(ctx, &data)
+	dnsnsrec := dnsnsrecGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsnsrec.Type(), &dnsnsrec)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsnsrec, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnsnsrec-config")
+	// Named resource - the add URL takes no resource name (matches SDK v2).
+	_, err := r.client.AddResource(service.Dnsnsrec.Type(), "", &dnsnsrec)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsnsrec, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnsnsrec resource")
 
-	// Read the updated state back
+	// Set ID (legacy SDK v2 composite "domain,nameserver") before reading state back.
+	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Domain.ValueString(), data.Nameserver.ValueString()))
+
+	// Read the created state back
 	r.readDnsnsrecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "dnsnsrec not found on the ADC immediately after create")
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,14 +97,25 @@ func (r *DnsnsrecResource) Read(ctx context.Context, req resource.ReadRequest, r
 	tflog.Debug(ctx, "Reading dnsnsrec resource")
 
 	r.readDnsnsrecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	// Record is gone on the ADC (readFromApi nulled the Id): drop it from state so a
+	// subsequent apply recreates it, matching the SDK v2 provider's behaviour.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsnsrecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsnsrecResourceModel
+	var data, state DnsnsrecResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +123,22 @@ func (r *DnsnsrecResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	tflog.Debug(ctx, "Updating dnsnsrec resource")
+	// Preserve ID from prior state.
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// dnsnsrec := dnsnsrecGetThePayloadFromtheConfig(ctx, &data)
+	// dnsnsrec has no updateable attributes: every attribute is ForceNew /
+	// RequiresReplace (matching the SDK v2 resource, which defined no update path).
+	// So Update never carries an in-place change; just re-read current state.
+	tflog.Debug(ctx, "Updating dnsnsrec resource (no updateable attributes)")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsnsrec.Type(), &dnsnsrec)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsnsrec, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated dnsnsrec resource")
-
-	// Read the updated state back
 	r.readDnsnsrecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if data.Id.IsNull() {
+		resp.Diagnostics.AddError("Client Error", "dnsnsrec not found on the ADC during update")
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +156,85 @@ func (r *DnsnsrecResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	tflog.Debug(ctx, "Deleting dnsnsrec resource")
 
-	// For dnsnsrec, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnsnsrec resource from state")
+	// Delete keys on domain (URL) with nameserver as a mandatory query arg
+	// (matches SDK v2 DeleteResourceWithArgsMap(type, domain, {nameserver})).
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"domain", "nameserver"}, nil)
+	if err != nil {
+		resp.Diagnostics.AddError("Parse Error", fmt.Sprintf("Unable to parse ID for delete: %s", err))
+		return
+	}
+
+	domain_value, ok := idMap["domain"]
+	if !ok {
+		resp.Diagnostics.AddError("Parse Error", "Attribute 'domain' not found in ID")
+		return
+	}
+
+	argsMap := make(map[string]string)
+	if val, ok := idMap["nameserver"]; ok && val != "" {
+		argsMap["nameserver"] = val
+	}
+
+	err = r.client.DeleteResourceWithArgsMap(service.Dnsnsrec.Type(), domain_value, argsMap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsnsrec, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted dnsnsrec resource")
 }
 
-// Helper function to read dnsnsrec data from API
+// Helper function to read dnsnsrec data from API. A domain can have multiple
+// name server records, so the record is located by filtering the array on both
+// domain and nameserver (matches the SDK v2 read). If it is not present the Id is
+// set to null so callers can drop it from state.
 func (r *DnsnsrecResource) readDnsnsrecFromApi(ctx context.Context, data *DnsnsrecResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnsnsrec.Type(), "")
+	idMap, _, err := utils.ParseIdString(data.Id.ValueString(), []string{"domain", "nameserver"}, nil)
+	if err != nil {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse ID: %s", err))
+		return
+	}
+
+	domain_Name, ok := idMap["domain"]
+	if !ok {
+		diags.AddError("Parse Error", "ID attribute 'domain' not found in ID string")
+		return
+	}
+	nameserver_Value := idMap["nameserver"]
+
+	findParams := service.FindParams{
+		ResourceType:             service.Dnsnsrec.Type(),
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsnsrec, got error: %s", err))
 		return
 	}
 
-	dnsnsrecSetAttrFromGet(ctx, data, getResponseData)
+	if len(dataArr) == 0 {
+		data.Id = types.StringNull()
+		return
+	}
 
+	foundIndex := -1
+	for i, v := range dataArr {
+		domainVal, ok := v["domain"].(string)
+		if !ok || domainVal != domain_Name {
+			continue
+		}
+		nsVal, ok := v["nameserver"].(string)
+		if !ok || nsVal != nameserver_Value {
+			continue
+		}
+		foundIndex = i
+		break
+	}
+
+	if foundIndex == -1 {
+		data.Id = types.StringNull()
+		return
+	}
+
+	dnsnsrecSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

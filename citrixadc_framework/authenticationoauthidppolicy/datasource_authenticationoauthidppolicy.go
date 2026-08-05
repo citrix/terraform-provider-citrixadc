@@ -55,7 +55,7 @@ func (d *AuthenticationoauthidppolicyDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	authenticationoauthidppolicySetAttrFromGet(ctx, &data, getResponseData)
+	authenticationoauthidppolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

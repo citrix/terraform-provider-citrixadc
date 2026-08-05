@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *AuthenticationstorefrontauthactionResource) Create(ctx context.Context,
 
 	tflog.Debug(ctx, "Creating authenticationstorefrontauthaction resource")
 
-	// authenticationstorefrontauthaction := authenticationstorefrontauthactionGetThePayloadFromtheConfig(ctx, &data)
+	authenticationstorefrontauthaction := authenticationstorefrontauthactionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationstorefrontauthaction.Type(), &authenticationstorefrontauthaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationstorefrontauthaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationstorefrontauthaction-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationstorefrontauthaction.Type(), name_value, &authenticationstorefrontauthaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationstorefrontauthaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationstorefrontauthaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(data.Name.ValueString())
+
 	// Read the updated state back
-	r.readAuthenticationstorefrontauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationstorefrontauthactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationstorefrontauthaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AuthenticationstorefrontauthactionResource) Read(ctx context.Context, r
 
 	tflog.Debug(ctx, "Reading authenticationstorefrontauthaction resource")
 
-	r.readAuthenticationstorefrontauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationstorefrontauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuthenticationstorefrontauthactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationstorefrontauthactionResourceModel
+	var data, state AuthenticationstorefrontauthactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,50 @@ func (r *AuthenticationstorefrontauthactionResource) Update(ctx context.Context,
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationstorefrontauthaction resource")
 
-	// Create API request body from the model
-	// authenticationstorefrontauthaction := authenticationstorefrontauthactionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Serverurl.Equal(state.Serverurl) {
+		tflog.Debug(ctx, "serverurl has changed for authenticationstorefrontauthaction")
+		hasChange = true
+	}
+	if !data.Domain.Equal(state.Domain) {
+		tflog.Debug(ctx, "domain has changed for authenticationstorefrontauthaction")
+		hasChange = true
+	}
+	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
+		tflog.Debug(ctx, "defaultauthenticationgroup has changed for authenticationstorefrontauthaction")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationstorefrontauthaction.Type(), &authenticationstorefrontauthaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationstorefrontauthaction, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		authenticationstorefrontauthaction := authenticationstorefrontauthactionGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Authenticationstorefrontauthaction.Type(), name_value, &authenticationstorefrontauthaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationstorefrontauthaction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationstorefrontauthaction resource")
+		tflog.Trace(ctx, "Updated authenticationstorefrontauthaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for authenticationstorefrontauthaction resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAuthenticationstorefrontauthactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationstorefrontauthactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationstorefrontauthaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +181,36 @@ func (r *AuthenticationstorefrontauthactionResource) Delete(ctx context.Context,
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationstorefrontauthaction resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Authenticationstorefrontauthaction.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationstorefrontauthaction, got error: %s", err))
+		return
+	}
 
-	// For authenticationstorefrontauthaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationstorefrontauthaction resource from state")
+	tflog.Trace(ctx, "Deleted authenticationstorefrontauthaction resource")
 }
 
 // Helper function to read authenticationstorefrontauthaction data from API
-func (r *AuthenticationstorefrontauthactionResource) readAuthenticationstorefrontauthactionFromApi(ctx context.Context, data *AuthenticationstorefrontauthactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationstorefrontauthaction.Type(), "")
+func (r *AuthenticationstorefrontauthactionResource) readAuthenticationstorefrontauthactionFromApi(ctx context.Context, data *AuthenticationstorefrontauthactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	authenticationstorefrontauthaction_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Authenticationstorefrontauthaction.Type(), authenticationstorefrontauthaction_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationstorefrontauthaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationstorefrontauthactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

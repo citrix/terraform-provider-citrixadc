@@ -6,10 +6,11 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -40,6 +41,9 @@ func (r *DnstxtrecResource) Schema(ctx context.Context, req resource.SchemaReque
 			"string": schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Description: "Information to store in the TXT resource record. Enclose the string in single or double quotation marks. A TXT resource record can contain up to six strings, each of which can contain up to 255 characters. If you want to add a string of more than 255 characters, evaluate whether splitting it into two or more smaller strings, subject to the six-string limit, works for you.",
 			},
 			"domain": schema.StringAttribute{
@@ -75,48 +79,106 @@ func (r *DnstxtrecResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"ttl": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
-				Default:     int64default.StaticInt64(3600),
 				Description: "Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.",
 			},
 		},
 	}
 }
 
-func dnstxtrecGetThePayloadFromtheConfig(ctx context.Context, data *DnstxtrecResourceModel) dns.Dnstxtrec {
-	tflog.Debug(ctx, "In dnstxtrecGetThePayloadFromtheConfig Function")
+func dnstxtrecGetThePayloadFromthePlan(ctx context.Context, data *DnstxtrecResourceModel, diags *diag.Diagnostics) dns.Dnstxtrec {
+	tflog.Debug(ctx, "In dnstxtrecGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// dnstxtrec has only an "add" NITRO verb (no update); the create payload mirrors
+	// the SDK v2 resource, which sent only domain, String and ttl. recordid is
+	// server-generated (mutually exclusive with String), and ecssubnet/nodeid are
+	// read/delete-time arguments, so none of them are part of the add payload.
 	dnstxtrec := dns.Dnstxtrec{}
-	if !data.Domain.IsNull() {
+	if !data.Domain.IsNull() && !data.Domain.IsUnknown() {
 		dnstxtrec.Domain = data.Domain.ValueString()
 	}
-	if !data.Ecssubnet.IsNull() {
-		dnstxtrec.Ecssubnet = data.Ecssubnet.ValueString()
+	if !data.String.IsNull() && !data.String.IsUnknown() {
+		stringList := make([]string, 0, len(data.String.Elements()))
+		diags.Append(data.String.ElementsAs(ctx, &stringList, false)...)
+		dnstxtrec.String = stringList
 	}
-	if !data.Nodeid.IsNull() {
-		dnstxtrec.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
-	}
-	if !data.Recordid.IsNull() {
-		dnstxtrec.Recordid = utils.IntPtr(int(data.Recordid.ValueInt64()))
-	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		dnstxtrec.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
 
 	return dnstxtrec
 }
 
+// dnstxtrecSetAttrFromGet populates the resource state from a NITRO GET response.
+// The configured "string" (RequiresReplace) is intentionally not overwritten from
+// the GET response so the resource preserves the user's configured value and avoids
+// "inconsistent result after apply" churn; the datasource setter handles it instead.
 func dnstxtrecSetAttrFromGet(ctx context.Context, data *DnstxtrecResourceModel, getResponseData map[string]interface{}) *DnstxtrecResourceModel {
 	tflog.Debug(ctx, "In dnstxtrecSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["domain"]; ok && val != nil {
+		data.Domain = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
+		data.Ecssubnet = types.StringValue(val.(string))
+	} else if data.Ecssubnet.IsUnknown() {
+		data.Ecssubnet = types.StringNull()
+	}
+	if val, ok := getResponseData["nodeid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Nodeid = types.Int64Value(intVal)
+		}
+	} else if data.Nodeid.IsUnknown() {
+		data.Nodeid = types.Int64Null()
+	}
+	if val, ok := getResponseData["recordid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Recordid = types.Int64Value(intVal)
+		}
+	} else if data.Recordid.IsUnknown() {
+		data.Recordid = types.Int64Null()
+	}
+	if val, ok := getResponseData["ttl"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Ttl = types.Int64Value(intVal)
+		}
+	} else if data.Ttl.IsUnknown() {
+		data.Ttl = types.Int64Null()
+	}
+
+	// Set ID for the resource - single unique attribute (domain), plain value.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Domain.ValueString()))
+
+	return data
+}
+
+// dnstxtrecSetAttrFromGetForDatasource populates all readable attributes (including
+// "string") from a NITRO GET response for the datasource.
+func dnstxtrecSetAttrFromGetForDatasource(ctx context.Context, data *DnstxtrecResourceModel, getResponseData map[string]interface{}) *DnstxtrecResourceModel {
+	tflog.Debug(ctx, "In dnstxtrecSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["domain"]; ok && val != nil {
 		data.Domain = types.StringValue(val.(string))
 	} else {
 		data.Domain = types.StringNull()
+	}
+	if val, ok := getResponseData["String"]; ok && val != nil {
+		if listVal, listOk := val.([]interface{}); listOk {
+			strs := make([]string, 0, len(listVal))
+			for _, item := range listVal {
+				strs = append(strs, fmt.Sprintf("%v", item))
+			}
+			listValue, d := types.ListValueFrom(ctx, types.StringType, strs)
+			if !d.HasError() {
+				data.String = listValue
+			}
+		}
+	} else {
+		data.String = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
@@ -145,9 +207,8 @@ func dnstxtrecSetAttrFromGet(ctx context.Context, data *DnstxtrecResourceModel, 
 		data.Ttl = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s", data.Domain.ValueString()))
+	// Set ID for the datasource - single unique attribute (domain), plain value.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Domain.ValueString()))
 
 	return data
 }

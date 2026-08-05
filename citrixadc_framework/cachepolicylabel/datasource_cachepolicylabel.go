@@ -55,7 +55,7 @@ func (d *CachepolicylabelDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	cachepolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	cachepolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

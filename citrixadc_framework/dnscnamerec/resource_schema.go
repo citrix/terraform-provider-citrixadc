@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -68,10 +67,10 @@ func (r *DnscnamerecResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"ttl": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
-				Default:     int64default.StaticInt64(3600),
 				Description: "Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.",
 			},
 		},
@@ -83,19 +82,19 @@ func dnscnamerecGetThePayloadFromtheConfig(ctx context.Context, data *Dnscnamere
 
 	// Create API request body from the model
 	dnscnamerec := dns.Dnscnamerec{}
-	if !data.Aliasname.IsNull() {
+	if !data.Aliasname.IsNull() && !data.Aliasname.IsUnknown() {
 		dnscnamerec.Aliasname = data.Aliasname.ValueString()
 	}
-	if !data.Canonicalname.IsNull() {
+	if !data.Canonicalname.IsNull() && !data.Canonicalname.IsUnknown() {
 		dnscnamerec.Canonicalname = data.Canonicalname.ValueString()
 	}
-	if !data.Ecssubnet.IsNull() {
+	if !data.Ecssubnet.IsNull() && !data.Ecssubnet.IsUnknown() {
 		dnscnamerec.Ecssubnet = data.Ecssubnet.ValueString()
 	}
-	if !data.Nodeid.IsNull() {
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
 		dnscnamerec.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		dnscnamerec.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
 
@@ -118,27 +117,31 @@ func dnscnamerecSetAttrFromGet(ctx context.Context, data *DnscnamerecResourceMod
 	}
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
-	} else {
+	} else if data.Ecssubnet.IsUnknown() {
+		// NITRO omits ecssubnet from GET; only null a value the plan left unknown so a
+		// configured value is preserved (prevents "inconsistent result after apply").
 		data.Ecssubnet = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
+		// NITRO omits nodeid (0) from GET; only null when plan left it unknown so a
+		// configured 0 is preserved (prevents "inconsistent result after apply").
 		data.Nodeid = types.Int64Null()
 	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
 		data.Ttl = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s", data.Aliasname.ValueString()))
+	// Single unique attribute (aliasname) - use plain value as ID (matches SDK v2 d.SetId).
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Aliasname.ValueString()))
 
 	return data
 }

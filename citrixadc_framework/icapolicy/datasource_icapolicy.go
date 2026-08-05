@@ -55,7 +55,7 @@ func (d *IcapolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	icapolicySetAttrFromGet(ctx, &data, getResponseData)
+	icapolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

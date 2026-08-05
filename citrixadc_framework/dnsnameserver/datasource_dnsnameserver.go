@@ -107,7 +107,7 @@ func (d *DnsnameserverDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	dnsnameserverSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	dnsnameserverSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

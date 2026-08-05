@@ -27,9 +27,9 @@ func (r *ExtendedmemoryparamResource) Schema(ctx context.Context, req resource.S
 				Computed:    true,
 				Description: "The ID of the extendedmemoryparam resource.",
 			},
+			// Backward-compat: SDK v2 declared memlimit as Required (Computed:false).
 			"memlimit": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Amount of NetScaler memory to reserve for the memory used by LSN and Subscriber Session Store feature, in multiples of 2MB.\n\nNote: If you later reduce the value of this parameter, the amount of active memory is not reduced. Changing the configured memory limit can only increase the amount of active memory.",
 			},
 		},
@@ -41,7 +41,7 @@ func extendedmemoryparamGetThePayloadFromtheConfig(ctx context.Context, data *Ex
 
 	// Create API request body from the model
 	extendedmemoryparam := basic.Extendedmemoryparam{}
-	if !data.Memlimit.IsNull() {
+	if !data.Memlimit.IsNull() && !data.Memlimit.IsUnknown() {
 		extendedmemoryparam.Memlimit = utils.IntPtr(int(data.Memlimit.ValueInt64()))
 	}
 
@@ -51,17 +51,16 @@ func extendedmemoryparamGetThePayloadFromtheConfig(ctx context.Context, data *Ex
 func extendedmemoryparamSetAttrFromGet(ctx context.Context, data *ExtendedmemoryparamResourceModel, getResponseData map[string]interface{}) *ExtendedmemoryparamResourceModel {
 	tflog.Debug(ctx, "In extendedmemoryparamSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// memlimit is always returned by NITRO GET for this singleton param.
 	if val, ok := getResponseData["memlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Memlimit = types.Int64Value(intVal)
 		}
-	} else {
-		data.Memlimit = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Singleton resource - static ID
 	data.Id = types.StringValue("extendedmemoryparam-config")
 
 	return data

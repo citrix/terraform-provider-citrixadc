@@ -55,14 +55,15 @@ func (r *CacheparameterResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating cacheparameter resource")
 
-	// cacheparameter := cacheparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	cacheparameter := cacheparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cacheparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource to configure the ADC
+	err := r.client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cacheparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("cacheparameter-config")
@@ -106,15 +107,15 @@ func (r *CacheparameterResource) Update(ctx context.Context, req resource.Update
 
 	tflog.Debug(ctx, "Updating cacheparameter resource")
 
-	// Create API request body from the model
-	// cacheparameter := cacheparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	cacheparameter := cacheparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cacheparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource to configure the ADC
+	err := r.client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cacheparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated cacheparameter resource")
 

@@ -55,7 +55,7 @@ func (d *ContentinspectionpolicylabelDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	contentinspectionpolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	contentinspectionpolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

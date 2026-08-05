@@ -43,32 +43,22 @@ func (d *DnszoneDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Look up the zone by its name (zonename)
 	zonename_Name := data.Zonename.ValueString()
 
-	var dataArr []map[string]interface{}
-	var err error
-
-	findParams := service.FindParams{
-		ResourceType:             service.Dnszone.Type(),
-		ResourceName:             zonename_Name,
-		ResourceMissingErrorCode: 258,
-	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	getResponseData, err := d.client.FindResource(service.Dnszone.Type(), zonename_Name)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read dnszone, got error: %s", err))
 		return
 	}
 
 	// Resource is missing
-	if len(dataArr) == 0 {
-		resp.Diagnostics.AddError("Client Error", "dnszone returned empty array.")
+	if getResponseData == nil {
+		resp.Diagnostics.AddError("Client Error", "dnszone returned empty response.")
 		return
 	}
 
-	// Since we're querying by zonename, we should get the specific zone
-	// The type parameter is for listing zones, not for individual zone lookups
-	dnszoneSetAttrFromGet(ctx, &data, dataArr[0])
+	dnszoneSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

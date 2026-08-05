@@ -3,6 +3,9 @@ package bridgetable
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -43,6 +46,11 @@ func (r *BridgetableResource) Configure(ctx context.Context, req resource.Config
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
+// bridgetableName builds the backward-compatible composite name/ID "mac,vxlan,vtep".
+func bridgetableName(data *BridgetableResourceModel) string {
+	return fmt.Sprintf("%s,%d,%s", data.Mac.ValueString(), data.Vxlan.ValueInt64(), data.Vtep.ValueString())
+}
+
 func (r *BridgetableResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data BridgetableResourceModel
 
@@ -55,22 +63,36 @@ func (r *BridgetableResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating bridgetable resource")
 
-	// bridgetable := bridgetableGetThePayloadFromtheConfig(ctx, &data)
+	// Add the bridge table entry (bridgeage excluded - applied separately below).
+	bridgetable := bridgetableGetThePayloadFromthePlan(ctx, &data)
+	name := bridgetableName(&data)
+	_, err := r.client.AddResource(service.Bridgetable.Type(), name, &bridgetable)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create bridgetable, got error: %s", err))
+		return
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgetable)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create bridgetable, got error: %s", err))
-	//	 return
-	// }
+	// bridgeage is a table-wide setting applied via an unnamed update.
+	if !data.Bridgeage.IsNull() && !data.Bridgeage.IsUnknown() {
+		bridgeagePayload := bridgetableGetTheBridgeagePayload(ctx, &data)
+		if err := r.client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgeagePayload); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to set bridgeage for bridgetable, got error: %s", err))
+			return
+		}
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("bridgetable-config")
+	// Backward-compatible composite ID.
+	data.Id = types.StringValue(name)
 
 	tflog.Trace(ctx, "Created bridgetable resource")
 
 	// Read the updated state back
-	r.readBridgetableFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBridgetableFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "bridgetable not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +110,24 @@ func (r *BridgetableResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading bridgetable resource")
 
-	r.readBridgetableFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readBridgetableFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *BridgetableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BridgetableResourceModel
+	var data, state BridgetableResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +135,31 @@ func (r *BridgetableResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating bridgetable resource")
 
-	// Create API request body from the model
-	// bridgetable := bridgetableGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgetable)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update bridgetable, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated bridgetable resource")
+	// Only bridgeage is updateable in place; all other attributes are RequiresReplace.
+	if !data.Bridgeage.Equal(state.Bridgeage) {
+		tflog.Debug(ctx, "bridgeage has changed for bridgetable, starting update")
+		bridgeagePayload := bridgetableGetTheBridgeagePayload(ctx, &data)
+		if err := r.client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgeagePayload); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update bridgetable, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated bridgetable resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for bridgetable resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readBridgetableFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBridgetableFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "bridgetable not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +177,73 @@ func (r *BridgetableResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Debug(ctx, "Deleting bridgetable resource")
 
-	// For bridgetable, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted bridgetable resource from state")
-}
+	// Delete requires the identifying args (mac, vxlan, vtep, devicevlan). mac and
+	// vtep are pre-escaped because a MAC address contains ':' which would otherwise
+	// break the "key:value" arg parsing (matches SDK v2).
+	argsMap := make(map[string]string)
+	argsMap["mac"] = url.QueryEscape(data.Mac.ValueString())
+	argsMap["vtep"] = url.QueryEscape(data.Vtep.ValueString())
+	argsMap["vxlan"] = strconv.Itoa(int(data.Vxlan.ValueInt64()))
+	argsMap["devicevlan"] = strconv.Itoa(int(data.Devicevlan.ValueInt64()))
 
-// Helper function to read bridgetable data from API
-func (r *BridgetableResource) readBridgetableFromApi(ctx context.Context, data *BridgetableResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Bridgetable.Type(), "")
-	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read bridgetable, got error: %s", err))
+	if err := r.client.DeleteResourceWithArgsMap(service.Bridgetable.Type(), "", argsMap); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete bridgetable, got error: %s", err))
 		return
 	}
 
-	bridgetableSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted bridgetable resource")
+}
 
+// readBridgetableFromApi finds the bridgetable entry matching the resource's
+// identity (mac, vxlan, vtep) and maps it onto the model. Returns false when the
+// entry no longer exists so the caller can remove it from state.
+func (r *BridgetableResource) readBridgetableFromApi(ctx context.Context, data *BridgetableResourceModel, diags *diag.Diagnostics) bool {
+	findParams := service.FindParams{
+		ResourceType: service.Bridgetable.Type(),
+	}
+	dataArray, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read bridgetable, got error: %s", err))
+		return false
+	}
+	if len(dataArray) == 0 {
+		return false
+	}
+
+	// Derive the identity keys from the ID ("mac,vxlan,vtep") so Read works after
+	// import (where only the ID is populated) as well as on refresh.
+	idSlice := strings.SplitN(data.Id.ValueString(), ",", 3)
+	if len(idSlice) != 3 {
+		diags.AddError("Parse Error", fmt.Sprintf("Unable to parse bridgetable ID %q, expected \"mac,vxlan,vtep\"", data.Id.ValueString()))
+		return false
+	}
+	mac := idSlice[0]
+	vxlan := idSlice[1]
+	vtep := idSlice[2]
+
+	foundIndex := -1
+	for i, entry := range dataArray {
+		match := true
+		if fmt.Sprintf("%v", entry["mac"]) != mac {
+			match = false
+		}
+		if fmt.Sprintf("%v", entry["vxlan"]) != vxlan {
+			match = false
+		}
+		if fmt.Sprintf("%v", entry["vtep"]) != vtep {
+			match = false
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+	if foundIndex == -1 {
+		tflog.Warn(ctx, fmt.Sprintf("bridgetable %s not found in array", data.Id.ValueString()))
+		return false
+	}
+
+	bridgetableSetAttrFromGet(ctx, data, dataArray[foundIndex])
+
+	return true
 }

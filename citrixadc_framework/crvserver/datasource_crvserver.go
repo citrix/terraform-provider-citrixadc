@@ -7,6 +7,7 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*CrvserverDataSource)(nil)
@@ -56,6 +57,9 @@ func (d *CrvserverDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	crvserverSetAttrFromGet(ctx, &data, getResponseData)
+
+	// Datasource has no Create; set the ID here (single unique attribute: name).
+	data.Id = types.StringValue(data.Name.ValueString())
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

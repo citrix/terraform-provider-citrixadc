@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -28,7 +30,11 @@ func (r *AuthenticationradiuspolicyResource) Schema(ctx context.Context, req res
 				Description: "The ID of the authenticationradiuspolicy resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 marked name ForceNew; NITRO cannot rename the policy after creation.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the RADIUS authentication policy.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after RADIUS policy is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication policy\" or 'my authentication policy').",
 			},
 			"reqaction": schema.StringAttribute{
@@ -44,18 +50,18 @@ func (r *AuthenticationradiuspolicyResource) Schema(ctx context.Context, req res
 	}
 }
 
-func authenticationradiuspolicyGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationradiuspolicyResourceModel) authentication.Authenticationradiuspolicy {
-	tflog.Debug(ctx, "In authenticationradiuspolicyGetThePayloadFromtheConfig Function")
+func authenticationradiuspolicyGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationradiuspolicyResourceModel) authentication.Authenticationradiuspolicy {
+	tflog.Debug(ctx, "In authenticationradiuspolicyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationradiuspolicy := authentication.Authenticationradiuspolicy{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationradiuspolicy.Name = data.Name.ValueString()
 	}
-	if !data.Reqaction.IsNull() {
+	if !data.Reqaction.IsNull() && !data.Reqaction.IsUnknown() {
 		authenticationradiuspolicy.Reqaction = data.Reqaction.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		authenticationradiuspolicy.Rule = data.Rule.ValueString()
 	}
 
@@ -83,7 +89,7 @@ func authenticationradiuspolicySetAttrFromGet(ctx context.Context, data *Authent
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

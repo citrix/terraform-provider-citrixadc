@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *DnssoarecResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating dnssoarec resource")
 
-	// dnssoarec := dnssoarecGetThePayloadFromtheConfig(ctx, &data)
+	dnssoarec := dnssoarecGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnssoarec.Type(), &dnssoarec)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnssoarec, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnssoarec-config")
+	// Named resource keyed on domain - use AddResource
+	dnssoarecId := data.Domain.ValueString()
+	_, err := r.client.AddResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnssoarec, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnssoarec resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(dnssoarecId)
+
 	// Read the updated state back
-	r.readDnssoarecFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnssoarecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnssoarec not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *DnssoarecResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading dnssoarec resource")
 
-	r.readDnssoarecFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnssoarecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnssoarecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnssoarecResourceModel
+	var data, state DnssoarecResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,78 @@ func (r *DnssoarecResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnssoarec resource")
 
-	// Create API request body from the model
-	// dnssoarec := dnssoarecGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	// (domain is the primary key and is RequiresReplace, so it never reaches Update)
+	hasChange := false
+	if !data.Contact.Equal(state.Contact) {
+		tflog.Debug(ctx, "contact has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Ecssubnet.Equal(state.Ecssubnet) {
+		tflog.Debug(ctx, "ecssubnet has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Expire.Equal(state.Expire) {
+		tflog.Debug(ctx, "expire has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Minimum.Equal(state.Minimum) {
+		tflog.Debug(ctx, "minimum has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Nodeid.Equal(state.Nodeid) {
+		tflog.Debug(ctx, "nodeid has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Originserver.Equal(state.Originserver) {
+		tflog.Debug(ctx, "originserver has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Refresh.Equal(state.Refresh) {
+		tflog.Debug(ctx, "refresh has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Retry.Equal(state.Retry) {
+		tflog.Debug(ctx, "retry has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Serial.Equal(state.Serial) {
+		tflog.Debug(ctx, "serial has changed for dnssoarec")
+		hasChange = true
+	}
+	if !data.Ttl.Equal(state.Ttl) {
+		tflog.Debug(ctx, "ttl has changed for dnssoarec")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnssoarec.Type(), &dnssoarec)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnssoarec, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		dnssoarec := dnssoarecGetThePayloadFromthePlan(ctx, &data)
+		// Named resource keyed on domain - use UpdateResource
+		dnssoarecId := data.Domain.ValueString()
+		_, err := r.client.UpdateResource(service.Dnssoarec.Type(), dnssoarecId, &dnssoarec)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnssoarec, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated dnssoarec resource")
+		tflog.Trace(ctx, "Updated dnssoarec resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for dnssoarec resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readDnssoarecFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnssoarecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnssoarec not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +208,33 @@ func (r *DnssoarecResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	tflog.Debug(ctx, "Deleting dnssoarec resource")
+	// Named resource keyed on domain - delete using DeleteResource
+	dnssoarecId := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Dnssoarec.Type(), dnssoarecId)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnssoarec, got error: %s", err))
+		return
+	}
 
-	// For dnssoarec, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnssoarec resource from state")
+	tflog.Trace(ctx, "Deleted dnssoarec resource")
 }
 
-// Helper function to read dnssoarec data from API
-func (r *DnssoarecResource) readDnssoarecFromApi(ctx context.Context, data *DnssoarecResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnssoarec.Type(), "")
+// Helper function to read dnssoarec data from API. Returns false when the
+// resource is not found on the ADC.
+func (r *DnssoarecResource) readDnssoarecFromApi(ctx context.Context, data *DnssoarecResourceModel, diags *diag.Diagnostics) bool {
+	// Named resource keyed on domain - the ID is the plain domain value
+	dnssoarecName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Dnssoarec.Type(), dnssoarecName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnssoarec, got error: %s", err))
-		return
+		return false
 	}
 
 	dnssoarecSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

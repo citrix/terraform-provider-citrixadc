@@ -3,8 +3,10 @@ package hanode
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,36 @@ func (r *HanodeResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	tflog.Debug(ctx, "Creating hanode resource")
 
-	// hanode := hanodeGetThePayloadFromtheConfig(ctx, &data)
+	hanode := hanodeGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create hanode, got error: %s", err))
-	//	 return
-	// }
+	// The hanode id is the resource identifier. Self node (id == 0) has no name in the
+	// NITRO URL and is configured via UpdateUnnamedResource; peer nodes (id 1-64) are
+	// named and added via AddResource. This mirrors the SDK v2 createHanodeFunc.
+	hanodeName := strconv.Itoa(int(data.Hanodeid.ValueInt64()))
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("hanode-config")
+	var err error
+	if data.Hanodeid.ValueInt64() != 0 {
+		_, err = r.client.AddResource(service.Hanode.Type(), hanodeName, &hanode)
+	} else {
+		err = r.client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
+	}
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create hanode, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created hanode resource")
 
+	// Set ID for the resource before reading state back
+	data.Id = types.StringValue(hanodeName)
+
 	// Read the updated state back
-	r.readHanodeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readHanodeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "hanode not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +104,24 @@ func (r *HanodeResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	tflog.Debug(ctx, "Reading hanode resource")
 
-	r.readHanodeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readHanodeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *HanodeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data HanodeResourceModel
+	var data, state HanodeResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +129,79 @@ func (r *HanodeResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating hanode resource")
 
-	// Create API request body from the model
-	// hanode := hanodeGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Deadinterval.Equal(state.Deadinterval) {
+		tflog.Debug(ctx, "deadinterval has changed for hanode")
+		hasChange = true
+	}
+	if !data.Failsafe.Equal(state.Failsafe) {
+		tflog.Debug(ctx, "failsafe has changed for hanode")
+		hasChange = true
+	}
+	if !data.Haprop.Equal(state.Haprop) {
+		tflog.Debug(ctx, "haprop has changed for hanode")
+		hasChange = true
+	}
+	if !data.Hastatus.Equal(state.Hastatus) {
+		tflog.Debug(ctx, "hastatus has changed for hanode")
+		hasChange = true
+	}
+	if !data.Hasync.Equal(state.Hasync) {
+		tflog.Debug(ctx, "hasync has changed for hanode")
+		hasChange = true
+	}
+	if !data.Hellointerval.Equal(state.Hellointerval) {
+		tflog.Debug(ctx, "hellointerval has changed for hanode")
+		hasChange = true
+	}
+	if !data.Inc.Equal(state.Inc) {
+		tflog.Debug(ctx, "inc has changed for hanode")
+		hasChange = true
+	}
+	if !data.Maxflips.Equal(state.Maxflips) {
+		tflog.Debug(ctx, "maxflips has changed for hanode")
+		hasChange = true
+	}
+	if !data.Maxfliptime.Equal(state.Maxfliptime) {
+		tflog.Debug(ctx, "maxfliptime has changed for hanode")
+		hasChange = true
+	}
+	if !data.Syncstatusstrictmode.Equal(state.Syncstatusstrictmode) {
+		tflog.Debug(ctx, "syncstatusstrictmode has changed for hanode")
+		hasChange = true
+	}
+	if !data.Syncvlan.Equal(state.Syncvlan) {
+		tflog.Debug(ctx, "syncvlan has changed for hanode")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update hanode, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated hanode resource")
+	if hasChange {
+		// Update uses PUT /config/hanode with the id carried in the body (unnamed),
+		// matching the SDK v2 updateHanodeFunc.
+		hanode := hanodeGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		err := r.client.UpdateUnnamedResource(service.Hanode.Type(), &hanode)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update hanode, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated hanode resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for hanode resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readHanodeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readHanodeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "hanode not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +219,31 @@ func (r *HanodeResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	tflog.Debug(ctx, "Deleting hanode resource")
 
-	// For hanode, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted hanode resource from state")
+	// Named resource - delete using DeleteResource keyed on the hanode id.
+	err := r.client.DeleteResource(service.Hanode.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete hanode, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted hanode resource")
 }
 
-// Helper function to read hanode data from API
-func (r *HanodeResource) readHanodeFromApi(ctx context.Context, data *HanodeResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Hanode.Type(), "")
+// Helper function to read hanode data from API. Returns false when the resource no
+// longer exists on the ADC so the caller can drop it from state.
+func (r *HanodeResource) readHanodeFromApi(ctx context.Context, data *HanodeResourceModel, diags *diag.Diagnostics) bool {
+	hanodeName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Hanode.Type(), hanodeName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read hanode, got error: %s", err))
-		return
+		return false
 	}
 
 	hanodeSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

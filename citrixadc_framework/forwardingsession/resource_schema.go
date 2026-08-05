@@ -2,14 +2,13 @@ package forwardingsession
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -51,11 +50,14 @@ func (r *ForwardingsessionResource) Schema(ctx context.Context, req resource.Sch
 			},
 			"connfailover": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Synchronize connection information with the secondary appliance in a high availability (HA) pair. That is, synchronize all connection-related information for the forwarding session.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the forwarding session rule. Can begin with a letter, number, or the underscore character (_), and can consist of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the rule is created.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my rule\" or 'my rule').",
 			},
 			"netmask": schema.StringAttribute{
@@ -76,56 +78,85 @@ func (r *ForwardingsessionResource) Schema(ctx context.Context, req resource.Sch
 			},
 			"processlocal": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enabling this option on forwarding session will not steer the packet to flow processor. Instead, packet will be routed.",
 			},
 			"sourceroutecache": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Cache the source ip address and mac address of the DA servers.",
 			},
 			"td": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
 		},
 	}
 }
 
-func forwardingsessionGetThePayloadFromtheConfig(ctx context.Context, data *ForwardingsessionResourceModel) network.Forwardingsession {
-	tflog.Debug(ctx, "In forwardingsessionGetThePayloadFromtheConfig Function")
+func forwardingsessionGetThePayloadFromthePlan(ctx context.Context, data *ForwardingsessionResourceModel) network.Forwardingsession {
+	tflog.Debug(ctx, "In forwardingsessionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	forwardingsession := network.Forwardingsession{}
-	if !data.Acl6name.IsNull() {
+	if !data.Acl6name.IsNull() && !data.Acl6name.IsUnknown() {
 		forwardingsession.Acl6name = data.Acl6name.ValueString()
 	}
-	if !data.Aclname.IsNull() {
+	if !data.Aclname.IsNull() && !data.Aclname.IsUnknown() {
 		forwardingsession.Aclname = data.Aclname.ValueString()
 	}
-	if !data.Connfailover.IsNull() {
+	if !data.Connfailover.IsNull() && !data.Connfailover.IsUnknown() {
 		forwardingsession.Connfailover = data.Connfailover.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		forwardingsession.Name = data.Name.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		forwardingsession.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Network.IsNull() {
+	if !data.Network.IsNull() && !data.Network.IsUnknown() {
 		forwardingsession.Network = data.Network.ValueString()
 	}
-	if !data.Processlocal.IsNull() {
+	if !data.Processlocal.IsNull() && !data.Processlocal.IsUnknown() {
 		forwardingsession.Processlocal = data.Processlocal.ValueString()
 	}
-	if !data.Sourceroutecache.IsNull() {
+	if !data.Sourceroutecache.IsNull() && !data.Sourceroutecache.IsUnknown() {
 		forwardingsession.Sourceroutecache = data.Sourceroutecache.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		forwardingsession.Td = utils.IntPtr(int(data.Td.ValueInt64()))
+	}
+
+	return forwardingsession
+}
+
+// forwardingsessionGetTheUpdatablePayloadFromThePlan builds the payload restricted to
+// NITRO-updatable fields. netmask and network are ForceNew (RequiresReplace) and never
+// reach Update, so they are excluded. td mirrors the SDK v2 update contract (no ForceNew).
+func forwardingsessionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *ForwardingsessionResourceModel) network.Forwardingsession {
+	tflog.Debug(ctx, "In forwardingsessionGetTheUpdatablePayloadFromThePlan Function")
+
+	forwardingsession := network.Forwardingsession{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		forwardingsession.Name = data.Name.ValueString()
+	}
+	if !data.Acl6name.IsNull() && !data.Acl6name.IsUnknown() {
+		forwardingsession.Acl6name = data.Acl6name.ValueString()
+	}
+	if !data.Aclname.IsNull() && !data.Aclname.IsUnknown() {
+		forwardingsession.Aclname = data.Aclname.ValueString()
+	}
+	if !data.Connfailover.IsNull() && !data.Connfailover.IsUnknown() {
+		forwardingsession.Connfailover = data.Connfailover.ValueString()
+	}
+	if !data.Processlocal.IsNull() && !data.Processlocal.IsUnknown() {
+		forwardingsession.Processlocal = data.Processlocal.ValueString()
+	}
+	if !data.Sourceroutecache.IsNull() && !data.Sourceroutecache.IsUnknown() {
+		forwardingsession.Sourceroutecache = data.Sourceroutecache.ValueString()
+	}
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		forwardingsession.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -180,13 +211,15 @@ func forwardingsessionSetAttrFromGet(ctx context.Context, data *Forwardingsessio
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
+		// NITRO omits td (default 0) from GET only when unset; preserve a configured
+		// value to avoid "inconsistent result after apply".
 		data.Td = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

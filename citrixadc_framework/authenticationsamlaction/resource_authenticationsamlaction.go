@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *AuthenticationsamlactionResource) Create(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Creating authenticationsamlaction resource")
 
-	// authenticationsamlaction := authenticationsamlactionGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	authenticationsamlaction := authenticationsamlactionGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationsamlaction.Type(), &authenticationsamlaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationsamlaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationsamlaction-config")
+	// Named resource - use AddResource
+	authenticationsamlactionName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName, &authenticationsamlaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationsamlaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationsamlaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(authenticationsamlactionName)
+
 	// Read the updated state back
-	r.readAuthenticationsamlactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationsamlactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationsamlaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AuthenticationsamlactionResource) Read(ctx context.Context, req resourc
 
 	tflog.Debug(ctx, "Reading authenticationsamlaction resource")
 
-	r.readAuthenticationsamlactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationsamlactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuthenticationsamlactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationsamlactionResourceModel
+	var data, state AuthenticationsamlactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,31 @@ func (r *AuthenticationsamlactionResource) Update(ctx context.Context, req resou
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationsamlaction resource")
 
 	// Create API request body from the model
-	// authenticationsamlaction := authenticationsamlactionGetThePayloadFromtheConfig(ctx, &data)
+	authenticationsamlaction := authenticationsamlactionGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationsamlaction.Type(), &authenticationsamlaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationsamlaction, got error: %s", err))
-	//	 return
-	// }
+	// Named resource - use UpdateResource
+	authenticationsamlactionName := data.Name.ValueString()
+	_, err := r.client.UpdateResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName, &authenticationsamlaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationsamlaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated authenticationsamlaction resource")
 
 	// Read the updated state back
-	r.readAuthenticationsamlactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationsamlactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationsamlaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +163,33 @@ func (r *AuthenticationsamlactionResource) Delete(ctx context.Context, req resou
 
 	tflog.Debug(ctx, "Deleting authenticationsamlaction resource")
 
-	// For authenticationsamlaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationsamlaction resource from state")
+	// Named resource - delete using DeleteResource
+	authenticationsamlactionName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationsamlaction, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted authenticationsamlaction resource")
 }
 
 // Helper function to read authenticationsamlaction data from API
-func (r *AuthenticationsamlactionResource) readAuthenticationsamlactionFromApi(ctx context.Context, data *AuthenticationsamlactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationsamlaction.Type(), "")
+func (r *AuthenticationsamlactionResource) readAuthenticationsamlactionFromApi(ctx context.Context, data *AuthenticationsamlactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	authenticationsamlactionName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Authenticationsamlaction.Type(), authenticationsamlactionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationsamlaction, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationsamlactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

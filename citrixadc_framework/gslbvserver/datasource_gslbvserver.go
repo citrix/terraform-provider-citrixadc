@@ -55,7 +55,7 @@ func (d *GslbvserverDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	gslbvserverSetAttrFromGet(ctx, &data, getResponseData)
+	gslbvserverSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

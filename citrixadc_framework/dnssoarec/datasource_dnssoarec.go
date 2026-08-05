@@ -43,46 +43,21 @@ func (d *DnssoarecDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	domain_Name := data.Domain.ValueString()
+	// Named resource keyed on domain - look up by domain (plain value)
+	domainName := data.Domain.ValueString()
 
-	var dataArr []map[string]interface{}
-	var err error
-
-	findParams := service.FindParams{
-		ResourceType:             service.Dnssoarec.Type(),
-		ResourceMissingErrorCode: 258,
-	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	getResponseData, err := d.client.FindResource(service.Dnssoarec.Type(), domainName)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read dnsptrrec, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read dnssoarec, got error: %s", err))
 		return
 	}
 
-	// Resource is missing
-	if len(dataArr) == 0 {
-		resp.Diagnostics.AddError("Client Error", "dnssoarec returned empty array.")
+	if getResponseData == nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("dnssoarec with domain %s not found", domainName))
 		return
 	}
 
-	// Iterate through results to find the one with the right reversedomain
-	foundIndex := -1
-	for i, v := range dataArr {
-		if domain, ok := v["domain"].(string); ok && domain == domain_Name {
-			foundIndex = i
-			break
-		}
-	}
-
-	// Resource is missing
-	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("dnssoarec with domain %s not found", domain_Name))
-		return
-	}
-
-	// For dnssoarec, we expect only one result based on domain name
-	// Use the first result
-	dnssoarecSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	dnssoarecSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

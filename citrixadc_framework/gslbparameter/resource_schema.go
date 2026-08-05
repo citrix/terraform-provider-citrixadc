@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -46,17 +44,17 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"automaticconfigsync": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "GSLB configuration will be synced automatically to remote gslb sites if enabled.",
 			},
 			"dropldnsreq": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Drop LDNS requests if round-trip time (RTT) information is not available.",
 			},
 			"gslbconfigsyncmonitor": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "If enabled, remote gslb site's rsync port will be monitored and site is considered for configuration sync only when the monitor is successful.",
 			},
 			"gslbsvcstatedelaytime": schema.Int64Attribute{
@@ -66,27 +64,27 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"gslbsyncinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10),
+				Computed:    true,
 				Description: "Time duartion (in seconds) for which the gslb sync process will wait before checking for config changes.",
 			},
 			"gslbsynclocfiles": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "If disabled, Location files will not be synced to the remote sites as part of manual sync and automatic sync.",
 			},
 			"gslbsyncmode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("IncrementalSync"),
+				Computed:    true,
 				Description: "Mode in which configuration will be synced from master site to remote sites.",
 			},
 			"gslbsyncsaveconfigcommand": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "If enabled, 'save ns config' command will be treated as other GSLB commands and synced to GSLB nodes when auto gslb sync option is enabled.",
 			},
 			"ldnsentrytimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(180),
+				Computed:    true,
 				Description: "Time, in seconds, after which an inactive LDNS entry is removed.",
 			},
 			"ldnsmask": schema.StringAttribute{
@@ -102,12 +100,12 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"mepkeepalivetimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10),
+				Computed:    true,
 				Description: "Time duartion (in seconds) during which if no new packets received by Local gslb site from Remote gslb site then mark the MEP connection DOWN",
 			},
 			"rtttolerance": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Computed:    true,
 				Description: "Tolerance, in milliseconds, for newly learned round-trip time (RTT) values. If the difference between the old RTT value and the newly computed RTT value is less than or equal to the specified tolerance value, the LDNS entry in the network metric table is not updated with the new RTT value. Prevents the exchange of metrics when variations in RTT values are negligible.",
 			},
 			"svcstatelearningtime": schema.Int64Attribute{
@@ -117,66 +115,71 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("NOLBACTION"),
+				Computed:    true,
 				Description: "Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:\n* NOLBACTION - Does not consider LB action in making LB decision.\n* RESET - Reset the request and notify the user, so that the user can resend the request.\n* DROP - Drop the request without sending a response to the user.",
 			},
 			"v6ldnsmasklen": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(128),
+				Computed:    true,
 				Description: "Mask for creating LDNS entries for IPv6 source addresses. The mask is defined as the number of leading bits to consider, in the source IP address, when creating an LDNS entry.",
 			},
 		},
 	}
 }
 
-func gslbparameterGetThePayloadFromtheConfig(ctx context.Context, data *GslbparameterResourceModel) gslb.Gslbparameter {
-	tflog.Debug(ctx, "In gslbparameterGetThePayloadFromtheConfig Function")
+func gslbparameterGetThePayloadFromthePlan(ctx context.Context, data *GslbparameterResourceModel) gslb.Gslbparameter {
+	tflog.Debug(ctx, "In gslbparameterGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	gslbparameter := gslb.Gslbparameter{}
-	if !data.Automaticconfigsync.IsNull() {
+	if !data.Automaticconfigsync.IsNull() && !data.Automaticconfigsync.IsUnknown() {
 		gslbparameter.Automaticconfigsync = data.Automaticconfigsync.ValueString()
 	}
-	if !data.Dropldnsreq.IsNull() {
+	if !data.Dropldnsreq.IsNull() && !data.Dropldnsreq.IsUnknown() {
 		gslbparameter.Dropldnsreq = data.Dropldnsreq.ValueString()
 	}
-	if !data.Gslbconfigsyncmonitor.IsNull() {
+	if !data.Gslbconfigsyncmonitor.IsNull() && !data.Gslbconfigsyncmonitor.IsUnknown() {
 		gslbparameter.Gslbconfigsyncmonitor = data.Gslbconfigsyncmonitor.ValueString()
 	}
-	if !data.Gslbsvcstatedelaytime.IsNull() {
+	if !data.Gslbsvcstatedelaytime.IsNull() && !data.Gslbsvcstatedelaytime.IsUnknown() {
 		gslbparameter.Gslbsvcstatedelaytime = utils.IntPtr(int(data.Gslbsvcstatedelaytime.ValueInt64()))
 	}
-	if !data.Gslbsyncinterval.IsNull() {
+	if !data.Gslbsyncinterval.IsNull() && !data.Gslbsyncinterval.IsUnknown() {
 		gslbparameter.Gslbsyncinterval = utils.IntPtr(int(data.Gslbsyncinterval.ValueInt64()))
 	}
-	if !data.Gslbsynclocfiles.IsNull() {
+	if !data.Gslbsynclocfiles.IsNull() && !data.Gslbsynclocfiles.IsUnknown() {
 		gslbparameter.Gslbsynclocfiles = data.Gslbsynclocfiles.ValueString()
 	}
-	if !data.Gslbsyncmode.IsNull() {
+	if !data.Gslbsyncmode.IsNull() && !data.Gslbsyncmode.IsUnknown() {
 		gslbparameter.Gslbsyncmode = data.Gslbsyncmode.ValueString()
 	}
-	if !data.Gslbsyncsaveconfigcommand.IsNull() {
+	if !data.Gslbsyncsaveconfigcommand.IsNull() && !data.Gslbsyncsaveconfigcommand.IsUnknown() {
 		gslbparameter.Gslbsyncsaveconfigcommand = data.Gslbsyncsaveconfigcommand.ValueString()
 	}
-	if !data.Ldnsentrytimeout.IsNull() {
+	if !data.Ldnsentrytimeout.IsNull() && !data.Ldnsentrytimeout.IsUnknown() {
 		gslbparameter.Ldnsentrytimeout = utils.IntPtr(int(data.Ldnsentrytimeout.ValueInt64()))
 	}
-	if !data.Ldnsmask.IsNull() {
+	if !data.Ldnsmask.IsNull() && !data.Ldnsmask.IsUnknown() {
 		gslbparameter.Ldnsmask = data.Ldnsmask.ValueString()
 	}
-	if !data.Mepkeepalivetimeout.IsNull() {
+	if !data.Ldnsprobeorder.IsNull() && !data.Ldnsprobeorder.IsUnknown() {
+		var ldnsprobeorderList []string
+		data.Ldnsprobeorder.ElementsAs(ctx, &ldnsprobeorderList, false)
+		gslbparameter.Ldnsprobeorder = ldnsprobeorderList
+	}
+	if !data.Mepkeepalivetimeout.IsNull() && !data.Mepkeepalivetimeout.IsUnknown() {
 		gslbparameter.Mepkeepalivetimeout = utils.IntPtr(int(data.Mepkeepalivetimeout.ValueInt64()))
 	}
-	if !data.Rtttolerance.IsNull() {
+	if !data.Rtttolerance.IsNull() && !data.Rtttolerance.IsUnknown() {
 		gslbparameter.Rtttolerance = utils.IntPtr(int(data.Rtttolerance.ValueInt64()))
 	}
-	if !data.Svcstatelearningtime.IsNull() {
+	if !data.Svcstatelearningtime.IsNull() && !data.Svcstatelearningtime.IsUnknown() {
 		gslbparameter.Svcstatelearningtime = utils.IntPtr(int(data.Svcstatelearningtime.ValueInt64()))
 	}
-	if !data.Undefaction.IsNull() {
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		gslbparameter.Undefaction = data.Undefaction.ValueString()
 	}
-	if !data.V6ldnsmasklen.IsNull() {
+	if !data.V6ldnsmasklen.IsNull() && !data.V6ldnsmasklen.IsUnknown() {
 		gslbparameter.V6ldnsmasklen = utils.IntPtr(int(data.V6ldnsmasklen.ValueInt64()))
 	}
 
@@ -206,7 +209,9 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Gslbsvcstatedelaytime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Gslbsvcstatedelaytime.IsUnknown() {
+		// NITRO default (0) is omitted from GET. Only null when the value was not
+		// configured (Unknown); preserve a configured 0 to avoid inconsistent-result.
 		data.Gslbsvcstatedelaytime = types.Int64Null()
 	}
 	if val, ok := getResponseData["gslbsyncinterval"]; ok && val != nil {
@@ -243,6 +248,17 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 	} else {
 		data.Ldnsmask = types.StringNull()
 	}
+	if val, ok := getResponseData["ldnsprobeorder"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Ldnsprobeorder = listValue
+		} else {
+			data.Ldnsprobeorder = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Ldnsprobeorder = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["mepkeepalivetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mepkeepalivetimeout = types.Int64Value(intVal)
@@ -261,7 +277,9 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Svcstatelearningtime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Svcstatelearningtime.IsUnknown() {
+		// NITRO default (0) is omitted from GET. Only null when the value was not
+		// configured (Unknown); preserve a configured 0 to avoid inconsistent-result.
 		data.Svcstatelearningtime = types.Int64Null()
 	}
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
@@ -278,7 +296,7 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Singleton resource - static ID
 	data.Id = types.StringValue("gslbparameter-config")
 
 	return data

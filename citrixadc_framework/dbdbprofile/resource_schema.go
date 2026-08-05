@@ -2,12 +2,14 @@ package dbdbprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/db"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -33,17 +35,17 @@ func (r *DbdbprofileResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"conmultiplex": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Use the same server-side connection for multiple client-side requests. Default is enabled.",
 			},
 			"enablecachingconmuxoff": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable caching when connection multiplexing is OFF.",
 			},
 			"interpretquery": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "If ENABLED, inspect the query and update the connection information, if required. If DISABLED, forward the query to the server.",
 			},
 			"kcdaccount": schema.StringAttribute{
@@ -52,7 +54,10 @@ func (r *DbdbprofileResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Name of the KCD account that is used for Windows authentication.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the database profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Cannot be changed after the profile is created.\n	    CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my profile\" or 'my profile').",
 			},
 			"stickiness": schema.StringAttribute{
@@ -64,27 +69,27 @@ func (r *DbdbprofileResource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func dbdbprofileGetThePayloadFromtheConfig(ctx context.Context, data *DbdbprofileResourceModel) db.Dbdbprofile {
-	tflog.Debug(ctx, "In dbdbprofileGetThePayloadFromtheConfig Function")
+func dbdbprofileGetThePayloadFromthePlan(ctx context.Context, data *DbdbprofileResourceModel) db.Dbdbprofile {
+	tflog.Debug(ctx, "In dbdbprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	dbdbprofile := db.Dbdbprofile{}
-	if !data.Conmultiplex.IsNull() {
+	if !data.Conmultiplex.IsNull() && !data.Conmultiplex.IsUnknown() {
 		dbdbprofile.Conmultiplex = data.Conmultiplex.ValueString()
 	}
-	if !data.Enablecachingconmuxoff.IsNull() {
+	if !data.Enablecachingconmuxoff.IsNull() && !data.Enablecachingconmuxoff.IsUnknown() {
 		dbdbprofile.Enablecachingconmuxoff = data.Enablecachingconmuxoff.ValueString()
 	}
-	if !data.Interpretquery.IsNull() {
+	if !data.Interpretquery.IsNull() && !data.Interpretquery.IsUnknown() {
 		dbdbprofile.Interpretquery = data.Interpretquery.ValueString()
 	}
-	if !data.Kcdaccount.IsNull() {
+	if !data.Kcdaccount.IsNull() && !data.Kcdaccount.IsUnknown() {
 		dbdbprofile.Kcdaccount = data.Kcdaccount.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		dbdbprofile.Name = data.Name.ValueString()
 	}
-	if !data.Stickiness.IsNull() {
+	if !data.Stickiness.IsNull() && !data.Stickiness.IsUnknown() {
 		dbdbprofile.Stickiness = data.Stickiness.ValueString()
 	}
 
@@ -127,8 +132,8 @@ func dbdbprofileSetAttrFromGet(ctx context.Context, data *DbdbprofileResourceMod
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

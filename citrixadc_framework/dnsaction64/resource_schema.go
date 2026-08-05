@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -29,7 +31,10 @@ func (r *Dnsaction64Resource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "The ID of the dnsaction64 resource.",
 			},
 			"actionname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the dns64 action.",
 			},
 			"excluderule": schema.StringAttribute{
@@ -50,21 +55,21 @@ func (r *Dnsaction64Resource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func dnsaction64GetThePayloadFromtheConfig(ctx context.Context, data *Dnsaction64ResourceModel) dns.Dnsaction64 {
-	tflog.Debug(ctx, "In dnsaction64GetThePayloadFromtheConfig Function")
+func dnsaction64GetThePayloadFromthePlan(ctx context.Context, data *Dnsaction64ResourceModel) dns.Dnsaction64 {
+	tflog.Debug(ctx, "In dnsaction64GetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	dnsaction64 := dns.Dnsaction64{}
-	if !data.Actionname.IsNull() {
+	if !data.Actionname.IsNull() && !data.Actionname.IsUnknown() {
 		dnsaction64.Actionname = data.Actionname.ValueString()
 	}
-	if !data.Excluderule.IsNull() {
+	if !data.Excluderule.IsNull() && !data.Excluderule.IsUnknown() {
 		dnsaction64.Excluderule = data.Excluderule.ValueString()
 	}
-	if !data.Mappedrule.IsNull() {
+	if !data.Mappedrule.IsNull() && !data.Mappedrule.IsUnknown() {
 		dnsaction64.Mappedrule = data.Mappedrule.ValueString()
 	}
-	if !data.Prefix.IsNull() {
+	if !data.Prefix.IsNull() && !data.Prefix.IsUnknown() {
 		dnsaction64.Prefix = data.Prefix.ValueString()
 	}
 
@@ -97,7 +102,7 @@ func dnsaction64SetAttrFromGet(ctx context.Context, data *Dnsaction64ResourceMod
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Actionname.ValueString())
 
 	return data

@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -37,14 +36,14 @@ func (r *DnsactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the dnsaction resource.",
 			},
 			"actionname": schema.StringAttribute{
-				Required:    true,
-				Description: "Name of the dns action.",
-			},
-			"actiontype": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Name of the dns action.",
+			},
+			"actiontype": schema.StringAttribute{
+				Required:    true,
 				Description: "The type of DNS action that is being configured.",
 			},
 			"dnsprofilename": schema.StringAttribute{
@@ -66,7 +65,7 @@ func (r *DnsactionResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"ttl": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3600),
+				Computed:    true,
 				Description: "Time to live, in seconds.",
 			},
 			"viewname": schema.StringAttribute{
@@ -78,24 +77,34 @@ func (r *DnsactionResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func dnsactionGetThePayloadFromtheConfig(ctx context.Context, data *DnsactionResourceModel) dns.Dnsaction {
-	tflog.Debug(ctx, "In dnsactionGetThePayloadFromtheConfig Function")
+func dnsactionGetThePayloadFromthePlan(ctx context.Context, data *DnsactionResourceModel) dns.Dnsaction {
+	tflog.Debug(ctx, "In dnsactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	dnsaction := dns.Dnsaction{}
-	if !data.Actionname.IsNull() {
+	if !data.Actionname.IsNull() && !data.Actionname.IsUnknown() {
 		dnsaction.Actionname = data.Actionname.ValueString()
 	}
-	if !data.Actiontype.IsNull() {
+	if !data.Actiontype.IsNull() && !data.Actiontype.IsUnknown() {
 		dnsaction.Actiontype = data.Actiontype.ValueString()
 	}
-	if !data.Dnsprofilename.IsNull() {
+	if !data.Dnsprofilename.IsNull() && !data.Dnsprofilename.IsUnknown() {
 		dnsaction.Dnsprofilename = data.Dnsprofilename.ValueString()
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
+		var ipaddressList []string
+		data.Ipaddress.ElementsAs(ctx, &ipaddressList, false)
+		dnsaction.Ipaddress = ipaddressList
+	}
+	if !data.Preferredloclist.IsNull() && !data.Preferredloclist.IsUnknown() {
+		var preferredloclistList []string
+		data.Preferredloclist.ElementsAs(ctx, &preferredloclistList, false)
+		dnsaction.Preferredloclist = preferredloclistList
+	}
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		dnsaction.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
-	if !data.Viewname.IsNull() {
+	if !data.Viewname.IsNull() && !data.Viewname.IsUnknown() {
 		dnsaction.Viewname = data.Viewname.ValueString()
 	}
 
@@ -121,11 +130,43 @@ func dnsactionSetAttrFromGet(ctx context.Context, data *DnsactionResourceModel, 
 	} else {
 		data.Dnsprofilename = types.StringNull()
 	}
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Ipaddress = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Ipaddress = listValue
+		default:
+			data.Ipaddress = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Ipaddress = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["preferredloclist"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Preferredloclist = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Preferredloclist = listValue
+		default:
+			data.Preferredloclist = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Preferredloclist = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
+		// ttl has a NITRO default (3600) that GET always echoes; only null it when
+		// the value is still unknown so a configured value is never clobbered.
 		data.Ttl = types.Int64Null()
 	}
 	if val, ok := getResponseData["viewname"]; ok && val != nil {
@@ -135,7 +176,7 @@ func dnsactionSetAttrFromGet(ctx context.Context, data *DnsactionResourceModel, 
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Actionname.ValueString())
 
 	return data

@@ -55,7 +55,7 @@ func (d *AuthorizationpolicyDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	authorizationpolicySetAttrFromGet(ctx, &data, getResponseData)
+	authorizationpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

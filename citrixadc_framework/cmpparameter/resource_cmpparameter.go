@@ -55,16 +55,17 @@ func (r *CmpparameterResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating cmpparameter resource")
 
-	// cmpparameter := cmpparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	cmpparameter := cmpparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cmpparameter, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - cmpparameter is a singleton config resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cmpparameter, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Generate the static ID for this singleton configuration resource
 	data.Id = types.StringValue("cmpparameter-config")
 
 	tflog.Trace(ctx, "Created cmpparameter resource")
@@ -106,15 +107,18 @@ func (r *CmpparameterResource) Update(ctx context.Context, req resource.UpdateRe
 
 	tflog.Debug(ctx, "Updating cmpparameter resource")
 
-	// Create API request body from the model
-	// cmpparameter := cmpparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve the singleton ID across the update
+	data.Id = types.StringValue("cmpparameter-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cmpparameter, got error: %s", err))
-	//	 return
-	// }
+	// Create API request body from the plan
+	cmpparameter := cmpparameterGetThePayloadFromtheConfig(ctx, &data)
+
+	// Make API call - cmpparameter is a singleton config resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Cmpparameter.Type(), &cmpparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cmpparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated cmpparameter resource")
 

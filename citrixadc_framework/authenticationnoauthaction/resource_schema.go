@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -32,22 +34,25 @@ func (r *AuthenticationnoauthactionResource) Schema(ctx context.Context, req res
 				Description: "This is the group that is added to user sessions that match current policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new no-authentication action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 		},
 	}
 }
 
-func authenticationnoauthactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationnoauthactionResourceModel) authentication.Authenticationnoauthaction {
-	tflog.Debug(ctx, "In authenticationnoauthactionGetThePayloadFromtheConfig Function")
+func authenticationnoauthactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationnoauthactionResourceModel) authentication.Authenticationnoauthaction {
+	tflog.Debug(ctx, "In authenticationnoauthactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationnoauthaction := authentication.Authenticationnoauthaction{}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationnoauthaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationnoauthaction.Name = data.Name.ValueString()
 	}
 

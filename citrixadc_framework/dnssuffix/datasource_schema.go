@@ -11,8 +11,7 @@ func DnssuffixDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"dnssuffix": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Suffix to be appended when resolving domain names that are not fully qualified.",
 			},
 		},

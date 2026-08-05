@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -54,7 +57,10 @@ func (r *DnspolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Name of the messagelog action to use for requests that match this policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the DNS policy.",
 			},
 			"preferredlocation": schema.StringAttribute{
@@ -81,33 +87,38 @@ func (r *DnspolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func dnspolicyGetThePayloadFromtheConfig(ctx context.Context, data *DnspolicyResourceModel) dns.Dnspolicy {
-	tflog.Debug(ctx, "In dnspolicyGetThePayloadFromtheConfig Function")
+func dnspolicyGetThePayloadFromthePlan(ctx context.Context, data *DnspolicyResourceModel) dns.Dnspolicy {
+	tflog.Debug(ctx, "In dnspolicyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	dnspolicy := dns.Dnspolicy{}
-	if !data.Actionname.IsNull() {
+	if !data.Actionname.IsNull() && !data.Actionname.IsUnknown() {
 		dnspolicy.Actionname = data.Actionname.ValueString()
 	}
-	if !data.Cachebypass.IsNull() {
+	if !data.Cachebypass.IsNull() && !data.Cachebypass.IsUnknown() {
 		dnspolicy.Cachebypass = data.Cachebypass.ValueString()
 	}
-	if !data.Drop.IsNull() {
+	if !data.Drop.IsNull() && !data.Drop.IsUnknown() {
 		dnspolicy.Drop = data.Drop.ValueString()
 	}
-	if !data.Logaction.IsNull() {
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
 		dnspolicy.Logaction = data.Logaction.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		dnspolicy.Name = data.Name.ValueString()
 	}
-	if !data.Preferredlocation.IsNull() {
+	if !data.Preferredlocation.IsNull() && !data.Preferredlocation.IsUnknown() {
 		dnspolicy.Preferredlocation = data.Preferredlocation.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Preferredloclist.IsNull() && !data.Preferredloclist.IsUnknown() {
+		var preferredloclist []string
+		data.Preferredloclist.ElementsAs(ctx, &preferredloclist, false)
+		dnspolicy.Preferredloclist = preferredloclist
+	}
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		dnspolicy.Rule = data.Rule.ValueString()
 	}
-	if !data.Viewname.IsNull() {
+	if !data.Viewname.IsNull() && !data.Viewname.IsUnknown() {
 		dnspolicy.Viewname = data.Viewname.ValueString()
 	}
 
@@ -117,50 +128,65 @@ func dnspolicyGetThePayloadFromtheConfig(ctx context.Context, data *DnspolicyRes
 func dnspolicySetAttrFromGet(ctx context.Context, data *DnspolicyResourceModel, getResponseData map[string]interface{}) *DnspolicyResourceModel {
 	tflog.Debug(ctx, "In dnspolicySetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Optional+Computed attributes are guarded: when NITRO omits the value from
+	// the GET response, a configured value is preserved (only a fresh unknown is
+	// nulled) so a configured value that is not echoed back does not cause an
+	// "inconsistent result after apply" error.
 	if val, ok := getResponseData["actionname"]; ok && val != nil {
 		data.Actionname = types.StringValue(val.(string))
-	} else {
+	} else if data.Actionname.IsUnknown() {
 		data.Actionname = types.StringNull()
 	}
 	if val, ok := getResponseData["cachebypass"]; ok && val != nil {
 		data.Cachebypass = types.StringValue(val.(string))
-	} else {
+	} else if data.Cachebypass.IsUnknown() {
 		data.Cachebypass = types.StringNull()
 	}
 	if val, ok := getResponseData["drop"]; ok && val != nil {
 		data.Drop = types.StringValue(val.(string))
-	} else {
+	} else if data.Drop.IsUnknown() {
 		data.Drop = types.StringNull()
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Logaction.IsUnknown() {
 		data.Logaction = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["preferredlocation"]; ok && val != nil {
 		data.Preferredlocation = types.StringValue(val.(string))
-	} else {
+	} else if data.Preferredlocation.IsUnknown() {
 		data.Preferredlocation = types.StringNull()
+	}
+	if val, ok := getResponseData["preferredloclist"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Preferredloclist = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Preferredloclist = listValue
+		default:
+			data.Preferredloclist = types.ListNull(types.StringType)
+		}
+	} else if data.Preferredloclist.IsUnknown() {
+		data.Preferredloclist = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
-	} else {
-		data.Rule = types.StringNull()
 	}
 	if val, ok := getResponseData["viewname"]; ok && val != nil {
 		data.Viewname = types.StringValue(val.(string))
-	} else {
+	} else if data.Viewname.IsUnknown() {
 		data.Viewname = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

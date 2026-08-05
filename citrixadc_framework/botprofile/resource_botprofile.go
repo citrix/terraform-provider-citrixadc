@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *BotprofileResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating botprofile resource")
 
-	// botprofile := botprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	botprofile := botprofileGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile.Type(), &botprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("botprofile-config")
+	// Named resource - use AddResource
+	botprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Botprofile.Type(), botprofileName, &botprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created botprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(botprofileName)
+
 	// Read the updated state back
-	r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *BotprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading botprofile resource")
 
-	r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BotprofileResourceModel
+	var data, state BotprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,121 @@ func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating botprofile resource")
 
-	// Create API request body from the model
-	// botprofile := botprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Addcookieflags.Equal(state.Addcookieflags) {
+		hasChange = true
+	}
+	if !data.BotEnableBlackList.Equal(state.BotEnableBlackList) {
+		hasChange = true
+	}
+	if !data.BotEnableIpReputation.Equal(state.BotEnableIpReputation) {
+		hasChange = true
+	}
+	if !data.BotEnableRateLimit.Equal(state.BotEnableRateLimit) {
+		hasChange = true
+	}
+	if !data.BotEnableTps.Equal(state.BotEnableTps) {
+		hasChange = true
+	}
+	if !data.BotEnableWhiteList.Equal(state.BotEnableWhiteList) {
+		hasChange = true
+	}
+	if !data.Clientipexpression.Equal(state.Clientipexpression) {
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		hasChange = true
+	}
+	if !data.Devicefingerprint.Equal(state.Devicefingerprint) {
+		hasChange = true
+	}
+	if !data.Devicefingerprintaction.Equal(state.Devicefingerprintaction) {
+		hasChange = true
+	}
+	if !data.Devicefingerprintmobile.Equal(state.Devicefingerprintmobile) {
+		hasChange = true
+	}
+	if !data.Dfprequestlimit.Equal(state.Dfprequestlimit) {
+		hasChange = true
+	}
+	if !data.Errorurl.Equal(state.Errorurl) {
+		hasChange = true
+	}
+	if !data.Headlessbrowserdetection.Equal(state.Headlessbrowserdetection) {
+		hasChange = true
+	}
+	if !data.Kmdetection.Equal(state.Kmdetection) {
+		hasChange = true
+	}
+	if !data.Kmeventspostbodylimit.Equal(state.Kmeventspostbodylimit) {
+		hasChange = true
+	}
+	if !data.Kmjavascriptname.Equal(state.Kmjavascriptname) {
+		hasChange = true
+	}
+	if !data.Sessioncookiename.Equal(state.Sessioncookiename) {
+		hasChange = true
+	}
+	if !data.Sessiontimeout.Equal(state.Sessiontimeout) {
+		hasChange = true
+	}
+	if !data.Signature.Equal(state.Signature) {
+		hasChange = true
+	}
+	if !data.Signaturemultipleuseragentheaderaction.Equal(state.Signaturemultipleuseragentheaderaction) {
+		hasChange = true
+	}
+	if !data.Signaturenouseragentheaderaction.Equal(state.Signaturenouseragentheaderaction) {
+		hasChange = true
+	}
+	if !data.Spoofedreqaction.Equal(state.Spoofedreqaction) {
+		hasChange = true
+	}
+	if !data.Trap.Equal(state.Trap) {
+		hasChange = true
+	}
+	if !data.Trapaction.Equal(state.Trapaction) {
+		hasChange = true
+	}
+	if !data.Trapurl.Equal(state.Trapurl) {
+		hasChange = true
+	}
+	if !data.Verboseloglevel.Equal(state.Verboseloglevel) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botprofile.Type(), &botprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		botprofile := botprofileGetThePayloadFromthePlan(ctx, &data)
+		// name is the identifier for the PUT body
+		botprofile.Name = data.Name.ValueString()
 
-	tflog.Trace(ctx, "Updated botprofile resource")
+		// Named resource - use UpdateResource
+		botprofileName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Botprofile.Type(), botprofileName, &botprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botprofile, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated botprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for botprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +253,33 @@ func (r *BotprofileResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting botprofile resource")
 
-	// For botprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted botprofile resource from state")
+	// Named resource - delete using DeleteResource
+	botprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Botprofile.Type(), botprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botprofile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted botprofile resource")
 }
 
 // Helper function to read botprofile data from API
-func (r *BotprofileResource) readBotprofileFromApi(ctx context.Context, data *BotprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Botprofile.Type(), "")
+func (r *BotprofileResource) readBotprofileFromApi(ctx context.Context, data *BotprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	botprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Botprofile.Type(), botprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	botprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

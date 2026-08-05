@@ -5,12 +5,11 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -18,9 +17,37 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
+// SslpolicybindingModel is one element of the sslpolicybinding set.
+type SslpolicybindingModel struct {
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Invoke                 types.Bool   `tfsdk:"invoke"`
+	Labelname              types.String `tfsdk:"labelname"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Type                   types.String `tfsdk:"type"`
+}
+
+var sslpolicybindingAttrTypes = map[string]attr.Type{
+	"gotopriorityexpression": types.StringType,
+	"invoke":                 types.BoolType,
+	"labelname":              types.StringType,
+	"labeltype":              types.StringType,
+	"policyname":             types.StringType,
+	"priority":               types.Int64Type,
+	"type":                   types.StringType,
+}
+
 // CsvserverResourceModel describes the resource data model.
 type CsvserverResourceModel struct {
 	Id                       types.String `tfsdk:"id"`
+	Sslcertkey               types.String `tfsdk:"sslcertkey"`
+	Snisslcertkeys           types.Set    `tfsdk:"snisslcertkeys"`
+	Sslprofile               types.String `tfsdk:"sslprofile"`
+	Ciphers                  types.List   `tfsdk:"ciphers"`
+	Ciphersuites             types.List   `tfsdk:"ciphersuites"`
+	Lbvserverbinding         types.String `tfsdk:"lbvserverbinding"`
+	Sslpolicybinding         types.Set    `tfsdk:"sslpolicybinding"`
 	Apiprofile               types.String `tfsdk:"apiprofile"`
 	Appflowlog               types.String `tfsdk:"appflowlog"`
 	Authentication           types.String `tfsdk:"authentication"`
@@ -120,7 +147,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Enable logging appflow flow information",
 			},
 			"authentication": schema.StringAttribute{
@@ -155,7 +182,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"backuppersistencetimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2),
+				Computed:    true,
 				Description: "Time period for which backup persistence is in effect.",
 			},
 			"backupvserver": schema.StringAttribute{
@@ -170,7 +197,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"casesensitive": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Consider case in URLs (for policies that use URLs instead of RULES). For example, with the ON setting, the URLs /a/1.html and /A/1.HTML are treated differently and can have different targets (set by content switching policies). With the OFF setting, /a/1.html and /A/1.HTML are switched to the same target.",
 			},
 			"clttimeout": schema.Int64Attribute{
@@ -205,12 +232,12 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"disableprimaryondown": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Continue forwarding the traffic to backup virtual server even after the primary server comes UP from the DOWN state.",
 			},
 			"dnsoverhttps": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "This option is used to enable/disable DNS over HTTPS (DoH) processing.",
 			},
 			"dnsprofilename": schema.StringAttribute{
@@ -220,7 +247,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"dnsrecordtype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("NSGSLB_IPV4"),
+				Computed:    true,
 				Description: "0",
 			},
 			"domainname": schema.StringAttribute{
@@ -230,7 +257,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"downstateflush": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Flush all active transactions associated with a virtual server whose state transitions from UP to DOWN. Do not enable this option for applications that must complete their transactions.",
 			},
 			"dtls": schema.StringAttribute{
@@ -250,7 +277,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"icmpvsrresponse": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("PASSIVE"),
+				Computed:    true,
 				Description: "Can be active or passive",
 			},
 			"insertvserveripport": schema.StringAttribute{
@@ -285,32 +312,32 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"listenpolicy": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("NONE"),
+				Computed:    true,
 				Description: "String specifying the listen policy for the content switching virtual server. Can be either the name of an existing expression or an in-line expression.",
 			},
 			"listenpriority": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(101),
+				Computed:    true,
 				Description: "Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.",
 			},
 			"mssqlserverversion": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("2008R2"),
+				Computed:    true,
 				Description: "The version of the MSSQL server",
 			},
 			"mysqlcharacterset": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(8),
+				Computed:    true,
 				Description: "The character set returned by the mysql vserver.",
 			},
 			"mysqlprotocolversion": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10),
+				Computed:    true,
 				Description: "The protocol version returned by the mysql vserver.",
 			},
 			"mysqlservercapabilities": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(41613),
+				Computed:    true,
 				Description: "The server capabilities returned by the mysql vserver.",
 			},
 			"mysqlserverversion": schema.StringAttribute{
@@ -319,7 +346,11 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The server version string returned by the mysql vserver.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the content switching virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters.\nCannot be changed after the CS virtual server is created.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, my server or my server).",
 			},
 			"netprofile": schema.StringAttribute{
@@ -328,16 +359,12 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The name of the network profile.",
 			},
 			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
 				Description: "New name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my name\" or 'my name').",
 			},
 			"oracleserverversion": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("10G"),
+				Computed:    true,
 				Description: "Oracle server version",
 			},
 			"persistencebackup": schema.StringAttribute{
@@ -364,13 +391,14 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Port number for content switching virtual server.",
 			},
 			"precedence": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("RULE"),
+				Computed:    true,
 				Description: "Type of precedence to use for both RULE-based and URL-based policies on the content switching virtual server. With the default (RULE) setting, incoming requests are evaluated against the rule-based content switching policies. If none of the rules match, the URL in the request is evaluated against the URL-based content switching policies.",
 			},
 			"probeport": schema.Int64Attribute{
@@ -385,17 +413,17 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"probesuccessresponsecode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("200 OK"),
+				Computed:    true,
 				Description: "HTTP code to return in SUCCESS case.",
 			},
 			"push": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Process traffic with the push virtual server that is bound to this content switching virtual server (specified by the Push VServer parameter). The service type of the push virtual server should be either HTTP or SSL.",
 			},
 			"pushlabel": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("none"),
+				Computed:    true,
 				Description: "Expression for extracting the label from the response received from server. This string can be either an existing rule name or an inline expression. The service type of the virtual server should be either HTTP or SSL.",
 			},
 			"pushmulticlients": schema.StringAttribute{
@@ -415,10 +443,11 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"range": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplace(),
 				},
-				Default:     int64default.StaticInt64(1),
 				Description: "Number of consecutive IP addresses, starting with the address specified by the IP Address parameter, to include in a range of addresses assigned to this virtual server.",
 			},
 			"redirectfromport": schema.Int64Attribute{
@@ -428,7 +457,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"redirectportrewrite": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "State of port rewrite while performing HTTP redirect.",
 			},
 			"redirecturl": schema.StringAttribute{
@@ -438,7 +467,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"rhistate": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("PASSIVE"),
+				Computed:    true,
 				Description: "A host route is injected according to the setting on the virtual servers\n            * If set to PASSIVE on all the virtual servers that share the IP address, the appliance always injects the hostroute.\n            * If set to ACTIVE on all the virtual servers that share the IP address, the appliance injects even if one virtual server is UP.\n            * If set to ACTIVE on some virtual servers and PASSIVE on the others, the appliance, injects even if one virtual server set to ACTIVE is UP.",
 			},
 			"rtspnat": schema.StringAttribute{
@@ -447,8 +476,10 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Enable network address translation (NAT) for real-time streaming protocol (RTSP) connections.",
 			},
 			"servicetype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Protocol used by the virtual server.",
@@ -470,12 +501,12 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"sopersistence": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Maintain source-IP based persistence on primary and backup virtual servers.",
 			},
 			"sopersistencetimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2),
+				Computed:    true,
 				Description: "Time-out value, in minutes, for spillover persistence.",
 			},
 			"sothreshold": schema.Int64Attribute{
@@ -484,22 +515,20 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Depending on the spillover method, the maximum number of connections or the maximum total bandwidth (Kbps) that a virtual server can handle before spillover occurs.",
 			},
 			"state": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("ENABLED"),
+				Optional:    true,
+				Computed:    true,
 				Description: "Initial state of the load balancing virtual server.",
 			},
 			"stateupdate": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable state updates for a specific content switching virtual server. By default, the Content Switching virtual server is always UP, regardless of the state of the Load Balancing virtual servers bound to it. This parameter interacts with the global setting as follows:\nGlobal Level | Vserver Level | Result\nENABLED      ENABLED        ENABLED\nENABLED      DISABLED       ENABLED\nDISABLED     ENABLED        ENABLED\nDISABLED     DISABLED       DISABLED\nIf you want to enable state updates for only some content switching virtual servers, be sure to disable the state update parameter.",
 			},
 			"targettype": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Virtual server target type.",
@@ -518,13 +547,14 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2),
+				Computed:    true,
 				Description: "Time period for which a persistence session is in effect.",
 			},
 			"ttl": schema.Int64Attribute{
@@ -534,13 +564,56 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"v6persistmasklen": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(128),
+				Computed:    true,
 				Description: "Persistence mask for IP based persistence types, for IPv6 virtual servers.",
 			},
 			"vipheader": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of virtual server IP and port header, for use with the VServer IP Port Insertion parameter.",
+			},
+			"sslcertkey": schema.StringAttribute{
+				Optional:    true,
+				Description: "Name of the SSL certificate-key pair to bind to the (SSL) content switching virtual server.",
+			},
+			"snisslcertkeys": schema.SetAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+				Description: "Names of the SNI SSL certificate-key pairs to bind to the (SSL) content switching virtual server.",
+			},
+			"sslprofile": schema.StringAttribute{
+				Optional:    true,
+				Description: "Name of the SSL profile that contains SSL settings for the (SSL) content switching virtual server.",
+			},
+			"ciphers": schema.ListAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+				Description: "Cipher alias names to bind to the (SSL) content switching virtual server (cluster deployments only).",
+			},
+			"ciphersuites": schema.ListAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+				Description: "Individual cipher suite names to bind to the (SSL) content switching virtual server.",
+			},
+			"lbvserverbinding": schema.StringAttribute{
+				Optional:    true,
+				Description: "Name of the default load balancing virtual server to bind to the content switching virtual server.",
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"sslpolicybinding": schema.SetNestedBlock{
+				Description: "SSL policies to bind to the (SSL) content switching virtual server.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"gotopriorityexpression": schema.StringAttribute{Optional: true, Computed: true, Description: "Expression or priority to determine the next policy to evaluate."},
+						"invoke":                 schema.BoolAttribute{Optional: true, Computed: true, Description: "Invoke a policy label if the current policy evaluates to TRUE."},
+						"labelname":              schema.StringAttribute{Optional: true, Computed: true, Description: "Name of the label to invoke if the current policy evaluates to TRUE."},
+						"labeltype":              schema.StringAttribute{Optional: true, Computed: true, Description: "Type of label to invoke."},
+						"policyname":             schema.StringAttribute{Optional: true, Computed: true, Description: "Name of the SSL policy bound to the SSL content switching virtual server."},
+						"priority":               schema.Int64Attribute{Optional: true, Computed: true, Description: "Priority of the policy binding."},
+						"type":                   schema.StringAttribute{Optional: true, Computed: true, Description: "Bind point to which the policy is bound."},
+					},
+				},
 			},
 		},
 	}
@@ -551,250 +624,249 @@ func csvserverGetThePayloadFromtheConfig(ctx context.Context, data *CsvserverRes
 
 	// Create API request body from the model
 	csvserver := cs.Csvserver{}
-	if !data.Apiprofile.IsNull() {
+	if !data.Apiprofile.IsNull() && !data.Apiprofile.IsUnknown() {
 		csvserver.Apiprofile = data.Apiprofile.ValueString()
 	}
-	if !data.Appflowlog.IsNull() {
+	if !data.Appflowlog.IsNull() && !data.Appflowlog.IsUnknown() {
 		csvserver.Appflowlog = data.Appflowlog.ValueString()
 	}
-	if !data.Authentication.IsNull() {
+	if !data.Authentication.IsNull() && !data.Authentication.IsUnknown() {
 		csvserver.Authentication = data.Authentication.ValueString()
 	}
-	if !data.Authenticationhost.IsNull() {
+	if !data.Authenticationhost.IsNull() && !data.Authenticationhost.IsUnknown() {
 		csvserver.Authenticationhost = data.Authenticationhost.ValueString()
 	}
-	if !data.Authn401.IsNull() {
+	if !data.Authn401.IsNull() && !data.Authn401.IsUnknown() {
 		csvserver.Authn401 = data.Authn401.ValueString()
 	}
-	if !data.Authnprofile.IsNull() {
+	if !data.Authnprofile.IsNull() && !data.Authnprofile.IsUnknown() {
 		csvserver.Authnprofile = data.Authnprofile.ValueString()
 	}
-	if !data.Authnvsname.IsNull() {
+	if !data.Authnvsname.IsNull() && !data.Authnvsname.IsUnknown() {
 		csvserver.Authnvsname = data.Authnvsname.ValueString()
 	}
-	if !data.Backupip.IsNull() {
+	if !data.Backupip.IsNull() && !data.Backupip.IsUnknown() {
 		csvserver.Backupip = data.Backupip.ValueString()
 	}
-	if !data.Backuppersistencetimeout.IsNull() {
+	if !data.Backuppersistencetimeout.IsNull() && !data.Backuppersistencetimeout.IsUnknown() {
 		csvserver.Backuppersistencetimeout = utils.IntPtr(int(data.Backuppersistencetimeout.ValueInt64()))
 	}
-	if !data.Backupvserver.IsNull() {
+	if !data.Backupvserver.IsNull() && !data.Backupvserver.IsUnknown() {
 		csvserver.Backupvserver = data.Backupvserver.ValueString()
 	}
-	if !data.Cacheable.IsNull() {
+	if !data.Cacheable.IsNull() && !data.Cacheable.IsUnknown() {
 		csvserver.Cacheable = data.Cacheable.ValueString()
 	}
-	if !data.Casesensitive.IsNull() {
+	if !data.Casesensitive.IsNull() && !data.Casesensitive.IsUnknown() {
 		csvserver.Casesensitive = data.Casesensitive.ValueString()
 	}
-	if !data.Clttimeout.IsNull() {
+	if !data.Clttimeout.IsNull() && !data.Clttimeout.IsUnknown() {
 		csvserver.Clttimeout = utils.IntPtr(int(data.Clttimeout.ValueInt64()))
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		csvserver.Comment = data.Comment.ValueString()
 	}
-	if !data.Cookiedomain.IsNull() {
+	if !data.Cookiedomain.IsNull() && !data.Cookiedomain.IsUnknown() {
 		csvserver.Cookiedomain = data.Cookiedomain.ValueString()
 	}
-	if !data.Cookiename.IsNull() {
+	if !data.Cookiename.IsNull() && !data.Cookiename.IsUnknown() {
 		csvserver.Cookiename = data.Cookiename.ValueString()
 	}
-	if !data.Cookietimeout.IsNull() {
+	if !data.Cookietimeout.IsNull() && !data.Cookietimeout.IsUnknown() {
 		csvserver.Cookietimeout = utils.IntPtr(int(data.Cookietimeout.ValueInt64()))
 	}
-	if !data.Dbprofilename.IsNull() {
+	if !data.Dbprofilename.IsNull() && !data.Dbprofilename.IsUnknown() {
 		csvserver.Dbprofilename = data.Dbprofilename.ValueString()
 	}
-	if !data.Disableprimaryondown.IsNull() {
+	if !data.Disableprimaryondown.IsNull() && !data.Disableprimaryondown.IsUnknown() {
 		csvserver.Disableprimaryondown = data.Disableprimaryondown.ValueString()
 	}
-	if !data.Dnsoverhttps.IsNull() {
+	if !data.Dnsoverhttps.IsNull() && !data.Dnsoverhttps.IsUnknown() {
 		csvserver.Dnsoverhttps = data.Dnsoverhttps.ValueString()
 	}
-	if !data.Dnsprofilename.IsNull() {
+	if !data.Dnsprofilename.IsNull() && !data.Dnsprofilename.IsUnknown() {
 		csvserver.Dnsprofilename = data.Dnsprofilename.ValueString()
 	}
-	if !data.Dnsrecordtype.IsNull() {
+	if !data.Dnsrecordtype.IsNull() && !data.Dnsrecordtype.IsUnknown() {
 		csvserver.Dnsrecordtype = data.Dnsrecordtype.ValueString()
 	}
-	if !data.Domainname.IsNull() {
+	if !data.Domainname.IsNull() && !data.Domainname.IsUnknown() {
 		csvserver.Domainname = data.Domainname.ValueString()
 	}
-	if !data.Downstateflush.IsNull() {
+	if !data.Downstateflush.IsNull() && !data.Downstateflush.IsUnknown() {
 		csvserver.Downstateflush = data.Downstateflush.ValueString()
 	}
-	if !data.Dtls.IsNull() {
+	if !data.Dtls.IsNull() && !data.Dtls.IsUnknown() {
 		csvserver.Dtls = data.Dtls.ValueString()
 	}
-	if !data.Httpprofilename.IsNull() {
+	if !data.Httpprofilename.IsNull() && !data.Httpprofilename.IsUnknown() {
 		csvserver.Httpprofilename = data.Httpprofilename.ValueString()
 	}
-	if !data.Httpsredirecturl.IsNull() {
+	if !data.Httpsredirecturl.IsNull() && !data.Httpsredirecturl.IsUnknown() {
 		csvserver.Httpsredirecturl = data.Httpsredirecturl.ValueString()
 	}
-	if !data.Icmpvsrresponse.IsNull() {
+	if !data.Icmpvsrresponse.IsNull() && !data.Icmpvsrresponse.IsUnknown() {
 		csvserver.Icmpvsrresponse = data.Icmpvsrresponse.ValueString()
 	}
-	if !data.Insertvserveripport.IsNull() {
+	if !data.Insertvserveripport.IsNull() && !data.Insertvserveripport.IsUnknown() {
 		csvserver.Insertvserveripport = data.Insertvserveripport.ValueString()
 	}
-	if !data.Ipmask.IsNull() {
+	if !data.Ipmask.IsNull() && !data.Ipmask.IsUnknown() {
 		csvserver.Ipmask = data.Ipmask.ValueString()
 	}
-	if !data.Ippattern.IsNull() {
+	if !data.Ippattern.IsNull() && !data.Ippattern.IsUnknown() {
 		csvserver.Ippattern = data.Ippattern.ValueString()
 	}
-	if !data.Ipset.IsNull() {
+	if !data.Ipset.IsNull() && !data.Ipset.IsUnknown() {
 		csvserver.Ipset = data.Ipset.ValueString()
 	}
-	if !data.Ipv46.IsNull() {
+	if !data.Ipv46.IsNull() && !data.Ipv46.IsUnknown() {
 		csvserver.Ipv46 = data.Ipv46.ValueString()
 	}
-	if !data.L2conn.IsNull() {
+	if !data.L2conn.IsNull() && !data.L2conn.IsUnknown() {
 		csvserver.L2conn = data.L2conn.ValueString()
 	}
-	if !data.Listenpolicy.IsNull() {
+	if !data.Listenpolicy.IsNull() && !data.Listenpolicy.IsUnknown() {
 		csvserver.Listenpolicy = data.Listenpolicy.ValueString()
 	}
-	if !data.Listenpriority.IsNull() {
+	if !data.Listenpriority.IsNull() && !data.Listenpriority.IsUnknown() {
 		csvserver.Listenpriority = utils.IntPtr(int(data.Listenpriority.ValueInt64()))
 	}
-	if !data.Mssqlserverversion.IsNull() {
+	if !data.Mssqlserverversion.IsNull() && !data.Mssqlserverversion.IsUnknown() {
 		csvserver.Mssqlserverversion = data.Mssqlserverversion.ValueString()
 	}
-	if !data.Mysqlcharacterset.IsNull() {
+	if !data.Mysqlcharacterset.IsNull() && !data.Mysqlcharacterset.IsUnknown() {
 		csvserver.Mysqlcharacterset = utils.IntPtr(int(data.Mysqlcharacterset.ValueInt64()))
 	}
-	if !data.Mysqlprotocolversion.IsNull() {
+	if !data.Mysqlprotocolversion.IsNull() && !data.Mysqlprotocolversion.IsUnknown() {
 		csvserver.Mysqlprotocolversion = utils.IntPtr(int(data.Mysqlprotocolversion.ValueInt64()))
 	}
-	if !data.Mysqlservercapabilities.IsNull() {
+	if !data.Mysqlservercapabilities.IsNull() && !data.Mysqlservercapabilities.IsUnknown() {
 		csvserver.Mysqlservercapabilities = utils.IntPtr(int(data.Mysqlservercapabilities.ValueInt64()))
 	}
-	if !data.Mysqlserverversion.IsNull() {
+	if !data.Mysqlserverversion.IsNull() && !data.Mysqlserverversion.IsUnknown() {
 		csvserver.Mysqlserverversion = data.Mysqlserverversion.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		csvserver.Name = data.Name.ValueString()
 	}
-	if !data.Netprofile.IsNull() {
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
 		csvserver.Netprofile = data.Netprofile.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		csvserver.Newname = data.Newname.ValueString()
-	}
-	if !data.Oracleserverversion.IsNull() {
+	// newname is rename-only (NITRO ?action=rename); it is not accepted in the
+	// add/set payload and is handled separately in Update.
+	if !data.Oracleserverversion.IsNull() && !data.Oracleserverversion.IsUnknown() {
 		csvserver.Oracleserverversion = data.Oracleserverversion.ValueString()
 	}
-	if !data.Persistencebackup.IsNull() {
+	if !data.Persistencebackup.IsNull() && !data.Persistencebackup.IsUnknown() {
 		csvserver.Persistencebackup = data.Persistencebackup.ValueString()
 	}
-	if !data.Persistenceid.IsNull() {
+	if !data.Persistenceid.IsNull() && !data.Persistenceid.IsUnknown() {
 		csvserver.Persistenceid = utils.IntPtr(int(data.Persistenceid.ValueInt64()))
 	}
-	if !data.Persistencetype.IsNull() {
+	if !data.Persistencetype.IsNull() && !data.Persistencetype.IsUnknown() {
 		csvserver.Persistencetype = data.Persistencetype.ValueString()
 	}
-	if !data.Persistmask.IsNull() {
+	if !data.Persistmask.IsNull() && !data.Persistmask.IsUnknown() {
 		csvserver.Persistmask = data.Persistmask.ValueString()
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		csvserver.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Precedence.IsNull() {
+	if !data.Precedence.IsNull() && !data.Precedence.IsUnknown() {
 		csvserver.Precedence = data.Precedence.ValueString()
 	}
-	if !data.Probeport.IsNull() {
+	if !data.Probeport.IsNull() && !data.Probeport.IsUnknown() {
 		csvserver.Probeport = utils.IntPtr(int(data.Probeport.ValueInt64()))
 	}
-	if !data.Probeprotocol.IsNull() {
+	if !data.Probeprotocol.IsNull() && !data.Probeprotocol.IsUnknown() {
 		csvserver.Probeprotocol = data.Probeprotocol.ValueString()
 	}
-	if !data.Probesuccessresponsecode.IsNull() {
+	if !data.Probesuccessresponsecode.IsNull() && !data.Probesuccessresponsecode.IsUnknown() {
 		csvserver.Probesuccessresponsecode = data.Probesuccessresponsecode.ValueString()
 	}
-	if !data.Push.IsNull() {
+	if !data.Push.IsNull() && !data.Push.IsUnknown() {
 		csvserver.Push = data.Push.ValueString()
 	}
-	if !data.Pushlabel.IsNull() {
+	if !data.Pushlabel.IsNull() && !data.Pushlabel.IsUnknown() {
 		csvserver.Pushlabel = data.Pushlabel.ValueString()
 	}
-	if !data.Pushmulticlients.IsNull() {
+	if !data.Pushmulticlients.IsNull() && !data.Pushmulticlients.IsUnknown() {
 		csvserver.Pushmulticlients = data.Pushmulticlients.ValueString()
 	}
-	if !data.Pushvserver.IsNull() {
+	if !data.Pushvserver.IsNull() && !data.Pushvserver.IsUnknown() {
 		csvserver.Pushvserver = data.Pushvserver.ValueString()
 	}
-	if !data.Quicprofilename.IsNull() {
+	if !data.Quicprofilename.IsNull() && !data.Quicprofilename.IsUnknown() {
 		csvserver.Quicprofilename = data.Quicprofilename.ValueString()
 	}
-	if !data.Range.IsNull() {
+	if !data.Range.IsNull() && !data.Range.IsUnknown() {
 		csvserver.Range = utils.IntPtr(int(data.Range.ValueInt64()))
 	}
-	if !data.Redirectfromport.IsNull() {
+	if !data.Redirectfromport.IsNull() && !data.Redirectfromport.IsUnknown() {
 		csvserver.Redirectfromport = utils.IntPtr(int(data.Redirectfromport.ValueInt64()))
 	}
-	if !data.Redirectportrewrite.IsNull() {
+	if !data.Redirectportrewrite.IsNull() && !data.Redirectportrewrite.IsUnknown() {
 		csvserver.Redirectportrewrite = data.Redirectportrewrite.ValueString()
 	}
-	if !data.Redirecturl.IsNull() {
+	if !data.Redirecturl.IsNull() && !data.Redirecturl.IsUnknown() {
 		csvserver.Redirecturl = data.Redirecturl.ValueString()
 	}
-	if !data.Rhistate.IsNull() {
+	if !data.Rhistate.IsNull() && !data.Rhistate.IsUnknown() {
 		csvserver.Rhistate = data.Rhistate.ValueString()
 	}
-	if !data.Rtspnat.IsNull() {
+	if !data.Rtspnat.IsNull() && !data.Rtspnat.IsUnknown() {
 		csvserver.Rtspnat = data.Rtspnat.ValueString()
 	}
-	if !data.Servicetype.IsNull() {
+	if !data.Servicetype.IsNull() && !data.Servicetype.IsUnknown() {
 		csvserver.Servicetype = data.Servicetype.ValueString()
 	}
-	if !data.Sitedomainttl.IsNull() {
+	if !data.Sitedomainttl.IsNull() && !data.Sitedomainttl.IsUnknown() {
 		csvserver.Sitedomainttl = utils.IntPtr(int(data.Sitedomainttl.ValueInt64()))
 	}
-	if !data.Sobackupaction.IsNull() {
+	if !data.Sobackupaction.IsNull() && !data.Sobackupaction.IsUnknown() {
 		csvserver.Sobackupaction = data.Sobackupaction.ValueString()
 	}
-	if !data.Somethod.IsNull() {
+	if !data.Somethod.IsNull() && !data.Somethod.IsUnknown() {
 		csvserver.Somethod = data.Somethod.ValueString()
 	}
-	if !data.Sopersistence.IsNull() {
+	if !data.Sopersistence.IsNull() && !data.Sopersistence.IsUnknown() {
 		csvserver.Sopersistence = data.Sopersistence.ValueString()
 	}
-	if !data.Sopersistencetimeout.IsNull() {
+	if !data.Sopersistencetimeout.IsNull() && !data.Sopersistencetimeout.IsUnknown() {
 		csvserver.Sopersistencetimeout = utils.IntPtr(int(data.Sopersistencetimeout.ValueInt64()))
 	}
-	if !data.Sothreshold.IsNull() {
+	if !data.Sothreshold.IsNull() && !data.Sothreshold.IsUnknown() {
 		csvserver.Sothreshold = utils.IntPtr(int(data.Sothreshold.ValueInt64()))
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		csvserver.State = data.State.ValueString()
 	}
-	if !data.Stateupdate.IsNull() {
+	if !data.Stateupdate.IsNull() && !data.Stateupdate.IsUnknown() {
 		csvserver.Stateupdate = data.Stateupdate.ValueString()
 	}
-	if !data.Targettype.IsNull() {
+	if !data.Targettype.IsNull() && !data.Targettype.IsUnknown() {
 		csvserver.Targettype = data.Targettype.ValueString()
 	}
-	if !data.Tcpprobeport.IsNull() {
+	if !data.Tcpprobeport.IsNull() && !data.Tcpprobeport.IsUnknown() {
 		csvserver.Tcpprobeport = utils.IntPtr(int(data.Tcpprobeport.ValueInt64()))
 	}
-	if !data.Tcpprofilename.IsNull() {
+	if !data.Tcpprofilename.IsNull() && !data.Tcpprofilename.IsUnknown() {
 		csvserver.Tcpprofilename = data.Tcpprofilename.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		csvserver.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Timeout.IsNull() {
+	if !data.Timeout.IsNull() && !data.Timeout.IsUnknown() {
 		csvserver.Timeout = utils.IntPtr(int(data.Timeout.ValueInt64()))
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		csvserver.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
-	if !data.V6persistmasklen.IsNull() {
+	if !data.V6persistmasklen.IsNull() && !data.V6persistmasklen.IsUnknown() {
 		csvserver.V6persistmasklen = utils.IntPtr(int(data.V6persistmasklen.ValueInt64()))
 	}
-	if !data.Vipheader.IsNull() {
+	if !data.Vipheader.IsNull() && !data.Vipheader.IsUnknown() {
 		csvserver.Vipheader = data.Vipheader.ValueString()
 	}
 
@@ -1024,21 +1096,23 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 	} else {
 		data.Mysqlserverversion = types.StringNull()
 	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
+	// Preserve the configured name. Only adopt the name from the GET response
+	// when the model has no name yet (e.g. import, where only the ID is known).
+	// After a rename the live object is named <newname> while the configured
+	// name attribute still holds the original value, so blindly overwriting it
+	// would clobber the user's config and trigger a spurious RequiresReplace.
+	if data.Name.IsNull() || data.Name.ValueString() == "" {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
 	}
 	if val, ok := getResponseData["netprofile"]; ok && val != nil {
 		data.Netprofile = types.StringValue(val.(string))
 	} else {
 		data.Netprofile = types.StringNull()
 	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
-	}
+	// newname is rename-only and never returned by GET; preserve the plan/state
+	// value so it does not flap to null on read.
 	if val, ok := getResponseData["oracleserverversion"]; ok && val != nil {
 		data.Oracleserverversion = types.StringValue(val.(string))
 	} else {
@@ -1195,9 +1269,13 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 	} else {
 		data.Sothreshold = types.Int64Null()
 	}
+	// The csvserver GET returns the operational status as "curstate" and does
+	// NOT echo the admin "state" attribute. Preserve the configured/plan value
+	// (only null it when it was never set) so a configured state does not flap
+	// and cause an "inconsistent result after apply".
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 	if val, ok := getResponseData["stateupdate"]; ok && val != nil {
@@ -1256,9 +1334,13 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 		data.Vipheader = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Set ID for the resource to the live object name returned by GET. This keeps
+	// the ID tracking the actual object even after an in-place rename (where the
+	// live name is <newname> while the configured name attribute is unchanged).
+	// It also sets the ID for the datasource, which has no Create.
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Id = types.StringValue(val.(string))
+	}
 
 	return data
 }

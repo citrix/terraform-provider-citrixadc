@@ -8,8 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -37,7 +35,7 @@ func (r *InatparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"nat46fragheader": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "When disabled, translator will not insert IPv6 fragmentation header for non fragmented IPv4 packets",
 			},
 			"nat46ignoretos": schema.StringAttribute{
@@ -47,7 +45,7 @@ func (r *InatparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"nat46v6mtu": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1280),
+				Computed:    true,
 				Description: "MTU setting for the IPv6 side. If the incoming IPv4 packet greater than this, either fragment or send icmp need fragmentation error.",
 			},
 			"nat46v6prefix": schema.StringAttribute{
@@ -57,7 +55,7 @@ func (r *InatparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"nat46zerochecksum": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Calculate checksum for UDP packets with zero checksum",
 			},
 			"td": schema.Int64Attribute{
@@ -74,22 +72,28 @@ func inatparamGetThePayloadFromtheConfig(ctx context.Context, data *InatparamRes
 
 	// Create API request body from the model
 	inatparam := network.Inatparam{}
-	if !data.Nat46fragheader.IsNull() {
+	if !data.Nat46fragheader.IsNull() && !data.Nat46fragheader.IsUnknown() {
 		inatparam.Nat46fragheader = data.Nat46fragheader.ValueString()
 	}
-	if !data.Nat46ignoretos.IsNull() {
+	if !data.Nat46ignoretos.IsNull() && !data.Nat46ignoretos.IsUnknown() {
 		inatparam.Nat46ignoretos = data.Nat46ignoretos.ValueString()
 	}
-	if !data.Nat46v6mtu.IsNull() {
+	if !data.Nat46v6mtu.IsNull() && !data.Nat46v6mtu.IsUnknown() {
 		inatparam.Nat46v6mtu = utils.IntPtr(int(data.Nat46v6mtu.ValueInt64()))
 	}
-	if !data.Nat46v6prefix.IsNull() {
+	if !data.Nat46v6prefix.IsNull() && !data.Nat46v6prefix.IsUnknown() {
 		inatparam.Nat46v6prefix = data.Nat46v6prefix.ValueString()
 	}
-	if !data.Nat46zerochecksum.IsNull() {
+	if !data.Nat46zerochecksum.IsNull() && !data.Nat46zerochecksum.IsUnknown() {
 		inatparam.Nat46zerochecksum = data.Nat46zerochecksum.ValueString()
 	}
-	if !data.Td.IsNull() {
+	// td is a co-dependent key: NITRO rejects a payload that carries td unless
+	// nat46v6prefix is also present (errorcode 1093 "Argument pre-requisite
+	// missing [td, nat46v6Prefix]"). Match the SDK v2 d.GetOk("td") semantics,
+	// which omit td for the default 0: only include td when the user explicitly
+	// set a non-zero value. Leaving the pointer nil marshals to "td":null, which
+	// NITRO accepts and treats as the default traffic domain (0).
+	if !data.Td.IsNull() && !data.Td.IsUnknown() && data.Td.ValueInt64() != 0 {
 		inatparam.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -99,44 +103,47 @@ func inatparamGetThePayloadFromtheConfig(ctx context.Context, data *InatparamRes
 func inatparamSetAttrFromGet(ctx context.Context, data *InatparamResourceModel, getResponseData map[string]interface{}) *InatparamResourceModel {
 	tflog.Debug(ctx, "In inatparamSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. For Optional+Computed attributes whose
+	// NITRO default may be omitted from the GET response, only null the value
+	// when it was unknown (never configured); this preserves a value the user
+	// explicitly configured and avoids "inconsistent result after apply".
 	if val, ok := getResponseData["nat46fragheader"]; ok && val != nil {
 		data.Nat46fragheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Nat46fragheader.IsUnknown() {
 		data.Nat46fragheader = types.StringNull()
 	}
 	if val, ok := getResponseData["nat46ignoretos"]; ok && val != nil {
 		data.Nat46ignoretos = types.StringValue(val.(string))
-	} else {
+	} else if data.Nat46ignoretos.IsUnknown() {
 		data.Nat46ignoretos = types.StringNull()
 	}
 	if val, ok := getResponseData["nat46v6mtu"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nat46v6mtu = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nat46v6mtu.IsUnknown() {
 		data.Nat46v6mtu = types.Int64Null()
 	}
 	if val, ok := getResponseData["nat46v6prefix"]; ok && val != nil {
 		data.Nat46v6prefix = types.StringValue(val.(string))
-	} else {
+	} else if data.Nat46v6prefix.IsUnknown() {
 		data.Nat46v6prefix = types.StringNull()
 	}
 	if val, ok := getResponseData["nat46zerochecksum"]; ok && val != nil {
 		data.Nat46zerochecksum = types.StringValue(val.(string))
-	} else {
+	} else if data.Nat46zerochecksum.IsUnknown() {
 		data.Nat46zerochecksum = types.StringNull()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the resource.
+	// Case 2: Single unique attribute (the traffic domain, td).
 	data.Id = types.StringValue(fmt.Sprintf("%d", data.Td.ValueInt64()))
 
 	return data

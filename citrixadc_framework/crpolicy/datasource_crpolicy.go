@@ -55,7 +55,7 @@ func (d *CrpolicyDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	crpolicySetAttrFromGet(ctx, &data, getResponseData)
+	crpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

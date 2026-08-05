@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *ClusternodeResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating clusternode resource")
 
-	// clusternode := clusternodeGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	clusternode := clusternodeGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Clusternode.Type(), &clusternode)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternode, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("clusternode-config")
+	// Named resource - use AddResource keyed on nodeid
+	clusternodeId := fmt.Sprintf("%d", data.Nodeid.ValueInt64())
+	_, err := r.client.AddResource(service.Clusternode.Type(), clusternodeId, &clusternode)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create clusternode, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created clusternode resource")
 
+	// Set ID for the resource before reading state back (matches SDK v2 id = nodeid)
+	data.Id = types.StringValue(clusternodeId)
+
 	// Read the updated state back
-	r.readClusternodeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readClusternodeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "clusternode not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *ClusternodeResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading clusternode resource")
 
-	r.readClusternodeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readClusternodeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ClusternodeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ClusternodeResourceModel
+	var data, state ClusternodeResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,59 @@ func (r *ClusternodeResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating clusternode resource")
 
-	// Create API request body from the model
-	// clusternode := clusternodeGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes (matches SDK v2)
+	hasChange := false
+	if !data.Backplane.Equal(state.Backplane) {
+		tflog.Debug(ctx, "backplane has changed for clusternode")
+		hasChange = true
+	}
+	if !data.Delay.Equal(state.Delay) {
+		tflog.Debug(ctx, "delay has changed for clusternode")
+		hasChange = true
+	}
+	if !data.Nodegroup.Equal(state.Nodegroup) {
+		tflog.Debug(ctx, "nodegroup has changed for clusternode")
+		hasChange = true
+	}
+	if !data.Priority.Equal(state.Priority) {
+		tflog.Debug(ctx, "priority has changed for clusternode")
+		hasChange = true
+	}
+	if !data.State.Equal(state.State) {
+		tflog.Debug(ctx, "state has changed for clusternode")
+		hasChange = true
+	}
+	if !data.Tunnelmode.Equal(state.Tunnelmode) {
+		tflog.Debug(ctx, "tunnelmode has changed for clusternode")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Clusternode.Type(), &clusternode)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update clusternode, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated clusternode resource")
+	if hasChange {
+		// Named resource - use UpdateResource keyed on nodeid
+		clusternode := clusternodeGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		clusternodeId := data.Id.ValueString()
+		_, err := r.client.UpdateResource(service.Clusternode.Type(), clusternodeId, &clusternode)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update clusternode, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated clusternode resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for clusternode resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readClusternodeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readClusternodeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "clusternode not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +191,43 @@ func (r *ClusternodeResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Debug(ctx, "Deleting clusternode resource")
 
-	// For clusternode, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted clusternode resource from state")
+	// Named resource - delete keyed on nodeid, passing delete-time args
+	// clearnodegroupconfig (default YES) and force (only when true), matching SDK v2.
+	args := make([]string, 0)
+	if !data.Clearnodegroupconfig.IsNull() && data.Clearnodegroupconfig.ValueString() != "" {
+		args = append(args, fmt.Sprintf("clearnodegroupconfig:%s", data.Clearnodegroupconfig.ValueString()))
+	} else {
+		args = append(args, "clearnodegroupconfig:YES")
+	}
+	if !data.Force.IsNull() && data.Force.ValueBool() {
+		args = append(args, fmt.Sprintf("force:%t", data.Force.ValueBool()))
+	}
+
+	err := r.client.DeleteResourceWithArgs(service.Clusternode.Type(), data.Id.ValueString(), args)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete clusternode, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted clusternode resource")
 }
 
-// Helper function to read clusternode data from API
-func (r *ClusternodeResource) readClusternodeFromApi(ctx context.Context, data *ClusternodeResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Clusternode.Type(), "")
+// Helper function to read clusternode data from API. Returns false when the resource no
+// longer exists on the ADC so the caller can remove it from state.
+func (r *ClusternodeResource) readClusternodeFromApi(ctx context.Context, data *ClusternodeResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute (nodeid) - ID is the plain value
+	clusternodeId := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Clusternode.Type(), clusternodeId)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read clusternode, got error: %s", err))
-		return
+		return false
 	}
 
 	clusternodeSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

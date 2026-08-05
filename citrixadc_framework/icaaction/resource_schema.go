@@ -41,7 +41,10 @@ func (r *IcaactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Name of the ica latencyprofile to be associated with this action.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the ICA action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the ICA action is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my ica action\" or 'my ica action').",
 			},
 			"newname": schema.StringAttribute{
@@ -56,23 +59,41 @@ func (r *IcaactionResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func icaactionGetThePayloadFromtheConfig(ctx context.Context, data *IcaactionResourceModel) ica.Icaaction {
-	tflog.Debug(ctx, "In icaactionGetThePayloadFromtheConfig Function")
+func icaactionGetThePayloadFromthePlan(ctx context.Context, data *IcaactionResourceModel) ica.Icaaction {
+	tflog.Debug(ctx, "In icaactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	icaaction := ica.Icaaction{}
-	if !data.Accessprofilename.IsNull() {
+	if !data.Accessprofilename.IsNull() && !data.Accessprofilename.IsUnknown() {
 		icaaction.Accessprofilename = data.Accessprofilename.ValueString()
 	}
-	if !data.Latencyprofilename.IsNull() {
+	if !data.Latencyprofilename.IsNull() && !data.Latencyprofilename.IsUnknown() {
 		icaaction.Latencyprofilename = data.Latencyprofilename.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		icaaction.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		icaaction.Newname = data.Newname.ValueString()
+	// newname is a rename-only parameter (NITRO ?action=rename) - excluded from the add payload
+
+	return icaaction
+}
+
+func icaactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *IcaactionResourceModel) ica.Icaaction {
+	tflog.Debug(ctx, "In icaactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// name is always carried because the update is a PUT to /config/icaaction (unnamed).
+	icaaction := ica.Icaaction{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		icaaction.Name = data.Name.ValueString()
 	}
+	if !data.Accessprofilename.IsNull() && !data.Accessprofilename.IsUnknown() {
+		icaaction.Accessprofilename = data.Accessprofilename.ValueString()
+	}
+	if !data.Latencyprofilename.IsNull() && !data.Latencyprofilename.IsUnknown() {
+		icaaction.Latencyprofilename = data.Latencyprofilename.ValueString()
+	}
+	// newname is a rename-only parameter - excluded from the update payload
 
 	return icaaction
 }
@@ -96,14 +117,17 @@ func icaactionSetAttrFromGet(ctx context.Context, data *IcaactionResourceModel, 
 	} else {
 		data.Name = types.StringNull()
 	}
+	// newname is a rename-only parameter and is never returned by the NITRO GET.
+	// Preserve a configured value; only resolve an unknown (Computed) value to null
+	// so a configured newname does not trigger "inconsistent result after apply".
 	if val, ok := getResponseData["newname"]; ok && val != nil {
 		data.Newname = types.StringValue(val.(string))
-	} else {
+	} else if data.Newname.IsUnknown() {
 		data.Newname = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

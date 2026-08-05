@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *AuthenticationsamlidpprofileResource) Create(ctx context.Context, req r
 
 	tflog.Debug(ctx, "Creating authenticationsamlidpprofile resource")
 
-	// authenticationsamlidpprofile := authenticationsamlidpprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	authenticationsamlidpprofile := authenticationsamlidpprofileGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationsamlidpprofile.Type(), &authenticationsamlidpprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationsamlidpprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationsamlidpprofile-config")
+	// Named resource - use AddResource
+	authenticationsamlidpprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationsamlidpprofile.Type(), authenticationsamlidpprofileName, &authenticationsamlidpprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationsamlidpprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationsamlidpprofile resource")
 
+	// Set ID for the resource before reading state (id == name)
+	data.Id = types.StringValue(authenticationsamlidpprofileName)
+
 	// Read the updated state back
-	r.readAuthenticationsamlidpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationsamlidpprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationsamlidpprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *AuthenticationsamlidpprofileResource) Read(ctx context.Context, req res
 
 	tflog.Debug(ctx, "Reading authenticationsamlidpprofile resource")
 
-	r.readAuthenticationsamlidpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAuthenticationsamlidpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuthenticationsamlidpprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationsamlidpprofileResourceModel
+	var data, state AuthenticationsamlidpprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,32 @@ func (r *AuthenticationsamlidpprofileResource) Update(ctx context.Context, req r
 		return
 	}
 
+	// Preserve ID from prior state (name is RequiresReplace, so it never changes here)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationsamlidpprofile resource")
 
-	// Create API request body from the model
-	// authenticationsamlidpprofile := authenticationsamlidpprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan and update the resource
+	authenticationsamlidpprofile := authenticationsamlidpprofileGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationsamlidpprofile.Type(), &authenticationsamlidpprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationsamlidpprofile, got error: %s", err))
-	//	 return
-	// }
+	// Named resource - use UpdateResource
+	authenticationsamlidpprofileName := data.Name.ValueString()
+	_, err := r.client.UpdateResource(service.Authenticationsamlidpprofile.Type(), authenticationsamlidpprofileName, &authenticationsamlidpprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationsamlidpprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated authenticationsamlidpprofile resource")
 
 	// Read the updated state back
-	r.readAuthenticationsamlidpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAuthenticationsamlidpprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "authenticationsamlidpprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +165,33 @@ func (r *AuthenticationsamlidpprofileResource) Delete(ctx context.Context, req r
 
 	tflog.Debug(ctx, "Deleting authenticationsamlidpprofile resource")
 
-	// For authenticationsamlidpprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationsamlidpprofile resource from state")
+	// Named resource - delete using DeleteResource keyed on the ID (name)
+	authenticationsamlidpprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Authenticationsamlidpprofile.Type(), authenticationsamlidpprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationsamlidpprofile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted authenticationsamlidpprofile resource")
 }
 
 // Helper function to read authenticationsamlidpprofile data from API
-func (r *AuthenticationsamlidpprofileResource) readAuthenticationsamlidpprofileFromApi(ctx context.Context, data *AuthenticationsamlidpprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationsamlidpprofile.Type(), "")
+func (r *AuthenticationsamlidpprofileResource) readAuthenticationsamlidpprofileFromApi(ctx context.Context, data *AuthenticationsamlidpprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Find with single ID attribute - ID is the plain value (the profile name)
+	authenticationsamlidpprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Authenticationsamlidpprofile.Type(), authenticationsamlidpprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationsamlidpprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	authenticationsamlidpprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -43,19 +43,20 @@ func (d *InterfacepairDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	// Case 2: Find with single ID attribute
+	// Look up by the primary key (interface_id -> NITRO "id").
 	id_Name := fmt.Sprintf("%d", data.Interfaceid.ValueInt64())
 
-	var getResponseData map[string]interface{}
-	var err error
-
-	getResponseData, err = d.client.FindResource(service.Interfacepair.Type(), id_Name)
+	getResponseData, err := d.client.FindResource(service.Interfacepair.Type(), id_Name)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read interfacepair, got error: %s", err))
 		return
 	}
+	if getResponseData == nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("interfacepair with id %s not found", id_Name))
+		return
+	}
 
-	interfacepairSetAttrFromGet(ctx, &data, getResponseData)
+	interfacepairSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

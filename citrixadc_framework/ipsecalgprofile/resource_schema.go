@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,26 +35,29 @@ func (r *IpsecalgprofileResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"connfailover": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Mode in which the connection failover feature must operate for the IPSec Alg. After a failover, established UDP connections and ESP packet flows are kept active and resumed on the secondary appliance. Recomended setting is ENABLED.",
 			},
 			"espgatetimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(30),
+				Computed:    true,
 				Description: "Timeout ESP in seconds as no ESP packets are seen after IKE negotiation",
 			},
 			"espsessiontimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(60),
+				Computed:    true,
 				Description: "ESP session timeout in minutes.",
 			},
 			"ikesessiontimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(60),
+				Computed:    true,
 				Description: "IKE session timeout in minutes",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the ipsec alg profile",
 			},
 		},
@@ -66,19 +69,19 @@ func ipsecalgprofileGetThePayloadFromtheConfig(ctx context.Context, data *Ipseca
 
 	// Create API request body from the model
 	ipsecalgprofile := ipsecalg.Ipsecalgprofile{}
-	if !data.Connfailover.IsNull() {
+	if !data.Connfailover.IsNull() && !data.Connfailover.IsUnknown() {
 		ipsecalgprofile.Connfailover = data.Connfailover.ValueString()
 	}
-	if !data.Espgatetimeout.IsNull() {
+	if !data.Espgatetimeout.IsNull() && !data.Espgatetimeout.IsUnknown() {
 		ipsecalgprofile.Espgatetimeout = utils.IntPtr(int(data.Espgatetimeout.ValueInt64()))
 	}
-	if !data.Espsessiontimeout.IsNull() {
+	if !data.Espsessiontimeout.IsNull() && !data.Espsessiontimeout.IsUnknown() {
 		ipsecalgprofile.Espsessiontimeout = utils.IntPtr(int(data.Espsessiontimeout.ValueInt64()))
 	}
-	if !data.Ikesessiontimeout.IsNull() {
+	if !data.Ikesessiontimeout.IsNull() && !data.Ikesessiontimeout.IsUnknown() {
 		ipsecalgprofile.Ikesessiontimeout = utils.IntPtr(int(data.Ikesessiontimeout.ValueInt64()))
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		ipsecalgprofile.Name = data.Name.ValueString()
 	}
 
@@ -98,21 +101,21 @@ func ipsecalgprofileSetAttrFromGet(ctx context.Context, data *IpsecalgprofileRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Espgatetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Espgatetimeout.IsUnknown() {
 		data.Espgatetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["espsessiontimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Espsessiontimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Espsessiontimeout.IsUnknown() {
 		data.Espsessiontimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["ikesessiontimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ikesessiontimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ikesessiontimeout.IsUnknown() {
 		data.Ikesessiontimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *IcaaccessprofileResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating icaaccessprofile resource")
 
-	// icaaccessprofile := icaaccessprofileGetThePayloadFromtheConfig(ctx, &data)
+	icaaccessprofile := icaaccessprofileGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Icaaccessprofile.Type(), &icaaccessprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create icaaccessprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("icaaccessprofile-config")
+	// Named resource - use AddResource (POST /nitro/v1/config/icaaccessprofile)
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Icaaccessprofile.Type(), name_value, &icaaccessprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create icaaccessprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created icaaccessprofile resource")
 
+	// Set ID for the resource before reading state (single unique attribute)
+	data.Id = types.StringValue(data.Name.ValueString())
+
 	// Read the updated state back
-	r.readIcaaccessprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readIcaaccessprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "icaaccessprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *IcaaccessprofileResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading icaaccessprofile resource")
 
-	r.readIcaaccessprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readIcaaccessprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *IcaaccessprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data IcaaccessprofileResourceModel
+	var data, state IcaaccessprofileResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,92 @@ func (r *IcaaccessprofileResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating icaaccessprofile resource")
 
-	// Create API request body from the model
-	// icaaccessprofile := icaaccessprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Clientaudioredirection.Equal(state.Clientaudioredirection) {
+		tflog.Debug(ctx, "clientaudioredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Clientclipboardredirection.Equal(state.Clientclipboardredirection) {
+		tflog.Debug(ctx, "clientclipboardredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Clientcomportredirection.Equal(state.Clientcomportredirection) {
+		tflog.Debug(ctx, "clientcomportredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Clientdriveredirection.Equal(state.Clientdriveredirection) {
+		tflog.Debug(ctx, "clientdriveredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Clientprinterredirection.Equal(state.Clientprinterredirection) {
+		tflog.Debug(ctx, "clientprinterredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Clienttwaindeviceredirection.Equal(state.Clienttwaindeviceredirection) {
+		tflog.Debug(ctx, "clienttwaindeviceredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Clientusbdriveredirection.Equal(state.Clientusbdriveredirection) {
+		tflog.Debug(ctx, "clientusbdriveredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Connectclientlptports.Equal(state.Connectclientlptports) {
+		tflog.Debug(ctx, "connectclientlptports has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Draganddrop.Equal(state.Draganddrop) {
+		tflog.Debug(ctx, "draganddrop has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Fido2redirection.Equal(state.Fido2redirection) {
+		tflog.Debug(ctx, "fido2redirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Localremotedatasharing.Equal(state.Localremotedatasharing) {
+		tflog.Debug(ctx, "localremotedatasharing has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Multistream.Equal(state.Multistream) {
+		tflog.Debug(ctx, "multistream has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Smartcardredirection.Equal(state.Smartcardredirection) {
+		tflog.Debug(ctx, "smartcardredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
+	if !data.Wiaredirection.Equal(state.Wiaredirection) {
+		tflog.Debug(ctx, "wiaredirection has changed for icaaccessprofile")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Icaaccessprofile.Type(), &icaaccessprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update icaaccessprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		icaaccessprofile := icaaccessprofileGetThePayloadFromthePlan(ctx, &data)
+		// Named resource update is a PUT to the collection URL with name in the body
+		err := r.client.UpdateUnnamedResource(service.Icaaccessprofile.Type(), &icaaccessprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update icaaccessprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated icaaccessprofile resource")
+		tflog.Trace(ctx, "Updated icaaccessprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for icaaccessprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readIcaaccessprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readIcaaccessprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "icaaccessprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +223,33 @@ func (r *IcaaccessprofileResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleting icaaccessprofile resource")
+	// Named resource - delete using DeleteResource (DELETE /nitro/v1/config/icaaccessprofile/<name>)
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Icaaccessprofile.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete icaaccessprofile, got error: %s", err))
+		return
+	}
 
-	// For icaaccessprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted icaaccessprofile resource from state")
+	tflog.Trace(ctx, "Deleted icaaccessprofile resource")
 }
 
 // Helper function to read icaaccessprofile data from API
-func (r *IcaaccessprofileResource) readIcaaccessprofileFromApi(ctx context.Context, data *IcaaccessprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Icaaccessprofile.Type(), "")
+func (r *IcaaccessprofileResource) readIcaaccessprofileFromApi(ctx context.Context, data *IcaaccessprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	name_value := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Icaaccessprofile.Type(), name_value)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read icaaccessprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	icaaccessprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,21 @@ func (r *AuthenticationoauthidppolicyResource) Create(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Creating authenticationoauthidppolicy resource")
-
-	// authenticationoauthidppolicy := authenticationoauthidppolicyGetThePayloadFromtheConfig(ctx, &data)
+	authenticationoauthidppolicy := authenticationoauthidppolicyGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationoauthidppolicy.Type(), &authenticationoauthidppolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationoauthidppolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationoauthidppolicy-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Authenticationoauthidppolicy.Type(), name_value, &authenticationoauthidppolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationoauthidppolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationoauthidppolicy resource")
+
+	// Set ID for the resource before reading state (single unique attribute -> plain name)
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
 	r.readAuthenticationoauthidppolicyFromApi(ctx, &data, &resp.Diagnostics)
@@ -90,13 +93,25 @@ func (r *AuthenticationoauthidppolicyResource) Read(ctx context.Context, req res
 
 	r.readAuthenticationoauthidppolicyFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource no longer exists on the ADC - remove it from state.
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuthenticationoauthidppolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationoauthidppolicyResourceModel
+	var data, state AuthenticationoauthidppolicyResourceModel
 
+	// Read Terraform prior state to preserve ID / detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +119,81 @@ func (r *AuthenticationoauthidppolicyResource) Update(ctx context.Context, req r
 		return
 	}
 
+	// Preserve ID from prior state (holds the current live name)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating authenticationoauthidppolicy resource")
 
-	// Create API request body from the model
-	// authenticationoauthidppolicy := authenticationoauthidppolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Rename branch: authenticationoauthidppolicy exposes a NITRO `rename` action. On a
+	// newname change, POST {name, newname} to ?action=rename and point the resource ID
+	// at the new name so subsequent reads/updates address the live object. (name itself
+	// is RequiresReplace, so a name change never reaches here - only newname does.)
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		// The rename SOURCE is the CURRENT LIVE name, tracked by the ID - NOT
+		// state.Name, which stays pinned to the originally configured value and would
+		// be stale on a second rename.
+		oldName := state.Id.ValueString()
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("Renaming authenticationoauthidppolicy from %q to %q", oldName, newName))
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationoauthidppolicy.Type(), &authenticationoauthidppolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationoauthidppolicy, got error: %s", err))
-	//	 return
-	// }
+		renamePayload := authentication.Authenticationoauthidppolicy{
+			Name:    oldName,
+			Newname: newName,
+		}
+		if err := r.client.ActOnResource(service.Authenticationoauthidppolicy.Type(), &renamePayload, "rename"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename authenticationoauthidppolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationoauthidppolicy resource")
+		// The live object is now named newName. Point the ID at it.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Read the updated state back
+	// Regular update branch: detect changes in the NITRO-updatable attributes.
+	hasChange := false
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for authenticationoauthidppolicy")
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for authenticationoauthidppolicy")
+		hasChange = true
+	}
+	if !data.Logaction.Equal(state.Logaction) {
+		tflog.Debug(ctx, "logaction has changed for authenticationoauthidppolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for authenticationoauthidppolicy")
+		hasChange = true
+	}
+	if !data.Undefaction.Equal(state.Undefaction) {
+		tflog.Debug(ctx, "undefaction has changed for authenticationoauthidppolicy")
+		hasChange = true
+	}
+
+	if hasChange {
+		authenticationoauthidppolicy := authenticationoauthidppolicyGetThePayloadFromthePlan(ctx, &data)
+		// Address the live object (== newname after a rename) as the update key.
+		authenticationoauthidppolicy.Name = data.Id.ValueString()
+		// Named resource - use UpdateResource
+		_, err := r.client.UpdateResource(service.Authenticationoauthidppolicy.Type(), data.Id.ValueString(), &authenticationoauthidppolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationoauthidppolicy, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated authenticationoauthidppolicy resource")
+	} else {
+		tflog.Debug(ctx, "No updatable changes detected for authenticationoauthidppolicy resource")
+	}
+
+	// Read the updated state back. Preserve the plan's user-facing key attributes across
+	// the read so a rename does not clobber the configured name / newname.
+	planName := data.Name
+	planNewname := data.Newname
 	r.readAuthenticationoauthidppolicyFromApi(ctx, &data, &resp.Diagnostics)
+	data.Name = planName
+	data.Newname = planNewname
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +210,37 @@ func (r *AuthenticationoauthidppolicyResource) Delete(ctx context.Context, req r
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationoauthidppolicy resource")
+	// Named resource - delete using DeleteResource. The ID holds the CURRENT LIVE name
+	// (== name at create, == newname after a rename), so delete by data.Id, NOT
+	// data.Name (which stays at the originally configured value after a rename).
+	liveName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Authenticationoauthidppolicy.Type(), liveName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationoauthidppolicy, got error: %s", err))
+		return
+	}
 
-	// For authenticationoauthidppolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationoauthidppolicy resource from state")
+	tflog.Trace(ctx, "Deleted authenticationoauthidppolicy resource")
 }
 
 // Helper function to read authenticationoauthidppolicy data from API
 func (r *AuthenticationoauthidppolicyResource) readAuthenticationoauthidppolicyFromApi(ctx context.Context, data *AuthenticationoauthidppolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationoauthidppolicy.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain (live) name value.
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Authenticationoauthidppolicy.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationoauthidppolicy, got error: %s", err))
 		return
 	}
 
 	authenticationoauthidppolicySetAttrFromGet(ctx, data, getResponseData)
-
 }

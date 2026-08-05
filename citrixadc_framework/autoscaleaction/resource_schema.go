@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -37,24 +36,29 @@ func (r *AutoscaleactionResource) Schema(ctx context.Context, req resource.Schem
 				Description: "The ID of the autoscaleaction resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "ActionScale action name.",
 			},
 			"parameters": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Parameters to use in the action",
 			},
 			"profilename": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "AutoScale profile name.",
 			},
 			"quiettime": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(300),
+				Computed:    true,
 				Description: "Time in seconds no other policy is evaluated or action is taken",
 			},
 			"type": schema.StringAttribute{
-				Required: true,
+				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -62,41 +66,73 @@ func (r *AutoscaleactionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"vmdestroygraceperiod": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10),
+				Computed:    true,
 				Description: "Time in minutes a VM is kept in inactive state before destroying",
 			},
 			"vserver": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Name of the vserver on which autoscale action has to be taken.",
 			},
 		},
 	}
 }
 
-func autoscaleactionGetThePayloadFromtheConfig(ctx context.Context, data *AutoscaleactionResourceModel) autoscale.Autoscaleaction {
-	tflog.Debug(ctx, "In autoscaleactionGetThePayloadFromtheConfig Function")
+// autoscaleactionGetThePayloadFromthePlan builds the full add/create payload.
+func autoscaleactionGetThePayloadFromthePlan(ctx context.Context, data *AutoscaleactionResourceModel) autoscale.Autoscaleaction {
+	tflog.Debug(ctx, "In autoscaleactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	autoscaleaction := autoscale.Autoscaleaction{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		autoscaleaction.Name = data.Name.ValueString()
 	}
-	if !data.Parameters.IsNull() {
+	if !data.Parameters.IsNull() && !data.Parameters.IsUnknown() {
 		autoscaleaction.Parameters = data.Parameters.ValueString()
 	}
-	if !data.Profilename.IsNull() {
+	if !data.Profilename.IsNull() && !data.Profilename.IsUnknown() {
 		autoscaleaction.Profilename = data.Profilename.ValueString()
 	}
-	if !data.Quiettime.IsNull() {
+	if !data.Quiettime.IsNull() && !data.Quiettime.IsUnknown() {
 		autoscaleaction.Quiettime = utils.IntPtr(int(data.Quiettime.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		autoscaleaction.Type = data.Type.ValueString()
 	}
-	if !data.Vmdestroygraceperiod.IsNull() {
+	if !data.Vmdestroygraceperiod.IsNull() && !data.Vmdestroygraceperiod.IsUnknown() {
 		autoscaleaction.Vmdestroygraceperiod = utils.IntPtr(int(data.Vmdestroygraceperiod.ValueInt64()))
 	}
-	if !data.Vserver.IsNull() {
+	if !data.Vserver.IsNull() && !data.Vserver.IsUnknown() {
+		autoscaleaction.Vserver = data.Vserver.ValueString()
+	}
+
+	return autoscaleaction
+}
+
+// autoscaleactionGetTheUpdatablePayloadFromThePlan builds the PUT/update payload.
+// The NITRO update (PUT /config/autoscaleaction) accepts only name plus the
+// updatable attributes; type is ForceNew/RequiresReplace and is excluded (matches
+// the SDK v2 update behavior).
+func autoscaleactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AutoscaleactionResourceModel) autoscale.Autoscaleaction {
+	tflog.Debug(ctx, "In autoscaleactionGetTheUpdatablePayloadFromThePlan Function")
+
+	autoscaleaction := autoscale.Autoscaleaction{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		autoscaleaction.Name = data.Name.ValueString()
+	}
+	if !data.Parameters.IsNull() && !data.Parameters.IsUnknown() {
+		autoscaleaction.Parameters = data.Parameters.ValueString()
+	}
+	if !data.Profilename.IsNull() && !data.Profilename.IsUnknown() {
+		autoscaleaction.Profilename = data.Profilename.ValueString()
+	}
+	if !data.Quiettime.IsNull() && !data.Quiettime.IsUnknown() {
+		autoscaleaction.Quiettime = utils.IntPtr(int(data.Quiettime.ValueInt64()))
+	}
+	if !data.Vmdestroygraceperiod.IsNull() && !data.Vmdestroygraceperiod.IsUnknown() {
+		autoscaleaction.Vmdestroygraceperiod = utils.IntPtr(int(data.Vmdestroygraceperiod.ValueInt64()))
+	}
+	if !data.Vserver.IsNull() && !data.Vserver.IsUnknown() {
 		autoscaleaction.Vserver = data.Vserver.ValueString()
 	}
 
@@ -126,7 +162,9 @@ func autoscaleactionSetAttrFromGet(ctx context.Context, data *AutoscaleactionRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Quiettime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Quiettime.IsUnknown() {
+		// NITRO omitted the value; only reset when the plan value is unknown so a
+		// configured value is preserved (prevents "inconsistent result after apply").
 		data.Quiettime = types.Int64Null()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
@@ -138,7 +176,9 @@ func autoscaleactionSetAttrFromGet(ctx context.Context, data *AutoscaleactionRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vmdestroygraceperiod = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vmdestroygraceperiod.IsUnknown() {
+		// NITRO omitted the value; only reset when the plan value is unknown so a
+		// configured value is preserved (prevents "inconsistent result after apply").
 		data.Vmdestroygraceperiod = types.Int64Null()
 	}
 	if val, ok := getResponseData["vserver"]; ok && val != nil {
@@ -148,7 +188,7 @@ func autoscaleactionSetAttrFromGet(ctx context.Context, data *AutoscaleactionRes
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

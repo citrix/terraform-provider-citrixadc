@@ -8,7 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,34 +34,37 @@ func (r *BridgegroupResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"dynamicrouting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable dynamic routing for this bridgegroup.",
 			},
 			"bridgegroup_id": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "An integer that uniquely identifies the bridge group.",
 			},
 			"ipv6dynamicrouting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable all IPv6 dynamic routing protocols on all VLANs bound to this bridgegroup. Note: For the ENABLED setting to work, you must configure IPv6 dynamic routing protocols from the VTYSH command line.",
 			},
 		},
 	}
 }
 
-func bridgegroupGetThePayloadFromtheConfig(ctx context.Context, data *BridgegroupResourceModel) network.Bridgegroup {
-	tflog.Debug(ctx, "In bridgegroupGetThePayloadFromtheConfig Function")
+func bridgegroupGetThePayloadFromthePlan(ctx context.Context, data *BridgegroupResourceModel) network.Bridgegroup {
+	tflog.Debug(ctx, "In bridgegroupGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	bridgegroup := network.Bridgegroup{}
-	if !data.Dynamicrouting.IsNull() {
-		bridgegroup.Dynamicrouting = data.Dynamicrouting.ValueString()
-	}
-	if !data.Bridgegroupid.IsNull() {
+	if !data.Bridgegroupid.IsNull() && !data.Bridgegroupid.IsUnknown() {
 		bridgegroup.Id = utils.IntPtr(int(data.Bridgegroupid.ValueInt64()))
 	}
-	if !data.Ipv6dynamicrouting.IsNull() {
+	if !data.Dynamicrouting.IsNull() && !data.Dynamicrouting.IsUnknown() {
+		bridgegroup.Dynamicrouting = data.Dynamicrouting.ValueString()
+	}
+	if !data.Ipv6dynamicrouting.IsNull() && !data.Ipv6dynamicrouting.IsUnknown() {
 		bridgegroup.Ipv6dynamicrouting = data.Ipv6dynamicrouting.ValueString()
 	}
 
@@ -90,7 +94,7 @@ func bridgegroupSetAttrFromGet(ctx context.Context, data *BridgegroupResourceMod
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(fmt.Sprintf("%d", data.Bridgegroupid.ValueInt64()))
 
 	return data

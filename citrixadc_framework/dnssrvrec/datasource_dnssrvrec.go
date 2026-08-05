@@ -74,11 +74,11 @@ func (d *DnssrvrecDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 		match := true
 
-		if v["domain"].(string) != domain_Name {
+		if d, ok := v["domain"].(string); !ok || d != domain_Name {
 			match = false
 		}
 
-		if v["target"].(string) != target_Name {
+		if t, ok := v["target"].(string); !ok || t != target_Name {
 			match = false
 		}
 

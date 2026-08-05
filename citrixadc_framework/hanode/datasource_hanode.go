@@ -55,7 +55,7 @@ func (d *HanodeDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	hanodeSetAttrFromGet(ctx, &data, getResponseData)
+	hanodeSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

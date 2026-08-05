@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/authentication"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -54,20 +57,21 @@ func (r *AuthenticationpolicylabelResource) Create(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Creating authenticationpolicylabel resource")
-
-	// authenticationpolicylabel := authenticationpolicylabelGetThePayloadFromtheConfig(ctx, &data)
+	authenticationpolicylabel := authenticationpolicylabelGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationpolicylabel.Type(), &authenticationpolicylabel)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationpolicylabel, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("authenticationpolicylabel-config")
+	// Named resource - use AddResource
+	labelname_value := data.Labelname.ValueString()
+	_, err := r.client.AddResource(service.Authenticationpolicylabel.Type(), labelname_value, &authenticationpolicylabel)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create authenticationpolicylabel, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created authenticationpolicylabel resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
 
 	// Read the updated state back
 	r.readAuthenticationpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
@@ -90,13 +94,24 @@ func (r *AuthenticationpolicylabelResource) Read(ctx context.Context, req resour
 
 	r.readAuthenticationpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AuthenticationpolicylabelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AuthenticationpolicylabelResourceModel
+	var data, state AuthenticationpolicylabelResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +119,46 @@ func (r *AuthenticationpolicylabelResource) Update(ctx context.Context, req reso
 		return
 	}
 
-	tflog.Debug(ctx, "Updating authenticationpolicylabel resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// authenticationpolicylabel := authenticationpolicylabelGetThePayloadFromtheConfig(ctx, &data)
+	// Rename support: authenticationpolicylabel exposes a NITRO update (PUT) endpoint,
+	// but every user-facing schema attribute (labelname, comment, loginschema, type)
+	// uses RequiresReplace to preserve the SDK v2 ForceNew contract, so Terraform
+	// recreates the resource on any of those changes and never reaches here for them.
+	// The ONLY change that lands in Update is `newname`, which drives an in-place
+	// rename via the NITRO ?action=rename endpoint.
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		// The rename SOURCE is the CURRENT LIVE name, tracked by the ID - NOT
+		// state.Labelname (which stays pinned to the originally configured value and
+		// would point at a stale name on a second rename). The live name is whatever
+		// the prior rename set the ID to (== labelname before any rename).
+		oldName := state.Id.ValueString()
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("Renaming authenticationpolicylabel from %q to %q", oldName, newName))
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Authenticationpolicylabel.Type(), &authenticationpolicylabel)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update authenticationpolicylabel, got error: %s", err))
-	//	 return
-	// }
+		renamePayload := authentication.Authenticationpolicylabel{
+			Labelname: oldName,
+			Newname:   newName,
+		}
+		if err := r.client.ActOnResource(service.Authenticationpolicylabel.Type(), &renamePayload, "rename"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename authenticationpolicylabel, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated authenticationpolicylabel resource")
+		// The live object is now named newName. Point the ID at it so the read below
+		// (and all future reads) address the renamed resource.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Read the updated state back
+	// Read the current state back. Capture the plan's labelname/newname and restore
+	// them after the read so a rename does not clobber the user-facing values or
+	// trigger an inconsistent-result / perpetual diff.
+	planLabelname := data.Labelname
+	planNewname := data.Newname
 	r.readAuthenticationpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	data.Labelname = planLabelname
+	data.Newname = planNewname
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,16 +175,35 @@ func (r *AuthenticationpolicylabelResource) Delete(ctx context.Context, req reso
 	}
 
 	tflog.Debug(ctx, "Deleting authenticationpolicylabel resource")
+	// Named resource - delete using DeleteResource. The ID holds the CURRENT LIVE
+	// name (== labelname at create, == newname after a rename), so we delete by
+	// data.Id, NOT data.Labelname (which stays at the originally configured value and
+	// would target a non-existent name after a rename, dangling the object).
+	liveName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Authenticationpolicylabel.Type(), liveName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete authenticationpolicylabel, got error: %s", err))
+		return
+	}
 
-	// For authenticationpolicylabel, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted authenticationpolicylabel resource from state")
+	tflog.Trace(ctx, "Deleted authenticationpolicylabel resource")
 }
 
 // Helper function to read authenticationpolicylabel data from API
 func (r *AuthenticationpolicylabelResource) readAuthenticationpolicylabelFromApi(ctx context.Context, data *AuthenticationpolicylabelResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Authenticationpolicylabel.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	labelname_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Authenticationpolicylabel.Type(), labelname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read authenticationpolicylabel, got error: %s", err))
 		return
 	}

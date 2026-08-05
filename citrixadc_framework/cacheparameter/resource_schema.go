@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -39,7 +37,7 @@ func (r *CacheparameterResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"cacheevictionpolicy": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("RELAXED"),
+				Computed:    true,
 				Description: "The cacheEvictionPolicy determines the threshold for preemptive eviction of cache objects using the LRU (Least Recently Used) algorithm. If set to AGGRESSIVE, eviction is triggered when free cache memory drops to 40%. MODERATE triggers eviction at 25%, and RELAXED triggers eviction at 10%.",
 			},
 			"enablebypass": schema.StringAttribute{
@@ -54,7 +52,7 @@ func (r *CacheparameterResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"maxpostlen": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4096),
+				Computed:    true,
 				Description: "Maximum number of POST body bytes to consider when evaluating parameters for a content group for which you have configured hit parameters and invalidation parameters.",
 			},
 			"memlimit": schema.Int64Attribute{
@@ -89,43 +87,118 @@ func (r *CacheparameterResource) Schema(ctx context.Context, req resource.Schema
 func cacheparameterGetThePayloadFromtheConfig(ctx context.Context, data *CacheparameterResourceModel) cache.Cacheparameter {
 	tflog.Debug(ctx, "In cacheparameterGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// Skip Null and Unknown values: an unconfigured Optional+Computed attribute is
+	// Unknown in the create plan and must NOT be sent (it would push an empty
+	// string / zero to the ADC).
 	cacheparameter := cache.Cacheparameter{}
-	if !data.Cacheevictionpolicy.IsNull() {
+	if !data.Cacheevictionpolicy.IsNull() && !data.Cacheevictionpolicy.IsUnknown() {
 		cacheparameter.Cacheevictionpolicy = data.Cacheevictionpolicy.ValueString()
 	}
-	if !data.Enablebypass.IsNull() {
+	if !data.Enablebypass.IsNull() && !data.Enablebypass.IsUnknown() {
 		cacheparameter.Enablebypass = data.Enablebypass.ValueString()
 	}
-	if !data.Enablehaobjpersist.IsNull() {
+	if !data.Enablehaobjpersist.IsNull() && !data.Enablehaobjpersist.IsUnknown() {
 		cacheparameter.Enablehaobjpersist = data.Enablehaobjpersist.ValueString()
 	}
-	if !data.Maxpostlen.IsNull() {
+	if !data.Maxpostlen.IsNull() && !data.Maxpostlen.IsUnknown() {
 		cacheparameter.Maxpostlen = utils.IntPtr(int(data.Maxpostlen.ValueInt64()))
 	}
-	if !data.Memlimit.IsNull() {
+	if !data.Memlimit.IsNull() && !data.Memlimit.IsUnknown() {
 		cacheparameter.Memlimit = utils.IntPtr(int(data.Memlimit.ValueInt64()))
 	}
-	if !data.Prefetchmaxpending.IsNull() {
+	if !data.Prefetchmaxpending.IsNull() && !data.Prefetchmaxpending.IsUnknown() {
 		cacheparameter.Prefetchmaxpending = utils.IntPtr(int(data.Prefetchmaxpending.ValueInt64()))
 	}
-	if !data.Undefaction.IsNull() {
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		cacheparameter.Undefaction = data.Undefaction.ValueString()
 	}
-	if !data.Verifyusing.IsNull() {
+	if !data.Verifyusing.IsNull() && !data.Verifyusing.IsUnknown() {
 		cacheparameter.Verifyusing = data.Verifyusing.ValueString()
 	}
-	if !data.Via.IsNull() {
+	if !data.Via.IsNull() && !data.Via.IsUnknown() {
 		cacheparameter.Via = data.Via.ValueString()
 	}
 
 	return cacheparameter
 }
 
+// cacheparameterSetAttrFromGet maps the GET response onto the RESOURCE state.
+// For each Optional+Computed attribute, when the ADC omits the field from GET
+// (which happens for NITRO defaults such as 0/false/empty), we only reset it to
+// Null if the model value is still Unknown (i.e. it was never configured). This
+// preserves a value the user explicitly configured (e.g. maxpostlen = 0) and
+// avoids "inconsistent result after apply" errors.
 func cacheparameterSetAttrFromGet(ctx context.Context, data *CacheparameterResourceModel, getResponseData map[string]interface{}) *CacheparameterResourceModel {
 	tflog.Debug(ctx, "In cacheparameterSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["cacheevictionpolicy"]; ok && val != nil {
+		data.Cacheevictionpolicy = types.StringValue(val.(string))
+	} else if data.Cacheevictionpolicy.IsUnknown() {
+		data.Cacheevictionpolicy = types.StringNull()
+	}
+	if val, ok := getResponseData["enablebypass"]; ok && val != nil {
+		data.Enablebypass = types.StringValue(val.(string))
+	} else if data.Enablebypass.IsUnknown() {
+		data.Enablebypass = types.StringNull()
+	}
+	if val, ok := getResponseData["enablehaobjpersist"]; ok && val != nil {
+		data.Enablehaobjpersist = types.StringValue(val.(string))
+	} else if data.Enablehaobjpersist.IsUnknown() {
+		data.Enablehaobjpersist = types.StringNull()
+	}
+	if val, ok := getResponseData["maxpostlen"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Maxpostlen = types.Int64Value(intVal)
+		}
+	} else if data.Maxpostlen.IsUnknown() {
+		data.Maxpostlen = types.Int64Null()
+	}
+	if val, ok := getResponseData["memlimit"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Memlimit = types.Int64Value(intVal)
+		}
+	} else if data.Memlimit.IsUnknown() {
+		data.Memlimit = types.Int64Null()
+	}
+	if val, ok := getResponseData["prefetchmaxpending"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Prefetchmaxpending = types.Int64Value(intVal)
+		}
+	} else if data.Prefetchmaxpending.IsUnknown() {
+		data.Prefetchmaxpending = types.Int64Null()
+	}
+	if val, ok := getResponseData["undefaction"]; ok && val != nil {
+		data.Undefaction = types.StringValue(val.(string))
+	} else if data.Undefaction.IsUnknown() {
+		data.Undefaction = types.StringNull()
+	}
+	if val, ok := getResponseData["verifyusing"]; ok && val != nil {
+		data.Verifyusing = types.StringValue(val.(string))
+	} else if data.Verifyusing.IsUnknown() {
+		data.Verifyusing = types.StringNull()
+	}
+	if val, ok := getResponseData["via"]; ok && val != nil {
+		data.Via = types.StringValue(val.(string))
+	} else if data.Via.IsUnknown() {
+		data.Via = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 1: No unique attributes (singleton) - static ID
+	data.Id = types.StringValue("cacheparameter-config")
+
+	return data
+}
+
+// cacheparameterSetAttrFromGetForDatasource maps the GET response onto the
+// DATASOURCE model. A datasource has no prior state to preserve, so every
+// attribute is copied straight from the GET response (value when present, Null
+// otherwise) and the synthetic singleton ID is set.
+func cacheparameterSetAttrFromGetForDatasource(ctx context.Context, data *CacheparameterResourceModel, getResponseData map[string]interface{}) *CacheparameterResourceModel {
+	tflog.Debug(ctx, "In cacheparameterSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["cacheevictionpolicy"]; ok && val != nil {
 		data.Cacheevictionpolicy = types.StringValue(val.(string))
 	} else {
@@ -144,6 +217,8 @@ func cacheparameterSetAttrFromGet(ctx context.Context, data *CacheparameterResou
 	if val, ok := getResponseData["maxpostlen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxpostlen = types.Int64Value(intVal)
+		} else {
+			data.Maxpostlen = types.Int64Null()
 		}
 	} else {
 		data.Maxpostlen = types.Int64Null()
@@ -151,6 +226,8 @@ func cacheparameterSetAttrFromGet(ctx context.Context, data *CacheparameterResou
 	if val, ok := getResponseData["memlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Memlimit = types.Int64Value(intVal)
+		} else {
+			data.Memlimit = types.Int64Null()
 		}
 	} else {
 		data.Memlimit = types.Int64Null()
@@ -158,6 +235,8 @@ func cacheparameterSetAttrFromGet(ctx context.Context, data *CacheparameterResou
 	if val, ok := getResponseData["prefetchmaxpending"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Prefetchmaxpending = types.Int64Value(intVal)
+		} else {
+			data.Prefetchmaxpending = types.Int64Null()
 		}
 	} else {
 		data.Prefetchmaxpending = types.Int64Null()
@@ -178,8 +257,7 @@ func cacheparameterSetAttrFromGet(ctx context.Context, data *CacheparameterResou
 		data.Via = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Set ID for the datasource
 	data.Id = types.StringValue("cacheparameter-config")
 
 	return data

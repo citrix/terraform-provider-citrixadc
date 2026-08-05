@@ -55,7 +55,7 @@ func (d *CachepolicyDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	cachepolicySetAttrFromGet(ctx, &data, getResponseData)
+	cachepolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -45,6 +45,11 @@ func GslbserviceDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Timeout value, in minutes, for the cookie, when cookie based site persistence is enabled.",
 			},
+			"delay": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The time, in seconds, after which the GSLB service is disabled when disabling with -delay.",
+			},
 			"downstateflush": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -85,7 +90,7 @@ func GslbserviceDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The maximum number of open connections that the service can support at any given time. A GSLB service whose connection count reaches the maximum is not considered when a GSLB decision is made, until the connection count drops below the maximum.",
 			},
-			"monitor_name_svc": schema.StringAttribute{
+			"monitornamesvc": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the monitor to bind to the service.",
@@ -119,11 +124,6 @@ func GslbserviceDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Service Parameters applicable to this delegation path.",
-			},
-			"newname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "New name for the GSLB service.",
 			},
 			"port": schema.Int64Attribute{
 				Optional:    true,
@@ -193,6 +193,30 @@ func GslbserviceDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.",
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"lbmonitorbinding": schema.SetNestedBlock{
+				Description: "Monitors bound to the GSLB service.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"weight": schema.Int64Attribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Weight to assign to the monitor-service binding.",
+						},
+						"monitor_name": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Name of the monitor bound to the GSLB service.",
+						},
+						"monstate": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "State of the monitor bound to the GSLB service.",
+						},
+					},
+				},
 			},
 		},
 	}

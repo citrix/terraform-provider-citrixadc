@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *ContentinspectionactionResource) Create(ctx context.Context, req resour
 
 	tflog.Debug(ctx, "Creating contentinspectionaction resource")
 
-	// contentinspectionaction := contentinspectionactionGetThePayloadFromtheConfig(ctx, &data)
+	contentinspectionaction := contentinspectionactionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Contentinspectionaction.Type(), &contentinspectionaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create contentinspectionaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("contentinspectionaction-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Contentinspectionaction.Type(), name_value, &contentinspectionaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create contentinspectionaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created contentinspectionaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readContentinspectionactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readContentinspectionactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "contentinspectionaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *ContentinspectionactionResource) Read(ctx context.Context, req resource
 
 	tflog.Debug(ctx, "Reading contentinspectionaction resource")
 
-	r.readContentinspectionactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readContentinspectionactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ContentinspectionactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ContentinspectionactionResourceModel
+	var data, state ContentinspectionactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,57 @@ func (r *ContentinspectionactionResource) Update(ctx context.Context, req resour
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating contentinspectionaction resource")
 
-	// Create API request body from the model
-	// contentinspectionaction := contentinspectionactionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Icapprofilename.Equal(state.Icapprofilename) {
+		tflog.Debug(ctx, "icapprofilename has changed for contentinspectionaction")
+		hasChange = true
+	}
+	if !data.Ifserverdown.Equal(state.Ifserverdown) {
+		tflog.Debug(ctx, "ifserverdown has changed for contentinspectionaction")
+		hasChange = true
+	}
+	if !data.Serverip.Equal(state.Serverip) {
+		tflog.Debug(ctx, "serverip has changed for contentinspectionaction")
+		hasChange = true
+	}
+	if !data.Servername.Equal(state.Servername) {
+		tflog.Debug(ctx, "servername has changed for contentinspectionaction")
+		hasChange = true
+	}
+	if !data.Serverport.Equal(state.Serverport) {
+		tflog.Debug(ctx, "serverport has changed for contentinspectionaction")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Contentinspectionaction.Type(), &contentinspectionaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update contentinspectionaction, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model (updatable fields only)
+		contentinspectionaction := contentinspectionactionGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Make API call
+		// Update is an unnamed PUT (name is carried in the payload)
+		err := r.client.UpdateUnnamedResource(service.Contentinspectionaction.Type(), &contentinspectionaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update contentinspectionaction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated contentinspectionaction resource")
+		tflog.Trace(ctx, "Updated contentinspectionaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for contentinspectionaction resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readContentinspectionactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readContentinspectionactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "contentinspectionaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +188,36 @@ func (r *ContentinspectionactionResource) Delete(ctx context.Context, req resour
 	}
 
 	tflog.Debug(ctx, "Deleting contentinspectionaction resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Contentinspectionaction.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete contentinspectionaction, got error: %s", err))
+		return
+	}
 
-	// For contentinspectionaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted contentinspectionaction resource from state")
+	tflog.Trace(ctx, "Deleted contentinspectionaction resource")
 }
 
 // Helper function to read contentinspectionaction data from API
-func (r *ContentinspectionactionResource) readContentinspectionactionFromApi(ctx context.Context, data *ContentinspectionactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Contentinspectionaction.Type(), "")
+func (r *ContentinspectionactionResource) readContentinspectionactionFromApi(ctx context.Context, data *ContentinspectionactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Contentinspectionaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read contentinspectionaction, got error: %s", err))
-		return
+		return false
 	}
 
 	contentinspectionactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

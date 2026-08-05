@@ -55,7 +55,7 @@ func (d *BotpolicylabelDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	botpolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	botpolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

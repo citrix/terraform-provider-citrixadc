@@ -235,5 +235,81 @@ func GslbvserverDataSourceSchema() schema.Schema {
 				Description: "Weight for the service.",
 			},
 		},
+		Blocks: map[string]schema.Block{
+			"domain": schema.SetNestedBlock{
+				Description: "Domains bound to the GSLB virtual server.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"domainname": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Domain name for which to change the time to live (TTL) and/or backup service IP address.",
+						},
+						"ttl": schema.Int64Attribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Time to live (TTL) for the domain.",
+						},
+						"backupip": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "The IP address of the backup service for the specified domain name.",
+						},
+						"cookiedomain": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "The cookie domain for the GSLB site.",
+						},
+						"cookietimeout": schema.Int64Attribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Timeout, in minutes, for the GSLB site cookie.",
+						},
+						"sitedomainttl": schema.Int64Attribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "TTL, in seconds, for all internally created site domains associated with this virtual server.",
+						},
+						"backupipflag": schema.BoolAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "The IP address of the backup service flag.",
+						},
+						"cookiedomainflag": schema.BoolAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "The cookie domain flag.",
+						},
+						"name": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Name of the virtual server on which to perform the binding operation.",
+						},
+					},
+				},
+			},
+			"service": schema.SetNestedBlock{
+				Description: "GSLB services bound to the GSLB virtual server.",
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"servicename": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Name of the GSLB service bound to the GSLB virtual server.",
+						},
+						"domainname": schema.StringAttribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Domain name for which to change the time to live (TTL) and/or backup service IP address.",
+						},
+						"weight": schema.Int64Attribute{
+							Optional:    true,
+							Computed:    true,
+							Description: "Weight to assign to the GSLB service.",
+						},
+					},
+				},
+			},
+		},
 	}
 }

@@ -55,7 +55,7 @@ func (d *DnspolicylabelDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	dnspolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	dnspolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

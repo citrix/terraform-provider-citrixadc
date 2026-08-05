@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -39,7 +41,10 @@ func (r *AuthenticationstorefrontauthactionResource) Schema(ctx context.Context,
 				Description: "Domain of the server that is used for authentication. If users enter name without domain, this parameter is added to username in the authentication request to server.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the Storefront Authentication action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the profile is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action').",
 			},
 			"serverurl": schema.StringAttribute{
@@ -50,22 +55,44 @@ func (r *AuthenticationstorefrontauthactionResource) Schema(ctx context.Context,
 	}
 }
 
-func authenticationstorefrontauthactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationstorefrontauthactionResourceModel) authentication.Authenticationstorefrontauthaction {
-	tflog.Debug(ctx, "In authenticationstorefrontauthactionGetThePayloadFromtheConfig Function")
+func authenticationstorefrontauthactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationstorefrontauthactionResourceModel) authentication.Authenticationstorefrontauthaction {
+	tflog.Debug(ctx, "In authenticationstorefrontauthactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationstorefrontauthaction := authentication.Authenticationstorefrontauthaction{}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationstorefrontauthaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Domain.IsNull() {
+	if !data.Domain.IsNull() && !data.Domain.IsUnknown() {
 		authenticationstorefrontauthaction.Domain = data.Domain.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationstorefrontauthaction.Name = data.Name.ValueString()
 	}
-	if !data.Serverurl.IsNull() {
+	if !data.Serverurl.IsNull() && !data.Serverurl.IsUnknown() {
 		authenticationstorefrontauthaction.Serverurl = data.Serverurl.ValueString()
+	}
+
+	return authenticationstorefrontauthaction
+}
+
+func authenticationstorefrontauthactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationstorefrontauthactionResourceModel) authentication.Authenticationstorefrontauthaction {
+	tflog.Debug(ctx, "In authenticationstorefrontauthactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// name is the mandatory key for the update PUT.
+	authenticationstorefrontauthaction := authentication.Authenticationstorefrontauthaction{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		authenticationstorefrontauthaction.Name = data.Name.ValueString()
+	}
+	if !data.Serverurl.IsNull() && !data.Serverurl.IsUnknown() {
+		authenticationstorefrontauthaction.Serverurl = data.Serverurl.ValueString()
+	}
+	if !data.Domain.IsNull() && !data.Domain.IsUnknown() {
+		authenticationstorefrontauthaction.Domain = data.Domain.ValueString()
+	}
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
+		authenticationstorefrontauthaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
 
 	return authenticationstorefrontauthaction
@@ -97,7 +124,7 @@ func authenticationstorefrontauthactionSetAttrFromGet(ctx context.Context, data 
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

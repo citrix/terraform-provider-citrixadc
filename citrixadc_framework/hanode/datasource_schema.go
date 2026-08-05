@@ -10,11 +10,11 @@ func HanodeDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"completedfliptime": schema.Int64Attribute{
+			"completedfliptime": schema.StringAttribute{
 				Computed:    true,
 				Description: "To inform user whether flip time is elapsed or not.",
 			},
-			"curflips": schema.Int64Attribute{
+			"curflips": schema.StringAttribute{
 				Computed:    true,
 				Description: "Keeps track of number of flips that have happened till now in current interval.",
 			},
@@ -23,7 +23,7 @@ func HanodeDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Number of seconds after which a peer node is marked DOWN if heartbeat messages are not received from the peer node.",
 			},
-			"enaifaces": schema.Int64Attribute{
+			"enaifaces": schema.StringAttribute{
 				Computed:    true,
 				Description: "Enabled interfaces.",
 			},
@@ -66,7 +66,7 @@ func HanodeDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The NSIP or NSIP6 address of the node to be added for an HA configuration. This setting is neither propagated nor synchronized.",
 			},
-			"masterstatetime": schema.Int64Attribute{
+			"masterstatetime": schema.StringAttribute{
 				Computed:    true,
 				Description: "Time elapsed in current master state.",
 			},

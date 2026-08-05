@@ -8,8 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -45,36 +45,39 @@ func (r *ClusterinstanceResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"backplanebasedview": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "View based on heartbeat only on bkplane interface",
 			},
 			"clid": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Unique number that identifies the cluster.",
 			},
 			"clusterproxyarp": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "This field controls the proxy arp feature in cluster. By default the flag is enabled.",
 			},
 			"deadinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3),
+				Computed:    true,
 				Description: "Amount of time, in seconds, after which nodes that do not respond to the heartbeats are assumed to be down.If the value is less than 3 sec, set the helloInterval parameter to 200 msec",
 			},
 			"dfdretainl2params": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "flag to add ext l2 header during steering. By default the flag is disabled.",
 			},
 			"hellointerval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(200),
+				Computed:    true,
 				Description: "Interval, in milliseconds, at which heartbeats are sent to each cluster node to check the health status.Set the value to 200 msec, if the deadInterval parameter is less than 3 sec",
 			},
 			"inc": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "This option is required if the cluster nodes reside on different networks.",
 			},
 			"nodegroup": schema.StringAttribute{
@@ -84,17 +87,17 @@ func (r *ClusterinstanceResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"preemption": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Preempt a cluster node that is configured as a SPARE if an ACTIVE node becomes available.",
 			},
 			"processlocal": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "By turning on this option packets destined to a service in a cluster will not under go any steering.",
 			},
 			"quorumtype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("MAJORITY"),
+				Computed:    true,
 				Description: "Quorum Configuration Choices  - \"Majority\" (recommended) requires majority of nodes to be online for the cluster to be UP. \"None\" relaxes this requirement.",
 			},
 			"retainconnectionsoncluster": schema.StringAttribute{
@@ -104,63 +107,63 @@ func (r *ClusterinstanceResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"secureheartbeats": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "By turning on this option cluster heartbeats will have security enabled.",
 			},
 			"syncstatusstrictmode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "strict mode for sync status of cluster. Depending on the the mode if there are any errors while applying config, sync status is displayed accordingly. By default the flag is disabled.",
 			},
 		},
 	}
 }
 
-func clusterinstanceGetThePayloadFromtheConfig(ctx context.Context, data *ClusterinstanceResourceModel) cluster.Clusterinstance {
-	tflog.Debug(ctx, "In clusterinstanceGetThePayloadFromtheConfig Function")
+func clusterinstanceGetThePayloadFromthePlan(ctx context.Context, data *ClusterinstanceResourceModel) cluster.Clusterinstance {
+	tflog.Debug(ctx, "In clusterinstanceGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	clusterinstance := cluster.Clusterinstance{}
-	if !data.Backplanebasedview.IsNull() {
+	if !data.Backplanebasedview.IsNull() && !data.Backplanebasedview.IsUnknown() {
 		clusterinstance.Backplanebasedview = data.Backplanebasedview.ValueString()
 	}
-	if !data.Clid.IsNull() {
+	if !data.Clid.IsNull() && !data.Clid.IsUnknown() {
 		clusterinstance.Clid = utils.IntPtr(int(data.Clid.ValueInt64()))
 	}
-	if !data.Clusterproxyarp.IsNull() {
+	if !data.Clusterproxyarp.IsNull() && !data.Clusterproxyarp.IsUnknown() {
 		clusterinstance.Clusterproxyarp = data.Clusterproxyarp.ValueString()
 	}
-	if !data.Deadinterval.IsNull() {
+	if !data.Deadinterval.IsNull() && !data.Deadinterval.IsUnknown() {
 		clusterinstance.Deadinterval = utils.IntPtr(int(data.Deadinterval.ValueInt64()))
 	}
-	if !data.Dfdretainl2params.IsNull() {
+	if !data.Dfdretainl2params.IsNull() && !data.Dfdretainl2params.IsUnknown() {
 		clusterinstance.Dfdretainl2params = data.Dfdretainl2params.ValueString()
 	}
-	if !data.Hellointerval.IsNull() {
+	if !data.Hellointerval.IsNull() && !data.Hellointerval.IsUnknown() {
 		clusterinstance.Hellointerval = utils.IntPtr(int(data.Hellointerval.ValueInt64()))
 	}
-	if !data.Inc.IsNull() {
+	if !data.Inc.IsNull() && !data.Inc.IsUnknown() {
 		clusterinstance.Inc = data.Inc.ValueString()
 	}
-	if !data.Nodegroup.IsNull() {
+	if !data.Nodegroup.IsNull() && !data.Nodegroup.IsUnknown() {
 		clusterinstance.Nodegroup = data.Nodegroup.ValueString()
 	}
-	if !data.Preemption.IsNull() {
+	if !data.Preemption.IsNull() && !data.Preemption.IsUnknown() {
 		clusterinstance.Preemption = data.Preemption.ValueString()
 	}
-	if !data.Processlocal.IsNull() {
+	if !data.Processlocal.IsNull() && !data.Processlocal.IsUnknown() {
 		clusterinstance.Processlocal = data.Processlocal.ValueString()
 	}
-	if !data.Quorumtype.IsNull() {
+	if !data.Quorumtype.IsNull() && !data.Quorumtype.IsUnknown() {
 		clusterinstance.Quorumtype = data.Quorumtype.ValueString()
 	}
-	if !data.Retainconnectionsoncluster.IsNull() {
+	if !data.Retainconnectionsoncluster.IsNull() && !data.Retainconnectionsoncluster.IsUnknown() {
 		clusterinstance.Retainconnectionsoncluster = data.Retainconnectionsoncluster.ValueString()
 	}
-	if !data.Secureheartbeats.IsNull() {
+	if !data.Secureheartbeats.IsNull() && !data.Secureheartbeats.IsUnknown() {
 		clusterinstance.Secureheartbeats = data.Secureheartbeats.ValueString()
 	}
-	if !data.Syncstatusstrictmode.IsNull() {
+	if !data.Syncstatusstrictmode.IsNull() && !data.Syncstatusstrictmode.IsUnknown() {
 		clusterinstance.Syncstatusstrictmode = data.Syncstatusstrictmode.ValueString()
 	}
 
@@ -192,7 +195,9 @@ func clusterinstanceSetAttrFromGet(ctx context.Context, data *ClusterinstanceRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Deadinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Deadinterval.IsUnknown() {
+		// NITRO omits the field only when unset; preserve a configured value to avoid
+		// "inconsistent result after apply", null it only when it was Computed/unknown.
 		data.Deadinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["dfdretainl2params"]; ok && val != nil {
@@ -204,7 +209,8 @@ func clusterinstanceSetAttrFromGet(ctx context.Context, data *ClusterinstanceRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Hellointerval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Hellointerval.IsUnknown() {
+		// See deadinterval note above.
 		data.Hellointerval = types.Int64Null()
 	}
 	if val, ok := getResponseData["inc"]; ok && val != nil {
@@ -249,7 +255,7 @@ func clusterinstanceSetAttrFromGet(ctx context.Context, data *ClusterinstanceRes
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute (clid) - plain value as ID (matches SDK v2)
 	data.Id = types.StringValue(fmt.Sprintf("%d", data.Clid.ValueInt64()))
 
 	return data

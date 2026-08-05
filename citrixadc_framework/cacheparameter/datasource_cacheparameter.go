@@ -53,7 +53,7 @@ func (d *CacheparameterDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	cacheparameterSetAttrFromGet(ctx, &data, getResponseData)
+	cacheparameterSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

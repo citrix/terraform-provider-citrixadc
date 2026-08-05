@@ -55,7 +55,7 @@ func (d *CmppolicylabelDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	cmppolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	cmppolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

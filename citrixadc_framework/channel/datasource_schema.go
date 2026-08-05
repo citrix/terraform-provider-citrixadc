@@ -1,9 +1,41 @@
 package channel
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// ChannelDataSourceModel describes the datasource data model.
+// It mirrors ChannelResourceModel but exposes the lookup key as "channelid"
+// (no underscore) to preserve the datasource's original, backward-compatible
+// attribute name. The resource keeps its own "channel_id" attribute.
+type ChannelDataSourceModel struct {
+	Id              types.String `tfsdk:"id"`
+	Bandwidthhigh   types.Int64  `tfsdk:"bandwidthhigh"`
+	Bandwidthnormal types.Int64  `tfsdk:"bandwidthnormal"`
+	Conndistr       types.String `tfsdk:"conndistr"`
+	Flowctl         types.String `tfsdk:"flowctl"`
+	Haheartbeat     types.String `tfsdk:"haheartbeat"`
+	Hamonitor       types.String `tfsdk:"hamonitor"`
+	Channelid       types.String `tfsdk:"channelid"`
+	Ifalias         types.String `tfsdk:"ifalias"`
+	Ifnum           types.List   `tfsdk:"ifnum"`
+	Lamac           types.String `tfsdk:"lamac"`
+	Linkredundancy  types.String `tfsdk:"linkredundancy"`
+	Lrminthroughput types.Int64  `tfsdk:"lrminthroughput"`
+	Macdistr        types.String `tfsdk:"macdistr"`
+	Mode            types.String `tfsdk:"mode"`
+	Mtu             types.Int64  `tfsdk:"mtu"`
+	Speed           types.String `tfsdk:"speed"`
+	State           types.String `tfsdk:"state"`
+	Tagall          types.String `tfsdk:"tagall"`
+	Throughput      types.Int64  `tfsdk:"throughput"`
+	Trunk           types.String `tfsdk:"trunk"`
+}
 
 func ChannelDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -113,4 +145,135 @@ func ChannelDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+// channelSetAttrFromGetForDatasource populates the datasource model from the
+// NITRO GET response. Unlike the resource variant it copies every attribute
+// straight from the API (a datasource is read-only, so there is no prior state
+// to preserve) and always sets both the "channelid" lookup key and "id".
+func channelSetAttrFromGetForDatasource(ctx context.Context, data *ChannelDataSourceModel, getResponseData map[string]interface{}) *ChannelDataSourceModel {
+	// id maps to the channelid (NITRO primary key) attribute
+	if val, ok := getResponseData["id"]; ok && val != nil {
+		data.Channelid = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ifnum"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Ifnum = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Ifnum = listValue
+		default:
+			data.Ifnum = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Ifnum = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["bandwidthhigh"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Bandwidthhigh = types.Int64Value(intVal)
+		}
+	} else {
+		data.Bandwidthhigh = types.Int64Null()
+	}
+	if val, ok := getResponseData["bandwidthnormal"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Bandwidthnormal = types.Int64Value(intVal)
+		}
+	} else {
+		data.Bandwidthnormal = types.Int64Null()
+	}
+	if val, ok := getResponseData["conndistr"]; ok && val != nil {
+		data.Conndistr = types.StringValue(val.(string))
+	} else {
+		data.Conndistr = types.StringNull()
+	}
+	if val, ok := getResponseData["flowctl"]; ok && val != nil {
+		data.Flowctl = types.StringValue(val.(string))
+	} else {
+		data.Flowctl = types.StringNull()
+	}
+	if val, ok := getResponseData["haheartbeat"]; ok && val != nil {
+		data.Haheartbeat = types.StringValue(val.(string))
+	} else {
+		data.Haheartbeat = types.StringNull()
+	}
+	if val, ok := getResponseData["hamonitor"]; ok && val != nil {
+		data.Hamonitor = types.StringValue(val.(string))
+	} else {
+		data.Hamonitor = types.StringNull()
+	}
+	if val, ok := getResponseData["ifalias"]; ok && val != nil {
+		data.Ifalias = types.StringValue(val.(string))
+	} else {
+		data.Ifalias = types.StringNull()
+	}
+	if val, ok := getResponseData["lamac"]; ok && val != nil {
+		data.Lamac = types.StringValue(val.(string))
+	} else {
+		data.Lamac = types.StringNull()
+	}
+	if val, ok := getResponseData["linkredundancy"]; ok && val != nil {
+		data.Linkredundancy = types.StringValue(val.(string))
+	} else {
+		data.Linkredundancy = types.StringNull()
+	}
+	if val, ok := getResponseData["lrminthroughput"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Lrminthroughput = types.Int64Value(intVal)
+		}
+	} else {
+		data.Lrminthroughput = types.Int64Null()
+	}
+	if val, ok := getResponseData["macdistr"]; ok && val != nil {
+		data.Macdistr = types.StringValue(val.(string))
+	} else {
+		data.Macdistr = types.StringNull()
+	}
+	if val, ok := getResponseData["mode"]; ok && val != nil {
+		data.Mode = types.StringValue(val.(string))
+	} else {
+		data.Mode = types.StringNull()
+	}
+	if val, ok := getResponseData["mtu"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Mtu = types.Int64Value(intVal)
+		}
+	} else {
+		data.Mtu = types.Int64Null()
+	}
+	if val, ok := getResponseData["speed"]; ok && val != nil {
+		data.Speed = types.StringValue(val.(string))
+	} else {
+		data.Speed = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["tagall"]; ok && val != nil {
+		data.Tagall = types.StringValue(val.(string))
+	} else {
+		data.Tagall = types.StringNull()
+	}
+	if val, ok := getResponseData["throughput"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Throughput = types.Int64Value(intVal)
+		}
+	} else {
+		data.Throughput = types.Int64Null()
+	}
+	if val, ok := getResponseData["trunk"]; ok && val != nil {
+		data.Trunk = types.StringValue(val.(string))
+	} else {
+		data.Trunk = types.StringNull()
+	}
+
+	// Set ID for the datasource (plain unique-attribute value)
+	data.Id = types.StringValue(data.Channelid.ValueString())
+
+	return data
 }

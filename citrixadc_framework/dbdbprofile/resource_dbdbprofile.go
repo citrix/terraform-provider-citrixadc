@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *DbdbprofileResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating dbdbprofile resource")
 
-	// dbdbprofile := dbdbprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	dbdbprofile := dbdbprofileGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dbdbprofile.Type(), &dbdbprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dbdbprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dbdbprofile-config")
+	// Named resource - use AddResource
+	dbdbprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Dbdbprofile.Type(), dbdbprofileName, &dbdbprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dbdbprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dbdbprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readDbdbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDbdbprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dbdbprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *DbdbprofileResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading dbdbprofile resource")
 
-	r.readDbdbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDbdbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DbdbprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DbdbprofileResourceModel
+	var data, state DbdbprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,57 @@ func (r *DbdbprofileResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dbdbprofile resource")
 
-	// Create API request body from the model
-	// dbdbprofile := dbdbprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Conmultiplex.Equal(state.Conmultiplex) {
+		tflog.Debug(ctx, "conmultiplex has changed for dbdbprofile")
+		hasChange = true
+	}
+	if !data.Enablecachingconmuxoff.Equal(state.Enablecachingconmuxoff) {
+		tflog.Debug(ctx, "enablecachingconmuxoff has changed for dbdbprofile")
+		hasChange = true
+	}
+	if !data.Interpretquery.Equal(state.Interpretquery) {
+		tflog.Debug(ctx, "interpretquery has changed for dbdbprofile")
+		hasChange = true
+	}
+	if !data.Kcdaccount.Equal(state.Kcdaccount) {
+		tflog.Debug(ctx, "kcdaccount has changed for dbdbprofile")
+		hasChange = true
+	}
+	if !data.Stickiness.Equal(state.Stickiness) {
+		tflog.Debug(ctx, "stickiness has changed for dbdbprofile")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dbdbprofile.Type(), &dbdbprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dbdbprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		dbdbprofile := dbdbprofileGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Update URL carries the name in the payload (no name path segment)
+		err := r.client.UpdateUnnamedResource(service.Dbdbprofile.Type(), &dbdbprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dbdbprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated dbdbprofile resource")
+		tflog.Trace(ctx, "Updated dbdbprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for dbdbprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readDbdbprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDbdbprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dbdbprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +189,36 @@ func (r *DbdbprofileResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	tflog.Debug(ctx, "Deleting dbdbprofile resource")
+	// Named resource - delete using DeleteResource
+	dbdbprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Dbdbprofile.Type(), dbdbprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dbdbprofile, got error: %s", err))
+		return
+	}
 
-	// For dbdbprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dbdbprofile resource from state")
+	tflog.Trace(ctx, "Deleted dbdbprofile resource")
 }
 
 // Helper function to read dbdbprofile data from API
-func (r *DbdbprofileResource) readDbdbprofileFromApi(ctx context.Context, data *DbdbprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dbdbprofile.Type(), "")
+func (r *DbdbprofileResource) readDbdbprofileFromApi(ctx context.Context, data *DbdbprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	dbdbprofileName := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Dbdbprofile.Type(), dbdbprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dbdbprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	dbdbprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

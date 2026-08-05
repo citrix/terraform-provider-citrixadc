@@ -38,8 +38,8 @@ func (r *DnsviewResource) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func dnsviewGetThePayloadFromtheConfig(ctx context.Context, data *DnsviewResourceModel) dns.Dnsview {
-	tflog.Debug(ctx, "In dnsviewGetThePayloadFromtheConfig Function")
+func dnsviewGetThePayloadFromthePlan(ctx context.Context, data *DnsviewResourceModel) dns.Dnsview {
+	tflog.Debug(ctx, "In dnsviewGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	dnsview := dns.Dnsview{}

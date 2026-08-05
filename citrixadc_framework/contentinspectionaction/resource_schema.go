@@ -2,14 +2,13 @@ package contentinspectionaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/contentinspection"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -44,11 +43,14 @@ func (r *ContentinspectionactionResource) Schema(ctx context.Context, req resour
 			},
 			"ifserverdown": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("RESET"),
+				Computed:    true,
 				Description: "Name of the action to perform if the Vserver representing the remote service is not UP. This is not supported for NOINSPECTION Type. The Supported actions are:\n* RESET - Reset the client connection by closing it. The client program, such as a browser, will handle this and may inform the user. The client may then resend the request if desired.\n* DROP - Drop the request without sending a response to the user.\n* CONTINUE - It bypasses the ContentIsnpection and Continues/resumes the Traffic-Flow to Client/Server.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the remote service action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.",
 			},
 			"serverip": schema.StringAttribute{
@@ -63,7 +65,7 @@ func (r *ContentinspectionactionResource) Schema(ctx context.Context, req resour
 			},
 			"serverport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1344),
+				Computed:    true,
 				Description: "Port of remoteService",
 			},
 			"type": schema.StringAttribute{
@@ -77,31 +79,59 @@ func (r *ContentinspectionactionResource) Schema(ctx context.Context, req resour
 	}
 }
 
-func contentinspectionactionGetThePayloadFromtheConfig(ctx context.Context, data *ContentinspectionactionResourceModel) contentinspection.Contentinspectionaction {
-	tflog.Debug(ctx, "In contentinspectionactionGetThePayloadFromtheConfig Function")
+func contentinspectionactionGetThePayloadFromthePlan(ctx context.Context, data *ContentinspectionactionResourceModel) contentinspection.Contentinspectionaction {
+	tflog.Debug(ctx, "In contentinspectionactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	contentinspectionaction := contentinspection.Contentinspectionaction{}
-	if !data.Icapprofilename.IsNull() {
+	if !data.Icapprofilename.IsNull() && !data.Icapprofilename.IsUnknown() {
 		contentinspectionaction.Icapprofilename = data.Icapprofilename.ValueString()
 	}
-	if !data.Ifserverdown.IsNull() {
+	if !data.Ifserverdown.IsNull() && !data.Ifserverdown.IsUnknown() {
 		contentinspectionaction.Ifserverdown = data.Ifserverdown.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		contentinspectionaction.Name = data.Name.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		contentinspectionaction.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Servername.IsNull() {
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() {
 		contentinspectionaction.Servername = data.Servername.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		contentinspectionaction.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		contentinspectionaction.Type = data.Type.ValueString()
+	}
+
+	return contentinspectionaction
+}
+
+func contentinspectionactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *ContentinspectionactionResourceModel) contentinspection.Contentinspectionaction {
+	tflog.Debug(ctx, "In contentinspectionactionGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// "name" is the key (always sent); "type" is not updatable (ForceNew/RequiresReplace).
+	contentinspectionaction := contentinspection.Contentinspectionaction{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		contentinspectionaction.Name = data.Name.ValueString()
+	}
+	if !data.Icapprofilename.IsNull() && !data.Icapprofilename.IsUnknown() {
+		contentinspectionaction.Icapprofilename = data.Icapprofilename.ValueString()
+	}
+	if !data.Ifserverdown.IsNull() && !data.Ifserverdown.IsUnknown() {
+		contentinspectionaction.Ifserverdown = data.Ifserverdown.ValueString()
+	}
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
+		contentinspectionaction.Serverip = data.Serverip.ValueString()
+	}
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() {
+		contentinspectionaction.Servername = data.Servername.ValueString()
+	}
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
+		contentinspectionaction.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
 
 	return contentinspectionaction
@@ -140,7 +170,8 @@ func contentinspectionactionSetAttrFromGet(ctx context.Context, data *Contentins
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Serverport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Serverport.IsUnknown() {
+		// Preserve a configured value; only null the port when it was never set.
 		data.Serverport = types.Int64Null()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
@@ -150,8 +181,8 @@ func contentinspectionactionSetAttrFromGet(ctx context.Context, data *Contentins
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

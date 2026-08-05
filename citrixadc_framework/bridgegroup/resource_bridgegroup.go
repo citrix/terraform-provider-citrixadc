@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *BridgegroupResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating bridgegroup resource")
 
-	// bridgegroup := bridgegroupGetThePayloadFromtheConfig(ctx, &data)
+	bridgegroup := bridgegroupGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Bridgegroup.Type(), &bridgegroup)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create bridgegroup, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("bridgegroup-config")
+	// Named resource - use AddResource
+	bridgegroupIdStr := fmt.Sprintf("%d", data.Bridgegroupid.ValueInt64())
+	_, err := r.client.AddResource(service.Bridgegroup.Type(), bridgegroupIdStr, &bridgegroup)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create bridgegroup, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created bridgegroup resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(bridgegroupIdStr)
+
 	// Read the updated state back
-	r.readBridgegroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBridgegroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "bridgegroup not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *BridgegroupResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading bridgegroup resource")
 
-	r.readBridgegroupFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readBridgegroupFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *BridgegroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BridgegroupResourceModel
+	var data, state BridgegroupResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,45 @@ func (r *BridgegroupResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Preserve ID from prior state (bridgegroup_id is RequiresReplace, so it never changes here)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating bridgegroup resource")
 
-	// Create API request body from the model
-	// bridgegroup := bridgegroupGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Dynamicrouting.Equal(state.Dynamicrouting) {
+		tflog.Debug(ctx, "dynamicrouting has changed for bridgegroup")
+		hasChange = true
+	}
+	if !data.Ipv6dynamicrouting.Equal(state.Ipv6dynamicrouting) {
+		tflog.Debug(ctx, "ipv6dynamicrouting has changed for bridgegroup")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Bridgegroup.Type(), &bridgegroup)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update bridgegroup, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		bridgegroup := bridgegroupGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		_, err := r.client.UpdateResource(service.Bridgegroup.Type(), data.Id.ValueString(), &bridgegroup)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update bridgegroup, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated bridgegroup resource")
+		tflog.Trace(ctx, "Updated bridgegroup resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for bridgegroup resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readBridgegroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBridgegroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "bridgegroup not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +177,32 @@ func (r *BridgegroupResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Debug(ctx, "Deleting bridgegroup resource")
 
-	// For bridgegroup, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted bridgegroup resource from state")
+	// Named resource - delete using DeleteResource
+	err := r.client.DeleteResource(service.Bridgegroup.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete bridgegroup, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted bridgegroup resource")
 }
 
 // Helper function to read bridgegroup data from API
-func (r *BridgegroupResource) readBridgegroupFromApi(ctx context.Context, data *BridgegroupResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Bridgegroup.Type(), "")
+func (r *BridgegroupResource) readBridgegroupFromApi(ctx context.Context, data *BridgegroupResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	bridgegroupName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Bridgegroup.Type(), bridgegroupName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read bridgegroup, got error: %s", err))
-		return
+		return false
 	}
 
 	bridgegroupSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

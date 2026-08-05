@@ -115,6 +115,11 @@ func InterfaceDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Ethernet speed of the interface, in Mbps.\nNotes:\n* If you set the speed as AUTO, the Citrix ADC attempts to auto-negotiate or auto-sense the link speed of the interface when it is UP. You must enable auto negotiation on the interface.\n* If you set a speed other than AUTO, you must specify the same speed for the peer network device. Mismatched speed and duplex settings between the peer devices of a link lead to link errors, packet loss, and other errors.\nSome interfaces do not support certain speeds. If you specify an unsupported speed, an error message appears.",
 			},
+			"state": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Link state of the interface (ENABLED/DISABLED). Configuring this attribute enables or disables the interface via the NITRO enable/disable actions.",
+			},
 			"tagall": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

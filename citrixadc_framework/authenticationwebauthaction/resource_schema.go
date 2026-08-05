@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -140,7 +142,10 @@ func (r *AuthenticationwebauthactionResource) Schema(ctx context.Context, req re
 				Description: "Exact HTTP request, in the form of an expression, which the Citrix ADC sends to the authentication server.\nThe Citrix ADC does not check the validity of this request. One must manually validate the request.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the Web Authentication action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the profile is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action').",
 			},
 			"scheme": schema.StringAttribute{
@@ -168,73 +173,73 @@ func authenticationwebauthactionGetThePayloadFromtheConfig(ctx context.Context, 
 
 	// Create API request body from the model
 	authenticationwebauthaction := authentication.Authenticationwebauthaction{}
-	if !data.Attribute1.IsNull() {
+	if !data.Attribute1.IsNull() && !data.Attribute1.IsUnknown() {
 		authenticationwebauthaction.Attribute1 = data.Attribute1.ValueString()
 	}
-	if !data.Attribute10.IsNull() {
+	if !data.Attribute10.IsNull() && !data.Attribute10.IsUnknown() {
 		authenticationwebauthaction.Attribute10 = data.Attribute10.ValueString()
 	}
-	if !data.Attribute11.IsNull() {
+	if !data.Attribute11.IsNull() && !data.Attribute11.IsUnknown() {
 		authenticationwebauthaction.Attribute11 = data.Attribute11.ValueString()
 	}
-	if !data.Attribute12.IsNull() {
+	if !data.Attribute12.IsNull() && !data.Attribute12.IsUnknown() {
 		authenticationwebauthaction.Attribute12 = data.Attribute12.ValueString()
 	}
-	if !data.Attribute13.IsNull() {
+	if !data.Attribute13.IsNull() && !data.Attribute13.IsUnknown() {
 		authenticationwebauthaction.Attribute13 = data.Attribute13.ValueString()
 	}
-	if !data.Attribute14.IsNull() {
+	if !data.Attribute14.IsNull() && !data.Attribute14.IsUnknown() {
 		authenticationwebauthaction.Attribute14 = data.Attribute14.ValueString()
 	}
-	if !data.Attribute15.IsNull() {
+	if !data.Attribute15.IsNull() && !data.Attribute15.IsUnknown() {
 		authenticationwebauthaction.Attribute15 = data.Attribute15.ValueString()
 	}
-	if !data.Attribute16.IsNull() {
+	if !data.Attribute16.IsNull() && !data.Attribute16.IsUnknown() {
 		authenticationwebauthaction.Attribute16 = data.Attribute16.ValueString()
 	}
-	if !data.Attribute2.IsNull() {
+	if !data.Attribute2.IsNull() && !data.Attribute2.IsUnknown() {
 		authenticationwebauthaction.Attribute2 = data.Attribute2.ValueString()
 	}
-	if !data.Attribute3.IsNull() {
+	if !data.Attribute3.IsNull() && !data.Attribute3.IsUnknown() {
 		authenticationwebauthaction.Attribute3 = data.Attribute3.ValueString()
 	}
-	if !data.Attribute4.IsNull() {
+	if !data.Attribute4.IsNull() && !data.Attribute4.IsUnknown() {
 		authenticationwebauthaction.Attribute4 = data.Attribute4.ValueString()
 	}
-	if !data.Attribute5.IsNull() {
+	if !data.Attribute5.IsNull() && !data.Attribute5.IsUnknown() {
 		authenticationwebauthaction.Attribute5 = data.Attribute5.ValueString()
 	}
-	if !data.Attribute6.IsNull() {
+	if !data.Attribute6.IsNull() && !data.Attribute6.IsUnknown() {
 		authenticationwebauthaction.Attribute6 = data.Attribute6.ValueString()
 	}
-	if !data.Attribute7.IsNull() {
+	if !data.Attribute7.IsNull() && !data.Attribute7.IsUnknown() {
 		authenticationwebauthaction.Attribute7 = data.Attribute7.ValueString()
 	}
-	if !data.Attribute8.IsNull() {
+	if !data.Attribute8.IsNull() && !data.Attribute8.IsUnknown() {
 		authenticationwebauthaction.Attribute8 = data.Attribute8.ValueString()
 	}
-	if !data.Attribute9.IsNull() {
+	if !data.Attribute9.IsNull() && !data.Attribute9.IsUnknown() {
 		authenticationwebauthaction.Attribute9 = data.Attribute9.ValueString()
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationwebauthaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Fullreqexpr.IsNull() {
+	if !data.Fullreqexpr.IsNull() && !data.Fullreqexpr.IsUnknown() {
 		authenticationwebauthaction.Fullreqexpr = data.Fullreqexpr.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationwebauthaction.Name = data.Name.ValueString()
 	}
-	if !data.Scheme.IsNull() {
+	if !data.Scheme.IsNull() && !data.Scheme.IsUnknown() {
 		authenticationwebauthaction.Scheme = data.Scheme.ValueString()
 	}
-	if !data.Serverip.IsNull() {
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
 		authenticationwebauthaction.Serverip = data.Serverip.ValueString()
 	}
-	if !data.Serverport.IsNull() {
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		authenticationwebauthaction.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
 	}
-	if !data.Successrule.IsNull() {
+	if !data.Successrule.IsNull() && !data.Successrule.IsUnknown() {
 		authenticationwebauthaction.Successrule = data.Successrule.ValueString()
 	}
 

@@ -69,16 +69,28 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 				// NITRO does not echo this field in a bare GET, so it cannot be
 				// Computed (it would stay unknown-after-apply). Optional only.
 				Optional: true,
+				// SDK v2 declared this Optional+Computed+ForceNew, so a legacy
+				// state carries a computed value that the current config (which
+				// leaves it unset) does not. Plain RequiresReplace would then see
+				// value->null and force a spurious replace of the parent on a
+				// state upgrade. RequiresReplaceIfConfigured only forces a replace
+				// when the user actually sets the field, preserving ForceNew
+				// semantics for real changes while tolerating the legacy upgrade.
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Indicates graceful movement of the service to TROFS. System will wait for monitor response time out before moving to TROFS",
 			},
 			"autoscale": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				// SDK v2 did NOT mark autoscale ForceNew, so it must stay
+				// in-place updatable for backward compatibility (the generated
+				// RequiresReplace was a defect that forced a spurious replace of
+				// the parent on a legacy state upgrade). UseStateForUnknown keeps
+				// the computed value stable across plans.
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Auto scale option for a GSLB servicegroup",
 			},
@@ -213,8 +225,12 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 			"state": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				// SDK v2 did NOT mark state ForceNew (it is toggled via
+				// enable/disable), so it must stay in-place updatable for
+				// backward compatibility. The generated RequiresReplace forced a
+				// spurious replace of the parent on a legacy state upgrade.
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Initial state of the GSLB service group.",
 			},
@@ -437,8 +453,15 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 	if val, ok := getResponseData["appflowlog"]; ok && val != nil {
 		data.Appflowlog = types.StringValue(val.(string))
 	}
-	if val, ok := getResponseData["autodelayedtrofs"]; ok && val != nil {
-		data.Autodelayedtrofs = types.StringValue(val.(string))
+	// autodelayedtrofs is Optional-only (not Computed) and create-only
+	// (RequiresReplace). NITRO echoes it in GET with its default ("NO"). Adopting
+	// that value when the user did not configure the attribute (plan/state null)
+	// would violate the plan and raise "inconsistent result after apply". Only
+	// adopt the GET value when the user configured it; otherwise preserve state.
+	if !data.Autodelayedtrofs.IsNull() && !data.Autodelayedtrofs.IsUnknown() {
+		if val, ok := getResponseData["autodelayedtrofs"]; ok && val != nil {
+			data.Autodelayedtrofs = types.StringValue(val.(string))
+		}
 	}
 	if val, ok := getResponseData["autoscale"]; ok && val != nil {
 		data.Autoscale = types.StringValue(val.(string))
@@ -460,8 +483,14 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 			data.Clttimeout = types.Int64Value(intVal)
 		}
 	}
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
+	// comment is Optional-only (not Computed). If NITRO echoes an empty/default
+	// comment in GET, adopting it when the user did not configure the attribute
+	// (plan/state null) would raise "inconsistent result after apply". Only adopt
+	// the GET value when the user configured it; otherwise preserve state.
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		if val, ok := getResponseData["comment"]; ok && val != nil {
+			data.Comment = types.StringValue(val.(string))
+		}
 	}
 	if val, ok := getResponseData["downstateflush"]; ok && val != nil {
 		data.Downstateflush = types.StringValue(val.(string))
