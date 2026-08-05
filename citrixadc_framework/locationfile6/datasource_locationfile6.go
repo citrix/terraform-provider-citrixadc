@@ -53,7 +53,7 @@ func (d *Locationfile6DataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	locationfile6SetAttrFromGet(ctx, &data, getResponseData)
+	locationfile6SetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

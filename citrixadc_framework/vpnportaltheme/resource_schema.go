@@ -51,10 +51,10 @@ func vpnportalthemeGetThePayloadFromtheConfig(ctx context.Context, data *Vpnport
 
 	// Create API request body from the model
 	vpnportaltheme := vpn.Vpnportaltheme{}
-	if !data.Basetheme.IsNull() {
+	if !data.Basetheme.IsNull() && !data.Basetheme.IsUnknown() {
 		vpnportaltheme.Basetheme = data.Basetheme.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnportaltheme.Name = data.Name.ValueString()
 	}
 
@@ -64,20 +64,22 @@ func vpnportalthemeGetThePayloadFromtheConfig(ctx context.Context, data *Vpnport
 func vpnportalthemeSetAttrFromGet(ctx context.Context, data *VpnportalthemeResourceModel, getResponseData map[string]interface{}) *VpnportalthemeResourceModel {
 	tflog.Debug(ctx, "In vpnportalthemeSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branches so we only null a value when it is unknown; never
+	// clobber a known configured value that NITRO may omit from GET (omit-on-default trap).
 	if val, ok := getResponseData["basetheme"]; ok && val != nil {
 		data.Basetheme = types.StringValue(val.(string))
-	} else {
+	} else if data.Basetheme.IsUnknown() {
 		data.Basetheme = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - plain value (name)
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

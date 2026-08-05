@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -439,7 +439,7 @@ func (r *TmsamlssoprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"digestmethod": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("SHA256"),
+				Computed:    true,
 				Description: "Algorithm to be used to compute/verify digest for SAML transactions",
 			},
 			"encryptassertion": schema.StringAttribute{
@@ -449,11 +449,14 @@ func (r *TmsamlssoprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"encryptionalgorithm": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("AES256"),
+				Computed:    true,
 				Description: "Algorithm to be used to encrypt SAML assertion",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new saml single sign-on profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an SSO action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"nameidexpr": schema.StringAttribute{
@@ -463,7 +466,7 @@ func (r *TmsamlssoprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"nameidformat": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("transient"),
+				Computed:    true,
 				Description: "Format of Name Identifier sent in Assertion.",
 			},
 			"relaystaterule": schema.StringAttribute{
@@ -493,17 +496,17 @@ func (r *TmsamlssoprofileResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"signassertion": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ASSERTION"),
+				Computed:    true,
 				Description: "Option to sign portions of assertion when Citrix ADC IDP sends one. Based on the user selection, either Assertion or Response or Both or none can be signed",
 			},
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("RSA-SHA256"),
+				Computed:    true,
 				Description: "Algorithm to be used to sign/verify SAML transactions",
 			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Computed:    true,
 				Description: "This option specifies the number of minutes on either side of current time that the assertion would be valid. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
 		},
@@ -752,7 +755,7 @@ func tmsamlssoprofileGetThePayloadFromtheConfig(ctx context.Context, data *Tmsam
 	if !data.Signaturealg.IsNull() {
 		tmsamlssoprofile.Signaturealg = data.Signaturealg.ValueString()
 	}
-	if !data.Skewtime.IsNull() {
+	if !data.Skewtime.IsNull() && !data.Skewtime.IsUnknown() {
 		tmsamlssoprofile.Skewtime = utils.IntPtr(int(data.Skewtime.ValueInt64()))
 	}
 
@@ -1143,9 +1146,10 @@ func tmsamlssoprofileSetAttrFromGet(ctx context.Context, data *TmsamlssoprofileR
 	} else {
 		data.Samlspcertname = types.StringNull()
 	}
-	if val, ok := getResponseData["sendpassword"]; ok && val != nil {
-		data.Sendpassword = types.StringValue(val.(string))
-	} else {
+	// sendpassword is intentionally NOT read back from NITRO (mirrors SDK v2, which
+	// commented out d.Set("sendpassword", ...)). Retain the configured value; only
+	// resolve an unknown plan value to null so state is never left unknown.
+	if data.Sendpassword.IsUnknown() {
 		data.Sendpassword = types.StringNull()
 	}
 	if val, ok := getResponseData["signassertion"]; ok && val != nil {
@@ -1162,7 +1166,8 @@ func tmsamlssoprofileSetAttrFromGet(ctx context.Context, data *TmsamlssoprofileR
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Skewtime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Skewtime.IsUnknown() {
+		// omit-on-default guard: never clobber a known configured value that NITRO omits
 		data.Skewtime = types.Int64Null()
 	}
 

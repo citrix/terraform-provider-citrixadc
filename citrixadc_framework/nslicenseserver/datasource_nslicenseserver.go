@@ -107,7 +107,7 @@ func (d *NslicenseserverDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	nslicenseserverSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	nslicenseserverSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

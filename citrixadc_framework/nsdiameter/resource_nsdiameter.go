@@ -55,16 +55,16 @@ func (r *NsdiameterResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nsdiameter resource")
 
-	// nsdiameter := nsdiameterGetThePayloadFromtheConfig(ctx, &data)
+	nsdiameter := nsdiameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsdiameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource (mirrors SDK v2 create).
+	err := r.client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsdiameter, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Static ID for this singleton configuration resource
 	data.Id = types.StringValue("nsdiameter-config")
 
 	tflog.Trace(ctx, "Created nsdiameter resource")
@@ -106,15 +106,18 @@ func (r *NsdiameterResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	tflog.Debug(ctx, "Updating nsdiameter resource")
 
-	// Create API request body from the model
-	// nsdiameter := nsdiameterGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve the singleton ID across the update.
+	data.Id = types.StringValue("nsdiameter-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsdiameter, got error: %s", err))
-	//	 return
-	// }
+	// Create API request body from the model
+	nsdiameter := nsdiameterGetThePayloadFromtheConfig(ctx, &data)
+
+	// Singleton resource - use UpdateUnnamedResource (mirrors SDK v2 update).
+	err := r.client.UpdateUnnamedResource(service.Nsdiameter.Type(), &nsdiameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsdiameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nsdiameter resource")
 

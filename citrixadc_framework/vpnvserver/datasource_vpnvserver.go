@@ -55,7 +55,7 @@ func (d *VpnvserverDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	vpnvserverSetAttrFromGet(ctx, &data, getResponseData)
+	vpnvserverSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

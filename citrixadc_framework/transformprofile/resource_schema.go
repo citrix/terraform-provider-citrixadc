@@ -56,16 +56,16 @@ func transformprofileGetThePayloadFromtheConfig(ctx context.Context, data *Trans
 
 	// Create API request body from the model
 	transformprofile := transform.Transformprofile{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		transformprofile.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		transformprofile.Name = data.Name.ValueString()
 	}
-	if !data.Onlytransformabsurlinbody.IsNull() {
+	if !data.Onlytransformabsurlinbody.IsNull() && !data.Onlytransformabsurlinbody.IsUnknown() {
 		transformprofile.Onlytransformabsurlinbody = data.Onlytransformabsurlinbody.ValueString()
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		transformprofile.Type = data.Type.ValueString()
 	}
 
@@ -75,25 +75,28 @@ func transformprofileGetThePayloadFromtheConfig(ctx context.Context, data *Trans
 func transformprofileSetAttrFromGet(ctx context.Context, data *TransformprofileResourceModel, getResponseData map[string]interface{}) *TransformprofileResourceModel {
 	tflog.Debug(ctx, "In transformprofileSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NITRO may omit attributes from GET when they equal their default
+	// (omit-on-default). Only null such an attribute when the current value is
+	// unknown; never clobber a known configured/state value (backward-compat).
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["onlytransformabsurlinbody"]; ok && val != nil {
 		data.Onlytransformabsurlinbody = types.StringValue(val.(string))
-	} else {
+	} else if data.Onlytransformabsurlinbody.IsUnknown() {
 		data.Onlytransformabsurlinbody = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 

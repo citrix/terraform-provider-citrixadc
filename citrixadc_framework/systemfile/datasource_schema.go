@@ -28,6 +28,12 @@ func SystemfileDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name of the file. It should not include filepath.",
 			},
+			// Present in the shared model; not meaningful as a datasource lookup input.
+			"is_base64_encoded": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Set to true when filecontent is already base64 encoded.",
+			},
 		},
 	}
 }

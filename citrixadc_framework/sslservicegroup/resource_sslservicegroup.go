@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *SslservicegroupResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating sslservicegroup resource")
 
-	// sslservicegroup := sslservicegroupGetThePayloadFromtheConfig(ctx, &data)
+	// sslservicegroup does not have an ADD operation; its SSL configuration is
+	// applied to an already-existing service group via an UPDATE (matches SDK v2).
+	sslservicegroupName := data.Servicegroupname.ValueString()
+	sslservicegroup := sslservicegroupGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslservicegroup.Type(), &sslservicegroup)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservicegroup, got error: %s", err))
-	//	 return
-	// }
+	_, err := r.client.UpdateResource(service.Sslservicegroup.Type(), sslservicegroupName, &sslservicegroup)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservicegroup, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslservicegroup-config")
+	// ID is the service group name (single unique attribute), matching SDK v2.
+	data.Id = types.StringValue(sslservicegroupName)
 
 	tflog.Trace(ctx, "Created sslservicegroup resource")
 
 	// Read the updated state back
-	r.readSslservicegroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslservicegroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslservicegroup not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *SslservicegroupResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading sslservicegroup resource")
 
-	r.readSslservicegroupFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslservicegroupFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslservicegroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslservicegroupResourceModel
+	var data, state SslservicegroupResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,80 @@ func (r *SslservicegroupResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslservicegroup resource")
 
-	// Create API request body from the model
-	// sslservicegroup := sslservicegroupGetThePayloadFromtheConfig(ctx, &data)
+	// Check whether any updateable attribute changed (servicegroupname is
+	// ForceNew and never reaches Update).
+	hasChange := false
+	if !data.Commonname.Equal(state.Commonname) {
+		hasChange = true
+	}
+	if !data.Ocspstapling.Equal(state.Ocspstapling) {
+		hasChange = true
+	}
+	if !data.Sendclosenotify.Equal(state.Sendclosenotify) {
+		hasChange = true
+	}
+	if !data.Serverauth.Equal(state.Serverauth) {
+		hasChange = true
+	}
+	if !data.Sessreuse.Equal(state.Sessreuse) {
+		hasChange = true
+	}
+	if !data.Sesstimeout.Equal(state.Sesstimeout) {
+		hasChange = true
+	}
+	if !data.Snienable.Equal(state.Snienable) {
+		hasChange = true
+	}
+	if !data.Ssl3.Equal(state.Ssl3) {
+		hasChange = true
+	}
+	if !data.Sslclientlogs.Equal(state.Sslclientlogs) {
+		hasChange = true
+	}
+	if !data.Sslprofile.Equal(state.Sslprofile) {
+		hasChange = true
+	}
+	if !data.Strictsigdigestcheck.Equal(state.Strictsigdigestcheck) {
+		hasChange = true
+	}
+	if !data.Tls1.Equal(state.Tls1) {
+		hasChange = true
+	}
+	if !data.Tls11.Equal(state.Tls11) {
+		hasChange = true
+	}
+	if !data.Tls12.Equal(state.Tls12) {
+		hasChange = true
+	}
+	if !data.Tls13.Equal(state.Tls13) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslservicegroup.Type(), &sslservicegroup)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservicegroup, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated sslservicegroup resource")
+	if hasChange {
+		sslservicegroupName := data.Servicegroupname.ValueString()
+		sslservicegroup := sslservicegroupGetThePayloadFromthePlan(ctx, &data)
+		_, err := r.client.UpdateResource(service.Sslservicegroup.Type(), sslservicegroupName, &sslservicegroup)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservicegroup, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated sslservicegroup resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for sslservicegroup resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readSslservicegroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslservicegroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslservicegroup not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +212,27 @@ func (r *SslservicegroupResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting sslservicegroup resource")
 
-	// For sslservicegroup, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// sslservicegroup has no DELETE operation on the ADC (its SSL config lives
+	// with the underlying service group). Removing it from state only, matching
+	// SDK v2 behavior.
 	tflog.Trace(ctx, "Deleted sslservicegroup resource from state")
 }
 
-// Helper function to read sslservicegroup data from API
-func (r *SslservicegroupResource) readSslservicegroupFromApi(ctx context.Context, data *SslservicegroupResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslservicegroup.Type(), "")
+// Helper function to read sslservicegroup data from API. Returns false when the
+// service group no longer exists so the caller can drop it from state.
+func (r *SslservicegroupResource) readSslservicegroupFromApi(ctx context.Context, data *SslservicegroupResourceModel, diags *diag.Diagnostics) bool {
+	sslservicegroupName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Sslservicegroup.Type(), sslservicegroupName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslservicegroup, got error: %s", err))
-		return
+		return false
 	}
 
 	sslservicegroupSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

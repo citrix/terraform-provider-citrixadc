@@ -55,7 +55,7 @@ func (d *VideooptimizationpacingactionDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	videooptimizationpacingactionSetAttrFromGet(ctx, &data, getResponseData)
+	videooptimizationpacingactionSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

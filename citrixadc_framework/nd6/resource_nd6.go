@@ -117,30 +117,24 @@ func (r *Nd6Resource) Read(ctx context.Context, req resource.ReadRequest, resp *
 }
 
 func (r *Nd6Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data Nd6ResourceModel
+	var data, state Nd6ResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state and plan data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "Updating nd6 resource")
+	// nd6 exposes no NITRO update endpoint and every attribute is ForceNew /
+	// RequiresReplace (matching the SDK v2 resource, which defined no Update
+	// callback at all). Terraform therefore never routes changes through
+	// Update; this body is a documented no-op that only refreshes state.
+	data.Id = state.Id
+	tflog.Debug(ctx, "Update is a no-op for nd6; all attributes are RequiresReplace")
 
-	// Create API request body from the model
-	// nd6 := nd6GetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nd6.Type(), &nd6)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nd6, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated nd6 resource")
-
-	// Read the updated state back
+	// Read the current state back
 	r.readNd6FromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -159,9 +153,24 @@ func (r *Nd6Resource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	tflog.Debug(ctx, "Deleting nd6 resource")
 
-	// Build the resource name for deletion
+	// Build the resource name and delete args for deletion.
+	// The NITRO nd6 delete endpoint identifies the entry by neighbor plus a
+	// vlan (or vxlan) qualifier and, optionally, td. This mirrors the SDK v2
+	// resource's deleteNd6Func exactly for backward compatibility (which used
+	// d.GetOk, treating a zero value as unset — hence the != 0 guards).
 	resourceId := data.Neighbor.ValueString()
-	err := r.client.DeleteResource(service.Nd6.Type(), resourceId)
+	args := make([]string, 0)
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() && data.Vlan.ValueInt64() != 0 {
+		args = append(args, fmt.Sprintf("vlan:%d", data.Vlan.ValueInt64()))
+	} else if !data.Vxlan.IsNull() && !data.Vxlan.IsUnknown() && data.Vxlan.ValueInt64() != 0 {
+		args = append(args, fmt.Sprintf("vxlan:%d", data.Vxlan.ValueInt64()))
+	} else {
+		args = append(args, "vlan:1")
+	}
+	if !data.Td.IsNull() && !data.Td.IsUnknown() && data.Td.ValueInt64() != 0 {
+		args = append(args, fmt.Sprintf("td:%d", data.Td.ValueInt64()))
+	}
+	err := r.client.DeleteResourceWithArgs(service.Nd6.Type(), resourceId, args)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nd6, got error: %s", err))
 		return

@@ -1,0 +1,15 @@
+# Resource        : nslicense
+# Primary ADC     : 154
+# Alternate ADCs  : 121, 159
+# Planned tests   : 2
+# Result          : PASS_first=1 PASS_alt=0 FAILED=0 SKIPPED=1
+
+## PASS (on primary ADC 154)
+  PASS  TestAccNslicenseDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED
+  SKIP  TestAccNslicense_basic  :: ssh does not work correctly with CPX

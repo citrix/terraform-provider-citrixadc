@@ -401,7 +401,7 @@ func (r *CsvserverResource) readSslpolicyBindings(ctx context.Context, name stri
 			Labelname:              types.StringValue(asString(b["labelname"])),
 			Labeltype:              types.StringValue(asString(b["labeltype"])),
 			Policyname:             types.StringValue(asString(b["policyname"])),
-			Priority:              types.Int64Value(0),
+			Priority:               types.Int64Value(0),
 			Type:                   types.StringValue(asString(b["type"])),
 		}
 		if p, ok := b["priority"]; ok && p != nil {

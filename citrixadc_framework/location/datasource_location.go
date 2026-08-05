@@ -55,7 +55,7 @@ func (d *LocationDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	locationSetAttrFromGet(ctx, &data, getResponseData)
+	locationSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -94,7 +94,7 @@ func (d *NsvpxparamDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	nsvpxparamSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	nsvpxparamSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

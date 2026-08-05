@@ -46,6 +46,7 @@ func (r *VpnnexthopserverResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "FQDN of the Citrix Gateway proxy in the second DMZ.",
@@ -54,6 +55,7 @@ func (r *VpnnexthopserverResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "IP address of the Citrix Gateway proxy in the second DMZ.",
@@ -69,6 +71,7 @@ func (r *VpnnexthopserverResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Address Type (IPV4/IPv6) of DNS name of nextHopServer FQDN.",
@@ -77,6 +80,7 @@ func (r *VpnnexthopserverResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Use of a secure port, such as 443, for the double-hop configuration.",
@@ -115,37 +119,40 @@ func vpnnexthopserverGetThePayloadFromtheConfig(ctx context.Context, data *Vpnne
 func vpnnexthopserverSetAttrFromGet(ctx context.Context, data *VpnnexthopserverResourceModel, getResponseData map[string]interface{}) *VpnnexthopserverResourceModel {
 	tflog.Debug(ctx, "In vpnnexthopserverSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE: else-branches only null a value when the current model value is
+	// Unknown (create read-back / import). We never clobber a known configured
+	// or prior-state value that NITRO omits from GET (omit-on-default trap).
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["nexthopfqdn"]; ok && val != nil {
 		data.Nexthopfqdn = types.StringValue(val.(string))
-	} else {
+	} else if data.Nexthopfqdn.IsUnknown() {
 		data.Nexthopfqdn = types.StringNull()
 	}
 	if val, ok := getResponseData["nexthopip"]; ok && val != nil {
 		data.Nexthopip = types.StringValue(val.(string))
-	} else {
+	} else if data.Nexthopip.IsUnknown() {
 		data.Nexthopip = types.StringNull()
 	}
 	if val, ok := getResponseData["nexthopport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nexthopport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nexthopport.IsUnknown() {
 		data.Nexthopport = types.Int64Null()
 	}
 	if val, ok := getResponseData["resaddresstype"]; ok && val != nil {
 		data.Resaddresstype = types.StringValue(val.(string))
-	} else {
+	} else if data.Resaddresstype.IsUnknown() {
 		data.Resaddresstype = types.StringNull()
 	}
 	if val, ok := getResponseData["secure"]; ok && val != nil {
 		data.Secure = types.StringValue(val.(string))
-	} else {
+	} else if data.Secure.IsUnknown() {
 		data.Secure = types.StringNull()
 	}
 

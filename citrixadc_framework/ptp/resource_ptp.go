@@ -55,14 +55,15 @@ func (r *PtpResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	tflog.Debug(ctx, "Creating ptp resource")
 
-	// ptp := ptpGetThePayloadFromtheConfig(ctx, &data)
+	// Singleton resource - push config with UpdateUnnamedResource (matches SDK v2)
+	ptp := ptpGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ptp.Type(), &ptp)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ptp, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Ptp.Type(), &ptp)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ptp, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("ptp-config")
@@ -95,8 +96,10 @@ func (r *PtpResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 }
 
 func (r *PtpResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data PtpResourceModel
+	var data, state PtpResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +107,33 @@ func (r *PtpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating ptp resource")
 
-	// Create API request body from the model
-	// ptp := ptpGetThePayloadFromtheConfig(ctx, &data)
+	// Change detection (matches SDK v2 hasChange on "state")
+	hasChange := false
+	if !data.State.Equal(state.State) {
+		tflog.Debug(ctx, "state has changed for ptp, starting update")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ptp.Type(), &ptp)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ptp, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		ptp := ptpGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated ptp resource")
+		// Make API call - singleton uses UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Ptp.Type(), &ptp)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ptp, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated ptp resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for ptp resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readPtpFromApi(ctx, &data, &resp.Diagnostics)

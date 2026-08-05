@@ -1,0 +1,15 @@
+# Resource        : nsdiameter
+# Primary ADC     : 159
+# Alternate ADCs  : 121, 154
+# Planned tests   : 2
+# Result          : PASS_first=2 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 159)
+  PASS  TestAccNsdiameter_basic
+  PASS  TestAccNsdiameterDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

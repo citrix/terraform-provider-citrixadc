@@ -1,0 +1,15 @@
+# Resource        : userprotocol
+# Primary ADC     : 157
+# Alternate ADCs  : 121, 152
+# Planned tests   : 2
+# Result          : PASS_first=0 PASS_alt=0 FAILED=0 SKIPPED=2
+
+## PASS (on primary ADC 157)
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED
+  SKIP  TestAccUserprotocol_basic  :: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!
+  SKIP  TestAccUserprotocolDataSource_basic  :: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!

@@ -57,8 +57,8 @@ func (r *VridparamResource) Create(ctx context.Context, req resource.CreateReque
 	vridparam := vridparamGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// Parameter singleton - NITRO has no "add" verb; create is the "set" verb (PUT).
-	_, err := r.client.UpdateResource(service.Vridparam.Type(), "", &vridparam)
+	// Singleton resource - use UpdateUnnamedResource (matches SDK v2 semantics).
+	err := r.client.UpdateUnnamedResource(service.Vridparam.Type(), &vridparam)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vridparam, got error: %s", err))
 		return
@@ -130,8 +130,8 @@ func (r *VridparamResource) Update(ctx context.Context, req resource.UpdateReque
 		// Create API request body from the model
 		vridparam := vridparamGetThePayloadFromthePlan(ctx, &data)
 		// Make API call
-		// Parameter singleton - update uses the same "set" verb (PUT).
-		_, err := r.client.UpdateResource(service.Vridparam.Type(), "", &vridparam)
+		// Singleton resource - use UpdateUnnamedResource (matches SDK v2 semantics).
+		err := r.client.UpdateUnnamedResource(service.Vridparam.Type(), &vridparam)
 		if err != nil {
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vridparam, got error: %s", err))
 			return

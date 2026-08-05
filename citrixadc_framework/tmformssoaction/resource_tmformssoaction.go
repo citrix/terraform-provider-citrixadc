@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *TmformssoactionResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating tmformssoaction resource")
 
-	// tmformssoaction := tmformssoactionGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	tmformssoaction := tmformssoactionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tmformssoaction.Type(), &tmformssoaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tmformssoaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("tmformssoaction-config")
+	// Named resource - use AddResource
+	tmformssoactionName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Tmformssoaction.Type(), tmformssoactionName, &tmformssoaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tmformssoaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created tmformssoaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", tmformssoactionName))
+
 	// Read the updated state back
-	r.readTmformssoactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTmformssoactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "tmformssoaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *TmformssoactionResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading tmformssoaction resource")
 
-	r.readTmformssoactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readTmformssoactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *TmformssoactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data TmformssoactionResourceModel
+	var data, state TmformssoactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,32 @@ func (r *TmformssoactionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating tmformssoaction resource")
 
-	// Create API request body from the model
-	// tmformssoaction := tmformssoactionGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model (name is included in the body).
+	// SDK v2 used UpdateUnnamedResource (PUT with name in the body) for this
+	// resource; preserve that backward-compatible behavior.
+	tmformssoaction := tmformssoactionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tmformssoaction.Type(), &tmformssoaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmformssoaction, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Tmformssoaction.Type(), &tmformssoaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmformssoaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated tmformssoaction resource")
 
 	// Read the updated state back
-	r.readTmformssoactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTmformssoactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "tmformssoaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +165,33 @@ func (r *TmformssoactionResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting tmformssoaction resource")
 
-	// For tmformssoaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted tmformssoaction resource from state")
+	// Named resource - delete using DeleteResource
+	tmformssoactionName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Tmformssoaction.Type(), tmformssoactionName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete tmformssoaction, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted tmformssoaction resource")
 }
 
-// Helper function to read tmformssoaction data from API
-func (r *TmformssoactionResource) readTmformssoactionFromApi(ctx context.Context, data *TmformssoactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Tmformssoaction.Type(), "")
+// Helper function to read tmformssoaction data from API.
+// Returns false (without an error) when the resource no longer exists.
+func (r *TmformssoactionResource) readTmformssoactionFromApi(ctx context.Context, data *TmformssoactionResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	tmformssoactionName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Tmformssoaction.Type(), tmformssoactionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read tmformssoaction, got error: %s", err))
-		return
+		return false
 	}
 
 	tmformssoactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

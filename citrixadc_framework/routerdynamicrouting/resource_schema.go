@@ -2,24 +2,27 @@ package routerdynamicrouting
 
 import (
 	"context"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/router"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // RouterdynamicroutingResourceModel describes the resource data model.
+//
+// routerdynamicrouting is an action-only resource. NITRO exposes only the
+// "apply" action (no GET/DELETE for the applied configuration), so the model
+// mirrors the SDK v2 contract exactly: a single list of command lines that are
+// joined and pushed to the appliance via ?action=apply.
 type RouterdynamicroutingResourceModel struct {
-	Id            types.String `tfsdk:"id"`
-	Commandstring types.String `tfsdk:"commandstring"`
-	Nodeid        types.Int64  `tfsdk:"nodeid"`
+	Id           types.String `tfsdk:"id"`
+	Commandlines types.List   `tfsdk:"commandlines"`
 }
 
 func (r *RouterdynamicroutingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -30,58 +33,38 @@ func (r *RouterdynamicroutingResource) Schema(ctx context.Context, req resource.
 				Computed:    true,
 				Description: "The ID of the routerdynamicrouting resource.",
 			},
-			"commandstring": schema.StringAttribute{
+			// SDK v2: TypeList of strings, Optional + Computed + ForceNew.
+			// Optional+Computed+ForceNew maps to RequiresReplaceIfConfigured();
+			// UseStateForUnknown is added before it because the attribute is
+			// Computed (avoids spurious known-after-apply churn).
+			"commandlines": schema.ListAttribute{
+				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				Description: "command to be executed",
-			},
-			"nodeid": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: "Unique number that identifies the cluster node.",
+				Description: "The commands to be applied as dynamic routing configuration. Each element is a single command line; the lines are joined and pushed to the appliance.",
 			},
 		},
 	}
 }
 
-func routerdynamicroutingGetThePayloadFromtheConfig(ctx context.Context, data *RouterdynamicroutingResourceModel) router.Routerdynamicrouting {
-	tflog.Debug(ctx, "In routerdynamicroutingGetThePayloadFromtheConfig Function")
+// routerdynamicroutingGetThePayloadFromthePlan builds the NITRO payload for the
+// "apply" action. The list of command lines is joined with newlines into the
+// single Commandstring field, mirroring the SDK v2 implementation.
+func routerdynamicroutingGetThePayloadFromthePlan(ctx context.Context, data *RouterdynamicroutingResourceModel) router.Routerdynamicrouting {
+	tflog.Debug(ctx, "In routerdynamicroutingGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
-	routerdynamicrouting := router.Routerdynamicrouting{}
-	if !data.Commandstring.IsNull() {
-		routerdynamicrouting.Commandstring = data.Commandstring.ValueString()
-	}
-	if !data.Nodeid.IsNull() {
-		routerdynamicrouting.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
-	}
-
-	return routerdynamicrouting
-}
-
-func routerdynamicroutingSetAttrFromGet(ctx context.Context, data *RouterdynamicroutingResourceModel, getResponseData map[string]interface{}) *RouterdynamicroutingResourceModel {
-	tflog.Debug(ctx, "In routerdynamicroutingSetAttrFromGet Function")
-
-	// Convert API response to model
-	if val, ok := getResponseData["commandstring"]; ok && val != nil {
-		data.Commandstring = types.StringValue(val.(string))
-	} else {
-		data.Commandstring = types.StringNull()
-	}
-	if val, ok := getResponseData["nodeid"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Nodeid = types.Int64Value(intVal)
-		}
-	} else {
-		data.Nodeid = types.Int64Null()
+	var lines []string
+	if !data.Commandlines.IsNull() && !data.Commandlines.IsUnknown() {
+		data.Commandlines.ElementsAs(ctx, &lines, false)
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Commandstring.ValueString())
+	cmdString := strings.Join(lines, "\n")
 
-	return data
+	return router.Routerdynamicrouting{
+		Commandstring: cmdString,
+	}
 }

@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -27,10 +29,15 @@ func (r *NetbridgeResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the netbridge resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 had ForceNew: true on name -> RequiresReplace
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the network bridge.",
 			},
 			"vxlanvlanmap": schema.StringAttribute{
+				// SDK v2: Optional + Computed, updateable (no Default)
 				Optional:    true,
 				Computed:    true,
 				Description: "The vlan to vxlan mapping to be applied to this netbridge.",
@@ -39,15 +46,15 @@ func (r *NetbridgeResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func netbridgeGetThePayloadFromtheConfig(ctx context.Context, data *NetbridgeResourceModel) network.Netbridge {
-	tflog.Debug(ctx, "In netbridgeGetThePayloadFromtheConfig Function")
+func netbridgeGetThePayloadFromthePlan(ctx context.Context, data *NetbridgeResourceModel) network.Netbridge {
+	tflog.Debug(ctx, "In netbridgeGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	netbridge := network.Netbridge{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		netbridge.Name = data.Name.ValueString()
 	}
-	if !data.Vxlanvlanmap.IsNull() {
+	if !data.Vxlanvlanmap.IsNull() && !data.Vxlanvlanmap.IsUnknown() {
 		netbridge.Vxlanvlanmap = data.Vxlanvlanmap.ValueString()
 	}
 
@@ -60,17 +67,19 @@ func netbridgeSetAttrFromGet(ctx context.Context, data *NetbridgeResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["vxlanvlanmap"]; ok && val != nil {
 		data.Vxlanvlanmap = types.StringValue(val.(string))
-	} else {
+	} else if data.Vxlanvlanmap.IsUnknown() {
+		// Only null when unknown; never clobber a known configured value that
+		// NITRO omits from the GET response (omit-on-default trap).
 		data.Vxlanvlanmap = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

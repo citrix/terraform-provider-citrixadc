@@ -55,14 +55,17 @@ func (r *NslicenseparametersResource) Create(ctx context.Context, req resource.C
 
 	tflog.Debug(ctx, "Creating nslicenseparameters resource")
 
-	// nslicenseparameters := nslicenseparametersGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan and push it to the ADC.
+	// nslicenseparameters is a singleton config object (no primary key), so it is
+	// written with UpdateUnnamedResource, mirroring the SDK v2 implementation.
+	nslicenseparameters := nslicenseparametersGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nslicenseparameters.Type(), &nslicenseparameters)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nslicenseparameters, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nslicenseparameters.Type(), &nslicenseparameters)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nslicenseparameters, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nslicenseparameters-config")
@@ -107,14 +110,14 @@ func (r *NslicenseparametersResource) Update(ctx context.Context, req resource.U
 	tflog.Debug(ctx, "Updating nslicenseparameters resource")
 
 	// Create API request body from the model
-	// nslicenseparameters := nslicenseparametersGetThePayloadFromtheConfig(ctx, &data)
+	nslicenseparameters := nslicenseparametersGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nslicenseparameters.Type(), &nslicenseparameters)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nslicenseparameters, got error: %s", err))
-	//	 return
-	// }
+	// Make API call (singleton config object - UpdateUnnamedResource)
+	err := r.client.UpdateUnnamedResource(service.Nslicenseparameters.Type(), &nslicenseparameters)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nslicenseparameters, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nslicenseparameters resource")
 

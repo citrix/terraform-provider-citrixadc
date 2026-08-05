@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -36,11 +35,16 @@ func (r *MapbmrResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "The ID of the mapbmr resource.",
 			},
 			"eabitlength": schema.Int64Attribute{
+				// SDK v2: Optional+Computed+ForceNew (no Default). Keep Optional+Computed
+				// with no Default (value is read back from the ADC). UseStateForUnknown
+				// keeps the computed value stable; RequiresReplaceIfConfigured reproduces
+				// ForceNew only when the user actually configured and changes the value.
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     int64default.StaticInt64(16),
 				Description: "The Embedded Address (EA) bit field encodes the CE-specific IPv4 address and port information.  The EA bit field, which is unique for a\n			          given Rule IPv6 prefix.",
 			},
 			"name": schema.StringAttribute{
@@ -51,19 +55,23 @@ func (r *MapbmrResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Name for the Basic Mapping Rule. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the  MAP Basic Mapping Rule is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"add network MapBmr bmr1 -natprefix 2005::/64 -EAbitLength 16 -psidoffset 6 -portsharingratio 8\" ).\n			The Basic Mapping Rule information allows a MAP BR to determine source IPv4 address from the IPv6 packet sent from MAP CE device.\n			Also it allows to determine destination IPv6 address of MAP CE before sending packets to MAP CE",
 			},
 			"psidlength": schema.Int64Attribute{
+				// SDK v2: Optional+Computed+ForceNew (no Default).
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     int64default.StaticInt64(8),
 				Description: "Length of Port Set IdentifierPort Set Identifier(PSID) in Embedded Address (EA) bits",
 			},
 			"psidoffset": schema.Int64Attribute{
+				// SDK v2: Optional+Computed+ForceNew (no Default).
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     int64default.StaticInt64(6),
 				Description: "Start bit position  of Port Set Identifier(PSID) value in Embedded Address (EA) bits.",
 			},
 			"ruleipv6prefix": schema.StringAttribute{
@@ -109,7 +117,9 @@ func mapbmrSetAttrFromGet(ctx context.Context, data *MapbmrResourceModel, getRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Eabitlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Eabitlength.IsUnknown() {
+		// Only null an unknown (unconfigured) value; never clobber a known
+		// configured value that NITRO omitted from GET (omit-on-default trap).
 		data.Eabitlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
@@ -121,14 +131,14 @@ func mapbmrSetAttrFromGet(ctx context.Context, data *MapbmrResourceModel, getRes
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Psidlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Psidlength.IsUnknown() {
 		data.Psidlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["psidoffset"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Psidoffset = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Psidoffset.IsUnknown() {
 		data.Psidoffset = types.Int64Null()
 	}
 	if val, ok := getResponseData["ruleipv6prefix"]; ok && val != nil {

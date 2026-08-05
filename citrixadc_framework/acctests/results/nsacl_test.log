@@ -1,0 +1,17 @@
+# Resource        : nsacl
+# Primary ADC     : 159
+# Alternate ADCs  : 121, 154
+# Planned tests   : 4
+# Result          : PASS_first=4 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 159)
+  PASS  TestAccNsacl_basic
+  PASS  TestAccNsacl_enable_disable
+  PASS  TestAccNsacl_dataset
+  PASS  TestAccNsaclDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

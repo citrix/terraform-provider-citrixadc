@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *PcpserverResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating pcpserver resource")
 
-	// pcpserver := pcpserverGetThePayloadFromtheConfig(ctx, &data)
+	pcpserver := pcpserverGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Pcpserver.Type(), &pcpserver)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create pcpserver, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("pcpserver-config")
+	// Named resource - use AddResource (NITRO add is POST /config/pcpserver)
+	pcpserverName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Pcpserver.Type(), pcpserverName, &pcpserver)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create pcpserver, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created pcpserver resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(pcpserverName)
+
 	// Read the updated state back
-	r.readPcpserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readPcpserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "pcpserver not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *PcpserverResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading pcpserver resource")
 
-	r.readPcpserverFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readPcpserverFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *PcpserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data PcpserverResourceModel
+	var data, state PcpserverResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,43 @@ func (r *PcpserverResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating pcpserver resource")
 
-	// Create API request body from the model
-	// pcpserver := pcpserverGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	// (ipaddress and name are RequiresReplace and never reach Update)
+	hasChange := false
+	if !data.Pcpprofile.Equal(state.Pcpprofile) {
+		tflog.Debug(ctx, "pcpprofile has changed for pcpserver")
+		hasChange = true
+	}
+	if !data.Port.Equal(state.Port) {
+		tflog.Debug(ctx, "port has changed for pcpserver")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Pcpserver.Type(), &pcpserver)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update pcpserver, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated pcpserver resource")
+	if hasChange {
+		// NITRO update is PUT /config/pcpserver (unnamed) with name in the body
+		pcpserver := pcpserverGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		err := r.client.UpdateUnnamedResource(service.Pcpserver.Type(), &pcpserver)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update pcpserver, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated pcpserver resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for pcpserver resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readPcpserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readPcpserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "pcpserver not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +175,33 @@ func (r *PcpserverResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting pcpserver resource")
 
-	// For pcpserver, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted pcpserver resource from state")
+	// Named resource - delete using DeleteResource (DELETE /config/pcpserver/{name})
+	pcpserverName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Pcpserver.Type(), pcpserverName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete pcpserver, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted pcpserver resource")
 }
 
-// Helper function to read pcpserver data from API
-func (r *PcpserverResource) readPcpserverFromApi(ctx context.Context, data *PcpserverResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Pcpserver.Type(), "")
+// Helper function to read pcpserver data from API. Returns false when the
+// resource no longer exists on the ADC.
+func (r *PcpserverResource) readPcpserverFromApi(ctx context.Context, data *PcpserverResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	pcpserverName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Pcpserver.Type(), pcpserverName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read pcpserver, got error: %s", err))
-		return
+		return false
 	}
 
 	pcpserverSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

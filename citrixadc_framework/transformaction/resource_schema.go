@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -55,18 +54,29 @@ func (r *TransformactionResource) Schema(ctx context.Context, req resource.Schem
 				Computed:    true,
 				Description: "PCRE-format regular expression that describes the transformation to be performed on cookie domains that match the cookieDomainFrom pattern. \nNOTE: The cookie domain to be transformed is extracted from the request.",
 			},
+			// SDK v2: Required + ForceNew
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name for the URL transformation action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the URL Transformation action is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, my transform action or my transform action).",
-			},
-			"priority": schema.Int64Attribute{
-				Required:    true,
-				Description: "Positive integer specifying the priority of the action within the profile. A lower number specifies a higher priority. Must be unique within the list of actions bound to the profile. Policies are evaluated in the order of their priority numbers, and the first policy that matches is applied.",
-			},
-			"profilename": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Name for the URL transformation action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the URL Transformation action is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, my transform action or my transform action).",
+			},
+			// SDK v2: Optional + Computed (TypeInt). Metadata marks it required, but the
+			// backward-compatible SDK v2 contract is Optional + Computed.
+			"priority": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Positive integer specifying the priority of the action within the profile. A lower number specifies a higher priority. Must be unique within the list of actions bound to the profile. Policies are evaluated in the order of their priority numbers, and the first policy that matches is applied.",
+			},
+			// SDK v2: Optional + Computed + ForceNew -> UseStateForUnknown() then
+			// RequiresReplaceIfConfigured().
+			"profilename": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the URL Transformation profile with which to associate this action.",
 			},
@@ -90,51 +100,74 @@ func (r *TransformactionResource) Schema(ctx context.Context, req resource.Schem
 				Computed:    true,
 				Description: "PCRE-format regular expression that describes the transformation to be performed on URLs that match the resUrlFrom pattern.",
 			},
+			// SDK v2: Optional + Computed, NO default (value read from ADC).
 			"state": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Enable or disable this action.",
 			},
 		},
 	}
 }
 
-func transformactionGetThePayloadFromtheConfig(ctx context.Context, data *TransformactionResourceModel) transform.Transformaction {
-	tflog.Debug(ctx, "In transformactionGetThePayloadFromtheConfig Function")
+// transformactionGetTheAddPayloadFromthePlan builds the payload for the NITRO add
+// operation. Mirroring SDK v2, add only carries name/profilename/state/priority;
+// the URL/cookie transformation patterns are applied via a follow-up update.
+func transformactionGetTheAddPayloadFromthePlan(ctx context.Context, data *TransformactionResourceModel) transform.Transformaction {
+	tflog.Debug(ctx, "In transformactionGetTheAddPayloadFromthePlan Function")
 
-	// Create API request body from the model
 	transformaction := transform.Transformaction{}
-	if !data.Comment.IsNull() {
-		transformaction.Comment = data.Comment.ValueString()
-	}
-	if !data.Cookiedomainfrom.IsNull() {
-		transformaction.Cookiedomainfrom = data.Cookiedomainfrom.ValueString()
-	}
-	if !data.Cookiedomaininto.IsNull() {
-		transformaction.Cookiedomaininto = data.Cookiedomaininto.ValueString()
-	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		transformaction.Name = data.Name.ValueString()
 	}
-	if !data.Priority.IsNull() {
-		transformaction.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
-	}
-	if !data.Profilename.IsNull() {
+	if !data.Profilename.IsNull() && !data.Profilename.IsUnknown() {
 		transformaction.Profilename = data.Profilename.ValueString()
 	}
-	if !data.Requrlfrom.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
+		transformaction.State = data.State.ValueString()
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		transformaction.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
+	}
+
+	return transformaction
+}
+
+// transformactionGetTheUpdatablePayloadFromThePlan builds the payload for the NITRO
+// update operation. Mirroring SDK v2, profilename is NOT included (it is set only at
+// add time and is ForceNew).
+func transformactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *TransformactionResourceModel) transform.Transformaction {
+	tflog.Debug(ctx, "In transformactionGetTheUpdatablePayloadFromThePlan Function")
+
+	transformaction := transform.Transformaction{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		transformaction.Name = data.Name.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		transformaction.Comment = data.Comment.ValueString()
+	}
+	if !data.Cookiedomainfrom.IsNull() && !data.Cookiedomainfrom.IsUnknown() {
+		transformaction.Cookiedomainfrom = data.Cookiedomainfrom.ValueString()
+	}
+	if !data.Cookiedomaininto.IsNull() && !data.Cookiedomaininto.IsUnknown() {
+		transformaction.Cookiedomaininto = data.Cookiedomaininto.ValueString()
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		transformaction.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
+	}
+	if !data.Requrlfrom.IsNull() && !data.Requrlfrom.IsUnknown() {
 		transformaction.Requrlfrom = data.Requrlfrom.ValueString()
 	}
-	if !data.Requrlinto.IsNull() {
+	if !data.Requrlinto.IsNull() && !data.Requrlinto.IsUnknown() {
 		transformaction.Requrlinto = data.Requrlinto.ValueString()
 	}
-	if !data.Resurlfrom.IsNull() {
+	if !data.Resurlfrom.IsNull() && !data.Resurlfrom.IsUnknown() {
 		transformaction.Resurlfrom = data.Resurlfrom.ValueString()
 	}
-	if !data.Resurlinto.IsNull() {
+	if !data.Resurlinto.IsNull() && !data.Resurlinto.IsUnknown() {
 		transformaction.Resurlinto = data.Resurlinto.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		transformaction.State = data.State.ValueString()
 	}
 
@@ -144,67 +177,67 @@ func transformactionGetThePayloadFromtheConfig(ctx context.Context, data *Transf
 func transformactionSetAttrFromGet(ctx context.Context, data *TransformactionResourceModel, getResponseData map[string]interface{}) *TransformactionResourceModel {
 	tflog.Debug(ctx, "In transformactionSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// The else-branch only nulls a value that is still Unknown (e.g. an omitted
+	// Optional+Computed attribute right after create). A KNOWN configured/state value
+	// that NITRO omits from GET (omit-on-default) is preserved, never clobbered.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiedomainfrom"]; ok && val != nil {
 		data.Cookiedomainfrom = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookiedomainfrom.IsUnknown() {
 		data.Cookiedomainfrom = types.StringNull()
 	}
 	if val, ok := getResponseData["cookiedomaininto"]; ok && val != nil {
 		data.Cookiedomaininto = types.StringValue(val.(string))
-	} else {
+	} else if data.Cookiedomaininto.IsUnknown() {
 		data.Cookiedomaininto = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["priority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Priority = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Priority.IsUnknown() {
 		data.Priority = types.Int64Null()
 	}
 	if val, ok := getResponseData["profilename"]; ok && val != nil {
 		data.Profilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Profilename.IsUnknown() {
 		data.Profilename = types.StringNull()
 	}
 	if val, ok := getResponseData["requrlfrom"]; ok && val != nil {
 		data.Requrlfrom = types.StringValue(val.(string))
-	} else {
+	} else if data.Requrlfrom.IsUnknown() {
 		data.Requrlfrom = types.StringNull()
 	}
 	if val, ok := getResponseData["requrlinto"]; ok && val != nil {
 		data.Requrlinto = types.StringValue(val.(string))
-	} else {
+	} else if data.Requrlinto.IsUnknown() {
 		data.Requrlinto = types.StringNull()
 	}
 	if val, ok := getResponseData["resurlfrom"]; ok && val != nil {
 		data.Resurlfrom = types.StringValue(val.(string))
-	} else {
+	} else if data.Resurlfrom.IsUnknown() {
 		data.Resurlfrom = types.StringNull()
 	}
 	if val, ok := getResponseData["resurlinto"]; ok && val != nil {
 		data.Resurlinto = types.StringValue(val.(string))
-	} else {
+	} else if data.Resurlinto.IsUnknown() {
 		data.Resurlinto = types.StringNull()
 	}
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the resource: single unique attribute (name).
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

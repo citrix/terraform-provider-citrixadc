@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -70,7 +69,7 @@ func (r *NstimeoutResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"halfclose": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10),
+				Computed:    true,
 				Description: "Idle timeout, in seconds, for connections that are in TCP half-closed state.",
 			},
 			"httpclient": schema.Int64Attribute{
@@ -85,17 +84,17 @@ func (r *NstimeoutResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"newconnidletimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4),
+				Computed:    true,
 				Description: "Timer interval, in seconds, for new TCP NATPCB connections on which no data was received.",
 			},
 			"nontcpzombie": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(60),
+				Computed:    true,
 				Description: "Interval at which the zombie clean-up process for non-TCP connections should run. Inactive IP NAT connections will be cleaned up.",
 			},
 			"reducedfintimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(30),
+				Computed:    true,
 				Description: "Alternative idle timeout, in seconds, for closed TCP NATPCB connections.",
 			},
 			"reducedrsttimeout": schema.Int64Attribute{
@@ -120,7 +119,7 @@ func (r *NstimeoutResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"zombie": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(120),
+				Computed:    true,
 				Description: "Interval, in seconds, at which the Citrix ADC zombie cleanup process must run. This process cleans up inactive TCP connections.",
 			},
 		},
@@ -192,112 +191,112 @@ func nstimeoutSetAttrFromGet(ctx context.Context, data *NstimeoutResourceModel, 
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Anyclient = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Anyclient.IsUnknown() {
 		data.Anyclient = types.Int64Null()
 	}
 	if val, ok := getResponseData["anyserver"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Anyserver = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Anyserver.IsUnknown() {
 		data.Anyserver = types.Int64Null()
 	}
 	if val, ok := getResponseData["anytcpclient"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Anytcpclient = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Anytcpclient.IsUnknown() {
 		data.Anytcpclient = types.Int64Null()
 	}
 	if val, ok := getResponseData["anytcpserver"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Anytcpserver = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Anytcpserver.IsUnknown() {
 		data.Anytcpserver = types.Int64Null()
 	}
 	if val, ok := getResponseData["client"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Client = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Client.IsUnknown() {
 		data.Client = types.Int64Null()
 	}
 	if val, ok := getResponseData["halfclose"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Halfclose = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Halfclose.IsUnknown() {
 		data.Halfclose = types.Int64Null()
 	}
 	if val, ok := getResponseData["httpclient"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Httpclient = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Httpclient.IsUnknown() {
 		data.Httpclient = types.Int64Null()
 	}
 	if val, ok := getResponseData["httpserver"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Httpserver = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Httpserver.IsUnknown() {
 		data.Httpserver = types.Int64Null()
 	}
 	if val, ok := getResponseData["newconnidletimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Newconnidletimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Newconnidletimeout.IsUnknown() {
 		data.Newconnidletimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["nontcpzombie"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nontcpzombie = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nontcpzombie.IsUnknown() {
 		data.Nontcpzombie = types.Int64Null()
 	}
 	if val, ok := getResponseData["reducedfintimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Reducedfintimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Reducedfintimeout.IsUnknown() {
 		data.Reducedfintimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["reducedrsttimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Reducedrsttimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Reducedrsttimeout.IsUnknown() {
 		data.Reducedrsttimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["server"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Server = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Server.IsUnknown() {
 		data.Server = types.Int64Null()
 	}
 	if val, ok := getResponseData["tcpclient"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tcpclient = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tcpclient.IsUnknown() {
 		data.Tcpclient = types.Int64Null()
 	}
 	if val, ok := getResponseData["tcpserver"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Tcpserver = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Tcpserver.IsUnknown() {
 		data.Tcpserver = types.Int64Null()
 	}
 	if val, ok := getResponseData["zombie"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Zombie = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Zombie.IsUnknown() {
 		data.Zombie = types.Int64Null()
 	}
 

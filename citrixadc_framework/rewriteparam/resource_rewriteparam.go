@@ -55,14 +55,14 @@ func (r *RewriteparamResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating rewriteparam resource")
 
-	// rewriteparam := rewriteparamGetThePayloadFromtheConfig(ctx, &data)
+	rewriteparam := rewriteparamGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Rewriteparam.Type(), &rewriteparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rewriteparam, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Rewriteparam.Type(), &rewriteparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rewriteparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("rewriteparam-config")
@@ -71,6 +71,9 @@ func (r *RewriteparamResource) Create(ctx context.Context, req resource.CreateRe
 
 	// Read the updated state back
 	r.readRewriteparamFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -89,14 +92,19 @@ func (r *RewriteparamResource) Read(ctx context.Context, req resource.ReadReques
 	tflog.Debug(ctx, "Reading rewriteparam resource")
 
 	r.readRewriteparamFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *RewriteparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data RewriteparamResourceModel
+	var data, state RewriteparamResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +112,42 @@ func (r *RewriteparamResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating rewriteparam resource")
 
-	// Create API request body from the model
-	// rewriteparam := rewriteparamGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Timeout.Equal(state.Timeout) {
+		tflog.Debug(ctx, "timeout has changed for rewriteparam")
+		hasChange = true
+	}
+	if !data.Undefaction.Equal(state.Undefaction) {
+		tflog.Debug(ctx, "undefaction has changed for rewriteparam")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Rewriteparam.Type(), &rewriteparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rewriteparam, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		rewriteparam := rewriteparamGetThePayloadFromthePlan(ctx, &data)
 
-	tflog.Trace(ctx, "Updated rewriteparam resource")
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Rewriteparam.Type(), &rewriteparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rewriteparam, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated rewriteparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for rewriteparam resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readRewriteparamFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,9 +165,8 @@ func (r *RewriteparamResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting rewriteparam resource")
 
-	// For rewriteparam, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted rewriteparam resource from state")
+	// Singleton resource - no delete operation on ADC, just remove from state
+	tflog.Trace(ctx, "Removed rewriteparam from Terraform state")
 }
 
 // Helper function to read rewriteparam data from API
@@ -151,5 +178,4 @@ func (r *RewriteparamResource) readRewriteparamFromApi(ctx context.Context, data
 	}
 
 	rewriteparamSetAttrFromGet(ctx, data, getResponseData)
-
 }

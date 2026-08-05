@@ -55,7 +55,7 @@ func (d *ResponderactionDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	responderactionSetAttrFromGet(ctx, &data, getResponseData)
+	responderactionSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

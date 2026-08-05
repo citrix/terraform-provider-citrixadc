@@ -1,0 +1,16 @@
+# Resource        : nsip6
+# Primary ADC     : 160
+# Alternate ADCs  : 121, 155
+# Planned tests   : 3
+# Result          : PASS_first=3 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 160)
+  PASS  TestAccNsip6_basic
+  PASS  TestAccNsip6_mptcpadvertise
+  PASS  TestAccNsip6DataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

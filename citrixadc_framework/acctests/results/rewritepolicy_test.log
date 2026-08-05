@@ -1,0 +1,17 @@
+# Resource        : rewritepolicy
+# Primary ADC     : 160
+# Alternate ADCs  : 121, 155
+# Planned tests   : 4
+# Result          : PASS_first=1 PASS_alt=2 FAILED=1 SKIPPED=0
+
+## PASS (on primary ADC 160)
+  PASS  TestAccRewritepolicyDataSource_basic
+
+## PASS (only on an alternate ADC)
+  PASS-ALT  TestAccRewritepolicy_lbvserverbinding  -> 121   (primary 160 reason: Error: Client Error)
+  PASS-ALT  TestAccRewritepolicy_csvserverbinding  -> 121   (primary 160 reason: Error: Client Error)
+
+## FAILED (all ADCs tried)
+  FAIL  TestAccRewritepolicy_globalbinding  :: Error: Client Error   [tried: 160, 121, 155]
+
+## SKIPPED

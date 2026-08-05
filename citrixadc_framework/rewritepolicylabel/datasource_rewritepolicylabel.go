@@ -55,7 +55,7 @@ func (d *RewritepolicylabelDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	rewritepolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	rewritepolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

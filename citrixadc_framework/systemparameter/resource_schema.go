@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -26,6 +24,7 @@ type SystemparameterResourceModel struct {
 	Forcepasswordchange     types.String `tfsdk:"forcepasswordchange"`
 	Googleanalytics         types.String `tfsdk:"googleanalytics"`
 	Localauth               types.String `tfsdk:"localauth"`
+	Maxclient               types.String `tfsdk:"maxclient"`
 	Maxsessionperuser       types.Int64  `tfsdk:"maxsessionperuser"`
 	Minpasswordlen          types.Int64  `tfsdk:"minpasswordlen"`
 	Natpcbforceflushlimit   types.Int64  `tfsdk:"natpcbforceflushlimit"`
@@ -54,12 +53,12 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"basicauth": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Enable or disable basic authentication for Nitro API.",
 			},
 			"cliloglevel": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("INFORMATIONAL"),
+				Computed:    true,
 				Description: "Audit log level, which specifies the types of events to log for cli executed commands.\nAvailable values function as follows:\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.",
 			},
 			"daystoexpire": schema.Int64Attribute{
@@ -69,28 +68,33 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"doppler": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Enable or disable Doppler",
 			},
 			"fipsusermode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Use this option to set the FIPS mode for key user-land processes. When enabled, these user-land processes will operate in FIPS mode. In this mode, these processes will use FIPS 140-2 certified crypto algorithms.\nWith a FIPS license, it is enabled by default and cannot be disabled.\nWithout a FIPS license, it is disabled by default, wherein these user-land processes will not operate in FIPS mode.",
 			},
 			"forcepasswordchange": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable or disable force password change for nsroot user",
 			},
 			"googleanalytics": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable or disable Google analytics",
 			},
 			"localauth": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "When enabled, local users can access Citrix ADC even when external authentication is configured. When disabled, local users are not allowed to access the Citrix ADC, Local users can access the Citrix ADC only when the configured external authentication servers are unavailable. This parameter is not applicable to SSH Key-based authentication",
+			},
+			"maxclient": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Maximum number of client connection allowed per user. Exposed for backward compatibility with the SDK v2 resource; this is a read-only NITRO parameter.",
 			},
 			"maxsessionperuser": schema.Int64Attribute{
 				Optional:    true,
@@ -104,17 +108,17 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"natpcbforceflushlimit": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(2147483647),
+				Computed:    true,
 				Description: "Flush the system if the number of Network Address Translation Protocol Control Blocks (NATPCBs) exceeds this value.",
 			},
 			"natpcbrstontimeout": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Send a reset signal to client and server connections when their NATPCBs time out. Avoids the buildup of idle TCP connections on both the sides.",
 			},
 			"passwordhistorycontrol": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enables or disable password expiry feature for system users.\nIf the feature is ENABLED, by default the last 6 passwords of users will be maintained and will not be allowed to reuse same.\nWhen the feature is enabled the daystoexpire, warnpriorndays and pwdhistoryCount will be set with default values. The values can only be set in system\nfor system parameter. It cannot be unset. It is possible to set and unset the values for daytoexpire and warnpriorndays in system groups.\nDefault values if feature is ENABLED:\ndaystoexpire: 30\nwarnpriorndays: 5\npwdhistoryCount: 6\nIf the feature is DISABLED the values cannot be set or unset in system parameter and system groups",
 			},
 			"promptstring": schema.StringAttribute{
@@ -129,27 +133,27 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"rbaonresponse": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Enable or disable Role-Based Authentication (RBA) on responses.",
 			},
 			"reauthonauthparamchange": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable or disable External user reauthentication when authentication parameter changes",
 			},
 			"removesensitivefiles": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Use this option to remove the sensitive files from the system like authorise keys, public keys etc. The commands which will remove sensitive files when this system paramter is enabled are rm cluster instance, rm cluster node, rm ha node, clear config full, join cluster and add cluster instance.",
 			},
 			"restrictedtimeout": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable/Disable the restricted timeout behaviour. When enabled, timeout cannot be configured beyond admin configured timeout  and also it will have the [minimum - maximum] range check. When disabled, timeout will have the old behaviour. By default the value is disabled",
 			},
 			"strongpassword": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("disabled"),
+				Computed:    true,
 				Description: "After enabling strong password (enableall / enablelocal - not included in exclude list), all the passwords / sensitive information must have - Atleast 1 Lower case character, Atleast 1 Upper case character, Atleast 1 numeric character, Atleast 1 special character ( ~, `, !, @, #, $, %, ^, &, *, -, _, =, +, {, }, [, ], |, \\, :, <, >, /, ., ,, \" \"). Exclude list in case of enablelocal is - NS_FIPS, NS_CRL, NS_RSAKEY, NS_PKCS12, NS_PKCS8, NS_LDAP, NS_TACACS, NS_TACACSACTION, NS_RADIUS, NS_RADIUSACTION, NS_ENCRYPTION_PARAMS. So no Strong Password checks will be performed on these ObjectType commands for enablelocal case.",
 			},
 			"timeout": schema.Int64Attribute{
@@ -159,12 +163,13 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"totalauthtimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(20),
+				Computed:    true,
 				Description: "Total time a request can take for authentication/authorization",
 			},
 			"wafprotection": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Configure WAF protection for endpoints used by NetScaler management interfaces. The available options are:\n* DEFAULT - NetScaler determines which endpoints have WAF protection enabled or disabled. In the current release, WAF protection is disabled for all endpoints when this option is used. The behavior of this option may change in future releases.\n* GUI - Endpoints used by the Management GUI Interface are WAF protected.\n* DISABLED - WAF protection is disabled for all endpoints.",
 			},
 			"warnpriorndays": schema.Int64Attribute{
@@ -181,73 +186,81 @@ func systemparameterGetThePayloadFromtheConfig(ctx context.Context, data *System
 
 	// Create API request body from the model
 	systemparameter := system.Systemparameter{}
-	if !data.Basicauth.IsNull() {
+	if !data.Basicauth.IsNull() && !data.Basicauth.IsUnknown() {
 		systemparameter.Basicauth = data.Basicauth.ValueString()
 	}
-	if !data.Cliloglevel.IsNull() {
+	if !data.Cliloglevel.IsNull() && !data.Cliloglevel.IsUnknown() {
 		systemparameter.Cliloglevel = data.Cliloglevel.ValueString()
 	}
-	if !data.Daystoexpire.IsNull() {
+	if !data.Daystoexpire.IsNull() && !data.Daystoexpire.IsUnknown() {
 		systemparameter.Daystoexpire = utils.IntPtr(int(data.Daystoexpire.ValueInt64()))
 	}
-	if !data.Doppler.IsNull() {
+	if !data.Doppler.IsNull() && !data.Doppler.IsUnknown() {
 		systemparameter.Doppler = data.Doppler.ValueString()
 	}
-	if !data.Fipsusermode.IsNull() {
+	if !data.Fipsusermode.IsNull() && !data.Fipsusermode.IsUnknown() {
 		systemparameter.Fipsusermode = data.Fipsusermode.ValueString()
 	}
-	if !data.Forcepasswordchange.IsNull() {
+	if !data.Forcepasswordchange.IsNull() && !data.Forcepasswordchange.IsUnknown() {
 		systemparameter.Forcepasswordchange = data.Forcepasswordchange.ValueString()
 	}
-	if !data.Googleanalytics.IsNull() {
+	if !data.Googleanalytics.IsNull() && !data.Googleanalytics.IsUnknown() {
 		systemparameter.Googleanalytics = data.Googleanalytics.ValueString()
 	}
-	if !data.Localauth.IsNull() {
+	if !data.Localauth.IsNull() && !data.Localauth.IsUnknown() {
 		systemparameter.Localauth = data.Localauth.ValueString()
 	}
-	if !data.Maxsessionperuser.IsNull() {
+	if !data.Maxclient.IsNull() && !data.Maxclient.IsUnknown() {
+		systemparameter.Maxclient = data.Maxclient.ValueString()
+	}
+	if !data.Maxsessionperuser.IsNull() && !data.Maxsessionperuser.IsUnknown() {
 		systemparameter.Maxsessionperuser = utils.IntPtr(int(data.Maxsessionperuser.ValueInt64()))
 	}
-	if !data.Minpasswordlen.IsNull() {
+	if !data.Minpasswordlen.IsNull() && !data.Minpasswordlen.IsUnknown() {
 		systemparameter.Minpasswordlen = utils.IntPtr(int(data.Minpasswordlen.ValueInt64()))
 	}
-	if !data.Natpcbforceflushlimit.IsNull() {
+	if !data.Natpcbforceflushlimit.IsNull() && !data.Natpcbforceflushlimit.IsUnknown() {
 		systemparameter.Natpcbforceflushlimit = utils.IntPtr(int(data.Natpcbforceflushlimit.ValueInt64()))
 	}
-	if !data.Natpcbrstontimeout.IsNull() {
+	if !data.Natpcbrstontimeout.IsNull() && !data.Natpcbrstontimeout.IsUnknown() {
 		systemparameter.Natpcbrstontimeout = data.Natpcbrstontimeout.ValueString()
 	}
-	if !data.Passwordhistorycontrol.IsNull() {
+	if !data.Passwordhistorycontrol.IsNull() && !data.Passwordhistorycontrol.IsUnknown() {
 		systemparameter.Passwordhistorycontrol = data.Passwordhistorycontrol.ValueString()
 	}
-	if !data.Promptstring.IsNull() {
+	if !data.Promptstring.IsNull() && !data.Promptstring.IsUnknown() {
 		systemparameter.Promptstring = data.Promptstring.ValueString()
 	}
-	if !data.Pwdhistorycount.IsNull() {
+	if !data.Pwdhistorycount.IsNull() && !data.Pwdhistorycount.IsUnknown() {
 		systemparameter.Pwdhistorycount = utils.IntPtr(int(data.Pwdhistorycount.ValueInt64()))
 	}
-	if !data.Rbaonresponse.IsNull() {
+	if !data.Rbaonresponse.IsNull() && !data.Rbaonresponse.IsUnknown() {
 		systemparameter.Rbaonresponse = data.Rbaonresponse.ValueString()
 	}
-	if !data.Reauthonauthparamchange.IsNull() {
+	if !data.Reauthonauthparamchange.IsNull() && !data.Reauthonauthparamchange.IsUnknown() {
 		systemparameter.Reauthonauthparamchange = data.Reauthonauthparamchange.ValueString()
 	}
-	if !data.Removesensitivefiles.IsNull() {
+	if !data.Removesensitivefiles.IsNull() && !data.Removesensitivefiles.IsUnknown() {
 		systemparameter.Removesensitivefiles = data.Removesensitivefiles.ValueString()
 	}
-	if !data.Restrictedtimeout.IsNull() {
+	if !data.Restrictedtimeout.IsNull() && !data.Restrictedtimeout.IsUnknown() {
 		systemparameter.Restrictedtimeout = data.Restrictedtimeout.ValueString()
 	}
-	if !data.Strongpassword.IsNull() {
+	if !data.Strongpassword.IsNull() && !data.Strongpassword.IsUnknown() {
 		systemparameter.Strongpassword = data.Strongpassword.ValueString()
 	}
-	if !data.Timeout.IsNull() {
+	if !data.Timeout.IsNull() && !data.Timeout.IsUnknown() {
 		systemparameter.Timeout = utils.IntPtr(int(data.Timeout.ValueInt64()))
 	}
-	if !data.Totalauthtimeout.IsNull() {
+	if !data.Totalauthtimeout.IsNull() && !data.Totalauthtimeout.IsUnknown() {
 		systemparameter.Totalauthtimeout = utils.IntPtr(int(data.Totalauthtimeout.ValueInt64()))
 	}
-	if !data.Warnpriorndays.IsNull() {
+	if !data.Wafprotection.IsNull() && !data.Wafprotection.IsUnknown() {
+		var wafprotectionList []string
+		data.Wafprotection.ElementsAs(ctx, &wafprotectionList, false)
+		systemparameter.Wafprotection = wafprotectionList
+	}
+	if !data.Warnpriorndays.IsNull() && !data.Warnpriorndays.IsUnknown() {
 		systemparameter.Warnpriorndays = utils.IntPtr(int(data.Warnpriorndays.ValueInt64()))
 	}
 
@@ -257,141 +270,160 @@ func systemparameterGetThePayloadFromtheConfig(ctx context.Context, data *System
 func systemparameterSetAttrFromGet(ctx context.Context, data *SystemparameterResourceModel, getResponseData map[string]interface{}) *SystemparameterResourceModel {
 	tflog.Debug(ctx, "In systemparameterSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// The else-branches only null a value when it is still Unknown (i.e. the
+	// attribute was not set in config) so that a configured value NITRO omits
+	// from GET (omit-on-default) is never clobbered.
 	if val, ok := getResponseData["basicauth"]; ok && val != nil {
 		data.Basicauth = types.StringValue(val.(string))
-	} else {
+	} else if data.Basicauth.IsUnknown() {
 		data.Basicauth = types.StringNull()
 	}
 	if val, ok := getResponseData["cliloglevel"]; ok && val != nil {
 		data.Cliloglevel = types.StringValue(val.(string))
-	} else {
+	} else if data.Cliloglevel.IsUnknown() {
 		data.Cliloglevel = types.StringNull()
 	}
 	if val, ok := getResponseData["daystoexpire"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Daystoexpire = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Daystoexpire.IsUnknown() {
 		data.Daystoexpire = types.Int64Null()
 	}
 	if val, ok := getResponseData["doppler"]; ok && val != nil {
 		data.Doppler = types.StringValue(val.(string))
-	} else {
+	} else if data.Doppler.IsUnknown() {
 		data.Doppler = types.StringNull()
 	}
 	if val, ok := getResponseData["fipsusermode"]; ok && val != nil {
 		data.Fipsusermode = types.StringValue(val.(string))
-	} else {
+	} else if data.Fipsusermode.IsUnknown() {
 		data.Fipsusermode = types.StringNull()
 	}
 	if val, ok := getResponseData["forcepasswordchange"]; ok && val != nil {
 		data.Forcepasswordchange = types.StringValue(val.(string))
-	} else {
+	} else if data.Forcepasswordchange.IsUnknown() {
 		data.Forcepasswordchange = types.StringNull()
 	}
 	if val, ok := getResponseData["googleanalytics"]; ok && val != nil {
 		data.Googleanalytics = types.StringValue(val.(string))
-	} else {
+	} else if data.Googleanalytics.IsUnknown() {
 		data.Googleanalytics = types.StringNull()
 	}
 	if val, ok := getResponseData["localauth"]; ok && val != nil {
 		data.Localauth = types.StringValue(val.(string))
-	} else {
+	} else if data.Localauth.IsUnknown() {
 		data.Localauth = types.StringNull()
+	}
+	if val, ok := getResponseData["maxclient"]; ok && val != nil {
+		data.Maxclient = types.StringValue(val.(string))
+	} else if data.Maxclient.IsUnknown() {
+		data.Maxclient = types.StringNull()
 	}
 	if val, ok := getResponseData["maxsessionperuser"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxsessionperuser = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxsessionperuser.IsUnknown() {
 		data.Maxsessionperuser = types.Int64Null()
 	}
 	if val, ok := getResponseData["minpasswordlen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Minpasswordlen = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Minpasswordlen.IsUnknown() {
 		data.Minpasswordlen = types.Int64Null()
 	}
 	if val, ok := getResponseData["natpcbforceflushlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Natpcbforceflushlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Natpcbforceflushlimit.IsUnknown() {
 		data.Natpcbforceflushlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["natpcbrstontimeout"]; ok && val != nil {
 		data.Natpcbrstontimeout = types.StringValue(val.(string))
-	} else {
+	} else if data.Natpcbrstontimeout.IsUnknown() {
 		data.Natpcbrstontimeout = types.StringNull()
 	}
 	if val, ok := getResponseData["passwordhistorycontrol"]; ok && val != nil {
 		data.Passwordhistorycontrol = types.StringValue(val.(string))
-	} else {
+	} else if data.Passwordhistorycontrol.IsUnknown() {
 		data.Passwordhistorycontrol = types.StringNull()
 	}
 	if val, ok := getResponseData["promptstring"]; ok && val != nil {
 		data.Promptstring = types.StringValue(val.(string))
-	} else {
+	} else if data.Promptstring.IsUnknown() {
 		data.Promptstring = types.StringNull()
 	}
 	if val, ok := getResponseData["pwdhistorycount"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Pwdhistorycount = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Pwdhistorycount.IsUnknown() {
 		data.Pwdhistorycount = types.Int64Null()
 	}
 	if val, ok := getResponseData["rbaonresponse"]; ok && val != nil {
 		data.Rbaonresponse = types.StringValue(val.(string))
-	} else {
+	} else if data.Rbaonresponse.IsUnknown() {
 		data.Rbaonresponse = types.StringNull()
 	}
 	if val, ok := getResponseData["reauthonauthparamchange"]; ok && val != nil {
 		data.Reauthonauthparamchange = types.StringValue(val.(string))
-	} else {
+	} else if data.Reauthonauthparamchange.IsUnknown() {
 		data.Reauthonauthparamchange = types.StringNull()
 	}
 	if val, ok := getResponseData["removesensitivefiles"]; ok && val != nil {
 		data.Removesensitivefiles = types.StringValue(val.(string))
-	} else {
+	} else if data.Removesensitivefiles.IsUnknown() {
 		data.Removesensitivefiles = types.StringNull()
 	}
 	if val, ok := getResponseData["restrictedtimeout"]; ok && val != nil {
 		data.Restrictedtimeout = types.StringValue(val.(string))
-	} else {
+	} else if data.Restrictedtimeout.IsUnknown() {
 		data.Restrictedtimeout = types.StringNull()
 	}
 	if val, ok := getResponseData["strongpassword"]; ok && val != nil {
 		data.Strongpassword = types.StringValue(val.(string))
-	} else {
+	} else if data.Strongpassword.IsUnknown() {
 		data.Strongpassword = types.StringNull()
 	}
 	if val, ok := getResponseData["timeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timeout.IsUnknown() {
 		data.Timeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["totalauthtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Totalauthtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Totalauthtimeout.IsUnknown() {
 		data.Totalauthtimeout = types.Int64Null()
+	}
+	if val, ok := getResponseData["wafprotection"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Wafprotection = listValue
+		} else if data.Wafprotection.IsUnknown() {
+			data.Wafprotection = types.ListNull(types.StringType)
+		}
+	} else if data.Wafprotection.IsUnknown() {
+		data.Wafprotection = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["warnpriorndays"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Warnpriorndays = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Warnpriorndays.IsUnknown() {
 		data.Warnpriorndays = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Case 1: No unique attributes - static ID (singleton)
 	data.Id = types.StringValue("systemparameter-config")
 
 	return data

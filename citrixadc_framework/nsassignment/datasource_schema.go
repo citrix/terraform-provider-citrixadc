@@ -34,11 +34,6 @@ func NsassignmentDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name for the assignment. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the assignment is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my assignment\" or my assignment).",
 			},
-			"newname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "New name for the assignment.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the rewrite policy is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my assignment\" or my assignment).",
-			},
 			"set": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

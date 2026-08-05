@@ -13,7 +13,7 @@ func ResponderpolicyDataSourceSchema() schema.Schema {
 			"action": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Name of the responder action to perform if the request matches this responder policy. There are also some built-in actions which can be used. These are:\n* NOOP - Send the request to the protected server instead of responding to it.\n* RESET - Reset the client connection by closing it. The client program, such as a browser, will handle this and may inform the user. The client may then resend the request if desired.\n* DROP - Drop the request without sending a response to the user.",
+				Description: "Name of the responder action to perform if the request matches this responder policy.",
 			},
 			"appflowaction": schema.StringAttribute{
 				Optional:    true,
@@ -32,12 +32,7 @@ func ResponderpolicyDataSourceSchema() schema.Schema {
 			},
 			"name": schema.StringAttribute{
 				Required:    true,
-				Description: "Name for the responder policy.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the responder policy is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my responder policy\" or 'my responder policy').",
-			},
-			"newname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "New name for the responder policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my responder policy\" or 'my responder policy').",
+				Description: "Name for the responder policy.",
 			},
 			"rule": schema.StringAttribute{
 				Optional:    true,
@@ -47,7 +42,52 @@ func ResponderpolicyDataSourceSchema() schema.Schema {
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.",
+				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF).",
+			},
+		},
+		// The convenience-block sets are shared with the resource model; they are
+		// exposed here as computed outputs so the shared model maps cleanly.
+		Blocks: map[string]schema.Block{
+			"globalbinding": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"gotopriorityexpression": schema.StringAttribute{Computed: true},
+						"invoke":                 schema.BoolAttribute{Computed: true},
+						"labelname":              schema.StringAttribute{Computed: true},
+						"labeltype":              schema.StringAttribute{Computed: true},
+						"policyname":             schema.StringAttribute{Computed: true},
+						"priority":               schema.Int64Attribute{Computed: true},
+						"type":                   schema.StringAttribute{Computed: true},
+					},
+				},
+			},
+			"lbvserverbinding": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"bindpoint":              schema.StringAttribute{Computed: true},
+						"gotopriorityexpression": schema.StringAttribute{Computed: true},
+						"invoke":                 schema.BoolAttribute{Computed: true},
+						"labelname":              schema.StringAttribute{Computed: true},
+						"labeltype":              schema.StringAttribute{Computed: true},
+						"name":                   schema.StringAttribute{Computed: true},
+						"priority":               schema.Int64Attribute{Computed: true},
+					},
+				},
+			},
+			"csvserverbinding": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"bindpoint":              schema.StringAttribute{Computed: true},
+						"gotopriorityexpression": schema.StringAttribute{Computed: true},
+						"invoke":                 schema.BoolAttribute{Computed: true},
+						"labelname":              schema.StringAttribute{Computed: true},
+						"labeltype":              schema.StringAttribute{Computed: true},
+						"name":                   schema.StringAttribute{Computed: true},
+						"policyname":             schema.StringAttribute{Computed: true},
+						"priority":               schema.Int64Attribute{Computed: true},
+						"targetlbvserver":        schema.StringAttribute{Computed: true},
+					},
+				},
 			},
 		},
 	}

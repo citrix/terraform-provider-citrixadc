@@ -101,7 +101,7 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	routeSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	routeSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

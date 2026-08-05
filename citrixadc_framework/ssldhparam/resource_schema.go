@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -33,14 +32,15 @@ func (r *SsldhparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 				Description: "The ID of the ssldhparam resource.",
 			},
+			// SDK v2: Required + ForceNew (TypeInt)
 			"bits": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Size, in bits, of the DH key being generated.",
 			},
+			// SDK v2: Required + ForceNew (TypeString). This value is the resource ID.
 			"dhfile": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -48,12 +48,14 @@ func (r *SsldhparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Description: "Name of and, optionally, path to the DH key file. /nsconfig/ssl/ is the default path.",
 			},
+			// SDK v2: Optional + Computed + ForceNew (no Default declared in SDK v2).
 			"gen": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("2"),
 				Description: "Random number required for generating the DH key. Required as part of the DH key generation algorithm.",
 			},
 		},
@@ -65,44 +67,15 @@ func ssldhparamGetThePayloadFromtheConfig(ctx context.Context, data *SsldhparamR
 
 	// Create API request body from the model
 	ssldhparam := ssl.Ssldhparam{}
-	if !data.Bits.IsNull() {
+	if !data.Bits.IsNull() && !data.Bits.IsUnknown() {
 		ssldhparam.Bits = utils.IntPtr(int(data.Bits.ValueInt64()))
 	}
-	if !data.Dhfile.IsNull() {
+	if !data.Dhfile.IsNull() && !data.Dhfile.IsUnknown() {
 		ssldhparam.Dhfile = data.Dhfile.ValueString()
 	}
-	if !data.Gen.IsNull() {
+	if !data.Gen.IsNull() && !data.Gen.IsUnknown() {
 		ssldhparam.Gen = data.Gen.ValueString()
 	}
 
 	return ssldhparam
-}
-
-func ssldhparamSetAttrFromGet(ctx context.Context, data *SsldhparamResourceModel, getResponseData map[string]interface{}) *SsldhparamResourceModel {
-	tflog.Debug(ctx, "In ssldhparamSetAttrFromGet Function")
-
-	// Convert API response to model
-	if val, ok := getResponseData["bits"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Bits = types.Int64Value(intVal)
-		}
-	} else {
-		data.Bits = types.Int64Null()
-	}
-	if val, ok := getResponseData["dhfile"]; ok && val != nil {
-		data.Dhfile = types.StringValue(val.(string))
-	} else {
-		data.Dhfile = types.StringNull()
-	}
-	if val, ok := getResponseData["gen"]; ok && val != nil {
-		data.Gen = types.StringValue(val.(string))
-	} else {
-		data.Gen = types.StringNull()
-	}
-
-	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
-	data.Id = types.StringValue("ssldhparam-config")
-
-	return data
 }

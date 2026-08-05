@@ -39,10 +39,10 @@ func NewNitroResourceResource() resource.Resource {
 //     (AddResource / FindResourceArrayWithParams / UpdateResource / DeleteResource)
 //   - "binding"                          -> binding CRUD
 //     (UpdateResource to add / FindResourceArrayWithParams to read /
-//      DeleteResourceWithArgs to remove)
+//     DeleteResourceWithArgs to remove)
 //   - "object_by_args"                   -> unnamed/args-keyed object CRUD
 //     (AddResource / FindResourceArrayWithParams by args /
-//      UpdateUnnamedResource / DeleteResourceWithArgsMap)
+//     UpdateUnnamedResource / DeleteResourceWithArgsMap)
 //
 // This is a faithful backward-compatible migration of the SDKv2 resource: the
 // resource type name (citrixadc_nitro_resource), the four user-facing attributes

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *VpnnexthopserverResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating vpnnexthopserver resource")
 
-	// vpnnexthopserver := vpnnexthopserverGetThePayloadFromtheConfig(ctx, &data)
+	vpnnexthopserver := vpnnexthopserverGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnnexthopserver.Type(), &vpnnexthopserver)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnnexthopserver, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnnexthopserver-config")
+	// Named resource - use AddResource
+	vpnnexthopserverName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Vpnnexthopserver.Type(), vpnnexthopserverName, &vpnnexthopserver)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnnexthopserver, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnnexthopserver resource")
 
+	// Set ID for the resource before reading state (single unique attr - plain value)
+	data.Id = types.StringValue(vpnnexthopserverName)
+
 	// Read the updated state back
-	r.readVpnnexthopserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnnexthopserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnnexthopserver not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *VpnnexthopserverResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading vpnnexthopserver resource")
 
-	r.readVpnnexthopserverFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnnexthopserverFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnnexthopserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnnexthopserverResourceModel
+	var data, state VpnnexthopserverResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,22 @@ func (r *VpnnexthopserverResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnnexthopserver resource")
 
-	// Create API request body from the model
-	// vpnnexthopserver := vpnnexthopserverGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnnexthopserver.Type(), &vpnnexthopserver)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnnexthopserver, got error: %s", err))
-	//	 return
-	// }
+	// All attributes are non-updateable (ForceNew/RequiresReplace), so Terraform
+	// recreates the resource on any change and Update carries no NITRO write.
+	// Re-sync the state from the appliance.
+	if !r.readVpnnexthopserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnnexthopserver not found immediately after update")
+		}
+		return
+	}
 
 	tflog.Trace(ctx, "Updated vpnnexthopserver resource")
-
-	// Read the updated state back
-	r.readVpnnexthopserverFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +153,34 @@ func (r *VpnnexthopserverResource) Delete(ctx context.Context, req resource.Dele
 
 	tflog.Debug(ctx, "Deleting vpnnexthopserver resource")
 
-	// For vpnnexthopserver, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnnexthopserver resource from state")
+	// Named resource - delete using DeleteResource keyed off the live ID
+	vpnnexthopserverName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Vpnnexthopserver.Type(), vpnnexthopserverName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnnexthopserver, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnnexthopserver resource")
 }
 
-// Helper function to read vpnnexthopserver data from API
-func (r *VpnnexthopserverResource) readVpnnexthopserverFromApi(ctx context.Context, data *VpnnexthopserverResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnnexthopserver.Type(), "")
+// Helper function to read vpnnexthopserver data from API.
+// Returns false (without an error diagnostic) when the resource is not found so
+// callers can drop it from state.
+func (r *VpnnexthopserverResource) readVpnnexthopserverFromApi(ctx context.Context, data *VpnnexthopserverResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	vpnnexthopserverName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vpnnexthopserver.Type(), vpnnexthopserverName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnnexthopserver, got error: %s", err))
-		return
+		return false
 	}
 
 	vpnnexthopserverSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

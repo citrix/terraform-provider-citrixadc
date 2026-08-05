@@ -44,10 +44,10 @@ func policystringmapGetThePayloadFromtheConfig(ctx context.Context, data *Policy
 
 	// Create API request body from the model
 	policystringmap := policy.Policystringmap{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		policystringmap.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		policystringmap.Name = data.Name.ValueString()
 	}
 
@@ -60,13 +60,14 @@ func policystringmapSetAttrFromGet(ctx context.Context, data *PolicystringmapRes
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
+		// Guard against the omit-on-default trap: NITRO omits an empty comment
+		// from GET. Only null it when the value is unknown; never clobber a
+		// known configured value (including "").
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
 	}
 
 	// Set ID for the resource

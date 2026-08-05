@@ -55,14 +55,16 @@ func (r *L3paramResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Debug(ctx, "Creating l3param resource")
 
-	// l3param := l3paramGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan (singleton — only known/configured values).
+	l3param := l3paramGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.L3param.Type(), &l3param)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create l3param, got error: %s", err))
-	//	 return
-	// }
+	// Make API call. l3param is a singleton (no name) — use UpdateUnnamedResource,
+	// matching the SDK v2 create semantics.
+	err := r.client.UpdateUnnamedResource(service.L3param.Type(), &l3param)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create l3param, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("l3param-config")
@@ -106,15 +108,18 @@ func (r *L3paramResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	tflog.Debug(ctx, "Updating l3param resource")
 
-	// Create API request body from the model
-	// l3param := l3paramGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve the ID from prior state (singleton static ID).
+	data.Id = types.StringValue("l3param-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.L3param.Type(), &l3param)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update l3param, got error: %s", err))
-	//	 return
-	// }
+	// Create API request body from the model (only known/configured values).
+	l3param := l3paramGetThePayloadFromtheConfig(ctx, &data)
+
+	// Make API call — singleton update via UpdateUnnamedResource, matching SDK v2.
+	err := r.client.UpdateUnnamedResource(service.L3param.Type(), &l3param)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update l3param, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated l3param resource")
 

@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -37,12 +35,12 @@ func (r *LbsipparametersResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"addrportvip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Add the rport parameter to the VIA headers of SIP requests that virtual servers receive from clients or servers.",
 			},
 			"retrydur": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(120),
+				Computed:    true,
 				Description: "Time, in seconds, for which a client must wait before initiating a connection after receiving a 503 Service Unavailable response from the SIP server. The time value is sent in the \"Retry-After\" header in the 503 response.",
 			},
 			"rnatdstport": schema.Int64Attribute{
@@ -67,7 +65,7 @@ func (r *LbsipparametersResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"sip503ratethreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(100),
+				Computed:    true,
 				Description: "Maximum number of 503 Service Unavailable responses to generate, once every 10 milliseconds, when a SIP virtual server becomes unavailable.",
 			},
 		},
@@ -79,25 +77,25 @@ func lbsipparametersGetThePayloadFromtheConfig(ctx context.Context, data *Lbsipp
 
 	// Create API request body from the model
 	lbsipparameters := lb.Lbsipparameters{}
-	if !data.Addrportvip.IsNull() {
+	if !data.Addrportvip.IsNull() && !data.Addrportvip.IsUnknown() {
 		lbsipparameters.Addrportvip = data.Addrportvip.ValueString()
 	}
-	if !data.Retrydur.IsNull() {
+	if !data.Retrydur.IsNull() && !data.Retrydur.IsUnknown() {
 		lbsipparameters.Retrydur = utils.IntPtr(int(data.Retrydur.ValueInt64()))
 	}
-	if !data.Rnatdstport.IsNull() {
+	if !data.Rnatdstport.IsNull() && !data.Rnatdstport.IsUnknown() {
 		lbsipparameters.Rnatdstport = utils.IntPtr(int(data.Rnatdstport.ValueInt64()))
 	}
-	if !data.Rnatsecuredstport.IsNull() {
+	if !data.Rnatsecuredstport.IsNull() && !data.Rnatsecuredstport.IsUnknown() {
 		lbsipparameters.Rnatsecuredstport = utils.IntPtr(int(data.Rnatsecuredstport.ValueInt64()))
 	}
-	if !data.Rnatsecuresrcport.IsNull() {
+	if !data.Rnatsecuresrcport.IsNull() && !data.Rnatsecuresrcport.IsUnknown() {
 		lbsipparameters.Rnatsecuresrcport = utils.IntPtr(int(data.Rnatsecuresrcport.ValueInt64()))
 	}
-	if !data.Rnatsrcport.IsNull() {
+	if !data.Rnatsrcport.IsNull() && !data.Rnatsrcport.IsUnknown() {
 		lbsipparameters.Rnatsrcport = utils.IntPtr(int(data.Rnatsrcport.ValueInt64()))
 	}
-	if !data.Sip503ratethreshold.IsNull() {
+	if !data.Sip503ratethreshold.IsNull() && !data.Sip503ratethreshold.IsUnknown() {
 		lbsipparameters.Sip503ratethreshold = utils.IntPtr(int(data.Sip503ratethreshold.ValueInt64()))
 	}
 
@@ -110,49 +108,49 @@ func lbsipparametersSetAttrFromGet(ctx context.Context, data *LbsipparametersRes
 	// Convert API response to model
 	if val, ok := getResponseData["addrportvip"]; ok && val != nil {
 		data.Addrportvip = types.StringValue(val.(string))
-	} else {
+	} else if data.Addrportvip.IsUnknown() {
 		data.Addrportvip = types.StringNull()
 	}
 	if val, ok := getResponseData["retrydur"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Retrydur = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Retrydur.IsUnknown() {
 		data.Retrydur = types.Int64Null()
 	}
 	if val, ok := getResponseData["rnatdstport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rnatdstport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rnatdstport.IsUnknown() {
 		data.Rnatdstport = types.Int64Null()
 	}
 	if val, ok := getResponseData["rnatsecuredstport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rnatsecuredstport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rnatsecuredstport.IsUnknown() {
 		data.Rnatsecuredstport = types.Int64Null()
 	}
 	if val, ok := getResponseData["rnatsecuresrcport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rnatsecuresrcport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rnatsecuresrcport.IsUnknown() {
 		data.Rnatsecuresrcport = types.Int64Null()
 	}
 	if val, ok := getResponseData["rnatsrcport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rnatsrcport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Rnatsrcport.IsUnknown() {
 		data.Rnatsrcport = types.Int64Null()
 	}
 	if val, ok := getResponseData["sip503ratethreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sip503ratethreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sip503ratethreshold.IsUnknown() {
 		data.Sip503ratethreshold = types.Int64Null()
 	}
 

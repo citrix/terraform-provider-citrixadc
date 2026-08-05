@@ -153,66 +153,69 @@ func (r *NscqaparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 func nscqaparamGetThePayloadFromtheConfig(ctx context.Context, data *NscqaparamResourceModel) ns.Nscqaparam {
 	tflog.Debug(ctx, "In nscqaparamGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// Guard on both IsNull and IsUnknown: on Create, unconfigured Optional+Computed
+	// attributes are Unknown (not Null); sending their zero-value (e.g. int 0) would
+	// wrongly overwrite ADC defaults.
 	nscqaparam := ns.Nscqaparam{}
-	if !data.Harqretxdelay.IsNull() {
+	if !data.Harqretxdelay.IsNull() && !data.Harqretxdelay.IsUnknown() {
 		nscqaparam.Harqretxdelay = utils.IntPtr(int(data.Harqretxdelay.ValueInt64()))
 	}
-	if !data.Lr1coeflist.IsNull() {
+	if !data.Lr1coeflist.IsNull() && !data.Lr1coeflist.IsUnknown() {
 		nscqaparam.Lr1coeflist = data.Lr1coeflist.ValueString()
 	}
-	if !data.Lr1probthresh.IsNull() {
+	if !data.Lr1probthresh.IsNull() && !data.Lr1probthresh.IsUnknown() {
 		nscqaparam.Lr1probthresh = data.Lr1probthresh.ValueFloat64()
 	}
-	if !data.Lr2coeflist.IsNull() {
+	if !data.Lr2coeflist.IsNull() && !data.Lr2coeflist.IsUnknown() {
 		nscqaparam.Lr2coeflist = data.Lr2coeflist.ValueString()
 	}
-	if !data.Lr2probthresh.IsNull() {
+	if !data.Lr2probthresh.IsNull() && !data.Lr2probthresh.IsUnknown() {
 		nscqaparam.Lr2probthresh = data.Lr2probthresh.ValueFloat64()
 	}
-	if !data.Minrttnet1.IsNull() {
+	if !data.Minrttnet1.IsNull() && !data.Minrttnet1.IsUnknown() {
 		nscqaparam.Minrttnet1 = utils.IntPtr(int(data.Minrttnet1.ValueInt64()))
 	}
-	if !data.Minrttnet2.IsNull() {
+	if !data.Minrttnet2.IsNull() && !data.Minrttnet2.IsUnknown() {
 		nscqaparam.Minrttnet2 = utils.IntPtr(int(data.Minrttnet2.ValueInt64()))
 	}
-	if !data.Minrttnet3.IsNull() {
+	if !data.Minrttnet3.IsNull() && !data.Minrttnet3.IsUnknown() {
 		nscqaparam.Minrttnet3 = utils.IntPtr(int(data.Minrttnet3.ValueInt64()))
 	}
-	if !data.Net1cclscale.IsNull() {
+	if !data.Net1cclscale.IsNull() && !data.Net1cclscale.IsUnknown() {
 		nscqaparam.Net1cclscale = data.Net1cclscale.ValueString()
 	}
-	if !data.Net1csqscale.IsNull() {
+	if !data.Net1csqscale.IsNull() && !data.Net1csqscale.IsUnknown() {
 		nscqaparam.Net1csqscale = data.Net1csqscale.ValueString()
 	}
-	if !data.Net1label.IsNull() {
+	if !data.Net1label.IsNull() && !data.Net1label.IsUnknown() {
 		nscqaparam.Net1label = data.Net1label.ValueString()
 	}
-	if !data.Net1logcoef.IsNull() {
+	if !data.Net1logcoef.IsNull() && !data.Net1logcoef.IsUnknown() {
 		nscqaparam.Net1logcoef = data.Net1logcoef.ValueString()
 	}
-	if !data.Net2cclscale.IsNull() {
+	if !data.Net2cclscale.IsNull() && !data.Net2cclscale.IsUnknown() {
 		nscqaparam.Net2cclscale = data.Net2cclscale.ValueString()
 	}
-	if !data.Net2csqscale.IsNull() {
+	if !data.Net2csqscale.IsNull() && !data.Net2csqscale.IsUnknown() {
 		nscqaparam.Net2csqscale = data.Net2csqscale.ValueString()
 	}
-	if !data.Net2label.IsNull() {
+	if !data.Net2label.IsNull() && !data.Net2label.IsUnknown() {
 		nscqaparam.Net2label = data.Net2label.ValueString()
 	}
-	if !data.Net2logcoef.IsNull() {
+	if !data.Net2logcoef.IsNull() && !data.Net2logcoef.IsUnknown() {
 		nscqaparam.Net2logcoef = data.Net2logcoef.ValueString()
 	}
-	if !data.Net3cclscale.IsNull() {
+	if !data.Net3cclscale.IsNull() && !data.Net3cclscale.IsUnknown() {
 		nscqaparam.Net3cclscale = data.Net3cclscale.ValueString()
 	}
-	if !data.Net3csqscale.IsNull() {
+	if !data.Net3csqscale.IsNull() && !data.Net3csqscale.IsUnknown() {
 		nscqaparam.Net3csqscale = data.Net3csqscale.ValueString()
 	}
-	if !data.Net3label.IsNull() {
+	if !data.Net3label.IsNull() && !data.Net3label.IsUnknown() {
 		nscqaparam.Net3label = data.Net3label.ValueString()
 	}
-	if !data.Net3logcoef.IsNull() {
+	if !data.Net3logcoef.IsNull() && !data.Net3logcoef.IsUnknown() {
 		nscqaparam.Net3logcoef = data.Net3logcoef.ValueString()
 	}
 
@@ -222,10 +225,142 @@ func nscqaparamGetThePayloadFromtheConfig(ctx context.Context, data *NscqaparamR
 func nscqaparamSetAttrFromGet(ctx context.Context, data *NscqaparamResourceModel, getResponseData map[string]interface{}) *NscqaparamResourceModel {
 	tflog.Debug(ctx, "In nscqaparamSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Omit-on-default guard: NITRO omits attributes left at their default (e.g. 0/false)
+	// from GET. Only null a value when it is Unknown (Computed, unconfigured); never
+	// clobber a known configured value, which would trigger an inconsistent-result error.
 	if val, ok := getResponseData["harqretxdelay"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Harqretxdelay = types.Int64Value(intVal)
+		}
+	} else if data.Harqretxdelay.IsUnknown() {
+		data.Harqretxdelay = types.Int64Null()
+	}
+	if val, ok := getResponseData["lr1coeflist"]; ok && val != nil {
+		data.Lr1coeflist = types.StringValue(val.(string))
+	} else if data.Lr1coeflist.IsUnknown() {
+		data.Lr1coeflist = types.StringNull()
+	}
+	// lr1probthresh: SDK v2 (citrixadc/resource_citrixadc_nscqaparam.go) intentionally does
+	// NOT read this attribute back from GET. Preserve that backward-compatible semantic:
+	// keep the configured/state value and only resolve an Unknown to null.
+	if data.Lr1probthresh.IsUnknown() {
+		data.Lr1probthresh = types.Float64Null()
+	}
+	if val, ok := getResponseData["lr2coeflist"]; ok && val != nil {
+		data.Lr2coeflist = types.StringValue(val.(string))
+	} else if data.Lr2coeflist.IsUnknown() {
+		data.Lr2coeflist = types.StringNull()
+	}
+	if val, ok := getResponseData["lr2probthresh"]; ok && val != nil {
+		if f, ok2 := val.(float64); ok2 {
+			data.Lr2probthresh = types.Float64Value(f)
+		} else if data.Lr2probthresh.IsUnknown() {
+			data.Lr2probthresh = types.Float64Null()
+		}
+	} else if data.Lr2probthresh.IsUnknown() {
+		data.Lr2probthresh = types.Float64Null()
+	}
+	if val, ok := getResponseData["minrttnet1"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Minrttnet1 = types.Int64Value(intVal)
+		}
+	} else if data.Minrttnet1.IsUnknown() {
+		data.Minrttnet1 = types.Int64Null()
+	}
+	if val, ok := getResponseData["minrttnet2"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Minrttnet2 = types.Int64Value(intVal)
+		}
+	} else if data.Minrttnet2.IsUnknown() {
+		data.Minrttnet2 = types.Int64Null()
+	}
+	if val, ok := getResponseData["minrttnet3"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Minrttnet3 = types.Int64Value(intVal)
+		}
+	} else if data.Minrttnet3.IsUnknown() {
+		data.Minrttnet3 = types.Int64Null()
+	}
+	if val, ok := getResponseData["net1cclscale"]; ok && val != nil {
+		data.Net1cclscale = types.StringValue(val.(string))
+	} else if data.Net1cclscale.IsUnknown() {
+		data.Net1cclscale = types.StringNull()
+	}
+	if val, ok := getResponseData["net1csqscale"]; ok && val != nil {
+		data.Net1csqscale = types.StringValue(val.(string))
+	} else if data.Net1csqscale.IsUnknown() {
+		data.Net1csqscale = types.StringNull()
+	}
+	if val, ok := getResponseData["net1label"]; ok && val != nil {
+		data.Net1label = types.StringValue(val.(string))
+	} else if data.Net1label.IsUnknown() {
+		data.Net1label = types.StringNull()
+	}
+	if val, ok := getResponseData["net1logcoef"]; ok && val != nil {
+		data.Net1logcoef = types.StringValue(val.(string))
+	} else if data.Net1logcoef.IsUnknown() {
+		data.Net1logcoef = types.StringNull()
+	}
+	if val, ok := getResponseData["net2cclscale"]; ok && val != nil {
+		data.Net2cclscale = types.StringValue(val.(string))
+	} else if data.Net2cclscale.IsUnknown() {
+		data.Net2cclscale = types.StringNull()
+	}
+	if val, ok := getResponseData["net2csqscale"]; ok && val != nil {
+		data.Net2csqscale = types.StringValue(val.(string))
+	} else if data.Net2csqscale.IsUnknown() {
+		data.Net2csqscale = types.StringNull()
+	}
+	if val, ok := getResponseData["net2label"]; ok && val != nil {
+		data.Net2label = types.StringValue(val.(string))
+	} else if data.Net2label.IsUnknown() {
+		data.Net2label = types.StringNull()
+	}
+	if val, ok := getResponseData["net2logcoef"]; ok && val != nil {
+		data.Net2logcoef = types.StringValue(val.(string))
+	} else if data.Net2logcoef.IsUnknown() {
+		data.Net2logcoef = types.StringNull()
+	}
+	if val, ok := getResponseData["net3cclscale"]; ok && val != nil {
+		data.Net3cclscale = types.StringValue(val.(string))
+	} else if data.Net3cclscale.IsUnknown() {
+		data.Net3cclscale = types.StringNull()
+	}
+	if val, ok := getResponseData["net3csqscale"]; ok && val != nil {
+		data.Net3csqscale = types.StringValue(val.(string))
+	} else if data.Net3csqscale.IsUnknown() {
+		data.Net3csqscale = types.StringNull()
+	}
+	if val, ok := getResponseData["net3label"]; ok && val != nil {
+		data.Net3label = types.StringValue(val.(string))
+	} else if data.Net3label.IsUnknown() {
+		data.Net3label = types.StringNull()
+	}
+	if val, ok := getResponseData["net3logcoef"]; ok && val != nil {
+		data.Net3logcoef = types.StringValue(val.(string))
+	} else if data.Net3logcoef.IsUnknown() {
+		data.Net3logcoef = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 1: No unique attributes - static ID
+	data.Id = types.StringValue("nscqaparam-config")
+
+	return data
+}
+
+// nscqaparamSetAttrFromGetForDatasource populates the datasource state directly from the
+// GET response. Unlike the resource setter it always reflects the ADC value (nulling on
+// absence) since a datasource has no prior configured/state value to preserve.
+func nscqaparamSetAttrFromGetForDatasource(ctx context.Context, data *NscqaparamResourceModel, getResponseData map[string]interface{}) *NscqaparamResourceModel {
+	tflog.Debug(ctx, "In nscqaparamSetAttrFromGetForDatasource Function")
+
+	if val, ok := getResponseData["harqretxdelay"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Harqretxdelay = types.Int64Value(intVal)
+		} else {
+			data.Harqretxdelay = types.Int64Null()
 		}
 	} else {
 		data.Harqretxdelay = types.Int64Null()
@@ -236,7 +371,11 @@ func nscqaparamSetAttrFromGet(ctx context.Context, data *NscqaparamResourceModel
 		data.Lr1coeflist = types.StringNull()
 	}
 	if val, ok := getResponseData["lr1probthresh"]; ok && val != nil {
-		data.Lr1probthresh = types.Float64Value(val.(float64))
+		if f, ok2 := val.(float64); ok2 {
+			data.Lr1probthresh = types.Float64Value(f)
+		} else {
+			data.Lr1probthresh = types.Float64Null()
+		}
 	} else {
 		data.Lr1probthresh = types.Float64Null()
 	}
@@ -246,13 +385,19 @@ func nscqaparamSetAttrFromGet(ctx context.Context, data *NscqaparamResourceModel
 		data.Lr2coeflist = types.StringNull()
 	}
 	if val, ok := getResponseData["lr2probthresh"]; ok && val != nil {
-		data.Lr2probthresh = types.Float64Value(val.(float64))
+		if f, ok2 := val.(float64); ok2 {
+			data.Lr2probthresh = types.Float64Value(f)
+		} else {
+			data.Lr2probthresh = types.Float64Null()
+		}
 	} else {
 		data.Lr2probthresh = types.Float64Null()
 	}
 	if val, ok := getResponseData["minrttnet1"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Minrttnet1 = types.Int64Value(intVal)
+		} else {
+			data.Minrttnet1 = types.Int64Null()
 		}
 	} else {
 		data.Minrttnet1 = types.Int64Null()
@@ -260,6 +405,8 @@ func nscqaparamSetAttrFromGet(ctx context.Context, data *NscqaparamResourceModel
 	if val, ok := getResponseData["minrttnet2"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Minrttnet2 = types.Int64Value(intVal)
+		} else {
+			data.Minrttnet2 = types.Int64Null()
 		}
 	} else {
 		data.Minrttnet2 = types.Int64Null()
@@ -267,6 +414,8 @@ func nscqaparamSetAttrFromGet(ctx context.Context, data *NscqaparamResourceModel
 	if val, ok := getResponseData["minrttnet3"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Minrttnet3 = types.Int64Value(intVal)
+		} else {
+			data.Minrttnet3 = types.Int64Null()
 		}
 	} else {
 		data.Minrttnet3 = types.Int64Null()
@@ -332,8 +481,7 @@ func nscqaparamSetAttrFromGet(ctx context.Context, data *NscqaparamResourceModel
 		data.Net3logcoef = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Set ID for the datasource
 	data.Id = types.StringValue("nscqaparam-config")
 
 	return data

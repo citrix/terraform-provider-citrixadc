@@ -55,14 +55,14 @@ func (r *IptunnelparamResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating iptunnelparam resource")
 
-	// iptunnelparam := iptunnelparamGetThePayloadFromtheConfig(ctx, &data)
+	iptunnelparam := iptunnelparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create iptunnelparam, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - push configuration with UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create iptunnelparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("iptunnelparam-config")
@@ -95,8 +95,10 @@ func (r *IptunnelparamResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *IptunnelparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data IptunnelparamResourceModel
+	var data, state IptunnelparamResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +106,20 @@ func (r *IptunnelparamResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating iptunnelparam resource")
 
 	// Create API request body from the model
-	// iptunnelparam := iptunnelparamGetThePayloadFromtheConfig(ctx, &data)
+	iptunnelparam := iptunnelparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update iptunnelparam, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - push configuration with UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update iptunnelparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated iptunnelparam resource")
 

@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -32,7 +34,11 @@ func (r *Nat64Resource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Description: "Name of any configured ACL6 whose action is ALLOW.  IPv6 Packets matching the condition of this ACL6 rule and destination IP address of these packets matching the NAT64 IPv6 prefix are considered for NAT64 translation.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 nat64 marks name as ForceNew -> RequiresReplace preserves backward compatibility.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the NAT64 rule. Must begin with a letter, number, or the underscore character (_), and can consist of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore characters. Cannot be changed after the rule is created. Choose a name that helps identify the NAT64 rule.",
 			},
 			"netprofile": schema.StringAttribute{
@@ -49,13 +55,13 @@ func nat64GetThePayloadFromtheConfig(ctx context.Context, data *Nat64ResourceMod
 
 	// Create API request body from the model
 	nat64 := network.Nat64{}
-	if !data.Acl6name.IsNull() {
+	if !data.Acl6name.IsNull() && !data.Acl6name.IsUnknown() {
 		nat64.Acl6name = data.Acl6name.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		nat64.Name = data.Name.ValueString()
 	}
-	if !data.Netprofile.IsNull() {
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
 		nat64.Netprofile = data.Netprofile.ValueString()
 	}
 
@@ -83,7 +89,7 @@ func nat64SetAttrFromGet(ctx context.Context, data *Nat64ResourceModel, getRespo
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value (name) as ID (matches SDK v2 d.SetId(name))
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

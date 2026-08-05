@@ -55,14 +55,15 @@ func (r *NsdhcpparamsResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating nsdhcpparams resource")
 
-	// nsdhcpparams := nsdhcpparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	nsdhcpparams := nsdhcpparamsGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsdhcpparams.Type(), &nsdhcpparams)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsdhcpparams, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nsdhcpparams.Type(), &nsdhcpparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsdhcpparams, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nsdhcpparams-config")
@@ -107,14 +108,14 @@ func (r *NsdhcpparamsResource) Update(ctx context.Context, req resource.UpdateRe
 	tflog.Debug(ctx, "Updating nsdhcpparams resource")
 
 	// Create API request body from the model
-	// nsdhcpparams := nsdhcpparamsGetThePayloadFromtheConfig(ctx, &data)
+	nsdhcpparams := nsdhcpparamsGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsdhcpparams.Type(), &nsdhcpparams)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsdhcpparams, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nsdhcpparams.Type(), &nsdhcpparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsdhcpparams, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nsdhcpparams resource")
 

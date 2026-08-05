@@ -2,13 +2,14 @@ package sslocspresponder
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -55,17 +56,17 @@ func (r *SslocspresponderResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"cache": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable caching of responses. Caching of responses received from the OCSP responder enables faster responses to the clients and reduces the load on the OCSP responder.",
 			},
 			"cachetimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Timeout for caching the OCSP response. After the timeout, the Citrix ADC sends a fresh request to the OCSP responder for the certificate status. If a timeout is not specified, the timeout provided in the OCSP response applies.",
 			},
 			"httpmethod": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("POST"),
+				Computed:    true,
 				Description: "HTTP method used to send ocsp request. POST is the default httpmethod. If request length is > 255, POST wil be used even if GET is set as httpMethod",
 			},
 			"insertclientcert": schema.StringAttribute{
@@ -74,7 +75,10 @@ func (r *SslocspresponderResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Include the complete client certificate in the OCSP request.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the OCSP responder. Cannot begin with a hash (#) or space character and must contain only ASCII alphanumeric, underscore (_), hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the responder is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my responder\" or 'my responder').",
 			},
 			"ocspurlresolvetimeout": schema.Int64Attribute{
@@ -84,12 +88,16 @@ func (r *SslocspresponderResource) Schema(ctx context.Context, req resource.Sche
 			},
 			"producedattimeskew": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(300),
+				Computed:    true,
 				Description: "Time, in seconds, for which the Citrix ADC waits before considering the response as invalid. The response is considered invalid if the Produced At time stamp in the OCSP response exceeds or precedes the current Citrix ADC clock time by the amount of time specified.",
 			},
 			"respondercert": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// SDK v2 ForceNew on an Optional+Computed attr -> RequiresReplaceIfConfigured
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
 				Description: "0",
 			},
 			"resptimeout": schema.Int64Attribute{
@@ -98,8 +106,12 @@ func (r *SslocspresponderResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Time, in milliseconds, to wait for an OCSP response. When this time elapses, an error message appears or the transaction is forwarded, depending on the settings on the virtual server. Includes Batching Delay time.",
 			},
 			"signingcert": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// SDK v2 ForceNew on an Optional+Computed attr -> RequiresReplaceIfConfigured
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
 				Description: "Certificate-key pair that is used to sign OCSP requests. If this parameter is not set, the requests are not signed.",
 			},
 			"trustresponder": schema.BoolAttribute{
@@ -120,54 +132,108 @@ func (r *SslocspresponderResource) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func sslocspresponderGetThePayloadFromtheConfig(ctx context.Context, data *SslocspresponderResourceModel) ssl.Sslocspresponder {
-	tflog.Debug(ctx, "In sslocspresponderGetThePayloadFromtheConfig Function")
+// sslocspresponderGetThePayloadFromthePlan builds the full NITRO payload used on Create.
+func sslocspresponderGetThePayloadFromthePlan(ctx context.Context, data *SslocspresponderResourceModel) ssl.Sslocspresponder {
+	tflog.Debug(ctx, "In sslocspresponderGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslocspresponder := ssl.Sslocspresponder{}
-	if !data.Batchingdelay.IsNull() {
+	if !data.Batchingdelay.IsNull() && !data.Batchingdelay.IsUnknown() {
 		sslocspresponder.Batchingdelay = utils.IntPtr(int(data.Batchingdelay.ValueInt64()))
 	}
-	if !data.Batchingdepth.IsNull() {
+	if !data.Batchingdepth.IsNull() && !data.Batchingdepth.IsUnknown() {
 		sslocspresponder.Batchingdepth = utils.IntPtr(int(data.Batchingdepth.ValueInt64()))
 	}
-	if !data.Cache.IsNull() {
+	if !data.Cache.IsNull() && !data.Cache.IsUnknown() {
 		sslocspresponder.Cache = data.Cache.ValueString()
 	}
-	if !data.Cachetimeout.IsNull() {
+	if !data.Cachetimeout.IsNull() && !data.Cachetimeout.IsUnknown() {
 		sslocspresponder.Cachetimeout = utils.IntPtr(int(data.Cachetimeout.ValueInt64()))
 	}
-	if !data.Httpmethod.IsNull() {
+	if !data.Httpmethod.IsNull() && !data.Httpmethod.IsUnknown() {
 		sslocspresponder.Httpmethod = data.Httpmethod.ValueString()
 	}
-	if !data.Insertclientcert.IsNull() {
+	if !data.Insertclientcert.IsNull() && !data.Insertclientcert.IsUnknown() {
 		sslocspresponder.Insertclientcert = data.Insertclientcert.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		sslocspresponder.Name = data.Name.ValueString()
 	}
-	if !data.Ocspurlresolvetimeout.IsNull() {
+	if !data.Ocspurlresolvetimeout.IsNull() && !data.Ocspurlresolvetimeout.IsUnknown() {
 		sslocspresponder.Ocspurlresolvetimeout = utils.IntPtr(int(data.Ocspurlresolvetimeout.ValueInt64()))
 	}
-	if !data.Producedattimeskew.IsNull() {
+	if !data.Producedattimeskew.IsNull() && !data.Producedattimeskew.IsUnknown() {
 		sslocspresponder.Producedattimeskew = utils.IntPtr(int(data.Producedattimeskew.ValueInt64()))
 	}
-	if !data.Respondercert.IsNull() {
+	if !data.Respondercert.IsNull() && !data.Respondercert.IsUnknown() {
 		sslocspresponder.Respondercert = data.Respondercert.ValueString()
 	}
-	if !data.Resptimeout.IsNull() {
+	if !data.Resptimeout.IsNull() && !data.Resptimeout.IsUnknown() {
 		sslocspresponder.Resptimeout = utils.IntPtr(int(data.Resptimeout.ValueInt64()))
 	}
-	if !data.Signingcert.IsNull() {
+	if !data.Signingcert.IsNull() && !data.Signingcert.IsUnknown() {
 		sslocspresponder.Signingcert = data.Signingcert.ValueString()
 	}
-	if !data.Trustresponder.IsNull() {
+	if !data.Trustresponder.IsNull() && !data.Trustresponder.IsUnknown() {
 		sslocspresponder.Trustresponder = data.Trustresponder.ValueBool()
 	}
-	if !data.Url.IsNull() {
+	if !data.Url.IsNull() && !data.Url.IsUnknown() {
 		sslocspresponder.Url = data.Url.ValueString()
 	}
-	if !data.Usenonce.IsNull() {
+	if !data.Usenonce.IsNull() && !data.Usenonce.IsUnknown() {
+		sslocspresponder.Usenonce = data.Usenonce.ValueString()
+	}
+
+	return sslocspresponder
+}
+
+// sslocspresponderGetTheUpdatablePayloadFromThePlan builds the NITRO payload used on Update.
+// respondercert and signingcert are ForceNew in SDK v2 (RequiresReplaceIfConfigured here),
+// so a change to them recreates the resource and never reaches Update; they are excluded
+// from the update payload to preserve the SDK v2 contract.
+func sslocspresponderGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *SslocspresponderResourceModel) ssl.Sslocspresponder {
+	tflog.Debug(ctx, "In sslocspresponderGetTheUpdatablePayloadFromThePlan Function")
+
+	sslocspresponder := ssl.Sslocspresponder{}
+	if !data.Batchingdelay.IsNull() && !data.Batchingdelay.IsUnknown() {
+		sslocspresponder.Batchingdelay = utils.IntPtr(int(data.Batchingdelay.ValueInt64()))
+	}
+	if !data.Batchingdepth.IsNull() && !data.Batchingdepth.IsUnknown() {
+		sslocspresponder.Batchingdepth = utils.IntPtr(int(data.Batchingdepth.ValueInt64()))
+	}
+	if !data.Cache.IsNull() && !data.Cache.IsUnknown() {
+		sslocspresponder.Cache = data.Cache.ValueString()
+	}
+	if !data.Cachetimeout.IsNull() && !data.Cachetimeout.IsUnknown() {
+		sslocspresponder.Cachetimeout = utils.IntPtr(int(data.Cachetimeout.ValueInt64()))
+	}
+	if !data.Httpmethod.IsNull() && !data.Httpmethod.IsUnknown() {
+		sslocspresponder.Httpmethod = data.Httpmethod.ValueString()
+	}
+	if !data.Insertclientcert.IsNull() && !data.Insertclientcert.IsUnknown() {
+		sslocspresponder.Insertclientcert = data.Insertclientcert.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		sslocspresponder.Name = data.Name.ValueString()
+	}
+	if !data.Ocspurlresolvetimeout.IsNull() && !data.Ocspurlresolvetimeout.IsUnknown() {
+		sslocspresponder.Ocspurlresolvetimeout = utils.IntPtr(int(data.Ocspurlresolvetimeout.ValueInt64()))
+	}
+	if !data.Producedattimeskew.IsNull() && !data.Producedattimeskew.IsUnknown() {
+		sslocspresponder.Producedattimeskew = utils.IntPtr(int(data.Producedattimeskew.ValueInt64()))
+	}
+	// respondercert is ForceNew (RequiresReplaceIfConfigured) - excluded from update payload
+	if !data.Resptimeout.IsNull() && !data.Resptimeout.IsUnknown() {
+		sslocspresponder.Resptimeout = utils.IntPtr(int(data.Resptimeout.ValueInt64()))
+	}
+	// signingcert is ForceNew (RequiresReplaceIfConfigured) - excluded from update payload
+	if !data.Trustresponder.IsNull() && !data.Trustresponder.IsUnknown() {
+		sslocspresponder.Trustresponder = data.Trustresponder.ValueBool()
+	}
+	if !data.Url.IsNull() && !data.Url.IsUnknown() {
+		sslocspresponder.Url = data.Url.ValueString()
+	}
+	if !data.Usenonce.IsNull() && !data.Usenonce.IsUnknown() {
 		sslocspresponder.Usenonce = data.Usenonce.ValueString()
 	}
 
@@ -177,98 +243,102 @@ func sslocspresponderGetThePayloadFromtheConfig(ctx context.Context, data *Ssloc
 func sslocspresponderSetAttrFromGet(ctx context.Context, data *SslocspresponderResourceModel, getResponseData map[string]interface{}) *SslocspresponderResourceModel {
 	tflog.Debug(ctx, "In sslocspresponderSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE (omit-on-default trap): NITRO omits values it considers "default"
+	// (e.g. cachetimeout=0, trustresponder=false) from the GET response. We must
+	// NOT clobber a known configured value with null in that case - only null the
+	// attribute when the current model value is Unknown (freshly Computed).
 	if val, ok := getResponseData["batchingdelay"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Batchingdelay = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Batchingdelay.IsUnknown() {
 		data.Batchingdelay = types.Int64Null()
 	}
 	if val, ok := getResponseData["batchingdepth"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Batchingdepth = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Batchingdepth.IsUnknown() {
 		data.Batchingdepth = types.Int64Null()
 	}
 	if val, ok := getResponseData["cache"]; ok && val != nil {
 		data.Cache = types.StringValue(val.(string))
-	} else {
+	} else if data.Cache.IsUnknown() {
 		data.Cache = types.StringNull()
 	}
 	if val, ok := getResponseData["cachetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cachetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cachetimeout.IsUnknown() {
 		data.Cachetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["httpmethod"]; ok && val != nil {
 		data.Httpmethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpmethod.IsUnknown() {
 		data.Httpmethod = types.StringNull()
 	}
 	if val, ok := getResponseData["insertclientcert"]; ok && val != nil {
 		data.Insertclientcert = types.StringValue(val.(string))
-	} else {
+	} else if data.Insertclientcert.IsUnknown() {
 		data.Insertclientcert = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["ocspurlresolvetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ocspurlresolvetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ocspurlresolvetimeout.IsUnknown() {
 		data.Ocspurlresolvetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["producedattimeskew"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Producedattimeskew = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Producedattimeskew.IsUnknown() {
 		data.Producedattimeskew = types.Int64Null()
 	}
 	if val, ok := getResponseData["respondercert"]; ok && val != nil {
 		data.Respondercert = types.StringValue(val.(string))
-	} else {
+	} else if data.Respondercert.IsUnknown() {
 		data.Respondercert = types.StringNull()
 	}
 	if val, ok := getResponseData["resptimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Resptimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Resptimeout.IsUnknown() {
 		data.Resptimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["signingcert"]; ok && val != nil {
 		data.Signingcert = types.StringValue(val.(string))
-	} else {
+	} else if data.Signingcert.IsUnknown() {
 		data.Signingcert = types.StringNull()
 	}
 	if val, ok := getResponseData["trustresponder"]; ok && val != nil {
 		data.Trustresponder = types.BoolValue(val.(bool))
-	} else {
+	} else if data.Trustresponder.IsUnknown() {
 		data.Trustresponder = types.BoolNull()
 	}
 	if val, ok := getResponseData["url"]; ok && val != nil {
 		data.Url = types.StringValue(val.(string))
-	} else {
+	} else if data.Url.IsUnknown() {
 		data.Url = types.StringNull()
 	}
 	if val, ok := getResponseData["usenonce"]; ok && val != nil {
 		data.Usenonce = types.StringValue(val.(string))
-	} else {
+	} else if data.Usenonce.IsUnknown() {
 		data.Usenonce = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

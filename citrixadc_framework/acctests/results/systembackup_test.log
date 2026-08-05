@@ -1,0 +1,15 @@
+# Resource        : systembackup
+# Primary ADC     : 157
+# Alternate ADCs  : 121, 152
+# Planned tests   : 2
+# Result          : PASS_first=1 PASS_alt=0 FAILED=0 SKIPPED=1
+
+## PASS (on primary ADC 157)
+  PASS  TestAccSystembackupDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED
+  SKIP  TestAccSystembackup_basic  :: TODO: Need to find a way to test this resource!

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *LsngroupResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating lsngroup resource")
 
-	// lsngroup := lsngroupGetThePayloadFromtheConfig(ctx, &data)
+	// Build the create payload from the plan
+	lsngroup := lsngroupGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsngroup.Type(), &lsngroup)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsngroup, got error: %s", err))
-	//	 return
-	// }
+	// Named resource - create using AddResource (POST)
+	groupname := data.Groupname.ValueString()
+	_, err := r.client.AddResource(service.Lsngroup.Type(), groupname, &lsngroup)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsngroup, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsngroup-config")
+	// ID is the resource name (single unique attribute: groupname)
+	data.Id = types.StringValue(groupname)
 
 	tflog.Trace(ctx, "Created lsngroup resource")
 
 	// Read the updated state back
-	r.readLsngroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsngroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsngroup not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *LsngroupResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading lsngroup resource")
 
-	r.readLsngroupFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLsngroupFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LsngroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsngroupResourceModel
+	var data, state LsngroupResourceModel
 
+	// Read prior state (to preserve ID and detect changes)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,66 @@ func (r *LsngroupResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsngroup resource")
 
-	// Create API request body from the model
-	// lsngroup := lsngroupGetThePayloadFromtheConfig(ctx, &data)
+	// Only updateable (non-ForceNew) attributes are checked here. ForceNew
+	// attributes (clientname, allocpolicy, ip6profile, nattype) trigger a
+	// resource replacement and never reach Update.
+	hasChange := false
+	if !data.Ftp.Equal(state.Ftp) {
+		hasChange = true
+	}
+	if !data.Ftpcm.Equal(state.Ftpcm) {
+		hasChange = true
+	}
+	if !data.Logging.Equal(state.Logging) {
+		hasChange = true
+	}
+	if !data.Portblocksize.Equal(state.Portblocksize) {
+		hasChange = true
+	}
+	if !data.Pptp.Equal(state.Pptp) {
+		hasChange = true
+	}
+	if !data.Rtspalg.Equal(state.Rtspalg) {
+		hasChange = true
+	}
+	if !data.Sessionlogging.Equal(state.Sessionlogging) {
+		hasChange = true
+	}
+	if !data.Sessionsync.Equal(state.Sessionsync) {
+		hasChange = true
+	}
+	if !data.Sipalg.Equal(state.Sipalg) {
+		hasChange = true
+	}
+	if !data.Snmptraplimit.Equal(state.Snmptraplimit) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsngroup.Type(), &lsngroup)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsngroup, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated lsngroup resource")
+	if hasChange {
+		lsngroup := lsngroupGetTheUpdatablePayloadFromthePlan(ctx, &data)
+		// lsngroup update is a PUT on the unnamed endpoint (groupname is carried in the body)
+		err := r.client.UpdateUnnamedResource(service.Lsngroup.Type(), &lsngroup)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsngroup, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated lsngroup resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsngroup resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readLsngroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsngroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsngroup not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +198,32 @@ func (r *LsngroupResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	tflog.Debug(ctx, "Deleting lsngroup resource")
 
-	// For lsngroup, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsngroup resource from state")
+	// Named resource - delete using DeleteResource
+	err := r.client.DeleteResource(service.Lsngroup.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsngroup, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsngroup resource")
 }
 
-// Helper function to read lsngroup data from API
-func (r *LsngroupResource) readLsngroupFromApi(ctx context.Context, data *LsngroupResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsngroup.Type(), "")
+// Helper function to read lsngroup data from API. Returns false when the
+// resource no longer exists on the appliance.
+func (r *LsngroupResource) readLsngroupFromApi(ctx context.Context, data *LsngroupResourceModel, diags *diag.Diagnostics) bool {
+	// Single unique attribute: the ID is the plain groupname value.
+	groupname := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lsngroup.Type(), groupname)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsngroup, got error: %s", err))
-		return
+		return false
 	}
 
 	lsngroupSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

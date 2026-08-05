@@ -1,0 +1,16 @@
+# Resource        : nsvpxparam
+# Primary ADC     : 153
+# Alternate ADCs  : 121, 158
+# Planned tests   : 3
+# Result          : PASS_first=2 PASS_alt=0 FAILED=0 SKIPPED=1
+
+## PASS (on primary ADC 153)
+  PASS  TestAccNsvpxparam_basic
+  PASS  TestAccNsvpxparamDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED
+  SKIP  TestAccNsvpxparam_cluster  :: ADC testbed is UNSPECIFIED. Expected CLUSTER.

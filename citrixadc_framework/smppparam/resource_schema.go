@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -41,7 +39,7 @@ func (r *SmppparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"addrrange": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("\\d*"),
+				Computed:    true,
 				Description: "Set of SME addresses, sent in the bind request, serviced by the ESME.",
 			},
 			"addrton": schema.Int64Attribute{
@@ -51,7 +49,7 @@ func (r *SmppparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"clientmode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("TRANSCEIVER"),
+				Computed:    true,
 				Description: "Mode in which the client binds to the ADC. Applicable settings function as follows:\n* TRANSCEIVER - Client can send and receive messages to and from the message center.\n* TRANSMITTERONLY - Client can only send messages.\n* RECEIVERONLY - Client can only receive messages.",
 			},
 			"msgqueue": schema.StringAttribute{
@@ -61,7 +59,7 @@ func (r *SmppparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"msgqueuesize": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10000),
+				Computed:    true,
 				Description: "Maximum number of SMPP messages that can be queued. After the limit is reached, the Citrix ADC sends a deliver_sm_resp PDU, with an appropriate error message, to the message center.",
 			},
 		},
@@ -71,24 +69,27 @@ func (r *SmppparamResource) Schema(ctx context.Context, req resource.SchemaReque
 func smppparamGetThePayloadFromtheConfig(ctx context.Context, data *SmppparamResourceModel) smpp.Smppparam {
 	tflog.Debug(ctx, "In smppparamGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// Only send attributes that are explicitly configured (known & non-null).
+	// Optional+Computed attributes that are unset are Unknown in the plan and
+	// must NOT be pushed (matches SDK v2 GetRawConfig null-guard behavior).
 	smppparam := smpp.Smppparam{}
-	if !data.Addrnpi.IsNull() {
+	if !data.Addrnpi.IsNull() && !data.Addrnpi.IsUnknown() {
 		smppparam.Addrnpi = utils.IntPtr(int(data.Addrnpi.ValueInt64()))
 	}
-	if !data.Addrrange.IsNull() {
+	if !data.Addrrange.IsNull() && !data.Addrrange.IsUnknown() {
 		smppparam.Addrrange = data.Addrrange.ValueString()
 	}
-	if !data.Addrton.IsNull() {
+	if !data.Addrton.IsNull() && !data.Addrton.IsUnknown() {
 		smppparam.Addrton = utils.IntPtr(int(data.Addrton.ValueInt64()))
 	}
-	if !data.Clientmode.IsNull() {
+	if !data.Clientmode.IsNull() && !data.Clientmode.IsUnknown() {
 		smppparam.Clientmode = data.Clientmode.ValueString()
 	}
-	if !data.Msgqueue.IsNull() {
+	if !data.Msgqueue.IsNull() && !data.Msgqueue.IsUnknown() {
 		smppparam.Msgqueue = data.Msgqueue.ValueString()
 	}
-	if !data.Msgqueuesize.IsNull() {
+	if !data.Msgqueuesize.IsNull() && !data.Msgqueuesize.IsUnknown() {
 		smppparam.Msgqueuesize = utils.IntPtr(int(data.Msgqueuesize.ValueInt64()))
 	}
 
@@ -98,41 +99,44 @@ func smppparamGetThePayloadFromtheConfig(ctx context.Context, data *SmppparamRes
 func smppparamSetAttrFromGet(ctx context.Context, data *SmppparamResourceModel, getResponseData map[string]interface{}) *SmppparamResourceModel {
 	tflog.Debug(ctx, "In smppparamSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// else-branches only null a value that is still Unknown; a known/configured
+	// value is preserved so a field NITRO omits from GET (omit-on-default) is not
+	// clobbered, avoiding "inconsistent result after apply".
 	if val, ok := getResponseData["addrnpi"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Addrnpi = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Addrnpi.IsUnknown() {
 		data.Addrnpi = types.Int64Null()
 	}
 	if val, ok := getResponseData["addrrange"]; ok && val != nil {
 		data.Addrrange = types.StringValue(val.(string))
-	} else {
+	} else if data.Addrrange.IsUnknown() {
 		data.Addrrange = types.StringNull()
 	}
 	if val, ok := getResponseData["addrton"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Addrton = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Addrton.IsUnknown() {
 		data.Addrton = types.Int64Null()
 	}
 	if val, ok := getResponseData["clientmode"]; ok && val != nil {
 		data.Clientmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientmode.IsUnknown() {
 		data.Clientmode = types.StringNull()
 	}
 	if val, ok := getResponseData["msgqueue"]; ok && val != nil {
 		data.Msgqueue = types.StringValue(val.(string))
-	} else {
+	} else if data.Msgqueue.IsUnknown() {
 		data.Msgqueue = types.StringNull()
 	}
 	if val, ok := getResponseData["msgqueuesize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Msgqueuesize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Msgqueuesize.IsUnknown() {
 		data.Msgqueuesize = types.Int64Null()
 	}
 

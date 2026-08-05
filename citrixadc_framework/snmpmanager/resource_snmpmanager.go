@@ -3,8 +3,11 @@ package snmpmanager
 import (
 	"context"
 	"fmt"
+	"net/url"
 
+	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +58,28 @@ func (r *SnmpmanagerResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating snmpmanager resource")
 
-	// snmpmanager := snmpmanagerGetThePayloadFromtheConfig(ctx, &data)
+	snmpmanager := snmpmanagerGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpmanager.Type(), &snmpmanager)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpmanager, got error: %s", err))
-	//	 return
-	// }
+	// Named resource keyed by ipaddress - use AddResource (matches SDK v2).
+	ipaddress := data.Ipaddress.ValueString()
+	_, err := r.client.AddResource(service.Snmpmanager.Type(), ipaddress, &snmpmanager)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpmanager, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("snmpmanager-config")
+	// ID matches SDK v2: d.SetId(ipaddress)
+	data.Id = types.StringValue(ipaddress)
 
 	tflog.Trace(ctx, "Created snmpmanager resource")
 
 	// Read the updated state back
-	r.readSnmpmanagerFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpmanagerFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpmanager not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *SnmpmanagerResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading snmpmanager resource")
 
-	r.readSnmpmanagerFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSnmpmanagerFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SnmpmanagerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SnmpmanagerResourceModel
+	var data, state SnmpmanagerResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,50 @@ func (r *SnmpmanagerResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating snmpmanager resource")
 
-	// Create API request body from the model
-	// snmpmanager := snmpmanagerGetThePayloadFromtheConfig(ctx, &data)
+	// snmpmanager is keyed by ipaddress; the update payload must carry it (matches SDK v2).
+	snmpmanager := snmp.Snmpmanager{
+		Ipaddress: data.Ipaddress.ValueString(),
+	}
+	hasChange := false
+	if !data.Domainresolveretry.Equal(state.Domainresolveretry) {
+		tflog.Debug(ctx, "domainresolveretry has changed for snmpmanager, starting update")
+		if !data.Domainresolveretry.IsNull() && !data.Domainresolveretry.IsUnknown() {
+			snmpmanager.Domainresolveretry = utils.IntPtr(int(data.Domainresolveretry.ValueInt64()))
+		}
+		hasChange = true
+	}
+	if !data.Netmask.Equal(state.Netmask) {
+		tflog.Debug(ctx, "netmask has changed for snmpmanager, starting update")
+		if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
+			snmpmanager.Netmask = data.Netmask.ValueString()
+		}
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpmanager.Type(), &snmpmanager)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpmanager, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated snmpmanager resource")
+	if hasChange {
+		// Matches SDK v2: UpdateUnnamedResource (PUT body carries the ipaddress key).
+		err := r.client.UpdateUnnamedResource(service.Snmpmanager.Type(), &snmpmanager)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpmanager %s, got error: %s", data.Ipaddress.ValueString(), err))
+			return
+		}
+		tflog.Trace(ctx, "Updated snmpmanager resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for snmpmanager resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readSnmpmanagerFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpmanagerFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpmanager not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +183,51 @@ func (r *SnmpmanagerResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Debug(ctx, "Deleting snmpmanager resource")
 
-	// For snmpmanager, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted snmpmanager resource from state")
-}
+	// snmpmanager delete requires the netmask disambiguator (matches SDK v2).
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("netmask:%s", url.QueryEscape(data.Netmask.ValueString())))
 
-// Helper function to read snmpmanager data from API
-func (r *SnmpmanagerResource) readSnmpmanagerFromApi(ctx context.Context, data *SnmpmanagerResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Snmpmanager.Type(), "")
+	err := r.client.DeleteResourceWithArgs(service.Snmpmanager.Type(), data.Ipaddress.ValueString(), args)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmpmanager, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete snmpmanager, got error: %s", err))
 		return
 	}
 
-	snmpmanagerSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted snmpmanager resource")
+}
 
+// readSnmpmanagerFromApi reads the snmpmanager state from the ADC. snmpmanager is
+// an array resource keyed by ipaddress, so it is fetched via FindAllResources and
+// matched on the ipaddress (matches SDK v2). Returns false if the manager is gone.
+func (r *SnmpmanagerResource) readSnmpmanagerFromApi(ctx context.Context, data *SnmpmanagerResourceModel, diags *diag.Diagnostics) bool {
+	snmpmanagerName := data.Id.ValueString()
+
+	dataArr, err := r.client.FindAllResources(service.Snmpmanager.Type())
+	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmpmanager, got error: %s", err))
+		return false
+	}
+
+	if len(dataArr) == 0 {
+		return false
+	}
+
+	foundIndex := -1
+	for i, v := range dataArr {
+		if ipaddress, ok := v["ipaddress"].(string); ok && ipaddress == snmpmanagerName {
+			foundIndex = i
+			break
+		}
+	}
+
+	if foundIndex == -1 {
+		return false
+	}
+
+	snmpmanagerSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	return true
 }

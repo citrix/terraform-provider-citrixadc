@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *NsicapprofileResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating nsicapprofile resource")
 
-	// nsicapprofile := nsicapprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	nsicapprofile := nsicapprofileGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsicapprofile.Type(), &nsicapprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsicapprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nsicapprofile-config")
+	// Named resource - use AddResource
+	nsicapprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Nsicapprofile.Type(), nsicapprofileName, &nsicapprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsicapprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nsicapprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(nsicapprofileName)
+
 	// Read the updated state back
-	r.readNsicapprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsicapprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsicapprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *NsicapprofileResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading nsicapprofile resource")
 
-	r.readNsicapprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNsicapprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NsicapprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsicapprofileResourceModel
+	var data, state NsicapprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,93 @@ func (r *NsicapprofileResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nsicapprofile resource")
 
-	// Create API request body from the model
-	// nsicapprofile := nsicapprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Allow204.Equal(state.Allow204) {
+		tflog.Debug(ctx, "allow204 has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Connectionkeepalive.Equal(state.Connectionkeepalive) {
+		tflog.Debug(ctx, "connectionkeepalive has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Hostheader.Equal(state.Hostheader) {
+		tflog.Debug(ctx, "hostheader has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Inserthttprequest.Equal(state.Inserthttprequest) {
+		tflog.Debug(ctx, "inserthttprequest has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Inserticapheaders.Equal(state.Inserticapheaders) {
+		tflog.Debug(ctx, "inserticapheaders has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Logaction.Equal(state.Logaction) {
+		tflog.Debug(ctx, "logaction has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Mode.Equal(state.Mode) {
+		tflog.Debug(ctx, "mode has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Preview.Equal(state.Preview) {
+		tflog.Debug(ctx, "preview has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Previewlength.Equal(state.Previewlength) {
+		tflog.Debug(ctx, "previewlength has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Queryparams.Equal(state.Queryparams) {
+		tflog.Debug(ctx, "queryparams has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Reqtimeout.Equal(state.Reqtimeout) {
+		tflog.Debug(ctx, "reqtimeout has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Reqtimeoutaction.Equal(state.Reqtimeoutaction) {
+		tflog.Debug(ctx, "reqtimeoutaction has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Uri.Equal(state.Uri) {
+		tflog.Debug(ctx, "uri has changed for nsicapprofile")
+		hasChange = true
+	}
+	if !data.Useragent.Equal(state.Useragent) {
+		tflog.Debug(ctx, "useragent has changed for nsicapprofile")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsicapprofile.Type(), &nsicapprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsicapprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		nsicapprofile := nsicapprofileGetThePayloadFromtheConfig(ctx, &data)
+		// Named resource - use UpdateResource
+		nsicapprofileName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Nsicapprofile.Type(), nsicapprofileName, &nsicapprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsicapprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated nsicapprofile resource")
+		tflog.Trace(ctx, "Updated nsicapprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nsicapprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readNsicapprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsicapprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsicapprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +224,33 @@ func (r *NsicapprofileResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	tflog.Debug(ctx, "Deleting nsicapprofile resource")
+	// Named resource - delete using DeleteResource
+	nsicapprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Nsicapprofile.Type(), nsicapprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nsicapprofile, got error: %s", err))
+		return
+	}
 
-	// For nsicapprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nsicapprofile resource from state")
+	tflog.Trace(ctx, "Deleted nsicapprofile resource")
 }
 
 // Helper function to read nsicapprofile data from API
-func (r *NsicapprofileResource) readNsicapprofileFromApi(ctx context.Context, data *NsicapprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nsicapprofile.Type(), "")
+func (r *NsicapprofileResource) readNsicapprofileFromApi(ctx context.Context, data *NsicapprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	nsicapprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Nsicapprofile.Type(), nsicapprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsicapprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	nsicapprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -2,6 +2,7 @@ package rewriteaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
 
@@ -35,89 +36,197 @@ func (r *RewriteactionResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "The ID of the rewriteaction resource.",
 			},
 			"comment": schema.StringAttribute{
+				// SDK v2: Optional+Computed, not ForceNew.
 				Optional:    true,
 				Computed:    true,
 				Description: "Comment. Can be used to preserve information about this rewrite action.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name for the user-defined rewrite action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the rewrite policy is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my rewrite action\" or 'my rewrite action').",
-			},
-			"newname": schema.StringAttribute{
+				// SDK v2: Optional+Computed, NOT ForceNew. A name is auto-generated in
+				// Create when omitted, mirroring the SDK v2 resource. UseStateForUnknown
+				// keeps the (possibly generated) name stable across refreshes. No
+				// RequiresReplace: SDK v2 did not mark name ForceNew.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
+				Description: "Name for the user-defined rewrite action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the rewrite policy is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my rewrite action\" or 'my rewrite action').",
+			},
+			"newname": schema.StringAttribute{
+				// newname is the rename trigger (NITRO ?action=rename). It is NOT present
+				// in the SDK v2 schema, so it must not force replacement (auto-gen added a
+				// spurious RequiresReplace that is removed here). It drives an in-place
+				// rename via Update. Optional only: a pure user input, never echoed by GET.
+				Optional:    true,
 				Description: "New name for the rewrite action. \nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the rewrite policy is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my rewrite action\" or 'my rewrite action').",
 			},
 			"refinesearch": schema.StringAttribute{
+				// SDK v2: Optional+Computed, not ForceNew.
 				Optional:    true,
 				Computed:    true,
 				Description: "Specify additional criteria to refine the results of the search. \nAlways starts with the \"extend(m,n)\" operation, where 'm' specifies number of bytes to the left of selected data and 'n' specifies number of bytes to the right of selected data to extend the selected area.\nYou can use refineSearch only on body expressions, and for the INSERT_BEFORE_ALL, INSERT_AFTER_ALL, REPLACE_ALL, and DELETE_ALL action types.\nExample: -refineSearch 'EXTEND(10, 20).REGEX_SELECT(re~0x[0-9a-zA-Z]+~).",
 			},
 			"search": schema.StringAttribute{
+				// SDK v2: Optional+Computed, not ForceNew.
 				Optional:    true,
 				Computed:    true,
-				Description: "Search facility that is used to match multiple strings in the request or response. Used in the INSERT_BEFORE_ALL, INSERT_AFTER_ALL, REPLACE_ALL, and DELETE_ALL action types. The following search types are supported:\n* Text (\"text(string)\") - A literal string. Example: -search text(\"hello\")\n* Regular expression (\"regex(re<delimiter>regular exp<delimiter>)\") - Pattern that is used to match multiple strings in the request or response. The pattern may be a PCRE-format regular expression with a delimiter that consists of any printable ASCII non-alphanumeric character except for the underscore (_) and space ( ) that is not otherwise used in the expression. Example: -search regex(re~^hello*~) The preceding regular expression can use the tilde (~) as the delimiter because that character does not appear in the regular expression itself.\n* XPath (\"xpath(xp<delimiter>xpath expression<delimiter>)\") - An XPath expression to search XML. The delimiter has the same rules as for regex. Example: -search xpath(xp%/a/b%)\n* JSON (\"xpath_json(xp<delimiter>xpath expression<delimiter>)\") - An XPath expression to search JSON. The delimiter has the same rules as for regex. Example: -search xpath_json(xp%/a/b%)\nNOTE: JSON searches use the same syntax as XPath searches, but operate on JSON files instead of standard XML files.\n* HTML (\"xpath_html(xp<delimiter>xpath expression<delimiter>)\") - An XPath expression to search HTML. The delimiter has the same rules as for regex. Example: -search xpath_html(xp%/html/body%)\nNOTE: HTML searches use the same syntax as XPath searches, but operate on HTML files instead of standard XML files; HTML 5 rules for the file syntax are used; HTML 4 and later are supported.\n* Patset (\"patset(patset)\") - A predefined pattern set. Example: -search patset(\"patset1\").\n* Datset (\"dataset(dataset)\") - A predefined dataset. Example: -search dataset(\"dataset1\").\n* AVP (\"avp(avp number)\") - AVP number that is used to match multiple AVPs in a Diameter/Radius Message. Example: -search avp(999)\n\nNote: for all these the TARGET prefix can be used in the replacement expression to specify the text that was selected by the -search parameter, optionally adjusted by the -refineSearch parameter.\nExample: TARGET.BEFORE_STR(\",\")",
+				Description: "Search facility that is used to match multiple strings in the request or response. Used in the INSERT_BEFORE_ALL, INSERT_AFTER_ALL, REPLACE_ALL, and DELETE_ALL action types.",
 			},
 			"stringbuilderexpr": schema.StringAttribute{
+				// SDK v2: Optional+Computed, not ForceNew.
 				Optional:    true,
 				Computed:    true,
 				Description: "Expression that specifies the content to insert into the request or response at the specified location, or that replaces the specified string.",
 			},
 			"target": schema.StringAttribute{
-				Required:    true,
+				// SDK v2: Optional+Computed, not ForceNew. (auto-gen wrongly made it Required.)
+				Optional:    true,
+				Computed:    true,
 				Description: "Expression that specifies which part of the request or response to rewrite.",
 			},
 			"type": schema.StringAttribute{
-				Required: true,
+				// SDK v2: Optional+Computed+ForceNew. Keep Optional+Computed (NITRO requires
+				// it for add, but the SDK v2 contract was Optional). UseStateForUnknown +
+				// RequiresReplaceIfConfigured reproduce the ForceNew semantics without
+				// forcing replacement on an unconfigured (read-back) value.
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Description: "Type of user-defined rewrite action. The information that you provide for, and the effect of, each type are as follows:: \n* REPLACE <target> <string_builder_expr>. Replaces the string with the string-builder expression.\n* REPLACE_ALL <target> <string_builder_expr> -search <search_expr>. In the request or response specified by <target>, replaces all occurrences of the string defined by <string_builder_expr> with the string defined by <search_expr>.\n* REPLACE_HTTP_RES <string_builder_expr>. Replaces the complete HTTP response with the string defined by the string-builder expression.\n* REPLACE_SIP_RES <target> - Replaces the complete SIP response with the string specified by <target>.\n* INSERT_HTTP_HEADER <header_string_builder_expr> <contents_string_builder_expr>. Inserts the HTTP header specified by <header_string_builder_expr> and header contents specified by <contents_string_builder_expr>.\n* DELETE_HTTP_HEADER <target>. Deletes the HTTP header specified by <target>.\n* CORRUPT_HTTP_HEADER <target>. Replaces the header name of all occurrences of the HTTP header specified by <target> with a corrupted name, so that it will not be recognized by the receiver  Example: MY_HEADER is changed to MHEY_ADER.\n* INSERT_BEFORE <target_expr> <string_builder_expr>. Finds the string specified in <target_expr> and inserts the string in <string_builder_expr> before it.\n* INSERT_BEFORE_ALL <target> <string_builder_expr> -search <search_expr>. In the request or response specified by <target>, locates all occurrences of the string specified in <string_builder_expr> and inserts the string specified in <search_expr> before each.\n* INSERT_AFTER <target_expr> <string_builder_expr>. Finds the string specified in <target_expr>, and inserts the string specified in <string_builder_expr> after it.\n* INSERT_AFTER_ALL <target> <string_builder_expr> -search <search_expr>. In the request or response specified by <target>, locates all occurrences of the string specified by <string_builder_expr> and inserts the string specified by <search_expr> after each.\n* DELETE <target>. Finds and deletes the specified target.\n* DELETE_ALL <target> -search <string_builder_expr>. In the request or response specified by <target>, locates and deletes all occurrences of the string specified by <string_builder_expr>.\n* REPLACE_DIAMETER_HEADER_FIELD <target> <field value>. In the request or response modify the header field specified by <target>. Use Diameter.req.flags.SET(<flag>) or Diameter.req.flags.UNSET<flag> as 'stringbuilderexpression' to set or unset flags.\n* REPLACE_DNS_HEADER_FIELD <target>. In the request or response modify the header field specified by <target>. \n* REPLACE_DNS_ANSWER_SECTION <target>. Replace the DNS answer section in the response. This is currently applicable for A and AAAA records only. Use DNS.NEW_RRSET_A & DNS.NEW_RRSET_AAAA expressions to configure the new answer section.\n* REPLACE_MQTT <target> <string_builder_expr> : Replace MQTT message fields specified in <target_expr> to the value specified in <string_builder_expr>\n* INSERT_MQTT <string_builder_expr> : Insert the string_builder_expr to an appropriate packet field in the MQTT message.\n* INSERT_AFTER_MQTT <target_expr> <string_builder_expr> : Insert a topic specified in <string_builder_expr> in the MQTT Subscribe or Unsubscribe message after the specified target_expr.\n* INSERT_BEFORE_MQTT <target_expr> <string_builder_expr> : Insert a topic specified in <string_builder_expr> in the MQTT Subscribe or Unsubscribe message before the specified target_expr.\n* DELETE_MQTT <target> : Deletes the specified target in the MQTT message.",
+				Description: "Type of user-defined rewrite action. The information that you provide for, and the effect of, each type are as follows:: \n* REPLACE <target> <string_builder_expr>. Replaces the string with the string-builder expression.\n* REPLACE_ALL <target> <string_builder_expr> -search <search_expr>.\n* REPLACE_HTTP_RES <string_builder_expr>.\n* REPLACE_SIP_RES <target>.\n* INSERT_HTTP_HEADER <header_string_builder_expr> <contents_string_builder_expr>.\n* DELETE_HTTP_HEADER <target>.\n* CORRUPT_HTTP_HEADER <target>.\n* INSERT_BEFORE <target_expr> <string_builder_expr>.\n* INSERT_BEFORE_ALL <target> <string_builder_expr> -search <search_expr>.\n* INSERT_AFTER <target_expr> <string_builder_expr>.\n* INSERT_AFTER_ALL <target> <string_builder_expr> -search <search_expr>.\n* DELETE <target>.\n* DELETE_ALL <target> -search <string_builder_expr>.\n* REPLACE_DIAMETER_HEADER_FIELD <target> <field value>.\n* REPLACE_DNS_HEADER_FIELD <target>.\n* REPLACE_DNS_ANSWER_SECTION <target>.\n* REPLACE_MQTT <target> <string_builder_expr>.\n* INSERT_MQTT <string_builder_expr>.\n* INSERT_AFTER_MQTT <target_expr> <string_builder_expr>.\n* INSERT_BEFORE_MQTT <target_expr> <string_builder_expr>.\n* DELETE_MQTT <target>.",
 			},
 		},
 	}
 }
 
-func rewriteactionGetThePayloadFromtheConfig(ctx context.Context, data *RewriteactionResourceModel) rewrite.Rewriteaction {
-	tflog.Debug(ctx, "In rewriteactionGetThePayloadFromtheConfig Function")
+// rewriteactionGetThePayloadFromthePlan builds the full add (create) payload.
+func rewriteactionGetThePayloadFromthePlan(ctx context.Context, data *RewriteactionResourceModel) rewrite.Rewriteaction {
+	tflog.Debug(ctx, "In rewriteactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	rewriteaction := rewrite.Rewriteaction{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		rewriteaction.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		rewriteaction.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		rewriteaction.Newname = data.Newname.ValueString()
-	}
-	if !data.Refinesearch.IsNull() {
+	// newname is a rename-only argument (NITRO ?action=rename). It is NOT part of the
+	// add payload, so it is deliberately excluded from the create POST body.
+	if !data.Refinesearch.IsNull() && !data.Refinesearch.IsUnknown() {
 		rewriteaction.Refinesearch = data.Refinesearch.ValueString()
 	}
-	if !data.Search.IsNull() {
+	if !data.Search.IsNull() && !data.Search.IsUnknown() {
 		rewriteaction.Search = data.Search.ValueString()
 	}
-	if !data.Stringbuilderexpr.IsNull() {
+	if !data.Stringbuilderexpr.IsNull() && !data.Stringbuilderexpr.IsUnknown() {
 		rewriteaction.Stringbuilderexpr = data.Stringbuilderexpr.ValueString()
 	}
-	if !data.Target.IsNull() {
+	if !data.Target.IsNull() && !data.Target.IsUnknown() {
 		rewriteaction.Target = data.Target.ValueString()
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		rewriteaction.Type = data.Type.ValueString()
 	}
 
 	return rewriteaction
 }
 
+// rewriteactionGetTheUpdatablePayloadFromThePlan builds the PUT (update) payload,
+// restricted to the NITRO-updatable fields. type is ForceNew (never reaches Update);
+// newname is rename-only (handled separately).
+func rewriteactionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *RewriteactionResourceModel) rewrite.Rewriteaction {
+	tflog.Debug(ctx, "In rewriteactionGetTheUpdatablePayloadFromThePlan Function")
+
+	rewriteaction := rewrite.Rewriteaction{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		rewriteaction.Name = data.Name.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		rewriteaction.Comment = data.Comment.ValueString()
+	}
+	if !data.Refinesearch.IsNull() && !data.Refinesearch.IsUnknown() {
+		rewriteaction.Refinesearch = data.Refinesearch.ValueString()
+	}
+	if !data.Search.IsNull() && !data.Search.IsUnknown() {
+		rewriteaction.Search = data.Search.ValueString()
+	}
+	if !data.Stringbuilderexpr.IsNull() && !data.Stringbuilderexpr.IsUnknown() {
+		rewriteaction.Stringbuilderexpr = data.Stringbuilderexpr.ValueString()
+	}
+	if !data.Target.IsNull() && !data.Target.IsUnknown() {
+		rewriteaction.Target = data.Target.ValueString()
+	}
+
+	return rewriteaction
+}
+
+// rewriteactionSetAttrFromGet populates the RESOURCE model from a GET response.
+// It preserves configured/known values that NITRO omits from GET (omit-on-default
+// trap), only nulling a field when the model value is still unknown.
 func rewriteactionSetAttrFromGet(ctx context.Context, data *RewriteactionResourceModel, getResponseData map[string]interface{}) *RewriteactionResourceModel {
 	tflog.Debug(ctx, "In rewriteactionSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
+	}
+	// name is the user-facing key. After a rename (via newname) the live object name
+	// (tracked by data.Id) diverges from the configured name, and GET returns the live
+	// name. Overwriting name from GET would clobber the user's configured value and
+	// trigger a spurious diff. Only adopt the GET value when the model has none (e.g.
+	// on import, where state carries only the ID); otherwise preserve.
+	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve plan/state value.
+	if val, ok := getResponseData["refinesearch"]; ok && val != nil {
+		data.Refinesearch = types.StringValue(val.(string))
+	} else if data.Refinesearch.IsUnknown() {
+		data.Refinesearch = types.StringNull()
+	}
+	if val, ok := getResponseData["search"]; ok && val != nil {
+		data.Search = types.StringValue(val.(string))
+	} else if data.Search.IsUnknown() {
+		data.Search = types.StringNull()
+	}
+	if val, ok := getResponseData["stringbuilderexpr"]; ok && val != nil {
+		data.Stringbuilderexpr = types.StringValue(val.(string))
+	} else if data.Stringbuilderexpr.IsUnknown() {
+		data.Stringbuilderexpr = types.StringNull()
+	}
+	if val, ok := getResponseData["target"]; ok && val != nil {
+		data.Target = types.StringValue(val.(string))
+	} else if data.Target.IsUnknown() {
+		data.Target = types.StringNull()
+	}
+	if val, ok := getResponseData["type"]; ok && val != nil {
+		data.Type = types.StringValue(val.(string))
+	} else if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
+	}
+
+	// Set ID for the resource (single unique attribute: name). Do not overwrite an
+	// ID already tracking the live (possibly renamed) name.
+	if data.Id.IsNull() || data.Id.IsUnknown() || data.Id.ValueString() == "" {
+		data.Id = types.StringValue(data.Name.ValueString())
+	}
+
+	return data
+}
+
+// rewriteactionSetAttrFromGetForDatasource faithfully copies every field from the
+// GET response. The datasource has no prior plan/state to preserve, so it populates
+// the model directly from the API response and sets the ID itself.
+func rewriteactionSetAttrFromGetForDatasource(ctx context.Context, data *RewriteactionResourceModel, getResponseData map[string]interface{}) *RewriteactionResourceModel {
+	tflog.Debug(ctx, "In rewriteactionSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
@@ -128,11 +237,8 @@ func rewriteactionSetAttrFromGet(ctx context.Context, data *RewriteactionResourc
 	} else {
 		data.Name = types.StringNull()
 	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
-	}
+	// newname is rename-only and never echoed by GET.
+	data.Newname = types.StringNull()
 	if val, ok := getResponseData["refinesearch"]; ok && val != nil {
 		data.Refinesearch = types.StringValue(val.(string))
 	} else {
@@ -159,9 +265,8 @@ func rewriteactionSetAttrFromGet(ctx context.Context, data *RewriteactionResourc
 		data.Type = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

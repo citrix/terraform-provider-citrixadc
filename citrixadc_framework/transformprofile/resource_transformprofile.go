@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/transform"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +56,55 @@ func (r *TransformprofileResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	tflog.Debug(ctx, "Creating transformprofile resource")
+	transformprofileName := data.Name.ValueString()
 
-	// transformprofile := transformprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Named resource - use AddResource.
+	// Only name (and type) are valid for the create operation; the remaining
+	// parameters must be applied through a follow-up update (matches SDK v2).
+	addPayload := transform.Transformprofile{
+		Name: data.Name.ValueString(),
+	}
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
+		addPayload.Type = data.Type.ValueString()
+	}
+	_, err := r.client.AddResource(service.Transformprofile.Type(), transformprofileName, &addPayload)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create transformprofile, got error: %s", err))
+		return
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Transformprofile.Type(), &transformprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create transformprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("transformprofile-config")
+	// Follow-up update to include the parameters that are invalid for create.
+	updatePayload := transformprofileGetThePayloadFromtheConfig(ctx, &data)
+	doUpdate := false
+	if updatePayload.Comment != "" {
+		doUpdate = true
+	}
+	if updatePayload.Onlytransformabsurlinbody != "" {
+		doUpdate = true
+	}
+	if updatePayload.Type != "" {
+		doUpdate = true
+	}
+	if doUpdate {
+		_, err := r.client.UpdateResource(service.Transformprofile.Type(), transformprofileName, &updatePayload)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update transformprofile after create, got error: %s", err))
+			return
+		}
+	}
 
 	tflog.Trace(ctx, "Created transformprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(transformprofileName)
+
 	// Read the updated state back
-	r.readTransformprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTransformprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "transformprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +122,24 @@ func (r *TransformprofileResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading transformprofile resource")
 
-	r.readTransformprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readTransformprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *TransformprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data TransformprofileResourceModel
+	var data, state TransformprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +147,51 @@ func (r *TransformprofileResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating transformprofile resource")
+	transformprofileName := data.Name.ValueString()
 
-	// Create API request body from the model
-	// transformprofile := transformprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Named resource - use UpdateResource for changed attributes only.
+	payload := transform.Transformprofile{
+		Name: data.Name.ValueString(),
+	}
+	hasChange := false
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for transformprofile")
+		payload.Comment = data.Comment.ValueString()
+		hasChange = true
+	}
+	if !data.Onlytransformabsurlinbody.Equal(state.Onlytransformabsurlinbody) {
+		tflog.Debug(ctx, "onlytransformabsurlinbody has changed for transformprofile")
+		payload.Onlytransformabsurlinbody = data.Onlytransformabsurlinbody.ValueString()
+		hasChange = true
+	}
+	if !data.Type.Equal(state.Type) {
+		tflog.Debug(ctx, "type has changed for transformprofile")
+		payload.Type = data.Type.ValueString()
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Transformprofile.Type(), &transformprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update transformprofile, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated transformprofile resource")
+	if hasChange {
+		_, err := r.client.UpdateResource(service.Transformprofile.Type(), transformprofileName, &payload)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update transformprofile, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated transformprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for transformprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readTransformprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTransformprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "transformprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +208,33 @@ func (r *TransformprofileResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleting transformprofile resource")
+	// Named resource - delete using DeleteResource
+	transformprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Transformprofile.Type(), transformprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete transformprofile, got error: %s", err))
+		return
+	}
 
-	// For transformprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted transformprofile resource from state")
+	tflog.Trace(ctx, "Deleted transformprofile resource")
 }
 
 // Helper function to read transformprofile data from API
-func (r *TransformprofileResource) readTransformprofileFromApi(ctx context.Context, data *TransformprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Transformprofile.Type(), "")
+func (r *TransformprofileResource) readTransformprofileFromApi(ctx context.Context, data *TransformprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	transformprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Transformprofile.Type(), transformprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read transformprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	transformprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

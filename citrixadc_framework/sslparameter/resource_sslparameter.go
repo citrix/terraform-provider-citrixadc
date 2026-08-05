@@ -55,16 +55,17 @@ func (r *SslparameterResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating sslparameter resource")
 
-	// sslparameter := sslparameterGetThePayloadFromtheConfig(ctx, &data)
+	sslparameter := sslparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslparameter, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Set ID for the resource before reading state
 	data.Id = types.StringValue("sslparameter-config")
 
 	tflog.Trace(ctx, "Created sslparameter resource")
@@ -95,8 +96,10 @@ func (r *SslparameterResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *SslparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslparameterResourceModel
+	var data, state SslparameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +107,21 @@ func (r *SslparameterResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslparameter resource")
 
 	// Create API request body from the model
-	// sslparameter := sslparameterGetThePayloadFromtheConfig(ctx, &data)
+	sslparameter := sslparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Sslparameter.Type(), &sslparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated sslparameter resource")
 

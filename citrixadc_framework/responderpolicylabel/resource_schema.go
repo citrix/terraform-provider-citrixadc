@@ -2,13 +2,13 @@ package responderpolicylabel
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -33,7 +33,13 @@ func (r *ResponderpolicylabelResource) Schema(ctx context.Context, req resource.
 			},
 			"comment": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				// SDK v2 had comment as Optional+Computed+ForceNew. NITRO has no
+				// server-side default for comment and omits it from the GET response
+				// when empty, so an Optional+Computed attribute the server neither
+				// defaults nor echoes stays UNKNOWN after apply ("still indicated an
+				// unknown value"). Keep Optional-only (unset -> known null; when set it
+				// is echoed by GET and read into state). RequiresReplace preserves the
+				// SDK v2 ForceNew contract.
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -48,18 +54,23 @@ func (r *ResponderpolicylabelResource) Schema(ctx context.Context, req resource.
 			},
 			"newname": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// newname is the rename trigger (NITRO ?action=rename). Changing it must
+				// NOT force replacement - it drives an in-place rename via Update. Not
+				// Computed: it is a pure user input, never echoed back by GET.
 				Description: "New name for the responder policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.",
 			},
 			"policylabeltype": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				// SDK v2 had policylabeltype as Optional+Computed+ForceNew with NO
+				// Default (the auto-gen wrongly added Default("HTTP")). NITRO returns the
+				// value on GET, so keep Optional+Computed. UseStateForUnknown before
+				// RequiresReplace preserves the Computed value across plans instead of
+				// churning it to unknown.
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("HTTP"),
 				Description: "Type of responses sent by the policies bound to this policy label. Types are:\n* HTTP - HTTP responses.\n* OTHERTCP - NON-HTTP TCP responses.\n* SIP_UDP - SIP responses.\n* RADIUS - RADIUS responses.\n* MYSQL - SQL responses in MySQL format.\n* MSSQL - SQL responses in Microsoft SQL format.\n* NAT - NAT response.\n* MQTT - Trigger policies bind with MQTT type.\n* MQTT_JUMBO - Trigger policies bind with MQTT Jumbo type.",
 			},
 		},
@@ -71,16 +82,15 @@ func responderpolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *R
 
 	// Create API request body from the model
 	responderpolicylabel := responder.Responderpolicylabel{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		responderpolicylabel.Comment = data.Comment.ValueString()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		responderpolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		responderpolicylabel.Newname = data.Newname.ValueString()
-	}
-	if !data.Policylabeltype.IsNull() {
+	// newname is a rename-only argument (NITRO ?action=rename). It is NOT part of the
+	// add payload, so it is deliberately excluded from the create POST body.
+	if !data.Policylabeltype.IsNull() && !data.Policylabeltype.IsUnknown() {
 		responderpolicylabel.Policylabeltype = data.Policylabeltype.ValueString()
 	}
 
@@ -90,7 +100,38 @@ func responderpolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *R
 func responderpolicylabelSetAttrFromGet(ctx context.Context, data *ResponderpolicylabelResourceModel, getResponseData map[string]interface{}) *ResponderpolicylabelResourceModel {
 	tflog.Debug(ctx, "In responderpolicylabelSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Pattern 7: NITRO omits "comment" from the GET response when it is empty, so
+	// only overwrite the model value when the field is actually present. Otherwise
+	// preserve the plan/state value to avoid a perpetual diff / nulled user input.
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	}
+	// labelname is the user-facing key. Once a rename has happened (via newname), the
+	// live object name (tracked by data.Id) diverges from the configured labelname,
+	// and GET returns the live (new) name. Overwriting labelname from GET would
+	// clobber the user's configured value and trigger a spurious RequiresReplace
+	// diff. So only adopt the GET value when we don't already have one (e.g. on
+	// import, where state carries only the ID); otherwise preserve.
+	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
+		if val, ok := getResponseData["labelname"]; ok && val != nil {
+			data.Labelname = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve plan/state value.
+	if val, ok := getResponseData["policylabeltype"]; ok && val != nil {
+		data.Policylabeltype = types.StringValue(val.(string))
+	}
+
+	return data
+}
+
+// responderpolicylabelSetAttrFromGetForDatasource faithfully copies every field from
+// the GET response. The datasource has no prior plan/state to preserve, so it must
+// populate the model directly from the API response and set the ID itself.
+func responderpolicylabelSetAttrFromGetForDatasource(ctx context.Context, data *ResponderpolicylabelResourceModel, getResponseData map[string]interface{}) *ResponderpolicylabelResourceModel {
+	tflog.Debug(ctx, "In responderpolicylabelSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
@@ -112,9 +153,8 @@ func responderpolicylabelSetAttrFromGet(ctx context.Context, data *Responderpoli
 		data.Policylabeltype = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Labelname.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
 
 	return data
 }

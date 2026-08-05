@@ -43,7 +43,7 @@ func (d *PolicydatasetDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Single unique attribute - find by name
 	name_Name := data.Name.ValueString()
 
 	var getResponseData map[string]interface{}

@@ -55,16 +55,17 @@ func (r *NstcpparamResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nstcpparam resource")
 
-	// nstcpparam := nstcpparamGetThePayloadFromtheConfig(ctx, &data)
+	nstcpparam := nstcpparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstcpparam.Type(), &nstcpparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstcpparam, got error: %s", err))
-	//	 return
-	// }
+	// nstcpparam is a singleton/unnamed configuration resource (SDK v2 parity:
+	// createNstcpparamFunc called client.UpdateUnnamedResource).
+	err := r.client.UpdateUnnamedResource(service.Nstcpparam.Type(), &nstcpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstcpparam, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Static singleton ID (no unique attributes).
 	data.Id = types.StringValue("nstcpparam-config")
 
 	tflog.Trace(ctx, "Created nstcpparam resource")
@@ -106,19 +107,21 @@ func (r *NstcpparamResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	tflog.Debug(ctx, "Updating nstcpparam resource")
 
-	// Create API request body from the model
-	// nstcpparam := nstcpparamGetThePayloadFromtheConfig(ctx, &data)
+	// All configurable attributes are RequiresReplaceIfConfigured (SDK v2
+	// ForceNew), so a configured change is handled by recreate rather than
+	// Update. This branch still pushes the config to keep computed-value
+	// resolution consistent.
+	nstcpparam := nstcpparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstcpparam.Type(), &nstcpparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstcpparam, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nstcpparam.Type(), &nstcpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstcpparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nstcpparam resource")
 
-	// Read the updated state back
+	// Read the updated state back (data.Id carried over from plan/prior state)
 	r.readNstcpparamFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -137,8 +140,9 @@ func (r *NstcpparamResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting nstcpparam resource")
 
-	// For nstcpparam, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// nstcpparam is a global configuration resource: it cannot actually be
+	// deleted, only reset. Matching SDK v2 deleteNstcpparamFunc, Delete just
+	// removes the reference from Terraform state.
 	tflog.Trace(ctx, "Deleted nstcpparam resource from state")
 }
 
@@ -151,5 +155,4 @@ func (r *NstcpparamResource) readNstcpparamFromApi(ctx context.Context, data *Ns
 	}
 
 	nstcpparamSetAttrFromGet(ctx, data, getResponseData)
-
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *PolicyexpressionResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating policyexpression resource")
 
-	// policyexpression := policyexpressionGetThePayloadFromtheConfig(ctx, &data)
+	policyexpression := policyexpressionGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Policyexpression.Type(), &policyexpression)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create policyexpression, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("policyexpression-config")
+	// Named resource - use AddResource
+	policyexpressionName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Policyexpression.Type(), policyexpressionName, &policyexpression)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create policyexpression, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created policyexpression resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readPolicyexpressionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readPolicyexpressionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "policyexpression not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *PolicyexpressionResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading policyexpression resource")
 
-	r.readPolicyexpressionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readPolicyexpressionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *PolicyexpressionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data PolicyexpressionResourceModel
+	var data, state PolicyexpressionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,47 @@ func (r *PolicyexpressionResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state (name is RequiresReplace, so it never changes here)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating policyexpression resource")
 
-	// Create API request body from the model
-	// policyexpression := policyexpressionGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Clientsecuritymessage.Equal(state.Clientsecuritymessage) {
+		tflog.Debug(ctx, "clientsecuritymessage has changed for policyexpression")
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for policyexpression")
+		hasChange = true
+	}
+	if !data.Value.Equal(state.Value) {
+		tflog.Debug(ctx, "value has changed for policyexpression")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Policyexpression.Type(), &policyexpression)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policyexpression, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated policyexpression resource")
+	if hasChange {
+		policyexpression := policyexpressionGetThePayloadFromtheConfig(ctx, &data)
+		// Named resource - use UpdateResource
+		policyexpressionName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Policyexpression.Type(), policyexpressionName, &policyexpression)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policyexpression, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated policyexpression resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for policyexpression resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readPolicyexpressionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readPolicyexpressionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "policyexpression not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +178,34 @@ func (r *PolicyexpressionResource) Delete(ctx context.Context, req resource.Dele
 
 	tflog.Debug(ctx, "Deleting policyexpression resource")
 
-	// For policyexpression, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted policyexpression resource from state")
+	// Named resource - delete using DeleteResource (keyed by the live name held in the ID)
+	policyexpressionName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Policyexpression.Type(), policyexpressionName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete policyexpression, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted policyexpression resource")
 }
 
-// Helper function to read policyexpression data from API
-func (r *PolicyexpressionResource) readPolicyexpressionFromApi(ctx context.Context, data *PolicyexpressionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Policyexpression.Type(), "")
+// Helper function to read policyexpression data from API. Returns false when the
+// resource no longer exists on the ADC.
+func (r *PolicyexpressionResource) readPolicyexpressionFromApi(ctx context.Context, data *PolicyexpressionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	policyexpressionName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Policyexpression.Type(), policyexpressionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read policyexpression, got error: %s", err))
-		return
+		return false
 	}
 
 	policyexpressionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

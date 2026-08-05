@@ -55,7 +55,7 @@ func (d *Nssimpleacl6DataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	nssimpleacl6SetAttrFromGet(ctx, &data, getResponseData)
+	nssimpleacl6SetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

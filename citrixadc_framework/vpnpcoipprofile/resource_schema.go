@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -38,37 +38,40 @@ func (r *VpnpcoipprofileResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"icvverification": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "ICV verification for PCOIP transport packets.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "name of PCoIP profile",
 			},
 			"sessionidletimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(180),
+				Computed:    true,
 				Description: "PCOIP Idle Session timeout",
 			},
 		},
 	}
 }
 
-func vpnpcoipprofileGetThePayloadFromtheConfig(ctx context.Context, data *VpnpcoipprofileResourceModel) vpn.Vpnpcoipprofile {
-	tflog.Debug(ctx, "In vpnpcoipprofileGetThePayloadFromtheConfig Function")
+func vpnpcoipprofileGetThePayloadFromthePlan(ctx context.Context, data *VpnpcoipprofileResourceModel) vpn.Vpnpcoipprofile {
+	tflog.Debug(ctx, "In vpnpcoipprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnpcoipprofile := vpn.Vpnpcoipprofile{}
-	if !data.Conserverurl.IsNull() {
+	if !data.Conserverurl.IsNull() && !data.Conserverurl.IsUnknown() {
 		vpnpcoipprofile.Conserverurl = data.Conserverurl.ValueString()
 	}
-	if !data.Icvverification.IsNull() {
+	if !data.Icvverification.IsNull() && !data.Icvverification.IsUnknown() {
 		vpnpcoipprofile.Icvverification = data.Icvverification.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnpcoipprofile.Name = data.Name.ValueString()
 	}
-	if !data.Sessionidletimeout.IsNull() {
+	if !data.Sessionidletimeout.IsNull() && !data.Sessionidletimeout.IsUnknown() {
 		vpnpcoipprofile.Sessionidletimeout = utils.IntPtr(int(data.Sessionidletimeout.ValueInt64()))
 	}
 
@@ -78,27 +81,31 @@ func vpnpcoipprofileGetThePayloadFromtheConfig(ctx context.Context, data *Vpnpco
 func vpnpcoipprofileSetAttrFromGet(ctx context.Context, data *VpnpcoipprofileResourceModel, getResponseData map[string]interface{}) *VpnpcoipprofileResourceModel {
 	tflog.Debug(ctx, "In vpnpcoipprofileSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard else-branches with IsUnknown() so a configured value that NITRO omits
+	// from GET (omit-on-default trap) is preserved rather than nulled.
 	if val, ok := getResponseData["conserverurl"]; ok && val != nil {
 		data.Conserverurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Conserverurl.IsUnknown() {
 		data.Conserverurl = types.StringNull()
 	}
 	if val, ok := getResponseData["icvverification"]; ok && val != nil {
 		data.Icvverification = types.StringValue(val.(string))
-	} else {
+	} else if data.Icvverification.IsUnknown() {
 		data.Icvverification = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["sessionidletimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessionidletimeout = types.Int64Value(intVal)
+		} else if data.Sessionidletimeout.IsUnknown() {
+			data.Sessionidletimeout = types.Int64Null()
 		}
-	} else {
+	} else if data.Sessionidletimeout.IsUnknown() {
 		data.Sessionidletimeout = types.Int64Null()
 	}
 

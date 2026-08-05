@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -52,53 +52,48 @@ func (r *SslservicegroupResource) Schema(ctx context.Context, req resource.Schem
 			"ocspstapling": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of OCSP stapling support on the SSL virtual server. Supported only if the protocol used is higher than SSLv3. Possible values:\nENABLED: The appliance sends a request to the OCSP responder to check the status of the server certificate and caches the response for the specified time. If the response is valid at the time of SSL handshake with the client, the OCSP-based server certificate status is sent to the client during the handshake.\nDISABLED: The appliance does not check the status of the server certificate.",
 			},
 			"sendclosenotify": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("True"),
 				Description: "Enable sending SSL Close-Notify at the end of a transaction",
 			},
 			"serverauth": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of server authentication support for the SSL service group.",
 			},
 			"servicegroupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the SSL service group for which to set advanced configuration.",
 			},
 			"sessreuse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "State of session reuse. Establishing the initial handshake requires CPU-intensive public key encryption operations. With the ENABLED setting, session key exchange is avoided for session resumption requests received from the client.",
 			},
 			"sesstimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     int64default.StaticInt64(300),
 				Description: "Time, in seconds, for which to keep the session active. Any session resumption request received after the timeout period will require a fresh SSL handshake and establishment of a new SSL session.",
 			},
 			"snienable": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of the Server Name Indication (SNI) feature on the service. SNI helps to enable SSL encryption on multiple domains on a single virtual server or service if the domains are controlled by the same organization and share the same second-level domain name. For example, *.sports.net can be used to secure domains such as login.sports.net and help.sports.net.",
 			},
 			"ssl3": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "State of SSLv3 protocol support for the SSL service group.\nNote: On platforms with SSL acceleration chips, if the SSL chip does not support SSLv3, this parameter cannot be set to ENABLED.",
 			},
 			"sslclientlogs": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI names, from SSL handshakes to the audit logs.",
 			},
 			"sslprofile": schema.StringAttribute{
@@ -109,98 +104,193 @@ func (r *SslservicegroupResource) Schema(ctx context.Context, req resource.Schem
 			"strictsigdigestcheck": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Parameter indicating to check whether peer's certificate is signed with one of signature-hash combination supported by Citrix ADC",
 			},
 			"tls1": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "State of TLSv1.0 protocol support for the SSL service group.",
 			},
 			"tls11": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "State of TLSv1.1 protocol support for the SSL service group.",
 			},
 			"tls12": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "State of TLSv1.2 protocol support for the SSL service group.",
 			},
 			"tls13": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "State of TLSv1.3 protocol support for the SSL service group.",
 			},
 		},
 	}
 }
 
-func sslservicegroupGetThePayloadFromtheConfig(ctx context.Context, data *SslservicegroupResourceModel) ssl.Sslservicegroup {
-	tflog.Debug(ctx, "In sslservicegroupGetThePayloadFromtheConfig Function")
+func sslservicegroupGetThePayloadFromthePlan(ctx context.Context, data *SslservicegroupResourceModel) ssl.Sslservicegroup {
+	tflog.Debug(ctx, "In sslservicegroupGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	sslservicegroup := ssl.Sslservicegroup{}
-	if !data.Commonname.IsNull() {
+	if !data.Commonname.IsNull() && !data.Commonname.IsUnknown() {
 		sslservicegroup.Commonname = data.Commonname.ValueString()
 	}
-	if !data.Ocspstapling.IsNull() {
+	if !data.Ocspstapling.IsNull() && !data.Ocspstapling.IsUnknown() {
 		sslservicegroup.Ocspstapling = data.Ocspstapling.ValueString()
 	}
-	if !data.Sendclosenotify.IsNull() {
+	if !data.Sendclosenotify.IsNull() && !data.Sendclosenotify.IsUnknown() {
 		sslservicegroup.Sendclosenotify = data.Sendclosenotify.ValueString()
 	}
-	if !data.Serverauth.IsNull() {
+	if !data.Serverauth.IsNull() && !data.Serverauth.IsUnknown() {
 		sslservicegroup.Serverauth = data.Serverauth.ValueString()
 	}
-	if !data.Servicegroupname.IsNull() {
+	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		sslservicegroup.Servicegroupname = data.Servicegroupname.ValueString()
 	}
-	if !data.Sessreuse.IsNull() {
+	if !data.Sessreuse.IsNull() && !data.Sessreuse.IsUnknown() {
 		sslservicegroup.Sessreuse = data.Sessreuse.ValueString()
 	}
-	if !data.Sesstimeout.IsNull() {
+	if !data.Sesstimeout.IsNull() && !data.Sesstimeout.IsUnknown() {
 		sslservicegroup.Sesstimeout = utils.IntPtr(int(data.Sesstimeout.ValueInt64()))
 	}
-	if !data.Snienable.IsNull() {
+	if !data.Snienable.IsNull() && !data.Snienable.IsUnknown() {
 		sslservicegroup.Snienable = data.Snienable.ValueString()
 	}
-	if !data.Ssl3.IsNull() {
+	if !data.Ssl3.IsNull() && !data.Ssl3.IsUnknown() {
 		sslservicegroup.Ssl3 = data.Ssl3.ValueString()
 	}
-	if !data.Sslclientlogs.IsNull() {
+	if !data.Sslclientlogs.IsNull() && !data.Sslclientlogs.IsUnknown() {
 		sslservicegroup.Sslclientlogs = data.Sslclientlogs.ValueString()
 	}
-	if !data.Sslprofile.IsNull() {
+	if !data.Sslprofile.IsNull() && !data.Sslprofile.IsUnknown() {
 		sslservicegroup.Sslprofile = data.Sslprofile.ValueString()
 	}
-	if !data.Strictsigdigestcheck.IsNull() {
+	if !data.Strictsigdigestcheck.IsNull() && !data.Strictsigdigestcheck.IsUnknown() {
 		sslservicegroup.Strictsigdigestcheck = data.Strictsigdigestcheck.ValueString()
 	}
-	if !data.Tls1.IsNull() {
+	if !data.Tls1.IsNull() && !data.Tls1.IsUnknown() {
 		sslservicegroup.Tls1 = data.Tls1.ValueString()
 	}
-	if !data.Tls11.IsNull() {
+	if !data.Tls11.IsNull() && !data.Tls11.IsUnknown() {
 		sslservicegroup.Tls11 = data.Tls11.ValueString()
 	}
-	if !data.Tls12.IsNull() {
+	if !data.Tls12.IsNull() && !data.Tls12.IsUnknown() {
 		sslservicegroup.Tls12 = data.Tls12.ValueString()
 	}
-	if !data.Tls13.IsNull() {
+	if !data.Tls13.IsNull() && !data.Tls13.IsUnknown() {
 		sslservicegroup.Tls13 = data.Tls13.ValueString()
 	}
 
 	return sslservicegroup
 }
 
+// sslservicegroupSetAttrFromGet updates the resource model from a NITRO GET
+// response. Guarded else-branches only null a value that is still unknown so a
+// known/configured value that NITRO omits on GET is never clobbered
+// (omit-on-default trap).
 func sslservicegroupSetAttrFromGet(ctx context.Context, data *SslservicegroupResourceModel, getResponseData map[string]interface{}) *SslservicegroupResourceModel {
 	tflog.Debug(ctx, "In sslservicegroupSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["commonname"]; ok && val != nil {
+		data.Commonname = types.StringValue(val.(string))
+	} else if data.Commonname.IsUnknown() {
+		data.Commonname = types.StringNull()
+	}
+	if val, ok := getResponseData["ocspstapling"]; ok && val != nil {
+		data.Ocspstapling = types.StringValue(val.(string))
+	} else if data.Ocspstapling.IsUnknown() {
+		data.Ocspstapling = types.StringNull()
+	}
+	if val, ok := getResponseData["sendclosenotify"]; ok && val != nil {
+		data.Sendclosenotify = types.StringValue(val.(string))
+	} else if data.Sendclosenotify.IsUnknown() {
+		data.Sendclosenotify = types.StringNull()
+	}
+	if val, ok := getResponseData["serverauth"]; ok && val != nil {
+		data.Serverauth = types.StringValue(val.(string))
+	} else if data.Serverauth.IsUnknown() {
+		data.Serverauth = types.StringNull()
+	}
+	if val, ok := getResponseData["servicegroupname"]; ok && val != nil {
+		data.Servicegroupname = types.StringValue(val.(string))
+	} else if data.Servicegroupname.IsUnknown() {
+		data.Servicegroupname = types.StringNull()
+	}
+	if val, ok := getResponseData["sessreuse"]; ok && val != nil {
+		data.Sessreuse = types.StringValue(val.(string))
+	} else if data.Sessreuse.IsUnknown() {
+		data.Sessreuse = types.StringNull()
+	}
+	if val, ok := getResponseData["sesstimeout"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Sesstimeout = types.Int64Value(intVal)
+		}
+	} else if data.Sesstimeout.IsUnknown() {
+		data.Sesstimeout = types.Int64Null()
+	}
+	if val, ok := getResponseData["snienable"]; ok && val != nil {
+		data.Snienable = types.StringValue(val.(string))
+	} else if data.Snienable.IsUnknown() {
+		data.Snienable = types.StringNull()
+	}
+	if val, ok := getResponseData["ssl3"]; ok && val != nil {
+		data.Ssl3 = types.StringValue(val.(string))
+	} else if data.Ssl3.IsUnknown() {
+		data.Ssl3 = types.StringNull()
+	}
+	if val, ok := getResponseData["sslclientlogs"]; ok && val != nil {
+		data.Sslclientlogs = types.StringValue(val.(string))
+	} else if data.Sslclientlogs.IsUnknown() {
+		data.Sslclientlogs = types.StringNull()
+	}
+	if val, ok := getResponseData["sslprofile"]; ok && val != nil {
+		data.Sslprofile = types.StringValue(val.(string))
+	} else if data.Sslprofile.IsUnknown() {
+		data.Sslprofile = types.StringNull()
+	}
+	if val, ok := getResponseData["strictsigdigestcheck"]; ok && val != nil {
+		data.Strictsigdigestcheck = types.StringValue(val.(string))
+	} else if data.Strictsigdigestcheck.IsUnknown() {
+		data.Strictsigdigestcheck = types.StringNull()
+	}
+	if val, ok := getResponseData["tls1"]; ok && val != nil {
+		data.Tls1 = types.StringValue(val.(string))
+	} else if data.Tls1.IsUnknown() {
+		data.Tls1 = types.StringNull()
+	}
+	if val, ok := getResponseData["tls11"]; ok && val != nil {
+		data.Tls11 = types.StringValue(val.(string))
+	} else if data.Tls11.IsUnknown() {
+		data.Tls11 = types.StringNull()
+	}
+	if val, ok := getResponseData["tls12"]; ok && val != nil {
+		data.Tls12 = types.StringValue(val.(string))
+	} else if data.Tls12.IsUnknown() {
+		data.Tls12 = types.StringNull()
+	}
+	if val, ok := getResponseData["tls13"]; ok && val != nil {
+		data.Tls13 = types.StringValue(val.(string))
+	} else if data.Tls13.IsUnknown() {
+		data.Tls13 = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID (matches SDK v2)
+	data.Id = types.StringValue(data.Servicegroupname.ValueString())
+
+	return data
+}
+
+// sslservicegroupSetAttrFromGetForDatasource populates the shared model for the
+// datasource. Unlike the resource setter it copies every value straight from the
+// GET response (a datasource has no prior state to preserve) and sets the ID.
+func sslservicegroupSetAttrFromGetForDatasource(ctx context.Context, data *SslservicegroupResourceModel, getResponseData map[string]interface{}) *SslservicegroupResourceModel {
+	tflog.Debug(ctx, "In sslservicegroupSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["commonname"]; ok && val != nil {
 		data.Commonname = types.StringValue(val.(string))
 	} else {
@@ -284,8 +374,7 @@ func sslservicegroupSetAttrFromGet(ctx context.Context, data *SslservicegroupRes
 		data.Tls13 = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the datasource
 	data.Id = types.StringValue(data.Servicegroupname.ValueString())
 
 	return data

@@ -7,7 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -50,7 +51,7 @@ func (r *TmsessionactionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"httponlycookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Allow only an HTTP session cookie, in which case the cookie cannot be accessed by scripts.",
 			},
 			"kcdaccount": schema.StringAttribute{
@@ -59,7 +60,10 @@ func (r *TmsessionactionResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Kerberos constrained delegation account name",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the session action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after a session action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"persistentcookie": schema.StringAttribute{
@@ -101,37 +105,37 @@ func tmsessionactionGetThePayloadFromtheConfig(ctx context.Context, data *Tmsess
 
 	// Create API request body from the model
 	tmsessionaction := tm.Tmsessionaction{}
-	if !data.Defaultauthorizationaction.IsNull() {
+	if !data.Defaultauthorizationaction.IsNull() && !data.Defaultauthorizationaction.IsUnknown() {
 		tmsessionaction.Defaultauthorizationaction = data.Defaultauthorizationaction.ValueString()
 	}
-	if !data.Homepage.IsNull() {
+	if !data.Homepage.IsNull() && !data.Homepage.IsUnknown() {
 		tmsessionaction.Homepage = data.Homepage.ValueString()
 	}
-	if !data.Httponlycookie.IsNull() {
+	if !data.Httponlycookie.IsNull() && !data.Httponlycookie.IsUnknown() {
 		tmsessionaction.Httponlycookie = data.Httponlycookie.ValueString()
 	}
-	if !data.Kcdaccount.IsNull() {
+	if !data.Kcdaccount.IsNull() && !data.Kcdaccount.IsUnknown() {
 		tmsessionaction.Kcdaccount = data.Kcdaccount.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		tmsessionaction.Name = data.Name.ValueString()
 	}
-	if !data.Persistentcookie.IsNull() {
+	if !data.Persistentcookie.IsNull() && !data.Persistentcookie.IsUnknown() {
 		tmsessionaction.Persistentcookie = data.Persistentcookie.ValueString()
 	}
-	if !data.Persistentcookievalidity.IsNull() {
+	if !data.Persistentcookievalidity.IsNull() && !data.Persistentcookievalidity.IsUnknown() {
 		tmsessionaction.Persistentcookievalidity = utils.IntPtr(int(data.Persistentcookievalidity.ValueInt64()))
 	}
-	if !data.Sesstimeout.IsNull() {
+	if !data.Sesstimeout.IsNull() && !data.Sesstimeout.IsUnknown() {
 		tmsessionaction.Sesstimeout = utils.IntPtr(int(data.Sesstimeout.ValueInt64()))
 	}
-	if !data.Sso.IsNull() {
+	if !data.Sso.IsNull() && !data.Sso.IsUnknown() {
 		tmsessionaction.Sso = data.Sso.ValueString()
 	}
-	if !data.Ssocredential.IsNull() {
+	if !data.Ssocredential.IsNull() && !data.Ssocredential.IsUnknown() {
 		tmsessionaction.Ssocredential = data.Ssocredential.ValueString()
 	}
-	if !data.Ssodomain.IsNull() {
+	if !data.Ssodomain.IsNull() && !data.Ssodomain.IsUnknown() {
 		tmsessionaction.Ssodomain = data.Ssodomain.ValueString()
 	}
 
@@ -141,64 +145,69 @@ func tmsessionactionGetThePayloadFromtheConfig(ctx context.Context, data *Tmsess
 func tmsessionactionSetAttrFromGet(ctx context.Context, data *TmsessionactionResourceModel, getResponseData map[string]interface{}) *TmsessionactionResourceModel {
 	tflog.Debug(ctx, "In tmsessionactionSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE (omit-on-default guard): when NITRO omits a field from the GET response,
+	// only reset the model field to null if it is currently Unknown (i.e. a Computed
+	// value that must be resolved at apply time). Never clobber a known/configured
+	// value that NITRO simply does not echo back (e.g. a 0/false/default value),
+	// which would otherwise cause an "inconsistent result after apply" error.
 	if val, ok := getResponseData["defaultauthorizationaction"]; ok && val != nil {
 		data.Defaultauthorizationaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthorizationaction.IsUnknown() {
 		data.Defaultauthorizationaction = types.StringNull()
 	}
 	if val, ok := getResponseData["homepage"]; ok && val != nil {
 		data.Homepage = types.StringValue(val.(string))
-	} else {
+	} else if data.Homepage.IsUnknown() {
 		data.Homepage = types.StringNull()
 	}
 	if val, ok := getResponseData["httponlycookie"]; ok && val != nil {
 		data.Httponlycookie = types.StringValue(val.(string))
-	} else {
+	} else if data.Httponlycookie.IsUnknown() {
 		data.Httponlycookie = types.StringNull()
 	}
 	if val, ok := getResponseData["kcdaccount"]; ok && val != nil {
 		data.Kcdaccount = types.StringValue(val.(string))
-	} else {
+	} else if data.Kcdaccount.IsUnknown() {
 		data.Kcdaccount = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["persistentcookie"]; ok && val != nil {
 		data.Persistentcookie = types.StringValue(val.(string))
-	} else {
+	} else if data.Persistentcookie.IsUnknown() {
 		data.Persistentcookie = types.StringNull()
 	}
 	if val, ok := getResponseData["persistentcookievalidity"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Persistentcookievalidity = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Persistentcookievalidity.IsUnknown() {
 		data.Persistentcookievalidity = types.Int64Null()
 	}
 	if val, ok := getResponseData["sesstimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sesstimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sesstimeout.IsUnknown() {
 		data.Sesstimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["sso"]; ok && val != nil {
 		data.Sso = types.StringValue(val.(string))
-	} else {
+	} else if data.Sso.IsUnknown() {
 		data.Sso = types.StringNull()
 	}
 	if val, ok := getResponseData["ssocredential"]; ok && val != nil {
 		data.Ssocredential = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssocredential.IsUnknown() {
 		data.Ssocredential = types.StringNull()
 	}
 	if val, ok := getResponseData["ssodomain"]; ok && val != nil {
 		data.Ssodomain = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssodomain.IsUnknown() {
 		data.Ssodomain = types.StringNull()
 	}
 

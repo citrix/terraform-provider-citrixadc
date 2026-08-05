@@ -43,19 +43,17 @@ func (d *NsdiameterDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	// Case 2: Find with single ID attribute
-	ownernode_Name := fmt.Sprintf("%d", data.Ownernode.ValueInt64())
-
+	// nsdiameter is a singleton - read the single global configuration.
 	var getResponseData map[string]interface{}
 	var err error
 
-	getResponseData, err = d.client.FindResource(service.Nsdiameter.Type(), ownernode_Name)
+	getResponseData, err = d.client.FindResource(service.Nsdiameter.Type(), "")
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read nsdiameter, got error: %s", err))
 		return
 	}
 
-	nsdiameterSetAttrFromGet(ctx, &data, getResponseData)
+	nsdiameterSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

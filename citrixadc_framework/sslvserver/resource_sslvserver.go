@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *SslvserverResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating sslvserver resource")
 
-	// sslvserver := sslvserverGetThePayloadFromtheConfig(ctx, &data)
+	// An sslvserver is not created directly; it represents advanced SSL settings on an
+	// already-existing SSL virtual server. Mirror SDK v2 behaviour and configure it via
+	// UpdateResource keyed on vservername (there is no AddResource for sslvserver).
+	sslvserver := sslvserverGetThePayloadFromtheConfig(ctx, &data)
+	sslvserverName := data.Vservername.ValueString()
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslvserver.Type(), &sslvserver)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslvserver, got error: %s", err))
-	//	 return
-	// }
+	_, err := r.client.UpdateResource(service.Sslvserver.Type(), sslvserverName, &sslvserver)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslvserver, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslvserver-config")
+	// ID is the vservername (single unique attribute).
+	data.Id = types.StringValue(sslvserverName)
 
 	tflog.Trace(ctx, "Created sslvserver resource")
 
 	// Read the updated state back
-	r.readSslvserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslvserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslvserver not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *SslvserverResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading sslvserver resource")
 
-	r.readSslvserverFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslvserverFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslvserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslvserverResourceModel
+	var data, state SslvserverResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,31 @@ func (r *SslvserverResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslvserver resource")
 
-	// Create API request body from the model
-	// sslvserver := sslvserverGetThePayloadFromtheConfig(ctx, &data)
+	// All attributes except vservername (RequiresReplace) are updateable. Push the full
+	// configured payload via UpdateResource, matching SDK v2 semantics.
+	sslvserver := sslvserverGetThePayloadFromtheConfig(ctx, &data)
+	sslvserverName := data.Vservername.ValueString()
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslvserver.Type(), &sslvserver)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslvserver, got error: %s", err))
-	//	 return
-	// }
+	_, err := r.client.UpdateResource(service.Sslvserver.Type(), sslvserverName, &sslvserver)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslvserver, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated sslvserver resource")
 
 	// Read the updated state back
-	r.readSslvserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslvserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslvserver not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +164,46 @@ func (r *SslvserverResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting sslvserver resource")
 
-	// For sslvserver, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// sslvserver has no DELETE operation. Mirror SDK v2 behaviour: if the sslprofile was
+	// not managed by this resource, unset it so a bound sslprofile can subsequently be
+	// deleted. The resource is then simply removed from Terraform state.
+	if data.Sslprofile.IsNull() || data.Sslprofile.IsUnknown() || data.Sslprofile.ValueString() == "" {
+		sslvserverName := data.Vservername.ValueString()
+		if sslvserverName == "" {
+			sslvserverName = data.Id.ValueString()
+		}
+		unsetPayload := map[string]interface{}{
+			"vservername": sslvserverName,
+			"sslprofile":  true,
+		}
+		if err := r.client.ActOnResource(service.Sslvserver.Type(), unsetPayload, "unset"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslprofile for sslvserver, got error: %s", err))
+			return
+		}
+	}
+
 	tflog.Trace(ctx, "Deleted sslvserver resource from state")
 }
 
-// Helper function to read sslvserver data from API
-func (r *SslvserverResource) readSslvserverFromApi(ctx context.Context, data *SslvserverResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslvserver.Type(), "")
+// Helper function to read sslvserver data from API. Returns false if the sslvserver no
+// longer exists on the ADC (so the caller can remove it from state).
+func (r *SslvserverResource) readSslvserverFromApi(ctx context.Context, data *SslvserverResourceModel, diags *diag.Diagnostics) bool {
+	// ID is the plain vservername value.
+	sslvserverName := data.Vservername.ValueString()
+	if sslvserverName == "" {
+		sslvserverName = data.Id.ValueString()
+	}
+
+	getResponseData, err := r.client.FindResource(service.Sslvserver.Type(), sslvserverName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslvserver, got error: %s", err))
-		return
+		return false
 	}
 
 	sslvserverSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

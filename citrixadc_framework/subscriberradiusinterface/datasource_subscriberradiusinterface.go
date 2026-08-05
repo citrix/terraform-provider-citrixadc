@@ -53,7 +53,7 @@ func (d *SubscriberradiusinterfaceDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	subscriberradiusinterfaceSetAttrFromGet(ctx, &data, getResponseData)
+	subscriberradiusinterfaceSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

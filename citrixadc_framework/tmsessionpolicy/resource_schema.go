@@ -2,11 +2,14 @@ package tmsessionpolicy
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/tm"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -32,7 +35,11 @@ func (r *TmsessionpolicyResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Action to be applied to connections that match this policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 ForceNew: true -> name cannot be changed after creation
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the session policy. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Cannot be changed after a session policy is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my policy\" or 'my policy').",
 			},
 			"rule": schema.StringAttribute{
@@ -43,18 +50,18 @@ func (r *TmsessionpolicyResource) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func tmsessionpolicyGetThePayloadFromtheConfig(ctx context.Context, data *TmsessionpolicyResourceModel) tm.Tmsessionpolicy {
-	tflog.Debug(ctx, "In tmsessionpolicyGetThePayloadFromtheConfig Function")
+func tmsessionpolicyGetThePayloadFromthePlan(ctx context.Context, data *TmsessionpolicyResourceModel) tm.Tmsessionpolicy {
+	tflog.Debug(ctx, "In tmsessionpolicyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	tmsessionpolicy := tm.Tmsessionpolicy{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		tmsessionpolicy.Action = data.Action.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		tmsessionpolicy.Name = data.Name.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		tmsessionpolicy.Rule = data.Rule.ValueString()
 	}
 
@@ -82,8 +89,8 @@ func tmsessionpolicySetAttrFromGet(ctx context.Context, data *TmsessionpolicyRes
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

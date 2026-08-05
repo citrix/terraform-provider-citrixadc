@@ -55,16 +55,17 @@ func (r *NsratecontrolResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating nsratecontrol resource")
 
-	// nsratecontrol := nsratecontrolGetThePayloadFromtheConfig(ctx, &data)
+	nsratecontrol := nsratecontrolGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsratecontrol, got error: %s", err))
-	//	 return
-	// }
+	// Make API call. nsratecontrol is a singleton (unnamed) configuration resource,
+	// so it is configured via UpdateUnnamedResource (matches SDK v2 behavior).
+	err := r.client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsratecontrol, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Static ID for this singleton configuration resource
 	data.Id = types.StringValue("nsratecontrol-config")
 
 	tflog.Trace(ctx, "Created nsratecontrol resource")
@@ -106,15 +107,18 @@ func (r *NsratecontrolResource) Update(ctx context.Context, req resource.UpdateR
 
 	tflog.Debug(ctx, "Updating nsratecontrol resource")
 
-	// Create API request body from the model
-	// nsratecontrol := nsratecontrolGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve ID from prior state
+	data.Id = types.StringValue("nsratecontrol-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsratecontrol, got error: %s", err))
-	//	 return
-	// }
+	// Create API request body from the model
+	nsratecontrol := nsratecontrolGetThePayloadFromtheConfig(ctx, &data)
+
+	// Make API call (singleton resource -> UpdateUnnamedResource)
+	err := r.client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsratecontrol, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nsratecontrol resource")
 

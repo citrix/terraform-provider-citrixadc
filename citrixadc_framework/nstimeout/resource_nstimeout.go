@@ -44,10 +44,12 @@ func (r *NstimeoutResource) Configure(ctx context.Context, req resource.Configur
 }
 
 func (r *NstimeoutResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data NstimeoutResourceModel
+	var data, config NstimeoutResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to build the payload only from user-configured values (matches SDK v2 GetRawConfig)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -55,14 +57,15 @@ func (r *NstimeoutResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating nstimeout resource")
 
-	// nstimeout := nstimeoutGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the config (unconfigured attributes are null and skipped)
+	nstimeout := nstimeoutGetThePayloadFromtheConfig(ctx, &config)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstimeout, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - nstimeout is a singleton, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstimeout, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nstimeout-config")
@@ -95,10 +98,12 @@ func (r *NstimeoutResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *NstimeoutResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NstimeoutResourceModel
+	var data, config NstimeoutResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to build the payload only from user-configured values (matches SDK v2 GetRawConfig)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,15 +111,15 @@ func (r *NstimeoutResource) Update(ctx context.Context, req resource.UpdateReque
 
 	tflog.Debug(ctx, "Updating nstimeout resource")
 
-	// Create API request body from the model
-	// nstimeout := nstimeoutGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the config (unconfigured attributes are null and skipped)
+	nstimeout := nstimeoutGetThePayloadFromtheConfig(ctx, &config)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstimeout, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - nstimeout is a singleton, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstimeout, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nstimeout resource")
 

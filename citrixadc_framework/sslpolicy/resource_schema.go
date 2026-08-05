@@ -43,15 +43,19 @@ func (r *SslpolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Any comments associated with this policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 had ForceNew:true on name (cannot be changed after creation).
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new SSL policy. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.  Cannot be changed after the policy is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my policy\" or 'my policy').",
 			},
 			"reqaction": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// SDK v2 did NOT set ForceNew on reqaction, so no RequiresReplace here
+				// (auto-gen wrongly added it). reqaction is write-on-create only: NITRO
+				// neither returns it in GET nor accepts it in update.
 				Description: "The name of the action to be performed on the request. Refer to 'add ssl action' command to add a new action. Builtin actions like NOOP, RESET, DROP, CLIENTAUTH and NOCLIENTAUTH are also allowed.",
 			},
 			"rule": schema.StringAttribute{
@@ -67,37 +71,106 @@ func (r *SslpolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func sslpolicyGetThePayloadFromtheConfig(ctx context.Context, data *SslpolicyResourceModel) ssl.Sslpolicy {
-	tflog.Debug(ctx, "In sslpolicyGetThePayloadFromtheConfig Function")
+// sslpolicyGetThePayloadFromthePlan builds the full add payload (create).
+func sslpolicyGetThePayloadFromthePlan(ctx context.Context, data *SslpolicyResourceModel) ssl.Sslpolicy {
+	tflog.Debug(ctx, "In sslpolicyGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	sslpolicy := ssl.Sslpolicy{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		sslpolicy.Action = data.Action.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		sslpolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		sslpolicy.Name = data.Name.ValueString()
 	}
-	if !data.Reqaction.IsNull() {
+	if !data.Reqaction.IsNull() && !data.Reqaction.IsUnknown() {
 		sslpolicy.Reqaction = data.Reqaction.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		sslpolicy.Rule = data.Rule.ValueString()
 	}
-	if !data.Undefaction.IsNull() {
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		sslpolicy.Undefaction = data.Undefaction.ValueString()
 	}
 
 	return sslpolicy
 }
 
+// sslpolicyGetTheUpdatablePayloadFromThePlan builds the update (PUT) payload.
+// Per the NITRO doc, the sslpolicy update payload accepts name, rule, action,
+// undefaction and comment ONLY - reqaction is not settable via update, so it is
+// excluded here.
+func sslpolicyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *SslpolicyResourceModel) ssl.Sslpolicy {
+	tflog.Debug(ctx, "In sslpolicyGetTheUpdatablePayloadFromThePlan Function")
+
+	sslpolicy := ssl.Sslpolicy{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		sslpolicy.Name = data.Name.ValueString()
+	}
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
+		sslpolicy.Action = data.Action.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		sslpolicy.Comment = data.Comment.ValueString()
+	}
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
+		sslpolicy.Rule = data.Rule.ValueString()
+	}
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
+		sslpolicy.Undefaction = data.Undefaction.ValueString()
+	}
+	// reqaction intentionally excluded - not accepted by NITRO update.
+
+	return sslpolicy
+}
+
+// sslpolicySetAttrFromGet updates the resource state from a GET response.
+// Else-branches only null values that are still unknown so a configured value
+// that NITRO omits from GET is never clobbered (omit-on-default guard).
 func sslpolicySetAttrFromGet(ctx context.Context, data *SslpolicyResourceModel, getResponseData map[string]interface{}) *SslpolicyResourceModel {
 	tflog.Debug(ctx, "In sslpolicySetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["action"]; ok && val != nil {
+		data.Action = types.StringValue(val.(string))
+	} else if data.Action.IsUnknown() {
+		data.Action = types.StringNull()
+	}
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+	// reqaction is never returned by NITRO GET; preserve the configured/prior
+	// value and only resolve an unknown (Computed, unconfigured) to null.
+	if data.Reqaction.IsUnknown() {
+		data.Reqaction = types.StringNull()
+	}
+	if val, ok := getResponseData["rule"]; ok && val != nil {
+		data.Rule = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["undefaction"]; ok && val != nil {
+		data.Undefaction = types.StringValue(val.(string))
+	} else if data.Undefaction.IsUnknown() {
+		data.Undefaction = types.StringNull()
+	}
+
+	// Set ID for the resource - single unique attribute (name) as plain value.
+	data.Id = types.StringValue(data.Name.ValueString())
+
+	return data
+}
+
+// sslpolicySetAttrFromGetForDatasource copies every value returned by the GET
+// response into the model and sets the ID. Used by the datasource, which has no
+// prior configured state to preserve.
+func sslpolicySetAttrFromGetForDatasource(ctx context.Context, data *SslpolicyResourceModel, getResponseData map[string]interface{}) *SslpolicyResourceModel {
+	tflog.Debug(ctx, "In sslpolicySetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
 	} else {
@@ -113,6 +186,7 @@ func sslpolicySetAttrFromGet(ctx context.Context, data *SslpolicyResourceModel, 
 	} else {
 		data.Name = types.StringNull()
 	}
+	// reqaction is not returned by NITRO GET.
 	if val, ok := getResponseData["reqaction"]; ok && val != nil {
 		data.Reqaction = types.StringValue(val.(string))
 	} else {
@@ -129,8 +203,6 @@ func sslpolicySetAttrFromGet(ctx context.Context, data *SslpolicyResourceModel, 
 		data.Undefaction = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

@@ -1,0 +1,15 @@
+# Resource        : subscribergxinterface
+# Primary ADC     : 157
+# Alternate ADCs  : 121, 152
+# Planned tests   : 2
+# Result          : PASS_first=0 PASS_alt=0 FAILED=1 SKIPPED=1
+
+## PASS (on primary ADC 157)
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+  FAIL  TestAccSubscribergxinterfaceDataSource_basic  :: Error: Provider returned invalid result object after apply   [tried: 157, 121, 152]
+
+## SKIPPED
+  SKIP  TestAccSubscribergxinterface_basic  :: TODO: Need to find a way to test this resource!

@@ -55,7 +55,7 @@ func (d *SsldtlsprofileDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	ssldtlsprofileSetAttrFromGet(ctx, &data, getResponseData)
+	ssldtlsprofileSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

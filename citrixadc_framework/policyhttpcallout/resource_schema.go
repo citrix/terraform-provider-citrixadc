@@ -2,11 +2,14 @@ package policyhttpcallout
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/policy"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -84,7 +87,10 @@ func (r *PolicyhttpcalloutResource) Schema(ctx context.Context, req resource.Sch
 				Description: "IP Address of the server (callout agent) to which the callout is sent. Can be an IPv4 or IPv6 address.\nMutually exclusive with the Virtual Server parameter. Therefore, you cannot set the <IP Address, Port> and the Virtual Server in the same HTTP callout.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the HTTP callout. Not case sensitive. Must begin with an ASCII letter or underscore (_) character, and must consist only of ASCII alphanumeric or underscore characters. Must not begin with 're' or 'xp' or be a word reserved for use as an expression qualifier prefix (such as HTTP) or enumeration value (such as ASCII). Must not be the name of an existing named expression, pattern set, dataset, stringmap, or HTTP callout.",
 			},
 			"parameters": schema.ListAttribute{
@@ -104,8 +110,16 @@ func (r *PolicyhttpcalloutResource) Schema(ctx context.Context, req resource.Sch
 				Description: "Expression that extracts the callout results from the response sent by the HTTP callout agent. Must be a response based expression, that is, it must begin with HTTP.RES. The operations in this expression must match the return type. For example, if you configure a return type of TEXT, the result expression must be a text based expression. If the return type is NUM, the result expression (resultExpr) must return a numeric value, as in the following example: http.res.body(10000).length.",
 			},
 			"returntype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// SDK v2 marked returntype ForceNew, and NITRO documents "You cannot
+				// change the return type after it is set." Keep Optional+Computed (the
+				// ADC echoes a returntype on GET) but force replacement when the user
+				// changes a configured value, mirroring the legacy ForceNew contract.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
 				Description: "Type of data that the target callout agent returns in response to the callout. \nAvailable settings function as follows:\n* TEXT - Treat the returned value as a text string. \n* NUM - Treat the returned value as a number.\n* BOOL - Treat the returned value as a Boolean value. \nNote: You cannot change the return type after it is set.",
 			},
 			"scheme": schema.StringAttribute{
@@ -127,51 +141,124 @@ func (r *PolicyhttpcalloutResource) Schema(ctx context.Context, req resource.Sch
 	}
 }
 
-func policyhttpcalloutGetThePayloadFromtheConfig(ctx context.Context, data *PolicyhttpcalloutResourceModel) policy.Policyhttpcallout {
-	tflog.Debug(ctx, "In policyhttpcalloutGetThePayloadFromtheConfig Function")
+// policyhttpcalloutGetThePayloadFromthePlan builds the full create payload (all
+// configured attributes, including the ForceNew name and returntype).
+func policyhttpcalloutGetThePayloadFromthePlan(ctx context.Context, data *PolicyhttpcalloutResourceModel) policy.Policyhttpcallout {
+	tflog.Debug(ctx, "In policyhttpcalloutGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	policyhttpcallout := policy.Policyhttpcallout{}
-	if !data.Bodyexpr.IsNull() {
+	if !data.Bodyexpr.IsNull() && !data.Bodyexpr.IsUnknown() {
 		policyhttpcallout.Bodyexpr = data.Bodyexpr.ValueString()
 	}
-	if !data.Cacheforsecs.IsNull() {
+	if !data.Cacheforsecs.IsNull() && !data.Cacheforsecs.IsUnknown() {
 		policyhttpcallout.Cacheforsecs = utils.IntPtr(int(data.Cacheforsecs.ValueInt64()))
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		policyhttpcallout.Comment = data.Comment.ValueString()
 	}
-	if !data.Fullreqexpr.IsNull() {
+	if !data.Fullreqexpr.IsNull() && !data.Fullreqexpr.IsUnknown() {
 		policyhttpcallout.Fullreqexpr = data.Fullreqexpr.ValueString()
 	}
-	if !data.Hostexpr.IsNull() {
+	if !data.Headers.IsNull() && !data.Headers.IsUnknown() {
+		var headersList []string
+		data.Headers.ElementsAs(ctx, &headersList, false)
+		policyhttpcallout.Headers = headersList
+	}
+	if !data.Hostexpr.IsNull() && !data.Hostexpr.IsUnknown() {
 		policyhttpcallout.Hostexpr = data.Hostexpr.ValueString()
 	}
-	if !data.Httpmethod.IsNull() {
+	if !data.Httpmethod.IsNull() && !data.Httpmethod.IsUnknown() {
 		policyhttpcallout.Httpmethod = data.Httpmethod.ValueString()
 	}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		policyhttpcallout.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		policyhttpcallout.Name = data.Name.ValueString()
 	}
-	if !data.Port.IsNull() {
+	if !data.Parameters.IsNull() && !data.Parameters.IsUnknown() {
+		var parametersList []string
+		data.Parameters.ElementsAs(ctx, &parametersList, false)
+		policyhttpcallout.Parameters = parametersList
+	}
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		policyhttpcallout.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Resultexpr.IsNull() {
+	if !data.Resultexpr.IsNull() && !data.Resultexpr.IsUnknown() {
 		policyhttpcallout.Resultexpr = data.Resultexpr.ValueString()
 	}
-	if !data.Returntype.IsNull() {
+	if !data.Returntype.IsNull() && !data.Returntype.IsUnknown() {
 		policyhttpcallout.Returntype = data.Returntype.ValueString()
 	}
-	if !data.Scheme.IsNull() {
+	if !data.Scheme.IsNull() && !data.Scheme.IsUnknown() {
 		policyhttpcallout.Scheme = data.Scheme.ValueString()
 	}
-	if !data.Urlstemexpr.IsNull() {
+	if !data.Urlstemexpr.IsNull() && !data.Urlstemexpr.IsUnknown() {
 		policyhttpcallout.Urlstemexpr = data.Urlstemexpr.ValueString()
 	}
-	if !data.Vserver.IsNull() {
+	if !data.Vserver.IsNull() && !data.Vserver.IsUnknown() {
+		policyhttpcallout.Vserver = data.Vserver.ValueString()
+	}
+
+	return policyhttpcallout
+}
+
+// policyhttpcalloutGetTheUpdatablePayloadFromThePlan builds the update payload,
+// restricted to NITRO-updatable fields. name and returntype are excluded because
+// they are ForceNew/RequiresReplace and never reach Update.
+func policyhttpcalloutGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *PolicyhttpcalloutResourceModel) policy.Policyhttpcallout {
+	tflog.Debug(ctx, "In policyhttpcalloutGetTheUpdatablePayloadFromThePlan Function")
+
+	policyhttpcallout := policy.Policyhttpcallout{}
+	// name is the key attribute (ForceNew) - required by NITRO for the update body.
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		policyhttpcallout.Name = data.Name.ValueString()
+	}
+	if !data.Bodyexpr.IsNull() && !data.Bodyexpr.IsUnknown() {
+		policyhttpcallout.Bodyexpr = data.Bodyexpr.ValueString()
+	}
+	if !data.Cacheforsecs.IsNull() && !data.Cacheforsecs.IsUnknown() {
+		policyhttpcallout.Cacheforsecs = utils.IntPtr(int(data.Cacheforsecs.ValueInt64()))
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		policyhttpcallout.Comment = data.Comment.ValueString()
+	}
+	if !data.Fullreqexpr.IsNull() && !data.Fullreqexpr.IsUnknown() {
+		policyhttpcallout.Fullreqexpr = data.Fullreqexpr.ValueString()
+	}
+	if !data.Headers.IsNull() && !data.Headers.IsUnknown() {
+		var headersList []string
+		data.Headers.ElementsAs(ctx, &headersList, false)
+		policyhttpcallout.Headers = headersList
+	}
+	if !data.Hostexpr.IsNull() && !data.Hostexpr.IsUnknown() {
+		policyhttpcallout.Hostexpr = data.Hostexpr.ValueString()
+	}
+	if !data.Httpmethod.IsNull() && !data.Httpmethod.IsUnknown() {
+		policyhttpcallout.Httpmethod = data.Httpmethod.ValueString()
+	}
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
+		policyhttpcallout.Ipaddress = data.Ipaddress.ValueString()
+	}
+	if !data.Parameters.IsNull() && !data.Parameters.IsUnknown() {
+		var parametersList []string
+		data.Parameters.ElementsAs(ctx, &parametersList, false)
+		policyhttpcallout.Parameters = parametersList
+	}
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		policyhttpcallout.Port = utils.IntPtr(int(data.Port.ValueInt64()))
+	}
+	if !data.Resultexpr.IsNull() && !data.Resultexpr.IsUnknown() {
+		policyhttpcallout.Resultexpr = data.Resultexpr.ValueString()
+	}
+	if !data.Scheme.IsNull() && !data.Scheme.IsUnknown() {
+		policyhttpcallout.Scheme = data.Scheme.ValueString()
+	}
+	if !data.Urlstemexpr.IsNull() && !data.Urlstemexpr.IsUnknown() {
+		policyhttpcallout.Urlstemexpr = data.Urlstemexpr.ValueString()
+	}
+	if !data.Vserver.IsNull() && !data.Vserver.IsUnknown() {
 		policyhttpcallout.Vserver = data.Vserver.ValueString()
 	}
 
@@ -181,85 +268,109 @@ func policyhttpcalloutGetThePayloadFromtheConfig(ctx context.Context, data *Poli
 func policyhttpcalloutSetAttrFromGet(ctx context.Context, data *PolicyhttpcalloutResourceModel, getResponseData map[string]interface{}) *PolicyhttpcalloutResourceModel {
 	tflog.Debug(ctx, "In policyhttpcalloutSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. The else branches only null a value when it is
+	// unknown, to avoid clobbering a known configured value that NITRO omits from GET
+	// (the omit-on-default trap).
 	if val, ok := getResponseData["bodyexpr"]; ok && val != nil {
 		data.Bodyexpr = types.StringValue(val.(string))
-	} else {
-		data.Bodyexpr = types.StringNull()
+	} else if data.Bodyexpr.IsUnknown() {
+		data.Bodyexpr = types.StringValue("")
 	}
 	if val, ok := getResponseData["cacheforsecs"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cacheforsecs = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cacheforsecs.IsUnknown() {
 		data.Cacheforsecs = types.Int64Null()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
-		data.Comment = types.StringNull()
+	} else if data.Comment.IsUnknown() {
+		data.Comment = types.StringValue("")
 	}
 	if val, ok := getResponseData["fullreqexpr"]; ok && val != nil {
 		data.Fullreqexpr = types.StringValue(val.(string))
-	} else {
-		data.Fullreqexpr = types.StringNull()
+	} else if data.Fullreqexpr.IsUnknown() {
+		data.Fullreqexpr = types.StringValue("")
+	}
+	if val, ok := getResponseData["headers"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Headers = listValue
+		} else if data.Headers.IsUnknown() {
+			data.Headers = types.ListNull(types.StringType)
+		}
+	} else if data.Headers.IsUnknown() {
+		data.Headers = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["hostexpr"]; ok && val != nil {
 		data.Hostexpr = types.StringValue(val.(string))
-	} else {
-		data.Hostexpr = types.StringNull()
+	} else if data.Hostexpr.IsUnknown() {
+		data.Hostexpr = types.StringValue("")
 	}
 	if val, ok := getResponseData["httpmethod"]; ok && val != nil {
 		data.Httpmethod = types.StringValue(val.(string))
-	} else {
-		data.Httpmethod = types.StringNull()
+	} else if data.Httpmethod.IsUnknown() {
+		data.Httpmethod = types.StringValue("")
 	}
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
-		data.Ipaddress = types.StringNull()
+	} else if data.Ipaddress.IsUnknown() {
+		data.Ipaddress = types.StringValue("")
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["parameters"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Parameters = listValue
+		} else if data.Parameters.IsUnknown() {
+			data.Parameters = types.ListNull(types.StringType)
+		}
+	} else if data.Parameters.IsUnknown() {
+		data.Parameters = types.ListNull(types.StringType)
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["resultexpr"]; ok && val != nil {
 		data.Resultexpr = types.StringValue(val.(string))
-	} else {
-		data.Resultexpr = types.StringNull()
+	} else if data.Resultexpr.IsUnknown() {
+		data.Resultexpr = types.StringValue("")
 	}
 	if val, ok := getResponseData["returntype"]; ok && val != nil {
 		data.Returntype = types.StringValue(val.(string))
-	} else {
+	} else if data.Returntype.IsUnknown() {
 		data.Returntype = types.StringNull()
 	}
 	if val, ok := getResponseData["scheme"]; ok && val != nil {
 		data.Scheme = types.StringValue(val.(string))
-	} else {
-		data.Scheme = types.StringNull()
+	} else if data.Scheme.IsUnknown() {
+		data.Scheme = types.StringValue("")
 	}
 	if val, ok := getResponseData["urlstemexpr"]; ok && val != nil {
 		data.Urlstemexpr = types.StringValue(val.(string))
-	} else {
-		data.Urlstemexpr = types.StringNull()
+	} else if data.Urlstemexpr.IsUnknown() {
+		data.Urlstemexpr = types.StringValue("")
 	}
 	if val, ok := getResponseData["vserver"]; ok && val != nil {
 		data.Vserver = types.StringValue(val.(string))
-	} else {
-		data.Vserver = types.StringNull()
+	} else if data.Vserver.IsUnknown() {
+		data.Vserver = types.StringValue("")
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

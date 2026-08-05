@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -27,8 +26,8 @@ func (r *PtpResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Description: "The ID of the ptp resource.",
 			},
 			"state": schema.StringAttribute{
+				// SDK v2: Required, not Computed, no Default, not ForceNew (updateable singleton attr)
 				Required:    true,
-				Default:     stringdefault.StaticString("ENABLE"),
 				Description: "Enables or disables Precision Time Protocol (PTP) on the appliance. If you disable PTP, make sure you enable Network Time Protocol (NTP) on the cluster.",
 			},
 		},
@@ -50,10 +49,12 @@ func ptpGetThePayloadFromtheConfig(ctx context.Context, data *PtpResourceModel) 
 func ptpSetAttrFromGet(ctx context.Context, data *PtpResourceModel, getResponseData map[string]interface{}) *PtpResourceModel {
 	tflog.Debug(ctx, "In ptpSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branch (omit-on-default trap): only null the value when it is
+	// unknown; never clobber a known/configured value that NITRO omits from GET.
 	if val, ok := getResponseData["state"]; ok && val != nil {
 		data.State = types.StringValue(val.(string))
-	} else {
+	} else if data.State.IsUnknown() {
 		data.State = types.StringNull()
 	}
 

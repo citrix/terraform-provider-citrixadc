@@ -43,7 +43,10 @@ func (r *UserprotocolResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Name of the extension to add parsing and runtime handling of the protocol packets.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Unique name for the user protocol. Not case sensitive. Must begin with an ASCII letter or underscore (_) character, and must consist only of ASCII alphanumeric or underscore characters.",
 			},
 			"transport": schema.StringAttribute{
@@ -62,17 +65,34 @@ func userprotocolGetThePayloadFromtheConfig(ctx context.Context, data *Userproto
 
 	// Create API request body from the model
 	userprotocol := user.Userprotocol{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		userprotocol.Comment = data.Comment.ValueString()
 	}
-	if !data.Extension.IsNull() {
+	if !data.Extension.IsNull() && !data.Extension.IsUnknown() {
 		userprotocol.Extension = data.Extension.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		userprotocol.Name = data.Name.ValueString()
 	}
-	if !data.Transport.IsNull() {
+	if !data.Transport.IsNull() && !data.Transport.IsUnknown() {
 		userprotocol.Transport = data.Transport.ValueString()
+	}
+
+	return userprotocol
+}
+
+// userprotocolGetTheUpdatablePayloadFromThePlan builds the payload for an update,
+// restricted to the NITRO-updatable fields. In SDK v2 only `comment` was updatable
+// (name/extension/transport are ForceNew); `name` is included to identify the resource.
+func userprotocolGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *UserprotocolResourceModel) user.Userprotocol {
+	tflog.Debug(ctx, "In userprotocolGetTheUpdatablePayloadFromThePlan Function")
+
+	userprotocol := user.Userprotocol{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		userprotocol.Name = data.Name.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		userprotocol.Comment = data.Comment.ValueString()
 	}
 
 	return userprotocol
@@ -84,7 +104,9 @@ func userprotocolSetAttrFromGet(ctx context.Context, data *UserprotocolResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
+		// omit-on-default guard: only null when unknown; never clobber a
+		// known configured/state value NITRO may omit from GET.
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["extension"]; ok && val != nil {

@@ -55,7 +55,7 @@ func (d *VpntrafficactionDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	vpntrafficactionSetAttrFromGet(ctx, &data, getResponseData)
+	vpntrafficactionSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

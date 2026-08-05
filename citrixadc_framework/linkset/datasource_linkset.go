@@ -46,16 +46,19 @@ func (d *LinksetDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	// Case 2: Find with single ID attribute
 	id_Name := data.Linksetid.ValueString()
 
-	var getResponseData map[string]interface{}
-	var err error
-
-	getResponseData, err = d.client.FindResource(service.Linkset.Type(), id_Name)
+	getResponseData, err := d.client.FindResource(service.Linkset.Type(), id_Name)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read linkset, got error: %s", err))
 		return
 	}
 
 	linksetSetAttrFromGet(ctx, &data, getResponseData)
+
+	// Populate the interfacebinding convenience block from the ADC.
+	if err := linksetReadInterfaceBindings(ctx, d.client, &data, id_Name); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read linkset interface bindings, got error: %s", err))
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

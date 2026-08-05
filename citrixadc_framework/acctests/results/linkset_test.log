@@ -1,0 +1,15 @@
+# Resource        : linkset
+# Primary ADC     : 159
+# Alternate ADCs  : 121, 154
+# Planned tests   : 2
+# Result          : PASS_first=0 PASS_alt=0 FAILED=0 SKIPPED=2
+
+## PASS (on primary ADC 159)
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED
+  SKIP  TestAccLinkset_basic  :: ADC testbed is UNSPECIFIED. Expected CLUSTER.
+  SKIP  TestAccLinksetDataSource_basic  :: ADC testbed is UNSPECIFIED. Expected CLUSTER.

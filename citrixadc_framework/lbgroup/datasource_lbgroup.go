@@ -55,7 +55,7 @@ func (d *LbgroupDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	lbgroupSetAttrFromGet(ctx, &data, getResponseData)
+	lbgroupSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

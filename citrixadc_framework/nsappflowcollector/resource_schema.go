@@ -2,12 +2,12 @@ package nsappflowcollector
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -33,6 +33,7 @@ func (r *NsappflowcollectorResource) Schema(ctx context.Context, req resource.Sc
 				Computed:    true,
 				Description: "The ID of the nsappflowcollector resource.",
 			},
+			// SDK v2: Required + ForceNew
 			"ipaddress": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -40,6 +41,7 @@ func (r *NsappflowcollectorResource) Schema(ctx context.Context, req resource.Sc
 				},
 				Description: "The IPv4 address of the AppFlow collector.",
 			},
+			// SDK v2: Required + ForceNew
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -47,30 +49,33 @@ func (r *NsappflowcollectorResource) Schema(ctx context.Context, req resource.Sc
 				},
 				Description: "Name of the AppFlow collector.",
 			},
+			// SDK v2: Optional + Computed + ForceNew (no Default in SDK v2 — value read from ADC).
 			"port": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     int64default.StaticInt64(4739),
 				Description: "The UDP port on which the AppFlow collector is listening.",
 			},
 		},
 	}
 }
 
-func nsappflowcollectorGetThePayloadFromtheConfig(ctx context.Context, data *NsappflowcollectorResourceModel) ns.Nsappflowcollector {
-	tflog.Debug(ctx, "In nsappflowcollectorGetThePayloadFromtheConfig Function")
+func nsappflowcollectorGetThePayloadFromthePlan(ctx context.Context, data *NsappflowcollectorResourceModel) ns.Nsappflowcollector {
+	tflog.Debug(ctx, "In nsappflowcollectorGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nsappflowcollector := ns.Nsappflowcollector{}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		nsappflowcollector.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		nsappflowcollector.Name = data.Name.ValueString()
 	}
-	if !data.Port.IsNull() {
+	// SDK v2 only set port when it was present in the raw config.
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		nsappflowcollector.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
 
@@ -83,25 +88,26 @@ func nsappflowcollectorSetAttrFromGet(ctx context.Context, data *Nsappflowcollec
 	// Convert API response to model
 	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
 		data.Ipaddress = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipaddress.IsUnknown() {
 		data.Ipaddress = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
+		// Only null when the value is unknown; never clobber a configured value.
 		data.Port = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

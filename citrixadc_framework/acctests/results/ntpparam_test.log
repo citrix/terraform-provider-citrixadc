@@ -1,0 +1,15 @@
+# Resource        : ntpparam
+# Primary ADC     : 156
+# Alternate ADCs  : 121, 151
+# Planned tests   : 2
+# Result          : PASS_first=0 PASS_alt=2 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 156)
+
+## PASS (only on an alternate ADC)
+  PASS-ALT  TestAccNtpparam_basic  -> 121   (primary 156 reason: Error: Client Error)
+  PASS-ALT  TestAccNtpparamDataSource_basic  -> 121   (primary 156 reason: ntpparam_test.go:112: Step 1/1 error: Check failed: Check 2/2 error: data.citrixadc_ntpparam.test: Attribute 'authentication' expected to be set)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

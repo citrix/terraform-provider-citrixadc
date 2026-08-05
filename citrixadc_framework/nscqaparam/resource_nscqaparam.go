@@ -55,14 +55,14 @@ func (r *NscqaparamResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nscqaparam resource")
 
-	// nscqaparam := nscqaparamGetThePayloadFromtheConfig(ctx, &data)
+	nscqaparam := nscqaparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nscqaparam.Type(), &nscqaparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nscqaparam, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nscqaparam.Type(), &nscqaparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nscqaparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nscqaparam-config")
@@ -95,8 +95,10 @@ func (r *NscqaparamResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NscqaparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NscqaparamResourceModel
+	var data, state NscqaparamResourceModel
 
+	// Read Terraform prior state to preserve the ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +106,20 @@ func (r *NscqaparamResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nscqaparam resource")
 
 	// Create API request body from the model
-	// nscqaparam := nscqaparamGetThePayloadFromtheConfig(ctx, &data)
+	nscqaparam := nscqaparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nscqaparam.Type(), &nscqaparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nscqaparam, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nscqaparam.Type(), &nscqaparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nscqaparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nscqaparam resource")
 

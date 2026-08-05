@@ -2,6 +2,7 @@ package lbpolicy
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
@@ -34,36 +35,47 @@ func (r *LbpolicyResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description: "The ID of the lbpolicy resource.",
 			},
 			"action": schema.StringAttribute{
+				// SDK v2 parity: Required (not Computed).
 				Required:    true,
 				Description: "Name of action to use if the request matches this LB policy.",
 			},
 			"comment": schema.StringAttribute{
+				// SDK v2 parity: Optional+Computed.
 				Optional:    true,
 				Computed:    true,
 				Description: "Any type of information about this LB policy.",
 			},
 			"logaction": schema.StringAttribute{
+				// SDK v2 parity: Optional+Computed.
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the messagelog action to use for requests that match this policy.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name of the LB policy.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the LB policy is added.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my lb policy\" or 'my lb policy').",
-			},
-			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				// SDK v2 parity: Required + ForceNew -> RequiresReplace. Changing the
+				// name itself recreates the resource, exactly like SDK v2. In-place
+				// renames are driven by the separate `newname` attribute (see below).
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Name of the LB policy.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the LB policy is added.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my lb policy\" or 'my lb policy').",
+			},
+			"newname": schema.StringAttribute{
+				// newname is the rename trigger (NITRO ?action=rename). It is a pure
+				// user input, never echoed back by GET, so it is Optional-only:
+				// NOT Computed (avoids known-after-apply churn) and NOT RequiresReplace
+				// (a change must reach Update to drive an in-place rename, not recreate).
+				Optional:    true,
 				Description: "New name for the LB policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my lb policy\" or 'my lb policy').",
 			},
 			"rule": schema.StringAttribute{
+				// SDK v2 parity: Required (not Computed).
 				Required:    true,
 				Description: "Expression against which traffic is evaluated.",
 			},
 			"undefaction": schema.StringAttribute{
+				// SDK v2 parity: Optional+Computed.
 				Optional:    true,
 				Computed:    true,
 				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Available settings function as follows:\n* NOLBACTION - Does not consider LB actions in making LB decision.\n* RESET - Reset the request and notify the user, so that the user can resend the request.\n* DROP - Drop the request without sending a response to the user.",
@@ -72,40 +84,117 @@ func (r *LbpolicyResource) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func lbpolicyGetThePayloadFromtheConfig(ctx context.Context, data *LbpolicyResourceModel) lb.Lbpolicy {
-	tflog.Debug(ctx, "In lbpolicyGetThePayloadFromtheConfig Function")
+// lbpolicyGetThePayloadFromthePlan builds the add/create POST body. newname is a
+// rename-only argument and is deliberately excluded from the create payload.
+func lbpolicyGetThePayloadFromthePlan(ctx context.Context, data *LbpolicyResourceModel) lb.Lbpolicy {
+	tflog.Debug(ctx, "In lbpolicyGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	lbpolicy := lb.Lbpolicy{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		lbpolicy.Action = data.Action.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		lbpolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Logaction.IsNull() {
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
 		lbpolicy.Logaction = data.Logaction.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		lbpolicy.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		lbpolicy.Newname = data.Newname.ValueString()
-	}
-	if !data.Rule.IsNull() {
+	// newname is a rename-only argument (NITRO ?action=rename); excluded from add.
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		lbpolicy.Rule = data.Rule.ValueString()
 	}
-	if !data.Undefaction.IsNull() {
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		lbpolicy.Undefaction = data.Undefaction.ValueString()
 	}
 
 	return lbpolicy
 }
 
+// lbpolicyGetTheUpdatablePayloadFromThePlan builds the UpdateResource body,
+// restricted to NITRO-updatable fields. newname is excluded (rename-only).
+func lbpolicyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *LbpolicyResourceModel) lb.Lbpolicy {
+	tflog.Debug(ctx, "In lbpolicyGetTheUpdatablePayloadFromThePlan Function")
+
+	lbpolicy := lb.Lbpolicy{}
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
+		lbpolicy.Action = data.Action.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		lbpolicy.Comment = data.Comment.ValueString()
+	}
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
+		lbpolicy.Logaction = data.Logaction.ValueString()
+	}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		lbpolicy.Name = data.Name.ValueString()
+	}
+	// newname is a rename-only argument (NITRO ?action=rename); excluded from update.
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
+		lbpolicy.Rule = data.Rule.ValueString()
+	}
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
+		lbpolicy.Undefaction = data.Undefaction.ValueString()
+	}
+
+	return lbpolicy
+}
+
+// lbpolicySetAttrFromGet populates the resource model from a GET response.
+// It preserves configured/plan values that NITRO omits from GET (omit-on-default
+// trap guard: only resolve to null when the field is still Unknown), and never
+// clobbers the user-facing name after a rename.
 func lbpolicySetAttrFromGet(ctx context.Context, data *LbpolicyResourceModel, getResponseData map[string]interface{}) *LbpolicyResourceModel {
 	tflog.Debug(ctx, "In lbpolicySetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["action"]; ok && val != nil {
+		data.Action = types.StringValue(val.(string))
+	} else if data.Action.IsUnknown() {
+		data.Action = types.StringNull()
+	}
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
+	}
+	if val, ok := getResponseData["logaction"]; ok && val != nil {
+		data.Logaction = types.StringValue(val.(string))
+	} else if data.Logaction.IsUnknown() {
+		data.Logaction = types.StringNull()
+	}
+	// name is the user-facing key. After a rename (via newname) the live object name
+	// (tracked by data.Id) diverges from the configured name, and GET returns the
+	// live name. Overwriting name from GET would clobber the user's configured value
+	// and trigger a spurious RequiresReplace diff. Only adopt the GET value when we
+	// don't already have one (e.g. on import, where state carries only the ID).
+	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve plan/state value.
+	if val, ok := getResponseData["rule"]; ok && val != nil {
+		data.Rule = types.StringValue(val.(string))
+	} else if data.Rule.IsUnknown() {
+		data.Rule = types.StringNull()
+	}
+	if val, ok := getResponseData["undefaction"]; ok && val != nil {
+		data.Undefaction = types.StringValue(val.(string))
+	} else if data.Undefaction.IsUnknown() {
+		data.Undefaction = types.StringNull()
+	}
+
+	return data
+}
+
+// lbpolicySetAttrFromGetForDatasource faithfully copies every field from the GET
+// response. The datasource has no prior plan/state to preserve, so it populates
+// the model directly from the API response and sets the ID itself.
+func lbpolicySetAttrFromGetForDatasource(ctx context.Context, data *LbpolicyResourceModel, getResponseData map[string]interface{}) *LbpolicyResourceModel {
+	tflog.Debug(ctx, "In lbpolicySetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
 	} else {
@@ -142,9 +231,8 @@ func lbpolicySetAttrFromGet(ctx context.Context, data *LbpolicyResourceModel, ge
 		data.Undefaction = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

@@ -85,7 +85,7 @@ func (d *Nsacl6DataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	nsacl6SetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	nsacl6SetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

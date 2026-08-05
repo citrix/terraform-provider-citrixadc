@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -34,41 +33,44 @@ func (r *SystembackupResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "The ID of the systembackup resource.",
 			},
-			"comment": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Description: "Comment specified at the time of creation of the backup file(*.tgz).",
-			},
+			// filename is Required + ForceNew in SDK v2. It is the resource identity
+			// (is_get_id/is_delete_id/x-unique-attr). Not Computed.
 			"filename": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name of the backup file(*.tgz) to be restored.",
 			},
+			// The remaining attributes are create-only args (is_updateable=false).
+			// Read is a no-op (SDK v2 schema.Noop), so they must NOT be Computed —
+			// an Optional+Computed attribute can never be resolved by a no-op Read and
+			// would fail apply with "still indicated an unknown value" (Pattern 13).
+			"comment": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Comment specified at the time of creation of the backup file(*.tgz).",
+			},
 			"includekernel": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Use this option to add kernel in the backup file",
 			},
+			// level had an invalid Default (Default without Computed) and SDK v2
+			// defined no default; dropped both flags and left it Optional.
 			"level": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("basic"),
 				Description: "Level of data to be backed up.",
 			},
 			"skipbackup": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -76,7 +78,6 @@ func (r *SystembackupResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"uselocaltimezone": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},

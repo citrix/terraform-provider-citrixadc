@@ -55,14 +55,15 @@ func (r *SmppparamResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating smppparam resource")
 
-	// smppparam := smppparamGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	smppparam := smppparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Smppparam.Type(), &smppparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create smppparam, got error: %s", err))
-	//	 return
-	// }
+	// smppparam is a singleton (unnamed) configuration resource
+	err := r.client.UpdateUnnamedResource(service.Smppparam.Type(), &smppparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create smppparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("smppparam-config")
@@ -106,15 +107,18 @@ func (r *SmppparamResource) Update(ctx context.Context, req resource.UpdateReque
 
 	tflog.Debug(ctx, "Updating smppparam resource")
 
-	// Create API request body from the model
-	// smppparam := smppparamGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve ID across the update (singleton static ID)
+	data.Id = types.StringValue("smppparam-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Smppparam.Type(), &smppparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update smppparam, got error: %s", err))
-	//	 return
-	// }
+	// Create API request body from the plan
+	smppparam := smppparamGetThePayloadFromtheConfig(ctx, &data)
+
+	// smppparam is a singleton (unnamed) configuration resource
+	err := r.client.UpdateUnnamedResource(service.Smppparam.Type(), &smppparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update smppparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated smppparam resource")
 

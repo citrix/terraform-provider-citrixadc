@@ -3,12 +3,12 @@ package lbroute
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -55,22 +55,28 @@ func (r *LbrouteResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Debug(ctx, "Creating lbroute resource")
 
-	// lbroute := lbrouteGetThePayloadFromtheConfig(ctx, &data)
+	// Build payload from the plan (td only when explicitly configured)
+	lbroute := lbrouteGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbroute.Type(), &lbroute)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbroute, got error: %s", err))
-	//	 return
-	// }
+	// The SDK v2 resource used "network,netmask,gatewayname" as the NITRO
+	// resource name for the AddResource call. Preserve that behavior.
+	lbrouteName := fmt.Sprintf("%s,%s,%s", data.Network.ValueString(), data.Netmask.ValueString(), data.Gatewayname.ValueString())
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lbroute-config")
+	_, err := r.client.AddResource(service.Lbroute.Type(), lbrouteName, &lbroute)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbroute, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lbroute resource")
 
-	// Read the updated state back
-	r.readLbrouteFromApi(ctx, &data, &resp.Diagnostics)
+	// Read the created state back (also sets the ID to the SDK v2 composite)
+	if !r.readLbrouteFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbroute not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +94,24 @@ func (r *LbrouteResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tflog.Debug(ctx, "Reading lbroute resource")
 
-	r.readLbrouteFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbrouteFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LbrouteResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LbrouteResourceModel
+	var data, state LbrouteResourceModel
 
+	// Read Terraform prior state to preserve the ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +119,20 @@ func (r *LbrouteResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	tflog.Debug(ctx, "Updating lbroute resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// lbroute := lbrouteGetThePayloadFromtheConfig(ctx, &data)
+	// lbroute has no NITRO-updatable attributes (every attribute is ForceNew in
+	// SDK v2 and RequiresReplace here), so Update never performs a write. It is
+	// only present to satisfy the resource.Resource interface. Read state back.
+	tflog.Debug(ctx, "Updating lbroute resource (read-back only; no updatable attributes)")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbroute.Type(), &lbroute)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbroute, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated lbroute resource")
-
-	// Read the updated state back
-	r.readLbrouteFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbrouteFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbroute not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +150,62 @@ func (r *LbrouteResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	tflog.Debug(ctx, "Deleting lbroute resource")
 
-	// For lbroute, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lbroute resource from state")
-}
+	// Only the network and netmask properties are required for deletion - not
+	// gatewayname. This mirrors the SDK v2 resource exactly.
+	argsMap := make(map[string]string)
+	argsMap["network"] = url.QueryEscape(data.Network.ValueString())
+	argsMap["netmask"] = url.QueryEscape(data.Netmask.ValueString())
 
-// Helper function to read lbroute data from API
-func (r *LbrouteResource) readLbrouteFromApi(ctx context.Context, data *LbrouteResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lbroute.Type(), "")
+	err := r.client.DeleteResourceWithArgsMap(service.Lbroute.Type(), "", argsMap)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbroute, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lbroute, got error: %s", err))
 		return
 	}
 
-	lbrouteSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted lbroute resource")
+}
 
+// Helper function to read lbroute data from API.
+// Returns true if the route was found, false otherwise.
+func (r *LbrouteResource) readLbrouteFromApi(ctx context.Context, data *LbrouteResourceModel, diags *diag.Diagnostics) bool {
+	// lbroute has no GET-by-name endpoint; enumerate the array and filter on the
+	// identity attributes (network, netmask, gatewayname) exactly as SDK v2 did.
+	findParams := service.FindParams{
+		ResourceType: service.Lbroute.Type(),
+	}
+	dataArray, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		tflog.Warn(ctx, fmt.Sprintf("Clearing lbroute state, got error: %s", err))
+		return false
+	}
+	if len(dataArray) == 0 {
+		tflog.Warn(ctx, "lbroute does not exist. Clearing state.")
+		return false
+	}
+
+	foundIndex := -1
+	for i, v := range dataArray {
+		match := true
+		if v["network"] != data.Network.ValueString() {
+			match = false
+		}
+		if v["netmask"] != data.Netmask.ValueString() {
+			match = false
+		}
+		if v["gatewayname"] != data.Gatewayname.ValueString() {
+			match = false
+		}
+		if match {
+			foundIndex = i
+			break
+		}
+	}
+	if foundIndex == -1 {
+		tflog.Warn(ctx, "lbroute not found in array. Clearing state.")
+		return false
+	}
+
+	lbrouteSetAttrFromGet(ctx, data, dataArray[foundIndex])
+
+	return true
 }

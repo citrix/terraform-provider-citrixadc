@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *SubscriberparamResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating subscriberparam resource")
 
-	// subscriberparam := subscriberparamGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	subscriberparam := subscriberparamGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscriberparam.Type(), &subscriberparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscriberparam, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Subscriberparam.Type(), &subscriberparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscriberparam, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Created subscriberparam resource")
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("subscriberparam-config")
 
-	tflog.Trace(ctx, "Created subscriberparam resource")
-
 	// Read the updated state back
-	r.readSubscriberparamFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSubscriberparamFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "subscriberparam not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *SubscriberparamResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading subscriberparam resource")
 
-	r.readSubscriberparamFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSubscriberparamFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SubscriberparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SubscriberparamResourceModel
+	var data, state SubscriberparamResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,58 @@ func (r *SubscriberparamResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating subscriberparam resource")
 
-	// Create API request body from the model
-	// subscriberparam := subscriberparamGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Idleaction.Equal(state.Idleaction) {
+		tflog.Debug(ctx, "idleaction has changed for subscriberparam")
+		hasChange = true
+	}
+	if !data.Idlettl.Equal(state.Idlettl) {
+		tflog.Debug(ctx, "idlettl has changed for subscriberparam")
+		hasChange = true
+	}
+	if !data.Interfacetype.Equal(state.Interfacetype) {
+		tflog.Debug(ctx, "interfacetype has changed for subscriberparam")
+		hasChange = true
+	}
+	if !data.Ipv6prefixlookuplist.Equal(state.Ipv6prefixlookuplist) {
+		tflog.Debug(ctx, "ipv6prefixlookuplist has changed for subscriberparam")
+		hasChange = true
+	}
+	if !data.Keytype.Equal(state.Keytype) {
+		tflog.Debug(ctx, "keytype has changed for subscriberparam")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscriberparam.Type(), &subscriberparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscriberparam, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		subscriberparam := subscriberparamGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated subscriberparam resource")
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Subscriberparam.Type(), &subscriberparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscriberparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated subscriberparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for subscriberparam resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readSubscriberparamFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSubscriberparamFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "subscriberparam not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +190,24 @@ func (r *SubscriberparamResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting subscriberparam resource")
 
-	// For subscriberparam, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// subscriberparam does not support a DELETE operation (singleton global configuration).
+	// Mirror the SDK v2 behavior: simply remove the resource from Terraform state.
 	tflog.Trace(ctx, "Deleted subscriberparam resource from state")
 }
 
 // Helper function to read subscriberparam data from API
-func (r *SubscriberparamResource) readSubscriberparamFromApi(ctx context.Context, data *SubscriberparamResourceModel, diags *diag.Diagnostics) {
+func (r *SubscriberparamResource) readSubscriberparamFromApi(ctx context.Context, data *SubscriberparamResourceModel, diags *diag.Diagnostics) bool {
+	// Case 1: Simple find without ID (singleton)
 	getResponseData, err := r.client.FindResource(service.Subscriberparam.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read subscriberparam, got error: %s", err))
-		return
+		return false
 	}
 
 	subscriberparamSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

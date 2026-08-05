@@ -43,7 +43,7 @@ func (d *ServiceDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Look up the service by name.
 	name_Name := data.Name.ValueString()
 
 	var getResponseData map[string]interface{}
@@ -55,7 +55,7 @@ func (d *ServiceDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	serviceSetAttrFromGet(ctx, &data, getResponseData)
+	serviceSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

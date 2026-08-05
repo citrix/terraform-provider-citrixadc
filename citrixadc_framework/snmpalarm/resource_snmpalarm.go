@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *SnmpalarmResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating snmpalarm resource")
 
-	// snmpalarm := snmpalarmGetThePayloadFromtheConfig(ctx, &data)
+	// snmpalarm has no add/delete operation - it is a predefined alarm that is
+	// configured via the update (PUT) operation. Mirror the SDK v2 create, which
+	// pushed the full configuration (including state) via UpdateUnnamedResource.
+	snmpalarm := snmpalarmGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpalarm.Type(), &snmpalarm)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpalarm, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("snmpalarm-config")
+	err := r.client.UpdateUnnamedResource(service.Snmpalarm.Type(), &snmpalarm)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpalarm, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created snmpalarm resource")
 
+	// Set ID for the resource before reading state back (single unique attribute).
+	data.Id = types.StringValue(data.Trapname.ValueString())
+
 	// Read the updated state back
-	r.readSnmpalarmFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpalarmFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpalarm not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *SnmpalarmResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading snmpalarm resource")
 
-	r.readSnmpalarmFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSnmpalarmFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SnmpalarmResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SnmpalarmResourceModel
+	var data, state SnmpalarmResourceModel
 
+	// Read Terraform prior state to preserve ID and for change detection
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,63 @@ func (r *SnmpalarmResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating snmpalarm resource")
 
-	// Create API request body from the model
-	// snmpalarm := snmpalarmGetThePayloadFromtheConfig(ctx, &data)
+	// Detect changes to the non-state updateable attributes (pushed via PUT).
+	hasChange := false
+	if !data.Logging.Equal(state.Logging) {
+		tflog.Debug(ctx, "logging has changed for snmpalarm")
+		hasChange = true
+	}
+	if !data.Normalvalue.Equal(state.Normalvalue) {
+		tflog.Debug(ctx, "normalvalue has changed for snmpalarm")
+		hasChange = true
+	}
+	if !data.Severity.Equal(state.Severity) {
+		tflog.Debug(ctx, "severity has changed for snmpalarm")
+		hasChange = true
+	}
+	if !data.Thresholdvalue.Equal(state.Thresholdvalue) {
+		tflog.Debug(ctx, "thresholdvalue has changed for snmpalarm")
+		hasChange = true
+	}
+	if !data.Time.Equal(state.Time) {
+		tflog.Debug(ctx, "time has changed for snmpalarm")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpalarm.Type(), &snmpalarm)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpalarm, got error: %s", err))
-	//	 return
-	// }
+	// State transitions are applied through the enable/disable actions, mirroring
+	// the SDK v2 doSnmpalarmStateChange behaviour.
+	if !data.State.Equal(state.State) && !data.State.IsNull() && !data.State.IsUnknown() {
+		tflog.Debug(ctx, "state has changed for snmpalarm")
+		if err := r.doSnmpalarmStateChange(ctx, data.Trapname.ValueString(), data.State.ValueString()); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpalarm state, got error: %s", err))
+			return
+		}
+	}
 
-	tflog.Trace(ctx, "Updated snmpalarm resource")
+	if hasChange {
+		snmpalarm := snmpalarmGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		err := r.client.UpdateUnnamedResource(service.Snmpalarm.Type(), &snmpalarm)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpalarm, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated snmpalarm resource")
+	} else {
+		tflog.Debug(ctx, "No PUT-updateable changes detected for snmpalarm resource")
+	}
 
 	// Read the updated state back
-	r.readSnmpalarmFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpalarmFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpalarm not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +194,48 @@ func (r *SnmpalarmResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	tflog.Debug(ctx, "Deleting snmpalarm resource")
-
-	// For snmpalarm, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// snmpalarm is a predefined resource with no DELETE operation. Mirror the
+	// SDK v2 behaviour: removing it from state only (Terraform handles the state
+	// removal automatically once Delete returns without error).
 	tflog.Trace(ctx, "Deleted snmpalarm resource from state")
 }
 
+// doSnmpalarmStateChange enables/disables the alarm via the dedicated NITRO
+// actions (mirrors SDK v2 doSnmpalarmStateChange).
+func (r *SnmpalarmResource) doSnmpalarmStateChange(ctx context.Context, trapname string, newstate string) error {
+	tflog.Debug(ctx, "In doSnmpalarmStateChange")
+
+	// A fresh payload with only the identifier is required; ActOnResource fails
+	// if superfluous attributes are supplied.
+	payload := map[string]interface{}{
+		"trapname": trapname,
+	}
+
+	switch newstate {
+	case "ENABLED":
+		return r.client.ActOnResource(service.Snmpalarm.Type(), payload, "enable")
+	case "DISABLED":
+		return r.client.ActOnResource(service.Snmpalarm.Type(), payload, "disable")
+	default:
+		return fmt.Errorf("%q is not a valid state. Use (\"ENABLED\", \"DISABLED\")", newstate)
+	}
+}
+
 // Helper function to read snmpalarm data from API
-func (r *SnmpalarmResource) readSnmpalarmFromApi(ctx context.Context, data *SnmpalarmResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Snmpalarm.Type(), "")
+func (r *SnmpalarmResource) readSnmpalarmFromApi(ctx context.Context, data *SnmpalarmResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain trapname value.
+	trapname := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Snmpalarm.Type(), trapname)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmpalarm, got error: %s", err))
-		return
+		return false
 	}
 
 	snmpalarmSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

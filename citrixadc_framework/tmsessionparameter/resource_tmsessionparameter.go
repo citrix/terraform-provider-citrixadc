@@ -55,14 +55,15 @@ func (r *TmsessionparameterResource) Create(ctx context.Context, req resource.Cr
 
 	tflog.Debug(ctx, "Creating tmsessionparameter resource")
 
-	// tmsessionparameter := tmsessionparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	tmsessionparameter := tmsessionparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tmsessionparameter.Type(), &tmsessionparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tmsessionparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource (NITRO exposes only update)
+	err := r.client.UpdateUnnamedResource(service.Tmsessionparameter.Type(), &tmsessionparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tmsessionparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("tmsessionparameter-config")
@@ -95,8 +96,10 @@ func (r *TmsessionparameterResource) Read(ctx context.Context, req resource.Read
 }
 
 func (r *TmsessionparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data TmsessionparameterResourceModel
+	var data, state TmsessionparameterResourceModel
 
+	// Read prior state (to detect changes and preserve ID)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +107,58 @@ func (r *TmsessionparameterResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating tmsessionparameter resource")
 
-	// Create API request body from the model
-	// tmsessionparameter := tmsessionparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Detect changes in the updateable attributes
+	hasChange := false
+	if !data.Defaultauthorizationaction.Equal(state.Defaultauthorizationaction) {
+		hasChange = true
+	}
+	if !data.Homepage.Equal(state.Homepage) {
+		hasChange = true
+	}
+	if !data.Httponlycookie.Equal(state.Httponlycookie) {
+		hasChange = true
+	}
+	if !data.Kcdaccount.Equal(state.Kcdaccount) {
+		hasChange = true
+	}
+	if !data.Persistentcookie.Equal(state.Persistentcookie) {
+		hasChange = true
+	}
+	if !data.Persistentcookievalidity.Equal(state.Persistentcookievalidity) {
+		hasChange = true
+	}
+	if !data.Sesstimeout.Equal(state.Sesstimeout) {
+		hasChange = true
+	}
+	if !data.Sso.Equal(state.Sso) {
+		hasChange = true
+	}
+	if !data.Ssocredential.Equal(state.Ssocredential) {
+		hasChange = true
+	}
+	if !data.Ssodomain.Equal(state.Ssodomain) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tmsessionparameter.Type(), &tmsessionparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmsessionparameter, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		tmsessionparameter := tmsessionparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated tmsessionparameter resource")
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Tmsessionparameter.Type(), &tmsessionparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmsessionparameter, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated tmsessionparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for tmsessionparameter resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readTmsessionparameterFromApi(ctx, &data, &resp.Diagnostics)

@@ -7,6 +7,7 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*NsaclDataSource)(nil)
@@ -85,7 +86,11 @@ func (d *NsaclDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	nsaclSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	nsaclSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+
+	// The datasource has no Create; set the ID to the plain acl name (matching
+	// the resource ID format).
+	data.Id = types.StringValue(aclname_Name)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

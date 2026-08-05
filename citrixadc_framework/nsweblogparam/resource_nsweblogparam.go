@@ -55,14 +55,15 @@ func (r *NsweblogparamResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating nsweblogparam resource")
 
-	// nsweblogparam := nsweblogparamGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan (singleton).
+	nsweblogparam := nsweblogparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsweblogparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton uses UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsweblogparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nsweblogparam-config")
@@ -107,14 +108,14 @@ func (r *NsweblogparamResource) Update(ctx context.Context, req resource.UpdateR
 	tflog.Debug(ctx, "Updating nsweblogparam resource")
 
 	// Create API request body from the model
-	// nsweblogparam := nsweblogparamGetThePayloadFromtheConfig(ctx, &data)
+	nsweblogparam := nsweblogparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsweblogparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton uses UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsweblogparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nsweblogparam resource")
 

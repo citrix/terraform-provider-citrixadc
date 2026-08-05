@@ -55,7 +55,7 @@ func (d *VideooptimizationdetectionpolicyDataSource) Read(ctx context.Context, r
 		return
 	}
 
-	videooptimizationdetectionpolicySetAttrFromGet(ctx, &data, getResponseData)
+	videooptimizationdetectionpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

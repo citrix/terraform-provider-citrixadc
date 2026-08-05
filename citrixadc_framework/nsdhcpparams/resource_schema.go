@@ -45,10 +45,10 @@ func nsdhcpparamsGetThePayloadFromtheConfig(ctx context.Context, data *Nsdhcppar
 
 	// Create API request body from the model
 	nsdhcpparams := ns.Nsdhcpparams{}
-	if !data.Dhcpclient.IsNull() {
+	if !data.Dhcpclient.IsNull() && !data.Dhcpclient.IsUnknown() {
 		nsdhcpparams.Dhcpclient = data.Dhcpclient.ValueString()
 	}
-	if !data.Saveroute.IsNull() {
+	if !data.Saveroute.IsNull() && !data.Saveroute.IsUnknown() {
 		nsdhcpparams.Saveroute = data.Saveroute.ValueString()
 	}
 
@@ -58,15 +58,17 @@ func nsdhcpparamsGetThePayloadFromtheConfig(ctx context.Context, data *Nsdhcppar
 func nsdhcpparamsSetAttrFromGet(ctx context.Context, data *NsdhcpparamsResourceModel, getResponseData map[string]interface{}) *NsdhcpparamsResourceModel {
 	tflog.Debug(ctx, "In nsdhcpparamsSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branch: only null when the current value is unknown, so a
+	// configured value that NITRO omits from GET is never clobbered (omit-on-default trap).
 	if val, ok := getResponseData["dhcpclient"]; ok && val != nil {
 		data.Dhcpclient = types.StringValue(val.(string))
-	} else {
+	} else if data.Dhcpclient.IsUnknown() {
 		data.Dhcpclient = types.StringNull()
 	}
 	if val, ok := getResponseData["saveroute"]; ok && val != nil {
 		data.Saveroute = types.StringValue(val.(string))
-	} else {
+	} else if data.Saveroute.IsUnknown() {
 		data.Saveroute = types.StringNull()
 	}
 

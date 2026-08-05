@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *TmsamlssoprofileResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating tmsamlssoprofile resource")
 
-	// tmsamlssoprofile := tmsamlssoprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	tmsamlssoprofile := tmsamlssoprofileGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tmsamlssoprofile.Type(), &tmsamlssoprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tmsamlssoprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("tmsamlssoprofile-config")
+	// Named resource - use AddResource
+	tmsamlssoprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Tmsamlssoprofile.Type(), tmsamlssoprofileName, &tmsamlssoprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tmsamlssoprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created tmsamlssoprofile resource")
 
+	// Set ID for the resource before reading state (Case 2: single unique attribute)
+	data.Id = types.StringValue(tmsamlssoprofileName)
+
 	// Read the updated state back
-	r.readTmsamlssoprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTmsamlssoprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "tmsamlssoprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *TmsamlssoprofileResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading tmsamlssoprofile resource")
 
-	r.readTmsamlssoprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readTmsamlssoprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *TmsamlssoprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data TmsamlssoprofileResourceModel
+	var data, state TmsamlssoprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,30 @@ func (r *TmsamlssoprofileResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating tmsamlssoprofile resource")
 
-	// Create API request body from the model
-	// tmsamlssoprofile := tmsamlssoprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model (Name is included in the payload)
+	tmsamlssoprofile := tmsamlssoprofileGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tmsamlssoprofile.Type(), &tmsamlssoprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmsamlssoprofile, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - mirrors SDK v2 which used UpdateUnnamedResource (name in body)
+	err := r.client.UpdateUnnamedResource(service.Tmsamlssoprofile.Type(), &tmsamlssoprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmsamlssoprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated tmsamlssoprofile resource")
 
 	// Read the updated state back
-	r.readTmsamlssoprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTmsamlssoprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "tmsamlssoprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +162,32 @@ func (r *TmsamlssoprofileResource) Delete(ctx context.Context, req resource.Dele
 
 	tflog.Debug(ctx, "Deleting tmsamlssoprofile resource")
 
-	// For tmsamlssoprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted tmsamlssoprofile resource from state")
+	// Named resource - delete using DeleteResource
+	tmsamlssoprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Tmsamlssoprofile.Type(), tmsamlssoprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete tmsamlssoprofile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted tmsamlssoprofile resource")
 }
 
 // Helper function to read tmsamlssoprofile data from API
-func (r *TmsamlssoprofileResource) readTmsamlssoprofileFromApi(ctx context.Context, data *TmsamlssoprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Tmsamlssoprofile.Type(), "")
+func (r *TmsamlssoprofileResource) readTmsamlssoprofileFromApi(ctx context.Context, data *TmsamlssoprofileResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (the profile name)
+	tmsamlssoprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Tmsamlssoprofile.Type(), tmsamlssoprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read tmsamlssoprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	tmsamlssoprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

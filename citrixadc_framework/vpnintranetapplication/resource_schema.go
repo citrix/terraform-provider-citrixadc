@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -46,6 +46,9 @@ func (r *VpnintranetapplicationResource) Schema(ctx context.Context, req resourc
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Description: "Names of the client applications, such as PuTTY and Xshell.",
 			},
 			"destip": schema.StringAttribute{
@@ -113,10 +116,10 @@ func (r *VpnintranetapplicationResource) Schema(ctx context.Context, req resourc
 			},
 			"spoofiip": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Default:     stringdefault.StaticString("True"),
 				Description: "IP address that the intranet application will use to route the connection through the virtual adapter.",
 			},
 			"srcip": schema.StringAttribute{
@@ -144,37 +147,42 @@ func vpnintranetapplicationGetThePayloadFromtheConfig(ctx context.Context, data 
 
 	// Create API request body from the model
 	vpnintranetapplication := vpn.Vpnintranetapplication{}
-	if !data.Destip.IsNull() {
+	if !data.Clientapplication.IsNull() && !data.Clientapplication.IsUnknown() {
+		var clientapps []string
+		data.Clientapplication.ElementsAs(ctx, &clientapps, false)
+		vpnintranetapplication.Clientapplication = clientapps
+	}
+	if !data.Destip.IsNull() && !data.Destip.IsUnknown() {
 		vpnintranetapplication.Destip = data.Destip.ValueString()
 	}
-	if !data.Destport.IsNull() {
+	if !data.Destport.IsNull() && !data.Destport.IsUnknown() {
 		vpnintranetapplication.Destport = data.Destport.ValueString()
 	}
-	if !data.Hostname.IsNull() {
+	if !data.Hostname.IsNull() && !data.Hostname.IsUnknown() {
 		vpnintranetapplication.Hostname = data.Hostname.ValueString()
 	}
-	if !data.Interception.IsNull() {
+	if !data.Interception.IsNull() && !data.Interception.IsUnknown() {
 		vpnintranetapplication.Interception = data.Interception.ValueString()
 	}
-	if !data.Intranetapplication.IsNull() {
+	if !data.Intranetapplication.IsNull() && !data.Intranetapplication.IsUnknown() {
 		vpnintranetapplication.Intranetapplication = data.Intranetapplication.ValueString()
 	}
-	if !data.Iprange.IsNull() {
+	if !data.Iprange.IsNull() && !data.Iprange.IsUnknown() {
 		vpnintranetapplication.Iprange = data.Iprange.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		vpnintranetapplication.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Protocol.IsNull() {
+	if !data.Protocol.IsNull() && !data.Protocol.IsUnknown() {
 		vpnintranetapplication.Protocol = data.Protocol.ValueString()
 	}
-	if !data.Spoofiip.IsNull() {
+	if !data.Spoofiip.IsNull() && !data.Spoofiip.IsUnknown() {
 		vpnintranetapplication.Spoofiip = data.Spoofiip.ValueString()
 	}
-	if !data.Srcip.IsNull() {
+	if !data.Srcip.IsNull() && !data.Srcip.IsUnknown() {
 		vpnintranetapplication.Srcip = data.Srcip.ValueString()
 	}
-	if !data.Srcport.IsNull() {
+	if !data.Srcport.IsNull() && !data.Srcport.IsUnknown() {
 		vpnintranetapplication.Srcport = utils.IntPtr(int(data.Srcport.ValueInt64()))
 	}
 
@@ -184,67 +192,88 @@ func vpnintranetapplicationGetThePayloadFromtheConfig(ctx context.Context, data 
 func vpnintranetapplicationSetAttrFromGet(ctx context.Context, data *VpnintranetapplicationResourceModel, getResponseData map[string]interface{}) *VpnintranetapplicationResourceModel {
 	tflog.Debug(ctx, "In vpnintranetapplicationSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// else-branches only null a value that is still Unknown (Create with an
+	// unconfigured Computed attr). A known/configured value that NITRO omits from
+	// GET is preserved to avoid the omit-on-default "inconsistent result" trap.
+	if val, ok := getResponseData["clientapplication"]; ok && val != nil {
+		if rawList, isList := val.([]interface{}); isList {
+			strList := make([]string, 0, len(rawList))
+			for _, item := range rawList {
+				if s, isStr := item.(string); isStr {
+					strList = append(strList, s)
+				}
+			}
+			listValue, diagErr := types.ListValueFrom(ctx, types.StringType, strList)
+			if !diagErr.HasError() {
+				data.Clientapplication = listValue
+			}
+		} else if data.Clientapplication.IsUnknown() {
+			data.Clientapplication = types.ListNull(types.StringType)
+		}
+	} else if data.Clientapplication.IsUnknown() {
+		data.Clientapplication = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["destip"]; ok && val != nil {
 		data.Destip = types.StringValue(val.(string))
-	} else {
+	} else if data.Destip.IsUnknown() {
 		data.Destip = types.StringNull()
 	}
 	if val, ok := getResponseData["destport"]; ok && val != nil {
 		data.Destport = types.StringValue(val.(string))
-	} else {
+	} else if data.Destport.IsUnknown() {
 		data.Destport = types.StringNull()
 	}
 	if val, ok := getResponseData["hostname"]; ok && val != nil {
 		data.Hostname = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostname.IsUnknown() {
 		data.Hostname = types.StringNull()
 	}
 	if val, ok := getResponseData["interception"]; ok && val != nil {
 		data.Interception = types.StringValue(val.(string))
-	} else {
+	} else if data.Interception.IsUnknown() {
 		data.Interception = types.StringNull()
 	}
 	if val, ok := getResponseData["intranetapplication"]; ok && val != nil {
 		data.Intranetapplication = types.StringValue(val.(string))
-	} else {
+	} else if data.Intranetapplication.IsUnknown() {
 		data.Intranetapplication = types.StringNull()
 	}
 	if val, ok := getResponseData["iprange"]; ok && val != nil {
 		data.Iprange = types.StringValue(val.(string))
-	} else {
+	} else if data.Iprange.IsUnknown() {
 		data.Iprange = types.StringNull()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["protocol"]; ok && val != nil {
 		data.Protocol = types.StringValue(val.(string))
-	} else {
+	} else if data.Protocol.IsUnknown() {
 		data.Protocol = types.StringNull()
 	}
 	if val, ok := getResponseData["spoofiip"]; ok && val != nil {
 		data.Spoofiip = types.StringValue(val.(string))
-	} else {
+	} else if data.Spoofiip.IsUnknown() {
 		data.Spoofiip = types.StringNull()
 	}
 	if val, ok := getResponseData["srcip"]; ok && val != nil {
 		data.Srcip = types.StringValue(val.(string))
-	} else {
+	} else if data.Srcip.IsUnknown() {
 		data.Srcip = types.StringNull()
 	}
 	if val, ok := getResponseData["srcport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Srcport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Srcport.IsUnknown() {
 		data.Srcport = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Intranetapplication.ValueString())
 
 	return data

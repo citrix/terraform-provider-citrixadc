@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -55,24 +57,31 @@ func (r *RouterdynamicroutingResource) Create(ctx context.Context, req resource.
 
 	tflog.Debug(ctx, "Creating routerdynamicrouting resource")
 
-	// routerdynamicrouting := routerdynamicroutingGetThePayloadFromtheConfig(ctx, &data)
+	// Build the apply-action payload from the plan (command lines joined by newlines)
+	routerdynamicrouting := routerdynamicroutingGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Routerdynamicrouting.Type(), &routerdynamicrouting)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create routerdynamicrouting, got error: %s", err))
-	//	 return
-	// }
+	// routerdynamicrouting is an action-only resource: push the configuration via
+	// the NITRO "apply" action (mirrors SDK v2 ActOnResource(..., "apply")).
+	err := r.client.ActOnResource(service.Routerdynamicrouting.Type(), &routerdynamicrouting, "apply")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to apply routerdynamicrouting, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("routerdynamicrouting-config")
+	// Generate a unique ID for this configuration resource (matches SDK v2 id format:
+	// resource.PrefixedUniqueId("tf-routerdynamicrouting-")).
+	data.Id = types.StringValue(sdkv2resource.PrefixedUniqueId("tf-routerdynamicrouting-"))
+
+	// commandlines is Optional+Computed; if it was not configured, give it a
+	// concrete (empty) value so the saved state is never unknown.
+	if data.Commandlines.IsNull() || data.Commandlines.IsUnknown() {
+		data.Commandlines = types.ListValueMust(types.StringType, []attr.Value{})
+	}
 
 	tflog.Trace(ctx, "Created routerdynamicrouting resource")
 
-	// Read the updated state back
-	r.readRouterdynamicroutingFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save data into Terraform state
+	// Save data into Terraform state. There is no GET for the applied config, so
+	// the configured command lines are the source of truth (SDK v2 Read is a no-op).
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -88,16 +97,18 @@ func (r *RouterdynamicroutingResource) Read(ctx context.Context, req resource.Re
 
 	tflog.Debug(ctx, "Reading routerdynamicrouting resource")
 
-	r.readRouterdynamicroutingFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save updated data into Terraform state
+	// routerdynamicrouting exposes no GET for the applied configuration; drift
+	// detection is impossible by definition. Preserve the prior state unchanged
+	// (mirrors SDK v2 Read = schema.Noop).
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *RouterdynamicroutingResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data RouterdynamicroutingResourceModel
+	// commandlines is RequiresReplaceIfConfigured, so Terraform never reaches
+	// Update with a real change. This preserves identity and state defensively.
+	var data, state RouterdynamicroutingResourceModel
 
-	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
@@ -106,20 +117,10 @@ func (r *RouterdynamicroutingResource) Update(ctx context.Context, req resource.
 
 	tflog.Debug(ctx, "Updating routerdynamicrouting resource")
 
-	// Create API request body from the model
-	// routerdynamicrouting := routerdynamicroutingGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Routerdynamicrouting.Type(), &routerdynamicrouting)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update routerdynamicrouting, got error: %s", err))
-	//	 return
-	// }
+	// Preserve ID from prior state
+	data.Id = state.Id
 
 	tflog.Trace(ctx, "Updated routerdynamicrouting resource")
-
-	// Read the updated state back
-	r.readRouterdynamicroutingFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +138,8 @@ func (r *RouterdynamicroutingResource) Delete(ctx context.Context, req resource.
 
 	tflog.Debug(ctx, "Deleting routerdynamicrouting resource")
 
-	// For routerdynamicrouting, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// routerdynamicrouting is a one-shot action resource with no NITRO delete
+	// verb; removing it from state (done automatically by the framework) is the
+	// correct behavior, mirroring the SDK v2 no-op delete.
 	tflog.Trace(ctx, "Deleted routerdynamicrouting resource from state")
-}
-
-// Helper function to read routerdynamicrouting data from API
-func (r *RouterdynamicroutingResource) readRouterdynamicroutingFromApi(ctx context.Context, data *RouterdynamicroutingResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Routerdynamicrouting.Type(), "")
-	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read routerdynamicrouting, got error: %s", err))
-		return
-	}
-
-	routerdynamicroutingSetAttrFromGet(ctx, data, getResponseData)
-
 }

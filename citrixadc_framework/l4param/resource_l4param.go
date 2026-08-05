@@ -55,14 +55,14 @@ func (r *L4paramResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Debug(ctx, "Creating l4param resource")
 
-	// l4param := l4paramGetThePayloadFromtheConfig(ctx, &data)
+	l4param := l4paramGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.L4param.Type(), &l4param)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create l4param, got error: %s", err))
-	//	 return
-	// }
+	// Make API call. l4param is a singleton, so use UpdateUnnamedResource.
+	err := r.client.UpdateUnnamedResource(service.L4param.Type(), &l4param)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create l4param, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("l4param-config")
@@ -107,14 +107,14 @@ func (r *L4paramResource) Update(ctx context.Context, req resource.UpdateRequest
 	tflog.Debug(ctx, "Updating l4param resource")
 
 	// Create API request body from the model
-	// l4param := l4paramGetThePayloadFromtheConfig(ctx, &data)
+	l4param := l4paramGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.L4param.Type(), &l4param)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update l4param, got error: %s", err))
-	//	 return
-	// }
+	// Make API call. l4param is a singleton, so use UpdateUnnamedResource.
+	err := r.client.UpdateUnnamedResource(service.L4param.Type(), &l4param)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update l4param, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated l4param resource")
 

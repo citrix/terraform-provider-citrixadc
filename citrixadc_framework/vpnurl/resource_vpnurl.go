@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *VpnurlResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	tflog.Debug(ctx, "Creating vpnurl resource")
 
-	// vpnurl := vpnurlGetThePayloadFromtheConfig(ctx, &data)
+	vpnurl := vpnurlGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnurl.Type(), &vpnurl)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnurl, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnurl-config")
+	// Named resource - use AddResource keyed on urlname
+	urlname := data.Urlname.ValueString()
+	_, err := r.client.AddResource(service.Vpnurl.Type(), urlname, &vpnurl)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnurl, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnurl resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(urlname)
+
 	// Read the updated state back
-	r.readVpnurlFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnurlFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnurl not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *VpnurlResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	tflog.Debug(ctx, "Reading vpnurl resource")
 
-	r.readVpnurlFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnurlFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnurlResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnurlResourceModel
+	var data, state VpnurlResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,30 @@ func (r *VpnurlResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnurl resource")
 
-	// Create API request body from the model
-	// vpnurl := vpnurlGetThePayloadFromtheConfig(ctx, &data)
+	vpnurl := vpnurlGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnurl.Type(), &vpnurl)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnurl, got error: %s", err))
-	//	 return
-	// }
+	// Named resource - use UpdateResource keyed on urlname
+	urlname := data.Urlname.ValueString()
+	_, err := r.client.UpdateResource(service.Vpnurl.Type(), urlname, &vpnurl)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnurl, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated vpnurl resource")
 
 	// Read the updated state back
-	r.readVpnurlFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnurlFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnurl not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +161,33 @@ func (r *VpnurlResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	tflog.Debug(ctx, "Deleting vpnurl resource")
 
-	// For vpnurl, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnurl resource from state")
+	// Named resource - delete using DeleteResource keyed on urlname
+	urlname := data.Urlname.ValueString()
+	err := r.client.DeleteResource(service.Vpnurl.Type(), urlname)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnurl, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnurl resource")
 }
 
-// Helper function to read vpnurl data from API
-func (r *VpnurlResource) readVpnurlFromApi(ctx context.Context, data *VpnurlResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnurl.Type(), "")
+// Helper function to read vpnurl data from API. Returns false when the
+// resource no longer exists on the ADC (so callers can drop it from state).
+func (r *VpnurlResource) readVpnurlFromApi(ctx context.Context, data *VpnurlResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain urlname value
+	urlname := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vpnurl.Type(), urlname)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnurl, got error: %s", err))
-		return
+		return false
 	}
 
 	vpnurlSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

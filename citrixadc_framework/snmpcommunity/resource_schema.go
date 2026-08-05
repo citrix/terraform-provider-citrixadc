@@ -2,6 +2,7 @@ package snmpcommunity
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/snmp"
 
@@ -46,15 +47,15 @@ func (r *SnmpcommunityResource) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func snmpcommunityGetThePayloadFromtheConfig(ctx context.Context, data *SnmpcommunityResourceModel) snmp.Snmpcommunity {
-	tflog.Debug(ctx, "In snmpcommunityGetThePayloadFromtheConfig Function")
+func snmpcommunityGetThePayloadFromthePlan(ctx context.Context, data *SnmpcommunityResourceModel) snmp.Snmpcommunity {
+	tflog.Debug(ctx, "In snmpcommunityGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	snmpcommunity := snmp.Snmpcommunity{}
-	if !data.Communityname.IsNull() {
+	if !data.Communityname.IsNull() && !data.Communityname.IsUnknown() {
 		snmpcommunity.Communityname = data.Communityname.ValueString()
 	}
-	if !data.Permissions.IsNull() {
+	if !data.Permissions.IsNull() && !data.Permissions.IsUnknown() {
 		snmpcommunity.Permissions = data.Permissions.ValueString()
 	}
 
@@ -67,18 +68,18 @@ func snmpcommunitySetAttrFromGet(ctx context.Context, data *SnmpcommunityResourc
 	// Convert API response to model
 	if val, ok := getResponseData["communityname"]; ok && val != nil {
 		data.Communityname = types.StringValue(val.(string))
-	} else {
+	} else if data.Communityname.IsUnknown() {
 		data.Communityname = types.StringNull()
 	}
 	if val, ok := getResponseData["permissions"]; ok && val != nil {
 		data.Permissions = types.StringValue(val.(string))
-	} else {
+	} else if data.Permissions.IsUnknown() {
 		data.Permissions = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Communityname.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Communityname.ValueString()))
 
 	return data
 }

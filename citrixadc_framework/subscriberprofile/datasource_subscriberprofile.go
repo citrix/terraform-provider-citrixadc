@@ -107,7 +107,7 @@ func (d *SubscriberprofileDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	subscriberprofileSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	subscriberprofileSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

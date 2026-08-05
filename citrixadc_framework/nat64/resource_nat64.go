@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *Nat64Resource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	tflog.Debug(ctx, "Creating nat64 resource")
 
-	// nat64 := nat64GetThePayloadFromtheConfig(ctx, &data)
+	nat64 := nat64GetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nat64.Type(), &nat64)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nat64, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nat64-config")
+	// Named resource - use AddResource
+	nat64Name := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Nat64.Type(), nat64Name, &nat64)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nat64, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nat64 resource")
 
+	// Set ID for the resource before reading state (matches SDK v2 d.SetId(name))
+	data.Id = types.StringValue(nat64Name)
+
 	// Read the updated state back
-	r.readNat64FromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNat64FromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nat64 not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *Nat64Resource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	tflog.Debug(ctx, "Reading nat64 resource")
 
-	r.readNat64FromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNat64FromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *Nat64Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data Nat64ResourceModel
+	var data, state Nat64ResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,43 @@ func (r *Nat64Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nat64 resource")
 
-	// Create API request body from the model
-	// nat64 := nat64GetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes (name is RequiresReplace)
+	hasChange := false
+	if !data.Acl6name.Equal(state.Acl6name) {
+		tflog.Debug(ctx, "acl6name has changed for nat64")
+		hasChange = true
+	}
+	if !data.Netprofile.Equal(state.Netprofile) {
+		tflog.Debug(ctx, "netprofile has changed for nat64")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nat64.Type(), &nat64)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nat64, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated nat64 resource")
+	if hasChange {
+		nat64 := nat64GetThePayloadFromtheConfig(ctx, &data)
+		// Named resource - use UpdateResource
+		nat64Name := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Nat64.Type(), nat64Name, &nat64)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nat64, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated nat64 resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nat64 resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readNat64FromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNat64FromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nat64 not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +174,32 @@ func (r *Nat64Resource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	tflog.Debug(ctx, "Deleting nat64 resource")
 
-	// For nat64, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nat64 resource from state")
+	// Named resource - delete using DeleteResource (matches SDK v2 DeleteResource(type, d.Id()))
+	nat64Name := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Nat64.Type(), nat64Name)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nat64, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nat64 resource")
 }
 
-// Helper function to read nat64 data from API
-func (r *Nat64Resource) readNat64FromApi(ctx context.Context, data *Nat64ResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nat64.Type(), "")
+// Helper function to read nat64 data from API. Returns false when the resource no longer exists.
+func (r *Nat64Resource) readNat64FromApi(ctx context.Context, data *Nat64ResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	nat64Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Nat64.Type(), nat64Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nat64, got error: %s", err))
-		return
+		return false
 	}
 
 	nat64SetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

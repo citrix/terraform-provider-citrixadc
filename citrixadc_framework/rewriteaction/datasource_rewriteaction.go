@@ -55,7 +55,7 @@ func (d *RewriteactionDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	rewriteactionSetAttrFromGet(ctx, &data, getResponseData)
+	rewriteactionSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -55,7 +55,7 @@ func (d *SslpolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	sslpolicySetAttrFromGet(ctx, &data, getResponseData)
+	sslpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

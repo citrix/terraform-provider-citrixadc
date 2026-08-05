@@ -1,0 +1,15 @@
+# Resource        : lsnappsprofile
+# Primary ADC     : 121
+# Alternate ADCs  : 151, 152
+# Planned tests   : 2
+# Result          : PASS_first=2 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 121)
+  PASS  TestAccLsnappsprofile_basic
+  PASS  TestAccLsnappsprofileDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

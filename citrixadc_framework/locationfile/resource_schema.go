@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -30,6 +29,7 @@ func (r *LocationfileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "The ID of the locationfile resource.",
 			},
+			// SDK v2: Required + ForceNew -> Required + RequiresReplace.
 			"locationfile": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -37,17 +37,26 @@ func (r *LocationfileResource) Schema(ctx context.Context, req resource.SchemaRe
 				},
 				Description: "Name of the location file, with or without absolute path. If the path is not included, the default path (/var/netscaler/locdb) is assumed. In a high availability setup, the static database must be stored in the same location on both NetScalers.",
 			},
+			// SDK v2: Optional + ForceNew (NO Default). Made Optional+Computed so the
+			// ADC-side default ("netscaler") is read back without a perpetual diff.
+			// A Default is invalid without Computed, and SDK v2 had none — so no Default.
+			// UseStateForUnknown() keeps the computed value stable across plans;
+			// RequiresReplaceIfConfigured() reproduces ForceNew only when the user
+			// actually configures the attribute (avoids computed-churn replacements).
 			"format": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("netscaler"),
 				Description: "Format of the location file. Required for the NetScaler to identify how to read the location file.",
 			},
+			// SDK v2: Optional + ForceNew (NOT Computed). The NITRO add/get operations
+			// do not carry src (only the separate Import action does), so src is never
+			// returned by GET — keep it Optional-only + RequiresReplace, matching SDK v2.
 			"src": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -57,28 +66,61 @@ func (r *LocationfileResource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func locationfileGetThePayloadFromtheConfig(ctx context.Context, data *LocationfileResourceModel) basic.Locationfile {
-	tflog.Debug(ctx, "In locationfileGetThePayloadFromtheConfig Function")
+// locationfileGetThePayloadFromthePlan builds the body for the `add` operation.
+// Mirroring SDK v2 (and the NITRO `add` doc, whose payload lists only Locationfile
+// + format), ONLY Locationfile and format are sent; src is excluded from the add
+// payload (src is used only by the separate Import action).
+func locationfileGetThePayloadFromthePlan(ctx context.Context, data *LocationfileResourceModel) basic.Locationfile {
+	tflog.Debug(ctx, "In locationfileGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	locationfile := basic.Locationfile{}
-	if !data.Locationfile.IsNull() {
+	if !data.Locationfile.IsNull() && !data.Locationfile.IsUnknown() {
 		locationfile.Locationfile = data.Locationfile.ValueString()
 	}
-	if !data.Format.IsNull() {
+	if !data.Format.IsNull() && !data.Format.IsUnknown() {
 		locationfile.Format = data.Format.ValueString()
-	}
-	if !data.Src.IsNull() {
-		locationfile.Src = data.Src.ValueString()
 	}
 
 	return locationfile
 }
 
+// locationfileSetAttrFromGet is the RESOURCE state setter. It preserves the
+// user-configured identity/inputs and only reads back computed values, so it never
+// clobbers a configured value with something the ADC omits from GET.
 func locationfileSetAttrFromGet(ctx context.Context, data *LocationfileResourceModel, getResponseData map[string]interface{}) *LocationfileResourceModel {
 	tflog.Debug(ctx, "In locationfileSetAttrFromGet Function")
 
-	// Convert API response to model
+	// locationfile is Required + RequiresReplace. Adopt the GET value only when the
+	// model has no value yet (import, where state carries only the ID); otherwise
+	// preserve the configured value to avoid clobbering it / inconsistent-result errors.
+	if data.Locationfile.IsNull() || data.Locationfile.IsUnknown() || data.Locationfile.ValueString() == "" {
+		if val, ok := getResponseData["Locationfile"]; ok && val != nil {
+			data.Locationfile = types.StringValue(val.(string))
+		}
+	}
+
+	// format is Optional+Computed: read the live value from the ADC. Guard the
+	// else-branch so a value the ADC omits from GET is only nulled when unknown,
+	// never clobbering a known configured value (omit-on-default trap).
+	if val, ok := getResponseData["format"]; ok && val != nil {
+		data.Format = types.StringValue(val.(string))
+	} else if data.Format.IsUnknown() {
+		data.Format = types.StringNull()
+	}
+
+	// src is Optional-only and never returned by GET (the add/get ops do not carry
+	// it). Preserve the configured/state value; do NOT clobber it.
+
+	// Id is set in Create/Read (SDK v2 ID = locationfile name); do not overwrite here.
+	return data
+}
+
+// locationfileSetAttrFromGetForDatasource is the DATASOURCE state setter. Unlike
+// the resource setter, it copies every value straight from the GET response and
+// assigns the datasource ID.
+func locationfileSetAttrFromGetForDatasource(ctx context.Context, data *LocationfileResourceModel, getResponseData map[string]interface{}) *LocationfileResourceModel {
+	tflog.Debug(ctx, "In locationfileSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["Locationfile"]; ok && val != nil {
 		data.Locationfile = types.StringValue(val.(string))
 	} else {
@@ -89,15 +131,15 @@ func locationfileSetAttrFromGet(ctx context.Context, data *LocationfileResourceM
 	} else {
 		data.Format = types.StringNull()
 	}
-	if val, ok := getResponseData["src"]; ok && val != nil {
-		data.Src = types.StringValue(val.(string))
+	// src is not returned by GET.
+	data.Src = types.StringNull()
+
+	// Datasource ID mirrors the SDK v2 resource ID scheme (the location file name),
+	// falling back to a static handle if the ADC returns no name.
+	if val, ok := getResponseData["Locationfile"]; ok && val != nil {
+		data.Id = types.StringValue(val.(string))
 	} else {
-		data.Src = types.StringNull()
+		data.Id = types.StringValue("locationfile-config")
 	}
-
-	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
-	data.Id = types.StringValue("locationfile-config")
-
 	return data
 }

@@ -83,28 +83,28 @@ func iptunnelparamGetThePayloadFromtheConfig(ctx context.Context, data *Iptunnel
 
 	// Create API request body from the model
 	iptunnelparam := network.Iptunnelparam{}
-	if !data.Dropfrag.IsNull() {
+	if !data.Dropfrag.IsNull() && !data.Dropfrag.IsUnknown() {
 		iptunnelparam.Dropfrag = data.Dropfrag.ValueString()
 	}
-	if !data.Dropfragcputhreshold.IsNull() {
+	if !data.Dropfragcputhreshold.IsNull() && !data.Dropfragcputhreshold.IsUnknown() {
 		iptunnelparam.Dropfragcputhreshold = utils.IntPtr(int(data.Dropfragcputhreshold.ValueInt64()))
 	}
-	if !data.Enablestrictrx.IsNull() {
+	if !data.Enablestrictrx.IsNull() && !data.Enablestrictrx.IsUnknown() {
 		iptunnelparam.Enablestrictrx = data.Enablestrictrx.ValueString()
 	}
-	if !data.Enablestricttx.IsNull() {
+	if !data.Enablestricttx.IsNull() && !data.Enablestricttx.IsUnknown() {
 		iptunnelparam.Enablestricttx = data.Enablestricttx.ValueString()
 	}
-	if !data.Mac.IsNull() {
+	if !data.Mac.IsNull() && !data.Mac.IsUnknown() {
 		iptunnelparam.Mac = data.Mac.ValueString()
 	}
-	if !data.Srcip.IsNull() {
+	if !data.Srcip.IsNull() && !data.Srcip.IsUnknown() {
 		iptunnelparam.Srcip = data.Srcip.ValueString()
 	}
-	if !data.Srciproundrobin.IsNull() {
+	if !data.Srciproundrobin.IsNull() && !data.Srciproundrobin.IsUnknown() {
 		iptunnelparam.Srciproundrobin = data.Srciproundrobin.ValueString()
 	}
-	if !data.Useclientsourceip.IsNull() {
+	if !data.Useclientsourceip.IsNull() && !data.Useclientsourceip.IsUnknown() {
 		iptunnelparam.Useclientsourceip = data.Useclientsourceip.ValueString()
 	}
 
@@ -114,47 +114,51 @@ func iptunnelparamGetThePayloadFromtheConfig(ctx context.Context, data *Iptunnel
 func iptunnelparamSetAttrFromGet(ctx context.Context, data *IptunnelparamResourceModel, getResponseData map[string]interface{}) *IptunnelparamResourceModel {
 	tflog.Debug(ctx, "In iptunnelparamSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NOTE (omit-on-default trap): NITRO may omit an attribute from GET when it holds
+	// its default value (e.g. "NO"/0). Only null an omitted attribute when it is Unknown
+	// (an unresolved Computed value); never clobber a known configured/state value, or
+	// Terraform reports "inconsistent result after apply".
 	if val, ok := getResponseData["dropfrag"]; ok && val != nil {
 		data.Dropfrag = types.StringValue(val.(string))
-	} else {
+	} else if data.Dropfrag.IsUnknown() {
 		data.Dropfrag = types.StringNull()
 	}
 	if val, ok := getResponseData["dropfragcputhreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dropfragcputhreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Dropfragcputhreshold.IsUnknown() {
 		data.Dropfragcputhreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["enablestrictrx"]; ok && val != nil {
 		data.Enablestrictrx = types.StringValue(val.(string))
-	} else {
+	} else if data.Enablestrictrx.IsUnknown() {
 		data.Enablestrictrx = types.StringNull()
 	}
 	if val, ok := getResponseData["enablestricttx"]; ok && val != nil {
 		data.Enablestricttx = types.StringValue(val.(string))
-	} else {
+	} else if data.Enablestricttx.IsUnknown() {
 		data.Enablestricttx = types.StringNull()
 	}
 	if val, ok := getResponseData["mac"]; ok && val != nil {
 		data.Mac = types.StringValue(val.(string))
-	} else {
+	} else if data.Mac.IsUnknown() {
 		data.Mac = types.StringNull()
 	}
 	if val, ok := getResponseData["srcip"]; ok && val != nil {
 		data.Srcip = types.StringValue(val.(string))
-	} else {
+	} else if data.Srcip.IsUnknown() {
 		data.Srcip = types.StringNull()
 	}
 	if val, ok := getResponseData["srciproundrobin"]; ok && val != nil {
 		data.Srciproundrobin = types.StringValue(val.(string))
-	} else {
+	} else if data.Srciproundrobin.IsUnknown() {
 		data.Srciproundrobin = types.StringNull()
 	}
 	if val, ok := getResponseData["useclientsourceip"]; ok && val != nil {
 		data.Useclientsourceip = types.StringValue(val.(string))
-	} else {
+	} else if data.Useclientsourceip.IsUnknown() {
 		data.Useclientsourceip = types.StringNull()
 	}
 

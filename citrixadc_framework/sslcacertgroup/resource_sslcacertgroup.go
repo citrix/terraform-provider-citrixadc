@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *SslcacertgroupResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating sslcacertgroup resource")
 
-	// sslcacertgroup := sslcacertgroupGetThePayloadFromtheConfig(ctx, &data)
+	sslcacertgroup := sslcacertgroupGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslcacertgroup.Type(), &sslcacertgroup)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslcacertgroup, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslcacertgroup-config")
+	// Named resource - use AddResource
+	cacertgroupname_value := data.Cacertgroupname.ValueString()
+	_, err := r.client.AddResource(service.Sslcacertgroup.Type(), cacertgroupname_value, &sslcacertgroup)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslcacertgroup, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslcacertgroup resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Cacertgroupname.ValueString()))
+
 	// Read the updated state back
-	r.readSslcacertgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslcacertgroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslcacertgroup not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *SslcacertgroupResource) Read(ctx context.Context, req resource.ReadRequ
 
 	tflog.Debug(ctx, "Reading sslcacertgroup resource")
 
-	r.readSslcacertgroupFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslcacertgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslcacertgroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslcacertgroupResourceModel
+	var data, state SslcacertgroupResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,23 @@ func (r *SslcacertgroupResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslcacertgroup resource")
 
-	// Create API request body from the model
-	// sslcacertgroup := sslcacertgroupGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslcacertgroup.Type(), &sslcacertgroup)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslcacertgroup, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated sslcacertgroup resource")
+	// sslcacertgroup has no NITRO-updatable attributes: cacertgroupname is the
+	// only user-settable attribute and it is ForceNew (RequiresReplace), so any
+	// change to it triggers a destroy/recreate rather than an in-place update.
+	// Nothing to push to NITRO here; just re-read the current state.
 
 	// Read the updated state back
-	r.readSslcacertgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslcacertgroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslcacertgroup not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +154,36 @@ func (r *SslcacertgroupResource) Delete(ctx context.Context, req resource.Delete
 
 	tflog.Debug(ctx, "Deleting sslcacertgroup resource")
 
-	// For sslcacertgroup, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslcacertgroup resource from state")
+	// Named resource - delete using DeleteResource
+	cacertgroupname_value := data.Cacertgroupname.ValueString()
+	err := r.client.DeleteResource(service.Sslcacertgroup.Type(), cacertgroupname_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslcacertgroup, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted sslcacertgroup resource")
 }
 
 // Helper function to read sslcacertgroup data from API
-func (r *SslcacertgroupResource) readSslcacertgroupFromApi(ctx context.Context, data *SslcacertgroupResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslcacertgroup.Type(), "")
+func (r *SslcacertgroupResource) readSslcacertgroupFromApi(ctx context.Context, data *SslcacertgroupResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (cacertgroupname)
+	cacertgroupname_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Sslcacertgroup.Type(), cacertgroupname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslcacertgroup, got error: %s", err))
-		return
+		return false
 	}
 
 	sslcacertgroupSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

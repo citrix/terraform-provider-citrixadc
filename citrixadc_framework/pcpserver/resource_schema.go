@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -41,7 +40,10 @@ func (r *PcpserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The IP address of the PCP server.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the PCP server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore CLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my pcpServer\" or my pcpServer).",
 			},
 			"pcpprofile": schema.StringAttribute{
@@ -51,7 +53,7 @@ func (r *PcpserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"port": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5351),
+				Computed:    true,
 				Description: "Port number for the PCP server.",
 			},
 		},
@@ -63,16 +65,38 @@ func pcpserverGetThePayloadFromtheConfig(ctx context.Context, data *PcpserverRes
 
 	// Create API request body from the model
 	pcpserver := pcp.Pcpserver{}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		pcpserver.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		pcpserver.Name = data.Name.ValueString()
 	}
-	if !data.Pcpprofile.IsNull() {
+	if !data.Pcpprofile.IsNull() && !data.Pcpprofile.IsUnknown() {
 		pcpserver.Pcpprofile = data.Pcpprofile.ValueString()
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
+		pcpserver.Port = utils.IntPtr(int(data.Port.ValueInt64()))
+	}
+
+	return pcpserver
+}
+
+// pcpserverGetTheUpdatablePayloadFromThePlan builds the payload for the NITRO
+// update (PUT) operation. Per the NITRO doc the update endpoint accepts only
+// name, port and pcpprofile (ipaddress is ForceNew and not part of the update
+// payload).
+func pcpserverGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *PcpserverResourceModel) pcp.Pcpserver {
+	tflog.Debug(ctx, "In pcpserverGetTheUpdatablePayloadFromThePlan Function")
+
+	pcpserver := pcp.Pcpserver{}
+	// name is the key and must always be present in the update body
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		pcpserver.Name = data.Name.ValueString()
+	}
+	if !data.Pcpprofile.IsNull() && !data.Pcpprofile.IsUnknown() {
+		pcpserver.Pcpprofile = data.Pcpprofile.ValueString()
+	}
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		pcpserver.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
 
@@ -107,7 +131,7 @@ func pcpserverSetAttrFromGet(ctx context.Context, data *PcpserverResourceModel, 
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value (name) as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

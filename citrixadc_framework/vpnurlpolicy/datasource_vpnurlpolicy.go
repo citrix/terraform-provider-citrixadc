@@ -55,7 +55,7 @@ func (d *VpnurlpolicyDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	vpnurlpolicySetAttrFromGet(ctx, &data, getResponseData)
+	vpnurlpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

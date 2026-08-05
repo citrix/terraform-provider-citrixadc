@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *PcpprofileResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating pcpprofile resource")
 
-	// pcpprofile := pcpprofileGetThePayloadFromtheConfig(ctx, &data)
+	pcpprofile := pcpprofileGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Pcpprofile.Type(), &pcpprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create pcpprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("pcpprofile-config")
+	// Named resource - use AddResource
+	pcpprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Pcpprofile.Type(), pcpprofileName, &pcpprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create pcpprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created pcpprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(pcpprofileName)
+
 	// Read the updated state back
-	r.readPcpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readPcpprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "pcpprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *PcpprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading pcpprofile resource")
 
-	r.readPcpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readPcpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *PcpprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data PcpprofileResourceModel
+	var data, state PcpprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,62 @@ func (r *PcpprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating pcpprofile resource")
 
-	// Create API request body from the model
-	// pcpprofile := pcpprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Announcemulticount.Equal(state.Announcemulticount) {
+		tflog.Debug(ctx, "announcemulticount has changed for pcpprofile")
+		hasChange = true
+	}
+	if !data.Mapping.Equal(state.Mapping) {
+		tflog.Debug(ctx, "mapping has changed for pcpprofile")
+		hasChange = true
+	}
+	if !data.Maxmaplife.Equal(state.Maxmaplife) {
+		tflog.Debug(ctx, "maxmaplife has changed for pcpprofile")
+		hasChange = true
+	}
+	if !data.Minmaplife.Equal(state.Minmaplife) {
+		tflog.Debug(ctx, "minmaplife has changed for pcpprofile")
+		hasChange = true
+	}
+	if !data.Peer.Equal(state.Peer) {
+		tflog.Debug(ctx, "peer has changed for pcpprofile")
+		hasChange = true
+	}
+	if !data.Thirdparty.Equal(state.Thirdparty) {
+		tflog.Debug(ctx, "thirdparty has changed for pcpprofile")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Pcpprofile.Type(), &pcpprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update pcpprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		pcpprofile := pcpprofileGetThePayloadFromtheConfig(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		pcpprofileName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Pcpprofile.Type(), pcpprofileName, &pcpprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update pcpprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated pcpprofile resource")
+		tflog.Trace(ctx, "Updated pcpprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for pcpprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readPcpprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readPcpprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "pcpprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +193,33 @@ func (r *PcpprofileResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	tflog.Debug(ctx, "Deleting pcpprofile resource")
+	// Named resource - delete using DeleteResource
+	pcpprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Pcpprofile.Type(), pcpprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete pcpprofile, got error: %s", err))
+		return
+	}
 
-	// For pcpprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted pcpprofile resource from state")
+	tflog.Trace(ctx, "Deleted pcpprofile resource")
 }
 
-// Helper function to read pcpprofile data from API
-func (r *PcpprofileResource) readPcpprofileFromApi(ctx context.Context, data *PcpprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Pcpprofile.Type(), "")
+// Helper function to read pcpprofile data from API.
+// Returns false when the resource no longer exists on the ADC.
+func (r *PcpprofileResource) readPcpprofileFromApi(ctx context.Context, data *PcpprofileResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	pcpprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Pcpprofile.Type(), pcpprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read pcpprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	pcpprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

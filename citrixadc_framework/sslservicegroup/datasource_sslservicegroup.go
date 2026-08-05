@@ -55,7 +55,7 @@ func (d *SslservicegroupDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	sslservicegroupSetAttrFromGet(ctx, &data, getResponseData)
+	sslservicegroupSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *LsnsipalgprofileResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating lsnsipalgprofile resource")
 
-	// lsnsipalgprofile := lsnsipalgprofileGetThePayloadFromtheConfig(ctx, &data)
+	lsnsipalgprofile := lsnsipalgprofileGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnsipalgprofile.Type(), &lsnsipalgprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnsipalgprofile, got error: %s", err))
-	//	 return
-	// }
+	// Named resource - use AddResource (NITRO add is POST /nitro/v1/config/lsnsipalgprofile)
+	lsnsipalgprofileName := data.Sipalgprofilename.ValueString()
+	_, err := r.client.AddResource(service.Lsnsipalgprofile.Type(), lsnsipalgprofileName, &lsnsipalgprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnsipalgprofile, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsnsipalgprofile-config")
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(lsnsipalgprofileName)
 
 	tflog.Trace(ctx, "Created lsnsipalgprofile resource")
 
 	// Read the updated state back
-	r.readLsnsipalgprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnsipalgprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnsipalgprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *LsnsipalgprofileResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading lsnsipalgprofile resource")
 
-	r.readLsnsipalgprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLsnsipalgprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LsnsipalgprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsnsipalgprofileResourceModel
+	var data, state LsnsipalgprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,31 @@ func (r *LsnsipalgprofileResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsnsipalgprofile resource")
 
 	// Create API request body from the model
-	// lsnsipalgprofile := lsnsipalgprofileGetThePayloadFromtheConfig(ctx, &data)
+	lsnsipalgprofile := lsnsipalgprofileGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnsipalgprofile.Type(), &lsnsipalgprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnsipalgprofile, got error: %s", err))
-	//	 return
-	// }
+	// NITRO update is PUT /nitro/v1/config/lsnsipalgprofile (name carried in body) - matches SDK v2
+	err := r.client.UpdateUnnamedResource(service.Lsnsipalgprofile.Type(), &lsnsipalgprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnsipalgprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated lsnsipalgprofile resource")
 
 	// Read the updated state back
-	r.readLsnsipalgprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnsipalgprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnsipalgprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +163,33 @@ func (r *LsnsipalgprofileResource) Delete(ctx context.Context, req resource.Dele
 
 	tflog.Debug(ctx, "Deleting lsnsipalgprofile resource")
 
-	// For lsnsipalgprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsnsipalgprofile resource from state")
+	// Named resource - delete using DeleteResource by ID (the live name)
+	lsnsipalgprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Lsnsipalgprofile.Type(), lsnsipalgprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnsipalgprofile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsnsipalgprofile resource")
 }
 
-// Helper function to read lsnsipalgprofile data from API
-func (r *LsnsipalgprofileResource) readLsnsipalgprofileFromApi(ctx context.Context, data *LsnsipalgprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsnsipalgprofile.Type(), "")
+// Helper function to read lsnsipalgprofile data from API.
+// Returns false (without error) when the resource no longer exists on the ADC.
+func (r *LsnsipalgprofileResource) readLsnsipalgprofileFromApi(ctx context.Context, data *LsnsipalgprofileResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (sipalgprofilename)
+	lsnsipalgprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lsnsipalgprofile.Type(), lsnsipalgprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsnsipalgprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	lsnsipalgprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

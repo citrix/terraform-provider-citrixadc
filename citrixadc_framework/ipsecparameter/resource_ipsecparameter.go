@@ -55,14 +55,16 @@ func (r *IpsecparameterResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating ipsecparameter resource")
 
-	// ipsecparameter := ipsecparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	ipsecparameter := ipsecparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ipsecparameter, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed (singleton) resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ipsecparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("ipsecparameter-config")
@@ -71,6 +73,9 @@ func (r *IpsecparameterResource) Create(ctx context.Context, req resource.Create
 
 	// Read the updated state back
 	r.readIpsecparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,8 +100,10 @@ func (r *IpsecparameterResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *IpsecparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data IpsecparameterResourceModel
+	var data, state IpsecparameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +111,29 @@ func (r *IpsecparameterResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating ipsecparameter resource")
 
 	// Create API request body from the model
-	// ipsecparameter := ipsecparameterGetThePayloadFromtheConfig(ctx, &data)
+	ipsecparameter := ipsecparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ipsecparameter, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed (singleton) resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ipsecparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated ipsecparameter resource")
 
 	// Read the updated state back
 	r.readIpsecparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

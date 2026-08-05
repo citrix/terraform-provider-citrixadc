@@ -2,6 +2,7 @@ package ipset
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func IpsetDataSourceSchema() schema.Schema {
@@ -18,6 +19,18 @@ func IpsetDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
+			},
+			"nsipbinding": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Description: "The IPv4 addresses (nsip) bound to the IP set.",
+			},
+			"nsip6binding": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Description: "The IPv6 addresses (nsip6) bound to the IP set.",
 			},
 		},
 	}

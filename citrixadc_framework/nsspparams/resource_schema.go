@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,12 +30,12 @@ func (r *NsspparamsResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"basethreshold": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(200),
+				Computed:    true,
 				Description: "Maximum number of server connections that can be opened before surge protection is activated.",
 			},
 			"throttle": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("Normal"),
+				Computed:    true,
 				Description: "Rate at which the system opens connections to the server.",
 			},
 		},
@@ -49,10 +47,10 @@ func nsspparamsGetThePayloadFromtheConfig(ctx context.Context, data *NsspparamsR
 
 	// Create API request body from the model
 	nsspparams := ns.Nsspparams{}
-	if !data.Basethreshold.IsNull() {
+	if !data.Basethreshold.IsNull() && !data.Basethreshold.IsUnknown() {
 		nsspparams.Basethreshold = utils.IntPtr(int(data.Basethreshold.ValueInt64()))
 	}
-	if !data.Throttle.IsNull() {
+	if !data.Throttle.IsNull() && !data.Throttle.IsUnknown() {
 		nsspparams.Throttle = data.Throttle.ValueString()
 	}
 
@@ -62,17 +60,19 @@ func nsspparamsGetThePayloadFromtheConfig(ctx context.Context, data *NsspparamsR
 func nsspparamsSetAttrFromGet(ctx context.Context, data *NsspparamsResourceModel, getResponseData map[string]interface{}) *NsspparamsResourceModel {
 	tflog.Debug(ctx, "In nsspparamsSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branches: only null a value when it is still Unknown
+	// (never clobber a known configured 0/false value that NITRO omits from GET).
 	if val, ok := getResponseData["basethreshold"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Basethreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Basethreshold.IsUnknown() {
 		data.Basethreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["throttle"]; ok && val != nil {
 		data.Throttle = types.StringValue(val.(string))
-	} else {
+	} else if data.Throttle.IsUnknown() {
 		data.Throttle = types.StringNull()
 	}
 

@@ -43,7 +43,7 @@ func (d *NspbrDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// nspbr is a named resource; look it up by its name (the plain-value ID).
 	name_Name := data.Name.ValueString()
 
 	var getResponseData map[string]interface{}
@@ -55,7 +55,9 @@ func (d *NspbrDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	nspbrSetAttrFromGet(ctx, &data, getResponseData)
+	// Use the datasource-specific setter which faithfully copies the GET response
+	// and sets data.Id (the datasource has no Create).
+	nspbrSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

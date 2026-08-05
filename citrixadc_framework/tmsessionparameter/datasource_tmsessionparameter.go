@@ -53,7 +53,7 @@ func (d *TmsessionparameterDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	tmsessionparameterSetAttrFromGet(ctx, &data, getResponseData)
+	tmsessionparameterSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

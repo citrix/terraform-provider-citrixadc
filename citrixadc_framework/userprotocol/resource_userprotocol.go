@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *UserprotocolResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating userprotocol resource")
 
-	// userprotocol := userprotocolGetThePayloadFromtheConfig(ctx, &data)
+	userprotocol := userprotocolGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Userprotocol.Type(), &userprotocol)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create userprotocol, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("userprotocol-config")
+	// Named resource - use AddResource
+	userprotocolName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Userprotocol.Type(), userprotocolName, &userprotocol)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create userprotocol, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created userprotocol resource")
 
+	// Set ID for the resource before reading state back (single unique attr - plain value)
+	data.Id = types.StringValue(userprotocolName)
+
 	// Read the updated state back
-	r.readUserprotocolFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readUserprotocolFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "userprotocol not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *UserprotocolResource) Read(ctx context.Context, req resource.ReadReques
 
 	tflog.Debug(ctx, "Reading userprotocol resource")
 
-	r.readUserprotocolFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readUserprotocolFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *UserprotocolResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data UserprotocolResourceModel
+	var data, state UserprotocolResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,38 @@ func (r *UserprotocolResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating userprotocol resource")
 
-	// Create API request body from the model
-	// userprotocol := userprotocolGetThePayloadFromtheConfig(ctx, &data)
+	// Only `comment` is updatable in SDK v2; name/extension/transport are ForceNew.
+	hasChange := false
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for userprotocol")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Userprotocol.Type(), &userprotocol)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update userprotocol, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated userprotocol resource")
+	if hasChange {
+		userprotocol := userprotocolGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Matches SDK v2 update path: PUT to the userprotocol resource with name+comment.
+		err := r.client.UpdateUnnamedResource(service.Userprotocol.Type(), &userprotocol)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update userprotocol, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated userprotocol resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for userprotocol resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readUserprotocolFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readUserprotocolFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "userprotocol not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +169,33 @@ func (r *UserprotocolResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting userprotocol resource")
 
-	// For userprotocol, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted userprotocol resource from state")
+	// Named resource - delete using DeleteResource (ID is the plain name)
+	userprotocolName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Userprotocol.Type(), userprotocolName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete userprotocol, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted userprotocol resource")
 }
 
-// Helper function to read userprotocol data from API
-func (r *UserprotocolResource) readUserprotocolFromApi(ctx context.Context, data *UserprotocolResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Userprotocol.Type(), "")
+// Helper function to read userprotocol data from API. Returns false when the
+// resource no longer exists on the ADC (so the caller can drop it from state).
+func (r *UserprotocolResource) readUserprotocolFromApi(ctx context.Context, data *UserprotocolResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	userprotocolName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Userprotocol.Type(), userprotocolName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read userprotocol, got error: %s", err))
-		return
+		return false
 	}
 
 	userprotocolSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *LsnappsprofileResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating lsnappsprofile resource")
 
-	// lsnappsprofile := lsnappsprofileGetThePayloadFromtheConfig(ctx, &data)
+	lsnappsprofile := lsnappsprofileGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnappsprofile.Type(), &lsnappsprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnappsprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsnappsprofile-config")
+	// Named resource - use AddResource (POST)
+	appsprofilename := data.Appsprofilename.ValueString()
+	_, err := r.client.AddResource(service.Lsnappsprofile.Type(), appsprofilename, &lsnappsprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnappsprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lsnappsprofile resource")
 
+	// Generate the resource ID (single unique attribute - plain value)
+	data.Id = types.StringValue(appsprofilename)
+
 	// Read the updated state back
-	r.readLsnappsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnappsprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnappsprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *LsnappsprofileResource) Read(ctx context.Context, req resource.ReadRequ
 
 	tflog.Debug(ctx, "Reading lsnappsprofile resource")
 
-	r.readLsnappsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLsnappsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LsnappsprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsnappsprofileResourceModel
+	var data, state LsnappsprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,60 @@ func (r *LsnappsprofileResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsnappsprofile resource")
 
-	// Create API request body from the model
-	// lsnappsprofile := lsnappsprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Filtering.Equal(state.Filtering) {
+		tflog.Debug(ctx, "filtering has changed for lsnappsprofile")
+		hasChange = true
+	}
+	if !data.Ippooling.Equal(state.Ippooling) {
+		tflog.Debug(ctx, "ippooling has changed for lsnappsprofile")
+		hasChange = true
+	}
+	if !data.L2info.Equal(state.L2info) {
+		tflog.Debug(ctx, "l2info has changed for lsnappsprofile")
+		hasChange = true
+	}
+	if !data.Mapping.Equal(state.Mapping) {
+		tflog.Debug(ctx, "mapping has changed for lsnappsprofile")
+		hasChange = true
+	}
+	if !data.Tcpproxy.Equal(state.Tcpproxy) {
+		tflog.Debug(ctx, "tcpproxy has changed for lsnappsprofile")
+		hasChange = true
+	}
+	if !data.Td.Equal(state.Td) {
+		tflog.Debug(ctx, "td has changed for lsnappsprofile")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnappsprofile.Type(), &lsnappsprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnappsprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model (excludes ForceNew transportprotocol)
+		lsnappsprofile := lsnappsprofileGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// SDK v2 parity - update is via PUT with the name carried in the body
+		err := r.client.UpdateUnnamedResource(service.Lsnappsprofile.Type(), &lsnappsprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnappsprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated lsnappsprofile resource")
+		tflog.Trace(ctx, "Updated lsnappsprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsnappsprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readLsnappsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnappsprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnappsprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +191,33 @@ func (r *LsnappsprofileResource) Delete(ctx context.Context, req resource.Delete
 
 	tflog.Debug(ctx, "Deleting lsnappsprofile resource")
 
-	// For lsnappsprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsnappsprofile resource from state")
+	// Named resource - delete using DeleteResource
+	appsprofilename := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Lsnappsprofile.Type(), appsprofilename)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnappsprofile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsnappsprofile resource")
 }
 
-// Helper function to read lsnappsprofile data from API
-func (r *LsnappsprofileResource) readLsnappsprofileFromApi(ctx context.Context, data *LsnappsprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsnappsprofile.Type(), "")
+// Helper function to read lsnappsprofile data from API.
+// Returns false (without an error diagnostic) when the resource no longer exists.
+func (r *LsnappsprofileResource) readLsnappsprofileFromApi(ctx context.Context, data *LsnappsprofileResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value
+	appsprofilename := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lsnappsprofile.Type(), appsprofilename)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsnappsprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	lsnappsprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

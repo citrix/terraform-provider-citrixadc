@@ -55,14 +55,15 @@ func (r *NtpparamResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating ntpparam resource")
 
-	// ntpparam := ntpparamGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	ntpparam := ntpparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ntpparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ntpparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("ntpparam-config")
@@ -106,15 +107,15 @@ func (r *NtpparamResource) Update(ctx context.Context, req resource.UpdateReques
 
 	tflog.Debug(ctx, "Updating ntpparam resource")
 
-	// Create API request body from the model
-	// ntpparam := ntpparamGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	ntpparam := ntpparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ntpparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ntpparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated ntpparam resource")
 

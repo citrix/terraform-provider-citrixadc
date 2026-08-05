@@ -55,14 +55,14 @@ func (r *NshttpparamResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating nshttpparam resource")
 
-	// nshttpparam := nshttpparamGetThePayloadFromtheConfig(ctx, &data)
+	nshttpparam := nshttpparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nshttpparam.Type(), &nshttpparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nshttpparam, got error: %s", err))
-	//	 return
-	// }
+	// nshttpparam is a singleton configuration resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nshttpparam.Type(), &nshttpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nshttpparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nshttpparam-config")
@@ -95,8 +95,10 @@ func (r *NshttpparamResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *NshttpparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NshttpparamResourceModel
+	var data, state NshttpparamResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +106,20 @@ func (r *NshttpparamResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nshttpparam resource")
 
 	// Create API request body from the model
-	// nshttpparam := nshttpparamGetThePayloadFromtheConfig(ctx, &data)
+	nshttpparam := nshttpparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nshttpparam.Type(), &nshttpparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nshttpparam, got error: %s", err))
-	//	 return
-	// }
+	// nshttpparam is a singleton configuration resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nshttpparam.Type(), &nshttpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nshttpparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nshttpparam resource")
 

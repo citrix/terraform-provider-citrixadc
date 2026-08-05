@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/spillover"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,20 +56,21 @@ func (r *SpilloveractionResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	tflog.Debug(ctx, "Creating spilloveraction resource")
-
-	// spilloveraction := spilloveractionGetThePayloadFromtheConfig(ctx, &data)
+	spilloveraction := spilloveractionGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Spilloveraction.Type(), &spilloveraction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create spilloveraction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("spilloveraction-config")
+	// Named resource - use AddResource (matches SDK v2 client.AddResource)
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Spilloveraction.Type(), name_value, &spilloveraction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create spilloveraction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created spilloveraction resource")
+
+	// Set ID for the resource before reading state (SDK v2 parity: ID == name)
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	// Read the updated state back
 	r.readSpilloveractionFromApi(ctx, &data, &resp.Diagnostics)
@@ -90,13 +93,24 @@ func (r *SpilloveractionResource) Read(ctx context.Context, req resource.ReadReq
 
 	r.readSpilloveractionFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SpilloveractionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SpilloveractionResourceModel
+	var data, state SpilloveractionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +118,47 @@ func (r *SpilloveractionResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating spilloveraction resource")
 
-	// Create API request body from the model
-	// spilloveraction := spilloveractionGetThePayloadFromtheConfig(ctx, &data)
+	// Rename support: spilloveraction exposes NO set/update endpoint (NITRO
+	// operations are add/delete/get/rename only). The only in-place mutation is
+	// the `rename` action. Every other schema attribute (name, action) uses
+	// RequiresReplace / RequiresReplaceIfConfigured, so Terraform recreates the
+	// resource on any of those changes and never reaches here for them. The ONLY
+	// change that lands in Update is `newname`.
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		// The rename SOURCE is the CURRENT LIVE name, which is tracked by the ID -
+		// NOT state.Name. state.Name stays pinned to the originally configured value,
+		// so on a SECOND rename it would point at the wrong (no longer live) name.
+		oldName := state.Id.ValueString()
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("Renaming spilloveraction from %q to %q", oldName, newName))
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Spilloveraction.Type(), &spilloveraction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update spilloveraction, got error: %s", err))
-	//	 return
-	// }
+		renamePayload := spillover.Spilloveraction{
+			Name:    oldName,
+			Newname: newName,
+		}
+		if err := r.client.ActOnResource(service.Spilloveraction.Type(), &renamePayload, "rename"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename spilloveraction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated spilloveraction resource")
+		// The live object is now named newName. Point the ID at it so the read
+		// below (and all future reads) address the renamed resource.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Read the updated state back
+	// Read the current state back. Capture the plan values for the identity-bearing
+	// attributes and restore them after the read so GET (which returns the live/new
+	// name) does not clobber the user-facing configuration.
+	planName := data.Name
+	planNewname := data.Newname
 	r.readSpilloveractionFromApi(ctx, &data, &resp.Diagnostics)
+	data.Name = planName
+	data.Newname = planNewname
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +175,38 @@ func (r *SpilloveractionResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	tflog.Debug(ctx, "Deleting spilloveraction resource")
+	// Named resource - delete using DeleteResource (matches SDK v2). The ID holds
+	// the CURRENT LIVE name (== name at create, == newname after a rename), so we
+	// must delete by data.Id, NOT data.Name (which stays at the originally
+	// configured value and would target a non-existent name after a rename).
+	liveName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Spilloveraction.Type(), liveName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete spilloveraction, got error: %s", err))
+		return
+	}
 
-	// For spilloveraction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted spilloveraction resource from state")
+	tflog.Trace(ctx, "Deleted spilloveraction resource")
 }
 
 // Helper function to read spilloveraction data from API
 func (r *SpilloveractionResource) readSpilloveractionFromApi(ctx context.Context, data *SpilloveractionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Spilloveraction.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value (the name)
+	name_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Spilloveraction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read spilloveraction, got error: %s", err))
 		return
 	}
 
 	spilloveractionSetAttrFromGet(ctx, data, getResponseData)
-
 }

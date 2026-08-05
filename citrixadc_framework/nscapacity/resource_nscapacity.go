@@ -3,7 +3,9 @@ package nscapacity
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -55,16 +57,25 @@ func (r *NscapacityResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nscapacity resource")
 
-	// nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
+	// Build the NITRO payload from the plan (Optional+Computed attributes that were
+	// not configured are unknown and are skipped by the payload builder).
+	nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nscapacity, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource to push the capacity config.
+	err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nscapacity, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Applying capacity/licensing requires a warm reboot for it to take effect
+	// (matches the SDK v2 createNscapacityFunc behaviour).
+	if err := r.warmRebootNetScaler(ctx); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Error warm rebooting ADC after applying nscapacity, got error: %s", err))
+		return
+	}
+
+	// Singleton resource - static ID
 	data.Id = types.StringValue("nscapacity-config")
 
 	tflog.Trace(ctx, "Created nscapacity resource")
@@ -95,8 +106,10 @@ func (r *NscapacityResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NscapacityResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NscapacityResourceModel
+	var data, state NscapacityResourceModel
 
+	// Read Terraform prior state to preserve the ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +117,27 @@ func (r *NscapacityResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state (singleton)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nscapacity resource")
 
-	// Create API request body from the model
-	// nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
+	// Build the NITRO payload from the plan.
+	nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nscapacity, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource. SDK v2 shared its create func
+	// for updates, so the update path mirrors create (push config + warm reboot).
+	err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nscapacity, got error: %s", err))
+		return
+	}
+
+	// Applying capacity/licensing requires a warm reboot for it to take effect.
+	if err := r.warmRebootNetScaler(ctx); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Error warm rebooting ADC after applying nscapacity, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nscapacity resource")
 
@@ -137,9 +160,48 @@ func (r *NscapacityResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting nscapacity resource")
 
-	// For nscapacity, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nscapacity resource from state")
+	// nscapacity is a singleton/action-only configuration; there is no DELETE verb.
+	// SDK v2 (deleteNscapacityFunc) resets the licensing knobs via the NITRO "unset"
+	// action, flagging the fields that were set in state. Replicate that exactly.
+	type nscapacityRemove struct {
+		Bandwidth bool `json:"bandwidth,omitempty"`
+		Platform  bool `json:"platform,omitempty"`
+		Vcpu      bool `json:"vcpu,omitempty"`
+	}
+	nscapacity := nscapacityRemove{}
+
+	if !data.Bandwidth.IsNull() && data.Bandwidth.ValueInt64() != 0 {
+		nscapacity.Bandwidth = true
+	}
+	if !data.Platform.IsNull() && data.Platform.ValueString() != "" {
+		nscapacity.Platform = true
+	}
+	if !data.Vcpu.IsNull() && data.Vcpu.ValueBool() {
+		nscapacity.Vcpu = true
+	}
+
+	if err := r.client.ActOnResource(service.Nscapacity.Type(), &nscapacity, "unset"); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete (unset) nscapacity, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nscapacity resource (unset licensing knobs)")
+}
+
+// warmRebootNetScaler issues a warm reboot and waits for the appliance to come
+// back, mirroring the SDK v2 rebootNetScaler(d, meta, warm=true) helper. Applying
+// an nscapacity/licensing change only takes effect after a reboot.
+func (r *NscapacityResource) warmRebootNetScaler(ctx context.Context) error {
+	tflog.Debug(ctx, "Warm rebooting NetScaler after nscapacity change")
+	reboot := ns.Reboot{
+		Warm: true,
+	}
+	if err := r.client.ActOnResource("reboot", &reboot, ""); err != nil {
+		return err
+	}
+	// Wait for the NetScaler to come back after a warm reboot (SDK v2 sleeps 120s).
+	time.Sleep(time.Second * 120)
+	return nil
 }
 
 // Helper function to read nscapacity data from API

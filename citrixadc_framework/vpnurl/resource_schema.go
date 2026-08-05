@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -79,7 +81,11 @@ func (r *VpnurlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Single sign on type for unified gateway",
 			},
 			"urlname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 marked urlname as ForceNew -> preserve as RequiresReplace for backward compatibility.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the bookmark link.",
 			},
 			"vservername": schema.StringAttribute{
@@ -96,37 +102,37 @@ func vpnurlGetThePayloadFromtheConfig(ctx context.Context, data *VpnurlResourceM
 
 	// Create API request body from the model
 	vpnurl := vpn.Vpnurl{}
-	if !data.Actualurl.IsNull() {
+	if !data.Actualurl.IsNull() && !data.Actualurl.IsUnknown() {
 		vpnurl.Actualurl = data.Actualurl.ValueString()
 	}
-	if !data.Appjson.IsNull() {
+	if !data.Appjson.IsNull() && !data.Appjson.IsUnknown() {
 		vpnurl.Appjson = data.Appjson.ValueString()
 	}
-	if !data.Applicationtype.IsNull() {
+	if !data.Applicationtype.IsNull() && !data.Applicationtype.IsUnknown() {
 		vpnurl.Applicationtype = data.Applicationtype.ValueString()
 	}
-	if !data.Clientlessaccess.IsNull() {
+	if !data.Clientlessaccess.IsNull() && !data.Clientlessaccess.IsUnknown() {
 		vpnurl.Clientlessaccess = data.Clientlessaccess.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		vpnurl.Comment = data.Comment.ValueString()
 	}
-	if !data.Iconurl.IsNull() {
+	if !data.Iconurl.IsNull() && !data.Iconurl.IsUnknown() {
 		vpnurl.Iconurl = data.Iconurl.ValueString()
 	}
-	if !data.Linkname.IsNull() {
+	if !data.Linkname.IsNull() && !data.Linkname.IsUnknown() {
 		vpnurl.Linkname = data.Linkname.ValueString()
 	}
-	if !data.Samlssoprofile.IsNull() {
+	if !data.Samlssoprofile.IsNull() && !data.Samlssoprofile.IsUnknown() {
 		vpnurl.Samlssoprofile = data.Samlssoprofile.ValueString()
 	}
-	if !data.Ssotype.IsNull() {
+	if !data.Ssotype.IsNull() && !data.Ssotype.IsUnknown() {
 		vpnurl.Ssotype = data.Ssotype.ValueString()
 	}
-	if !data.Urlname.IsNull() {
+	if !data.Urlname.IsNull() && !data.Urlname.IsUnknown() {
 		vpnurl.Urlname = data.Urlname.ValueString()
 	}
-	if !data.Vservername.IsNull() {
+	if !data.Vservername.IsNull() && !data.Vservername.IsUnknown() {
 		vpnurl.Vservername = data.Vservername.ValueString()
 	}
 
@@ -136,65 +142,67 @@ func vpnurlGetThePayloadFromtheConfig(ctx context.Context, data *VpnurlResourceM
 func vpnurlSetAttrFromGet(ctx context.Context, data *VpnurlResourceModel, getResponseData map[string]interface{}) *VpnurlResourceModel {
 	tflog.Debug(ctx, "In vpnurlSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branches so we only null a value when it is unknown (never
+	// clobber a known configured value that NITRO happens to omit from GET).
 	if val, ok := getResponseData["actualurl"]; ok && val != nil {
 		data.Actualurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Actualurl.IsUnknown() {
 		data.Actualurl = types.StringNull()
 	}
 	if val, ok := getResponseData["appjson"]; ok && val != nil {
 		data.Appjson = types.StringValue(val.(string))
-	} else {
+	} else if data.Appjson.IsUnknown() {
 		data.Appjson = types.StringNull()
 	}
 	if val, ok := getResponseData["applicationtype"]; ok && val != nil {
 		data.Applicationtype = types.StringValue(val.(string))
-	} else {
+	} else if data.Applicationtype.IsUnknown() {
 		data.Applicationtype = types.StringNull()
 	}
 	if val, ok := getResponseData["clientlessaccess"]; ok && val != nil {
 		data.Clientlessaccess = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientlessaccess.IsUnknown() {
 		data.Clientlessaccess = types.StringNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["iconurl"]; ok && val != nil {
 		data.Iconurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Iconurl.IsUnknown() {
 		data.Iconurl = types.StringNull()
 	}
 	if val, ok := getResponseData["linkname"]; ok && val != nil {
 		data.Linkname = types.StringValue(val.(string))
-	} else {
+	} else if data.Linkname.IsUnknown() {
 		data.Linkname = types.StringNull()
 	}
 	if val, ok := getResponseData["samlssoprofile"]; ok && val != nil {
 		data.Samlssoprofile = types.StringValue(val.(string))
-	} else {
+	} else if data.Samlssoprofile.IsUnknown() {
 		data.Samlssoprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["ssotype"]; ok && val != nil {
 		data.Ssotype = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssotype.IsUnknown() {
 		data.Ssotype = types.StringNull()
 	}
 	if val, ok := getResponseData["urlname"]; ok && val != nil {
 		data.Urlname = types.StringValue(val.(string))
-	} else {
+	} else if data.Urlname.IsUnknown() {
 		data.Urlname = types.StringNull()
 	}
 	if val, ok := getResponseData["vservername"]; ok && val != nil {
 		data.Vservername = types.StringValue(val.(string))
-	} else {
+	} else if data.Vservername.IsUnknown() {
 		data.Vservername = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Urlname.ValueString())
 
 	return data

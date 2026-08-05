@@ -4,9 +4,12 @@ import (
 	"context"
 
 	"github.com/citrix/adc-nitro-go/resource/config/stream"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -27,7 +30,10 @@ func (r *StreamselectorResource) Schema(ctx context.Context, req resource.Schema
 				Description: "The ID of the streamselector resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the selector. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. If the name includes one or more spaces, and you are using the Citrix ADC CLI, enclose the name in double or single quotation marks (for example, \"my selector\" or 'my selector').",
 			},
 			"rule": schema.ListAttribute{
@@ -39,13 +45,18 @@ func (r *StreamselectorResource) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func streamselectorGetThePayloadFromtheConfig(ctx context.Context, data *StreamselectorResourceModel) stream.Streamselector {
-	tflog.Debug(ctx, "In streamselectorGetThePayloadFromtheConfig Function")
+func streamselectorGetThePayloadFromthePlan(ctx context.Context, data *StreamselectorResourceModel) stream.Streamselector {
+	tflog.Debug(ctx, "In streamselectorGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	streamselector := stream.Streamselector{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		streamselector.Name = data.Name.ValueString()
+	}
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
+		var ruleList []string
+		data.Rule.ElementsAs(ctx, &ruleList, false)
+		streamselector.Rule = ruleList
 	}
 
 	return streamselector
@@ -60,9 +71,24 @@ func streamselectorSetAttrFromGet(ctx context.Context, data *StreamselectorResou
 	} else {
 		data.Name = types.StringNull()
 	}
+	if val, ok := getResponseData["rule"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Rule = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Rule = listValue
+		default:
+			data.Rule = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Rule = types.ListNull(types.StringType)
+	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

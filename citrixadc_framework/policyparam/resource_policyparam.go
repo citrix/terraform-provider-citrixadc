@@ -55,16 +55,17 @@ func (r *PolicyparamResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating policyparam resource")
 
-	// policyparam := policyparamGetThePayloadFromtheConfig(ctx, &data)
+	// Build payload from the plan
+	policyparam := policyparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Policyparam.Type(), &policyparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create policyparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Policyparam.Type(), &policyparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create policyparam, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Static ID for this singleton configuration resource
 	data.Id = types.StringValue("policyparam-config")
 
 	tflog.Trace(ctx, "Created policyparam resource")
@@ -106,15 +107,18 @@ func (r *PolicyparamResource) Update(ctx context.Context, req resource.UpdateReq
 
 	tflog.Debug(ctx, "Updating policyparam resource")
 
-	// Create API request body from the model
-	// policyparam := policyparamGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve ID from prior state (static singleton ID)
+	data.Id = types.StringValue("policyparam-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Policyparam.Type(), &policyparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policyparam, got error: %s", err))
-	//	 return
-	// }
+	// Build payload from the plan
+	policyparam := policyparamGetThePayloadFromtheConfig(ctx, &data)
+
+	// Make API call - singleton resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Policyparam.Type(), &policyparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policyparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated policyparam resource")
 

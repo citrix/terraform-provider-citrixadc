@@ -1,0 +1,15 @@
+# Resource        : uservserver
+# Primary ADC     : 158
+# Alternate ADCs  : 121, 153
+# Planned tests   : 2
+# Result          : PASS_first=0 PASS_alt=0 FAILED=0 SKIPPED=2
+
+## PASS (on primary ADC 158)
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED
+  SKIP  TestAccUservserver_basic  :: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!
+  SKIP  TestAccUservserverDataSource_basic  :: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!

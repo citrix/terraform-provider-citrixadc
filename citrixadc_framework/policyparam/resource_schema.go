@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -28,9 +27,11 @@ func (r *PolicyparamResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:    true,
 				Description: "The ID of the policyparam resource.",
 			},
+			// SDK v2 parity: timeout was Optional+Computed with NO Default and NO
+			// ForceNew (is_updateable=true). Value is read from the ADC when unset.
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3900),
+				Computed:    true,
 				Description: "Maximum time in milliseconds to allow for processing expressions and policies without interruption. If the timeout is reached then the evaluation causes an UNDEF to be raised and no further processing is performed.",
 			},
 		},
@@ -42,7 +43,7 @@ func policyparamGetThePayloadFromtheConfig(ctx context.Context, data *Policypara
 
 	// Create API request body from the model
 	policyparam := policy.Policyparam{}
-	if !data.Timeout.IsNull() {
+	if !data.Timeout.IsNull() && !data.Timeout.IsUnknown() {
 		policyparam.Timeout = utils.IntPtr(int(data.Timeout.ValueInt64()))
 	}
 
@@ -57,7 +58,9 @@ func policyparamSetAttrFromGet(ctx context.Context, data *PolicyparamResourceMod
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timeout.IsUnknown() {
+		// Omit-on-default guard: only null when the value is unknown; never
+		// clobber a known configured value that NITRO may omit from GET.
 		data.Timeout = types.Int64Null()
 	}
 

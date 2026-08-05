@@ -140,53 +140,58 @@ func nd6GetThePayloadFromtheConfig(ctx context.Context, data *Nd6ResourceModel) 
 func nd6SetAttrFromGet(ctx context.Context, data *Nd6ResourceModel, getResponseData map[string]interface{}) *Nd6ResourceModel {
 	tflog.Debug(ctx, "In nd6SetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// NITRO omits several nd6 fields from GET when they hold their default /
+	// omit-on-default value. Only null a field when the current model value is
+	// Unknown (i.e. a Computed attribute that was never configured); never
+	// clobber a known configured/state value the appliance simply did not echo
+	// back, which would trigger "inconsistent result after apply".
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
-	} else {
+	} else if data.Ifnum.IsUnknown() {
 		data.Ifnum = types.StringNull()
 	}
 	if val, ok := getResponseData["mac"]; ok && val != nil {
 		data.Mac = types.StringValue(val.(string))
-	} else {
+	} else if data.Mac.IsUnknown() {
 		data.Mac = types.StringNull()
 	}
 	if val, ok := getResponseData["neighbor"]; ok && val != nil {
 		data.Neighbor = types.StringValue(val.(string))
-	} else {
+	} else if data.Neighbor.IsUnknown() {
 		data.Neighbor = types.StringNull()
 	}
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
 		data.Nodeid = types.Int64Null()
 	}
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
 	}
 	if val, ok := getResponseData["vlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vlan.IsUnknown() {
 		data.Vlan = types.Int64Null()
 	}
 	if val, ok := getResponseData["vtep"]; ok && val != nil {
 		data.Vtep = types.StringValue(val.(string))
-	} else {
+	} else if data.Vtep.IsUnknown() {
 		data.Vtep = types.StringNull()
 	}
 	if val, ok := getResponseData["vxlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vxlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vxlan.IsUnknown() {
 		data.Vxlan = types.Int64Null()
 	}
 

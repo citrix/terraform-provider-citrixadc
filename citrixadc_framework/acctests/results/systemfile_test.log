@@ -1,0 +1,16 @@
+# Resource        : systemfile
+# Primary ADC     : 152
+# Alternate ADCs  : 121, 157
+# Planned tests   : 3
+# Result          : PASS_first=3 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 152)
+  PASS  TestAccSystemfile_basic
+  PASS  TestAccSystemfile_base64
+  PASS  TestAccSystemfileDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

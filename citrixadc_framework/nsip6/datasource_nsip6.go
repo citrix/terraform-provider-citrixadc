@@ -102,7 +102,7 @@ func (d *Nsip6DataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	nsip6SetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	nsip6SetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

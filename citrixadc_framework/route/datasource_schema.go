@@ -94,6 +94,18 @@ func RouteDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Positive integer used by the routing algorithms to determine preference for this route over others of equal cost. The lower the weight, the higher the preference.",
 			},
+			// Convenience attributes carried on the shared resource model; not
+			// meaningful for a datasource read but must exist in the schema.
+			"delete_default_route": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "If true, delete the default static route (network 0.0.0.0, netmask 0.0.0.0) after adding this route",
+			},
+			"original_default_gateway": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Stores the gateway of the original default route that was deleted, used to restore it on destroy",
+			},
 		},
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *SsldtlsprofileResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating ssldtlsprofile resource")
 
-	// ssldtlsprofile := ssldtlsprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	ssldtlsprofile := ssldtlsprofileGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ssldtlsprofile.Type(), &ssldtlsprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ssldtlsprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("ssldtlsprofile-config")
+	// Named resource - use AddResource
+	ssldtlsprofileName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Ssldtlsprofile.Type(), ssldtlsprofileName, &ssldtlsprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ssldtlsprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created ssldtlsprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", ssldtlsprofileName))
+
 	// Read the updated state back
-	r.readSsldtlsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSsldtlsprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "ssldtlsprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *SsldtlsprofileResource) Read(ctx context.Context, req resource.ReadRequ
 
 	tflog.Debug(ctx, "Reading ssldtlsprofile resource")
 
-	r.readSsldtlsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSsldtlsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SsldtlsprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SsldtlsprofileResourceModel
+	var data, state SsldtlsprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,74 @@ func (r *SsldtlsprofileResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating ssldtlsprofile resource")
 
-	// Create API request body from the model
-	// ssldtlsprofile := ssldtlsprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Helloverifyrequest.Equal(state.Helloverifyrequest) {
+		tflog.Debug(ctx, "helloverifyrequest has changed for ssldtlsprofile")
+		hasChange = true
+	}
+	if !data.Initialretrytimeout.Equal(state.Initialretrytimeout) {
+		tflog.Debug(ctx, "initialretrytimeout has changed for ssldtlsprofile")
+		hasChange = true
+	}
+	if !data.Maxbadmacignorecount.Equal(state.Maxbadmacignorecount) {
+		tflog.Debug(ctx, "maxbadmacignorecount has changed for ssldtlsprofile")
+		hasChange = true
+	}
+	if !data.Maxholdqlen.Equal(state.Maxholdqlen) {
+		tflog.Debug(ctx, "maxholdqlen has changed for ssldtlsprofile")
+		hasChange = true
+	}
+	if !data.Maxpacketsize.Equal(state.Maxpacketsize) {
+		tflog.Debug(ctx, "maxpacketsize has changed for ssldtlsprofile")
+		hasChange = true
+	}
+	if !data.Maxrecordsize.Equal(state.Maxrecordsize) {
+		tflog.Debug(ctx, "maxrecordsize has changed for ssldtlsprofile")
+		hasChange = true
+	}
+	if !data.Maxretrytime.Equal(state.Maxretrytime) {
+		tflog.Debug(ctx, "maxretrytime has changed for ssldtlsprofile")
+		hasChange = true
+	}
+	if !data.Pmtudiscovery.Equal(state.Pmtudiscovery) {
+		tflog.Debug(ctx, "pmtudiscovery has changed for ssldtlsprofile")
+		hasChange = true
+	}
+	if !data.Terminatesession.Equal(state.Terminatesession) {
+		tflog.Debug(ctx, "terminatesession has changed for ssldtlsprofile")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ssldtlsprofile.Type(), &ssldtlsprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ssldtlsprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		ssldtlsprofile := ssldtlsprofileGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		ssldtlsprofileName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Ssldtlsprofile.Type(), ssldtlsprofileName, &ssldtlsprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ssldtlsprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated ssldtlsprofile resource")
+		tflog.Trace(ctx, "Updated ssldtlsprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for ssldtlsprofile resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readSsldtlsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSsldtlsprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "ssldtlsprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +206,33 @@ func (r *SsldtlsprofileResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	tflog.Debug(ctx, "Deleting ssldtlsprofile resource")
+	// Named resource - delete using DeleteResource
+	ssldtlsprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Ssldtlsprofile.Type(), ssldtlsprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete ssldtlsprofile, got error: %s", err))
+		return
+	}
 
-	// For ssldtlsprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted ssldtlsprofile resource from state")
+	tflog.Trace(ctx, "Deleted ssldtlsprofile resource")
 }
 
 // Helper function to read ssldtlsprofile data from API
-func (r *SsldtlsprofileResource) readSsldtlsprofileFromApi(ctx context.Context, data *SsldtlsprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Ssldtlsprofile.Type(), "")
+func (r *SsldtlsprofileResource) readSsldtlsprofileFromApi(ctx context.Context, data *SsldtlsprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	ssldtlsprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Ssldtlsprofile.Type(), ssldtlsprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read ssldtlsprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	ssldtlsprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

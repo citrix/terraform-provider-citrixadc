@@ -1,0 +1,25 @@
+# Resource        : lbvserver
+# Primary ADC     : 152
+# Alternate ADCs  : 121, 157
+# Planned tests   : 12
+# Result          : PASS_first=7 PASS_alt=0 FAILED=2 SKIPPED=3
+
+## PASS (on primary ADC 152)
+  PASS  TestAccLbvserver_basic
+  PASS  TestAccLbvserver_quicbridgeprofile
+  PASS  TestAccLbvserver_snicerts
+  PASS  TestAccLbvserver_AssertNonUpdateableAttributes
+  PASS  TestAccLbvserver_enable_disable
+  PASS  TestAccLbvserver_nonAddressable
+  PASS  TestAccLbvserverDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+  FAIL  TestAccLbvserver_backupvserver  :: lbvserver_test.go:726: Step 4/4 error: Check failed: Check 2/2 error: citrixadc_lbvserver.tf_test_main_lb: Attribute 'backupvserver' expected "", got "bkpnew"   [tried: 152, 121, 157]
+  FAIL  TestAccLbvserver_redirectfromport  :: lbvserver_test.go:816: Step 2/5 error: Check failed: Check 2/2 error: citrixadc_lbvserver.tf_test_redirectfromport_lb: Attribute 'redirectfromport' expected "0", got "80"   [tried: 152, 121, 157]
+
+## SKIPPED
+  SKIP  TestAccLbvserver_standalone_ciphersuites_mixed  :: ADC testbed is UNSPECIFIED. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.
+  SKIP  TestAccLbvserver_cluster_ciphersuites  :: ADC testbed is UNSPECIFIED. Expected CLUSTER.
+  SKIP  TestAccLbvserver_cluster_ciphers  :: ADC testbed is UNSPECIFIED. Expected CLUSTER.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *LsnpoolResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Debug(ctx, "Creating lsnpool resource")
 
-	// lsnpool := lsnpoolGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	lsnpool := lsnpoolGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnpool.Type(), &lsnpool)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnpool, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsnpool-config")
+	// Named resource - use AddResource (matches SDK v2 client.AddResource("lsnpool", poolname, ...))
+	poolname := data.Poolname.ValueString()
+	_, err := r.client.AddResource(service.Lsnpool.Type(), poolname, &lsnpool)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnpool, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lsnpool resource")
 
+	// Set ID for the resource before reading state (matches SDK v2 d.SetId(poolname))
+	data.Id = types.StringValue(poolname)
+
 	// Read the updated state back
-	r.readLsnpoolFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnpoolFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnpool not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *LsnpoolResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tflog.Debug(ctx, "Reading lsnpool resource")
 
-	r.readLsnpoolFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLsnpoolFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LsnpoolResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsnpoolResourceModel
+	var data, state LsnpoolResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,43 @@ func (r *LsnpoolResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsnpool resource")
 
-	// Create API request body from the model
-	// lsnpool := lsnpoolGetThePayloadFromtheConfig(ctx, &data)
+	// Only maxportrealloctmq and portrealloctimeout are updateable in NITRO
+	// (nattype, portblockallocation and poolname are ForceNew).
+	hasChange := false
+	if !data.Maxportrealloctmq.Equal(state.Maxportrealloctmq) {
+		tflog.Debug(ctx, "maxportrealloctmq has changed for lsnpool")
+		hasChange = true
+	}
+	if !data.Portrealloctimeout.Equal(state.Portrealloctimeout) {
+		tflog.Debug(ctx, "portrealloctimeout has changed for lsnpool")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnpool.Type(), &lsnpool)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnpool, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated lsnpool resource")
+	if hasChange {
+		lsnpool := lsnpoolGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Matches SDK v2 client.UpdateUnnamedResource("lsnpool", &lsnpool)
+		err := r.client.UpdateUnnamedResource(service.Lsnpool.Type(), &lsnpool)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnpool, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated lsnpool resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsnpool resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readLsnpoolFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnpoolFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnpool not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +175,36 @@ func (r *LsnpoolResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	tflog.Debug(ctx, "Deleting lsnpool resource")
 
-	// For lsnpool, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsnpool resource from state")
+	// Named resource - delete using DeleteResource (matches SDK v2 client.DeleteResource("lsnpool", poolname))
+	poolname := data.Poolname.ValueString()
+	if poolname == "" {
+		poolname = data.Id.ValueString()
+	}
+	err := r.client.DeleteResource(service.Lsnpool.Type(), poolname)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnpool, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsnpool resource")
 }
 
-// Helper function to read lsnpool data from API
-func (r *LsnpoolResource) readLsnpoolFromApi(ctx context.Context, data *LsnpoolResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsnpool.Type(), "")
+// Helper function to read lsnpool data from API. Returns false when the resource no longer exists.
+func (r *LsnpoolResource) readLsnpoolFromApi(ctx context.Context, data *LsnpoolResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain poolname value
+	poolname := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lsnpool.Type(), poolname)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsnpool, got error: %s", err))
-		return
+		return false
 	}
 
 	lsnpoolSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -55,14 +55,15 @@ func (r *NsspparamsResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nsspparams resource")
 
-	// nsspparams := nsspparamsGetThePayloadFromtheConfig(ctx, &data)
+	// Singleton resource - build the payload and push it via UpdateUnnamedResource
+	nsspparams := nsspparamsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsspparams, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsspparams, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nsspparams-config")
@@ -95,8 +96,10 @@ func (r *NsspparamsResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NsspparamsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsspparamsResourceModel
+	var data, state NsspparamsResourceModel
 
+	// Read Terraform prior state to preserve the ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +107,20 @@ func (r *NsspparamsResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nsspparams resource")
 
 	// Create API request body from the model
-	// nsspparams := nsspparamsGetThePayloadFromtheConfig(ctx, &data)
+	nsspparams := nsspparamsGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsspparams, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nsspparams.Type(), &nsspparams)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsspparams, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nsspparams resource")
 

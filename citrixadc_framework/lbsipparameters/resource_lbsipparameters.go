@@ -55,14 +55,14 @@ func (r *LbsipparametersResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating lbsipparameters resource")
 
-	// lbsipparameters := lbsipparametersGetThePayloadFromtheConfig(ctx, &data)
+	lbsipparameters := lbsipparametersGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbsipparameters, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbsipparameters, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("lbsipparameters-config")
@@ -107,14 +107,14 @@ func (r *LbsipparametersResource) Update(ctx context.Context, req resource.Updat
 	tflog.Debug(ctx, "Updating lbsipparameters resource")
 
 	// Create API request body from the model
-	// lbsipparameters := lbsipparametersGetThePayloadFromtheConfig(ctx, &data)
+	lbsipparameters := lbsipparametersGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbsipparameters, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbsipparameters, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated lbsipparameters resource")
 

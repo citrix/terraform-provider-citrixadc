@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -119,12 +117,12 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"accessrestrictedpageredirect": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("CDN"),
+				Computed:    true,
 				Description: "By default, an access restricted page hosted on secure private access CDN is displayed when a restricted app is accessed. The setting can be changed to NS to display the access restricted page hosted on the gateway or OFF to not display any access restricted page.",
 			},
 			"advancedclientlessvpnmode": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Option to enable/disable Advanced ClientlessVpnMode. Additionaly, it can be set to STRICT to block Classic ClientlessVpnMode while in AdvancedClientlessMode.",
 			},
 			"allowedlogingroups": schema.StringAttribute{
@@ -144,7 +142,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"apptokentimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(100),
+				Computed:    true,
 				Description: "The timeout value in seconds for tokens to access XenMobile applications",
 			},
 			"authorizationgroup": schema.StringAttribute{
@@ -159,17 +157,17 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"backendcertvalidation": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "enables backend server certificate validation",
 			},
 			"backenddtls12": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enables DTLS 1.2 for backend server handshakes",
 			},
 			"backendserversni": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "enables sni extension for backend server handshakes",
 			},
 			"citrixreceiverhome": schema.StringAttribute{
@@ -184,7 +182,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"clientcleanupprompt": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Prompt for client-side cache clean-up when a client-initiated session closes.",
 			},
 			"clientconfiguration": schema.ListAttribute{
@@ -205,12 +203,12 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"clientlessmodeurlencoding": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("OPAQUE"),
+				Computed:    true,
 				Description: "When clientless access is enabled, you can choose to encode the addresses of internal web applications or to leave the address as clear text. Available settings function as follows:\n* OPAQUE - Use standard encoding mechanisms to make the domain and protocol part of the resource unclear to users.\n* TRANSPARENT - Do not encode the web address and make it visible to users.\n* ENCRYPT - Allow the domain and protocol to be encrypted using a session key. When the web address is encrypted, the URL is different for each user session for the same web resource. If users bookmark the encoded web address, save it in the web browser and then log off, they cannot connect to the web address when they log on and use the bookmark. If users save the encrypted bookmark in the Access Interface during their session, the bookmark works each time the user logs on.",
 			},
 			"clientlesspersistentcookie": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DENY"),
+				Computed:    true,
 				Description: "State of persistent cookies in clientless access mode. Persistent cookies are required for accessing certain features of SharePoint, such as opening and editing Microsoft Word, Excel, and PowerPoint documents hosted on the SharePoint server. A persistent cookie remains on the user device and is sent with each HTTP request. Citrix Gateway encrypts the persistent cookie before sending it to the plug-in on the user device, and refreshes the cookie periodically as long as the session exists. The cookie becomes stale if the session ends. Available settings function as follows:\n* ALLOW - Enable persistent cookies. Users can open and edit Microsoft documents stored in SharePoint.\n* DENY - Disable persistent cookies. Users cannot open and edit Microsoft documents stored in SharePoint.\n* PROMPT - Prompt users to allow or deny persistent cookies during the session. Persistent cookies are not required for clientless access if users do not connect to SharePoint.",
 			},
 			"clientlessvpnmode": schema.StringAttribute{
@@ -251,12 +249,12 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"defaultauthorizationaction": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DENY"),
+				Computed:    true,
 				Description: "Specify the network resources that users have access to when they log on to the internal network. The default setting for authorization is to deny access to all network resources. Citrix recommends using the default global setting and then creating authorization policies to define the network resources users can access. If you set the default authorization policy to DENY, you must explicitly authorize access to any network resource, which improves security.",
 			},
 			"deviceposture": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable device posture",
 			},
 			"dnsvservername": schema.StringAttribute{
@@ -271,7 +269,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"encryptcsecexp": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Enable encryption of client security expressions.",
 			},
 			"epaclienttype": schema.StringAttribute{
@@ -368,7 +366,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"linuxpluginupgrade": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("Always"),
+				Computed:    true,
 				Description: "Option to set plugin upgrade behaviour for Linux",
 			},
 			"locallanaccess": schema.StringAttribute{
@@ -388,17 +386,17 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"macpluginupgrade": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("Always"),
+				Computed:    true,
 				Description: "Option to set plugin upgrade behaviour for Mac",
 			},
 			"maxiipperuser": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(1),
+				Computed:    true,
 				Description: "Maximum number of Intranet IP that can be assigned to a user from AAA group, VPN vserver or VPN global pool. This setting is not applicable for AAA user level Intranet IP configuration",
 			},
 			"mdxtokentimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(10),
+				Computed:    true,
 				Description: "Validity of MDX Token in minutes. This token is used for mdx services to access backend and valid  HEAD and GET request.",
 			},
 			"netmask": schema.StringAttribute{
@@ -428,7 +426,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"proxylocalbypass": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Bypass proxy server for local addresses option in Internet Explorer and Firefox proxy server settings.",
 			},
 			"rdpclientprofilename": schema.StringAttribute{
@@ -448,17 +446,17 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"securebrowse": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Allow users to connect through Citrix Gateway to network resources from iOS and Android mobile devices with Citrix Receiver. Users do not need to establish a full VPN tunnel to access resources in the secure network.",
 			},
 			"secureprivateaccess": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enables or disables the secure private access configuration.",
 			},
 			"sesstimeout": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(30),
+				Computed:    true,
 				Description: "Number of minutes after which the session times out.",
 			},
 			"smartgroup": schema.StringAttribute{
@@ -483,7 +481,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"spoofiip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
 				Description: "Indicate whether or not the application requires IP spoofing, which routes the connection to the intranet application through the virtual adapter.",
 			},
 			"sslproxy": schema.StringAttribute{
@@ -498,7 +496,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"ssocredential": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("PRIMARY"),
+				Computed:    true,
 				Description: "Specify whether to use the primary or secondary authentication credentials for single sign-on to the server.",
 			},
 			"storefronturl": schema.StringAttribute{
@@ -518,12 +516,12 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"useiip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("NOSPILLOVER"),
+				Computed:    true,
 				Description: "Define IP address pool options. Available settings function as follows:\n* SPILLOVER - When an address pool is configured and the mapped IP is used as an intranet IP address, the mapped IP address is used when an intranet IP address cannot be assigned.\n* NOSPILLOVER - When intranet IP addresses are enabled and the mapped IP address is not used, the Transfer Login page appears for users who have used all available intranet IP addresses.\n* OFF - Address pool is not configured.",
 			},
 			"usemip": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("NS"),
+				Computed:    true,
 				Description: "Enable or disable the use of a unique IP address alias, or a mapped IP address, as the client IP address for each client session. Allow Citrix Gateway to use the mapped IP address as an intranet IP address when all other IP addresses are not available.\nWhen IP pooling is configured and the mapped IP is used as an intranet IP address, the mapped IP address is used when an intranet IP address cannot be assigned.",
 			},
 			"userdomains": schema.StringAttribute{
@@ -548,12 +546,12 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"windowsclienttype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("AGENT"),
+				Computed:    true,
 				Description: "The Windows client type. Choose between two types of Windows Client\\\na) Application Agent - which always runs in the task bar as a standalone application and also has a supporting service which runs permanently when installed\\\nb) Activex Control - ActiveX control run by Microsoft Internet Explorer.",
 			},
 			"windowspluginupgrade": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("Always"),
+				Computed:    true,
 				Description: "Option to set plugin upgrade behaviour for Win",
 			},
 			"winsip": schema.StringAttribute{
@@ -575,260 +573,280 @@ func vpnparameterGetThePayloadFromtheConfig(ctx context.Context, data *Vpnparame
 
 	// Create API request body from the model
 	vpnparameter := vpn.Vpnparameter{}
-	if !data.Accessrestrictedpageredirect.IsNull() {
+	if !data.Accessrestrictedpageredirect.IsNull() && !data.Accessrestrictedpageredirect.IsUnknown() {
 		vpnparameter.Accessrestrictedpageredirect = data.Accessrestrictedpageredirect.ValueString()
 	}
-	if !data.Advancedclientlessvpnmode.IsNull() {
+	if !data.Advancedclientlessvpnmode.IsNull() && !data.Advancedclientlessvpnmode.IsUnknown() {
 		vpnparameter.Advancedclientlessvpnmode = data.Advancedclientlessvpnmode.ValueString()
 	}
-	if !data.Allowedlogingroups.IsNull() {
+	if !data.Allowedlogingroups.IsNull() && !data.Allowedlogingroups.IsUnknown() {
 		vpnparameter.Allowedlogingroups = data.Allowedlogingroups.ValueString()
 	}
-	if !data.Allprotocolproxy.IsNull() {
+	if !data.Allprotocolproxy.IsNull() && !data.Allprotocolproxy.IsUnknown() {
 		vpnparameter.Allprotocolproxy = data.Allprotocolproxy.ValueString()
 	}
-	if !data.Alwaysonprofilename.IsNull() {
+	if !data.Alwaysonprofilename.IsNull() && !data.Alwaysonprofilename.IsUnknown() {
 		vpnparameter.Alwaysonprofilename = data.Alwaysonprofilename.ValueString()
 	}
-	if !data.Apptokentimeout.IsNull() {
+	if !data.Apptokentimeout.IsNull() && !data.Apptokentimeout.IsUnknown() {
 		vpnparameter.Apptokentimeout = utils.IntPtr(int(data.Apptokentimeout.ValueInt64()))
 	}
-	if !data.Authorizationgroup.IsNull() {
+	if !data.Authorizationgroup.IsNull() && !data.Authorizationgroup.IsUnknown() {
 		vpnparameter.Authorizationgroup = data.Authorizationgroup.ValueString()
 	}
-	if !data.Autoproxyurl.IsNull() {
+	if !data.Autoproxyurl.IsNull() && !data.Autoproxyurl.IsUnknown() {
 		vpnparameter.Autoproxyurl = data.Autoproxyurl.ValueString()
 	}
-	if !data.Backendcertvalidation.IsNull() {
+	if !data.Backendcertvalidation.IsNull() && !data.Backendcertvalidation.IsUnknown() {
 		vpnparameter.Backendcertvalidation = data.Backendcertvalidation.ValueString()
 	}
-	if !data.Backenddtls12.IsNull() {
+	if !data.Backenddtls12.IsNull() && !data.Backenddtls12.IsUnknown() {
 		vpnparameter.Backenddtls12 = data.Backenddtls12.ValueString()
 	}
-	if !data.Backendserversni.IsNull() {
+	if !data.Backendserversni.IsNull() && !data.Backendserversni.IsUnknown() {
 		vpnparameter.Backendserversni = data.Backendserversni.ValueString()
 	}
-	if !data.Citrixreceiverhome.IsNull() {
+	if !data.Citrixreceiverhome.IsNull() && !data.Citrixreceiverhome.IsUnknown() {
 		vpnparameter.Citrixreceiverhome = data.Citrixreceiverhome.ValueString()
 	}
-	if !data.Clientchoices.IsNull() {
+	if !data.Clientchoices.IsNull() && !data.Clientchoices.IsUnknown() {
 		vpnparameter.Clientchoices = data.Clientchoices.ValueString()
 	}
-	if !data.Clientcleanupprompt.IsNull() {
+	if !data.Clientcleanupprompt.IsNull() && !data.Clientcleanupprompt.IsUnknown() {
 		vpnparameter.Clientcleanupprompt = data.Clientcleanupprompt.ValueString()
 	}
-	if !data.Clientdebug.IsNull() {
+	if !data.Clientdebug.IsNull() && !data.Clientdebug.IsUnknown() {
 		vpnparameter.Clientdebug = data.Clientdebug.ValueString()
 	}
-	if !data.Clientidletimeout.IsNull() {
+	if !data.Clientidletimeout.IsNull() && !data.Clientidletimeout.IsUnknown() {
 		vpnparameter.Clientidletimeout = utils.IntPtr(int(data.Clientidletimeout.ValueInt64()))
 	}
-	if !data.Clientlessmodeurlencoding.IsNull() {
+	if !data.Clientlessmodeurlencoding.IsNull() && !data.Clientlessmodeurlencoding.IsUnknown() {
 		vpnparameter.Clientlessmodeurlencoding = data.Clientlessmodeurlencoding.ValueString()
 	}
-	if !data.Clientlesspersistentcookie.IsNull() {
+	if !data.Clientlesspersistentcookie.IsNull() && !data.Clientlesspersistentcookie.IsUnknown() {
 		vpnparameter.Clientlesspersistentcookie = data.Clientlesspersistentcookie.ValueString()
 	}
-	if !data.Clientlessvpnmode.IsNull() {
+	if !data.Clientlessvpnmode.IsNull() && !data.Clientlessvpnmode.IsUnknown() {
 		vpnparameter.Clientlessvpnmode = data.Clientlessvpnmode.ValueString()
 	}
-	if !data.Clientsecurity.IsNull() {
+	if !data.Clientsecurity.IsNull() && !data.Clientsecurity.IsUnknown() {
 		vpnparameter.Clientsecurity = data.Clientsecurity.ValueString()
 	}
-	if !data.Clientsecuritygroup.IsNull() {
+	if !data.Clientsecuritygroup.IsNull() && !data.Clientsecuritygroup.IsUnknown() {
 		vpnparameter.Clientsecuritygroup = data.Clientsecuritygroup.ValueString()
 	}
-	if !data.Clientsecuritylog.IsNull() {
+	if !data.Clientsecuritylog.IsNull() && !data.Clientsecuritylog.IsUnknown() {
 		vpnparameter.Clientsecuritylog = data.Clientsecuritylog.ValueString()
 	}
-	if !data.Clientsecuritymessage.IsNull() {
+	if !data.Clientsecuritymessage.IsNull() && !data.Clientsecuritymessage.IsUnknown() {
 		vpnparameter.Clientsecuritymessage = data.Clientsecuritymessage.ValueString()
 	}
-	if !data.Clientversions.IsNull() {
+	if !data.Clientversions.IsNull() && !data.Clientversions.IsUnknown() {
 		vpnparameter.Clientversions = data.Clientversions.ValueString()
 	}
-	if !data.Defaultauthorizationaction.IsNull() {
+	if !data.Defaultauthorizationaction.IsNull() && !data.Defaultauthorizationaction.IsUnknown() {
 		vpnparameter.Defaultauthorizationaction = data.Defaultauthorizationaction.ValueString()
 	}
-	if !data.Deviceposture.IsNull() {
+	if !data.Deviceposture.IsNull() && !data.Deviceposture.IsUnknown() {
 		vpnparameter.Deviceposture = data.Deviceposture.ValueString()
 	}
-	if !data.Dnsvservername.IsNull() {
+	if !data.Dnsvservername.IsNull() && !data.Dnsvservername.IsUnknown() {
 		vpnparameter.Dnsvservername = data.Dnsvservername.ValueString()
 	}
-	if !data.Emailhome.IsNull() {
+	if !data.Emailhome.IsNull() && !data.Emailhome.IsUnknown() {
 		vpnparameter.Emailhome = data.Emailhome.ValueString()
 	}
-	if !data.Encryptcsecexp.IsNull() {
+	if !data.Encryptcsecexp.IsNull() && !data.Encryptcsecexp.IsUnknown() {
 		vpnparameter.Encryptcsecexp = data.Encryptcsecexp.ValueString()
 	}
-	if !data.Epaclienttype.IsNull() {
+	if !data.Epaclienttype.IsNull() && !data.Epaclienttype.IsUnknown() {
 		vpnparameter.Epaclienttype = data.Epaclienttype.ValueString()
 	}
-	if !data.Forcedtimeout.IsNull() {
+	if !data.Forcedtimeout.IsNull() && !data.Forcedtimeout.IsUnknown() {
 		vpnparameter.Forcedtimeout = utils.IntPtr(int(data.Forcedtimeout.ValueInt64()))
 	}
-	if !data.Forcedtimeoutwarning.IsNull() {
+	if !data.Forcedtimeoutwarning.IsNull() && !data.Forcedtimeoutwarning.IsUnknown() {
 		vpnparameter.Forcedtimeoutwarning = utils.IntPtr(int(data.Forcedtimeoutwarning.ValueInt64()))
 	}
-	if !data.Fqdnspoofedip.IsNull() {
+	if !data.Fqdnspoofedip.IsNull() && !data.Fqdnspoofedip.IsUnknown() {
 		vpnparameter.Fqdnspoofedip = data.Fqdnspoofedip.ValueString()
 	}
-	if !data.Ftpproxy.IsNull() {
+	if !data.Ftpproxy.IsNull() && !data.Ftpproxy.IsUnknown() {
 		vpnparameter.Ftpproxy = data.Ftpproxy.ValueString()
 	}
-	if !data.Gopherproxy.IsNull() {
+	if !data.Gopherproxy.IsNull() && !data.Gopherproxy.IsUnknown() {
 		vpnparameter.Gopherproxy = data.Gopherproxy.ValueString()
 	}
-	if !data.Homepage.IsNull() {
+	if !data.Homepage.IsNull() && !data.Homepage.IsUnknown() {
 		vpnparameter.Homepage = data.Homepage.ValueString()
 	}
-	if !data.Httpproxy.IsNull() {
+	if !data.Httpproxy.IsNull() && !data.Httpproxy.IsUnknown() {
 		vpnparameter.Httpproxy = data.Httpproxy.ValueString()
 	}
-	if !data.Httptrackconnproxy.IsNull() {
+	if !data.Httptrackconnproxy.IsNull() && !data.Httptrackconnproxy.IsUnknown() {
 		vpnparameter.Httptrackconnproxy = data.Httptrackconnproxy.ValueString()
 	}
-	if !data.Icaproxy.IsNull() {
+	if !data.Icaproxy.IsNull() && !data.Icaproxy.IsUnknown() {
 		vpnparameter.Icaproxy = data.Icaproxy.ValueString()
 	}
-	if !data.Icasessiontimeout.IsNull() {
+	if !data.Icasessiontimeout.IsNull() && !data.Icasessiontimeout.IsUnknown() {
 		vpnparameter.Icasessiontimeout = data.Icasessiontimeout.ValueString()
 	}
-	if !data.Icauseraccounting.IsNull() {
+	if !data.Icauseraccounting.IsNull() && !data.Icauseraccounting.IsUnknown() {
 		vpnparameter.Icauseraccounting = data.Icauseraccounting.ValueString()
 	}
-	if !data.Iconwithreceiver.IsNull() {
+	if !data.Iconwithreceiver.IsNull() && !data.Iconwithreceiver.IsUnknown() {
 		vpnparameter.Iconwithreceiver = data.Iconwithreceiver.ValueString()
 	}
-	if !data.Iipdnssuffix.IsNull() {
+	if !data.Iipdnssuffix.IsNull() && !data.Iipdnssuffix.IsUnknown() {
 		vpnparameter.Iipdnssuffix = data.Iipdnssuffix.ValueString()
 	}
-	if !data.Kcdaccount.IsNull() {
+	if !data.Kcdaccount.IsNull() && !data.Kcdaccount.IsUnknown() {
 		vpnparameter.Kcdaccount = data.Kcdaccount.ValueString()
 	}
-	if !data.Killconnections.IsNull() {
+	if !data.Killconnections.IsNull() && !data.Killconnections.IsUnknown() {
 		vpnparameter.Killconnections = data.Killconnections.ValueString()
 	}
-	if !data.Linuxpluginupgrade.IsNull() {
+	if !data.Linuxpluginupgrade.IsNull() && !data.Linuxpluginupgrade.IsUnknown() {
 		vpnparameter.Linuxpluginupgrade = data.Linuxpluginupgrade.ValueString()
 	}
-	if !data.Locallanaccess.IsNull() {
+	if !data.Locallanaccess.IsNull() && !data.Locallanaccess.IsUnknown() {
 		vpnparameter.Locallanaccess = data.Locallanaccess.ValueString()
 	}
-	if !data.Loginscript.IsNull() {
+	if !data.Loginscript.IsNull() && !data.Loginscript.IsUnknown() {
 		vpnparameter.Loginscript = data.Loginscript.ValueString()
 	}
-	if !data.Logoutscript.IsNull() {
+	if !data.Logoutscript.IsNull() && !data.Logoutscript.IsUnknown() {
 		vpnparameter.Logoutscript = data.Logoutscript.ValueString()
 	}
-	if !data.Macpluginupgrade.IsNull() {
+	if !data.Macpluginupgrade.IsNull() && !data.Macpluginupgrade.IsUnknown() {
 		vpnparameter.Macpluginupgrade = data.Macpluginupgrade.ValueString()
 	}
-	if !data.Maxiipperuser.IsNull() {
+	if !data.Maxiipperuser.IsNull() && !data.Maxiipperuser.IsUnknown() {
 		vpnparameter.Maxiipperuser = utils.IntPtr(int(data.Maxiipperuser.ValueInt64()))
 	}
-	if !data.Mdxtokentimeout.IsNull() {
+	if !data.Mdxtokentimeout.IsNull() && !data.Mdxtokentimeout.IsUnknown() {
 		vpnparameter.Mdxtokentimeout = utils.IntPtr(int(data.Mdxtokentimeout.ValueInt64()))
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		vpnparameter.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Ntdomain.IsNull() {
+	if !data.Ntdomain.IsNull() && !data.Ntdomain.IsUnknown() {
 		vpnparameter.Ntdomain = data.Ntdomain.ValueString()
 	}
-	if !data.Pcoipprofilename.IsNull() {
+	if !data.Pcoipprofilename.IsNull() && !data.Pcoipprofilename.IsUnknown() {
 		vpnparameter.Pcoipprofilename = data.Pcoipprofilename.ValueString()
 	}
-	if !data.Proxy.IsNull() {
+	if !data.Proxy.IsNull() && !data.Proxy.IsUnknown() {
 		vpnparameter.Proxy = data.Proxy.ValueString()
 	}
-	if !data.Proxyexception.IsNull() {
+	if !data.Proxyexception.IsNull() && !data.Proxyexception.IsUnknown() {
 		vpnparameter.Proxyexception = data.Proxyexception.ValueString()
 	}
-	if !data.Proxylocalbypass.IsNull() {
+	if !data.Proxylocalbypass.IsNull() && !data.Proxylocalbypass.IsUnknown() {
 		vpnparameter.Proxylocalbypass = data.Proxylocalbypass.ValueString()
 	}
-	if !data.Rdpclientprofilename.IsNull() {
+	if !data.Rdpclientprofilename.IsNull() && !data.Rdpclientprofilename.IsUnknown() {
 		vpnparameter.Rdpclientprofilename = data.Rdpclientprofilename.ValueString()
 	}
-	if !data.Rfc1918.IsNull() {
+	if !data.Rfc1918.IsNull() && !data.Rfc1918.IsUnknown() {
 		vpnparameter.Rfc1918 = data.Rfc1918.ValueString()
 	}
-	if !data.Samesite.IsNull() {
+	if !data.Samesite.IsNull() && !data.Samesite.IsUnknown() {
 		vpnparameter.Samesite = data.Samesite.ValueString()
 	}
-	if !data.Securebrowse.IsNull() {
+	if !data.Securebrowse.IsNull() && !data.Securebrowse.IsUnknown() {
 		vpnparameter.Securebrowse = data.Securebrowse.ValueString()
 	}
-	if !data.Secureprivateaccess.IsNull() {
+	if !data.Secureprivateaccess.IsNull() && !data.Secureprivateaccess.IsUnknown() {
 		vpnparameter.Secureprivateaccess = data.Secureprivateaccess.ValueString()
 	}
-	if !data.Sesstimeout.IsNull() {
+	if !data.Sesstimeout.IsNull() && !data.Sesstimeout.IsUnknown() {
 		vpnparameter.Sesstimeout = utils.IntPtr(int(data.Sesstimeout.ValueInt64()))
 	}
-	if !data.Smartgroup.IsNull() {
+	if !data.Smartgroup.IsNull() && !data.Smartgroup.IsUnknown() {
 		vpnparameter.Smartgroup = data.Smartgroup.ValueString()
 	}
-	if !data.Socksproxy.IsNull() {
+	if !data.Socksproxy.IsNull() && !data.Socksproxy.IsUnknown() {
 		vpnparameter.Socksproxy = data.Socksproxy.ValueString()
 	}
-	if !data.Splitdns.IsNull() {
+	if !data.Splitdns.IsNull() && !data.Splitdns.IsUnknown() {
 		vpnparameter.Splitdns = data.Splitdns.ValueString()
 	}
-	if !data.Splittunnel.IsNull() {
+	if !data.Splittunnel.IsNull() && !data.Splittunnel.IsUnknown() {
 		vpnparameter.Splittunnel = data.Splittunnel.ValueString()
 	}
-	if !data.Spoofiip.IsNull() {
+	if !data.Spoofiip.IsNull() && !data.Spoofiip.IsUnknown() {
 		vpnparameter.Spoofiip = data.Spoofiip.ValueString()
 	}
-	if !data.Sslproxy.IsNull() {
+	if !data.Sslproxy.IsNull() && !data.Sslproxy.IsUnknown() {
 		vpnparameter.Sslproxy = data.Sslproxy.ValueString()
 	}
-	if !data.Sso.IsNull() {
+	if !data.Sso.IsNull() && !data.Sso.IsUnknown() {
 		vpnparameter.Sso = data.Sso.ValueString()
 	}
-	if !data.Ssocredential.IsNull() {
+	if !data.Ssocredential.IsNull() && !data.Ssocredential.IsUnknown() {
 		vpnparameter.Ssocredential = data.Ssocredential.ValueString()
 	}
-	if !data.Storefronturl.IsNull() {
+	if !data.Storefronturl.IsNull() && !data.Storefronturl.IsUnknown() {
 		vpnparameter.Storefronturl = data.Storefronturl.ValueString()
 	}
-	if !data.Transparentinterception.IsNull() {
+	if !data.Transparentinterception.IsNull() && !data.Transparentinterception.IsUnknown() {
 		vpnparameter.Transparentinterception = data.Transparentinterception.ValueString()
 	}
-	if !data.Uitheme.IsNull() {
+	if !data.Uitheme.IsNull() && !data.Uitheme.IsUnknown() {
 		vpnparameter.Uitheme = data.Uitheme.ValueString()
 	}
-	if !data.Useiip.IsNull() {
+	if !data.Useiip.IsNull() && !data.Useiip.IsUnknown() {
 		vpnparameter.Useiip = data.Useiip.ValueString()
 	}
-	if !data.Usemip.IsNull() {
+	if !data.Usemip.IsNull() && !data.Usemip.IsUnknown() {
 		vpnparameter.Usemip = data.Usemip.ValueString()
 	}
-	if !data.Userdomains.IsNull() {
+	if !data.Userdomains.IsNull() && !data.Userdomains.IsUnknown() {
 		vpnparameter.Userdomains = data.Userdomains.ValueString()
 	}
-	if !data.Wihome.IsNull() {
+	if !data.Wihome.IsNull() && !data.Wihome.IsUnknown() {
 		vpnparameter.Wihome = data.Wihome.ValueString()
 	}
-	if !data.Wihomeaddresstype.IsNull() {
+	if !data.Wihomeaddresstype.IsNull() && !data.Wihomeaddresstype.IsUnknown() {
 		vpnparameter.Wihomeaddresstype = data.Wihomeaddresstype.ValueString()
 	}
-	if !data.Windowsautologon.IsNull() {
+	if !data.Windowsautologon.IsNull() && !data.Windowsautologon.IsUnknown() {
 		vpnparameter.Windowsautologon = data.Windowsautologon.ValueString()
 	}
-	if !data.Windowsclienttype.IsNull() {
+	if !data.Windowsclienttype.IsNull() && !data.Windowsclienttype.IsUnknown() {
 		vpnparameter.Windowsclienttype = data.Windowsclienttype.ValueString()
 	}
-	if !data.Windowspluginupgrade.IsNull() {
+	if !data.Windowspluginupgrade.IsNull() && !data.Windowspluginupgrade.IsUnknown() {
 		vpnparameter.Windowspluginupgrade = data.Windowspluginupgrade.ValueString()
 	}
-	if !data.Winsip.IsNull() {
+	if !data.Winsip.IsNull() && !data.Winsip.IsUnknown() {
 		vpnparameter.Winsip = data.Winsip.ValueString()
 	}
-	if !data.Wiportalmode.IsNull() {
+	if !data.Wiportalmode.IsNull() && !data.Wiportalmode.IsUnknown() {
 		vpnparameter.Wiportalmode = data.Wiportalmode.ValueString()
+	}
+	if !data.Clientconfiguration.IsNull() && !data.Clientconfiguration.IsUnknown() {
+		var clientconfigurationList []string
+		data.Clientconfiguration.ElementsAs(ctx, &clientconfigurationList, false)
+		vpnparameter.Clientconfiguration = clientconfigurationList
+	}
+	if !data.Clientoptions.IsNull() && !data.Clientoptions.IsUnknown() {
+		var clientoptionsList []string
+		data.Clientoptions.ElementsAs(ctx, &clientoptionsList, false)
+		vpnparameter.Clientoptions = clientoptionsList
+	}
+	if !data.Forcecleanup.IsNull() && !data.Forcecleanup.IsUnknown() {
+		var forcecleanupList []string
+		data.Forcecleanup.ElementsAs(ctx, &forcecleanupList, false)
+		vpnparameter.Forcecleanup = forcecleanupList
+	}
+	if !data.Httpport.IsNull() && !data.Httpport.IsUnknown() {
+		var httpportList []int
+		data.Httpport.ElementsAs(ctx, &httpportList, false)
+		vpnparameter.Httpport = httpportList
 	}
 
 	return vpnparameter
@@ -840,442 +858,491 @@ func vpnparameterSetAttrFromGet(ctx context.Context, data *VpnparameterResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["accessrestrictedpageredirect"]; ok && val != nil {
 		data.Accessrestrictedpageredirect = types.StringValue(val.(string))
-	} else {
+	} else if data.Accessrestrictedpageredirect.IsUnknown() {
 		data.Accessrestrictedpageredirect = types.StringNull()
 	}
 	if val, ok := getResponseData["advancedclientlessvpnmode"]; ok && val != nil {
 		data.Advancedclientlessvpnmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Advancedclientlessvpnmode.IsUnknown() {
 		data.Advancedclientlessvpnmode = types.StringNull()
 	}
 	if val, ok := getResponseData["allowedlogingroups"]; ok && val != nil {
 		data.Allowedlogingroups = types.StringValue(val.(string))
-	} else {
+	} else if data.Allowedlogingroups.IsUnknown() {
 		data.Allowedlogingroups = types.StringNull()
 	}
 	if val, ok := getResponseData["allprotocolproxy"]; ok && val != nil {
 		data.Allprotocolproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Allprotocolproxy.IsUnknown() {
 		data.Allprotocolproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["alwaysonprofilename"]; ok && val != nil {
 		data.Alwaysonprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Alwaysonprofilename.IsUnknown() {
 		data.Alwaysonprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["apptokentimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Apptokentimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Apptokentimeout.IsUnknown() {
 		data.Apptokentimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["authorizationgroup"]; ok && val != nil {
 		data.Authorizationgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Authorizationgroup.IsUnknown() {
 		data.Authorizationgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["autoproxyurl"]; ok && val != nil {
 		data.Autoproxyurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Autoproxyurl.IsUnknown() {
 		data.Autoproxyurl = types.StringNull()
 	}
 	if val, ok := getResponseData["backendcertvalidation"]; ok && val != nil {
 		data.Backendcertvalidation = types.StringValue(val.(string))
-	} else {
+	} else if data.Backendcertvalidation.IsUnknown() {
 		data.Backendcertvalidation = types.StringNull()
 	}
 	if val, ok := getResponseData["backenddtls12"]; ok && val != nil {
 		data.Backenddtls12 = types.StringValue(val.(string))
-	} else {
+	} else if data.Backenddtls12.IsUnknown() {
 		data.Backenddtls12 = types.StringNull()
 	}
 	if val, ok := getResponseData["backendserversni"]; ok && val != nil {
 		data.Backendserversni = types.StringValue(val.(string))
-	} else {
+	} else if data.Backendserversni.IsUnknown() {
 		data.Backendserversni = types.StringNull()
 	}
 	if val, ok := getResponseData["citrixreceiverhome"]; ok && val != nil {
 		data.Citrixreceiverhome = types.StringValue(val.(string))
-	} else {
+	} else if data.Citrixreceiverhome.IsUnknown() {
 		data.Citrixreceiverhome = types.StringNull()
 	}
 	if val, ok := getResponseData["clientchoices"]; ok && val != nil {
 		data.Clientchoices = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientchoices.IsUnknown() {
 		data.Clientchoices = types.StringNull()
 	}
 	if val, ok := getResponseData["clientcleanupprompt"]; ok && val != nil {
 		data.Clientcleanupprompt = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientcleanupprompt.IsUnknown() {
 		data.Clientcleanupprompt = types.StringNull()
 	}
 	if val, ok := getResponseData["clientdebug"]; ok && val != nil {
 		data.Clientdebug = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientdebug.IsUnknown() {
 		data.Clientdebug = types.StringNull()
 	}
 	if val, ok := getResponseData["clientidletimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Clientidletimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Clientidletimeout.IsUnknown() {
 		data.Clientidletimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["clientlessmodeurlencoding"]; ok && val != nil {
 		data.Clientlessmodeurlencoding = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientlessmodeurlencoding.IsUnknown() {
 		data.Clientlessmodeurlencoding = types.StringNull()
 	}
 	if val, ok := getResponseData["clientlesspersistentcookie"]; ok && val != nil {
 		data.Clientlesspersistentcookie = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientlesspersistentcookie.IsUnknown() {
 		data.Clientlesspersistentcookie = types.StringNull()
 	}
 	if val, ok := getResponseData["clientlessvpnmode"]; ok && val != nil {
 		data.Clientlessvpnmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientlessvpnmode.IsUnknown() {
 		data.Clientlessvpnmode = types.StringNull()
 	}
 	if val, ok := getResponseData["clientsecurity"]; ok && val != nil {
 		data.Clientsecurity = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientsecurity.IsUnknown() {
 		data.Clientsecurity = types.StringNull()
 	}
 	if val, ok := getResponseData["clientsecuritygroup"]; ok && val != nil {
 		data.Clientsecuritygroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientsecuritygroup.IsUnknown() {
 		data.Clientsecuritygroup = types.StringNull()
 	}
 	if val, ok := getResponseData["clientsecuritylog"]; ok && val != nil {
 		data.Clientsecuritylog = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientsecuritylog.IsUnknown() {
 		data.Clientsecuritylog = types.StringNull()
 	}
 	if val, ok := getResponseData["clientsecuritymessage"]; ok && val != nil {
 		data.Clientsecuritymessage = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientsecuritymessage.IsUnknown() {
 		data.Clientsecuritymessage = types.StringNull()
 	}
 	if val, ok := getResponseData["clientversions"]; ok && val != nil {
 		data.Clientversions = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientversions.IsUnknown() {
 		data.Clientversions = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultauthorizationaction"]; ok && val != nil {
 		data.Defaultauthorizationaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Defaultauthorizationaction.IsUnknown() {
 		data.Defaultauthorizationaction = types.StringNull()
 	}
 	if val, ok := getResponseData["deviceposture"]; ok && val != nil {
 		data.Deviceposture = types.StringValue(val.(string))
-	} else {
+	} else if data.Deviceposture.IsUnknown() {
 		data.Deviceposture = types.StringNull()
 	}
 	if val, ok := getResponseData["dnsvservername"]; ok && val != nil {
 		data.Dnsvservername = types.StringValue(val.(string))
-	} else {
+	} else if data.Dnsvservername.IsUnknown() {
 		data.Dnsvservername = types.StringNull()
 	}
 	if val, ok := getResponseData["emailhome"]; ok && val != nil {
 		data.Emailhome = types.StringValue(val.(string))
-	} else {
+	} else if data.Emailhome.IsUnknown() {
 		data.Emailhome = types.StringNull()
 	}
 	if val, ok := getResponseData["encryptcsecexp"]; ok && val != nil {
 		data.Encryptcsecexp = types.StringValue(val.(string))
-	} else {
+	} else if data.Encryptcsecexp.IsUnknown() {
 		data.Encryptcsecexp = types.StringNull()
 	}
 	if val, ok := getResponseData["epaclienttype"]; ok && val != nil {
 		data.Epaclienttype = types.StringValue(val.(string))
-	} else {
+	} else if data.Epaclienttype.IsUnknown() {
 		data.Epaclienttype = types.StringNull()
 	}
 	if val, ok := getResponseData["forcedtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Forcedtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Forcedtimeout.IsUnknown() {
 		data.Forcedtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["forcedtimeoutwarning"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Forcedtimeoutwarning = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Forcedtimeoutwarning.IsUnknown() {
 		data.Forcedtimeoutwarning = types.Int64Null()
 	}
 	if val, ok := getResponseData["fqdnspoofedip"]; ok && val != nil {
 		data.Fqdnspoofedip = types.StringValue(val.(string))
-	} else {
+	} else if data.Fqdnspoofedip.IsUnknown() {
 		data.Fqdnspoofedip = types.StringNull()
 	}
 	if val, ok := getResponseData["ftpproxy"]; ok && val != nil {
 		data.Ftpproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Ftpproxy.IsUnknown() {
 		data.Ftpproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["gopherproxy"]; ok && val != nil {
 		data.Gopherproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Gopherproxy.IsUnknown() {
 		data.Gopherproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["homepage"]; ok && val != nil {
 		data.Homepage = types.StringValue(val.(string))
-	} else {
+	} else if data.Homepage.IsUnknown() {
 		data.Homepage = types.StringNull()
 	}
 	if val, ok := getResponseData["httpproxy"]; ok && val != nil {
 		data.Httpproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Httpproxy.IsUnknown() {
 		data.Httpproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["httptrackconnproxy"]; ok && val != nil {
 		data.Httptrackconnproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Httptrackconnproxy.IsUnknown() {
 		data.Httptrackconnproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["icaproxy"]; ok && val != nil {
 		data.Icaproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Icaproxy.IsUnknown() {
 		data.Icaproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["icasessiontimeout"]; ok && val != nil {
 		data.Icasessiontimeout = types.StringValue(val.(string))
-	} else {
+	} else if data.Icasessiontimeout.IsUnknown() {
 		data.Icasessiontimeout = types.StringNull()
 	}
 	if val, ok := getResponseData["icauseraccounting"]; ok && val != nil {
 		data.Icauseraccounting = types.StringValue(val.(string))
-	} else {
+	} else if data.Icauseraccounting.IsUnknown() {
 		data.Icauseraccounting = types.StringNull()
 	}
 	if val, ok := getResponseData["iconwithreceiver"]; ok && val != nil {
 		data.Iconwithreceiver = types.StringValue(val.(string))
-	} else {
+	} else if data.Iconwithreceiver.IsUnknown() {
 		data.Iconwithreceiver = types.StringNull()
 	}
 	if val, ok := getResponseData["iipdnssuffix"]; ok && val != nil {
 		data.Iipdnssuffix = types.StringValue(val.(string))
-	} else {
+	} else if data.Iipdnssuffix.IsUnknown() {
 		data.Iipdnssuffix = types.StringNull()
 	}
 	if val, ok := getResponseData["kcdaccount"]; ok && val != nil {
 		data.Kcdaccount = types.StringValue(val.(string))
-	} else {
+	} else if data.Kcdaccount.IsUnknown() {
 		data.Kcdaccount = types.StringNull()
 	}
 	if val, ok := getResponseData["killconnections"]; ok && val != nil {
 		data.Killconnections = types.StringValue(val.(string))
-	} else {
+	} else if data.Killconnections.IsUnknown() {
 		data.Killconnections = types.StringNull()
 	}
 	if val, ok := getResponseData["linuxpluginupgrade"]; ok && val != nil {
 		data.Linuxpluginupgrade = types.StringValue(val.(string))
-	} else {
+	} else if data.Linuxpluginupgrade.IsUnknown() {
 		data.Linuxpluginupgrade = types.StringNull()
 	}
 	if val, ok := getResponseData["locallanaccess"]; ok && val != nil {
 		data.Locallanaccess = types.StringValue(val.(string))
-	} else {
+	} else if data.Locallanaccess.IsUnknown() {
 		data.Locallanaccess = types.StringNull()
 	}
 	if val, ok := getResponseData["loginscript"]; ok && val != nil {
 		data.Loginscript = types.StringValue(val.(string))
-	} else {
+	} else if data.Loginscript.IsUnknown() {
 		data.Loginscript = types.StringNull()
 	}
 	if val, ok := getResponseData["logoutscript"]; ok && val != nil {
 		data.Logoutscript = types.StringValue(val.(string))
-	} else {
+	} else if data.Logoutscript.IsUnknown() {
 		data.Logoutscript = types.StringNull()
 	}
 	if val, ok := getResponseData["macpluginupgrade"]; ok && val != nil {
 		data.Macpluginupgrade = types.StringValue(val.(string))
-	} else {
+	} else if data.Macpluginupgrade.IsUnknown() {
 		data.Macpluginupgrade = types.StringNull()
 	}
 	if val, ok := getResponseData["maxiipperuser"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Maxiipperuser = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Maxiipperuser.IsUnknown() {
 		data.Maxiipperuser = types.Int64Null()
 	}
 	if val, ok := getResponseData["mdxtokentimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Mdxtokentimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Mdxtokentimeout.IsUnknown() {
 		data.Mdxtokentimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["netmask"]; ok && val != nil {
 		data.Netmask = types.StringValue(val.(string))
-	} else {
+	} else if data.Netmask.IsUnknown() {
 		data.Netmask = types.StringNull()
 	}
 	if val, ok := getResponseData["ntdomain"]; ok && val != nil {
 		data.Ntdomain = types.StringValue(val.(string))
-	} else {
+	} else if data.Ntdomain.IsUnknown() {
 		data.Ntdomain = types.StringNull()
 	}
 	if val, ok := getResponseData["pcoipprofilename"]; ok && val != nil {
 		data.Pcoipprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Pcoipprofilename.IsUnknown() {
 		data.Pcoipprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["proxy"]; ok && val != nil {
 		data.Proxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxy.IsUnknown() {
 		data.Proxy = types.StringNull()
 	}
 	if val, ok := getResponseData["proxyexception"]; ok && val != nil {
 		data.Proxyexception = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxyexception.IsUnknown() {
 		data.Proxyexception = types.StringNull()
 	}
 	if val, ok := getResponseData["proxylocalbypass"]; ok && val != nil {
 		data.Proxylocalbypass = types.StringValue(val.(string))
-	} else {
+	} else if data.Proxylocalbypass.IsUnknown() {
 		data.Proxylocalbypass = types.StringNull()
 	}
 	if val, ok := getResponseData["rdpclientprofilename"]; ok && val != nil {
 		data.Rdpclientprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Rdpclientprofilename.IsUnknown() {
 		data.Rdpclientprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["rfc1918"]; ok && val != nil {
 		data.Rfc1918 = types.StringValue(val.(string))
-	} else {
+	} else if data.Rfc1918.IsUnknown() {
 		data.Rfc1918 = types.StringNull()
 	}
 	if val, ok := getResponseData["samesite"]; ok && val != nil {
 		data.Samesite = types.StringValue(val.(string))
-	} else {
+	} else if data.Samesite.IsUnknown() {
 		data.Samesite = types.StringNull()
 	}
 	if val, ok := getResponseData["securebrowse"]; ok && val != nil {
 		data.Securebrowse = types.StringValue(val.(string))
-	} else {
+	} else if data.Securebrowse.IsUnknown() {
 		data.Securebrowse = types.StringNull()
 	}
 	if val, ok := getResponseData["secureprivateaccess"]; ok && val != nil {
 		data.Secureprivateaccess = types.StringValue(val.(string))
-	} else {
+	} else if data.Secureprivateaccess.IsUnknown() {
 		data.Secureprivateaccess = types.StringNull()
 	}
 	if val, ok := getResponseData["sesstimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sesstimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sesstimeout.IsUnknown() {
 		data.Sesstimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["smartgroup"]; ok && val != nil {
 		data.Smartgroup = types.StringValue(val.(string))
-	} else {
+	} else if data.Smartgroup.IsUnknown() {
 		data.Smartgroup = types.StringNull()
 	}
 	if val, ok := getResponseData["socksproxy"]; ok && val != nil {
 		data.Socksproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Socksproxy.IsUnknown() {
 		data.Socksproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["splitdns"]; ok && val != nil {
 		data.Splitdns = types.StringValue(val.(string))
-	} else {
+	} else if data.Splitdns.IsUnknown() {
 		data.Splitdns = types.StringNull()
 	}
 	if val, ok := getResponseData["splittunnel"]; ok && val != nil {
 		data.Splittunnel = types.StringValue(val.(string))
-	} else {
+	} else if data.Splittunnel.IsUnknown() {
 		data.Splittunnel = types.StringNull()
 	}
 	if val, ok := getResponseData["spoofiip"]; ok && val != nil {
 		data.Spoofiip = types.StringValue(val.(string))
-	} else {
+	} else if data.Spoofiip.IsUnknown() {
 		data.Spoofiip = types.StringNull()
 	}
 	if val, ok := getResponseData["sslproxy"]; ok && val != nil {
 		data.Sslproxy = types.StringValue(val.(string))
-	} else {
+	} else if data.Sslproxy.IsUnknown() {
 		data.Sslproxy = types.StringNull()
 	}
 	if val, ok := getResponseData["sso"]; ok && val != nil {
 		data.Sso = types.StringValue(val.(string))
-	} else {
+	} else if data.Sso.IsUnknown() {
 		data.Sso = types.StringNull()
 	}
 	if val, ok := getResponseData["ssocredential"]; ok && val != nil {
 		data.Ssocredential = types.StringValue(val.(string))
-	} else {
+	} else if data.Ssocredential.IsUnknown() {
 		data.Ssocredential = types.StringNull()
 	}
 	if val, ok := getResponseData["storefronturl"]; ok && val != nil {
 		data.Storefronturl = types.StringValue(val.(string))
-	} else {
+	} else if data.Storefronturl.IsUnknown() {
 		data.Storefronturl = types.StringNull()
 	}
 	if val, ok := getResponseData["transparentinterception"]; ok && val != nil {
 		data.Transparentinterception = types.StringValue(val.(string))
-	} else {
+	} else if data.Transparentinterception.IsUnknown() {
 		data.Transparentinterception = types.StringNull()
 	}
 	if val, ok := getResponseData["uitheme"]; ok && val != nil {
 		data.Uitheme = types.StringValue(val.(string))
-	} else {
+	} else if data.Uitheme.IsUnknown() {
 		data.Uitheme = types.StringNull()
 	}
 	if val, ok := getResponseData["useiip"]; ok && val != nil {
 		data.Useiip = types.StringValue(val.(string))
-	} else {
+	} else if data.Useiip.IsUnknown() {
 		data.Useiip = types.StringNull()
 	}
 	if val, ok := getResponseData["usemip"]; ok && val != nil {
 		data.Usemip = types.StringValue(val.(string))
-	} else {
+	} else if data.Usemip.IsUnknown() {
 		data.Usemip = types.StringNull()
 	}
 	if val, ok := getResponseData["userdomains"]; ok && val != nil {
 		data.Userdomains = types.StringValue(val.(string))
-	} else {
+	} else if data.Userdomains.IsUnknown() {
 		data.Userdomains = types.StringNull()
 	}
 	if val, ok := getResponseData["wihome"]; ok && val != nil {
 		data.Wihome = types.StringValue(val.(string))
-	} else {
+	} else if data.Wihome.IsUnknown() {
 		data.Wihome = types.StringNull()
 	}
 	if val, ok := getResponseData["wihomeaddresstype"]; ok && val != nil {
 		data.Wihomeaddresstype = types.StringValue(val.(string))
-	} else {
+	} else if data.Wihomeaddresstype.IsUnknown() {
 		data.Wihomeaddresstype = types.StringNull()
 	}
 	if val, ok := getResponseData["windowsautologon"]; ok && val != nil {
 		data.Windowsautologon = types.StringValue(val.(string))
-	} else {
+	} else if data.Windowsautologon.IsUnknown() {
 		data.Windowsautologon = types.StringNull()
 	}
 	if val, ok := getResponseData["windowsclienttype"]; ok && val != nil {
 		data.Windowsclienttype = types.StringValue(val.(string))
-	} else {
+	} else if data.Windowsclienttype.IsUnknown() {
 		data.Windowsclienttype = types.StringNull()
 	}
 	if val, ok := getResponseData["windowspluginupgrade"]; ok && val != nil {
 		data.Windowspluginupgrade = types.StringValue(val.(string))
-	} else {
+	} else if data.Windowspluginupgrade.IsUnknown() {
 		data.Windowspluginupgrade = types.StringNull()
 	}
 	if val, ok := getResponseData["winsip"]; ok && val != nil {
 		data.Winsip = types.StringValue(val.(string))
-	} else {
+	} else if data.Winsip.IsUnknown() {
 		data.Winsip = types.StringNull()
 	}
 	if val, ok := getResponseData["wiportalmode"]; ok && val != nil {
 		data.Wiportalmode = types.StringValue(val.(string))
-	} else {
+	} else if data.Wiportalmode.IsUnknown() {
 		data.Wiportalmode = types.StringNull()
+	}
+	if val, ok := getResponseData["clientconfiguration"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Clientconfiguration = listValue
+		} else if data.Clientconfiguration.IsUnknown() {
+			data.Clientconfiguration = types.ListNull(types.StringType)
+		}
+	} else if data.Clientconfiguration.IsUnknown() {
+		data.Clientconfiguration = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["clientoptions"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Clientoptions = listValue
+		} else if data.Clientoptions.IsUnknown() {
+			data.Clientoptions = types.ListNull(types.StringType)
+		}
+	} else if data.Clientoptions.IsUnknown() {
+		data.Clientoptions = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["forcecleanup"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Forcecleanup = listValue
+		} else if data.Forcecleanup.IsUnknown() {
+			data.Forcecleanup = types.ListNull(types.StringType)
+		}
+	} else if data.Forcecleanup.IsUnknown() {
+		data.Forcecleanup = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["httpport"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := make([]int64, 0, len(sliceVal))
+			for _, v := range sliceVal {
+				if iv, err := utils.ConvertToInt64(v); err == nil {
+					intList = append(intList, iv)
+				}
+			}
+			listValue, _ := types.ListValueFrom(ctx, types.Int64Type, intList)
+			data.Httpport = listValue
+		} else if data.Httpport.IsUnknown() {
+			data.Httpport = types.ListNull(types.Int64Type)
+		}
+	} else if data.Httpport.IsUnknown() {
+		data.Httpport = types.ListNull(types.Int64Type)
 	}
 
 	// Set ID for the resource

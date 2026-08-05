@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *NsservicepathResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating nsservicepath resource")
 
-	// nsservicepath := nsservicepathGetThePayloadFromtheConfig(ctx, &data)
+	nsservicepath := nsservicepathGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsservicepath.Type(), &nsservicepath)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsservicepath, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nsservicepath-config")
+	// Named resource - use AddResource
+	servicepathname_value := data.Servicepathname.ValueString()
+	_, err := r.client.AddResource(service.Nsservicepath.Type(), servicepathname_value, &nsservicepath)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsservicepath, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nsservicepath resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Servicepathname.ValueString()))
+
 	// Read the updated state back
-	r.readNsservicepathFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsservicepathFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsservicepath not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *NsservicepathResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading nsservicepath resource")
 
-	r.readNsservicepathFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNsservicepathFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NsservicepathResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsservicepathResourceModel
+	var data, state NsservicepathResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,22 @@ func (r *NsservicepathResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nsservicepath resource")
 
-	// Create API request body from the model
-	// nsservicepath := nsservicepathGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsservicepath.Type(), &nsservicepath)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsservicepath, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated nsservicepath resource")
-
-	// Read the updated state back
-	r.readNsservicepathFromApi(ctx, &data, &resp.Diagnostics)
+	// nsservicepath has a single writable attribute (servicepathname) which is
+	// the key and is ForceNew (RequiresReplace). NITRO exposes no update
+	// operation for this resource, so there is nothing to push here; any change
+	// to servicepathname triggers a destroy/create instead. Re-read to keep
+	// state consistent.
+	if !r.readNsservicepathFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsservicepath not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +153,36 @@ func (r *NsservicepathResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 
 	tflog.Debug(ctx, "Deleting nsservicepath resource")
+	// Named resource - delete using DeleteResource
+	servicepathname_value := data.Servicepathname.ValueString()
+	err := r.client.DeleteResource(service.Nsservicepath.Type(), servicepathname_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nsservicepath, got error: %s", err))
+		return
+	}
 
-	// For nsservicepath, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nsservicepath resource from state")
+	tflog.Trace(ctx, "Deleted nsservicepath resource")
 }
 
 // Helper function to read nsservicepath data from API
-func (r *NsservicepathResource) readNsservicepathFromApi(ctx context.Context, data *NsservicepathResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nsservicepath.Type(), "")
+func (r *NsservicepathResource) readNsservicepathFromApi(ctx context.Context, data *NsservicepathResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	servicepathname_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Nsservicepath.Type(), servicepathname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsservicepath, got error: %s", err))
-		return
+		return false
 	}
 
 	nsservicepathSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

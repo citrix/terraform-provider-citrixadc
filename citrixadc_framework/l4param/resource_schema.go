@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -29,12 +28,12 @@ func (r *L4paramResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"l2connmethod": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("MacVlanChannel"),
+				Computed:    true,
 				Description: "Layer 2 connection method based on the combination of  channel number, MAC address and VLAN. It is tuned with l2conn param of lb vserver. If l2conn of lb vserver is ON then method specified here will be used to identify a connection in addition to the 4-tuple (<source IP>:<source port>::<destination IP>:<destination port>).",
 			},
 			"l4switch": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "In L4 switch topology, always clients and servers are on the same side. Enable l4switch to allow such connections.",
 			},
 		},
@@ -59,15 +58,17 @@ func l4paramGetThePayloadFromtheConfig(ctx context.Context, data *L4paramResourc
 func l4paramSetAttrFromGet(ctx context.Context, data *L4paramResourceModel, getResponseData map[string]interface{}) *L4paramResourceModel {
 	tflog.Debug(ctx, "In l4paramSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branches (omit-on-default trap): only resolve an unknown value
+	// to null when NITRO omits the field; never clobber a known configured value.
 	if val, ok := getResponseData["l2connmethod"]; ok && val != nil {
 		data.L2connmethod = types.StringValue(val.(string))
-	} else {
+	} else if data.L2connmethod.IsUnknown() {
 		data.L2connmethod = types.StringNull()
 	}
 	if val, ok := getResponseData["l4switch"]; ok && val != nil {
 		data.L4switch = types.StringValue(val.(string))
-	} else {
+	} else if data.L4switch.IsUnknown() {
 		data.L4switch = types.StringNull()
 	}
 

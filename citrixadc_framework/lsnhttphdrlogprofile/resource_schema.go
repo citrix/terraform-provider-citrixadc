@@ -2,12 +2,14 @@ package lsnhttphdrlogprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -31,51 +33,56 @@ func (r *LsnhttphdrlogprofileResource) Schema(ctx context.Context, req resource.
 				Description: "The ID of the lsnhttphdrlogprofile resource.",
 			},
 			"httphdrlogprofilename": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 ForceNew -> RequiresReplace (name change recreates the resource)
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the HTTP header logging Profile.",
 			},
 			"loghost": schema.StringAttribute{
+				// SDK v2: Optional + Computed, no Default (value read back from ADC)
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Host information is logged if option is enabled.",
 			},
 			"logmethod": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "HTTP method information is logged if option is enabled.",
 			},
 			"logurl": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "URL information is logged if option is enabled.",
 			},
 			"logversion": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ENABLED"),
+				Computed:    true,
 				Description: "Version information is logged if option is enabled.",
 			},
 		},
 	}
 }
 
-func lsnhttphdrlogprofileGetThePayloadFromtheConfig(ctx context.Context, data *LsnhttphdrlogprofileResourceModel) lsn.Lsnhttphdrlogprofile {
-	tflog.Debug(ctx, "In lsnhttphdrlogprofileGetThePayloadFromtheConfig Function")
+func lsnhttphdrlogprofileGetThePayloadFromthePlan(ctx context.Context, data *LsnhttphdrlogprofileResourceModel) lsn.Lsnhttphdrlogprofile {
+	tflog.Debug(ctx, "In lsnhttphdrlogprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsnhttphdrlogprofile := lsn.Lsnhttphdrlogprofile{}
-	if !data.Httphdrlogprofilename.IsNull() {
+	if !data.Httphdrlogprofilename.IsNull() && !data.Httphdrlogprofilename.IsUnknown() {
 		lsnhttphdrlogprofile.Httphdrlogprofilename = data.Httphdrlogprofilename.ValueString()
 	}
-	if !data.Loghost.IsNull() {
+	if !data.Loghost.IsNull() && !data.Loghost.IsUnknown() {
 		lsnhttphdrlogprofile.Loghost = data.Loghost.ValueString()
 	}
-	if !data.Logmethod.IsNull() {
+	if !data.Logmethod.IsNull() && !data.Logmethod.IsUnknown() {
 		lsnhttphdrlogprofile.Logmethod = data.Logmethod.ValueString()
 	}
-	if !data.Logurl.IsNull() {
+	if !data.Logurl.IsNull() && !data.Logurl.IsUnknown() {
 		lsnhttphdrlogprofile.Logurl = data.Logurl.ValueString()
 	}
-	if !data.Logversion.IsNull() {
+	if !data.Logversion.IsNull() && !data.Logversion.IsUnknown() {
 		lsnhttphdrlogprofile.Logversion = data.Logversion.ValueString()
 	}
 
@@ -85,36 +92,38 @@ func lsnhttphdrlogprofileGetThePayloadFromtheConfig(ctx context.Context, data *L
 func lsnhttphdrlogprofileSetAttrFromGet(ctx context.Context, data *LsnhttphdrlogprofileResourceModel, getResponseData map[string]interface{}) *LsnhttphdrlogprofileResourceModel {
 	tflog.Debug(ctx, "In lsnhttphdrlogprofileSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard else-branches: only null a value when it is unknown; never clobber a
+	// known configured value that NITRO omits from the GET response (omit-on-default trap).
 	if val, ok := getResponseData["httphdrlogprofilename"]; ok && val != nil {
 		data.Httphdrlogprofilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Httphdrlogprofilename.IsUnknown() {
 		data.Httphdrlogprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["loghost"]; ok && val != nil {
 		data.Loghost = types.StringValue(val.(string))
-	} else {
+	} else if data.Loghost.IsUnknown() {
 		data.Loghost = types.StringNull()
 	}
 	if val, ok := getResponseData["logmethod"]; ok && val != nil {
 		data.Logmethod = types.StringValue(val.(string))
-	} else {
+	} else if data.Logmethod.IsUnknown() {
 		data.Logmethod = types.StringNull()
 	}
 	if val, ok := getResponseData["logurl"]; ok && val != nil {
 		data.Logurl = types.StringValue(val.(string))
-	} else {
+	} else if data.Logurl.IsUnknown() {
 		data.Logurl = types.StringNull()
 	}
 	if val, ok := getResponseData["logversion"]; ok && val != nil {
 		data.Logversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Logversion.IsUnknown() {
 		data.Logversion = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Httphdrlogprofilename.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Httphdrlogprofilename.ValueString()))
 
 	return data
 }

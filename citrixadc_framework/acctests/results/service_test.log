@@ -1,0 +1,19 @@
+# Resource        : service
+# Primary ADC     : 159
+# Alternate ADCs  : 121, 154
+# Planned tests   : 6
+# Result          : PASS_first=1 PASS_alt=0 FAILED=4 SKIPPED=1
+
+## PASS (on primary ADC 159)
+  PASS  TestAccService_AssertNonUpdateableAttributes
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+  FAIL  TestAccService_basic  :: Error: Provider returned invalid result object after apply   [tried: 159, 121, 154]
+  FAIL  TestAccService_sslservice  :: Error: Provider returned invalid result object after apply   [tried: 159, 121, 154]
+  FAIL  TestAccService_rebind_default_monitor  :: Error: Provider returned invalid result object after apply   [tried: 159, 121, 154]
+  FAIL  TestAccServiceDataSource_basic  :: Error: Provider returned invalid result object after apply   [tried: 159, 121, 154]
+
+## SKIPPED
+  SKIP  TestAccService_enable_disable  :: TODO: Disable

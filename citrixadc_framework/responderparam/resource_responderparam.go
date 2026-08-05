@@ -55,14 +55,15 @@ func (r *ResponderparamResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating responderparam resource")
 
-	// responderparam := responderparamGetThePayloadFromtheConfig(ctx, &data)
+	// Build the NITRO payload from the plan (singleton).
+	responderparam := responderparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Responderparam.Type(), &responderparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create responderparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call — singleton uses UpdateUnnamedResource (matches SDK v2).
+	err := r.client.UpdateUnnamedResource(service.Responderparam.Type(), &responderparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create responderparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("responderparam-config")
@@ -71,6 +72,9 @@ func (r *ResponderparamResource) Create(ctx context.Context, req resource.Create
 
 	// Read the updated state back
 	r.readResponderparamFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -106,20 +110,23 @@ func (r *ResponderparamResource) Update(ctx context.Context, req resource.Update
 
 	tflog.Debug(ctx, "Updating responderparam resource")
 
-	// Create API request body from the model
-	// responderparam := responderparamGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model (singleton).
+	responderparam := responderparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Responderparam.Type(), &responderparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update responderparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call — singleton uses UpdateUnnamedResource (matches SDK v2).
+	err := r.client.UpdateUnnamedResource(service.Responderparam.Type(), &responderparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update responderparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated responderparam resource")
 
 	// Read the updated state back
 	r.readResponderparamFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

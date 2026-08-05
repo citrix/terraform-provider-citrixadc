@@ -99,7 +99,7 @@ func (d *SystemfileDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	systemfileSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	systemfileSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

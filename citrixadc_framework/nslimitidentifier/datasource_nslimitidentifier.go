@@ -55,7 +55,7 @@ func (d *NslimitidentifierDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	nslimitidentifierSetAttrFromGet(ctx, &data, getResponseData)
+	nslimitidentifierSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

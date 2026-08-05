@@ -55,16 +55,18 @@ func (r *Nat64paramResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nat64param resource")
 
-	// nat64param := nat64paramGetThePayloadFromtheConfig(ctx, &data)
+	// Singleton: build the payload from the plan and push it with
+	// UpdateUnnamedResource (matches SDK v2 createNat64paramFunc).
+	nat64param := nat64paramGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nat64param.Type(), &nat64param)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nat64param, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nat64param.Type(), &nat64param)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nat64param, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Generate stable ID for this singleton configuration resource
 	data.Id = types.StringValue("nat64param-config")
 
 	tflog.Trace(ctx, "Created nat64param resource")
@@ -95,8 +97,10 @@ func (r *Nat64paramResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *Nat64paramResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data Nat64paramResourceModel
+	var data, state Nat64paramResourceModel
 
+	// Read Terraform prior state to preserve the singleton ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,17 +108,21 @@ func (r *Nat64paramResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nat64param resource")
 
-	// Create API request body from the model
-	// nat64param := nat64paramGetThePayloadFromtheConfig(ctx, &data)
+	// Singleton: build the payload from the plan and push it with
+	// UpdateUnnamedResource (matches SDK v2 updateNat64paramFunc).
+	nat64param := nat64paramGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nat64param.Type(), &nat64param)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nat64param, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nat64param.Type(), &nat64param)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nat64param, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nat64param resource")
 

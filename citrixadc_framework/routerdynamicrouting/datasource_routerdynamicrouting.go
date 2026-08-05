@@ -7,6 +7,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 var _ datasource.DataSource = (*RouterdynamicroutingDataSource)(nil)
@@ -17,6 +20,17 @@ func ROuterdynamicroutingDataSource() datasource.DataSource {
 
 type RouterdynamicroutingDataSource struct {
 	client *service.NitroClient
+}
+
+// RouterdynamicroutingDataSourceModel describes the datasource data model.
+//
+// The datasource is a read-only "show command" query and is intentionally
+// decoupled from the resource model: the resource is action-only and carries a
+// commandlines list, while the datasource queries by a single commandstring.
+type RouterdynamicroutingDataSourceModel struct {
+	Id            types.String `tfsdk:"id"`
+	Commandstring types.String `tfsdk:"commandstring"`
+	Nodeid        types.Int64  `tfsdk:"nodeid"`
 }
 
 func (d *RouterdynamicroutingDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -35,7 +49,7 @@ func (d *RouterdynamicroutingDataSource) Schema(ctx context.Context, req datasou
 }
 
 func (d *RouterdynamicroutingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RouterdynamicroutingResourceModel
+	var data RouterdynamicroutingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -44,7 +58,6 @@ func (d *RouterdynamicroutingDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	// Case 3: Array filter without parent ID
-
 	commandstring_Name := data.Commandstring.ValueString()
 
 	var dataArr []map[string]interface{}
@@ -69,12 +82,10 @@ func (d *RouterdynamicroutingDataSource) Read(ctx context.Context, req datasourc
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-
-		if v["commandstring"].(string) == commandstring_Name {
+		if cs, ok := v["commandstring"].(string); ok && cs == commandstring_Name {
 			foundIndex = i
 			break
 		}
-
 	}
 
 	// Resource is missing
@@ -83,8 +94,24 @@ func (d *RouterdynamicroutingDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	routerdynamicroutingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	routerdynamicroutingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// routerdynamicroutingSetAttrFromGetForDatasource copies the GET response into
+// the datasource model and sets the datasource ID.
+func routerdynamicroutingSetAttrFromGetForDatasource(ctx context.Context, data *RouterdynamicroutingDataSourceModel, getResponseData map[string]interface{}) {
+	if val, ok := getResponseData["commandstring"]; ok && val != nil {
+		data.Commandstring = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["nodeid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Nodeid = types.Int64Value(intVal)
+		}
+	}
+
+	// Set ID for the datasource
+	data.Id = types.StringValue(data.Commandstring.ValueString())
 }

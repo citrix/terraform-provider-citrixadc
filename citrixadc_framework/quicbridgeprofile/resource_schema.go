@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,35 +32,41 @@ func (r *QuicbridgeprofileResource) Schema(ctx context.Context, req resource.Sch
 				Description: "The ID of the quicbridgeprofile resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 ForceNew: name cannot be changed after creation.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the QUIC profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@),equals sign (=), and hyphen (-) characters. Cannot be changed after the profile is created.",
 			},
 			"routingalgorithm": schema.StringAttribute{
+				// SDK v2: Optional+Computed, no Default (value read back from ADC).
 				Optional:    true,
-				Default:     stringdefault.StaticString("PLAINTEXT"),
+				Computed:    true,
 				Description: "Routing algorithm to generate routable connection IDs.",
 			},
 			"serveridlength": schema.Int64Attribute{
+				// SDK v2: Optional+Computed, no Default (value read back from ADC).
 				Optional:    true,
-				Default:     int64default.StaticInt64(4),
+				Computed:    true,
 				Description: "Length of serverid to encode/decode server information",
 			},
 		},
 	}
 }
 
-func quicbridgeprofileGetThePayloadFromtheConfig(ctx context.Context, data *QuicbridgeprofileResourceModel) quicbridge.Quicbridgeprofile {
-	tflog.Debug(ctx, "In quicbridgeprofileGetThePayloadFromtheConfig Function")
+func quicbridgeprofileGetThePayloadFromthePlan(ctx context.Context, data *QuicbridgeprofileResourceModel) quicbridge.Quicbridgeprofile {
+	tflog.Debug(ctx, "In quicbridgeprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	quicbridgeprofile := quicbridge.Quicbridgeprofile{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		quicbridgeprofile.Name = data.Name.ValueString()
 	}
-	if !data.Routingalgorithm.IsNull() {
+	if !data.Routingalgorithm.IsNull() && !data.Routingalgorithm.IsUnknown() {
 		quicbridgeprofile.Routingalgorithm = data.Routingalgorithm.ValueString()
 	}
-	if !data.Serveridlength.IsNull() {
+	if !data.Serveridlength.IsNull() && !data.Serveridlength.IsUnknown() {
 		quicbridgeprofile.Serveridlength = utils.IntPtr(int(data.Serveridlength.ValueInt64()))
 	}
 
@@ -73,19 +79,21 @@ func quicbridgeprofileSetAttrFromGet(ctx context.Context, data *Quicbridgeprofil
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
+	// Guard else-branch (omit-on-default trap): only null when the value is
+	// unknown, never clobber a known configured value NITRO may omit from GET.
 	if val, ok := getResponseData["routingalgorithm"]; ok && val != nil {
 		data.Routingalgorithm = types.StringValue(val.(string))
-	} else {
+	} else if data.Routingalgorithm.IsUnknown() {
 		data.Routingalgorithm = types.StringNull()
 	}
 	if val, ok := getResponseData["serveridlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Serveridlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Serveridlength.IsUnknown() {
 		data.Serveridlength = types.Int64Null()
 	}
 

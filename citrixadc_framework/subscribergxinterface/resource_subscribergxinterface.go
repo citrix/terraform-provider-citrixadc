@@ -55,14 +55,15 @@ func (r *SubscribergxinterfaceResource) Create(ctx context.Context, req resource
 
 	tflog.Debug(ctx, "Creating subscribergxinterface resource")
 
-	// subscribergxinterface := subscribergxinterfaceGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	subscribergxinterface := subscribergxinterfaceGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscribergxinterface.Type(), &subscribergxinterface)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscribergxinterface, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Subscribergxinterface.Type(), &subscribergxinterface)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscribergxinterface, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("subscribergxinterface-config")
@@ -106,15 +107,15 @@ func (r *SubscribergxinterfaceResource) Update(ctx context.Context, req resource
 
 	tflog.Debug(ctx, "Updating subscribergxinterface resource")
 
-	// Create API request body from the model
-	// subscribergxinterface := subscribergxinterfaceGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	subscribergxinterface := subscribergxinterfaceGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscribergxinterface.Type(), &subscribergxinterface)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscribergxinterface, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Subscribergxinterface.Type(), &subscribergxinterface)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscribergxinterface, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated subscribergxinterface resource")
 

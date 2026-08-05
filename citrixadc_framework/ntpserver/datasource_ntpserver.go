@@ -130,7 +130,7 @@ func (d *NtpserverDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	ntpserverSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	ntpserverSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

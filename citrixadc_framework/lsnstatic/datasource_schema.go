@@ -34,6 +34,11 @@ func LsnstaticDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "NAT port for this LSN mapping entry. * represents all ports being used. Used in case of static wildcard",
 			},
+			"nattype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Type of sessions to be displayed.",
+			},
 			"network6": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

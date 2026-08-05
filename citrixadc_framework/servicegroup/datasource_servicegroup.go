@@ -55,7 +55,7 @@ func (d *ServicegroupDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	servicegroupSetAttrFromGet(ctx, &data, getResponseData)
+	servicegroupSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -55,14 +55,15 @@ func (r *VpnparameterResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating vpnparameter resource")
 
-	// vpnparameter := vpnparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	vpnparameter := vpnparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("vpnparameter-config")
@@ -107,14 +108,14 @@ func (r *VpnparameterResource) Update(ctx context.Context, req resource.UpdateRe
 	tflog.Debug(ctx, "Updating vpnparameter resource")
 
 	// Create API request body from the model
-	// vpnparameter := vpnparameterGetThePayloadFromtheConfig(ctx, &data)
+	vpnparameter := vpnparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Vpnparameter.Type(), &vpnparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated vpnparameter resource")
 

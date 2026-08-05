@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
@@ -44,20 +43,23 @@ func (d *NsipDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	// Case 3: Array filter without parent ID
+	ipaddressName := data.Ipaddress.ValueString()
 
-	ipaddress_Name := data.Ipaddress.ValueString()
-
-	td_Name := data.Td.ValueInt64()
-
-	var dataArr []map[string]interface{}
-	var err error
+	trafficDomain := int64(0)
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		trafficDomain = data.Td.ValueInt64()
+	}
+	argsMap := map[string]string{
+		"td": fmt.Sprintf("%d", trafficDomain),
+	}
 
 	findParams := service.FindParams{
-		ResourceType:             "nsip",
+		ResourceType:             service.Nsip.Type(),
+		ResourceName:             ipaddressName,
 		ResourceMissingErrorCode: 258,
+		ArgsMap:                  argsMap,
 	}
-	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
+	dataArr, err := d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read nsip, got error: %s", err))
 		return
@@ -69,40 +71,22 @@ func (d *NsipDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching ipaddress
 	foundIndex := -1
 	for i, v := range dataArr {
-
-		match := true
-
-		if v["ipaddress"].(string) != ipaddress_Name {
-			match = false
-		}
-
-		// Convert td to int64 safely
-		tdVal, err := utils.ConvertToInt64(v["td"])
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to convert td field: %s", err))
-			return
-		}
-		if tdVal != td_Name {
-			match = false
-		}
-
-		if match {
+		if addr, ok := v["ipaddress"].(string); ok && addr == ipaddressName {
 			foundIndex = i
 			break
 		}
-
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("nsip with ipaddress %s not found", ipaddress_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("nsip with ipaddress %s not found", ipaddressName))
 		return
 	}
 
-	nsipSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	nsipSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

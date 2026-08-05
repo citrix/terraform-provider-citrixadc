@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *PolicyhttpcalloutResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Debug(ctx, "Creating policyhttpcallout resource")
 
-	// policyhttpcallout := policyhttpcalloutGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	policyhttpcallout := policyhttpcalloutGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Policyhttpcallout.Type(), &policyhttpcallout)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create policyhttpcallout, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("policyhttpcallout-config")
+	// Named resource - use AddResource
+	policyhttpcalloutName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Policyhttpcallout.Type(), policyhttpcalloutName, &policyhttpcallout)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create policyhttpcallout, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created policyhttpcallout resource")
 
+	// Set ID for the resource before reading state back
+	data.Id = types.StringValue(policyhttpcalloutName)
+
 	// Read the updated state back
-	r.readPolicyhttpcalloutFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readPolicyhttpcalloutFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "policyhttpcallout not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,162 @@ func (r *PolicyhttpcalloutResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading policyhttpcallout resource")
 
-	r.readPolicyhttpcalloutFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readPolicyhttpcalloutFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *PolicyhttpcalloutResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data PolicyhttpcalloutResourceModel
+	var data, state, config PolicyhttpcalloutResourceModel
 
+	// Read Terraform prior state to preserve ID and for change detection
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes the user removed from config
+	// (plan marks removed Optional+Computed attrs as unknown, config keeps them null).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating policyhttpcallout resource")
 
-	// Create API request body from the model
-	// policyhttpcallout := policyhttpcalloutGetThePayloadFromtheConfig(ctx, &data)
+	// NITRO enforces mutual exclusivity between fullreqexpr and the request-shaping
+	// attributes (bodyexpr, httpmethod, hostexpr, urlstemexpr, headers, parameters):
+	// setting fullreqexpr while any of those is still present on the appliance fails
+	// with errorcode 703 ("Full request expression and other request attributes
+	// cannot be set at the same time"). NITRO also rejects clearing these via an empty
+	// value in the update payload. So, for any mutually-exclusive request-shaping
+	// attribute the user removed from config (null in config) that still holds a value
+	// in prior state, clear it on the appliance with an ?action=unset call before the
+	// update PUT. This preserves the SDK v2 user-facing contract (mode switching such
+	// as httpmethod-style -> fullReqExpr-style works in a single apply).
+	policyhttpcalloutName := data.Name.ValueString()
+	unsetPayload := map[string]interface{}{"name": policyhttpcalloutName}
+	needUnset := false
+	markUnsetString := func(name string, cfg, st types.String) {
+		if cfg.IsNull() && !st.IsNull() && st.ValueString() != "" {
+			unsetPayload[name] = true
+			needUnset = true
+		}
+	}
+	markUnsetList := func(name string, cfg, st types.List) {
+		if cfg.IsNull() && !st.IsNull() && len(st.Elements()) > 0 {
+			unsetPayload[name] = true
+			needUnset = true
+		}
+	}
+	markUnsetString("fullreqexpr", config.Fullreqexpr, state.Fullreqexpr)
+	markUnsetString("bodyexpr", config.Bodyexpr, state.Bodyexpr)
+	markUnsetString("hostexpr", config.Hostexpr, state.Hostexpr)
+	markUnsetString("urlstemexpr", config.Urlstemexpr, state.Urlstemexpr)
+	markUnsetString("httpmethod", config.Httpmethod, state.Httpmethod)
+	markUnsetList("headers", config.Headers, state.Headers)
+	markUnsetList("parameters", config.Parameters, state.Parameters)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Policyhttpcallout.Type(), &policyhttpcallout)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policyhttpcallout, got error: %s", err))
-	//	 return
-	// }
+	if needUnset {
+		tflog.Debug(ctx, "Unsetting mutually-exclusive request-shaping attributes removed from config")
+		if err := r.client.ActOnResource(service.Policyhttpcallout.Type(), unsetPayload, "unset"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset policyhttpcallout attributes, got error: %s", err))
+			return
+		}
+	}
 
-	tflog.Trace(ctx, "Updated policyhttpcallout resource")
+	// Check if there are any changes in updateable attributes.
+	// name and returntype are ForceNew/RequiresReplace and never reach Update.
+	hasChange := false
+	if !data.Bodyexpr.Equal(state.Bodyexpr) {
+		tflog.Debug(ctx, "bodyexpr has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Cacheforsecs.Equal(state.Cacheforsecs) {
+		tflog.Debug(ctx, "cacheforsecs has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Fullreqexpr.Equal(state.Fullreqexpr) {
+		tflog.Debug(ctx, "fullreqexpr has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Headers.Equal(state.Headers) {
+		tflog.Debug(ctx, "headers has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Hostexpr.Equal(state.Hostexpr) {
+		tflog.Debug(ctx, "hostexpr has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Httpmethod.Equal(state.Httpmethod) {
+		tflog.Debug(ctx, "httpmethod has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Ipaddress.Equal(state.Ipaddress) {
+		tflog.Debug(ctx, "ipaddress has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Parameters.Equal(state.Parameters) {
+		tflog.Debug(ctx, "parameters has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Port.Equal(state.Port) {
+		tflog.Debug(ctx, "port has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Resultexpr.Equal(state.Resultexpr) {
+		tflog.Debug(ctx, "resultexpr has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Scheme.Equal(state.Scheme) {
+		tflog.Debug(ctx, "scheme has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Urlstemexpr.Equal(state.Urlstemexpr) {
+		tflog.Debug(ctx, "urlstemexpr has changed for policyhttpcallout")
+		hasChange = true
+	}
+	if !data.Vserver.Equal(state.Vserver) {
+		tflog.Debug(ctx, "vserver has changed for policyhttpcallout")
+		hasChange = true
+	}
+
+	if hasChange {
+		// Create API request body from the model (updatable fields only)
+		policyhttpcallout := policyhttpcalloutGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Named resource - use UpdateResource
+		policyhttpcalloutName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Policyhttpcallout.Type(), policyhttpcalloutName, &policyhttpcallout)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policyhttpcallout, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated policyhttpcallout resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for policyhttpcallout resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readPolicyhttpcalloutFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readPolicyhttpcalloutFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "policyhttpcallout not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +269,33 @@ func (r *PolicyhttpcalloutResource) Delete(ctx context.Context, req resource.Del
 
 	tflog.Debug(ctx, "Deleting policyhttpcallout resource")
 
-	// For policyhttpcallout, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted policyhttpcallout resource from state")
+	// Named resource - delete using DeleteResource keyed off the ID (live name)
+	policyhttpcalloutName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Policyhttpcallout.Type(), policyhttpcalloutName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete policyhttpcallout, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted policyhttpcallout resource")
 }
 
-// Helper function to read policyhttpcallout data from API
-func (r *PolicyhttpcalloutResource) readPolicyhttpcalloutFromApi(ctx context.Context, data *PolicyhttpcalloutResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Policyhttpcallout.Type(), "")
+// Helper function to read policyhttpcallout data from API.
+// Returns false (without error) when the resource no longer exists on the ADC.
+func (r *PolicyhttpcalloutResource) readPolicyhttpcalloutFromApi(ctx context.Context, data *PolicyhttpcalloutResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	policyhttpcalloutName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Policyhttpcallout.Type(), policyhttpcalloutName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read policyhttpcallout, got error: %s", err))
-		return
+		return false
 	}
 
 	policyhttpcalloutSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

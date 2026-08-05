@@ -1,0 +1,15 @@
+# Resource        : nd6
+# Primary ADC     : 156
+# Alternate ADCs  : 121, 151
+# Planned tests   : 2
+# Result          : PASS_first=2 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 156)
+  PASS  TestAccNd6_basic
+  PASS  TestAccNd6DataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

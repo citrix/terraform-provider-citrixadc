@@ -2,12 +2,14 @@ package vpnpcoipvserverprofile
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,12 +37,15 @@ func (r *VpnpcoipvserverprofileResource) Schema(ctx context.Context, req resourc
 				Description: "Login domain for PCoIP users",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "name of PCoIP vserver profile",
 			},
 			"udpport": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4172),
+				Computed:    true,
 				Description: "UDP port for PCoIP data traffic",
 			},
 		},
@@ -52,13 +57,13 @@ func vpnpcoipvserverprofileGetThePayloadFromtheConfig(ctx context.Context, data 
 
 	// Create API request body from the model
 	vpnpcoipvserverprofile := vpn.Vpnpcoipvserverprofile{}
-	if !data.Logindomain.IsNull() {
+	if !data.Logindomain.IsNull() && !data.Logindomain.IsUnknown() {
 		vpnpcoipvserverprofile.Logindomain = data.Logindomain.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnpcoipvserverprofile.Name = data.Name.ValueString()
 	}
-	if !data.Udpport.IsNull() {
+	if !data.Udpport.IsNull() && !data.Udpport.IsUnknown() {
 		vpnpcoipvserverprofile.Udpport = utils.IntPtr(int(data.Udpport.ValueInt64()))
 	}
 
@@ -71,25 +76,25 @@ func vpnpcoipvserverprofileSetAttrFromGet(ctx context.Context, data *Vpnpcoipvse
 	// Convert API response to model
 	if val, ok := getResponseData["logindomain"]; ok && val != nil {
 		data.Logindomain = types.StringValue(val.(string))
-	} else {
+	} else if data.Logindomain.IsUnknown() {
 		data.Logindomain = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["udpport"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Udpport = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Udpport.IsUnknown() {
 		data.Udpport = types.Int64Null()
 	}
 
 	// Set ID for the resource
 	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

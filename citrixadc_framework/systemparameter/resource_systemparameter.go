@@ -55,14 +55,15 @@ func (r *SystemparameterResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating systemparameter resource")
 
-	// systemparameter := systemparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	systemparameter := systemparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systemparameter.Type(), &systemparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Systemparameter.Type(), &systemparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create systemparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("systemparameter-config")
@@ -107,14 +108,14 @@ func (r *SystemparameterResource) Update(ctx context.Context, req resource.Updat
 	tflog.Debug(ctx, "Updating systemparameter resource")
 
 	// Create API request body from the model
-	// systemparameter := systemparameterGetThePayloadFromtheConfig(ctx, &data)
+	systemparameter := systemparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Systemparameter.Type(), &systemparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systemparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Systemparameter.Type(), &systemparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update systemparameter, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated systemparameter resource")
 

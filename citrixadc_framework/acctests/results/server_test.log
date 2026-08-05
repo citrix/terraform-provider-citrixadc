@@ -1,0 +1,17 @@
+# Resource        : server
+# Primary ADC     : 157
+# Alternate ADCs  : 159
+# Planned tests   : 4
+# Result          : PASS_first=4 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 157)
+  PASS  TestAccServer_basic
+  PASS  TestAccServer_AssertNonUpdateableAttributes
+  PASS  TestAccServer_enable_disable
+  PASS  TestAccServerDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

@@ -150,7 +150,7 @@ func ServiceDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Close monitoring connections by sending the service a connection termination message with the specified bit set.",
 			},
-			"monitor_name_svc": schema.StringAttribute{
+			"monitornamesvc": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the monitor bound to the specified service.",
@@ -169,10 +169,10 @@ func ServiceDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Network profile to use for the service.",
 			},
-			"newname": schema.StringAttribute{
+			"riseapbrstatsmsgcode": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "New name for the service. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.",
+				Description: "The code indicating the rise apbr status.",
 			},
 			"pathmonitor": schema.StringAttribute{
 				Optional:    true,
@@ -263,6 +263,48 @@ func ServiceDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Weight to assign to the monitor-service binding. When a monitor is UP, the weight assigned to its binding with the service determines how much the monitor contributes toward keeping the health of the service above the value configured for the Monitor Threshold parameter.",
+			},
+
+			// Convenience blocks (shared with the resource model).
+			"lbvserver": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The name of the lb vserver to which the service is bound.",
+			},
+			"lbmonitor": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The name of the lb monitor bound to the service.",
+			},
+			"snienable": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "State of the Server Name Indication (SNI) feature on the service (SSL services only).",
+			},
+			"commonname": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name to be checked against the CommonName (CN) field in the server certificate bound to the SSL service.",
+			},
+			"wait_until_disabled": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "When set, the provider waits until the service reaches the DISABLED state before returning.",
+			},
+			"disabled_timeout": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Maximum duration to wait for the service to reach the DISABLED state.",
+			},
+			"disabled_poll_delay": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Delay before the first poll while waiting for the DISABLED state.",
+			},
+			"disabled_poll_interval": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Interval between polls while waiting for the DISABLED state.",
 			},
 		},
 	}

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,29 @@ func (r *VpnvserverResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating vpnvserver resource")
 
-	// vpnvserver := vpnvserverGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	vpnvserver := vpnvserverGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver.Type(), &vpnvserver)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnvserver-config")
+	// Named resource - use AddResource
+	vpnvserverName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Vpnvserver.Type(), vpnvserverName, &vpnvserver)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnvserver, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnvserver resource")
 
+	// Set ID (the live vserver name) before reading state back
+	data.Id = types.StringValue(vpnvserverName)
+
 	// Read the updated state back
-	r.readVpnvserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnvserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnvserver not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *VpnvserverResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading vpnvserver resource")
 
-	r.readVpnvserverFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnvserverFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnvserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnvserverResourceModel
+	var data, state VpnvserverResourceModel
 
+	// Read Terraform prior state to preserve the live name/ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,56 @@ func (r *VpnvserverResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID (live name) from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnvserver resource")
 
-	// Create API request body from the model
-	// vpnvserver := vpnvserverGetThePayloadFromtheConfig(ctx, &data)
+	// Handle in-place rename (NITRO ?action=rename) when newname changes.
+	if !data.Newname.IsNull() && !data.Newname.IsUnknown() && data.Newname.ValueString() != "" &&
+		!data.Newname.Equal(state.Newname) {
+		newName := data.Newname.ValueString()
+		// The rename source must be the CURRENT LIVE name, tracked in state.Id.
+		renamePayload := vpn.Vpnvserver{
+			Name:    state.Id.ValueString(),
+			Newname: newName,
+		}
+		tflog.Debug(ctx, fmt.Sprintf("Renaming vpnvserver %s to %s", state.Id.ValueString(), newName))
+		err := r.client.ActOnResource(service.Vpnvserver.Type(), &renamePayload, "rename")
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename vpnvserver, got error: %s", err))
+			return
+		}
+		// The ID now tracks the live (renamed) object.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnvserver.Type(), &vpnvserver)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver, got error: %s", err))
-	//	 return
-	// }
+	// Build a set payload containing ONLY the changed updateable attributes,
+	// mirroring the SDK v2 update contract. name/servicetype are create-only
+	// (RequiresReplace) and never reach the set payload — NITRO rejects
+	// servicetype on set (errorcode 278); newname is handled above via rename.
+	vpnvserver, hasChange := vpnvserverGetTheUpdatablePayloadFromThePlan(ctx, &data, &state)
 
-	tflog.Trace(ctx, "Updated vpnvserver resource")
+	if hasChange {
+		// Key the update on the live name (data.Id), which reflects any rename above.
+		vpnvserver.Name = data.Id.ValueString()
+		_, err := r.client.UpdateResource(service.Vpnvserver.Type(), data.Id.ValueString(), &vpnvserver)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnvserver, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated vpnvserver resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnvserver resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readVpnvserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnvserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnvserver not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +189,30 @@ func (r *VpnvserverResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting vpnvserver resource")
 
-	// For vpnvserver, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnvserver resource from state")
+	// Named resource - delete by live name (data.Id), robust to a prior rename.
+	err := r.client.DeleteResource(service.Vpnvserver.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnvserver, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnvserver resource")
 }
 
-// Helper function to read vpnvserver data from API
-func (r *VpnvserverResource) readVpnvserverFromApi(ctx context.Context, data *VpnvserverResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnvserver.Type(), "")
+// Helper function to read vpnvserver data from API. Returns false if not found.
+func (r *VpnvserverResource) readVpnvserverFromApi(ctx context.Context, data *VpnvserverResourceModel, diags *diag.Diagnostics) bool {
+	vpnvserverName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vpnvserver.Type(), vpnvserverName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnvserver, got error: %s", err))
-		return
+		return false
 	}
 
 	vpnvserverSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

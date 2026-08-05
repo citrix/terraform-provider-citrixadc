@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -55,22 +54,23 @@ func (r *SnmpmibResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Debug(ctx, "Creating snmpmib resource")
 
-	// snmpmib := snmpmibGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	snmpmib := snmpmibGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpmib, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("snmpmib-config")
+	// snmpmib is a singleton (unnamed) resource - push config with UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpmib, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created snmpmib resource")
 
-	// Read the updated state back
+	// Read the updated state back (also sets data.Id)
 	r.readSnmpmibFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -106,20 +106,23 @@ func (r *SnmpmibResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	tflog.Debug(ctx, "Updating snmpmib resource")
 
-	// Create API request body from the model
-	// snmpmib := snmpmibGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	snmpmib := snmpmibGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpmib, got error: %s", err))
-	//	 return
-	// }
+	// snmpmib is a singleton (unnamed) resource - push config with UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpmib, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated snmpmib resource")
 
-	// Read the updated state back
+	// Read the updated state back (also sets data.Id)
 	r.readSnmpmibFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

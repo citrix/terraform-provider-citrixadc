@@ -51,6 +51,11 @@ func SystemparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "When enabled, local users can access Citrix ADC even when external authentication is configured. When disabled, local users are not allowed to access the Citrix ADC, Local users can access the Citrix ADC only when the configured external authentication servers are unavailable. This parameter is not applicable to SSH Key-based authentication",
 			},
+			"maxclient": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Maximum number of client connection allowed per user. Exposed for backward compatibility with the SDK v2 resource; this is a read-only NITRO parameter.",
+			},
 			"maxsessionperuser": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

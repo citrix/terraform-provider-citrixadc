@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/vpn"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,27 @@ func (r *VpnurlactionResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating vpnurlaction resource")
 
-	// vpnurlaction := vpnurlactionGetThePayloadFromtheConfig(ctx, &data)
+	vpnurlaction := vpnurlactionGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnurlaction.Type(), &vpnurlaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnurlaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnurlaction-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Vpnurlaction.Type(), name_value, &vpnurlaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnurlaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnurlaction resource")
 
+	// Set ID for the resource before reading state (single_unique - plain value)
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
 	r.readVpnurlactionFromApi(ctx, &data, &resp.Diagnostics)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -90,13 +97,26 @@ func (r *VpnurlactionResource) Read(ctx context.Context, req resource.ReadReques
 
 	r.readVpnurlactionFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource no longer exists on the ADC - drop it from state (mirrors SDK v2
+	// clearing the ID when FindResource fails).
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnurlactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnurlactionResourceModel
+	var data, state VpnurlactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +124,94 @@ func (r *VpnurlactionResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID (current live name) from prior state.
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnurlaction resource")
 
-	// Create API request body from the model
-	// vpnurlaction := vpnurlactionGetThePayloadFromtheConfig(ctx, &data)
+	// Rename support: NITRO exposes a `rename` action plus a `newname` attribute.
+	// A newname change drives an in-place rename (NOT a destroy/recreate). The
+	// rename SOURCE is the CURRENT LIVE name, tracked by the ID - NOT state.Name
+	// (which stays pinned to the originally configured value and would be stale on
+	// a second rename).
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		oldName := state.Id.ValueString()
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("Renaming vpnurlaction from %q to %q", oldName, newName))
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnurlaction.Type(), &vpnurlaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnurlaction, got error: %s", err))
-	//	 return
-	// }
+		renamePayload := vpn.Vpnurlaction{
+			Name:    oldName,
+			Newname: newName,
+		}
+		if err := r.client.ActOnResource(service.Vpnurlaction.Type(), &renamePayload, "rename"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename vpnurlaction, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated vpnurlaction resource")
+		// The live object is now named newName. Point the ID at it so subsequent
+		// operations (update payload, read-back, future reads) address it.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Read the updated state back
+	// Regular update of the mutable attributes. name is ForceNew (RequiresReplace)
+	// so it never changes here; every other non-rename attribute is updateable.
+	hasChange := false
+	if !data.Actualurl.Equal(state.Actualurl) {
+		hasChange = true
+	}
+	if !data.Applicationtype.Equal(state.Applicationtype) {
+		hasChange = true
+	}
+	if !data.Clientlessaccess.Equal(state.Clientlessaccess) {
+		hasChange = true
+	}
+	if !data.Comment.Equal(state.Comment) {
+		hasChange = true
+	}
+	if !data.Iconurl.Equal(state.Iconurl) {
+		hasChange = true
+	}
+	if !data.Linkname.Equal(state.Linkname) {
+		hasChange = true
+	}
+	if !data.Samlssoprofile.Equal(state.Samlssoprofile) {
+		hasChange = true
+	}
+	if !data.Ssotype.Equal(state.Ssotype) {
+		hasChange = true
+	}
+	if !data.Vservername.Equal(state.Vservername) {
+		hasChange = true
+	}
+
+	if hasChange {
+		vpnurlaction := vpnurlactionGetThePayloadFromthePlan(ctx, &data)
+		// Address the current live name (== configured name, or the post-rename
+		// name if a rename happened above).
+		liveName := data.Id.ValueString()
+		vpnurlaction.Name = liveName
+		_, err := r.client.UpdateResource(service.Vpnurlaction.Type(), liveName, &vpnurlaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnurlaction, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated vpnurlaction resource")
+	} else {
+		tflog.Debug(ctx, "No mutable changes detected for vpnurlaction resource, skipping update")
+	}
+
+	// Read the current state back. Preserve the user-facing key (name) and the
+	// rename-only newname across the read-back so a rename does not surface as a
+	// spurious diff.
+	planName := data.Name
+	planNewname := data.Newname
 	r.readVpnurlactionFromApi(ctx, &data, &resp.Diagnostics)
+	data.Name = planName
+	data.Newname = planNewname
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +229,35 @@ func (r *VpnurlactionResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting vpnurlaction resource")
 
-	// For vpnurlaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnurlaction resource from state")
+	// Named resource - delete using DeleteResource. The ID holds the CURRENT LIVE
+	// name (== name at create, == newname after a rename), so delete by data.Id,
+	// NOT data.Name (which stays at the originally configured value and would target
+	// a non-existent name after a rename, dangling the object).
+	liveName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Vpnurlaction.Type(), liveName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnurlaction, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnurlaction resource")
 }
 
 // Helper function to read vpnurlaction data from API
 func (r *VpnurlactionResource) readVpnurlactionFromApi(ctx context.Context, data *VpnurlactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnurlaction.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value (live name)
+	name_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vpnurlaction.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnurlaction, got error: %s", err))
 		return
 	}
 
 	vpnurlactionSetAttrFromGet(ctx, data, getResponseData)
-
 }

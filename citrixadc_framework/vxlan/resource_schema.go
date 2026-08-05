@@ -8,10 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -39,44 +37,45 @@ func (r *VxlanResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed:    true,
 				Description: "The ID of the vxlan resource.",
 			},
+			// SDK v2: vxlanid TypeInt Required ForceNew -> Required + RequiresReplace.
+			"vxlanid": schema.Int64Attribute{
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
+				Description: "A positive integer, which is also called VXLAN Network Identifier (VNI), that uniquely identifies a VXLAN.",
+			},
+			// SDK v2: Optional+Computed, no Default (value read from ADC).
 			"dynamicrouting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable dynamic routing on this VXLAN.",
-			},
-			"vxlanid": schema.Int64Attribute{
-				Required:    true,
-				Description: "A positive integer, which is also called VXLAN Network Identifier (VNI), that uniquely identifies a VXLAN.",
 			},
 			"innervlantagging": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Specifies whether Citrix ADC should generate VXLAN packets with inner VLAN tag.",
 			},
 			"ipv6dynamicrouting": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable all IPv6 dynamic routing protocols on this VXLAN. Note: For the ENABLED setting to work, you must configure IPv6 dynamic routing protocols from the VTYSH command line.",
 			},
 			"port": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4789),
+				Computed:    true,
 				Description: "Specifies UDP destination port for VXLAN packets.",
 			},
+			// SDK v2: protocol Optional+Computed, NOT ForceNew (Update handles it).
 			"protocol": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("ETHERNET"),
+				Optional:    true,
+				Computed:    true,
 				Description: "VXLAN-GPE next protocol. RESERVED, IPv4, IPv6, ETHERNET, NSH",
 			},
+			// SDK v2: type Optional+Computed, NOT ForceNew (Update handles it).
 			"type": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("VXLAN"),
+				Optional:    true,
+				Computed:    true,
 				Description: "VXLAN encapsulation type. VXLAN, VXLANGPE",
 			},
 			"vlan": schema.Int64Attribute{
@@ -88,92 +87,137 @@ func (r *VxlanResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
-func vxlanGetThePayloadFromtheConfig(ctx context.Context, data *VxlanResourceModel) network.Vxlan {
-	tflog.Debug(ctx, "In vxlanGetThePayloadFromtheConfig Function")
+// vxlanGetThePayloadFromthePlan builds the full create payload from the plan.
+func vxlanGetThePayloadFromthePlan(ctx context.Context, data *VxlanResourceModel) network.Vxlan {
+	tflog.Debug(ctx, "In vxlanGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	vxlan := network.Vxlan{}
-	if !data.Dynamicrouting.IsNull() {
-		vxlan.Dynamicrouting = data.Dynamicrouting.ValueString()
-	}
-	if !data.Vxlanid.IsNull() {
+	if !data.Vxlanid.IsNull() && !data.Vxlanid.IsUnknown() {
 		vxlan.Id = utils.IntPtr(int(data.Vxlanid.ValueInt64()))
 	}
-	if !data.Innervlantagging.IsNull() {
+	if !data.Dynamicrouting.IsNull() && !data.Dynamicrouting.IsUnknown() {
+		vxlan.Dynamicrouting = data.Dynamicrouting.ValueString()
+	}
+	if !data.Innervlantagging.IsNull() && !data.Innervlantagging.IsUnknown() {
 		vxlan.Innervlantagging = data.Innervlantagging.ValueString()
 	}
-	if !data.Ipv6dynamicrouting.IsNull() {
+	if !data.Ipv6dynamicrouting.IsNull() && !data.Ipv6dynamicrouting.IsUnknown() {
 		vxlan.Ipv6dynamicrouting = data.Ipv6dynamicrouting.ValueString()
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		vxlan.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 	}
-	if !data.Protocol.IsNull() {
+	if !data.Protocol.IsNull() && !data.Protocol.IsUnknown() {
 		vxlan.Protocol = data.Protocol.ValueString()
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		vxlan.Type = data.Type.ValueString()
 	}
-	if !data.Vlan.IsNull() {
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
 		vxlan.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
 	}
 
 	return vxlan
 }
 
+// vxlanGetTheUpdatablePayloadFromThePlan mirrors SDK v2 update semantics: only
+// changed fields are placed on the payload. The key (id) is always included.
+func vxlanGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *VxlanResourceModel, state *VxlanResourceModel) (network.Vxlan, bool) {
+	tflog.Debug(ctx, "In vxlanGetTheUpdatablePayloadFromThePlan Function")
+
+	vxlan := network.Vxlan{}
+	if !data.Vxlanid.IsNull() && !data.Vxlanid.IsUnknown() {
+		vxlan.Id = utils.IntPtr(int(data.Vxlanid.ValueInt64()))
+	}
+
+	hasChange := false
+	if !data.Dynamicrouting.Equal(state.Dynamicrouting) {
+		vxlan.Dynamicrouting = data.Dynamicrouting.ValueString()
+		hasChange = true
+	}
+	if !data.Innervlantagging.Equal(state.Innervlantagging) {
+		vxlan.Innervlantagging = data.Innervlantagging.ValueString()
+		hasChange = true
+	}
+	if !data.Ipv6dynamicrouting.Equal(state.Ipv6dynamicrouting) {
+		vxlan.Ipv6dynamicrouting = data.Ipv6dynamicrouting.ValueString()
+		hasChange = true
+	}
+	if !data.Port.Equal(state.Port) {
+		vxlan.Port = utils.IntPtr(int(data.Port.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Protocol.Equal(state.Protocol) {
+		vxlan.Protocol = data.Protocol.ValueString()
+		hasChange = true
+	}
+	if !data.Type.Equal(state.Type) {
+		vxlan.Type = data.Type.ValueString()
+		hasChange = true
+	}
+	if !data.Vlan.Equal(state.Vlan) {
+		vxlan.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
+		hasChange = true
+	}
+
+	return vxlan, hasChange
+}
+
 func vxlanSetAttrFromGet(ctx context.Context, data *VxlanResourceModel, getResponseData map[string]interface{}) *VxlanResourceModel {
 	tflog.Debug(ctx, "In vxlanSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. else-branches only null when the current
+	// value is Unknown, so a configured value NITRO omits from GET is preserved
+	// (omit-on-default guard).
 	if val, ok := getResponseData["dynamicrouting"]; ok && val != nil {
 		data.Dynamicrouting = types.StringValue(val.(string))
-	} else {
+	} else if data.Dynamicrouting.IsUnknown() {
 		data.Dynamicrouting = types.StringNull()
 	}
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vxlanid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vxlanid.IsUnknown() {
 		data.Vxlanid = types.Int64Null()
 	}
 	if val, ok := getResponseData["innervlantagging"]; ok && val != nil {
 		data.Innervlantagging = types.StringValue(val.(string))
-	} else {
+	} else if data.Innervlantagging.IsUnknown() {
 		data.Innervlantagging = types.StringNull()
 	}
 	if val, ok := getResponseData["ipv6dynamicrouting"]; ok && val != nil {
 		data.Ipv6dynamicrouting = types.StringValue(val.(string))
-	} else {
+	} else if data.Ipv6dynamicrouting.IsUnknown() {
 		data.Ipv6dynamicrouting = types.StringNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Port = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.Int64Null()
 	}
 	if val, ok := getResponseData["protocol"]; ok && val != nil {
 		data.Protocol = types.StringValue(val.(string))
-	} else {
+	} else if data.Protocol.IsUnknown() {
 		data.Protocol = types.StringNull()
 	}
 	if val, ok := getResponseData["type"]; ok && val != nil {
 		data.Type = types.StringValue(val.(string))
-	} else {
+	} else if data.Type.IsUnknown() {
 		data.Type = types.StringNull()
 	}
 	if val, ok := getResponseData["vlan"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Vlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Vlan.IsUnknown() {
 		data.Vlan = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the resource (single unique attribute -> plain value), matching
+	// the SDK v2 d.SetId(vxlanIdStr) scheme.
 	data.Id = types.StringValue(fmt.Sprintf("%d", data.Vxlanid.ValueInt64()))
 
 	return data

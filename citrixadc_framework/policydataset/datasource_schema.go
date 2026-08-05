@@ -20,11 +20,6 @@ func PolicydatasetDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "This is used to populate internal dataset information so that the dataset can also be used dynamically in an expression. Here dynamically means the dataset name can also be derived using an expression. For example for a given dataset name \"allow_test\" it can be used dynamically as client.ip.src.equals_any(\"allow_\" + http.req.url.path.get(1)). This cannot be used with default datasets.",
 			},
-			"dynamiconly": schema.BoolAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Shows only dynamic datasets when set true.",
-			},
 			"name": schema.StringAttribute{
 				Required:    true,
 				Description: "Name of the dataset. Must not exceed 127 characters.",

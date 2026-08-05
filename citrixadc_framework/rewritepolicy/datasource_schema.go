@@ -29,11 +29,6 @@ func RewritepolicyDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name for the rewrite policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the rewrite policy is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my rewrite policy\" or 'my rewrite policy').",
 			},
-			"newname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "New name for the rewrite policy. \nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my rewrite policy\" or 'my rewrite policy').",
-			},
 			"rule": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -43,6 +38,51 @@ func RewritepolicyDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.",
+			},
+		},
+		// The convenience-block sets are shared with the resource model; they are
+		// exposed here as computed outputs so the shared model maps cleanly.
+		Blocks: map[string]schema.Block{
+			"globalbinding": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"globalbindtype":         schema.StringAttribute{Computed: true},
+						"gotopriorityexpression": schema.StringAttribute{Computed: true},
+						"invoke":                 schema.BoolAttribute{Computed: true},
+						"labelname":              schema.StringAttribute{Computed: true},
+						"labeltype":              schema.StringAttribute{Computed: true},
+						"policyname":             schema.StringAttribute{Computed: true},
+						"priority":               schema.Int64Attribute{Computed: true},
+						"type":                   schema.StringAttribute{Computed: true},
+					},
+				},
+			},
+			"lbvserverbinding": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"bindpoint":              schema.StringAttribute{Computed: true},
+						"gotopriorityexpression": schema.StringAttribute{Computed: true},
+						"invoke":                 schema.BoolAttribute{Computed: true},
+						"labelname":              schema.StringAttribute{Computed: true},
+						"labeltype":              schema.StringAttribute{Computed: true},
+						"name":                   schema.StringAttribute{Computed: true},
+						"priority":               schema.Int64Attribute{Computed: true},
+					},
+				},
+			},
+			"csvserverbinding": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"bindpoint":              schema.StringAttribute{Computed: true},
+						"gotopriorityexpression": schema.StringAttribute{Computed: true},
+						"invoke":                 schema.BoolAttribute{Computed: true},
+						"labelname":              schema.StringAttribute{Computed: true},
+						"labeltype":              schema.StringAttribute{Computed: true},
+						"name":                   schema.StringAttribute{Computed: true},
+						"priority":               schema.Int64Attribute{Computed: true},
+						"targetlbvserver":        schema.StringAttribute{Computed: true},
+					},
+				},
 			},
 		},
 	}

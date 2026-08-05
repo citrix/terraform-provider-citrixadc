@@ -55,14 +55,15 @@ func (r *LsnparameterResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating lsnparameter resource")
 
-	// lsnparameter := lsnparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Singleton resource - use UpdateUnnamedResource (NITRO exposes only get/update)
+	lsnparameter := lsnparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnparameter.Type(), &lsnparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnparameter, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Lsnparameter.Type(), &lsnparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("lsnparameter-config")
@@ -95,8 +96,10 @@ func (r *LsnparameterResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *LsnparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsnparameterResourceModel
+	var data, state LsnparameterResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,19 +107,38 @@ func (r *LsnparameterResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsnparameter resource")
 
-	// Create API request body from the model
-	// lsnparameter := lsnparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Memlimit.Equal(state.Memlimit) {
+		tflog.Debug(ctx, "memlimit has changed for lsnparameter")
+		hasChange = true
+	}
+	if !data.Sessionsync.Equal(state.Sessionsync) {
+		tflog.Debug(ctx, "sessionsync has changed for lsnparameter")
+		hasChange = true
+	}
+	if !data.Subscrsessionremoval.Equal(state.Subscrsessionremoval) {
+		tflog.Debug(ctx, "subscrsessionremoval has changed for lsnparameter")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnparameter.Type(), &lsnparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnparameter, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated lsnparameter resource")
+	if hasChange {
+		// Singleton resource - use UpdateUnnamedResource
+		lsnparameter := lsnparameterGetThePayloadFromtheConfig(ctx, &data)
+		err := r.client.UpdateUnnamedResource(service.Lsnparameter.Type(), &lsnparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnparameter, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated lsnparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsnparameter resource, skipping update")
+	}
 
 	// Read the updated state back
 	r.readLsnparameterFromApi(ctx, &data, &resp.Diagnostics)

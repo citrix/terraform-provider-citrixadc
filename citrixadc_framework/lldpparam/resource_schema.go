@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,7 +31,7 @@ func (r *LldpparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"holdtimetxmult": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(4),
+				Computed:    true,
 				Description: "A multiplier for calculating the duration for which the receiving device stores the LLDP information in its database before discarding or removing it. The duration is calculated as the holdtimeTxMult (Holdtime Multiplier) parameter value multiplied by the timer (Timer) parameter value.",
 			},
 			"mode": schema.StringAttribute{
@@ -42,7 +41,7 @@ func (r *LldpparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"timer": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(30),
+				Computed:    true,
 				Description: "Interval, in seconds, between LLDP packet data units (LLDPDUs).  that the Citrix ADC sends to a directly connected device.",
 			},
 		},
@@ -70,24 +69,26 @@ func lldpparamGetThePayloadFromtheConfig(ctx context.Context, data *LldpparamRes
 func lldpparamSetAttrFromGet(ctx context.Context, data *LldpparamResourceModel, getResponseData map[string]interface{}) *LldpparamResourceModel {
 	tflog.Debug(ctx, "In lldpparamSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branches with IsUnknown(): never clobber a known configured
+	// value that NITRO may omit from GET (the omit-on-default trap).
 	if val, ok := getResponseData["holdtimetxmult"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Holdtimetxmult = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Holdtimetxmult.IsUnknown() {
 		data.Holdtimetxmult = types.Int64Null()
 	}
 	if val, ok := getResponseData["mode"]; ok && val != nil {
 		data.Mode = types.StringValue(val.(string))
-	} else {
+	} else if data.Mode.IsUnknown() {
 		data.Mode = types.StringNull()
 	}
 	if val, ok := getResponseData["timer"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timer = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Timer.IsUnknown() {
 		data.Timer = types.Int64Null()
 	}
 

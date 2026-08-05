@@ -1,0 +1,17 @@
+# Resource        : responderpolicy
+# Primary ADC     : 154
+# Alternate ADCs  : 121, 159
+# Planned tests   : 4
+# Result          : PASS_first=1 PASS_alt=0 FAILED=3 SKIPPED=0
+
+## PASS (on primary ADC 154)
+  PASS  TestAccResponderpolicyDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+  FAIL  TestAccResponderpolicy_globalbinding  :: Error: Client Error   [tried: 154, 121, 159]
+  FAIL  TestAccResponderpolicy_lbvserverbinding  :: Error: Client Error   [tried: 154, 121, 159]
+  FAIL  TestAccResponderpolicy_csvserverbinding  :: Error: Client Error   [tried: 154, 121, 159]
+
+## SKIPPED

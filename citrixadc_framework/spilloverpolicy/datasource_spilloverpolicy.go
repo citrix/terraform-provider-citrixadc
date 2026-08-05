@@ -55,7 +55,7 @@ func (d *SpilloverpolicyDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	spilloverpolicySetAttrFromGet(ctx, &data, getResponseData)
+	spilloverpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

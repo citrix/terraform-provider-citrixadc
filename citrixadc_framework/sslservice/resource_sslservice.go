@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *SslserviceResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating sslservice resource")
 
-	// sslservice := sslserviceGetThePayloadFromtheConfig(ctx, &data)
+	sslservice := sslserviceGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslservice.Type(), &sslservice)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservice, got error: %s", err))
-	//	 return
-	// }
+	// sslservice is configured on an existing SSL service (settings-style resource):
+	// mirror SDK v2 which uses UpdateUnnamedResource for the initial push.
+	err := r.client.UpdateUnnamedResource(service.Sslservice.Type(), &sslservice)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslservice, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslservice-config")
+	// ID is the plain servicename value (matches SDK v2 d.SetId(servicename))
+	data.Id = types.StringValue(data.Servicename.ValueString())
 
 	tflog.Trace(ctx, "Created sslservice resource")
 
 	// Read the updated state back
-	r.readSslserviceFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslserviceFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslservice not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *SslserviceResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading sslservice resource")
 
-	r.readSslserviceFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslserviceFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslserviceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslserviceResourceModel
+	var data, state SslserviceResourceModel
 
+	// Read Terraform prior state to preserve the ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,36 @@ func (r *SslserviceResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state (servicename is RequiresReplace so it never changes here)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating sslservice resource")
 
-	// Create API request body from the model
-	// sslservice := sslserviceGetThePayloadFromtheConfig(ctx, &data)
+	// Build a DELTA payload (only changed fields), mirroring SDK v2
+	// updateSslserviceFunc which used per-field d.HasChange(). Sending the full
+	// config on every update violates NITRO prerequisites such as
+	// "sessTimeout requires sessReuse==ENABLED" (errorcode 1093). servicename
+	// cannot change (RequiresReplace), so use the current name for the update.
+	sslservice, hasChange := sslserviceGetThePayloadForUpdate(ctx, &data, &state)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslservice.Type(), &sslservice)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservice, got error: %s", err))
-	//	 return
-	// }
+	sslserviceName := data.Servicename.ValueString()
+	if hasChange {
+		_, err := r.client.UpdateResource(service.Sslservice.Type(), sslserviceName, &sslservice)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservice %s, got error: %s", sslserviceName, err))
+			return
+		}
+	}
 
 	tflog.Trace(ctx, "Updated sslservice resource")
 
 	// Read the updated state back
-	r.readSslserviceFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslserviceFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslservice not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +167,27 @@ func (r *SslserviceResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting sslservice resource")
 
-	// For sslservice, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// sslservice has no NITRO delete operation - the SSL settings live on the parent
+	// SSL service. Mirror SDK v2 which only clears the ID (state removal only).
 	tflog.Trace(ctx, "Deleted sslservice resource from state")
 }
 
-// Helper function to read sslservice data from API
-func (r *SslserviceResource) readSslserviceFromApi(ctx context.Context, data *SslserviceResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslservice.Type(), "")
+// Helper function to read sslservice data from API.
+// Returns false when the resource no longer exists on the ADC.
+func (r *SslserviceResource) readSslserviceFromApi(ctx context.Context, data *SslserviceResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain servicename value.
+	sslserviceName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Sslservice.Type(), sslserviceName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslservice, got error: %s", err))
-		return
+		return false
 	}
 
 	sslserviceSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

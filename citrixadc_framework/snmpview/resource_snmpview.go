@@ -55,22 +55,28 @@ func (r *SnmpviewResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating snmpview resource")
 
-	// snmpview := snmpviewGetThePayloadFromtheConfig(ctx, &data)
+	snmpview := snmpviewGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpview.Type(), &snmpview)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpview, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("snmpview-config")
+	// Named resource - use AddResource
+	name := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Snmpview.Type(), name, &snmpview)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpview, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created snmpview resource")
 
+	// Set ID for the resource before reading state (matches SDK v2 d.SetId(name))
+	data.Id = types.StringValue(name)
+
 	// Read the updated state back
-	r.readSnmpviewFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpviewFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpview not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +94,24 @@ func (r *SnmpviewResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading snmpview resource")
 
-	r.readSnmpviewFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSnmpviewFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SnmpviewResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SnmpviewResourceModel
+	var data, state SnmpviewResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +119,39 @@ func (r *SnmpviewResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating snmpview resource")
 
-	// Create API request body from the model
-	// snmpview := snmpviewGetThePayloadFromtheConfig(ctx, &data)
+	// name and subtree are ForceNew (RequiresReplace) so only "type" is
+	// updateable in place. This mirrors the SDK v2 update semantics which
+	// performed an unnamed PUT only when "type" changed.
+	hasChange := false
+	if !data.Type.Equal(state.Type) {
+		tflog.Debug(ctx, "type has changed for snmpview, starting update")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpview.Type(), &snmpview)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpview, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated snmpview resource")
+	if hasChange {
+		snmpview := snmpviewGetThePayloadFromthePlan(ctx, &data)
+		err := r.client.UpdateUnnamedResource(service.Snmpview.Type(), &snmpview)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpview, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated snmpview resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for snmpview resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readSnmpviewFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpviewFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpview not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +169,62 @@ func (r *SnmpviewResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	tflog.Debug(ctx, "Deleting snmpview resource")
 
-	// For snmpview, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted snmpview resource from state")
-}
+	// Named resource - delete using DeleteResourceWithArgs, disambiguating on
+	// subtree (NITRO delete: /snmpview/<name>?args=subtree:<subtree>).
+	name := data.Name.ValueString()
+	subtree := data.Subtree.ValueString()
+	args := []string{fmt.Sprintf("subtree:%s", subtree)}
 
-// Helper function to read snmpview data from API
-func (r *SnmpviewResource) readSnmpviewFromApi(ctx context.Context, data *SnmpviewResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Snmpview.Type(), "")
+	err := r.client.DeleteResourceWithArgs(service.Snmpview.Type(), name, args)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmpview, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete snmpview, got error: %s", err))
 		return
 	}
 
-	snmpviewSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted snmpview resource")
+}
 
+// Helper function to read snmpview data from API.
+//
+// snmpview is a named resource that is uniquely identified by the (name, subtree)
+// pair, so a GET-all is filtered by both keys (mirrors the SDK v2 read).
+func (r *SnmpviewResource) readSnmpviewFromApi(ctx context.Context, data *SnmpviewResourceModel, diags *diag.Diagnostics) bool {
+	name := data.Name.ValueString()
+	subtree := data.Subtree.ValueString()
+
+	findParams := service.FindParams{
+		ResourceType:             service.Snmpview.Type(),
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmpview, got error: %s", err))
+		return false
+	}
+
+	// Resource is missing
+	if len(dataArr) == 0 {
+		return false
+	}
+
+	// Iterate through results to find the one with the right name and subtree
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["name"] == nil || v["subtree"] == nil {
+			continue
+		}
+		if v["name"].(string) == name && v["subtree"].(string) == subtree {
+			foundIndex = i
+			break
+		}
+	}
+
+	// Resource is missing
+	if foundIndex == -1 {
+		return false
+	}
+
+	snmpviewSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	return true
 }

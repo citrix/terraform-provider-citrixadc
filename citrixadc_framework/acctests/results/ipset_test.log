@@ -1,0 +1,18 @@
+# Resource        : ipset
+# Primary ADC     : 153
+# Alternate ADCs  : 121
+# Planned tests   : 5
+# Result          : PASS_first=5 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 153)
+  PASS  TestAccIpset_no_bindings
+  PASS  TestAccIpset_with_bindings
+  PASS  TestAccIpset_ipv4_swaps
+  PASS  TestAccIpset_ipv6_swaps
+  PASS  TestAccIpsetDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

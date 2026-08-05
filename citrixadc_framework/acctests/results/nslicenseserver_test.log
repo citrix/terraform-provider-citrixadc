@@ -1,0 +1,15 @@
+# Resource        : nslicenseserver
+# Primary ADC     : 157
+# Alternate ADCs  : 121, 152
+# Planned tests   : 2
+# Result          : PASS_first=0 PASS_alt=0 FAILED=0 SKIPPED=2
+
+## PASS (on primary ADC 157)
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED
+  SKIP  TestAccNslicenseserver_basic  :: Skipping test because this needs changes for LAS
+  SKIP  TestAccNslicenseserverDataSource_basic  :: Skipping test because this needs changes for LAS

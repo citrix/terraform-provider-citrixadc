@@ -1,0 +1,17 @@
+# Resource        : nsip
+# Primary ADC     : 151
+# Alternate ADCs  : 121, 156
+# Planned tests   : 4
+# Result          : PASS_first=4 PASS_alt=0 FAILED=0 SKIPPED=0
+
+## PASS (on primary ADC 151)
+  PASS  TestAccNsip_basic
+  PASS  TestAccNsip_mptcpadvertise
+  PASS  TestAccNsip_trafficdomain
+  PASS  TestAccNsipDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+
+## SKIPPED

@@ -1,0 +1,15 @@
+# Resource        : vpnvserver
+# Primary ADC     : 156
+# Alternate ADCs  : 121, 151
+# Planned tests   : 2
+# Result          : PASS_first=1 PASS_alt=0 FAILED=1 SKIPPED=0
+
+## PASS (on primary ADC 156)
+  PASS  TestAccVpnvserverDataSource_basic
+
+## PASS (only on an alternate ADC)
+
+## FAILED (all ADCs tried)
+  FAIL  TestAccVpnvserver_basic  :: Error: Client Error   [tried: 156, 121, 151]
+
+## SKIPPED

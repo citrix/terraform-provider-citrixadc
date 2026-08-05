@@ -2,16 +2,12 @@ package nsacl6
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -75,14 +71,16 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "ID of an interface. The Citrix ADC applies the ACL6 rule only to the incoming packets from the specified interface. If you do not specify any value, the appliance applies the ACL6 rule to the incoming packets from all interfaces.",
 			},
 			"acl6action": schema.StringAttribute{
+				// SDK v2: Required, NOT ForceNew (updatable). No RequiresReplace.
+				Required:    true,
+				Description: "Action to perform on the incoming IPv6 packets that match the ACL6 rule.\nAvailable settings function as follows:\n* ALLOW - The Citrix ADC processes the packet.\n* BRIDGE - The Citrix ADC bridges the packet to the destination without processing it.\n* DENY - The Citrix ADC drops the packet.",
+			},
+			"acl6name": schema.StringAttribute{
+				// SDK v2: Required + ForceNew.
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Action to perform on the incoming IPv6 packets that match the ACL6 rule.\nAvailable settings function as follows:\n* ALLOW - The Citrix ADC processes the packet.\n* BRIDGE - The Citrix ADC bridges the packet to the destination without processing it.\n* DENY - The Citrix ADC drops the packet.",
-			},
-			"acl6name": schema.StringAttribute{
-				Required:    true,
 				Description: "Name for the ACL6 rule. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.",
 			},
 			"aclaction": schema.StringAttribute{
@@ -126,8 +124,9 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Specifies the type of hashmethod to be applied, to steer the packet to the FP of the packet.",
 			},
 			"dfdprefix": schema.Int64Attribute{
+				// SDK v2: Optional+Computed, no Default (read from ADC).
 				Optional:    true,
-				Default:     int64default.StaticInt64(128),
+				Computed:    true,
 				Description: "hashprefix to be applied to SIP/DIP to generate rsshash FP.eg 128 => hash calculated on the complete IP",
 			},
 			"established": schema.BoolAttribute{
@@ -146,16 +145,15 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "ICMP Message type to match against the message type of an incoming IPv6 ICMP packet. For example, to block DESTINATION UNREACHABLE messages, you must specify 3 as the ICMP type.\n\nNote: This parameter can be specified only for the ICMP protocol.",
 			},
 			"logstate": schema.StringAttribute{
+				// SDK v2: Optional+Computed, no Default (read from ADC).
 				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Computed:    true,
 				Description: "Enable or disable logging of events related to the ACL6 rule. The log messages are stored in the configured syslog or auditlog server.",
 			},
 			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// Not present in SDK v2. Rename is not implemented (SDK v2 had no rename);
+				// keep as a pure optional input, excluded from the create/update payload.
+				Optional:    true,
 				Description: "New name for the ACL6 rule. Must begin with an ASCII alphabetic or underscore \\(_\\) character, and must contain only ASCII alphanumeric, underscore, hash \\(\\#\\), period \\(.\\), space, colon \\(:\\), at \\(@\\), equals \\(=\\), and hyphen \\(-\\) characters.",
 			},
 			"nodeid": schema.Int64Attribute{
@@ -179,8 +177,9 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Protocol, identified by protocol number, to match against the protocol of an incoming IPv6 packet.",
 			},
 			"ratelimit": schema.Int64Attribute{
+				// SDK v2: Optional+Computed, no Default (read from ADC).
 				Optional:    true,
-				Default:     int64default.StaticInt64(100),
+				Computed:    true,
 				Description: "Maximum number of log messages to be generated per second. If you set this parameter, you must enable the Log State parameter.",
 			},
 			"srcipop": schema.StringAttribute{
@@ -204,8 +203,9 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "MAC address to match against the source MAC address of an incoming IPv6 packet.",
 			},
 			"srcmacmask": schema.StringAttribute{
+				// SDK v2: Optional+Computed, no Default (read from ADC).
 				Optional:    true,
-				Default:     stringdefault.StaticString("000000000000"),
+				Computed:    true,
 				Description: "Used to define range of Source MAC address. It takes string of 0 and 1, 0s are for exact match and 1s for wildcard. For matching first 3 bytes of MAC address, srcMacMask value \"000000111111\".",
 			},
 			"srcport": schema.BoolAttribute{
@@ -224,11 +224,10 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Source port (range).",
 			},
 			"state": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("ENABLED"),
+				// SDK v2: Optional+Computed, NOT ForceNew, no Default. State changes are
+				// applied in-place via the enable/disable action in Update.
+				Optional:    true,
+				Computed:    true,
 				Description: "State of the ACL6.",
 			},
 			"stateful": schema.StringAttribute{
@@ -237,27 +236,27 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "If stateful option is enabled, transparent sessions are created for the traffic hitting this ACL6 and not hitting any other features like LB, INAT etc.",
 			},
 			"td": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
+				// SDK v2: Optional+Computed, NOT ForceNew (updatable). No RequiresReplace.
+				Optional:    true,
+				Computed:    true,
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
 			"ttl": schema.Int64Attribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
+				// SDK v2: Optional+Computed, NOT ForceNew (updatable). No RequiresReplace.
+				Optional:    true,
+				Computed:    true,
 				Description: "Time to expire this ACL6 (in seconds).",
 			},
 			"type": schema.StringAttribute{
+				// SDK v2: Optional+Computed + ForceNew, no Default (read from ADC).
+				// Optional+Computed+ForceNew -> RequiresReplaceIfConfigured, with
+				// UseStateForUnknown to avoid known-after-apply churn on the computed value.
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("CLASSIC"),
 				Description: "Type of the acl6 ,default will be CLASSIC.\nAvailable options as follows:\n* CLASSIC - specifies the regular extended acls.\n* DFD - cluster specific acls,specifies hashmethod for steering of the packet in cluster .",
 			},
 			"vlan": schema.Int64Attribute{
@@ -274,130 +273,456 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func nsacl6GetThePayloadFromtheConfig(ctx context.Context, data *Nsacl6ResourceModel) ns.Nsacl6 {
-	tflog.Debug(ctx, "In nsacl6GetThePayloadFromtheConfig Function")
+// nsacl6GetThePayloadFromthePlan builds the full create payload (matches SDK v2 create,
+// including state). newname is rename-only and excluded.
+func nsacl6GetThePayloadFromthePlan(ctx context.Context, data *Nsacl6ResourceModel) ns.Nsacl6 {
+	tflog.Debug(ctx, "In nsacl6GetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	nsacl6 := ns.Nsacl6{}
-	if !data.Interface.IsNull() {
+	if !data.Interface.IsNull() && !data.Interface.IsUnknown() {
 		nsacl6.Interface = data.Interface.ValueString()
 	}
-	if !data.Acl6action.IsNull() {
+	if !data.Acl6action.IsNull() && !data.Acl6action.IsUnknown() {
 		nsacl6.Acl6action = data.Acl6action.ValueString()
 	}
-	if !data.Acl6name.IsNull() {
+	if !data.Acl6name.IsNull() && !data.Acl6name.IsUnknown() {
 		nsacl6.Acl6name = data.Acl6name.ValueString()
 	}
-	if !data.Aclaction.IsNull() {
+	if !data.Aclaction.IsNull() && !data.Aclaction.IsUnknown() {
 		nsacl6.Aclaction = data.Aclaction.ValueString()
 	}
-	if !data.Destipop.IsNull() {
+	if !data.Destipop.IsNull() && !data.Destipop.IsUnknown() {
 		nsacl6.Destipop = data.Destipop.ValueString()
 	}
-	if !data.Destipv6.IsNull() {
+	if !data.Destipv6.IsNull() && !data.Destipv6.IsUnknown() {
 		nsacl6.Destipv6 = data.Destipv6.ValueBool()
 	}
-	if !data.Destipv6val.IsNull() {
+	if !data.Destipv6val.IsNull() && !data.Destipv6val.IsUnknown() {
 		nsacl6.Destipv6val = data.Destipv6val.ValueString()
 	}
-	if !data.Destport.IsNull() {
+	if !data.Destport.IsNull() && !data.Destport.IsUnknown() {
 		nsacl6.Destport = data.Destport.ValueBool()
 	}
-	if !data.Destportop.IsNull() {
+	if !data.Destportop.IsNull() && !data.Destportop.IsUnknown() {
 		nsacl6.Destportop = data.Destportop.ValueString()
 	}
-	if !data.Destportval.IsNull() {
+	if !data.Destportval.IsNull() && !data.Destportval.IsUnknown() {
 		nsacl6.Destportval = data.Destportval.ValueString()
 	}
-	if !data.Dfdhash.IsNull() {
+	if !data.Dfdhash.IsNull() && !data.Dfdhash.IsUnknown() {
 		nsacl6.Dfdhash = data.Dfdhash.ValueString()
 	}
-	if !data.Dfdprefix.IsNull() {
+	if !data.Dfdprefix.IsNull() && !data.Dfdprefix.IsUnknown() {
 		nsacl6.Dfdprefix = utils.IntPtr(int(data.Dfdprefix.ValueInt64()))
 	}
-	if !data.Established.IsNull() {
+	if !data.Established.IsNull() && !data.Established.IsUnknown() {
 		nsacl6.Established = data.Established.ValueBool()
 	}
-	if !data.Icmpcode.IsNull() {
+	if !data.Icmpcode.IsNull() && !data.Icmpcode.IsUnknown() {
 		nsacl6.Icmpcode = utils.IntPtr(int(data.Icmpcode.ValueInt64()))
 	}
-	if !data.Icmptype.IsNull() {
+	if !data.Icmptype.IsNull() && !data.Icmptype.IsUnknown() {
 		nsacl6.Icmptype = utils.IntPtr(int(data.Icmptype.ValueInt64()))
 	}
-	if !data.Logstate.IsNull() {
+	if !data.Logstate.IsNull() && !data.Logstate.IsUnknown() {
 		nsacl6.Logstate = data.Logstate.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		nsacl6.Newname = data.Newname.ValueString()
-	}
-	if !data.Nodeid.IsNull() {
+	// newname is rename-only and excluded from the create payload.
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
 		nsacl6.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
 	}
-	if !data.Priority.IsNull() {
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		nsacl6.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
-	if !data.Protocol.IsNull() {
+	if !data.Protocol.IsNull() && !data.Protocol.IsUnknown() {
 		nsacl6.Protocol = data.Protocol.ValueString()
 	}
-	if !data.Protocolnumber.IsNull() {
+	if !data.Protocolnumber.IsNull() && !data.Protocolnumber.IsUnknown() {
 		nsacl6.Protocolnumber = utils.IntPtr(int(data.Protocolnumber.ValueInt64()))
 	}
-	if !data.Ratelimit.IsNull() {
+	if !data.Ratelimit.IsNull() && !data.Ratelimit.IsUnknown() {
 		nsacl6.Ratelimit = utils.IntPtr(int(data.Ratelimit.ValueInt64()))
 	}
-	if !data.Srcipop.IsNull() {
+	if !data.Srcipop.IsNull() && !data.Srcipop.IsUnknown() {
 		nsacl6.Srcipop = data.Srcipop.ValueString()
 	}
-	if !data.Srcipv6.IsNull() {
+	if !data.Srcipv6.IsNull() && !data.Srcipv6.IsUnknown() {
 		nsacl6.Srcipv6 = data.Srcipv6.ValueBool()
 	}
-	if !data.Srcipv6val.IsNull() {
+	if !data.Srcipv6val.IsNull() && !data.Srcipv6val.IsUnknown() {
 		nsacl6.Srcipv6val = data.Srcipv6val.ValueString()
 	}
-	if !data.Srcmac.IsNull() {
+	if !data.Srcmac.IsNull() && !data.Srcmac.IsUnknown() {
 		nsacl6.Srcmac = data.Srcmac.ValueString()
 	}
-	if !data.Srcmacmask.IsNull() {
+	if !data.Srcmacmask.IsNull() && !data.Srcmacmask.IsUnknown() {
 		nsacl6.Srcmacmask = data.Srcmacmask.ValueString()
 	}
-	if !data.Srcport.IsNull() {
+	if !data.Srcport.IsNull() && !data.Srcport.IsUnknown() {
 		nsacl6.Srcport = data.Srcport.ValueBool()
 	}
-	if !data.Srcportop.IsNull() {
+	if !data.Srcportop.IsNull() && !data.Srcportop.IsUnknown() {
 		nsacl6.Srcportop = data.Srcportop.ValueString()
 	}
-	if !data.Srcportval.IsNull() {
+	if !data.Srcportval.IsNull() && !data.Srcportval.IsUnknown() {
 		nsacl6.Srcportval = data.Srcportval.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		nsacl6.State = data.State.ValueString()
 	}
-	if !data.Stateful.IsNull() {
+	if !data.Stateful.IsNull() && !data.Stateful.IsUnknown() {
 		nsacl6.Stateful = data.Stateful.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		nsacl6.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		nsacl6.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		nsacl6.Type = data.Type.ValueString()
 	}
-	if !data.Vlan.IsNull() {
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
 		nsacl6.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
 	}
-	if !data.Vxlan.IsNull() {
+	if !data.Vxlan.IsNull() && !data.Vxlan.IsUnknown() {
 		nsacl6.Vxlan = utils.IntPtr(int(data.Vxlan.ValueInt64()))
 	}
 
 	return nsacl6
 }
 
+// nsacl6GetTheUpdatablePayloadFromThePlan builds the update payload restricted to
+// the fields the NITRO update (PUT) endpoint accepts. Per the nsacl6 NITRO doc the
+// update payload does NOT accept acl6action, td or ttl (they are add-only); those,
+// along with state (enable/disable action), type (ForceNew) and newname (rename-only),
+// are excluded. acl6name is included as the key. Sending an add-only field on update
+// makes NITRO reject the request with errorcode 278 "Invalid argument".
+func nsacl6GetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Nsacl6ResourceModel) ns.Nsacl6 {
+	tflog.Debug(ctx, "In nsacl6GetTheUpdatablePayloadFromThePlan Function")
+
+	nsacl6 := ns.Nsacl6{}
+	if !data.Acl6name.IsNull() && !data.Acl6name.IsUnknown() {
+		nsacl6.Acl6name = data.Acl6name.ValueString()
+	}
+	// acl6action is NOT accepted by the NITRO update (PUT) endpoint (add-only). Excluded.
+	if !data.Aclaction.IsNull() && !data.Aclaction.IsUnknown() {
+		nsacl6.Aclaction = data.Aclaction.ValueString()
+	}
+	if !data.Destipop.IsNull() && !data.Destipop.IsUnknown() {
+		nsacl6.Destipop = data.Destipop.ValueString()
+	}
+	if !data.Destipv6.IsNull() && !data.Destipv6.IsUnknown() {
+		nsacl6.Destipv6 = data.Destipv6.ValueBool()
+	}
+	if !data.Destipv6val.IsNull() && !data.Destipv6val.IsUnknown() {
+		nsacl6.Destipv6val = data.Destipv6val.ValueString()
+	}
+	if !data.Destport.IsNull() && !data.Destport.IsUnknown() {
+		nsacl6.Destport = data.Destport.ValueBool()
+	}
+	if !data.Destportop.IsNull() && !data.Destportop.IsUnknown() {
+		nsacl6.Destportop = data.Destportop.ValueString()
+	}
+	if !data.Destportval.IsNull() && !data.Destportval.IsUnknown() {
+		nsacl6.Destportval = data.Destportval.ValueString()
+	}
+	if !data.Dfdhash.IsNull() && !data.Dfdhash.IsUnknown() {
+		nsacl6.Dfdhash = data.Dfdhash.ValueString()
+	}
+	if !data.Dfdprefix.IsNull() && !data.Dfdprefix.IsUnknown() {
+		nsacl6.Dfdprefix = utils.IntPtr(int(data.Dfdprefix.ValueInt64()))
+	}
+	if !data.Established.IsNull() && !data.Established.IsUnknown() {
+		nsacl6.Established = data.Established.ValueBool()
+	}
+	if !data.Icmpcode.IsNull() && !data.Icmpcode.IsUnknown() {
+		nsacl6.Icmpcode = utils.IntPtr(int(data.Icmpcode.ValueInt64()))
+	}
+	if !data.Icmptype.IsNull() && !data.Icmptype.IsUnknown() {
+		nsacl6.Icmptype = utils.IntPtr(int(data.Icmptype.ValueInt64()))
+	}
+	if !data.Interface.IsNull() && !data.Interface.IsUnknown() {
+		nsacl6.Interface = data.Interface.ValueString()
+	}
+	if !data.Logstate.IsNull() && !data.Logstate.IsUnknown() {
+		nsacl6.Logstate = data.Logstate.ValueString()
+	}
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
+		nsacl6.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
+	}
+	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
+		nsacl6.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
+	}
+	if !data.Protocol.IsNull() && !data.Protocol.IsUnknown() {
+		nsacl6.Protocol = data.Protocol.ValueString()
+	}
+	if !data.Protocolnumber.IsNull() && !data.Protocolnumber.IsUnknown() {
+		nsacl6.Protocolnumber = utils.IntPtr(int(data.Protocolnumber.ValueInt64()))
+	}
+	if !data.Ratelimit.IsNull() && !data.Ratelimit.IsUnknown() {
+		nsacl6.Ratelimit = utils.IntPtr(int(data.Ratelimit.ValueInt64()))
+	}
+	if !data.Srcipop.IsNull() && !data.Srcipop.IsUnknown() {
+		nsacl6.Srcipop = data.Srcipop.ValueString()
+	}
+	if !data.Srcipv6.IsNull() && !data.Srcipv6.IsUnknown() {
+		nsacl6.Srcipv6 = data.Srcipv6.ValueBool()
+	}
+	if !data.Srcipv6val.IsNull() && !data.Srcipv6val.IsUnknown() {
+		nsacl6.Srcipv6val = data.Srcipv6val.ValueString()
+	}
+	if !data.Srcmac.IsNull() && !data.Srcmac.IsUnknown() {
+		nsacl6.Srcmac = data.Srcmac.ValueString()
+	}
+	if !data.Srcmacmask.IsNull() && !data.Srcmacmask.IsUnknown() {
+		nsacl6.Srcmacmask = data.Srcmacmask.ValueString()
+	}
+	if !data.Srcport.IsNull() && !data.Srcport.IsUnknown() {
+		nsacl6.Srcport = data.Srcport.ValueBool()
+	}
+	if !data.Srcportop.IsNull() && !data.Srcportop.IsUnknown() {
+		nsacl6.Srcportop = data.Srcportop.ValueString()
+	}
+	if !data.Srcportval.IsNull() && !data.Srcportval.IsUnknown() {
+		nsacl6.Srcportval = data.Srcportval.ValueString()
+	}
+	if !data.Stateful.IsNull() && !data.Stateful.IsUnknown() {
+		nsacl6.Stateful = data.Stateful.ValueString()
+	}
+	// td and ttl are NOT accepted by the NITRO update (PUT) endpoint (add-only). Excluded.
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
+		nsacl6.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
+	}
+	if !data.Vxlan.IsNull() && !data.Vxlan.IsUnknown() {
+		nsacl6.Vxlan = utils.IntPtr(int(data.Vxlan.ValueInt64()))
+	}
+
+	return nsacl6
+}
+
+// nsacl6SetAttrFromGet updates the resource model from a GET response. Attributes that
+// NITRO omits from GET (omit-on-default trap: a configured 0/false/"" value) are NOT
+// clobbered to null — the else branch only nulls a value that is still unknown.
 func nsacl6SetAttrFromGet(ctx context.Context, data *Nsacl6ResourceModel, getResponseData map[string]interface{}) *Nsacl6ResourceModel {
 	tflog.Debug(ctx, "In nsacl6SetAttrFromGet Function")
 
-	// Convert API response to model
+	// NITRO serializes the interface field with a capital "Interface" JSON key.
+	if val, ok := getResponseData["Interface"]; ok && val != nil {
+		data.Interface = types.StringValue(val.(string))
+	} else if data.Interface.IsUnknown() {
+		data.Interface = types.StringNull()
+	}
+	if val, ok := getResponseData["acl6action"]; ok && val != nil {
+		data.Acl6action = types.StringValue(val.(string))
+	} else if data.Acl6action.IsUnknown() {
+		data.Acl6action = types.StringNull()
+	}
+	if val, ok := getResponseData["acl6name"]; ok && val != nil {
+		data.Acl6name = types.StringValue(val.(string))
+	} else if data.Acl6name.IsUnknown() {
+		data.Acl6name = types.StringNull()
+	}
+	if val, ok := getResponseData["aclaction"]; ok && val != nil {
+		data.Aclaction = types.StringValue(val.(string))
+	} else if data.Aclaction.IsUnknown() {
+		data.Aclaction = types.StringNull()
+	}
+	if val, ok := getResponseData["destipop"]; ok && val != nil {
+		data.Destipop = types.StringValue(val.(string))
+	} else if data.Destipop.IsUnknown() {
+		data.Destipop = types.StringNull()
+	}
+	if val, ok := getResponseData["destipv6"]; ok && val != nil {
+		data.Destipv6 = types.BoolValue(val.(bool))
+	} else if data.Destipv6.IsUnknown() {
+		data.Destipv6 = types.BoolNull()
+	}
+	if val, ok := getResponseData["destipv6val"]; ok && val != nil {
+		data.Destipv6val = types.StringValue(val.(string))
+	} else if data.Destipv6val.IsUnknown() {
+		data.Destipv6val = types.StringNull()
+	}
+	if val, ok := getResponseData["destport"]; ok && val != nil {
+		data.Destport = types.BoolValue(val.(bool))
+	} else if data.Destport.IsUnknown() {
+		data.Destport = types.BoolNull()
+	}
+	if val, ok := getResponseData["destportop"]; ok && val != nil {
+		data.Destportop = types.StringValue(val.(string))
+	} else if data.Destportop.IsUnknown() {
+		data.Destportop = types.StringNull()
+	}
+	if val, ok := getResponseData["destportval"]; ok && val != nil {
+		data.Destportval = types.StringValue(val.(string))
+	} else if data.Destportval.IsUnknown() {
+		data.Destportval = types.StringNull()
+	}
+	if val, ok := getResponseData["dfdhash"]; ok && val != nil {
+		data.Dfdhash = types.StringValue(val.(string))
+	} else if data.Dfdhash.IsUnknown() {
+		data.Dfdhash = types.StringNull()
+	}
+	if val, ok := getResponseData["dfdprefix"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Dfdprefix = types.Int64Value(intVal)
+		}
+	} else if data.Dfdprefix.IsUnknown() {
+		data.Dfdprefix = types.Int64Null()
+	}
+	if val, ok := getResponseData["established"]; ok && val != nil {
+		data.Established = types.BoolValue(val.(bool))
+	} else if data.Established.IsUnknown() {
+		data.Established = types.BoolNull()
+	}
+	if val, ok := getResponseData["icmpcode"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Icmpcode = types.Int64Value(intVal)
+		}
+	} else if data.Icmpcode.IsUnknown() {
+		data.Icmpcode = types.Int64Null()
+	}
+	if val, ok := getResponseData["icmptype"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Icmptype = types.Int64Value(intVal)
+		}
+	} else if data.Icmptype.IsUnknown() {
+		data.Icmptype = types.Int64Null()
+	}
+	if val, ok := getResponseData["logstate"]; ok && val != nil {
+		data.Logstate = types.StringValue(val.(string))
+	} else if data.Logstate.IsUnknown() {
+		data.Logstate = types.StringNull()
+	}
+	// newname is rename-only and never returned by GET - retain from config.
+	if val, ok := getResponseData["nodeid"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Nodeid = types.Int64Value(intVal)
+		}
+	} else if data.Nodeid.IsUnknown() {
+		data.Nodeid = types.Int64Null()
+	}
+	if val, ok := getResponseData["priority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Priority = types.Int64Value(intVal)
+		}
+	} else if data.Priority.IsUnknown() {
+		data.Priority = types.Int64Null()
+	}
+	if val, ok := getResponseData["protocol"]; ok && val != nil {
+		data.Protocol = types.StringValue(val.(string))
+	} else if data.Protocol.IsUnknown() {
+		data.Protocol = types.StringNull()
+	}
+	if val, ok := getResponseData["protocolnumber"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Protocolnumber = types.Int64Value(intVal)
+		}
+	} else if data.Protocolnumber.IsUnknown() {
+		data.Protocolnumber = types.Int64Null()
+	}
+	if val, ok := getResponseData["ratelimit"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Ratelimit = types.Int64Value(intVal)
+		}
+	} else if data.Ratelimit.IsUnknown() {
+		data.Ratelimit = types.Int64Null()
+	}
+	if val, ok := getResponseData["srcipop"]; ok && val != nil {
+		data.Srcipop = types.StringValue(val.(string))
+	} else if data.Srcipop.IsUnknown() {
+		data.Srcipop = types.StringNull()
+	}
+	if val, ok := getResponseData["srcipv6"]; ok && val != nil {
+		data.Srcipv6 = types.BoolValue(val.(bool))
+	} else if data.Srcipv6.IsUnknown() {
+		data.Srcipv6 = types.BoolNull()
+	}
+	if val, ok := getResponseData["srcipv6val"]; ok && val != nil {
+		data.Srcipv6val = types.StringValue(val.(string))
+	} else if data.Srcipv6val.IsUnknown() {
+		data.Srcipv6val = types.StringNull()
+	}
+	if val, ok := getResponseData["srcmac"]; ok && val != nil {
+		data.Srcmac = types.StringValue(val.(string))
+	} else if data.Srcmac.IsUnknown() {
+		data.Srcmac = types.StringNull()
+	}
+	if val, ok := getResponseData["srcmacmask"]; ok && val != nil {
+		data.Srcmacmask = types.StringValue(val.(string))
+	} else if data.Srcmacmask.IsUnknown() {
+		data.Srcmacmask = types.StringNull()
+	}
+	if val, ok := getResponseData["srcport"]; ok && val != nil {
+		data.Srcport = types.BoolValue(val.(bool))
+	} else if data.Srcport.IsUnknown() {
+		data.Srcport = types.BoolNull()
+	}
+	if val, ok := getResponseData["srcportop"]; ok && val != nil {
+		data.Srcportop = types.StringValue(val.(string))
+	} else if data.Srcportop.IsUnknown() {
+		data.Srcportop = types.StringNull()
+	}
+	if val, ok := getResponseData["srcportval"]; ok && val != nil {
+		data.Srcportval = types.StringValue(val.(string))
+	} else if data.Srcportval.IsUnknown() {
+		data.Srcportval = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["stateful"]; ok && val != nil {
+		data.Stateful = types.StringValue(val.(string))
+	} else if data.Stateful.IsUnknown() {
+		data.Stateful = types.StringNull()
+	}
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
+	}
+	if val, ok := getResponseData["ttl"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Ttl = types.Int64Value(intVal)
+		}
+	} else if data.Ttl.IsUnknown() {
+		data.Ttl = types.Int64Null()
+	}
+	if val, ok := getResponseData["type"]; ok && val != nil {
+		data.Type = types.StringValue(val.(string))
+	} else if data.Type.IsUnknown() {
+		data.Type = types.StringNull()
+	}
+	if val, ok := getResponseData["vlan"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Vlan = types.Int64Value(intVal)
+		}
+	} else if data.Vlan.IsUnknown() {
+		data.Vlan = types.Int64Null()
+	}
+	if val, ok := getResponseData["vxlan"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Vxlan = types.Int64Value(intVal)
+		}
+	} else if data.Vxlan.IsUnknown() {
+		data.Vxlan = types.Int64Null()
+	}
+
+	// Set ID for the resource (matches SDK v2 & resource_id_mapping.json: single acl6name).
+	data.Id = types.StringValue(data.Acl6name.ValueString())
+
+	return data
+}
+
+// nsacl6SetAttrFromGetForDatasource updates the shared model from a GET response for the
+// datasource: it copies every attribute (nulling absent ones) and sets the ID.
+func nsacl6SetAttrFromGetForDatasource(ctx context.Context, data *Nsacl6ResourceModel, getResponseData map[string]interface{}) *Nsacl6ResourceModel {
+	tflog.Debug(ctx, "In nsacl6SetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["Interface"]; ok && val != nil {
 		data.Interface = types.StringValue(val.(string))
 	} else {
@@ -484,11 +809,7 @@ func nsacl6SetAttrFromGet(ctx context.Context, data *Nsacl6ResourceModel, getRes
 	} else {
 		data.Logstate = types.StringNull()
 	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
-	}
+	data.Newname = types.StringNull()
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
@@ -606,9 +927,7 @@ func nsacl6SetAttrFromGet(ctx context.Context, data *Nsacl6ResourceModel, getRes
 		data.Vxlan = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Acl6name.ValueString(), data.Type.ValueString()))
+	data.Id = types.StringValue(data.Acl6name.ValueString())
 
 	return data
 }

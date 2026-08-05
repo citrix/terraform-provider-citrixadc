@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -55,19 +58,20 @@ func (r *NstimerResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Debug(ctx, "Creating nstimer resource")
 
-	// nstimer := nstimerGetThePayloadFromtheConfig(ctx, &data)
+	nstimer := nstimerGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstimer.Type(), &nstimer)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstimer, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nstimer-config")
+	// Named resource - use AddResource (NITRO add is POST)
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Nstimer.Type(), name_value, &nstimer)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstimer, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nstimer resource")
+
+	// Set ID for the resource (single unique attribute -> plain value) before reading back
+	data.Id = types.StringValue(data.Name.ValueString())
 
 	// Read the updated state back
 	r.readNstimerFromApi(ctx, &data, &resp.Diagnostics)
@@ -90,13 +94,25 @@ func (r *NstimerResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	r.readNstimerFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Resource was deleted out-of-band
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NstimerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NstimerResourceModel
+	var data, state NstimerResourceModel
 
+	// Read Terraform prior state to preserve ID / detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,73 @@ func (r *NstimerResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
+	// Preserve ID from prior state (tracks the current live name)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nstimer resource")
 
-	// Create API request body from the model
-	// nstimer := nstimerGetThePayloadFromtheConfig(ctx, &data)
+	// Rename support: nstimer exposes a NITRO ?action=rename. A newname change drives
+	// an in-place rename instead of a destroy/recreate. Every other attribute except
+	// the RequiresReplace key (name) reaches Update as a normal change.
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		// The rename SOURCE is the CURRENT LIVE name, tracked by the ID (== name at
+		// create, == the prior newname after a rename) - NOT data.Name, which stays
+		// pinned to the originally configured value.
+		oldName := state.Id.ValueString()
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("Renaming nstimer from %q to %q", oldName, newName))
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstimer.Type(), &nstimer)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstimer, got error: %s", err))
-	//	 return
-	// }
+		renamePayload := ns.Nstimer{
+			Name:    oldName,
+			Newname: newName,
+		}
+		if err := r.client.ActOnResource(service.Nstimer.Type(), &renamePayload, "rename"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename nstimer, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated nstimer resource")
+		// The live object is now named newName. Point the ID at it so the update /
+		// read below (and all future reads) address the renamed resource.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Read the updated state back
+	// Regular in-place update of the updatable attributes (comment, interval, unit).
+	hasChange := false
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for nstimer")
+		hasChange = true
+	}
+	if !data.Interval.Equal(state.Interval) {
+		tflog.Debug(ctx, "interval has changed for nstimer")
+		hasChange = true
+	}
+	if !data.Unit.Equal(state.Unit) {
+		tflog.Debug(ctx, "unit has changed for nstimer")
+		hasChange = true
+	}
+
+	if hasChange {
+		nstimer := nstimerGetThePayloadFromthePlan(ctx, &data)
+		// Target the CURRENT LIVE name (== data.Id, which reflects any rename above).
+		nstimer.Name = data.Id.ValueString()
+		_, err := r.client.UpdateResource(service.Nstimer.Type(), data.Id.ValueString(), &nstimer)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstimer, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated nstimer resource")
+	} else {
+		tflog.Debug(ctx, "No non-rename changes detected for nstimer resource, skipping update")
+	}
+
+	// Read the current state back. Preserve the plan's name/newname so a rename does
+	// not let the GET response (which now reports the live/new name) clobber the
+	// user-facing configured values and cause an inconsistent-result / perpetual diff.
+	planName := data.Name
+	planNewname := data.Newname
 	r.readNstimerFromApi(ctx, &data, &resp.Diagnostics)
+	data.Name = planName
+	data.Newname = planNewname
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +204,34 @@ func (r *NstimerResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	tflog.Debug(ctx, "Deleting nstimer resource")
 
-	// For nstimer, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nstimer resource from state")
+	// Named resource - delete using DeleteResource. The ID holds the CURRENT LIVE name
+	// (== name at create, == newname after a rename), so delete by data.Id, NOT
+	// data.Name (which stays at the originally configured value and would target a
+	// non-existent name after a rename, leaving the object dangling).
+	liveName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Nstimer.Type(), liveName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nstimer, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nstimer resource")
 }
 
 // Helper function to read nstimer data from API
 func (r *NstimerResource) readNstimerFromApi(ctx context.Context, data *NstimerResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nstimer.Type(), "")
+	// Case 2: Find with single ID attribute - ID is the plain value (current live name)
+	name_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Nstimer.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nstimer, got error: %s", err))
 		return
 	}
 
 	nstimerSetAttrFromGet(ctx, data, getResponseData)
-
 }
