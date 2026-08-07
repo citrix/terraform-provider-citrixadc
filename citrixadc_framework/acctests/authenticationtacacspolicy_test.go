@@ -87,6 +87,31 @@ func TestAccAuthenticationtacacspolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationtacacspolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationtacacspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationtacacspolicy_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacspolicyExist("citrixadc_authenticationtacacspolicy.tf_tacacspolicy", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationtacacspolicy_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationtacacspolicyExist("citrixadc_authenticationtacacspolicy.tf_tacacspolicy", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationtacacspolicy_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_authenticationtacacspolicy.tf_tacacspolicy"
 	resource.Test(t, resource.TestCase{

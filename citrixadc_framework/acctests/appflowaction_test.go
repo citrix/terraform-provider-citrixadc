@@ -209,6 +209,27 @@ func TestAccAppflowaction_import(t *testing.T) {
 	})
 }
 
+func TestAccAppflowaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppflowactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppflowaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowactionExist("citrixadc_appflowaction.tf_appflowaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppflowaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppflowactionExist("citrixadc_appflowaction.tf_appflowaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppflowaction_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_appflowaction.tf_appflowaction"
 	resource.Test(t, resource.TestCase{

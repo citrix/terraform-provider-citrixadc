@@ -201,6 +201,27 @@ func TestAccSsllogprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccSsllogprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSsllogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSsllogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsllogprofileExist("citrixadc_ssllogprofile.demo_ssllogprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSsllogprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSsllogprofileExist("citrixadc_ssllogprofile.demo_ssllogprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSsllogprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -110,6 +110,27 @@ func TestAccTmsessionpolicy_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccTmsessionpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTmsessionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionpolicyExist("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmsessionpolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTmsessionpolicyExist("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckTmsessionpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

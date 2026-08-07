@@ -195,6 +195,31 @@ func TestAccContentinspectionpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccContentinspectionpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckContentinspectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccContentinspectionpolicy_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionpolicyExist("citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccContentinspectionpolicy_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionpolicyExist("citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccContentinspectionpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

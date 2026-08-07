@@ -182,6 +182,27 @@ func TestAccAuthenticationloginschema_import(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationloginschema_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationloginschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationloginschema_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemaExist("citrixadc_authenticationloginschema.tf_loginschema", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationloginschema_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemaExist("citrixadc_authenticationloginschema.tf_loginschema", nil)),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationloginschemaDataSource_basic = `
 	resource "citrixadc_authenticationloginschema" "tf_loginschema_ds" {
 		name                    = "tf_loginschema_ds"

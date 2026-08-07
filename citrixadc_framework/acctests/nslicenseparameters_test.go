@@ -133,6 +133,27 @@ func TestAccNslicenseparameters_import(t *testing.T) {
 	})
 }
 
+func TestAccNslicenseparameters_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNslicenseparameters_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseparametersExist("citrixadc_nslicenseparameters.tf_nslicenseparameters", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNslicenseparameters_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNslicenseparametersExist("citrixadc_nslicenseparameters.tf_nslicenseparameters", nil)),
+			},
+		},
+	})
+}
+
 const testAccNslicenseparametersDataSource_basic = `
 
 	resource "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {

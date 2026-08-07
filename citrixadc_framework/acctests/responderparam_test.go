@@ -149,6 +149,27 @@ func TestAccResponderparam_import(t *testing.T) {
 	})
 }
 
+func TestAccResponderparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccResponderparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderparamExist("citrixadc_responderparam.tf_responderparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccResponderparam_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckResponderparamExist("citrixadc_responderparam.tf_responderparam", nil)),
+			},
+		},
+	})
+}
+
 const testAccResponderparamDataSource_basic = `
 resource "citrixadc_responderparam" "tf_responderparam_ds" {
     timeout = 7

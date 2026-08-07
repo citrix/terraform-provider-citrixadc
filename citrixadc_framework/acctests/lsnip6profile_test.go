@@ -83,6 +83,27 @@ func TestAccLsnip6profile_basic(t *testing.T) {
 	})
 }
 
+func TestAccLsnip6profile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnip6profileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnip6profile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnip6profileExist("citrixadc_lsnip6profile.tf_lsnaip6profile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnip6profile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnip6profileExist("citrixadc_lsnip6profile.tf_lsnaip6profile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLsnip6profile_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_lsnip6profile.tf_lsnaip6profile"
 	resource.Test(t, resource.TestCase{

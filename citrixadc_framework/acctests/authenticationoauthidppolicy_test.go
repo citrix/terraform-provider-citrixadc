@@ -210,6 +210,27 @@ func TestAccAuthenticationoauthidppolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationoauthidppolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationoauthidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationoauthidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationoauthidppolicyExist("citrixadc_authenticationoauthidppolicy.tf_idppolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationoauthidppolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationoauthidppolicyExist("citrixadc_authenticationoauthidppolicy.tf_idppolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationoauthidppolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

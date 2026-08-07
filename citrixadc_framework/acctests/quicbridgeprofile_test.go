@@ -186,6 +186,30 @@ func testAccCheckQuicbridgeprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccQuicbridgeprofile_sdkv2StateUpgrade(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckQuicbridgeprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccQuicbridgeprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicbridgeprofileExist("citrixadc_quicbridgeprofile.tfAcc_quicbridge", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccQuicbridgeprofile_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckQuicbridgeprofileExist("citrixadc_quicbridgeprofile.tfAcc_quicbridge", nil)),
+			},
+		},
+	})
+}
+
 func TestAccQuicbridgeprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

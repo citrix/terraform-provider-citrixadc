@@ -179,6 +179,27 @@ const testAccStreamselectorDataSource_basic = `
 	}
 `
 
+func TestAccStreamselector_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckStreamselectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccStreamselector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamselectorExist("citrixadc_streamselector.tf_streamselector", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccStreamselector_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckStreamselectorExist("citrixadc_streamselector.tf_streamselector", nil)),
+			},
+		},
+	})
+}
+
 func TestAccStreamselectorDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

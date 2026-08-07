@@ -195,6 +195,27 @@ func TestAccDbdbprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccDbdbprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDbdbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDbdbprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDbdbprofileExist("citrixadc_dbdbprofile.tf_dbdbprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDbdbprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDbdbprofileExist("citrixadc_dbdbprofile.tf_dbdbprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDbdbprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

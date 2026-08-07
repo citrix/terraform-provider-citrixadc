@@ -195,6 +195,27 @@ func testAccCheckTransformprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTransformprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTransformprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTransformprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_trans_profile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTransformprofile_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_trans_profile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccTransformprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

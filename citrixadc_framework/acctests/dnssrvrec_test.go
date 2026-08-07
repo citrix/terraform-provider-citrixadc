@@ -193,6 +193,27 @@ func testAccCheckDnssrvrecDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnssrvrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnssrvrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnssrvrec_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssrvrecExist("citrixadc_dnssrvrec.dnssrvrec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnssrvrec_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnssrvrecExist("citrixadc_dnssrvrec.dnssrvrec", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnssrvrecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

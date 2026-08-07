@@ -206,6 +206,27 @@ func TestAccSnmpgroup_import(t *testing.T) {
 	})
 }
 
+func TestAccSnmpgroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmpgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmpgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpgroupExist("citrixadc_snmpgroup.tf_snmpgroup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmpgroup_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSnmpgroupExist("citrixadc_snmpgroup.tf_snmpgroup", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSnmpgroupDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

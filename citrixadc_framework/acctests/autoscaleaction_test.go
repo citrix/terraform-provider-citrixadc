@@ -224,6 +224,27 @@ const testAccAutoscaleactionDataSource_basic = `
 	}
 `
 
+func TestAccAutoscaleaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAutoscaleactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAutoscaleaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscaleactionExist("citrixadc_autoscaleaction.tf_autoscaleaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAutoscaleaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAutoscaleactionExist("citrixadc_autoscaleaction.tf_autoscaleaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAutoscaleactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

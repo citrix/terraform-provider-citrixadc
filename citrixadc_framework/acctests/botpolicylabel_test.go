@@ -177,6 +177,27 @@ func TestAccBotpolicylabel_import(t *testing.T) {
 	})
 }
 
+func TestAccBotpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccBotpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicylabelExist("citrixadc_botpolicylabel.tf_Botpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotpolicylabel_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckBotpolicylabelExist("citrixadc_botpolicylabel.tf_Botpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 const testAccBotpolicylabelDataSource_basic = `
 
 resource "citrixadc_botpolicylabel" "tf_botpolicylabel_ds" {

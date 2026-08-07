@@ -119,6 +119,27 @@ func TestAccAaaotpparameter_import(t *testing.T) {
 	})
 }
 
+func TestAccAaaotpparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaaotpparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaaotpparameterExist("citrixadc_aaaotpparameter.tf_aaaotpparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaaotpparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAaaotpparameterExist("citrixadc_aaaotpparameter.tf_aaaotpparameter", nil)),
+			},
+		},
+	})
+}
+
 const testAccAaaotpparameterDataSource_basic = `
 	resource "citrixadc_aaaotpparameter" "tf_aaaotpparameter" {
 		encryption = "OFF"

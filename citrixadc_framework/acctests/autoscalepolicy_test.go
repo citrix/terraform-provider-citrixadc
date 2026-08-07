@@ -189,6 +189,27 @@ func TestAccAutoscalepolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccAutoscalepolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAutoscalepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAutoscalepolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscalepolicyExist("citrixadc_autoscalepolicy.tf_autoscalepolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAutoscalepolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAutoscalepolicyExist("citrixadc_autoscalepolicy.tf_autoscalepolicy", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAutoscalepolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

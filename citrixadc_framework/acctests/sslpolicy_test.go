@@ -209,6 +209,27 @@ func TestAccSslpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccSslpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslpolicyExist("citrixadc_sslpolicy.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslpolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslpolicyExist("citrixadc_sslpolicy.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSslpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -175,6 +175,27 @@ func TestAccDnspolicylabel_import(t *testing.T) {
 	})
 }
 
+func TestAccDnspolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnspolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnspolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabelExist("citrixadc_dnspolicylabel.dnspolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnspolicylabel_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnspolicylabelExist("citrixadc_dnspolicylabel.dnspolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnspolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

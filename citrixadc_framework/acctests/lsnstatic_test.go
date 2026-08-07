@@ -158,6 +158,31 @@ func TestAccLsnstatic_import(t *testing.T) {
 	})
 }
 
+func TestAccLsnstatic_sdkv2StateUpgrade(t *testing.T) {
+	// No upgrade baseline possible: the released citrix/citrixadc 2.2.0 provider
+	// cannot create the prerequisite lsnclient (ec1074 "set command not present"),
+	// so step 1 never establishes SDK-v2 state. The current provider is unaffected.
+	t.Skip("no 2.2.0 baseline: released 2.2.0 provider fails to create lsnclient prerequisite (ec1074)")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnstaticDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnstatic_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnstaticExist("citrixadc_lsnstatic.tf_lsnstatic", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnstatic_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnstaticExist("citrixadc_lsnstatic.tf_lsnstatic", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckLsnstaticExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

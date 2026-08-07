@@ -240,6 +240,27 @@ const testAccAuthenticationsamlidppolicyDataSource_basic = `
 	}
 `
 
+func TestAccAuthenticationsamlidppolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationsamlidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationsamlidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidppolicyExist("citrixadc_authenticationsamlidppolicy.tf_samlidppolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationsamlidppolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidppolicyExist("citrixadc_authenticationsamlidppolicy.tf_samlidppolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationsamlidppolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doSslcertkeyPreChecks(t) },

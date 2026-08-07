@@ -128,6 +128,27 @@ func TestAccAuthenticationsamlaction_import(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationsamlaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationsamlactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationsamlaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlactionExist("citrixadc_authenticationsamlaction.tf_samlaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationsamlaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlactionExist("citrixadc_authenticationsamlaction.tf_samlaction", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationsamlactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -287,6 +287,27 @@ func TestAccGslbvserver_import(t *testing.T) {
 	})
 }
 
+func TestAccGslbvserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccGslbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserverExist("citrixadc_gslbvserver.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbvserver_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckGslbvserverExist("citrixadc_gslbvserver.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccGslbvserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

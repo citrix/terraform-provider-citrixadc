@@ -206,6 +206,27 @@ const testAccLsntransportprofileDataSource_basic = `
 	}
 `
 
+func TestAccLsntransportprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsntransportprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsntransportprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsntransportprofileExist("citrixadc_lsntransportprofile.tf_lsntransportprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsntransportprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsntransportprofileExist("citrixadc_lsntransportprofile.tf_lsntransportprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLsntransportprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

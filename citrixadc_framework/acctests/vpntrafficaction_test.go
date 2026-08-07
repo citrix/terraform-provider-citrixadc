@@ -202,6 +202,27 @@ func TestAccVpntrafficaction_import(t *testing.T) {
 	})
 }
 
+func TestAccVpntrafficaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpntrafficactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpntrafficaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpntrafficactionExist("citrixadc_vpntrafficaction.tf_action", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpntrafficaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpntrafficactionExist("citrixadc_vpntrafficaction.tf_action", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpntrafficactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

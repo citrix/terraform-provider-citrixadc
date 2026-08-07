@@ -214,3 +214,24 @@ func TestAccAppflowcollector_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppflowcollector_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppflowcollectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowcollectorExist("citrixadc_appflowcollector.tf_appflowcollector", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppflowcollector_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppflowcollectorExist("citrixadc_appflowcollector.tf_appflowcollector", nil)),
+			},
+		},
+	})
+}

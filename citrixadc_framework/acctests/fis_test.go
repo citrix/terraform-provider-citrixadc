@@ -168,6 +168,27 @@ const testAccFisDataSource_basic = `
 	}
 `
 
+func TestAccFis_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFisDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccFis_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFisExist("citrixadc_fis.tf_fis", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccFis_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckFisExist("citrixadc_fis.tf_fis", nil)),
+			},
+		},
+	})
+}
+
 func TestAccFisDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

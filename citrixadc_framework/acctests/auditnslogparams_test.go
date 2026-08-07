@@ -145,6 +145,27 @@ func TestAccAuditnslogparams_import(t *testing.T) {
 	})
 }
 
+func TestAccAuditnslogparams_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuditnslogparams_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditnslogparamsExist("citrixadc_auditnslogparams.tf_auditnslogparams", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuditnslogparams_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuditnslogparamsExist("citrixadc_auditnslogparams.tf_auditnslogparams", nil)),
+			},
+		},
+	})
+}
+
 const testAccAuditnslogparamsDataSource_basic = `
 
 resource "citrixadc_auditnslogparams" "tf_auditnslogparams" {

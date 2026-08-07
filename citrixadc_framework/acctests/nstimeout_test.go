@@ -119,6 +119,27 @@ func testAccCheckNstimeoutExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccNstimeout_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNstimeout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimeoutExist("citrixadc_nstimeout.tf_nstimeout", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNstimeout_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNstimeoutExist("citrixadc_nstimeout.tf_nstimeout", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNstimeout_import(t *testing.T) {
 	const resAddr = "citrixadc_nstimeout.tf_nstimeout"
 	resource.Test(t, resource.TestCase{

@@ -216,6 +216,27 @@ func TestAccNat64_import(t *testing.T) {
 	})
 }
 
+func TestAccNat64_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNat64Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNat64_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNat64Exist("citrixadc_nat64.tf_nat64", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNat64_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNat64Exist("citrixadc_nat64.tf_nat64", nil)),
+			},
+		},
+	})
+}
+
 const testAccNat64DataSource_basic = `
 	resource "citrixadc_nsacl6" "tf_nsacl6_ds" {
 		acl6name   = "tf_nsacl6_ds"

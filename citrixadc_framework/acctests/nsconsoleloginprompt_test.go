@@ -142,6 +142,27 @@ func TestAccNsconsoleloginprompt_import(t *testing.T) {
 	})
 }
 
+func TestAccNsconsoleloginprompt_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsconsoleloginpromptDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsconsoleloginprompt_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsconsoleloginpromptExist("citrixadc_nsconsoleloginprompt.tf_nsconsoleloginprompt", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsconsoleloginprompt_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsconsoleloginpromptExist("citrixadc_nsconsoleloginprompt.tf_nsconsoleloginprompt", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNsconsoleloginpromptDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

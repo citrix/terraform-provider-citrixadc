@@ -108,6 +108,27 @@ func TestAccRoute6_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccRoute6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRoute6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRoute6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute6Exist("citrixadc_route6.tf_route6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRoute6_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRoute6Exist("citrixadc_route6.tf_route6", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckRoute6Exist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

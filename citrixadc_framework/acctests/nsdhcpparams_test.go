@@ -137,6 +137,27 @@ func TestAccNsdhcpparamsDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsdhcpparams_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsdhcpparams_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsdhcpparamsExist("citrixadc_nsdhcpparams.tf_nsdhcpparams", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsdhcpparams_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsdhcpparamsExist("citrixadc_nsdhcpparams.tf_nsdhcpparams", nil)),
+			},
+		},
+	})
+}
+
 const testAccNsdhcpparamsDataSource_basic = `
 
 resource "citrixadc_nsdhcpparams" "tf_nsdhcpparams" {

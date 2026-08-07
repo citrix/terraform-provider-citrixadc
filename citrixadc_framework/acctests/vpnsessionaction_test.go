@@ -213,6 +213,27 @@ func TestAccVpnsessionaction_import(t *testing.T) {
 	})
 }
 
+func TestAccVpnsessionaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnsessionaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsessionactionExist("citrixadc_vpnsessionaction.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnsessionaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnsessionactionExist("citrixadc_vpnsessionaction.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnsessionactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

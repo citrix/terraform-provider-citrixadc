@@ -215,6 +215,27 @@ const testAccPcpserverDataSource_basic = `
 	}
 `
 
+func TestAccPcpserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPcpserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccPcpserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPcpserverExist("citrixadc_pcpserver.tf_pcpserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPcpserver_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckPcpserverExist("citrixadc_pcpserver.tf_pcpserver", nil)),
+			},
+		},
+	})
+}
+
 func TestAccPcpserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

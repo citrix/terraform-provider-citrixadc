@@ -191,6 +191,33 @@ func TestAccLinkset_import(t *testing.T) {
 	})
 }
 
+func TestAccLinkset_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("clustering not supported in CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLinksetDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLinkset_add_with_no_binding,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLinksetExist("citrixadc_linkset.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLinkset_add_with_no_binding,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLinksetExist("citrixadc_linkset.foo", nil)),
+			},
+		},
+	})
+}
+
 const testAccLinksetDataSource_basic = `
 	resource "citrixadc_linkset" "tf_linkset" {
 		linkset_id = "LS/2"

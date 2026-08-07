@@ -168,6 +168,27 @@ func TestAccDnsviewDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccDnsview_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnsview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsviewExist("citrixadc_dnsview.tf_dnsview", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnsview_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnsviewExist("citrixadc_dnsview.tf_dnsview", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnsview_import(t *testing.T) {
 	const resAddr = "citrixadc_dnsview.tf_dnsview"
 	resource.Test(t, resource.TestCase{

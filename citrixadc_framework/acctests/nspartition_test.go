@@ -182,6 +182,27 @@ func TestAccNspartition_import(t *testing.T) {
 	})
 }
 
+func TestAccNspartition_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspartitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNspartition_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartitionExist("citrixadc_nspartition.tf_nspartition", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNspartition_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNspartitionExist("citrixadc_nspartition.tf_nspartition", nil)),
+			},
+		},
+	})
+}
+
 const testAccNspartitionDataSource_basic = `
 	resource "citrixadc_nspartition" "tf_nspartition_ds" {
 		partitionname = "tf_test_partition"

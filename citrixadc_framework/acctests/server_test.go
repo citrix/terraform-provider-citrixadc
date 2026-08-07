@@ -315,6 +315,27 @@ func TestAccServer_import(t *testing.T) {
 	})
 }
 
+func TestAccServer_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccServer_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServerExist("citrixadc_server.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccServer_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckServerExist("citrixadc_server.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccServerDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

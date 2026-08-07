@@ -180,6 +180,27 @@ func TestAccAppfwfieldtype_import(t *testing.T) {
 	})
 }
 
+func TestAccAppfwfieldtype_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwfieldtypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwfieldtype_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwfieldtypeExist("citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwfieldtype_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwfieldtypeExist("citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwfieldtype_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_appfwfieldtype.tfAcc_appfwfieldtype"
 	resource.Test(t, resource.TestCase{

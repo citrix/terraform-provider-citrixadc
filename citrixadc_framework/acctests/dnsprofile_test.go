@@ -254,6 +254,27 @@ func TestAccDnsprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccDnsprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnsprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsprofileExist("citrixadc_dnsprofile.tf_add", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnsprofile_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnsprofileExist("citrixadc_dnsprofile.tf_add", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnsprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

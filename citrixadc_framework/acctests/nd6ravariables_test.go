@@ -73,6 +73,27 @@ func TestAccNd6ravariables_basic(t *testing.T) {
 	})
 }
 
+func TestAccNd6ravariables_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNd6ravariables_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6ravariablesExist("citrixadc_nd6ravariables.tf_nd6ravariables", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNd6ravariables_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNd6ravariablesExist("citrixadc_nd6ravariables.tf_nd6ravariables", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNd6ravariablesExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

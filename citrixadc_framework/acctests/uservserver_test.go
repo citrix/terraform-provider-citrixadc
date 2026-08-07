@@ -246,6 +246,28 @@ func TestAccUservserver_import(t *testing.T) {
 	})
 }
 
+func TestAccUservserver_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckUservserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccUservserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckUservserverExist("citrixadc_uservserver.tf_uservserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccUservserver_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckUservserverExist("citrixadc_uservserver.tf_uservserver", nil)),
+			},
+		},
+	})
+}
+
 func TestAccUservserverDataSource_basic(t *testing.T) {
 	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
 	resource.Test(t, resource.TestCase{

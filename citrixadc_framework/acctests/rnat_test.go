@@ -202,6 +202,27 @@ func TestAccRnat_import(t *testing.T) {
 	})
 }
 
+func TestAccRnat_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRnatDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRnat_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnatExist("citrixadc_rnat.tfrnat", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRnat_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRnatExist("citrixadc_rnat.tfrnat", nil)),
+			},
+		},
+	})
+}
+
 const testAccRnatDataSource_basic = `
 resource "citrixadc_rnat" "test" {
 	name    = "tf_rnat_ds"

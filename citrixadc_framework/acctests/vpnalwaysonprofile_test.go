@@ -198,6 +198,27 @@ func TestAccVpnalwaysonprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccVpnalwaysonprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnalwaysonprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnalwaysonprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnalwaysonprofileExist("citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnalwaysonprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnalwaysonprofileExist("citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnalwaysonprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -205,6 +205,27 @@ const testAccNsservicefunctionDataSource_basic = `
 	}
 `
 
+func TestAccNsservicefunction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsservicefunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsservicefunction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicefunctionExist("citrixadc_nsservicefunction.tf_servicefunc", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsservicefunction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsservicefunctionExist("citrixadc_nsservicefunction.tf_servicefunc", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNsservicefunctionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

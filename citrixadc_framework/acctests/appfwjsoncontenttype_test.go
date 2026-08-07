@@ -163,6 +163,27 @@ func TestAccAppfwjsoncontenttype_import(t *testing.T) {
 	})
 }
 
+func TestAccAppfwjsoncontenttype_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwjsoncontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwjsoncontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsoncontenttypeExist("citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwjsoncontenttype_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwjsoncontenttypeExist("citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwjsoncontenttype_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype"
 	resource.Test(t, resource.TestCase{

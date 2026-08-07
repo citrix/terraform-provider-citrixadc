@@ -195,6 +195,27 @@ data "citrixadc_lsnappsprofile" "tf_lsnappsprofile_ds" {
 }
 `
 
+func TestAccLsnappsprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnappsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnappsprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnappsprofileExist("citrixadc_lsnappsprofile.tf_lsnappsprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnappsprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnappsprofileExist("citrixadc_lsnappsprofile.tf_lsnappsprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLsnappsprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -211,6 +211,27 @@ data "citrixadc_systemfile" "tf_file_datasource" {
 }
 `
 
+func TestAccSystemfile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSystemfile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemfileExist("citrixadc_systemfile.tf_file", nil, []string{"/var/tmp", "hello.txt"})),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemfile_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSystemfileExist("citrixadc_systemfile.tf_file", nil, []string{"/var/tmp", "hello.txt"})),
+			},
+		},
+	})
+}
+
 func TestAccSystemfileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

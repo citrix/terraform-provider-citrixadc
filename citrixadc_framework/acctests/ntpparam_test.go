@@ -129,6 +129,27 @@ data "citrixadc_ntpparam" "test" {
 }
 `
 
+func TestAccNtpparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNtpparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNtpparamExist("citrixadc_ntpparam.tf_ntpparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNtpparam_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNtpparamExist("citrixadc_ntpparam.tf_ntpparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNtpparam_import(t *testing.T) {
 	const resAddr = "citrixadc_ntpparam.tf_ntpparam"
 	resource.Test(t, resource.TestCase{

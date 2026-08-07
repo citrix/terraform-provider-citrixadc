@@ -120,6 +120,31 @@ data "citrixadc_nsmode" "test" {
 }
 `
 
+func TestAccNsmode_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsmode_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testEnsureNsmodes([]string{"usip", "cka"}, true),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsmode_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testEnsureNsmodes([]string{"usip", "cka"}, true),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNsmode_import(t *testing.T) {
 	const resAddr = "citrixadc_nsmode.tf_nsmode"
 	resource.Test(t, resource.TestCase{

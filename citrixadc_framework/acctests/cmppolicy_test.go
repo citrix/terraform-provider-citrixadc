@@ -192,6 +192,27 @@ data "citrixadc_cmppolicy" "tf_cmppolicy_datasource" {
 
 `
 
+func TestAccCmppolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCmppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCmppolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicyExist("citrixadc_cmppolicy.tf_cmppolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCmppolicy_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCmppolicyExist("citrixadc_cmppolicy.tf_cmppolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCmppolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

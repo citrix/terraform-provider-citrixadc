@@ -139,6 +139,28 @@ func TestAccInterfacepair_import(t *testing.T) {
 	})
 }
 
+func TestAccInterfacepair_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckInterfacepairDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccInterfacepair_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfacepairExist("citrixadc_interfacepair.tf_interfacepair", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccInterfacepair_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckInterfacepairExist("citrixadc_interfacepair.tf_interfacepair", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckInterfacepairExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -154,6 +154,30 @@ func TestAccSslaction_import(t *testing.T) {
 	})
 }
 
+func TestAccSslaction_sdkv2StateUpgrade(t *testing.T) {
+	if isCpxRun {
+		t.Skip("sslaction clientcertverification attribute not supported in CPX12")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslactionExist("citrixadc_sslaction.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslactionExist("citrixadc_sslaction.foo", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckSslactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -193,6 +193,27 @@ func TestAccTmtrafficpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccTmtrafficpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmtrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTmtrafficpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficpolicyExist("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmtrafficpolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTmtrafficpolicyExist("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", nil)),
+			},
+		},
+	})
+}
+
 const testAccTmtrafficpolicyDataSource_basic = `
 
 	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {

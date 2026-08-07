@@ -164,6 +164,27 @@ func TestAccMapdomain_import(t *testing.T) {
 	})
 }
 
+func TestAccMapdomain_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckMapdomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccMapdomain_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMapdomainExist("citrixadc_mapdomain.tf_mapdomain", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccMapdomain_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckMapdomainExist("citrixadc_mapdomain.tf_mapdomain", nil)),
+			},
+		},
+	})
+}
+
 func TestAccMapdomainDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

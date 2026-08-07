@@ -135,6 +135,35 @@ func TestAccSystemextramgmtcpu_import(t *testing.T) {
 	})
 }
 
+func TestAccSystemextramgmtcpu_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_12CORES" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_12CORES.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("CPX does not support the feature")
+		// TODO actually we need a VPX with 12 cores licensed to test this resource
+		// otherwise the systemextramgmtcpu enable action is a noop
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSystemextramgmtcpu_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemextramgmtcpuExist("citrixadc_systemextramgmtcpu.tf_extramgmtcpu", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemextramgmtcpu_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSystemextramgmtcpuExist("citrixadc_systemextramgmtcpu.tf_extramgmtcpu", nil)),
+			},
+		},
+	})
+}
+
 const testAccSystemextramgmtcpuDataSource_basic = `
 
 data "citrixadc_systemextramgmtcpu" "tf_extramgmtcpu" {

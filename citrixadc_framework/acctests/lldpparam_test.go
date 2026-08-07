@@ -135,6 +135,27 @@ const testAccLldpparamDataSource_basic = `
 	}
 `
 
+func TestAccLldpparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLldpparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLldpparamExist("citrixadc_lldpparam.tf_lldpparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLldpparam_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLldpparamExist("citrixadc_lldpparam.tf_lldpparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLldpparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -179,6 +179,27 @@ func TestAccCmpaction_import(t *testing.T) {
 	})
 }
 
+func TestAccCmpaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCmpactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCmpaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpactionExist("citrixadc_cmpaction.tf_cmpaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCmpaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCmpactionExist("citrixadc_cmpaction.tf_cmpaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCmpactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

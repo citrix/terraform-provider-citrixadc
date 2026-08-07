@@ -252,6 +252,27 @@ func testAccCheckCsactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCsaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCsaction_create,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsactionExist("citrixadc_csaction.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsaction_create,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCsactionExist("citrixadc_csaction.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCsactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

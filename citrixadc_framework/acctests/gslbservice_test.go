@@ -525,6 +525,27 @@ func TestAccGslbservice_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccGslbservice_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccGslbservice_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbserviceExist("citrixadc_gslbservice.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbservice_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckGslbserviceExist("citrixadc_gslbservice.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccGslbserviceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

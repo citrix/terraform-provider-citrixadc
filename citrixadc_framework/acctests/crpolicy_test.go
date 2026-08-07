@@ -180,6 +180,27 @@ func testAccCheckCrpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCrpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCrpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrpolicyExist("citrixadc_crpolicy.crpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrpolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCrpolicyExist("citrixadc_crpolicy.crpolicy", nil)),
+			},
+		},
+	})
+}
+
 const testAccCrpolicyDataSource_basic = `
 
 resource "citrixadc_crpolicy" "crpolicy" {

@@ -194,6 +194,27 @@ func TestAccVpnurl_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccVpnurl_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnurlDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnurl_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlExist("citrixadc_vpnurl.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnurl_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnurlExist("citrixadc_vpnurl.foo", nil)),
+			},
+		},
+	})
+}
+
 const testAccVpnurlDataSource_basic = `
 
 resource "citrixadc_vpnurl" "foo" {

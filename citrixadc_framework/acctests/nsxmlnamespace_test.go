@@ -175,6 +175,27 @@ func testAccCheckNsxmlnamespaceDestroy(s *terraform.State) error {
 
 	return nil
 }
+func TestAccNsxmlnamespace_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsxmlnamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsxmlnamespace_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsxmlnamespaceExist("citrixadc_nsxmlnamespace.tf_nsxmlnamespace", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsxmlnamespace_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsxmlnamespaceExist("citrixadc_nsxmlnamespace.tf_nsxmlnamespace", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNsxmlnamespaceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

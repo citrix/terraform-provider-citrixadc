@@ -223,6 +223,27 @@ func TestAccTransformaction_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccTransformaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTransformactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTransformaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformactionExist("citrixadc_transformaction.tf_trans_action", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTransformaction_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTransformactionExist("citrixadc_transformaction.tf_trans_action", nil)),
+			},
+		},
+	})
+}
+
 const testAccTransformactionDataSource_basic = `
 resource "citrixadc_transformprofile" "tf_trans_profile1" {
   name = "tf_trans_profile1"

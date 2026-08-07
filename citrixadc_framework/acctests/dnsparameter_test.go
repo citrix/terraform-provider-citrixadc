@@ -199,6 +199,27 @@ func testAccCheckDnsparameterExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccDnsparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnsparameter_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsparameterExist("citrixadc_dnsparameter.tf_dnsparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnsparameter_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnsparameterExist("citrixadc_dnsparameter.tf_dnsparameter", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnsparameter_import(t *testing.T) {
 	const resAddr = "citrixadc_dnsparameter.tf_dnsparameter"
 	resource.Test(t, resource.TestCase{

@@ -47,6 +47,27 @@ func TestAccNsservicepath_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsservicepath_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsservicepathDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsservicepath_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicepathExist("citrixadc_nsservicepath.tf_servicepath", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsservicepath_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsservicepathExist("citrixadc_nsservicepath.tf_servicepath", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNsservicepath_import(t *testing.T) {
 	const resAddr = "citrixadc_nsservicepath.tf_servicepath"
 	resource.Test(t, resource.TestCase{

@@ -190,6 +190,27 @@ func TestAccIcapolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccIcapolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIcapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIcapolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIcapolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccIcapolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

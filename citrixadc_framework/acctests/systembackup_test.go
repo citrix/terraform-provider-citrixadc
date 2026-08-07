@@ -49,6 +49,28 @@ func TestAccSystembackup_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystembackup_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystembackupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSystembackup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystembackup_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSystembackup_selfHealing(t *testing.T) {
 	t.Skip("TODO: Need to find a way to test this resource!")
 	const resAddr = "citrixadc_systembackup.tf_systembackup"

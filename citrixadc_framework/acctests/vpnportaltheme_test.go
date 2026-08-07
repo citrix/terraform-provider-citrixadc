@@ -188,6 +188,27 @@ func TestAccVpnportaltheme_import(t *testing.T) {
 	})
 }
 
+func TestAccVpnportaltheme_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnportalthemeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnportaltheme_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnportalthemeExist("citrixadc_vpnportaltheme.tf_vpnportaltheme", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnportaltheme_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnportalthemeExist("citrixadc_vpnportaltheme.tf_vpnportaltheme", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnportalthemeDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

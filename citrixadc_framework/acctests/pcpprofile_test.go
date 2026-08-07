@@ -184,6 +184,27 @@ func TestAccPcpprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccPcpprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccPcpprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPcpprofileExist("citrixadc_pcpprofile.tf_pcpprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPcpprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckPcpprofileExist("citrixadc_pcpprofile.tf_pcpprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccPcpprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

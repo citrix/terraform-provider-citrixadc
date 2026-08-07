@@ -171,6 +171,27 @@ const testAccAppfwxmlschemaDataSource_basic = `
 	}
 `
 
+func TestAccAppfwxmlschema_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doAppfwPreChecks(t) },
+		CheckDestroy: testAccCheckAppfwxmlschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwxmlschema_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlschemaExist("citrixadc_appfwxmlschema.tf_appfwxmlschema", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwxmlschema_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwxmlschemaExist("citrixadc_appfwxmlschema.tf_appfwxmlschema", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwxmlschemaDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doAppfwPreChecks(t) },

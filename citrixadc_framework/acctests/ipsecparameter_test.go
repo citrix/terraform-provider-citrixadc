@@ -142,6 +142,27 @@ func TestAccIpsecparameter_import(t *testing.T) {
 	})
 }
 
+func TestAccIpsecparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIpsecparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecparameterExist("citrixadc_ipsecparameter.tf_ipsecparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIpsecparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckIpsecparameterExist("citrixadc_ipsecparameter.tf_ipsecparameter", nil)),
+			},
+		},
+	})
+}
+
 func TestAccIpsecparameterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

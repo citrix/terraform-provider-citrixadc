@@ -189,6 +189,27 @@ func TestAccVideooptimizationpacingpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccVideooptimizationpacingpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVideooptimizationpacingpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVideooptimizationpacingpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicyExist("citrixadc_videooptimizationpacingpolicy.tf_policy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVideooptimizationpacingpolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicyExist("citrixadc_videooptimizationpacingpolicy.tf_policy", nil)),
+			},
+		},
+	})
+}
+
 const testAccVideooptimizationpacingpolicyDataSource_basic = `
 
 	resource "citrixadc_videooptimizationpacingaction" "tf_action" {

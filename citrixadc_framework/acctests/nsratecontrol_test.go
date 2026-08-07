@@ -137,6 +137,27 @@ const testAccNsratecontrolDataSource_basic = `
 	}
 `
 
+func TestAccNsratecontrol_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsratecontrol_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsratecontrolExist("citrixadc_nsratecontrol.tf_nsratecontrol", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsratecontrol_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsratecontrolExist("citrixadc_nsratecontrol.tf_nsratecontrol", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNsratecontrolDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

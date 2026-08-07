@@ -132,6 +132,27 @@ func TestAccGslbparameter_import(t *testing.T) {
 	})
 }
 
+func TestAccGslbparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccGslbparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccGslbparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckGslbparameterExist("citrixadc_gslbparameter.tf_gslbparameter", nil)),
+			},
+		},
+	})
+}
+
 const testAccGslbparameterDataSource_basic = `
 
 	resource "citrixadc_gslbparameter" "tf_gslbparameter" {

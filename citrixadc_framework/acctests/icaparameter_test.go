@@ -91,6 +91,27 @@ func TestAccIcaparameter_basic(t *testing.T) {
 	})
 }
 
+func TestAccIcaparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIcaparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaparameterExist("citrixadc_icaparameter.tf_icaparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIcaparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckIcaparameterExist("citrixadc_icaparameter.tf_icaparameter", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckIcaparameterExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

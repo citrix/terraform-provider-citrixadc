@@ -150,6 +150,27 @@ func TestAccNsdiameter_import(t *testing.T) {
 	})
 }
 
+func TestAccNsdiameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsdiameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsdiameter_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsdiameterExist("citrixadc_nsdiameter.tf_nsdiameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsdiameter_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsdiameterExist("citrixadc_nsdiameter.tf_nsdiameter", nil)),
+			},
+		},
+	})
+}
+
 const testAccNsdiameterDataSource_basic = `
 	resource "citrixadc_nsdiameter" "tf_nsdiameter_ds" {
 		identity               = "citrixadc.com"

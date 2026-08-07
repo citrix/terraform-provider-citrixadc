@@ -159,6 +159,27 @@ func TestAccAppfwxmlcontenttype_import(t *testing.T) {
 	})
 }
 
+func TestAccAppfwxmlcontenttype_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwxmlcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwxmlcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlcontenttypeExist("citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwxmlcontenttype_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwxmlcontenttypeExist("citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype", nil)),
+			},
+		},
+	})
+}
+
 const testAccAppfwxmlcontenttypeDataSource_basic = `
 
 	resource "citrixadc_appfwxmlcontenttype" "tf_Acc_appfwxmlcontenttype" {

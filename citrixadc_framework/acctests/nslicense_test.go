@@ -96,6 +96,31 @@ resource "citrixadc_nslicense" "tf_license" {
 }
 `
 
+func TestAccNslicense_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("ssh does not work correctly with CPX")
+	if isCpxRun {
+		t.Skip("ssh does not work correctly with CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNslicense_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseExist("citrixadc_nslicense.tf_license", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNslicense_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNslicenseExist("citrixadc_nslicense.tf_license", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNslicenseDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -202,6 +202,27 @@ data "citrixadc_lsnhttphdrlogprofile" "tf_lsnhttphdrlogprofile_ds" {
 }
 `
 
+func TestAccLsnhttphdrlogprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnhttphdrlogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnhttphdrlogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnhttphdrlogprofileExist("citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnhttphdrlogprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnhttphdrlogprofileExist("citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLsnhttphdrlogprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

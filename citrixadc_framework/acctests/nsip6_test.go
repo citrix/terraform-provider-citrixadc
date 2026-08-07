@@ -212,6 +212,31 @@ func TestAccNsip6_import(t *testing.T) {
 	})
 }
 
+func TestAccNsip6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsip6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsip6_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsip6Exist("citrixadc_nsip6.tf_nsip6", nil, "2002:db8:100::ff/64"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsip6_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsip6Exist("citrixadc_nsip6.tf_nsip6", nil, "2002:db8:100::ff/64"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNsip6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

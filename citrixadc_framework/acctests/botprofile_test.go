@@ -206,6 +206,27 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 }
 `
 
+func TestAccBotprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccBotprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckBotprofileExist("citrixadc_botprofile.tf_botprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccBotprofile_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_botprofile.tf_botprofile"
 	resource.Test(t, resource.TestCase{

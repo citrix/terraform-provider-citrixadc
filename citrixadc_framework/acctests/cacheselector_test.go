@@ -171,6 +171,27 @@ func TestAccCacheselector_import(t *testing.T) {
 	})
 }
 
+func TestAccCacheselector_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCacheselectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCacheselector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheselectorExist("citrixadc_cacheselector.tf_cacheselector", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCacheselector_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCacheselectorExist("citrixadc_cacheselector.tf_cacheselector", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCacheselectorDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

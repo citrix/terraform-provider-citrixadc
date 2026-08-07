@@ -168,3 +168,24 @@ const testAccRewriteparamDataSource_basic = `
 data "citrixadc_rewriteparam" "test" {
 }
 `
+
+func TestAccRewriteparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRewriteparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRewriteparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteparamExist("citrixadc_rewriteparam.tf_rewriteparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRewriteparam_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRewriteparamExist("citrixadc_rewriteparam.tf_rewriteparam", nil)),
+			},
+		},
+	})
+}

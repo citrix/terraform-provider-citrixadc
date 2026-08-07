@@ -140,6 +140,27 @@ func TestAccNsvpxparam_import(t *testing.T) {
 	})
 }
 
+func TestAccNsvpxparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsvpxparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsvpxparam_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsvpxparam_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNsvpxparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

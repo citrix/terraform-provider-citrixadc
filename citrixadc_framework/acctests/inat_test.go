@@ -253,6 +253,27 @@ data "citrixadc_inat" "foo" {
 }
 `
 
+func TestAccInat_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckInatDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccInat_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInatExist("citrixadc_inat.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccInat_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckInatExist("citrixadc_inat.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccInatDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

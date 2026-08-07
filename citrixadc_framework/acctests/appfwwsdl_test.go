@@ -54,6 +54,27 @@ func TestAccAppfwwsdl_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwwsdl_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwwsdlDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwwsdl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwwsdlExist("citrixadc_appfwwsdl.tf_appfwwsdl", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwwsdl_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwwsdlExist("citrixadc_appfwwsdl.tf_appfwwsdl", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwwsdlExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

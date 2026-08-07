@@ -128,6 +128,27 @@ const testAccAppalgparamDataSource_basic = `
 	}
 `
 
+func TestAccAppalgparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppalgparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppalgparamExist("citrixadc_appalgparam.tf_appalgparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppalgparam_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppalgparamExist("citrixadc_appalgparam.tf_appalgparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppalgparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

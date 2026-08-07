@@ -69,6 +69,30 @@ func TestAccSslservicegroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslservicegroup_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslservicegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslservicegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservicegroupExist("citrixadc_sslservicegroup.tf_sslservicegroup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslservicegroup_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslservicegroupExist("citrixadc_sslservicegroup.tf_sslservicegroup", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckSslservicegroupExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

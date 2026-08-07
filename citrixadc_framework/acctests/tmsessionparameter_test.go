@@ -147,6 +147,31 @@ data "citrixadc_tmsessionparameter" "tf_tmsessionparameter" {
 }
 `
 
+func TestAccTmsessionparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTmsessionparameter_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmsessionparameterExist("citrixadc_tmsessionparameter.tf_tmsessionparameter", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmsessionparameter_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmsessionparameterExist("citrixadc_tmsessionparameter.tf_tmsessionparameter", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccTmsessionparameterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

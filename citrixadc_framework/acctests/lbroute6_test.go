@@ -314,6 +314,27 @@ data "citrixadc_lbroute6" "demo_route6" {
 }
 `
 
+func TestAccLbroute6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbroute6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbroute6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbroute6Exist("citrixadc_lbroute6.demo_route6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbroute6_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLbroute6Exist("citrixadc_lbroute6.demo_route6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLbroute6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -212,6 +212,27 @@ func TestAccAppqoepolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccAppqoepolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppqoepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppqoepolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoepolicyExist("citrixadc_appqoepolicy.tf_appqoepolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppqoepolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppqoepolicyExist("citrixadc_appqoepolicy.tf_appqoepolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppqoepolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

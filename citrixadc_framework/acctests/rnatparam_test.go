@@ -132,6 +132,27 @@ const testAccRnatparamDataSource_basic = `
 	}
 `
 
+func TestAccRnatparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRnatparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnatparamExist("citrixadc_rnatparam.tf_rnatparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRnatparam_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRnatparamExist("citrixadc_rnatparam.tf_rnatparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccRnatparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

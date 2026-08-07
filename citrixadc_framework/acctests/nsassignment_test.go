@@ -220,6 +220,27 @@ const testAccNsassignmentDataSource_basic = `
 	}
 `
 
+func TestAccNsassignment_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsassignmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsassignment_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsassignmentExist("citrixadc_nsassignment.tf_nsassignment", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsassignment_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsassignmentExist("citrixadc_nsassignment.tf_nsassignment", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNsassignmentDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -196,6 +196,31 @@ func TestAccAuditmessageaction_import(t *testing.T) {
 	})
 }
 
+func TestAccAuditmessageaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuditmessageactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuditmessageaction_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditmessageactionExist("citrixadc_auditmessageaction.tf_msgaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuditmessageaction_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditmessageactionExist("citrixadc_auditmessageaction.tf_msgaction", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAuditmessageactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

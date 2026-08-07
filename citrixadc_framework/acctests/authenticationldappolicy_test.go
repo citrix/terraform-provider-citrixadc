@@ -190,6 +190,27 @@ func TestAccAuthenticationldappolicy_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationldappolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationldappolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationldappolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationldappolicyExist("citrixadc_authenticationldappolicy.tf_authenticationldappolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationldappolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationldappolicyExist("citrixadc_authenticationldappolicy.tf_authenticationldappolicy", nil)),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationldappolicyDataSource_basic = `
 	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
 		name          = "ldapaction_ds"

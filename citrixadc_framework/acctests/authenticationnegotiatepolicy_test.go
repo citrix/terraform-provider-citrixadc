@@ -215,6 +215,27 @@ const testAccAuthenticationnegotiatepolicyDataSource_basic = `
 	}
 `
 
+func TestAccAuthenticationnegotiatepolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationnegotiatepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationnegotiatepolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationnegotiatepolicyExist("citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationnegotiatepolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationnegotiatepolicyExist("citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationnegotiatepolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

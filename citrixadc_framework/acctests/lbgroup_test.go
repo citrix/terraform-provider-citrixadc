@@ -177,6 +177,27 @@ func TestAccLbgroup_import(t *testing.T) {
 	})
 }
 
+func TestAccLbgroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbgroupExist("citrixadc_lbgroup.tf_lbgroup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbgroup_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLbgroupExist("citrixadc_lbgroup.tf_lbgroup", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckLbgroupExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

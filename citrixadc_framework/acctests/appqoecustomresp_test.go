@@ -209,6 +209,27 @@ func TestAccAppqoecustomresp_import(t *testing.T) {
 	})
 }
 
+func TestAccAppqoecustomresp_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppqoecustomrespDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppqoecustomresp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist("citrixadc_appqoecustomresp.tf_appqoecustomresp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppqoecustomresp_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist("citrixadc_appqoecustomresp.tf_appqoecustomresp", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppqoecustomrespDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

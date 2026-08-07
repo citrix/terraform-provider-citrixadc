@@ -185,6 +185,27 @@ func TestAccAuthenticationnoauthaction_import(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationnoauthaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationnoauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationnoauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationnoauthactionExist("citrixadc_authenticationnoauthaction.tf_noauthaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationnoauthaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationnoauthactionExist("citrixadc_authenticationnoauthaction.tf_noauthaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationnoauthactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

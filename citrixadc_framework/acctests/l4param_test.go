@@ -132,6 +132,27 @@ const testAccL4paramDataSource_basic = `
 	}
 `
 
+func TestAccL4param_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccL4param_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckL4paramExist("citrixadc_l4param.tf_l4param", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccL4param_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckL4paramExist("citrixadc_l4param.tf_l4param", nil)),
+			},
+		},
+	})
+}
+
 func TestAccL4paramDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

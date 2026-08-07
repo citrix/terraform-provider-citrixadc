@@ -167,6 +167,28 @@ func testAccCheckSubscribergxinterfaceExist(n string, id *string) resource.TestC
 	}
 }
 
+func TestAccSubscribergxinterface_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSubscribergxinterface_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSubscribergxinterfaceExist("citrixadc_subscribergxinterface.tf_subscribergxinterface", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSubscribergxinterface_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSubscribergxinterfaceExist("citrixadc_subscribergxinterface.tf_subscribergxinterface", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSubscribergxinterfaceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

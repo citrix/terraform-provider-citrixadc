@@ -240,6 +240,30 @@ func TestAccHanode_import(t *testing.T) {
 	})
 }
 
+func TestAccHanode_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheck(t) },
+		// CheckDestroy is nil: hanode 0 is the permanent local self-node and can
+		// never be deleted, so the standard Destroy check always reports it as
+		// "still exists". The upgrade itself (2.2.0 -> current) is what we verify.
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccHanodeLocal_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckHanodeExist("citrixadc_hanode.local_node", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccHanodeLocal_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckHanodeExist("citrixadc_hanode.local_node", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckHanodeDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()

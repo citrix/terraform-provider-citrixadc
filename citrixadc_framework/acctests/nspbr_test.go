@@ -200,6 +200,27 @@ func TestAccNspbr_import(t *testing.T) {
 	})
 }
 
+func TestAccNspbr_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspbrDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNspbr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbrExist("citrixadc_nspbr.tf_nspbr", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNspbr_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNspbrExist("citrixadc_nspbr.tf_nspbr", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNspbrDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

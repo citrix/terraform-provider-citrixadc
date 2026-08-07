@@ -179,6 +179,27 @@ func TestAccAuthorizationpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccAuthorizationpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthorizationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthorizationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicyExist("citrixadc_authorizationpolicy.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthorizationpolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicyExist("citrixadc_authorizationpolicy.foo", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAuthorizationpolicyDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()

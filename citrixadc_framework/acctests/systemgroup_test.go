@@ -305,6 +305,27 @@ func TestAccSystemgroup_import(t *testing.T) {
 	})
 }
 
+func TestAccSystemgroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSystemgroup_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSystemgroup_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSystemgroupDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

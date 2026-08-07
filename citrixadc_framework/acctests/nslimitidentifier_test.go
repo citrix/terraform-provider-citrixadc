@@ -203,6 +203,27 @@ const testAccNslimitidentifierDataSource_basic = `
 	}
 `
 
+func TestAccNslimitidentifier_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNslimitidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNslimitidentifier_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslimitidentifierExist("citrixadc_nslimitidentifier.tf_nslimitidentifier", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNslimitidentifier_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNslimitidentifierExist("citrixadc_nslimitidentifier.tf_nslimitidentifier", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNslimitidentifierDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

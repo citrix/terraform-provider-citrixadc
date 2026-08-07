@@ -196,6 +196,27 @@ func testAccCheckCacheforwardproxyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCacheforwardproxy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCacheforwardproxyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCacheforwardproxy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheforwardproxyExist("citrixadc_cacheforwardproxy.tf_cacheforwardproxy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCacheforwardproxy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCacheforwardproxyExist("citrixadc_cacheforwardproxy.tf_cacheforwardproxy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCacheforwardproxyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

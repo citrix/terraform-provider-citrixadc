@@ -141,6 +141,27 @@ func TestAccAppfwurlencodedformcontenttype_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccAppfwurlencodedformcontenttype_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwurlencodedformcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwurlencodedformcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwurlencodedformcontenttypeExist("citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwurlencodedformcontenttype_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwurlencodedformcontenttypeExist("citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwurlencodedformcontenttype_import(t *testing.T) {
 	const resAddr = "citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype"
 	resource.Test(t, resource.TestCase{

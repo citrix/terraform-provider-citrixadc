@@ -162,6 +162,27 @@ func TestAccTransformpolicylabel_import(t *testing.T) {
 	})
 }
 
+func TestAccTransformpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTransformpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTransformpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformpolicylabelExist("citrixadc_transformpolicylabel.transformpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTransformpolicylabel_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTransformpolicylabelExist("citrixadc_transformpolicylabel.transformpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccTransformpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -166,6 +166,27 @@ func TestAccNssimpleacl6_import(t *testing.T) {
 	})
 }
 
+func TestAccNssimpleacl6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNssimpleacl6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNssimpleacl6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNssimpleacl6Exist("citrixadc_nssimpleacl6.tf_nssimpleacl6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNssimpleacl6_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNssimpleacl6Exist("citrixadc_nssimpleacl6.tf_nssimpleacl6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNssimpleacl6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

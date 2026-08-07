@@ -161,6 +161,27 @@ func TestAccMapdmr_import(t *testing.T) {
 	})
 }
 
+func TestAccMapdmr_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckMapdmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccMapdmr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMapdmrExist("citrixadc_mapdmr.tf_mapdmr", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccMapdmr_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckMapdmrExist("citrixadc_mapdmr.tf_mapdmr", nil)),
+			},
+		},
+	})
+}
+
 const testAccMapdmrDataSource_basic = `
 
 	resource "citrixadc_mapdmr" "tf_mapdmr_ds" {

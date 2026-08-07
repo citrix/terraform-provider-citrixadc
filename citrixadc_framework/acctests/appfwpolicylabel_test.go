@@ -171,6 +171,27 @@ func TestAccAppfwpolicylabel_import(t *testing.T) {
 	})
 }
 
+func TestAccAppfwpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabelExist("citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwpolicylabel_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabelExist("citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

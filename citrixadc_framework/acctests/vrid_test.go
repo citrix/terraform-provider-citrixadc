@@ -200,6 +200,27 @@ data "citrixadc_vrid" "tf_vrid" {
 }
 `
 
+func TestAccVrid_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVridDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVrid_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVridExist("citrixadc_vrid.tf_vrid", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVrid_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVridExist("citrixadc_vrid.tf_vrid", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVridDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -208,6 +208,27 @@ func TestAccAppfwpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccAppfwpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicyExist("citrixadc_appfwpolicy.tfAcc_appfwpolicy1", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwpolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwpolicyExist("citrixadc_appfwpolicy.tfAcc_appfwpolicy1", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

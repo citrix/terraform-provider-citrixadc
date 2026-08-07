@@ -158,6 +158,27 @@ func TestAccDnssuffix_import(t *testing.T) {
 	})
 }
 
+func TestAccDnssuffix_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnssuffixDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnssuffix_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssuffixExist("citrixadc_dnssuffix.tf_dnssuffix", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnssuffix_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnssuffixExist("citrixadc_dnssuffix.tf_dnssuffix", nil)),
+			},
+		},
+	})
+}
+
 const testAccDnssuffixDataSource_basic = `
 
 	resource "citrixadc_dnssuffix" "tf_dnssuffix" {

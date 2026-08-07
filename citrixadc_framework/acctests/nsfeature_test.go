@@ -170,6 +170,31 @@ data "citrixadc_nsfeature" "tf_nsfeature_ds" {
 }
 `
 
+func TestAccNsfeature_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsfeature_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnabledDisabledFeatures([]string{"cs", "lb"}, []string{"ssl", "appfw"}),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsfeature_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnabledDisabledFeatures([]string{"cs", "lb"}, []string{"ssl", "appfw"}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNsfeatureDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

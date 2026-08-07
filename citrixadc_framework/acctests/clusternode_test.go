@@ -322,6 +322,30 @@ func TestAccClusternode_import(t *testing.T) {
 	})
 }
 
+func TestAccClusternode_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccClusternode_basic_nogroup_config,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusternode_basic_nogroup_config,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckClusternodeExist("citrixadc_clusternode.tf_clusternode", nil)),
+			},
+		},
+	})
+}
+
 const testAccClusternodeDataSource_basic = `
 
 

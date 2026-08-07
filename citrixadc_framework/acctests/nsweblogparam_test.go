@@ -139,3 +139,24 @@ const testAccNsweblogparamDataSource_basic = `
 data "citrixadc_nsweblogparam" "test" {
 }
 `
+
+func TestAccNsweblogparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsweblogparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsweblogparamExist("citrixadc_nsweblogparam.tf_nsweblofparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsweblogparam_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsweblogparamExist("citrixadc_nsweblogparam.tf_nsweblofparam", nil)),
+			},
+		},
+	})
+}

@@ -219,6 +219,27 @@ func TestAccContentinspectionaction_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccContentinspectionaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckContentinspectionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccContentinspectionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionactionExist("citrixadc_contentinspectionaction.tf_contentinspectionaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccContentinspectionaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckContentinspectionactionExist("citrixadc_contentinspectionaction.tf_contentinspectionaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccContentinspectionactionDataSource_basic = `
 
 resource "citrixadc_nsicapprofile" "tf_nsicapprofile_ds" {

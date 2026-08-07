@@ -193,6 +193,27 @@ const testAccAuthenticationpolicylabelDataSource_basic = `
 	}
 `
 
+func TestAccAuthenticationpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationpolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpolicylabelExist("citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationpolicylabel_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationpolicylabelExist("citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

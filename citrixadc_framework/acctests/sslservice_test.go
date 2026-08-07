@@ -180,6 +180,30 @@ func TestAccSslservice_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslservice_sdkv2StateUpgrade(t *testing.T) {
+	// if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	// }
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslservice_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslserviceExist("citrixadc_sslservice.demo_sslservice", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslservice_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslserviceExist("citrixadc_sslservice.demo_sslservice", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSslservice_import(t *testing.T) {
 	t.Skip("Skipping sslservice import test")
 	const resAddr = "citrixadc_sslservice.demo_sslservice"

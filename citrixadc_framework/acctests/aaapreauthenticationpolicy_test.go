@@ -190,6 +190,27 @@ func TestAccAaapreauthenticationpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccAaapreauthenticationpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaapreauthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaapreauthenticationpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationpolicyExist("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaapreauthenticationpolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationpolicyExist("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", nil)),
+			},
+		},
+	})
+}
+
 const testAccAaapreauthenticationpolicyDataSource_basic = `
 
 	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {

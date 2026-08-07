@@ -128,6 +128,27 @@ func TestAccLsnpool_import(t *testing.T) {
 	})
 }
 
+func TestAccLsnpool_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnpoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnpool_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnpoolExist("citrixadc_lsnpool.tf_lsnpool", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnpool_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnpoolExist("citrixadc_lsnpool.tf_lsnpool", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckLsnpoolExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

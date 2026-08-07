@@ -205,6 +205,27 @@ func TestAccArp_import(t *testing.T) {
 	})
 }
 
+func TestAccArp_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckArpDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccArp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckArpExist("citrixadc_arp.tf_arp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccArp_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckArpExist("citrixadc_arp.tf_arp", nil)),
+			},
+		},
+	})
+}
+
 func TestAccArpDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

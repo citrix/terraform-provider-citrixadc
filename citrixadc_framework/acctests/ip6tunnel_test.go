@@ -191,6 +191,27 @@ func TestAccIp6tunnel_import(t *testing.T) {
 	})
 }
 
+func TestAccIp6tunnel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIp6tunnelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIp6tunnel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIp6tunnelExist("citrixadc_ip6tunnel.tf_ip6tunnel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIp6tunnel_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckIp6tunnelExist("citrixadc_ip6tunnel.tf_ip6tunnel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccIp6tunnelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

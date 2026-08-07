@@ -160,6 +160,27 @@ func TestAccRewritepolicylabel_import(t *testing.T) {
 	})
 }
 
+func TestAccRewritepolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRewritepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRewritepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabelExist("citrixadc_rewritepolicylabel.tf_rewritepolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRewritepolicylabel_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabelExist("citrixadc_rewritepolicylabel.tf_rewritepolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccRewritepolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

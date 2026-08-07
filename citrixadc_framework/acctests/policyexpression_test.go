@@ -127,6 +127,27 @@ func TestAccPolicyexpression_import(t *testing.T) {
 	})
 }
 
+func TestAccPolicyexpression_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicyexpressionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccPolicyexpression_advanced_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_advanced_policyexpression", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPolicyexpression_advanced_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_advanced_policyexpression", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyexpressionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -65,6 +65,31 @@ func TestAccRouterdynamicrouting_import(t *testing.T) {
 	})
 }
 
+func TestAccRouterdynamicrouting_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	if isCpxRun {
+		t.Skip("Feature not supported on CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRouterdynamicrouting_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRouterdynamicroutingExist("citrixadc_routerdynamicrouting.tf_dynamicrouting", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRouterdynamicrouting_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRouterdynamicroutingExist("citrixadc_routerdynamicrouting.tf_dynamicrouting", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckRouterdynamicroutingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

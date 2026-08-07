@@ -244,6 +244,30 @@ const testAccNetprofileDataSource_basic = `
 	}
 `
 
+func TestAccNetprofile_sdkv2StateUpgrade(t *testing.T) {
+	if isCpxRun {
+		t.Skip("CPX 12.0 is outdated for this resource")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNetprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofileExist("citrixadc_netprofile.tf_netprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNetprofile_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNetprofileExist("citrixadc_netprofile.tf_netprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNetprofileDataSource_basic(t *testing.T) {
 	if isCpxRun {
 		t.Skip("CPX 12.0 is outdated for this resource")

@@ -155,6 +155,27 @@ func testAccCheckSnmpmanagerDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSnmpmanager_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmpmanagerDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmpmanager_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpmanagerExist("citrixadc_snmpmanager.tf_snmpmanager", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmpmanager_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSnmpmanagerExist("citrixadc_snmpmanager.tf_snmpmanager", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSnmpmanagerDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

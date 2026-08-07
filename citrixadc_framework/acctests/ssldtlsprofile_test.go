@@ -226,6 +226,27 @@ func TestAccSsldtlsprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccSsldtlsprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSsldtlsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSsldtlsprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsldtlsprofileExist("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSsldtlsprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSsldtlsprofileExist("citrixadc_ssldtlsprofile.tf_ssldtlsprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSsldtlsprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -173,6 +173,27 @@ const testAccAppfwhtmlerrorpageDataSource_basic = `
 	}
 `
 
+func TestAccAppfwhtmlerrorpage_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doAppfwPreChecks(t) },
+		CheckDestroy: testAccCheckAppfwhtmlerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwhtmlerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwhtmlerrorpageExist("citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwhtmlerrorpage_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwhtmlerrorpageExist("citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwhtmlerrorpageDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doAppfwPreChecks(t) },

@@ -132,6 +132,27 @@ const testAccArpparamDataSource_basic = `
 	}
 `
 
+func TestAccArpparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccArpparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckArpparamExist("citrixadc_arpparam.tf_arpparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccArpparam_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckArpparamExist("citrixadc_arpparam.tf_arpparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccArpparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

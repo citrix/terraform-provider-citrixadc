@@ -126,6 +126,27 @@ const testAccPtpDataSource_basic = `
 	}
 `
 
+func TestAccPtp_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccPtp_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPtpExist("citrixadc_ptp.tf_ptp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPtp_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckPtpExist("citrixadc_ptp.tf_ptp", nil)),
+			},
+		},
+	})
+}
+
 func TestAccPtpDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

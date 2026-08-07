@@ -162,6 +162,28 @@ func TestAccIpv6_import(t *testing.T) {
 	})
 }
 
+func TestAccIpv6_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpv6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIpv6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpv6Exist("citrixadc_ipv6.tf_ipv6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIpv6_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckIpv6Exist("citrixadc_ipv6.tf_ipv6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccIpv6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

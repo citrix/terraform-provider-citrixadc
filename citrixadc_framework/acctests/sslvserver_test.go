@@ -216,6 +216,31 @@ const testAccSslvserverDataSource_basic = `
 	}
 `
 
+func TestAccSslvserver_sdkv2StateUpgrade(t *testing.T) {
+	// No upgrade baseline possible: the released citrix/citrixadc 2.2.0 provider
+	// CRASHES ("plugin crashed") applying this sslvserver config, so step 1 never
+	// establishes SDK-v2 state. The current provider is unaffected.
+	t.Skip("no 2.2.0 baseline: released 2.2.0 provider crashes on sslvserver apply")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserverExist("citrixadc_sslvserver.tf_sslvserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslvserver_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslvserverExist("citrixadc_sslvserver.tf_sslvserver", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSslvserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

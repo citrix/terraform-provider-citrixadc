@@ -225,6 +225,27 @@ func TestAccBridgetableDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccBridgetable_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBridgetableDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccBridgetable_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgetableExist("citrixadc_bridgetable.tf_bridgetable", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBridgetable_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckBridgetableExist("citrixadc_bridgetable.tf_bridgetable", nil)),
+			},
+		},
+	})
+}
+
 const testAccBridgetableDataSource_basic = `
 
 resource "citrixadc_vlan" "tf_vlan_ds" {

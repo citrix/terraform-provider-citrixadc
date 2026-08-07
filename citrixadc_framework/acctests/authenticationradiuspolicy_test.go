@@ -215,6 +215,27 @@ const testAccAuthenticationradiuspolicyDataSource_basic = `
 	}
 `
 
+func TestAccAuthenticationradiuspolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationradiuspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationradiuspolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationradiuspolicyExist("citrixadc_authenticationradiuspolicy.tf_radiuspolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationradiuspolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationradiuspolicyExist("citrixadc_authenticationradiuspolicy.tf_radiuspolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationradiuspolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

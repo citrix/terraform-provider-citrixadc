@@ -163,6 +163,27 @@ func TestAccNsicapprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccNsicapprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsicapprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsicapprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsicapprofileExist("citrixadc_nsicapprofile.tf_nsicapprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsicapprofile_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsicapprofileExist("citrixadc_nsicapprofile.tf_nsicapprofile", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNsicapprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

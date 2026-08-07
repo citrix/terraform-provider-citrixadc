@@ -172,6 +172,27 @@ func TestAccVxlanvlanmap_import(t *testing.T) {
 	})
 }
 
+func TestAccVxlanvlanmap_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVxlanvlanmapDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVxlanvlanmap_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanvlanmapExist("citrixadc_vxlanvlanmap.tf_vxlanvlanmp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVxlanvlanmap_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVxlanvlanmapExist("citrixadc_vxlanvlanmap.tf_vxlanvlanmp", nil)),
+			},
+		},
+	})
+}
+
 const testAccVxlanvlanmapDataSource_basic = `
 
 	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {

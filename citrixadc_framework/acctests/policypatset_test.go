@@ -175,6 +175,27 @@ func TestAccPolicypatset_import(t *testing.T) {
 	})
 }
 
+func TestAccPolicypatset_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicypatsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccPolicypatset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist("citrixadc_policypatset.tf_patset", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPolicypatset_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist("citrixadc_policypatset.tf_patset", nil)),
+			},
+		},
+	})
+}
+
 const testAccPolicypatsetDataSource_basic = `
 	resource "citrixadc_policypatset" "tf_patset_ds" {
 		name = "tf_patset_ds"

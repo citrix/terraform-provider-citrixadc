@@ -411,6 +411,27 @@ func TestAccIpset_import(t *testing.T) {
 	})
 }
 
+func TestAccIpset_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIpset_no_bindings,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIpset_no_bindings,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccIpsetDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

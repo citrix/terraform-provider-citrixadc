@@ -180,6 +180,27 @@ func testAccCheckOnlinkipv6prefixDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccOnlinkipv6prefix_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckOnlinkipv6prefixDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccOnlinkipv6prefix_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckOnlinkipv6prefixExist("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccOnlinkipv6prefix_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckOnlinkipv6prefixExist("citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix", nil)),
+			},
+		},
+	})
+}
+
 func TestAccOnlinkipv6prefixDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

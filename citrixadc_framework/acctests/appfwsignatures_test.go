@@ -172,6 +172,27 @@ const testAccAppfwsignaturesDataSource_basic = `
 	}
 `
 
+func TestAccAppfwsignatures_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwsignaturesDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwsignatures_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwsignaturesExist("citrixadc_appfwsignatures.tf_appfwsignatures", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwsignatures_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwsignaturesExist("citrixadc_appfwsignatures.tf_appfwsignatures", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwsignaturesDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doAppfwPreChecks(t) },

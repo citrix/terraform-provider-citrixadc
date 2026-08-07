@@ -184,6 +184,27 @@ func testAccCheckTunneltrafficpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTunneltrafficpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTunneltrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTunneltrafficpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTunneltrafficpolicyExist("citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTunneltrafficpolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTunneltrafficpolicyExist("citrixadc_tunneltrafficpolicy.tf_tunneltrafficpolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccTunneltrafficpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

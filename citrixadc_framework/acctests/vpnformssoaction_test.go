@@ -240,6 +240,27 @@ data "citrixadc_vpnformssoaction" "tf_vpnformssoaction" {
 }
 `
 
+func TestAccVpnformssoaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnformssoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnformssoactionExist("citrixadc_vpnformssoaction.tf_vpnformssoaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnformssoaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnformssoactionExist("citrixadc_vpnformssoaction.tf_vpnformssoaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnformssoactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

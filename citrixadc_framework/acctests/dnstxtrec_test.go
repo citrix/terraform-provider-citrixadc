@@ -153,6 +153,27 @@ data "citrixadc_dnstxtrec" "dnstxtrec" {
 }
 `
 
+func TestAccDnstxtrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnstxtrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnstxtrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnstxtrecExist("citrixadc_dnstxtrec.dnstxtrec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnstxtrec_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnstxtrecExist("citrixadc_dnstxtrec.dnstxtrec", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnstxtrecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

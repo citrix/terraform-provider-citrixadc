@@ -217,6 +217,27 @@ func TestAccAuthenticationepaaction_import(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationepaaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationepaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationepaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_epaaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationepaaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_epaaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationepaactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

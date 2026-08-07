@@ -126,6 +126,27 @@ func TestAccInatparam_import(t *testing.T) {
 	})
 }
 
+func TestAccInatparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccInatparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInatparamExist("citrixadc_inatparam.tf_inatparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccInatparam_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckInatparamExist("citrixadc_inatparam.tf_inatparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccInatparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

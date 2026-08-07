@@ -127,6 +127,27 @@ const testAccRsskeytypeDataSource_basic = `
 	}
 `
 
+func TestAccRsskeytype_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRsskeytype_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRsskeytypeExist("citrixadc_rsskeytype.tf_rsskeytype", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRsskeytype_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRsskeytypeExist("citrixadc_rsskeytype.tf_rsskeytype", nil)),
+			},
+		},
+	})
+}
+
 func TestAccRsskeytypeDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

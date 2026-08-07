@@ -167,6 +167,27 @@ func TestAccResponderhtmlpage_import(t *testing.T) {
 	})
 }
 
+func TestAccResponderhtmlpage_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderhtmlpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccResponderhtmlpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderhtmlpageExist("citrixadc_responderhtmlpage.tf_responder_page", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccResponderhtmlpage_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckResponderhtmlpageExist("citrixadc_responderhtmlpage.tf_responder_page", nil)),
+			},
+		},
+	})
+}
+
 const testAccResponderhtmlpageDataSource_basic = `
 resource "citrixadc_systemfile" "tf_html_page_ds" {
     filename = "tf_html_page_ds.html"

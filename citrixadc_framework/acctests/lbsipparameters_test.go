@@ -158,6 +158,31 @@ const testAccLbsipparametersDataSource_basic = `
 	}
 `
 
+func TestAccLbsipparameters_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbsipparameters_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbsipparametersExist("citrixadc_lbsipparameters.tf_lbsipparameters", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbsipparameters_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbsipparametersExist("citrixadc_lbsipparameters.tf_lbsipparameters", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLbsipparametersDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

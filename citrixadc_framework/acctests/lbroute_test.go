@@ -122,6 +122,31 @@ func TestAccLbroute_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbroute_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbrouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbroute_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbrouteExist("citrixadc_lbroute.tf_lbroute", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbroute_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbrouteExist("citrixadc_lbroute.tf_lbroute", nil),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckLbrouteExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

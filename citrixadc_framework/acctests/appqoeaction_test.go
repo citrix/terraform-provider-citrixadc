@@ -73,6 +73,31 @@ func TestAccAppqoeaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppqoeaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppqoeactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppqoeaction_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppqoeactionExist("citrixadc_appqoeaction.tf_appqoeaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppqoeaction_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppqoeactionExist("citrixadc_appqoeaction.tf_appqoeaction", nil),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAppqoeactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

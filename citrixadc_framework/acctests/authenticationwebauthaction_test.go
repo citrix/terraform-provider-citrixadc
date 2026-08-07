@@ -186,6 +186,27 @@ func testAccCheckAuthenticationwebauthactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationwebauthaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationwebauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationwebauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthactionExist("citrixadc_authenticationwebauthaction.tf_webauthaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationwebauthaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthactionExist("citrixadc_authenticationwebauthaction.tf_webauthaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccAuthenticationwebauthactionDataSource_basic = `
 	resource "citrixadc_authenticationwebauthaction" "tf_webauthaction" {
 		name                       = "tf_webauthaction_ds"

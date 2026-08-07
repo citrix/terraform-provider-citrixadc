@@ -122,6 +122,27 @@ func TestAccLacp_import(t *testing.T) {
 	})
 }
 
+func TestAccLacp_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLacp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLacpExist("citrixadc_lacp.tf_lacp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLacp_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLacpExist("citrixadc_lacp.tf_lacp", nil)),
+			},
+		},
+	})
+}
+
 const testAccLacpDataSource_basic = `
 	resource "citrixadc_lacp" "tf_lacp_ds" {
 		syspriority = 40

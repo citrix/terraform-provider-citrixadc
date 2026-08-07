@@ -210,6 +210,27 @@ data "citrixadc_vpnurlaction" "foo" {
 }
 `
 
+func TestAccVpnurlaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnurlactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnurlaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlactionExist("citrixadc_vpnurlaction.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnurlaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnurlactionExist("citrixadc_vpnurlaction.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnurlactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

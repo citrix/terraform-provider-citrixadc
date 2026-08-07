@@ -509,3 +509,24 @@ func TestAccService_selfHealing(t *testing.T) {
 		},
 	})
 }
+
+func TestAccService_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccService_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServiceExist("citrixadc_service.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccService_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckServiceExist("citrixadc_service.foo", nil)),
+			},
+		},
+	})
+}

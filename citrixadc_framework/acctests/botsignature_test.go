@@ -165,6 +165,32 @@ func TestAccBotsignature_import(t *testing.T) {
 	})
 }
 
+func TestAccBotsignature_sdkv2StateUpgrade(t *testing.T) {
+	// No upgrade baseline possible: the released citrix/citrixadc 2.2.0 provider
+	// rejects this botsignature config at step 1 ("Invalid function argument" on
+	// the signature-file import), so SDK-v2 state is never established. The current
+	// provider is unaffected.
+	t.Skip("no 2.2.0 baseline: released 2.2.0 provider errors on botsignature step 1 (invalid function argument)")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotsignatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccBotsignature_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotsignatureExist("citrixadc_botsignature.tf_botsignature", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotsignature_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckBotsignatureExist("citrixadc_botsignature.tf_botsignature", nil)),
+			},
+		},
+	})
+}
+
 const testAccBotsignatureDataSource_basic = `
 	resource "citrixadc_systemfile" "tf_signature_ds" {
 		filename     = "bot_signature_ds.json"

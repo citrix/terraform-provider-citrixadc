@@ -175,6 +175,27 @@ func TestAccRewriteaction_import(t *testing.T) {
 	})
 }
 
+func TestAccRewriteaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRewriteactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRewriteaction_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteactionExist("citrixadc_rewriteaction.tf_rewrite_action", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRewriteaction_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRewriteactionExist("citrixadc_rewriteaction.tf_rewrite_action", nil)),
+			},
+		},
+	})
+}
+
 const testAccRewriteactionDataSource_basic = `
 resource "citrixadc_rewriteaction" "tf_rewrite_action_ds" {
     name = "tf_rewrite_action_ds"

@@ -174,6 +174,27 @@ func TestAccNd6_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccNd6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNd6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist("citrixadc_nd6.tf_nd6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNd6_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNd6Exist("citrixadc_nd6.tf_nd6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNd6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

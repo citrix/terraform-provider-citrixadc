@@ -118,6 +118,27 @@ func TestAccSslcacertgroup_import(t *testing.T) {
 	})
 }
 
+func TestAccSslcacertgroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslcacertgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslcacertgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertgroupExist("citrixadc_sslcacertgroup.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslcacertgroup_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslcacertgroupExist("citrixadc_sslcacertgroup.foo", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckSslcacertgroupExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

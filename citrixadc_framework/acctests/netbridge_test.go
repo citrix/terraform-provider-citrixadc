@@ -200,6 +200,27 @@ func TestAccNetbridge_import(t *testing.T) {
 	})
 }
 
+func TestAccNetbridge_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetbridgeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNetbridge_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridgeExist("citrixadc_netbridge.tf_netbridge", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNetbridge_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNetbridgeExist("citrixadc_netbridge.tf_netbridge", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNetbridgeDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -75,6 +75,27 @@ func TestAccLsnlogprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccLsnlogprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnlogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnlogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnlogprofileExist("citrixadc_lsnlogprofile.tf_lsnlogprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnlogprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnlogprofileExist("citrixadc_lsnlogprofile.tf_lsnlogprofile", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckLsnlogprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

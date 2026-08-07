@@ -112,6 +112,27 @@ func TestAccVpnparameter_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnparameter_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnparameterExist("citrixadc_vpnparameter.tf_vpnparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnparameter_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnparameterExist("citrixadc_vpnparameter.tf_vpnparameter", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckVpnparameterExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

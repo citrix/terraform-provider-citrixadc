@@ -78,6 +78,28 @@ func TestAccAdmparameter_import(t *testing.T) {
 	})
 }
 
+func TestAccAdmparameter_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("Autoconnect cannot be disabled for Citrix Internal NetScalers")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAdmparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAdmparameterExist("citrixadc_admparameter.tf_admparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAdmparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAdmparameterExist("citrixadc_admparameter.tf_admparameter", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAdmparameterExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

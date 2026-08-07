@@ -159,6 +159,27 @@ func TestAccSubscriberradiusinterface_import(t *testing.T) {
 	})
 }
 
+func TestAccSubscriberradiusinterface_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSubscriberradiusinterface_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSubscriberradiusinterfaceExist("citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSubscriberradiusinterface_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSubscriberradiusinterfaceExist("citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSubscriberradiusinterfaceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -186,6 +186,27 @@ func TestAccAppflowpolicylabel_import(t *testing.T) {
 	})
 }
 
+func TestAccAppflowpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppflowpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppflowpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicylabelExist("citrixadc_appflowpolicylabel.tf_appflowpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppflowpolicylabel_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppflowpolicylabelExist("citrixadc_appflowpolicylabel.tf_appflowpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppflowpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

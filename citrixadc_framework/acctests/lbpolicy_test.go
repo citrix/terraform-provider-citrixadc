@@ -188,6 +188,27 @@ const testAccLbpolicyDataSource_basic = `
 	}
 `
 
+func TestAccLbpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbpolicyExist("citrixadc_lbpolicy.tf_pol", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbpolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLbpolicyExist("citrixadc_lbpolicy.tf_pol", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLbpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

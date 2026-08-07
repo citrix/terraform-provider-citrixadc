@@ -222,6 +222,27 @@ func TestAccIcaaccessprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccIcaaccessprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIcaaccessprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccIcaaccessprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaaccessprofileExist("citrixadc_icaaccessprofile.tf_icaaccessprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccIcaaccessprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckIcaaccessprofileExist("citrixadc_icaaccessprofile.tf_icaaccessprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccIcaaccessprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

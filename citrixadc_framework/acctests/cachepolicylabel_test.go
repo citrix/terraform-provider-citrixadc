@@ -173,6 +173,27 @@ func testAccCheckCachepolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCachepolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCachepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCachepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabelExist("citrixadc_cachepolicylabel.tf_policylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCachepolicylabel_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCachepolicylabelExist("citrixadc_cachepolicylabel.tf_policylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCachepolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

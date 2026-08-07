@@ -141,6 +141,27 @@ resource "citrixadc_cspolicy" "foo_cspolicy" {
 }
 `
 
+func TestAccCspolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicyExist("citrixadc_cspolicy.foo_cspolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCspolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCspolicyExist("citrixadc_cspolicy.foo_cspolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCspolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

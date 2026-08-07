@@ -175,6 +175,27 @@ const testAccPolicymapDataSource_basic = `
 	}
 `
 
+func TestAccPolicymap_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicymapDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccPolicymap_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicymapExist("citrixadc_policymap.tf_policymap", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPolicymap_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckPolicymapExist("citrixadc_policymap.tf_policymap", nil)),
+			},
+		},
+	})
+}
+
 func TestAccPolicymapDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

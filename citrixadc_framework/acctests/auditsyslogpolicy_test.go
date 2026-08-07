@@ -55,6 +55,30 @@ func TestAccAuditsyslogpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditsyslogpolicy_sdkv2StateUpgrade(t *testing.T) {
+	if isCpxRun {
+		t.Skip("global binding causes issues with ADC version 12.0")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuditsyslogpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuditsyslogpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogpolicyExist("citrixadc_auditsyslogpolicy.tf_syslogpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuditsyslogpolicy_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuditsyslogpolicyExist("citrixadc_auditsyslogpolicy.tf_syslogpolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuditsyslogpolicy_import(t *testing.T) {
 	if isCpxRun {
 		t.Skip("global binding causes issues with ADC version 12.0")

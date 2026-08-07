@@ -175,6 +175,27 @@ func TestAccAppfwmultipartformcontenttype_import(t *testing.T) {
 	})
 }
 
+func TestAccAppfwmultipartformcontenttype_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwmultipartformcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwmultipartformcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwmultipartformcontenttypeExist("citrixadc_appfwmultipartformcontenttype.tf_multipartform", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwmultipartformcontenttype_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwmultipartformcontenttypeExist("citrixadc_appfwmultipartformcontenttype.tf_multipartform", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwmultipartformcontenttypeDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

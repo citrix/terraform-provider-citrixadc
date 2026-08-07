@@ -124,6 +124,27 @@ func TestAccNsvariable_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccNsvariable_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsvariableDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsvariable_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsvariableExist("citrixadc_nsvariable.tf_nsvariable", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsvariable_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsvariableExist("citrixadc_nsvariable.tf_nsvariable", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNsvariableExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

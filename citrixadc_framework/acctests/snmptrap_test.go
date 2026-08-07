@@ -223,6 +223,27 @@ func TestAccSnmptrap_import(t *testing.T) {
 	})
 }
 
+func TestAccSnmptrap_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmptrapDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmptrap_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmptrapExist("citrixadc_snmptrap.tf_snmptrap", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmptrap_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSnmptrapExist("citrixadc_snmptrap.tf_snmptrap", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSnmptrapDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

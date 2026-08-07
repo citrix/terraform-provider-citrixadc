@@ -175,6 +175,27 @@ const testAccLbactionDataSource_basic = `
 	}
 `
 
+func TestAccLbaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbactionExist("citrixadc_lbaction.tf_act", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLbactionExist("citrixadc_lbaction.tf_act", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLbactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

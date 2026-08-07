@@ -201,6 +201,28 @@ func TestAccUserprotocol_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccUserprotocol_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckUserprotocolDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccUserprotocol_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckUserprotocolExist("citrixadc_userprotocol.tf_userprotocol", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccUserprotocol_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckUserprotocolExist("citrixadc_userprotocol.tf_userprotocol", nil)),
+			},
+		},
+	})
+}
+
 func TestAccUserprotocolDataSource_basic(t *testing.T) {
 	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
 	resource.Test(t, resource.TestCase{

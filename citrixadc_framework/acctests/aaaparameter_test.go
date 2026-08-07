@@ -177,3 +177,24 @@ func TestAccAaaparameter_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaaparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaaparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaaparameterExist("citrixadc_aaaparameter.tf_aaaparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaaparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAaaparameterExist("citrixadc_aaaparameter.tf_aaaparameter", nil)),
+			},
+		},
+	})
+}

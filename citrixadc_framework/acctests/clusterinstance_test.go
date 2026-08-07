@@ -180,6 +180,27 @@ func testAccCheckClusterinstanceDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccClusterinstance_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusterinstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccClusterinstance_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusterinstanceExist("citrixadc_clusterinstance.tf_clusterinstance", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccClusterinstance_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckClusterinstanceExist("citrixadc_clusterinstance.tf_clusterinstance", nil)),
+			},
+		},
+	})
+}
+
 func TestAccClusterinstanceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

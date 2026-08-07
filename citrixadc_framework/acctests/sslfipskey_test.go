@@ -180,6 +180,30 @@ func TestAccSslfipskey_import(t *testing.T) {
 	})
 }
 
+func TestAccSslfipskey_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslfipskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslfipskey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslfipskeyExist("citrixadc_sslfipskey.demo_sslfipskey", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslfipskey_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslfipskeyExist("citrixadc_sslfipskey.demo_sslfipskey", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSslfipskeyDataSource_basic(t *testing.T) {
 	if adcTestbed != "STANDALONE_HSM" {
 		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)

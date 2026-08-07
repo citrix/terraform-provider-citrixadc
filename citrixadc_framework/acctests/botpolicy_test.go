@@ -118,6 +118,27 @@ func TestAccBotpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccBotpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccBotpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicyExist("citrixadc_botpolicy.tfAcc_botpolicy1", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccBotpolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckBotpolicyExist("citrixadc_botpolicy.tfAcc_botpolicy1", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckBotpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

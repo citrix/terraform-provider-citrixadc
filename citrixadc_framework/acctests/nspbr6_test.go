@@ -200,6 +200,27 @@ func TestAccNspbr6_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccNspbr6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspbr6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNspbr6_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbr6Exist("citrixadc_nspbr6.tf_nspbr6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNspbr6_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNspbr6Exist("citrixadc_nspbr6.tf_nspbr6", nil)),
+			},
+		},
+	})
+}
+
 const testAccNspbr6DataSource_basic = `
 
 	resource "citrixadc_iptunnel" "tf_iptunnel" {

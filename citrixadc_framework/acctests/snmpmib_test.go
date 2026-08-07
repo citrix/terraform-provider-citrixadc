@@ -150,6 +150,27 @@ func TestAccSnmpmibDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccSnmpmib_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmpmib_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpmibExist("citrixadc_snmpmib.tf_snmpmib", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmpmib_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSnmpmibExist("citrixadc_snmpmib.tf_snmpmib", nil)),
+			},
+		},
+	})
+}
+
 const testAccSnmpmibDataSource_basic = `
 
 resource "citrixadc_snmpmib" "tf_snmpmib_ds" {

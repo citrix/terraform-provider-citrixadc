@@ -128,6 +128,27 @@ data "citrixadc_contentinspectionparameter" "tf_contentinspectionparameter_datas
 }
 `
 
+func TestAccContentinspectionparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccContentinspectionparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionparameterExist("citrixadc_contentinspectionparameter.tf_contentinspectionparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccContentinspectionparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckContentinspectionparameterExist("citrixadc_contentinspectionparameter.tf_contentinspectionparameter", nil)),
+			},
+		},
+	})
+}
+
 func TestAccContentinspectionparameterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

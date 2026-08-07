@@ -60,6 +60,27 @@ func TestAccCsparameter_basic(t *testing.T) {
 	})
 }
 
+func TestAccCsparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsparameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCsparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsparameterExist("citrixadc_csparameter.tf_csparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCsparameterExist("citrixadc_csparameter.tf_csparameter", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckCsparameterExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

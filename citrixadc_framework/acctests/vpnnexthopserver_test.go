@@ -191,6 +191,27 @@ data "citrixadc_vpnnexthopserver" "tf_vpnnexthopserver" {
 }
 `
 
+func TestAccVpnnexthopserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnnexthopserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnnexthopserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnnexthopserverExist("citrixadc_vpnnexthopserver.tf_vpnnexthopserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnnexthopserver_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnnexthopserverExist("citrixadc_vpnnexthopserver.tf_vpnnexthopserver", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnnexthopserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

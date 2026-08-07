@@ -186,6 +186,27 @@ func testAccCheckVrid6Destroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVrid6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVrid6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVrid6_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVrid6Exist("citrixadc_vrid6.tf_vrid6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVrid6_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVrid6Exist("citrixadc_vrid6.tf_vrid6", nil)),
+			},
+		},
+	})
+}
+
 const testAccVrid6DataSource_basic = `
 	resource "citrixadc_vrid6" "tf_vrid6" {
 		vrid6_id             = 3

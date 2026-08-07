@@ -200,6 +200,27 @@ func testAccCheckVpnurlpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnurlpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnurlpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnurlpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlpolicyExist("citrixadc_vpnurlpolicy.tf_vpnurlpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnurlpolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnurlpolicyExist("citrixadc_vpnurlpolicy.tf_vpnurlpolicy", nil)),
+			},
+		},
+	})
+}
+
 const testAccVpnurlpolicyDataSource_basic = `
 
 	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {

@@ -207,6 +207,27 @@ func TestAccAuthenticationdfapolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationdfapolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationdfapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationdfapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist("citrixadc_authenticationdfapolicy.td_dfapolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationdfapolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist("citrixadc_authenticationdfapolicy.td_dfapolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationdfapolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

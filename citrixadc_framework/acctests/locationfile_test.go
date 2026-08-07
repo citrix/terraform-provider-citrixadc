@@ -175,6 +175,27 @@ const testAccLocationfileDataSource_basic = `
 	}
 `
 
+func TestAccLocationfile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLocationfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLocationfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfileExist("citrixadc_locationfile.tf_locationfile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLocationfile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLocationfileExist("citrixadc_locationfile.tf_locationfile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLocationfileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

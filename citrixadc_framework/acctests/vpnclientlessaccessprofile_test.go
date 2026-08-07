@@ -197,6 +197,27 @@ func TestAccVpnclientlessaccessprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccVpnclientlessaccessprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnclientlessaccessprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnclientlessaccessprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnclientlessaccessprofileExist("citrixadc_vpnclientlessaccessprofile.tf_vpnclientlessaccessprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnclientlessaccessprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnclientlessaccessprofileExist("citrixadc_vpnclientlessaccessprofile.tf_vpnclientlessaccessprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnclientlessaccessprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -193,6 +193,27 @@ func TestAccFeopolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccFeopolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFeopolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccFeopolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeopolicyExist("citrixadc_feopolicy.tf_feopolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccFeopolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckFeopolicyExist("citrixadc_feopolicy.tf_feopolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccFeopolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -145,6 +145,27 @@ const testAccSmppparamDataSource_basic = `
 	}
 `
 
+func TestAccSmppparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSmppparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSmppparamExist("citrixadc_smppparam.tf_smppparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSmppparam_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSmppparamExist("citrixadc_smppparam.tf_smppparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSmppparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

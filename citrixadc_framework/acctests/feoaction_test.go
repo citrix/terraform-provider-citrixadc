@@ -206,6 +206,27 @@ func TestAccFeoaction_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccFeoaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFeoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccFeoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoactionExist("citrixadc_feoaction.tf_feoaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccFeoaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckFeoactionExist("citrixadc_feoaction.tf_feoaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccFeoactionDataSource_basic = `
 
 resource "citrixadc_feoaction" "tf_feoaction_ds" {

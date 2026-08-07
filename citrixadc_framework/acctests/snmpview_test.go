@@ -203,3 +203,24 @@ func TestAccSnmpview_selfHealing(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSnmpview_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmpviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmpview_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil)),
+			},
+		},
+	})
+}

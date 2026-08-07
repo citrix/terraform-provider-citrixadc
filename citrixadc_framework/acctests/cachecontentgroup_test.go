@@ -77,6 +77,27 @@ func TestAccCachecontentgroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccCachecontentgroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCachecontentgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCachecontentgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachecontentgroupExist("citrixadc_cachecontentgroup.tf_cachecontentgroup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCachecontentgroup_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCachecontentgroupExist("citrixadc_cachecontentgroup.tf_cachecontentgroup", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCachecontentgroup_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_cachecontentgroup.tf_cachecontentgroup"
 	resource.Test(t, resource.TestCase{

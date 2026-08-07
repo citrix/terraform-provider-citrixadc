@@ -300,6 +300,31 @@ func TestAccNstcpparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccNstcpparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNstcpparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNstcpparam_zero_values,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpparamExist("citrixadc_nstcpparam.tf_tcpparam", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNstcpparam_zero_values,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpparamExist("citrixadc_nstcpparam.tf_tcpparam", nil),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNstcpparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -156,6 +156,27 @@ func TestAccSpilloverpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccSpilloverpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSpilloverpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSpilloverpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloverpolicyExist("citrixadc_spilloverpolicy.tf_spilloverpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSpilloverpolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSpilloverpolicyExist("citrixadc_spilloverpolicy.tf_spilloverpolicy", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckSpilloverpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

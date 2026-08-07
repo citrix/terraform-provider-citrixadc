@@ -277,6 +277,27 @@ func TestAccNtpserver_import(t *testing.T) {
 	})
 }
 
+func TestAccNtpserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNtpserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNtpserver_basic_ip,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNtpserverExist("citrixadc_ntpserver.tf_ntpserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNtpserver_basic_ip,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNtpserverExist("citrixadc_ntpserver.tf_ntpserver", nil)),
+			},
+		},
+	})
+}
+
 const testAccNtpserverDataSource_basic = `
 
 resource "citrixadc_ntpserver" "tf_ntpserver_ds" {

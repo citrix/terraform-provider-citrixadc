@@ -144,6 +144,27 @@ const testAccFeoparameterDataSource_basic = `
 	}
 `
 
+func TestAccFeoparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccFeoparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoparameterExist("citrixadc_feoparameter.tf_feoparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccFeoparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckFeoparameterExist("citrixadc_feoparameter.tf_feoparameter", nil)),
+			},
+		},
+	})
+}
+
 func TestAccFeoparameterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

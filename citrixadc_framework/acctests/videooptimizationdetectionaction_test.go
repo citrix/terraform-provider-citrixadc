@@ -191,6 +191,27 @@ func testAccCheckVideooptimizationdetectionactionDestroy(s *terraform.State) err
 	return nil
 }
 
+func TestAccVideooptimizationdetectionaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVideooptimizationdetectionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVideooptimizationdetectionaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionactionExist("citrixadc_videooptimizationdetectionaction.tf_detectionaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVideooptimizationdetectionaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionactionExist("citrixadc_videooptimizationdetectionaction.tf_detectionaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVideooptimizationdetectionactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

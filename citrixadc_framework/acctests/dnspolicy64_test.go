@@ -181,6 +181,27 @@ func TestAccDnspolicy64_import(t *testing.T) {
 	})
 }
 
+func TestAccDnspolicy64_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnspolicy64Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnspolicy64_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicy64Exist("citrixadc_dnspolicy64.dnspolicy64", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnspolicy64_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnspolicy64Exist("citrixadc_dnspolicy64.dnspolicy64", nil)),
+			},
+		},
+	})
+}
+
 const testAccDnspolicy64DataSource_basic = `
 
 resource "citrixadc_dnspolicy64" "dnspolicy64" {

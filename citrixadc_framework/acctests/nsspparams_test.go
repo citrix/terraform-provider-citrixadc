@@ -148,6 +148,27 @@ func TestAccNsspparams_import(t *testing.T) {
 	})
 }
 
+func TestAccNsspparams_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsspparamsDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsspparams_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsspparamsExist("citrixadc_nsspparams.tf_nsspparams", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsspparams_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsspparamsExist("citrixadc_nsspparams.tf_nsspparams", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNsspparamsDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

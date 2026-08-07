@@ -173,6 +173,27 @@ func TestAccLocationfile6_import(t *testing.T) {
 	})
 }
 
+func TestAccLocationfile6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLocationfile6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLocationfile6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfile6Exist("citrixadc_locationfile6.tf_locationfile6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLocationfile6_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLocationfile6Exist("citrixadc_locationfile6.tf_locationfile6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLocationfile6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

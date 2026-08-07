@@ -180,6 +180,27 @@ func testAccCheckCmppolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCmppolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCmppolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCmppolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabelExist("citrixadc_cmppolicylabel.tf_cmppolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCmppolicylabel_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCmppolicylabelExist("citrixadc_cmppolicylabel.tf_cmppolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCmppolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

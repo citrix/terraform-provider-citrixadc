@@ -193,6 +193,28 @@ func TestAccNslicenseserverDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccNslicenseserver_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("Skipping test because this needs changes for LAS")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNslicenseserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNslicenseserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseserverExist("citrixadc_nslicenseserver.tf_licenseserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNslicenseserver_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNslicenseserverExist("citrixadc_nslicenseserver.tf_licenseserver", nil)),
+			},
+		},
+	})
+}
+
 const testAccNslicenseserverDataSource_basic = `
 
 resource "citrixadc_nslicenseserver" "tf_licenseserver_ds" {

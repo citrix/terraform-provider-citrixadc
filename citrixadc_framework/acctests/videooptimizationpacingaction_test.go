@@ -192,6 +192,27 @@ func TestAccVideooptimizationpacingaction_import(t *testing.T) {
 	})
 }
 
+func TestAccVideooptimizationpacingaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVideooptimizationpacingactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVideooptimizationpacingaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingactionExist("citrixadc_videooptimizationpacingaction.tf_pacingaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVideooptimizationpacingaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingactionExist("citrixadc_videooptimizationpacingaction.tf_pacingaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVideooptimizationpacingactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

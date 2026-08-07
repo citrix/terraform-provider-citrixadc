@@ -69,6 +69,27 @@ func TestAccAuthenticationcitrixauthaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationcitrixauthaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationcitrixauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationcitrixauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcitrixauthactionExist("citrixadc_authenticationcitrixauthaction.tf_citrixauthaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationcitrixauthaction_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationcitrixauthactionExist("citrixadc_authenticationcitrixauthaction.tf_citrixauthaction", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationcitrixauthactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -155,6 +155,27 @@ func TestAccDnsnaptrrec_import(t *testing.T) {
 	})
 }
 
+func TestAccDnsnaptrrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsnaptrrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnsnaptrrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsnaptrrecExist("citrixadc_dnsnaptrrec.dnsnaptrrec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnsnaptrrec_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnsnaptrrecExist("citrixadc_dnsnaptrrec.dnsnaptrrec", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnsnaptrrecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

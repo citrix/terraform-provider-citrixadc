@@ -186,6 +186,27 @@ func TestAccForwardingsession_import(t *testing.T) {
 	})
 }
 
+func TestAccForwardingsession_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckForwardingsessionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccForwardingsession_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckForwardingsessionExist("citrixadc_forwardingsession.tf_forwarding", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccForwardingsession_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckForwardingsessionExist("citrixadc_forwardingsession.tf_forwarding", nil)),
+			},
+		},
+	})
+}
+
 const testAccForwardingsessionDataSource_basic = `
 
 resource "citrixadc_forwardingsession" "tf_forwarding_ds" {

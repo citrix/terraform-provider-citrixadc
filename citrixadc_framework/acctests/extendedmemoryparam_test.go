@@ -126,6 +126,27 @@ const testAccExtendedmemoryparamDataSource_basic = `
 	}
 `
 
+func TestAccExtendedmemoryparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccExtendedmemoryparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckExtendedmemoryparamExist("citrixadc_extendedmemoryparam.tf_extendedmemoryparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccExtendedmemoryparam_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckExtendedmemoryparamExist("citrixadc_extendedmemoryparam.tf_extendedmemoryparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccExtendedmemoryparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

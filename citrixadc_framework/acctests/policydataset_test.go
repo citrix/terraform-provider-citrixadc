@@ -171,6 +171,27 @@ func TestAccPolicydataset_import(t *testing.T) {
 	})
 }
 
+func TestAccPolicydataset_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicydatasetDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccPolicydataset_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccPolicydataset_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil)),
+			},
+		},
+	})
+}
+
 func TestAccPolicydatasetDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

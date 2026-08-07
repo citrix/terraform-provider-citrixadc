@@ -102,6 +102,27 @@ func TestAccStreamidentifier_basic(t *testing.T) {
 	})
 }
 
+func TestAccStreamidentifier_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckStreamidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccStreamidentifier_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamidentifierExist("citrixadc_streamidentifier.tf_streamidentifier", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccStreamidentifier_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckStreamidentifierExist("citrixadc_streamidentifier.tf_streamidentifier", nil)),
+			},
+		},
+	})
+}
+
 func TestAccStreamidentifier_import(t *testing.T) {
 	const resAddr = "citrixadc_streamidentifier.tf_streamidentifier"
 	resource.Test(t, resource.TestCase{

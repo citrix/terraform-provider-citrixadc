@@ -120,6 +120,31 @@ func TestAccNstcpbufparam_import(t *testing.T) {
 	})
 }
 
+func TestAccNstcpbufparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNstcpbufparam_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpbufparamExist("citrixadc_nstcpbufparam.tf_nstcpbufparam", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNstcpbufparam_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpbufparamExist("citrixadc_nstcpbufparam.tf_nstcpbufparam", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNstcpbufparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -65,6 +65,28 @@ func TestAccNspbrs_import(t *testing.T) {
 	})
 }
 
+func TestAccNspbrs_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNspbrs_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbrsExist("citrixadc_nspbrs_apply.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNspbrs_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNspbrsExist("citrixadc_nspbrs_apply.foo", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNspbrsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

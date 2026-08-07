@@ -107,6 +107,30 @@ resource "citrixadc_interface" "tf_interface" {
 }
 `
 
+func TestAccInterface_sdkv2StateUpgrade(t *testing.T) {
+	if isCpxRun {
+		t.Skip("skipping test CPX has different interface numbering")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccInterface_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfaceExist("citrixadc_interface.tf_interface", nil, "1/1")),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccInterface_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckInterfaceExist("citrixadc_interface.tf_interface", nil, "1/1")),
+			},
+		},
+	})
+}
+
 func TestAccInterfaceDataSource_basic(t *testing.T) {
 	if isCpxRun {
 		t.Skip("skipping test CPX has different interface numbering")

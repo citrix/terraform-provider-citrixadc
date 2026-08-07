@@ -185,6 +185,27 @@ func TestAccLsnclient_import(t *testing.T) {
 	})
 }
 
+func TestAccLsnclient_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnclientDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnclient_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclientExist("citrixadc_lsnclient.tf_lsnclient", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnclient_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnclientExist("citrixadc_lsnclient.tf_lsnclient", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLsnclientDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

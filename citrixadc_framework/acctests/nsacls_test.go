@@ -263,6 +263,27 @@ func testMapEquals(m1 map[string]interface{}, m2 map[string]interface{}) bool {
 	return eq
 }
 
+func TestAccNsacls_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsaclsDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsacls_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsaclsExist("citrixadc_nsacls.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsacls_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsaclsExist("citrixadc_nsacls.foo", nil)),
+			},
+		},
+	})
+}
+
 const testAccNsacls_basic = `
 
 

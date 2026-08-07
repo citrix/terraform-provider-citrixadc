@@ -189,6 +189,27 @@ func TestAccTransformpolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccTransformpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTransformpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTransformpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformpolicyExist("citrixadc_transformpolicy.tf_trans_policy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTransformpolicy_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTransformpolicyExist("citrixadc_transformpolicy.tf_trans_policy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccTransformpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

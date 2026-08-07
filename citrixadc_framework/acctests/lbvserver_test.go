@@ -946,3 +946,24 @@ func TestAccLbvserver_import(t *testing.T) {
 		},
 	})
 }
+
+func TestAccLbvserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserverExist("citrixadc_lbvserver.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbvserver_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLbvserverExist("citrixadc_lbvserver.foo", nil)),
+			},
+		},
+	})
+}

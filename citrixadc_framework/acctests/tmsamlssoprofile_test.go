@@ -167,6 +167,27 @@ func TestAccTmsamlssoprofile_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccTmsamlssoprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmsamlssoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTmsamlssoprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsamlssoprofileExist("citrixadc_tmsamlssoprofile.tf_tmsamlssoprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmsamlssoprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTmsamlssoprofileExist("citrixadc_tmsamlssoprofile.tf_tmsamlssoprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccTmsamlssoprofile_import(t *testing.T) {
 	const resAddr = "citrixadc_tmsamlssoprofile.tf_tmsamlssoprofile"
 	resource.Test(t, resource.TestCase{

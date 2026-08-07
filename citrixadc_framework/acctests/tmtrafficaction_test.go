@@ -187,6 +187,27 @@ func TestAccTmtrafficaction_import(t *testing.T) {
 	})
 }
 
+func TestAccTmtrafficaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmtrafficactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTmtrafficaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficactionExist("citrixadc_tmtrafficaction.tf_tmtrafficaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmtrafficaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTmtrafficactionExist("citrixadc_tmtrafficaction.tf_tmtrafficaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccTmtrafficactionDataSource_basic = `
 
 

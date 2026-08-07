@@ -182,6 +182,27 @@ data "citrixadc_vlan" "tf_vlan" {
 }
 `
 
+func TestAccVlan_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVlan_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlanExist("citrixadc_vlan.tf_vlan", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVlan_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVlanExist("citrixadc_vlan.tf_vlan", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVlanDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

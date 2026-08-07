@@ -267,6 +267,27 @@ func TestAccSslocspresponder_import(t *testing.T) {
 	})
 }
 
+func TestAccSslocspresponder_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslocspresponderDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslocspresponder_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslocspresponderExist("citrixadc_sslocspresponder.tf_sslocspresponder", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslocspresponder_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslocspresponderExist("citrixadc_sslocspresponder.tf_sslocspresponder", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSslocspresponderDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

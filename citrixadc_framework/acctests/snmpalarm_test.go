@@ -132,6 +132,27 @@ func testAccCheckSnmpalarmExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccSnmpalarm_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmpalarm_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpalarmExist("citrixadc_snmpalarm.tf_snmpalarm", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmpalarm_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSnmpalarmExist("citrixadc_snmpalarm.tf_snmpalarm", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSnmpalarmDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

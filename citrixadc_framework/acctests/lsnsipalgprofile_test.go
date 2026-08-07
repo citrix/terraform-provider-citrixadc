@@ -194,6 +194,27 @@ func TestAccLsnsipalgprofile_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccLsnsipalgprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnsipalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnsipalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnsipalgprofileExist("citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnsipalgprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnsipalgprofileExist("citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile", nil)),
+			},
+		},
+	})
+}
+
 const testAccLsnsipalgprofileDataSource_basic = `
 
 resource "citrixadc_lsnsipalgprofile" "tf_lsnsipalgprofile_ds" {

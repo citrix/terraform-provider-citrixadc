@@ -170,6 +170,27 @@ func TestAccDnsaddrec_import(t *testing.T) {
 	})
 }
 
+func TestAccDnsaddrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsaddrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnsaddrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsaddrecExist("citrixadc_dnsaddrec.dnsaddrec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnsaddrec_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnsaddrecExist("citrixadc_dnsaddrec.dnsaddrec", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnsaddrecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

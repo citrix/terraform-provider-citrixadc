@@ -193,6 +193,27 @@ data "citrixadc_lsnrtspalgprofile" "tf_lsnrtspalgprofile_ds" {
 }
 `
 
+func TestAccLsnrtspalgprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnrtspalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsnrtspalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnrtspalgprofileExist("citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsnrtspalgprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnrtspalgprofileExist("citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLsnrtspalgprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

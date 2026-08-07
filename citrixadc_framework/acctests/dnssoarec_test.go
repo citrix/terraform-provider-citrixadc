@@ -149,6 +149,27 @@ func TestAccDnssoarec_import(t *testing.T) {
 	})
 }
 
+func TestAccDnssoarec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnssoarecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnssoarec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssoarecExist("citrixadc_dnssoarec.tf_dnssoarec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnssoarec_basic_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnssoarecExist("citrixadc_dnssoarec.tf_dnssoarec", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckDnssoarecExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

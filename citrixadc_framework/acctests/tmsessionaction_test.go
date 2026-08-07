@@ -187,6 +187,27 @@ func TestAccTmsessionaction_import(t *testing.T) {
 	})
 }
 
+func TestAccTmsessionaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTmsessionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionactionExist("citrixadc_tmsessionaction.tf_tmsessionaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmsessionaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTmsessionactionExist("citrixadc_tmsessionaction.tf_tmsessionaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccTmsessionactionDataSource_basic = `
 
 

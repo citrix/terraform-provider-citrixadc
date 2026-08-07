@@ -130,6 +130,27 @@ func TestAccAppqoeparameter_import(t *testing.T) {
 	})
 }
 
+func TestAccAppqoeparameter_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppqoeparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoeparameterExist("citrixadc_appqoeparameter.tf_appqoeparameter", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppqoeparameter_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppqoeparameterExist("citrixadc_appqoeparameter.tf_appqoeparameter", nil)),
+			},
+		},
+	})
+}
+
 const testAccAppqoeparameterDataSource_basic = `
 
 	resource "citrixadc_appqoeparameter" "tf_appqoeparameter" {

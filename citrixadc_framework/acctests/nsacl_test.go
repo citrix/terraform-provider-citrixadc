@@ -341,6 +341,27 @@ func TestAccNsacl_import(t *testing.T) {
 	})
 }
 
+func TestAccNsacl_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsaclDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNsacl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsaclExist("citrixadc_nsacl.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNsacl_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsaclExist("citrixadc_nsacl.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNsaclDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

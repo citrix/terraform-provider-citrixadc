@@ -209,6 +209,27 @@ func TestAccVpnvserver_import(t *testing.T) {
 	})
 }
 
+func TestAccVpnvserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnvserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserverExist("citrixadc_vpnvserver.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnvserver_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnvserverExist("citrixadc_vpnvserver.foo", nil)),
+			},
+		},
+	})
+}
+
 const testAccVpnvserverDataSource_basic = `
 	resource "citrixadc_ipset" "tf_ipset" {
 		name = "tf_test_ipset"

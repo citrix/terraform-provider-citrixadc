@@ -200,6 +200,28 @@ func TestAccSubscriberprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccSubscriberprofile_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSubscriberprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSubscriberprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSubscriberprofileExist("citrixadc_subscriberprofile.tf_subscriberprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSubscriberprofile_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSubscriberprofileExist("citrixadc_subscriberprofile.tf_subscriberprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSubscriberprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

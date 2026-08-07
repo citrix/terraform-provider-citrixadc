@@ -113,6 +113,27 @@ func TestAccAppfwlearningsettings_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwlearningsettings_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwlearningsettings_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwlearningsettingsExist("citrixadc_appfwlearningsettings.tf_learningsetting", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwlearningsettings_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwlearningsettingsExist("citrixadc_appfwlearningsettings.tf_learningsetting", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwlearningsettings_import(t *testing.T) {
 	const resAddr = "citrixadc_appfwlearningsettings.tf_learningsetting"
 	resource.Test(t, resource.TestCase{

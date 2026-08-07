@@ -191,6 +191,27 @@ func TestAccVpnpcoipprofile_import(t *testing.T) {
 	})
 }
 
+func TestAccVpnpcoipprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnpcoipprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnpcoipprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnpcoipprofileExist("citrixadc_vpnpcoipprofile.tf_vpnpcoipprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnpcoipprofile_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnpcoipprofileExist("citrixadc_vpnpcoipprofile.tf_vpnpcoipprofile", nil)),
+			},
+		},
+	})
+}
+
 func TestAccVpnpcoipprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

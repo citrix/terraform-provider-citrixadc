@@ -175,6 +175,27 @@ func TestAccAaagroup_import(t *testing.T) {
 	})
 }
 
+func TestAccAaagroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaagroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAaagroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroupExist("citrixadc_aaagroup.tf_aaagroup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAaagroup_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAaagroupExist("citrixadc_aaagroup.tf_aaagroup", nil)),
+			},
+		},
+	})
+}
+
 const testAccAaagroup_DataSource_basic = `
 
 	resource "citrixadc_aaagroup" "tf_aaagroup" {

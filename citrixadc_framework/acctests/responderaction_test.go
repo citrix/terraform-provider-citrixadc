@@ -290,6 +290,27 @@ func TestAccResponderaction_import(t *testing.T) {
 	})
 }
 
+func TestAccResponderaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccResponderaction_target_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccResponderaction_target_step1,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccResponderactionDataSource_basic = `
 resource "citrixadc_responderaction" "tfaction_ds" {
   name    = "tfaction_ds"

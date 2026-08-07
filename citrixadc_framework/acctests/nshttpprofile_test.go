@@ -239,6 +239,30 @@ func TestAccNshttpprofile_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccNshttpprofile_sdkv2StateUpgrade(t *testing.T) {
+	if !nshttpprofileSupportsHttp2smallwndtimeout(t) {
+		t.Skip("ADC firmware does not support http2smallwndtimeout (CVE-2026-13474 param); skipping nshttpprofile test")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNshttpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccNshttpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNshttpprofileExist("citrixadc_nshttpprofile.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccNshttpprofile_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckNshttpprofileExist("citrixadc_nshttpprofile.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNshttpprofile_import(t *testing.T) {
 	if !nshttpprofileSupportsHttp2smallwndtimeout(t) {
 		t.Skip("ADC firmware does not support http2smallwndtimeout (CVE-2026-13474 param); skipping nshttpprofile test")

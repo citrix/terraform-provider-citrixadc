@@ -174,6 +174,27 @@ func TestAccLbmetrictableDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccLbmetrictable_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbmetrictableDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLbmetrictable_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmetrictableExist("citrixadc_lbmetrictable.tfAcc_lbmetrictable", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLbmetrictable_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckLbmetrictableExist("citrixadc_lbmetrictable.tfAcc_lbmetrictable", nil)),
+			},
+		},
+	})
+}
+
 const testAccLbmetrictableDataSource_basic = `
 
 resource "citrixadc_lbmetrictable" "tf_lbmetrictable_ds" {

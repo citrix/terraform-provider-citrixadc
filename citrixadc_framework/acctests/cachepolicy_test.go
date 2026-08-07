@@ -187,6 +187,27 @@ func TestAccCachepolicy_import(t *testing.T) {
 	})
 }
 
+func TestAccCachepolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCachepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCachepolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicyExist("citrixadc_cachepolicy.tf_cachepolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCachepolicy_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCachepolicyExist("citrixadc_cachepolicy.tf_cachepolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCachepolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

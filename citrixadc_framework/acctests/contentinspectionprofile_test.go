@@ -73,6 +73,31 @@ func TestAccContentinspectionprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccContentinspectionprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckContentinspectionprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccContentinspectionprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionprofileExist("citrixadc_contentinspectionprofile.tf_contentinspectionprofile", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccContentinspectionprofile_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionprofileExist("citrixadc_contentinspectionprofile.tf_contentinspectionprofile", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccContentinspectionprofile_import(t *testing.T) {
 	const resAddr = "citrixadc_contentinspectionprofile.tf_contentinspectionprofile"
 	resource.Test(t, resource.TestCase{

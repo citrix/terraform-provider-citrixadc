@@ -81,6 +81,27 @@ func TestAccCsvserver_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccCsvserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCsvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCsvserver_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.foo", nil)),
+			},
+		},
+	})
+}
+
 const testAccCsvserverDataSource_basic = `
 
 resource "citrixadc_csvserver" "foo" {

@@ -54,6 +54,27 @@ func TestAccAppfwxmlerrorpage_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppfwxmlerrorpage_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwxmlerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAppfwxmlerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlerrorpageExist("citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAppfwxmlerrorpage_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwxmlerrorpageExist("citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwxmlerrorpage_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage"
 	resource.Test(t, resource.TestCase{

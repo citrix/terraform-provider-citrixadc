@@ -180,6 +180,27 @@ func TestAccVpnintranetapplication_import(t *testing.T) {
 	})
 }
 
+func TestAccVpnintranetapplication_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnintranetapplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccVpnintranetapplication_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnintranetapplicationExist("citrixadc_vpnintranetapplication.tf_vpnintranetapplication", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccVpnintranetapplication_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnintranetapplicationExist("citrixadc_vpnintranetapplication.tf_vpnintranetapplication", nil)),
+			},
+		},
+	})
+}
+
 const testAccVpnintranetapplicationDataSource_basic = `
 
 	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {

@@ -136,6 +136,27 @@ func TestAccDnszone_import(t *testing.T) {
 	})
 }
 
+func TestAccDnszone_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnszoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnszone_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnszoneExist("citrixadc_dnszone.dnszone", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnszone_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnszoneExist("citrixadc_dnszone.dnszone", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckDnszoneExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

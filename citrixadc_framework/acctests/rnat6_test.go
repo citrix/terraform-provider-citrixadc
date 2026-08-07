@@ -137,6 +137,27 @@ data "citrixadc_rnat6" "test" {
 }
 `
 
+func TestAccRnat6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccRnat6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat6Exist("citrixadc_rnat6.tf_rnat6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccRnat6_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckRnat6Exist("citrixadc_rnat6.tf_rnat6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccRnat6_import(t *testing.T) {
 	const resAddr = "citrixadc_rnat6.tf_rnat6"
 	resource.Test(t, resource.TestCase{

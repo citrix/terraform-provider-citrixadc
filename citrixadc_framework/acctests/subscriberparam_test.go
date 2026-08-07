@@ -148,6 +148,27 @@ func TestAccSubscriberparam_import(t *testing.T) {
 	})
 }
 
+func TestAccSubscriberparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSubscriberparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSubscriberparamExist("citrixadc_subscriberparam.tf_subscriberparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSubscriberparam_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckSubscriberparamExist("citrixadc_subscriberparam.tf_subscriberparam", nil)),
+			},
+		},
+	})
+}
+
 func TestAccSubscriberparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

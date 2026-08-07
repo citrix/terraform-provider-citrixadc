@@ -181,6 +181,27 @@ func TestAccCrvserver_import(t *testing.T) {
 	})
 }
 
+func TestAccCrvserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccCrvserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserverExist("citrixadc_crvserver.crvserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccCrvserver_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckCrvserverExist("citrixadc_crvserver.crvserver", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCrvserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

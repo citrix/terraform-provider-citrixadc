@@ -83,6 +83,27 @@ func TestAccAuthenticationloginschemapolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationloginschemapolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationloginschemapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuthenticationloginschemapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemapolicyExist("citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuthenticationloginschemapolicy_add,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemapolicyExist("citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy", nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationloginschemapolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

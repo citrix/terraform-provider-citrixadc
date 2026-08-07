@@ -203,6 +203,27 @@ func TestAccTmformssoaction_import(t *testing.T) {
 	})
 }
 
+func TestAccTmformssoaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccTmformssoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmformssoactionExist("citrixadc_tmformssoaction.tf_tmformssoaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccTmformssoaction_basic,
+				Check:                    resource.ComposeTestCheckFunc(testAccCheckTmformssoactionExist("citrixadc_tmformssoaction.tf_tmformssoaction", nil)),
+			},
+		},
+	})
+}
+
 func TestAccTmformssoactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

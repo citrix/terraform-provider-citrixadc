@@ -193,6 +193,31 @@ func testAccCheckAuditnslogactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuditnslogaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuditnslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccAuditnslogaction_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditnslogactionExist("citrixadc_auditnslogaction.tf_auditnslogaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccAuditnslogaction_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditnslogactionExist("citrixadc_auditnslogaction.tf_auditnslogaction", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAuditnslogactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
