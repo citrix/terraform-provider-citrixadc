@@ -117,7 +117,9 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: replace only when set in config, so the SDKv2 "" -> Framework null
+					// state representation change does not force recreate on provider upgrade.
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Passphrase for reading the encrypted public/private DNS keys",
 			},
@@ -135,7 +137,9 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed: true,
 				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: replace only when the version is actually set in config, so the
+					// auto-populated default never forces destroy+recreate on provider upgrade.
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Increment this version to signal a password_wo update.",
 			},
