@@ -151,7 +151,9 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed: true,
 				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: replace only when the version is actually set in config, so the
+					// auto-populated default never forces destroy+recreate on provider upgrade.
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Increment this version to signal a sitepassword_wo update.",
 			},
