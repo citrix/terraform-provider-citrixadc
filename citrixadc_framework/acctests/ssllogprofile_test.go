@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -89,6 +90,34 @@ func TestAccSsllogprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccSsllogprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ssllogprofile.demo_ssllogprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSsllogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSsllogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsllogprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ssllogprofile.Type(), "demo_ssllogprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSsllogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsllogprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckSsllogprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -151,6 +180,25 @@ func testAccCheckSsllogprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSsllogprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_ssllogprofile.demo_ssllogprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSsllogprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSsllogprofile_basic},
+			{
+				Config:                  testAccSsllogprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccSsllogprofileDataSource_basic(t *testing.T) {

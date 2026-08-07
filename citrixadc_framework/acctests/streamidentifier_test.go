@@ -102,6 +102,53 @@ func TestAccStreamidentifier_basic(t *testing.T) {
 	})
 }
 
+func TestAccStreamidentifier_import(t *testing.T) {
+	const resAddr = "citrixadc_streamidentifier.tf_streamidentifier"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckStreamidentifierDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccStreamidentifier_basic},
+			{
+				Config:                  testAccStreamidentifier_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccStreamidentifier_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_streamidentifier.tf_streamidentifier"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckStreamidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamidentifier_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamidentifierExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Streamidentifier.Type(), "my_streamidentifier"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccStreamidentifier_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamidentifierExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckStreamidentifierExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

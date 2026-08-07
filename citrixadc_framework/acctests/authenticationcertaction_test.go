@@ -150,6 +150,53 @@ func testAccCheckAuthenticationcertactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationcertaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationcertaction.tf_certaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcertactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcertaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcertactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationcertaction.Type(), "tf_certaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationcertaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcertactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationcertaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationcertaction.tf_certaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcertactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationcertaction_add},
+			{
+				Config:                  testAccAuthenticationcertaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationcertactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

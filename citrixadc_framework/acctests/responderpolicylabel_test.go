@@ -125,6 +125,53 @@ data "citrixadc_responderpolicylabel" "responder_policylabel_ds" {
 }
 `
 
+func TestAccResponderpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicylabel.responder_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Responderpolicylabel.Type(), "tf_responder_policylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccResponderpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicylabel.responder_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderpolicylabel_basic},
+			{
+				Config:                  testAccResponderpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccResponderpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -135,6 +135,53 @@ func testAccCheckNspartitionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNspartition_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nspartition.tf_nspartition"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspartition_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartitionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nspartition.Type(), "tf_nspartition"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNspartition_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartitionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNspartition_import(t *testing.T) {
+	const resAddr = "citrixadc_nspartition.tf_nspartition"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartitionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNspartition_add},
+			{
+				Config:                  testAccNspartition_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"minbandwidth"},
+			},
+		},
+	})
+}
+
 const testAccNspartitionDataSource_basic = `
 	resource "citrixadc_nspartition" "tf_nspartition_ds" {
 		partitionname = "tf_test_partition"

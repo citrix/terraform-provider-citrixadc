@@ -98,6 +98,25 @@ func testAccCheckContentinspectionparameterExist(n string, id *string) resource.
 	}
 }
 
+func TestAccContentinspectionparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionparameter.tf_contentinspectionparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectionparameter_basic},
+			{
+				Config:                  testAccContentinspectionparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccContentinspectionparameterDataSource_basic = `
 
 resource "citrixadc_contentinspectionparameter" "tf_contentinspectionparameter" {

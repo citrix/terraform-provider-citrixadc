@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -65,6 +66,53 @@ func TestAccBotpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_botpolicy.tfAcc_botpolicy1", "rule", "true"),
 					resource.TestCheckResourceAttr("citrixadc_botpolicy.tfAcc_botpolicy1", "comment", "CHANGED COMMENT"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBotpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botpolicy.tfAcc_botpolicy1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Botpolicy.Type(), "tfAcc_botpolicy1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccBotpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_botpolicy.tfAcc_botpolicy1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotpolicy_add},
+			{
+				Config:                  testAccBotpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -110,6 +111,53 @@ func TestAccNsicapprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "reqtimeout", "30"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsicapprofile.nsicapprofile_data", "reqtimeoutaction", "RESET"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNsicapprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsicapprofile.tf_nsicapprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsicapprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsicapprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsicapprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsicapprofile.Type(), "tf_nsicapprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsicapprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsicapprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsicapprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_nsicapprofile.tf_nsicapprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsicapprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsicapprofile_add},
+			{
+				Config:                  testAccNsicapprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

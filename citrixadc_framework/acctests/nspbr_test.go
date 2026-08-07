@@ -135,6 +135,34 @@ func testAccCheckNspbrDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNspbr_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nspbr.tf_nspbr"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspbrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspbr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbrExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nspbr.Type(), "my_nspbr"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNspbr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbrExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccNspbrDataSource_basic = `
 	resource "citrixadc_nspbr" "tf_nspbr_ds" {
 		name     = "tf_test_nspbr_ds"
@@ -152,6 +180,25 @@ const testAccNspbrDataSource_basic = `
 		name = citrixadc_nspbr.tf_nspbr_ds.name
 	}
 `
+
+func TestAccNspbr_import(t *testing.T) {
+	const resAddr = "citrixadc_nspbr.tf_nspbr"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspbrDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNspbr_basic},
+			{
+				Config:                  testAccNspbr_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccNspbrDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

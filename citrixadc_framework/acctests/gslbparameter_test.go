@@ -113,6 +113,25 @@ func testAccCheckGslbparameterExist(n string, id *string) resource.TestCheckFunc
 	}
 }
 
+func TestAccGslbparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbparameter.tf_gslbparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbparameter_basic},
+			{
+				Config:                  testAccGslbparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccGslbparameterDataSource_basic = `
 
 	resource "citrixadc_gslbparameter" "tf_gslbparameter" {

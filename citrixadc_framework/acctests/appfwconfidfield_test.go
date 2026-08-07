@@ -170,6 +170,25 @@ func testAccCheckAppfwconfidfieldDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwconfidfield_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwconfidfield.tf_confidfield1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwconfidfieldDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwconfidfield_add},
+			{
+				Config:                  testAccAppfwconfidfield_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAppfwconfidfieldDataSource_basic = `
 	resource "citrixadc_appfwconfidfield" "tf_confidfield1" {
 		fieldname = "tf_confidfield"

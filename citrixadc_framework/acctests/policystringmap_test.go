@@ -126,6 +126,53 @@ func testAccCheckPolicystringmapDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccPolicystringmap_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policystringmap.tf_policystringmap"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicystringmapDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicystringmap_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicystringmapExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policystringmap.Type(), "tf_policystringmap"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicystringmap_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicystringmapExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPolicystringmap_import(t *testing.T) {
+	const resAddr = "citrixadc_policystringmap.tf_policystringmap"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicystringmapDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicystringmap_basic_step1},
+			{
+				Config:                  testAccPolicystringmap_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccPolicystringmapDataSource_basic = `
 	resource "citrixadc_policystringmap" "tf_policystringmap_ds" {
 		name = "tf_policystringmap_ds"

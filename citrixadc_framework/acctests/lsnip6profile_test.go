@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -77,6 +78,53 @@ func TestAccLsnip6profile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lsnip6profile.tf_lsnaip6profile", "type", "DS-Lite"),
 					resource.TestCheckResourceAttr("citrixadc_lsnip6profile.tf_lsnaip6profile", "network6", "1001::/64"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLsnip6profile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnip6profile.tf_lsnaip6profile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnip6profileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnip6profile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnip6profileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnip6profile.Type(), "my_lsn_ip6profile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnip6profile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnip6profileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnip6profile_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnip6profile.tf_lsnaip6profile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnip6profileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnip6profile_basic},
+			{
+				Config:                  testAccLsnip6profile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

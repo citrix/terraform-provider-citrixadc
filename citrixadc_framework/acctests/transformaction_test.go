@@ -112,6 +112,25 @@ func TestAccTransformaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccTransformaction_import(t *testing.T) {
+	const resAddr = "citrixadc_transformaction.tf_trans_action"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTransformaction_basic_step1},
+			{
+				Config:                  testAccTransformaction_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckTransformactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -174,6 +193,34 @@ func testAccCheckTransformactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccTransformaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_transformaction.tf_trans_action"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Transformaction.Type(), "tf_trans_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTransformaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformactionExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 const testAccTransformactionDataSource_basic = `

@@ -109,6 +109,53 @@ func TestAccSpilloverpolicyDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccSpilloverpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_spilloverpolicy.tf_spilloverpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSpilloverpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpilloverpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloverpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Spilloverpolicy.Type(), "tf_spilloverpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSpilloverpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloverpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSpilloverpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_spilloverpolicy.tf_spilloverpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSpilloverpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSpilloverpolicy_add},
+			{
+				Config:                  testAccSpilloverpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSpilloverpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

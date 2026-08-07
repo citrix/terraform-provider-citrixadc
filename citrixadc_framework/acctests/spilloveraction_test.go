@@ -78,6 +78,53 @@ func TestAccSpilloveractionDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccSpilloveraction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_spilloveraction.tf_spilloveraction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSpilloveractionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpilloveraction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloveractionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Spilloveraction.Type(), "my_spilloveraction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSpilloveraction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloveractionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSpilloveraction_import(t *testing.T) {
+	const resAddr = "citrixadc_spilloveraction.tf_spilloveraction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSpilloveractionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSpilloveraction_basic},
+			{
+				Config:                  testAccSpilloveraction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSpilloveractionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

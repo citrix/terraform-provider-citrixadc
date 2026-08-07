@@ -52,6 +52,53 @@ func TestAccSystemcmdpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystemcmdpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemcmdpolicy.tf_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemcmdpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemcmdpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemcmdpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Systemcmdpolicy.Type(), "tf_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemcmdpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemcmdpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSystemcmdpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_systemcmdpolicy.tf_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemcmdpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemcmdpolicy_basic_step1},
+			{
+				Config:                  testAccSystemcmdpolicy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSystemcmdpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

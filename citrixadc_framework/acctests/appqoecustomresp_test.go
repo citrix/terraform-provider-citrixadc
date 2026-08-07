@@ -162,6 +162,53 @@ func testAccCheckAppqoecustomrespDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppqoecustomresp_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appqoecustomresp.tf_appqoecustomresp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoecustomrespDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoecustomresp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appqoecustomresp.Type(), "my_appqoecustomresp"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppqoecustomresp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppqoecustomresp_import(t *testing.T) {
+	const resAddr = "citrixadc_appqoecustomresp.tf_appqoecustomresp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoecustomrespDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppqoecustomresp_basic},
+			{
+				Config:                  testAccAppqoecustomresp_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"src"},
+			},
+		},
+	})
+}
+
 func TestAccAppqoecustomrespDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

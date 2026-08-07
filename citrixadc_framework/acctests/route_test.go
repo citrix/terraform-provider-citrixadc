@@ -169,6 +169,25 @@ func testAccCheckRouteDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccRoute_import(t *testing.T) {
+	const resAddr = "citrixadc_route.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRoute_add},
+			{
+				Config:                  testAccRoute_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_default_route", "original_default_gateway"},
+			},
+		},
+	})
+}
+
 const testAccRouteDataSource_basic = `
 	resource "citrixadc_nsip" "nsip" {
 		ipaddress = "100.0.1.100"

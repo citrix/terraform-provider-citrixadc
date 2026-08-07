@@ -69,6 +69,53 @@ func TestAccOnlinkipv6prefix_basic(t *testing.T) {
 	})
 }
 
+func TestAccOnlinkipv6prefix_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckOnlinkipv6prefixDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOnlinkipv6prefix_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckOnlinkipv6prefixExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Onlinkipv6prefix.Type(), "8000::/64"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccOnlinkipv6prefix_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckOnlinkipv6prefixExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccOnlinkipv6prefix_import(t *testing.T) {
+	const resAddr = "citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckOnlinkipv6prefixDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccOnlinkipv6prefix_basic},
+			{
+				Config:                  testAccOnlinkipv6prefix_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckOnlinkipv6prefixExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

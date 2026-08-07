@@ -268,6 +268,53 @@ const testAccServerDataSource_basic = `
 	}
 `
 
+func TestAccServer_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_server.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServer_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServerExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Server.Type(), "test_server"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccServer_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServerExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccServer_import(t *testing.T) {
+	const resAddr = "citrixadc_server.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServerDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccServer_basic},
+			{
+				Config:                  testAccServer_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccServerDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

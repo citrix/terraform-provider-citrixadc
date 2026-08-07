@@ -128,6 +128,53 @@ func testAccCheckNsappflowcollectorDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsappflowcollector_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsappflowcollector.tf_appflowcollector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsappflowcollectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsappflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsappflowcollectorExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsappflowcollector.Type(), "tf_appflowcollector"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsappflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsappflowcollectorExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsappflowcollector_import(t *testing.T) {
+	const resAddr = "citrixadc_nsappflowcollector.tf_appflowcollector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsappflowcollectorDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsappflowcollector_basic},
+			{
+				Config:                  testAccNsappflowcollector_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNsappflowcollectorDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

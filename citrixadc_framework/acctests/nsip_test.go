@@ -322,6 +322,25 @@ func testAccCheckNsipDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsip_import(t *testing.T) {
+	const resAddr = "citrixadc_nsip.tf_test_nsip"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsipDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsip_basic_step1},
+			{
+				Config:                  testAccNsip_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNsipDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

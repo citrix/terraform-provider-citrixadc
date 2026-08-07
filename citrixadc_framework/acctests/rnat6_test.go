@@ -136,3 +136,22 @@ data "citrixadc_rnat6" "test" {
 	name = citrixadc_rnat6.test.name
 }
 `
+
+func TestAccRnat6_import(t *testing.T) {
+	const resAddr = "citrixadc_rnat6.tf_rnat6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccRnat6_basic},
+			{
+				Config:                  testAccRnat6_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

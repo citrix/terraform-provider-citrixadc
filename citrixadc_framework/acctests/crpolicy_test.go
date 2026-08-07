@@ -69,6 +69,53 @@ func TestAccCrpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccCrpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crpolicy.crpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Crpolicy.Type(), "crpolicy1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCrpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_crpolicy.crpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrpolicy_add},
+			{
+				Config:                  testAccCrpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCrpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

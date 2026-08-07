@@ -193,6 +193,53 @@ func TestAccHanodeLocalDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccHanode_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_hanode.local_node"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHanodeLocal_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckHanodeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Hanode.Type(), "0"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccHanodeLocal_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckHanodeExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccHanode_import(t *testing.T) {
+	const resAddr = "citrixadc_hanode.local_node"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccHanodeLocal_basic},
+			{
+				Config:                  testAccHanodeLocal_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"masterstatetime"},
+			},
+		},
+	})
+}
+
 func testAccCheckHanodeDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()

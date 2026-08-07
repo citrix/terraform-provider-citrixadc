@@ -49,6 +49,55 @@ func TestAccSystembackup_basic(t *testing.T) {
 	})
 }
 
+func TestAccSystembackup_selfHealing(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_systembackup.tf_systembackup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystembackupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystembackup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystembackupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Systembackup.Type(), "new.tgz"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystembackup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystembackupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSystembackup_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_systembackup.tf_systembackup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystembackupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystembackup_basic},
+			{
+				Config:                  testAccSystembackup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSystembackupExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -179,6 +179,53 @@ func testAccCheckSsldtlsprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSsldtlsprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ssldtlsprofile.tf_ssldtlsprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSsldtlsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSsldtlsprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsldtlsprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ssldtlsprofile.Type(), "tf_ssldtlsprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSsldtlsprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSsldtlsprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSsldtlsprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_ssldtlsprofile.tf_ssldtlsprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSsldtlsprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSsldtlsprofile_basic},
+			{
+				Config:                  testAccSsldtlsprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSsldtlsprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

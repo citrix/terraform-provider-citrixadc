@@ -111,6 +111,25 @@ func testAccCheckAppqoeparameterExist(n string, id *string) resource.TestCheckFu
 	}
 }
 
+func TestAccAppqoeparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_appqoeparameter.tf_appqoeparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAppqoeparameter_basic},
+			{
+				Config:                  testAccAppqoeparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAppqoeparameterDataSource_basic = `
 
 	resource "citrixadc_appqoeparameter" "tf_appqoeparameter" {

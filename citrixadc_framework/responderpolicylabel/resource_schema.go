@@ -33,14 +33,20 @@ func (r *ResponderpolicylabelResource) Schema(ctx context.Context, req resource.
 			},
 			"comment": schema.StringAttribute{
 				Optional: true,
-				// SDK v2 had comment as Optional+Computed+ForceNew. NITRO has no
-				// server-side default for comment and omits it from the GET response
-				// when empty, so an Optional+Computed attribute the server neither
-				// defaults nor echoes stays UNKNOWN after apply ("still indicated an
-				// unknown value"). Keep Optional-only (unset -> known null; when set it
-				// is echoed by GET and read into state). RequiresReplace preserves the
-				// SDK v2 ForceNew contract.
+				Computed: true,
+				// SDK v2 had comment as Optional+Computed+ForceNew and stored "" when
+				// unset. Keep Optional+Computed to preserve that contract: an upgraded
+				// SDK v2 state carries comment="", so making comment Optional-only would
+				// force a spurious RequiresReplace (config-null vs state-"") that
+				// destroys the parent and drops any child binding. NITRO omits comment
+				// from GET when empty, so SetAttrFromGet resolves the absent value to ""
+				// (a known value) to avoid "still indicated an unknown value" after
+				// apply. UseStateForUnknown (before RequiresReplace) preserves the
+				// Computed value across plans instead of churning it to unknown, exactly
+				// as done for policylabeltype below; RequiresReplace preserves the SDK v2
+				// ForceNew contract.
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Any comments to preserve information about this responder policy label.",
@@ -101,11 +107,15 @@ func responderpolicylabelSetAttrFromGet(ctx context.Context, data *Responderpoli
 	tflog.Debug(ctx, "In responderpolicylabelSetAttrFromGet Function")
 
 	// Convert API response to model.
-	// Pattern 7: NITRO omits "comment" from the GET response when it is empty, so
-	// only overwrite the model value when the field is actually present. Otherwise
-	// preserve the plan/state value to avoid a perpetual diff / nulled user input.
+	// comment is Optional+Computed (see schema). NITRO omits "comment" from the GET
+	// response when it is empty, so when the field is absent resolve it to "" (the
+	// value SDK v2 stored and a known value) rather than leaving the Computed
+	// planned value unknown, which would otherwise fail with "still indicated an
+	// unknown value" after a fresh apply where comment is unset.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringValue("")
 	}
 	// labelname is the user-facing key. Once a rename has happened (via newname), the
 	// live object name (tracked by data.Id) diverges from the configured labelname,

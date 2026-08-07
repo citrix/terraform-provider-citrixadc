@@ -127,6 +127,59 @@ func testAccCheckSslfipskeyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSslfipskey_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslfipskey.demo_sslfipskey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslfipskeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslfipskey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslfipskeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslfipskey.Type(), "f1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslfipskey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslfipskeyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSslfipskey_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_HSM" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslfipskey.demo_sslfipskey"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslfipskeyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslfipskey_basic},
+			{
+				Config:                  testAccSslfipskey_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSslfipskeyDataSource_basic(t *testing.T) {
 	if adcTestbed != "STANDALONE_HSM" {
 		t.Skipf("ADC testbed is %s. Expected STANDALONE_HSM.", adcTestbed)

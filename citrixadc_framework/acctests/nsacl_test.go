@@ -276,6 +276,34 @@ func TestAccNsacl_dataset(t *testing.T) {
 	})
 }
 
+func TestAccNsacl_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsacl.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsaclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsacl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsaclExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsacl.Type(), "test_acl"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsacl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsaclExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccNsaclDataSource_basic = `
 
 resource "citrixadc_nsacl" "foo" {
@@ -293,6 +321,25 @@ data "citrixadc_nsacl" "foo" {
   depends_on = [citrixadc_nsacl.foo]
 }
 `
+
+func TestAccNsacl_import(t *testing.T) {
+	const resAddr = "citrixadc_nsacl.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsaclDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsacl_basic},
+			{
+				Config:                  testAccNsacl_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccNsaclDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

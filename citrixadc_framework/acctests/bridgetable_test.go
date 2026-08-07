@@ -189,6 +189,25 @@ func testAccCheckBridgetableDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccBridgetable_import(t *testing.T) {
+	const resAddr = "citrixadc_bridgetable.tf_bridgetable"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgetableDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBridgetable_basic},
+			{
+				Config:                  testAccBridgetable_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bridgeage"},
+			},
+		},
+	})
+}
+
 func TestAccBridgetableDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

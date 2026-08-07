@@ -112,6 +112,25 @@ func testAccCheckFeoparameterExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccFeoparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_feoparameter.tf_feoparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccFeoparameter_basic},
+			{
+				Config:                  testAccFeoparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccFeoparameterDataSource_basic = `
 	resource "citrixadc_feoparameter" "tf_feoparameter" {
 		jpegqualitypercent = 10

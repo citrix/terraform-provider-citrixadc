@@ -157,6 +157,53 @@ func TestAccPolicyhttpcallout_basic(t *testing.T) {
 	})
 }
 
+func TestAccPolicyhttpcallout_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policyhttpcallout.tf_policyhttpcallout"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyhttpcalloutDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyhttpcallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyhttpcalloutExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policyhttpcallout.Type(), "tf_policyhttpcallout"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicyhttpcallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyhttpcalloutExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPolicyhttpcallout_import(t *testing.T) {
+	const resAddr = "citrixadc_policyhttpcallout.tf_policyhttpcallout"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyhttpcalloutDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicyhttpcallout_basic},
+			{
+				Config:                  testAccPolicyhttpcallout_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"fullreqexpr", "ipaddress", "urlstemexpr"},
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyhttpcalloutExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -176,6 +176,53 @@ func testAccCheckSnmptrapDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSnmptrap_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_snmptrap.tf_snmptrap"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmptrapDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmptrap_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmptrapExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Snmptrap.Type(), "specific", []string{"trapdestination:192.168.2.2", "version:V2"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSnmptrap_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmptrapExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSnmptrap_import(t *testing.T) {
+	const resAddr = "citrixadc_snmptrap.tf_snmptrap"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmptrapDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmptrap_basic},
+			{
+				Config:                  testAccSnmptrap_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSnmptrapDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

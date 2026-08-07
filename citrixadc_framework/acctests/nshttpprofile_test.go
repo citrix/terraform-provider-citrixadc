@@ -210,6 +210,57 @@ func testAccCheckNshttpprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNshttpprofile_selfHealing(t *testing.T) {
+	t.Skip("ADC firmware does not support http2smallwndtimeout (CVE-2026-13474 param); skipping nshttpprofile test")
+	const resAddr = "citrixadc_nshttpprofile.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNshttpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNshttpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNshttpprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nshttpprofile.Type(), "tf_httpprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNshttpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNshttpprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNshttpprofile_import(t *testing.T) {
+	if !nshttpprofileSupportsHttp2smallwndtimeout(t) {
+		t.Skip("ADC firmware does not support http2smallwndtimeout (CVE-2026-13474 param); skipping nshttpprofile test")
+	}
+	const resAddr = "citrixadc_nshttpprofile.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNshttpprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNshttpprofile_add},
+			{
+				Config:                  testAccNshttpprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNshttpprofileDataSource_basic = `
 
 	resource "citrixadc_nshttpprofile" "tf_nshttpprofile_ds" {

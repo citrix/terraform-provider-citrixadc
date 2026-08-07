@@ -105,6 +105,34 @@ func TestAccNat64_basic(t *testing.T) {
 	})
 }
 
+func TestAccNat64_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nat64.tf_nat64"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNat64Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNat64_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNat64Exist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nat64.Type(), "tf_nat64"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNat64_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNat64Exist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNat64Exist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -167,6 +195,25 @@ func testAccCheckNat64Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNat64_import(t *testing.T) {
+	const resAddr = "citrixadc_nat64.tf_nat64"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNat64Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNat64_add},
+			{
+				Config:                  testAccNat64_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccNat64DataSource_basic = `

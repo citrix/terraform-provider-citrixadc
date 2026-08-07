@@ -130,6 +130,53 @@ func testAccCheckSslcertfileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSslcertfile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcertfile.tf_sslcertfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertfileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Sslcertfile.Type(), "", []string{"name:tf_sslcertfile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcertfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertfileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSslcertfile_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcertfile.tf_sslcertfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertfileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcertfile_basic},
+			{
+				Config:                  testAccSslcertfile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"src"},
+			},
+		},
+	})
+}
+
 func TestAccSslcertfileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

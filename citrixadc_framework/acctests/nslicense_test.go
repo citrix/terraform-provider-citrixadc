@@ -42,6 +42,29 @@ func TestAccNslicense_basic(t *testing.T) {
 	})
 }
 
+func TestAccNslicense_import(t *testing.T) {
+	t.Skip("ssh does not work correctly with CPX")
+	if isCpxRun {
+		t.Skip("ssh does not work correctly with CPX")
+	}
+	const resAddr = "citrixadc_nslicense.tf_license"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNslicense_basic},
+			{
+				Config:                  testAccNslicense_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNslicenseExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

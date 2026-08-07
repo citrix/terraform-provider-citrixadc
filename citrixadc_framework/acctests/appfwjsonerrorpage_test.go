@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -123,6 +124,53 @@ const testAccAppfwjsonerrorpageDataSource_basic = `
 		depends_on = [citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage]
 	}
 `
+
+func TestAccAppfwjsonerrorpage_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwjsonerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwjsonerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsonerrorpageExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwjsonerrorpage.Type(), "tf_appfwjsonerrorpage"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwjsonerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsonerrorpageExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwjsonerrorpage_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwjsonerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwjsonerrorpage_basic},
+			{
+				Config:                  testAccAppfwjsonerrorpage_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
+}
 
 func TestAccAppfwjsonerrorpageDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

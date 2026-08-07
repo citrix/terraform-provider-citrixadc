@@ -109,6 +109,25 @@ func testAccCheckL2paramExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccL2param_import(t *testing.T) {
+	const resAddr = "citrixadc_l2param.tf_l2param"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccL2param_basic},
+			{
+				Config:                  testAccL2param_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccL2paramDataSource_basic = `
 	resource "citrixadc_l2param" "tf_l2param" {
 		mbfpeermacupdate   = 20

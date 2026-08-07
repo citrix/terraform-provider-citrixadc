@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -72,6 +73,34 @@ func TestAccVideooptimizationpacingpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_videooptimizationpacingpolicy.tf_policy", "name", "tf_policy"),
 					resource.TestCheckResourceAttr("citrixadc_videooptimizationpacingpolicy.tf_policy", "rule", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationpacingpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingpolicy.tf_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationpacingpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Videooptimizationpacingpolicy.Type(), "tf_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationpacingpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicyExist(resAddr, nil)),
 			},
 		},
 	})
@@ -139,6 +168,25 @@ func testAccCheckVideooptimizationpacingpolicyDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+func TestAccVideooptimizationpacingpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingpolicy.tf_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVideooptimizationpacingpolicy_add},
+			{
+				Config:                  testAccVideooptimizationpacingpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccVideooptimizationpacingpolicyDataSource_basic = `

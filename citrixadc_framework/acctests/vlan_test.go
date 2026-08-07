@@ -124,6 +124,53 @@ func testAccCheckVlanDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVlan_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vlan.tf_vlan"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlanExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vlan.Type(), "40"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVlan_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlanExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVlan_import(t *testing.T) {
+	const resAddr = "citrixadc_vlan.tf_vlan"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlanDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVlan_basic_step1},
+			{
+				Config:                  testAccVlan_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccVlanDataSource_basic = `
 resource "citrixadc_vlan" "tf_vlan" {
     vlanid = 40

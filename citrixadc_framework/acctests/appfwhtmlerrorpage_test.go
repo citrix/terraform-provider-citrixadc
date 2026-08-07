@@ -113,6 +113,53 @@ func testAccCheckAppfwhtmlerrorpageDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwhtmlerrorpage_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwhtmlerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwhtmlerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwhtmlerrorpageExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwhtmlerrorpage.Type(), "tf_appfwhtmlerrorpage"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwhtmlerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwhtmlerrorpageExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwhtmlerrorpage_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwhtmlerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwhtmlerrorpage_basic},
+			{
+				Config:                  testAccAppfwhtmlerrorpage_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
+}
+
 const testAccAppfwhtmlerrorpageDataSource_basic = `
 	resource "citrixadc_appfwhtmlerrorpage" "tf_appfwhtmlerrorpage" {
 		name       = "tf_appfwhtmlerrorpage"

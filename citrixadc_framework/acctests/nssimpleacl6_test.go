@@ -55,6 +55,34 @@ func TestAccNssimpleacl6_basic(t *testing.T) {
 	})
 }
 
+func TestAccNssimpleacl6_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nssimpleacl6.tf_nssimpleacl6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNssimpleacl6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNssimpleacl6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNssimpleacl6Exist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nssimpleacl6.Type(), "tf_nssimpleacl6"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNssimpleacl6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNssimpleacl6Exist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNssimpleacl6Exist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -117,6 +145,25 @@ func testAccCheckNssimpleacl6Destroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNssimpleacl6_import(t *testing.T) {
+	const resAddr = "citrixadc_nssimpleacl6.tf_nssimpleacl6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNssimpleacl6Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNssimpleacl6_basic},
+			{
+				Config:                  testAccNssimpleacl6_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ttl"},
+			},
+		},
+	})
 }
 
 func TestAccNssimpleacl6DataSource_basic(t *testing.T) {

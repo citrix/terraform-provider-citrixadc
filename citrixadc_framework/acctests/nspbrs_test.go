@@ -45,6 +45,26 @@ func TestAccNspbrs_basic(t *testing.T) {
 	})
 }
 
+func TestAccNspbrs_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_nspbrs_apply.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNspbrs_basic},
+			{
+				Config:                  testAccNspbrs_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNspbrsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

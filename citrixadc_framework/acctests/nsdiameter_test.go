@@ -131,6 +131,25 @@ func testAccCheckNsdiameterDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsdiameter_import(t *testing.T) {
+	const resAddr = "citrixadc_nsdiameter.tf_nsdiameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsdiameter_add},
+			{
+				Config:                  testAccNsdiameter_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"serverclosepropagation"},
+			},
+		},
+	})
+}
+
 const testAccNsdiameterDataSource_basic = `
 	resource "citrixadc_nsdiameter" "tf_nsdiameter_ds" {
 		identity               = "citrixadc.com"

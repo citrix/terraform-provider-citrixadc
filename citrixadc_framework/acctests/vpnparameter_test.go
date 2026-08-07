@@ -150,6 +150,25 @@ func testAccCheckVpnparameterExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccVpnparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnparameter.tf_vpnparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnparameter_add},
+			{
+				Config:                  testAccVpnparameter_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccVpnparameterDataSource_basic = `
 
 	resource "citrixadc_vpnparameter" "tf_vpnparameter" {

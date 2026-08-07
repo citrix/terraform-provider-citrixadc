@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -125,6 +126,53 @@ func testAccCheckAppfwmultipartformcontenttypeDestroy(s *terraform.State) error 
 	}
 
 	return nil
+}
+
+func TestAccAppfwmultipartformcontenttype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwmultipartformcontenttype.tf_multipartform"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwmultipartformcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwmultipartformcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwmultipartformcontenttypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwmultipartformcontenttype.Type(), "date/tf_multipartform"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwmultipartformcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwmultipartformcontenttypeExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwmultipartformcontenttype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwmultipartformcontenttype.tf_multipartform"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwmultipartformcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwmultipartformcontenttype_basic},
+			{
+				Config:                  testAccAppfwmultipartformcontenttype_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccAppfwmultipartformcontenttypeDataSource_basic(t *testing.T) {

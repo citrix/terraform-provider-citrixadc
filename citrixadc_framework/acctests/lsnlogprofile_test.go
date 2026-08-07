@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -136,6 +137,53 @@ func testAccCheckLsnlogprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLsnlogprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnlogprofile.tf_lsnlogprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnlogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnlogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnlogprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnlogprofile.Type(), "my_lsn_logprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnlogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnlogprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnlogprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnlogprofile.tf_lsnlogprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnlogprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnlogprofile_basic},
+			{
+				Config:                  testAccLsnlogprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccLsnlogprofileDataSource_basic = `

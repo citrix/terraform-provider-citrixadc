@@ -139,3 +139,25 @@ data "citrixadc_interface" "tf_interface" {
     interface_id = citrixadc_interface.tf_interface.interface_id
 }
 `
+
+func TestAccInterface_import(t *testing.T) {
+	if isCpxRun {
+		t.Skip("skipping test CPX has different interface numbering")
+	}
+	const resAddr = "citrixadc_interface.tf_interface"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccInterface_basic_step1},
+			{
+				Config:                  testAccInterface_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

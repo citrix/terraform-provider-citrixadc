@@ -124,6 +124,26 @@ func TestAccNscapacityDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccNscapacity_import(t *testing.T) {
+	t.Skip("Requires License Server Configuration.")
+	const resAddr = "citrixadc_nscapacity.tf_capacity"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNscapacity_basic_step1},
+			{
+				Config:                  testAccNscapacity_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNscapacity_sdkv2StateUpgrade(t *testing.T) {
 	t.Skip("Requires License Server Configuration.")
 	resource.Test(t, resource.TestCase{

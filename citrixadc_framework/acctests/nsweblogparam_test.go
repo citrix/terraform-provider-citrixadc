@@ -116,6 +116,25 @@ func TestAccNsweblogparamDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsweblogparam_import(t *testing.T) {
+	const resAddr = "citrixadc_nsweblogparam.tf_nsweblofparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsweblogparam_add},
+			{
+				Config:                  testAccNsweblogparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNsweblogparamDataSource_basic = `
 data "citrixadc_nsweblogparam" "test" {
 }

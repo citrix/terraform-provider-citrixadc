@@ -107,6 +107,25 @@ func testAccCheckInatparamExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccInatparam_import(t *testing.T) {
+	const resAddr = "citrixadc_inatparam.tf_inatparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccInatparam_basic},
+			{
+				Config:                  testAccInatparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccInatparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

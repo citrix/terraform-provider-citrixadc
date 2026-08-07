@@ -82,6 +82,34 @@ func TestAccTmsessionpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccTmsessionpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionpolicy.tf_tmsessionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmsessionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Tmsessionpolicy.Type(), "my_tmsession_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmsessionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckTmsessionpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -144,6 +172,25 @@ func testAccCheckTmsessionpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccTmsessionpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionpolicy.tf_tmsessionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmsessionpolicy_basic},
+			{
+				Config:                  testAccTmsessionpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccTmsessionpolicyDataSource_basic = `

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -142,6 +143,53 @@ func testAccCheckContentinspectionpolicylabelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccContentinspectionpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Contentinspectionpolicylabel.Type(), "my_ci_policylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccContentinspectionpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectionpolicylabel_basic},
+			{
+				Config:                  testAccContentinspectionpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccContentinspectionpolicylabelDataSource_basic(t *testing.T) {

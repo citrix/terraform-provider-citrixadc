@@ -113,6 +113,25 @@ func testAccCheckLocationDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLocation_import(t *testing.T) {
+	const resAddr = "citrixadc_location.tf_location"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLocationDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLocation_basic},
+			{
+				Config:                  testAccLocation_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"preferredlocation"},
+			},
+		},
+	})
+}
+
 const testAccLocationDataSource_basic = `
 
 	resource "citrixadc_location" "tf_location" {

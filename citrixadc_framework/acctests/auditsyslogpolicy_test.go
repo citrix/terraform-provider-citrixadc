@@ -55,6 +55,28 @@ func TestAccAuditsyslogpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditsyslogpolicy_import(t *testing.T) {
+	if isCpxRun {
+		t.Skip("global binding causes issues with ADC version 12.0")
+	}
+	const resAddr = "citrixadc_auditsyslogpolicy.tf_syslogpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuditsyslogpolicy_basic_step1},
+			{
+				Config:                  testAccAuditsyslogpolicy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuditsyslogpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -191,6 +213,37 @@ resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy" {
 }
 
 `
+
+func TestAccAuditsyslogpolicy_selfHealing(t *testing.T) {
+	if isCpxRun {
+		t.Skip("global binding causes issues with ADC version 12.0")
+	}
+	const resAddr = "citrixadc_auditsyslogpolicy.tf_syslogpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Auditsyslogpolicy.Type(), "tf_auditsyslogpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuditsyslogpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
 
 func TestAccAuditsyslogpolicyDataSource_basic(t *testing.T) {
 	if isCpxRun {

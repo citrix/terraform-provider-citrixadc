@@ -199,6 +199,25 @@ func testAccCheckDnsparameterExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccDnsparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsparameter.tf_dnsparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsparameter_basic_step1},
+			{
+				Config:                  testAccDnsparameter_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccDnsparameterDataSource_basic = `
 resource "citrixadc_dnsparameter" "tf_dnsparameter" {
   cacheecszeroprefix         = "DISABLED"

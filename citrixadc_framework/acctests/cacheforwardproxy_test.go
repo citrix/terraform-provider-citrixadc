@@ -64,6 +64,53 @@ func TestAccCacheforwardproxy_basic(t *testing.T) {
 	})
 }
 
+func TestAccCacheforwardproxy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cacheforwardproxy.tf_cacheforwardproxy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheforwardproxyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCacheforwardproxy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheforwardproxyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Cacheforwardproxy.Type(), "10.222.74.185", []string{"port:5000"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCacheforwardproxy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheforwardproxyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCacheforwardproxy_import(t *testing.T) {
+	const resAddr = "citrixadc_cacheforwardproxy.tf_cacheforwardproxy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheforwardproxyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCacheforwardproxy_basic},
+			{
+				Config:                  testAccCacheforwardproxy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCacheforwardproxyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

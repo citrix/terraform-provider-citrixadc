@@ -132,6 +132,53 @@ func testAccCheckAuthorizationpolicyExist(n string, id *string) resource.TestChe
 	}
 }
 
+func TestAccAuthorizationpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicy.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authorizationpolicy.Type(), "tp-authorize-1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthorizationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthorizationpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicy.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthorizationpolicy_add},
+			{
+				Config:                  testAccAuthorizationpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthorizationpolicyDestroy(s *terraform.State) error {
 	// Use the shared utility function to get a configured client
 	client, err := testAccGetFrameworkClient()

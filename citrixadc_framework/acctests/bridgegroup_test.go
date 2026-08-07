@@ -144,6 +144,53 @@ func testAccCheckBridgegroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccBridgegroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_bridgegroup.tf_bridgegroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBridgegroup_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgegroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Bridgegroup.Type(), "2"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBridgegroup_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBridgegroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccBridgegroup_import(t *testing.T) {
+	const resAddr = "citrixadc_bridgegroup.tf_bridgegroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBridgegroup_add},
+			{
+				Config:                  testAccBridgegroup_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccBridgegroupDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

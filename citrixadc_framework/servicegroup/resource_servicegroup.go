@@ -2,6 +2,7 @@ package servicegroup
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -167,6 +168,23 @@ func (r *ServicegroupResource) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
+// servicegroupPayloadHasMutableFields reports whether the servicegroup SET payload
+// carries any attribute beyond the resource name key. NITRO rejects a name-only SET
+// with errorcode 1094 ("Too few arguments"), so the base update is skipped in that
+// case (mirrors lbvserverPayloadHasMutableFields and the SDK v2 hasChange gating).
+func servicegroupPayloadHasMutableFields(payload *basic.Servicegroup) bool {
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return true // fail open: let NITRO validate the payload
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return true
+	}
+	delete(m, "servicegroupname")
+	return len(m) > 0
+}
+
 func (r *ServicegroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data, state ServicegroupResourceModel
 
@@ -196,13 +214,20 @@ func (r *ServicegroupResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	// Detect whether any updateable servicegroup attribute changed.
+	// Detect whether any updateable servicegroup attribute changed. Guard the SET
+	// with servicegroupPayloadHasMutableFields so a payload that carries only the
+	// name key (e.g. every mutable attr resolved to unknown/null on a refresh of
+	// SDK-v2-written state) never reaches NITRO as a name-only SET (errorcode 1094
+	// "Too few arguments"). Belt-and-suspenders with the UseStateForUnknown plan
+	// modifiers that keep those attrs known in the plan.
 	if servicegroupAttrsChanged(&data, &state) {
 		updatePayload := servicegroupGetTheUpdatePayloadFromthePlan(ctx, &data)
 		updatePayload.Servicegroupname = servicegroupName
-		if _, err := r.client.UpdateResource(service.Servicegroup.Type(), servicegroupName, &updatePayload); err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update servicegroup %s, got error: %s", servicegroupName, err))
-			return
+		if servicegroupPayloadHasMutableFields(&updatePayload) {
+			if _, err := r.client.UpdateResource(service.Servicegroup.Type(), servicegroupName, &updatePayload); err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update servicegroup %s, got error: %s", servicegroupName, err))
+				return
+			}
 		}
 	}
 

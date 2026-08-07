@@ -99,6 +99,25 @@ func testAccCheckNshostnameExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccNshostname_import(t *testing.T) {
+	const resAddr = "citrixadc_nshostname.tf_nshostname"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNshostname_basic},
+			{
+				Config:                  testAccNshostname_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNshostnameDataSource_basic = `
 	resource "citrixadc_nshostname" "tf_nshostname_ds" {
 		hostname  = "testhost.citrix.com"

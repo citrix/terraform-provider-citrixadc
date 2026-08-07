@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -196,8 +197,14 @@ func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest
 	// (SDK v2 parity: state change was driven by an explicit config change).
 	stateChange := !data.State.IsNull() && !data.State.IsUnknown() &&
 		data.State.ValueString() != "" && !data.State.Equal(state.State)
-	lbmonitorChanged := !data.Lbmonitor.Equal(state.Lbmonitor)
-	lbvserverChanged := !data.Lbvserver.Equal(state.Lbvserver)
+	// Only treat the lb monitor / lb vserver convenience blocks as changed when the
+	// plan carries a real, known value. On a refresh of SDK-v2-written state these
+	// Optional(+Computed) convenience attrs plan as Unknown; treating Unknown as a
+	// change would unbind a separately-managed service_lbmonitor_binding /
+	// lbvserver_service_binding (SDK v2 parity: change was driven by an explicit
+	// config change only).
+	lbmonitorChanged := !data.Lbmonitor.IsUnknown() && !data.Lbmonitor.Equal(state.Lbmonitor)
+	lbvserverChanged := !data.Lbvserver.IsUnknown() && !data.Lbvserver.Equal(state.Lbvserver)
 
 	// Unbind existing lb monitor binding, if it changed.
 	if lbmonitorChanged {
@@ -225,9 +232,19 @@ func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest
 	if hasChange {
 		svc := serviceGetTheUpdatablePayloadFromThePlan(ctx, &data)
 		svc.Name = serviceName
-		if _, err := r.client.UpdateResource(service.Service.Type(), serviceName, &svc); err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update service %s, got error: %s", serviceName, err))
-			return
+		// Only issue the base SET when the payload carries a field beyond the name.
+		// On a refresh of SDK-v2-written state the Optional+Computed attributes can
+		// plan as Unknown and be dropped from the payload, which would otherwise
+		// produce a name-only SET that NITRO rejects with errorcode 1094
+		// ("Too few arguments"). This mirrors the SDK v2 per-attribute hasChange
+		// gating (and lbvserverPayloadHasMutableFields).
+		if servicePayloadHasMutableFields(&svc) {
+			if _, err := r.client.UpdateResource(service.Service.Type(), serviceName, &svc); err != nil {
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update service %s, got error: %s", serviceName, err))
+				return
+			}
+		} else {
+			tflog.Debug(ctx, "Skipping base service SET: payload carries no field beyond name")
 		}
 	} else {
 		tflog.Debug(ctx, "No updatable attribute changes detected for service resource")
@@ -350,21 +367,29 @@ func (r *ServiceResource) readServiceFromApi(ctx context.Context, data *ServiceR
 		data.Lbvserver = types.StringValue(boundVserver)
 	}
 
-	// Read the bound lb monitor.
-	boundMonitors, err := r.client.FindAllBoundResources(service.Service.Type(), serviceName, service.Lbmonitor.Type())
-	if err != nil {
-		return false
-	}
-	boundMonitor := ""
-	for _, monitor := range boundMonitors {
-		if mon, ok := monitor["monitor_name"]; ok && mon != nil {
-			if s, ok2 := mon.(string); ok2 {
-				boundMonitor = s
-				break
+	// Read the bound lb monitor, only when the model attr is non-null (SDK v2 parity
+	// with the guarded lbvserver convenience block above). A null lbmonitor means the
+	// binding is not being managed through the service resource (it is managed by a
+	// separate service_lbmonitor_binding), so adopting the externally-bound monitor
+	// here would make Update believe it is a change and unbind it. Note: on Create/
+	// Update an unconfigured (Computed) lbmonitor is Unknown, not null, so the default
+	// monitor is still adopted back (SDK v2 parity, e.g. "tcp-default").
+	if !data.Lbmonitor.IsNull() {
+		boundMonitors, err := r.client.FindAllBoundResources(service.Service.Type(), serviceName, service.Lbmonitor.Type())
+		if err != nil {
+			return false
+		}
+		boundMonitor := ""
+		for _, monitor := range boundMonitors {
+			if mon, ok := monitor["monitor_name"]; ok && mon != nil {
+				if s, ok2 := mon.(string); ok2 {
+					boundMonitor = s
+					break
+				}
 			}
 		}
+		data.Lbmonitor = types.StringValue(boundMonitor)
 	}
-	data.Lbmonitor = types.StringValue(boundMonitor)
 
 	// Read the SSL service properties, if being managed.
 	if hasSslserviceProperties(data) {
@@ -396,6 +421,26 @@ func (r *ServiceResource) readServiceFromApi(ctx context.Context, data *ServiceR
 	}
 
 	return true
+}
+
+// servicePayloadHasMutableFields reports whether the service SET payload carries
+// any attribute beyond the resource name. NITRO rejects a name-only SET with
+// errorcode 1094 ("Too few arguments"), so the base update is skipped in that case.
+// This mirrors citrixadc_framework/lbvserver's lbvserverPayloadHasMutableFields and
+// the SDK v2 per-attribute hasChange gating: on a refresh of SDK-v2-written state the
+// Optional+Computed attrs can plan as Unknown and get dropped from the payload,
+// leaving a name-only SET.
+func servicePayloadHasMutableFields(payload *basic.Service) bool {
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return true // fail open: let NITRO validate the payload
+	}
+	var m map[string]interface{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return true
+	}
+	delete(m, "name")
+	return len(m) > 0
 }
 
 // serviceHasUpdatableChange reports whether any non-ForceNew, non-action

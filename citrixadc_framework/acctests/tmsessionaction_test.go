@@ -140,6 +140,53 @@ func testAccCheckTmsessionactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTmsessionaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionaction.tf_tmsessionaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmsessionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Tmsessionaction.Type(), "my_tmsession_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmsessionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTmsessionaction_import(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionaction.tf_tmsessionaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmsessionaction_basic},
+			{
+				Config:                  testAccTmsessionaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccTmsessionactionDataSource_basic = `
 
 

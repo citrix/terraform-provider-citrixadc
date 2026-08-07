@@ -99,6 +99,25 @@ func testAccCheckAppalgparamExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccAppalgparam_import(t *testing.T) {
+	const resAddr = "citrixadc_appalgparam.tf_appalgparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAppalgparam_add},
+			{
+				Config:                  testAccAppalgparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAppalgparamDataSource_basic = `
 	resource "citrixadc_appalgparam" "tf_appalgparam" {
 		pptpgreidletimeout = 8000

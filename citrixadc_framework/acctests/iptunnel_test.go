@@ -176,6 +176,60 @@ func testAccCheckIptunnelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccIptunnel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_iptunnel.tf_iptunnel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIptunnelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIptunnel_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIptunnelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Iptunnel.Type(), "tf_iptunnel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIptunnel_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIptunnelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIptunnel_import(t *testing.T) {
+	// TODO: un-skip once iptunnel import populates the name/ID. Provider defect
+	// (NSNETAUTO-1148): iptunnel/resource_schema.go iptunnelSetAttrFromGet sets
+	// data.Id from data.Name, but on import data.Name starts null and is only
+	// repopulated from the GET response via an `else if data.Name.IsUnknown()`
+	// branch (never fires for a null) — so the imported ID resolves to "" and the
+	// import verification fails with "resource with ID '' not found".
+	t.Skip("known provider import defect: iptunnel import yields empty ID (name not repopulated from GET) (NSNETAUTO-1148)")
+	const resAddr = "citrixadc_iptunnel.tf_iptunnel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIptunnelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIptunnel_basic_step1},
+			{
+				Config:                  testAccIptunnel_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccIptunnelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

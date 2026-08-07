@@ -108,6 +108,25 @@ func testAccCheckNat64paramExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccNat64param_import(t *testing.T) {
+	const resAddr = "citrixadc_nat64param.tf_nat64param"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNat64param_add},
+			{
+				Config:                  testAccNat64param_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNat64paramDataSource_basic = `
 	resource "citrixadc_nat64param" "tf_nat64param" {
 		nat64ignoretos    = "YES"

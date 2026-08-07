@@ -158,3 +158,22 @@ func TestAccAaaparameterDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAaaparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_aaaparameter.tf_aaaparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAaaparameter_basic},
+			{
+				Config:                  testAccAaaparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

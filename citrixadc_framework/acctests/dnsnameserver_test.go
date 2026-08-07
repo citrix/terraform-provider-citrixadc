@@ -95,6 +95,34 @@ func TestAccDnsnameserver_basic(t *testing.T) {
 	})
 }
 
+func TestAccDnsnameserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnsnameserver.dnsnameserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsnameserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsnameserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsnameserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Dnsnameserver.Type(), "192.0.2.0", []string{"type:UDP"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnsnameserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsnameserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckDnsnameserverExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -402,6 +430,25 @@ const testAccDnsnameserverDataSource_basic = `
 		type = citrixadc_dnsnameserver.dnsnameserver.type
 	}
 `
+
+func TestAccDnsnameserver_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsnameserver.dnsnameserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsnameserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsnameserver_add},
+			{
+				Config:                  testAccDnsnameserver_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccDnsnameserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

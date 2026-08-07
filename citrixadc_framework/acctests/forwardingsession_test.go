@@ -139,6 +139,53 @@ func testAccCheckForwardingsessionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccForwardingsession_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_forwardingsession.tf_forwarding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckForwardingsessionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccForwardingsession_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckForwardingsessionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Forwardingsession.Type(), "tf_forwarding"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccForwardingsession_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckForwardingsessionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccForwardingsession_import(t *testing.T) {
+	const resAddr = "citrixadc_forwardingsession.tf_forwarding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckForwardingsessionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccForwardingsession_add},
+			{
+				Config:                  testAccForwardingsession_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccForwardingsessionDataSource_basic = `
 
 resource "citrixadc_forwardingsession" "tf_forwarding_ds" {

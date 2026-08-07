@@ -32,15 +32,25 @@ func (r *RewritepolicylabelResource) Schema(ctx context.Context, req resource.Sc
 				Description: "The ID of the rewritepolicylabel resource.",
 			},
 			"comment": schema.StringAttribute{
-				// SDK v2 had comment as Optional+Computed+ForceNew. Computed is dropped
-				// here: NITRO has no server-side default for comment and the GET response
-				// omits it entirely when empty, so an Optional+Computed attribute that the
-				// server neither defaults nor echoes stays UNKNOWN after apply ("still
-				// indicated an unknown value"). Optional-only -> unset yields a known null;
-				// when set it is echoed back by GET and read into state by SetAttrFromGet.
-				// ForceNew is preserved via RequiresReplace.
+				// SDK v2 had comment as Optional+Computed+ForceNew, and it stored comment=""
+				// when unset. Reproduce that contract as Optional+Computed so that upgraded
+				// SDK v2 state (comment="") does NOT read as a change against a config-null
+				// value on a RequiresReplace attribute -- which previously forced a spurious
+				// destroy+recreate of the label on upgrade, dropping any child *_binding and
+				// failing with ec315 "Resource in use".
+				//
+				// UseStateForUnknown is listed BEFORE RequiresReplace: when comment is unset,
+				// the Computed plan value resolves to the prior state value ("") instead of
+				// staying unknown, so RequiresReplace compares ""=="" and does not trigger.
+				//
+				// NITRO omits "comment" from GET when empty; rewritepolicylabelSetAttrFromGet
+				// therefore sets it to "" on absence so the Computed value stays KNOWN after a
+				// fresh create (avoiding "inconsistent result after apply / still indicated an
+				// unknown value"). ForceNew is preserved via RequiresReplace.
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Any comments to preserve information about this rewrite policy label.",
@@ -102,11 +112,16 @@ func rewritepolicylabelSetAttrFromGet(ctx context.Context, data *Rewritepolicyla
 	tflog.Debug(ctx, "In rewritepolicylabelSetAttrFromGet Function")
 
 	// Convert API response to model.
-	// Pattern 7: NITRO omits "comment" from the GET response when it is empty, so only
-	// overwrite the model value when the field is actually present. Otherwise preserve
-	// the plan/state value to avoid a perpetual diff / nulled user input.
+	// comment is Optional+Computed (UseStateForUnknown+RequiresReplace) mirroring the SDK v2
+	// Optional+Computed+ForceNew contract, which stored comment="" when unset. NITRO omits
+	// "comment" from the GET response when it is empty, so set the model to "" on absence:
+	// this keeps the Computed value KNOWN after a fresh create (avoiding "inconsistent result
+	// after apply / still indicated an unknown value") and matches the SDK v2 stored "". A
+	// non-empty comment is always echoed by GET, so a user-set value is never clobbered.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
+	} else {
+		data.Comment = types.StringValue("")
 	}
 	// labelname is the user-facing key. Once a rename has happened (via newname), the
 	// live object name (tracked by data.Id) diverges from the configured labelname, and

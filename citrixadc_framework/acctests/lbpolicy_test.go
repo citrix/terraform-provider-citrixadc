@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -118,6 +119,53 @@ func testAccCheckLbpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLbpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbpolicy.tf_pol"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lbpolicy.Type(), "tf_pol"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLbpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_lbpolicy.tf_pol"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbpolicy_basic},
+			{
+				Config:                  testAccLbpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccLbpolicyDataSource_basic = `

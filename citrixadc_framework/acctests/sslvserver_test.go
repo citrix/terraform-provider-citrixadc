@@ -160,6 +160,25 @@ func testAccCheckSslvserverDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSslvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_sslvserver.tf_sslvserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslvserver_basic},
+			{
+				Config:                  testAccSslvserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccSslvserverDataSource_basic = `
 	resource "citrixadc_sslvserver" "tf_sslvserver" {
 		cipherredirect = "ENABLED"

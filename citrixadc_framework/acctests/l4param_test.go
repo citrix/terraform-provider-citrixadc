@@ -101,6 +101,25 @@ func testAccCheckL4paramExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccL4param_import(t *testing.T) {
+	const resAddr = "citrixadc_l4param.tf_l4param"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccL4param_add},
+			{
+				Config:                  testAccL4param_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccL4paramDataSource_basic = `
 
 	resource "citrixadc_l4param" "tf_l4param" {

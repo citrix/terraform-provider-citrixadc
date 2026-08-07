@@ -103,6 +103,25 @@ func testAccCheckAaapreauthenticationparameterExist(n string, id *string) resour
 	}
 }
 
+func TestAccAaapreauthenticationparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAaapreauthenticationparameter_basic},
+			{
+				Config:                  testAccAaapreauthenticationparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAaapreauthenticationparameterDataSource_basic = `
 
 	resource "citrixadc_aaapreauthenticationparameter" "tf_aaapreauthenticationparameter" {

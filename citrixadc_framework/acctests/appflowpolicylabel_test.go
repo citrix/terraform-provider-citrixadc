@@ -127,6 +127,34 @@ func testAccCheckAppflowpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppflowpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicylabel.tf_appflowpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appflowpolicylabel.Type(), "tf_policylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccAppflowpolicylabelDataSource_basic = `
 
 	resource "citrixadc_appflowpolicylabel" "tf_appflowpolicylabel" {
@@ -138,6 +166,25 @@ const testAccAppflowpolicylabelDataSource_basic = `
 		labelname = citrixadc_appflowpolicylabel.tf_appflowpolicylabel.labelname
 	}
 `
+
+func TestAccAppflowpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicylabel.tf_appflowpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowpolicylabel_basic},
+			{
+				Config:                  testAccAppflowpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccAppflowpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

@@ -47,6 +47,34 @@ func TestAccCspolicylabel_basic(t *testing.T) {
 	})
 }
 
+func TestAccCspolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cspolicylabel.tf_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCspolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cspolicylabel.Type(), "tf_policylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCspolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckCspolicylabelExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -109,6 +137,25 @@ func testAccCheckCspolicylabelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccCspolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_cspolicylabel.tf_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCspolicylabel_basic},
+			{
+				Config:                  testAccCspolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccCspolicylabelDataSource_basic(t *testing.T) {

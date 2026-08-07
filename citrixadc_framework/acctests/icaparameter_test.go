@@ -129,6 +129,25 @@ func testAccCheckIcaparameterExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccIcaparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_icaparameter.tf_icaparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccIcaparameter_basic},
+			{
+				Config:                  testAccIcaparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccIcaparameterDataSource_basic = `
 
 resource "citrixadc_icaparameter" "tf_icaparameter" {

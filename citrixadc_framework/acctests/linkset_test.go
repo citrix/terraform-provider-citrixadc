@@ -132,6 +132,65 @@ func testAccCheckLinksetDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLinkset_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("clustering not supported in CPX")
+	}
+	const resAddr = "citrixadc_linkset.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLinksetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLinkset_add_with_no_binding,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLinksetExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Linkset.Type(), "LS/1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLinkset_add_with_no_binding,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLinksetExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLinkset_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("clustering not supported in CPX")
+	}
+	const resAddr = "citrixadc_linkset.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLinksetDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLinkset_add_with_no_binding},
+			{
+				Config:                  testAccLinkset_add_with_no_binding,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLinksetDataSource_basic = `
 	resource "citrixadc_linkset" "tf_linkset" {
 		linkset_id = "LS/2"

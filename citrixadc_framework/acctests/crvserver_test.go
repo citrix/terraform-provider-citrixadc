@@ -134,6 +134,53 @@ func testAccCheckCrvserverDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCrvserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver.crvserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Crvserver.Type(), "my_vserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver.crvserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_add},
+			{
+				Config:                  testAccCrvserver_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccCrvserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

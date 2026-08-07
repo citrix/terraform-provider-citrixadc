@@ -74,6 +74,25 @@ func TestAccSmppparam_basic(t *testing.T) {
 	})
 }
 
+func TestAccSmppparam_import(t *testing.T) {
+	const resAddr = "citrixadc_smppparam.tf_smppparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSmppparam_basic},
+			{
+				Config:                  testAccSmppparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSmppparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

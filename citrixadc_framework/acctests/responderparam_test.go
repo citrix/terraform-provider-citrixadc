@@ -130,6 +130,25 @@ func testAccCheckResponderparamDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccResponderparam_import(t *testing.T) {
+	const resAddr = "citrixadc_responderparam.tf_responderparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderparamDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderparam_basic},
+			{
+				Config:                  testAccResponderparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccResponderparamDataSource_basic = `
 resource "citrixadc_responderparam" "tf_responderparam_ds" {
     timeout = 7

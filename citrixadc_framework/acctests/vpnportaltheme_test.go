@@ -141,6 +141,53 @@ func testAccCheckVpnportalthemeDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnportaltheme_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnportaltheme.tf_vpnportaltheme"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnportalthemeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnportaltheme_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnportalthemeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnportaltheme.Type(), "tf_vpnportaltheme"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnportaltheme_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnportalthemeExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnportaltheme_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnportaltheme.tf_vpnportaltheme"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnportalthemeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnportaltheme_add},
+			{
+				Config:                  testAccVpnportaltheme_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccVpnportalthemeDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

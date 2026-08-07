@@ -193,6 +193,25 @@ data "citrixadc_nsip6" "tf_nsip6_datasource" {
 }
 `
 
+func TestAccNsip6_import(t *testing.T) {
+	const resAddr = "citrixadc_nsip6.tf_nsip6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsip6Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsip6_basic_step1},
+			{
+				Config:                  testAccNsip6_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNsip6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

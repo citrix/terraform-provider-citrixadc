@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -141,6 +142,53 @@ func testAccCheckLsntransportprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLsntransportprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsntransportprofile.tf_lsntransportprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsntransportprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsntransportprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsntransportprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsntransportprofile.Type(), "my_lsn_transportprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsntransportprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsntransportprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsntransportprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_lsntransportprofile.tf_lsntransportprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsntransportprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsntransportprofile_basic},
+			{
+				Config:                  testAccLsntransportprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccLsntransportprofileDataSource_basic = `

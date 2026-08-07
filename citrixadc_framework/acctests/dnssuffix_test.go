@@ -111,6 +111,53 @@ func testAccCheckDnssuffixDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnssuffix_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnssuffix.tf_dnssuffix"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssuffixDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnssuffix_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssuffixExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnssuffix.Type(), "example.com"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnssuffix_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssuffixExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnssuffix_import(t *testing.T) {
+	const resAddr = "citrixadc_dnssuffix.tf_dnssuffix"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssuffixDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnssuffix_basic},
+			{
+				Config:                  testAccDnssuffix_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccDnssuffixDataSource_basic = `
 
 	resource "citrixadc_dnssuffix" "tf_dnssuffix" {

@@ -113,6 +113,25 @@ func testAccCheckTmsessionparameterExist(n string, id *string) resource.TestChec
 	}
 }
 
+func TestAccTmsessionparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionparameter.tf_tmsessionparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccTmsessionparameter_basic},
+			{
+				Config:                  testAccTmsessionparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccTmsessionparameterDataSource_basic = `
 
 

@@ -149,6 +149,53 @@ resource "citrixadc_auditmessageaction" "tf_msgaction" {
 
 `
 
+func TestAccAuditmessageaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_auditmessageaction.tf_msgaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditmessageactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditmessageaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditmessageactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Auditmessageaction.Type(), "tf_msgaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuditmessageaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditmessageactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuditmessageaction_import(t *testing.T) {
+	const resAddr = "citrixadc_auditmessageaction.tf_msgaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditmessageactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuditmessageaction_basic_step1},
+			{
+				Config:                  testAccAuditmessageaction_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAuditmessageactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

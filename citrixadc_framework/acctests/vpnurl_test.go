@@ -83,6 +83,25 @@ func TestAccVpnurl_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnurl_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnurl.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnurlDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnurl_add},
+			{
+				Config:                  testAccVpnurl_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVpnurlExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -145,6 +164,34 @@ func testAccCheckVpnurlDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnurl_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnurl.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnurlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnurl_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnurl.Type(), "Firsturl"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnurl_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 const testAccVpnurlDataSource_basic = `

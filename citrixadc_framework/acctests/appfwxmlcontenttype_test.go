@@ -112,6 +112,53 @@ func testAccCheckAppfwxmlcontenttypeDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwxmlcontenttype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwxmlcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwxmlcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlcontenttypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwxmlcontenttype.Type(), "tf_Acc.*test"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwxmlcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlcontenttypeExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwxmlcontenttype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwxmlcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwxmlcontenttype_basic},
+			{
+				Config:                  testAccAppfwxmlcontenttype_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAppfwxmlcontenttypeDataSource_basic = `
 
 	resource "citrixadc_appfwxmlcontenttype" "tf_Acc_appfwxmlcontenttype" {

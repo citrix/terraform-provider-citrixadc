@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -72,6 +73,55 @@ func TestAccLsnappsattributes_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lsnappsattributes.tf_lsnappsattributes", "port", "90"),
 					resource.TestCheckResourceAttr("citrixadc_lsnappsattributes.tf_lsnappsattributes", "sessiontimeout", "60"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLsnappsattributes_selfHealing(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this LSN resource!")
+	const resAddr = "citrixadc_lsnappsattributes.tf_lsnappsattributes"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnappsattributesDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnappsattributes_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnappsattributesExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnappsattributes.Type(), "my_lsn_appattributes"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnappsattributes_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnappsattributesExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnappsattributes_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this LSN resource!")
+	const resAddr = "citrixadc_lsnappsattributes.tf_lsnappsattributes"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnappsattributesDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnappsattributes_basic},
+			{
+				Config:                  testAccLsnappsattributes_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

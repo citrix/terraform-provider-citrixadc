@@ -125,6 +125,25 @@ func testAccCheckCacheparameterExist(n string, id *string) resource.TestCheckFun
 	}
 }
 
+func TestAccCacheparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_cacheparameter.tf_cacheparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccCacheparameter_basic},
+			{
+				Config:                  testAccCacheparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccCacheparameterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

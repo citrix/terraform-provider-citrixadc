@@ -167,3 +167,50 @@ func TestAccAppflowcollectorDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppflowcollector_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowcollector.tf_appflowcollector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowcollectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowcollectorExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appflowcollector.Type(), "tf_collector3"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowcollectorExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppflowcollector_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowcollector.tf_appflowcollector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowcollectorDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowcollector_basic},
+			{
+				Config:                  testAccAppflowcollector_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

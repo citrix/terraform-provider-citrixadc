@@ -146,6 +146,53 @@ func testAccCheckTmtrafficpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTmtrafficpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmtrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmtrafficpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Tmtrafficpolicy.Type(), "my_tmtraffic_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmtrafficpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTmtrafficpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmtrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmtrafficpolicy_basic},
+			{
+				Config:                  testAccTmtrafficpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccTmtrafficpolicyDataSource_basic = `
 
 	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {

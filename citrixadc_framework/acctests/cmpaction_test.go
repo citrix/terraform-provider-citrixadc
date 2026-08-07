@@ -68,6 +68,34 @@ func TestAccCmpaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccCmpaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cmpaction.tf_cmpaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmpactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmpaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cmpaction.Type(), "my_cmpaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCmpaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckCmpactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -130,6 +158,25 @@ func testAccCheckCmpactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccCmpaction_import(t *testing.T) {
+	const resAddr = "citrixadc_cmpaction.tf_cmpaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmpactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCmpaction_basic},
+			{
+				Config:                  testAccCmpaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccCmpactionDataSource_basic(t *testing.T) {

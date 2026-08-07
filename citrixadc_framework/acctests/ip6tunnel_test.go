@@ -144,6 +144,53 @@ func testAccCheckIp6tunnelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccIp6tunnel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ip6tunnel.tf_ip6tunnel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIp6tunnelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIp6tunnel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIp6tunnelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ip6tunnel.Type(), "tf_ip6tunnel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIp6tunnel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIp6tunnelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIp6tunnel_import(t *testing.T) {
+	const resAddr = "citrixadc_ip6tunnel.tf_ip6tunnel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIp6tunnelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIp6tunnel_add},
+			{
+				Config:                  testAccIp6tunnel_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccIp6tunnelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

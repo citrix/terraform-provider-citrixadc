@@ -126,6 +126,25 @@ func testAccCheckNscqaparamExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccNscqaparam_import(t *testing.T) {
+	const resAddr = "citrixadc_nscqaparam.tf_nscqaparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNscqaparam_basic},
+			{
+				Config:                  testAccNscqaparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"lr1probthresh"},
+			},
+		},
+	})
+}
+
 const testAccNscqaparamDataSource_basic = `
 
 

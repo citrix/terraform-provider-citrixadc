@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -138,6 +139,53 @@ func testAccCheckVpnpcoipvserverprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnpcoipvserverprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnpcoipvserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnpcoipvserverprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnpcoipvserverprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnpcoipvserverprofile.Type(), "tf_vpnpcoipvserverprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnpcoipvserverprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnpcoipvserverprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnpcoipvserverprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnpcoipvserverprofile.tf_vpnpcoipvserverprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnpcoipvserverprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnpcoipvserverprofile_add},
+			{
+				Config:                  testAccVpnpcoipvserverprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccVpnpcoipvserverprofileDataSource_basic(t *testing.T) {

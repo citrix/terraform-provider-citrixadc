@@ -77,6 +77,53 @@ func TestAccNsvariable_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsvariable_import(t *testing.T) {
+	const resAddr = "citrixadc_nsvariable.tf_nsvariable"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsvariableDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsvariable_add},
+			{
+				Config:                  testAccNsvariable_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccNsvariable_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsvariable.tf_nsvariable"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsvariableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsvariable_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsvariableExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsvariable.Type(), "tf_nsvariable"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsvariable_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsvariableExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckNsvariableExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

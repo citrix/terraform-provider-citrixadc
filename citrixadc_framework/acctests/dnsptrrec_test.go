@@ -116,6 +116,53 @@ func testAccCheckDnsptrrecDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnsptrrec_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnsptrrec.tf_dnsptrrec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsptrrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsptrrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsptrrecExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnsptrrec.Type(), "0.2.0.192.in-addr.arpa"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnsptrrec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsptrrecExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnsptrrec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsptrrec.tf_dnsptrrec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsptrrecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsptrrec_basic},
+			{
+				Config:                  testAccDnsptrrec_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccDnsptrrecDataSource_basic = `
 
 resource "citrixadc_dnsptrrec" "tf_dnsptrrec" {

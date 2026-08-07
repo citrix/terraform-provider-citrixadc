@@ -80,6 +80,53 @@ func TestAccPolicyexpression_classic(t *testing.T) {
 	})
 }
 
+func TestAccPolicyexpression_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policyexpression.tf_advanced_policyexpression"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyexpressionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyexpression_advanced_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyexpressionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policyexpression.Type(), "tf_advanced_policyexrpession"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicyexpression_advanced_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyexpressionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPolicyexpression_import(t *testing.T) {
+	const resAddr = "citrixadc_policyexpression.tf_advanced_policyexpression"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyexpressionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicyexpression_advanced_step1},
+			{
+				Config:                  testAccPolicyexpression_advanced_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyexpressionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

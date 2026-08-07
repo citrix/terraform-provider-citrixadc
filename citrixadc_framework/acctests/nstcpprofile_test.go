@@ -175,6 +175,34 @@ const testAccNstcpprofileDataSource_basic = `
 	}
 `
 
+func TestAccNstcpprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nstcpprofile.tf_test_profile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstcpprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstcpprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nstcpprofile.Type(), "test_tf_profile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNstcpprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstcpprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccNstcpprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -188,6 +216,25 @@ func TestAccNstcpprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "ws", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "ackaggregation", "ENABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNstcpprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_nstcpprofile.tf_test_profile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNstcpprofile_basic_step1},
+			{
+				Config:                  testAccNstcpprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

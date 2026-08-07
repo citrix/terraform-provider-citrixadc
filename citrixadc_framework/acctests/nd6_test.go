@@ -146,6 +146,34 @@ const testAccNd6DataSource_basic = `
 	}
 `
 
+func TestAccNd6_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nd6.tf_nd6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNd6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Nd6.Type(), "2001::3", []string{"vlan:1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNd6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6Exist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccNd6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

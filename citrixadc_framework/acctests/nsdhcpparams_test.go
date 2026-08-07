@@ -63,6 +63,25 @@ func TestAccNsdhcpparams_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsdhcpparams_import(t *testing.T) {
+	const resAddr = "citrixadc_nsdhcpparams.tf_nsdhcpparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsdhcpparams_add},
+			{
+				Config:                  testAccNsdhcpparams_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNsdhcpparamsExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

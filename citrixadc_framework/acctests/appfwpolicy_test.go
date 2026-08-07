@@ -161,6 +161,53 @@ func testAccCheckAppfwpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwpolicy.tfAcc_appfwpolicy1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwpolicy.Type(), "tfAcc_appfwpolicy1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwpolicy.tfAcc_appfwpolicy1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwpolicy_add},
+			{
+				Config:                  testAccAppfwpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAppfwpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

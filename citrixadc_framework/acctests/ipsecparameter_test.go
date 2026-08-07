@@ -123,6 +123,25 @@ func testAccCheckIpsecparameterExist(n string, id *string) resource.TestCheckFun
 	}
 }
 
+func TestAccIpsecparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_ipsecparameter.tf_ipsecparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccIpsecparameter_basic},
+			{
+				Config:                  testAccIpsecparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccIpsecparameterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

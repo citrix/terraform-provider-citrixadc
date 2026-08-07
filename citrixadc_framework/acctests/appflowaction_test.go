@@ -189,3 +189,50 @@ func TestAccAppflowactionDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppflowaction_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowaction.tf_appflowaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowaction_basic},
+			{
+				Config:                  testAccAppflowaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppflowaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowaction.tf_appflowaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appflowaction.Type(), "test_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowactionExist(resAddr, nil)),
+			},
+		},
+	})
+}

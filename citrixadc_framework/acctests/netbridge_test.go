@@ -153,6 +153,53 @@ func testAccCheckNetbridgeDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNetbridge_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netbridge.tf_netbridge"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridgeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridgeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Netbridge.Type(), "tf_netbridge"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetbridge_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridgeExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNetbridge_import(t *testing.T) {
+	const resAddr = "citrixadc_netbridge.tf_netbridge"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridgeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetbridge_add},
+			{
+				Config:                  testAccNetbridge_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNetbridgeDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

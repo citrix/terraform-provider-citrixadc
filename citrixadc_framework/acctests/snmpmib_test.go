@@ -75,6 +75,25 @@ func TestAccSnmpmib_basic(t *testing.T) {
 	})
 }
 
+func TestAccSnmpmib_import(t *testing.T) {
+	const resAddr = "citrixadc_snmpmib.tf_snmpmib"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmpmib_basic},
+			{
+				Config:                  testAccSnmpmib_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSnmpmibExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -72,6 +72,53 @@ func TestAccAuditnslogpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditnslogpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_auditnslogpolicy.tf_auditnslogpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditnslogpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditnslogpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditnslogpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Auditnslogpolicy.Type(), "my_auditnslogpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuditnslogpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditnslogpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuditnslogpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_auditnslogpolicy.tf_auditnslogpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditnslogpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuditnslogpolicy_basic},
+			{
+				Config:                  testAccAuditnslogpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuditnslogpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

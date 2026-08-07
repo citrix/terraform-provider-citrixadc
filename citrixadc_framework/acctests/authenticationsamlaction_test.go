@@ -81,6 +81,53 @@ func TestAccAuthenticationsamlaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationsamlaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlaction.tf_samlaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationsamlaction.Type(), "tf_samlaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationsamlaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationsamlaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlaction.tf_samlaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationsamlaction_add},
+			{
+				Config:                  testAccAuthenticationsamlaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationsamlactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

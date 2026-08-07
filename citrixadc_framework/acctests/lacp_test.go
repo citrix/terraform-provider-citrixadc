@@ -103,6 +103,25 @@ func testAccCheckLacpExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccLacp_import(t *testing.T) {
+	const resAddr = "citrixadc_lacp.tf_lacp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccLacp_basic},
+			{
+				Config:                  testAccLacp_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLacpDataSource_basic = `
 	resource "citrixadc_lacp" "tf_lacp_ds" {
 		syspriority = 40

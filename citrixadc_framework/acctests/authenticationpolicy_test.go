@@ -146,6 +146,53 @@ func testAccCheckAuthenticationpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpolicy.tf_authenticationpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationpolicy.Type(), "tf_authenticationpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpolicy.tf_authenticationpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationpolicy_add},
+			{
+				Config:                  testAccAuthenticationpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthenticationpolicyDataSource_basic = `
 	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
 		name          = "ldapaction_ds"

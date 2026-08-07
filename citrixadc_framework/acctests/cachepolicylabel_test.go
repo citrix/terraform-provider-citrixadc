@@ -62,6 +62,53 @@ func TestAccCachepolicylabel_basic(t *testing.T) {
 	})
 }
 
+func TestAccCachepolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cachepolicylabel.tf_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cachepolicylabel.Type(), "my_cachepolicylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCachepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCachepolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_cachepolicylabel.tf_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCachepolicylabel_basic},
+			{
+				Config:                  testAccCachepolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCachepolicylabelExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

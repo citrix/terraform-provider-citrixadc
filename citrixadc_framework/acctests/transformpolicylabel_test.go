@@ -115,6 +115,53 @@ func testAccCheckTransformpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTransformpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_transformpolicylabel.transformpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Transformpolicylabel.Type(), "label_1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTransformpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTransformpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_transformpolicylabel.transformpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTransformpolicylabel_basic},
+			{
+				Config:                  testAccTransformpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccTransformpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

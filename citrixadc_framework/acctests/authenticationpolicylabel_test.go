@@ -133,6 +133,53 @@ func testAccCheckAuthenticationpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationpolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationpolicylabel.Type(), "tf_authenticationpolicylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationpolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationpolicylabel_add},
+			{
+				Config:                  testAccAuthenticationpolicylabel_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthenticationpolicylabelDataSource_basic = `
 
 	resource "citrixadc_authenticationpolicylabel" "tf_authenticationpolicylabel_ds" {

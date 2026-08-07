@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -146,6 +147,53 @@ func testAccCheckPcpserverDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccPcpserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_pcpserver.tf_pcpserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPcpserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPcpserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPcpserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Pcpserver.Type(), "my_pcpserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPcpserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPcpserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPcpserver_import(t *testing.T) {
+	const resAddr = "citrixadc_pcpserver.tf_pcpserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPcpserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPcpserver_basic},
+			{
+				Config:                  testAccPcpserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccPcpserverDataSource_basic = `

@@ -137,6 +137,53 @@ func testAccCheckAuthenticationvserverDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationvserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver.tf_authenticationvserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationvserver.Type(), "tf_authenticationvserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationvserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationvserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver.tf_authenticationvserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationvserver_add},
+			{
+				Config:                  testAccAuthenticationvserver_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"state"},
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationvserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

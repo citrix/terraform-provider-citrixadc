@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -111,6 +112,53 @@ func testAccCheckMapdmrDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccMapdmr_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_mapdmr.tf_mapdmr"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMapdmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMapdmr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMapdmrExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Mapdmr.Type(), "tf_mapdmr"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMapdmr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMapdmrExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccMapdmr_import(t *testing.T) {
+	const resAddr = "citrixadc_mapdmr.tf_mapdmr"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMapdmrDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccMapdmr_basic},
+			{
+				Config:                  testAccMapdmr_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccMapdmrDataSource_basic = `

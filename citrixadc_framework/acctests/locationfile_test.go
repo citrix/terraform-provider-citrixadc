@@ -116,6 +116,53 @@ func testAccCheckLocationfileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLocationfile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_locationfile.tf_locationfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLocationfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Locationfile.Type(), ""); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLocationfile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLocationfile_import(t *testing.T) {
+	const resAddr = "citrixadc_locationfile.tf_locationfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLocationfileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLocationfile_basic},
+			{
+				Config:                  testAccLocationfile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLocationfileDataSource_basic = `
 
 	resource "citrixadc_locationfile" "tf_locationfile" {

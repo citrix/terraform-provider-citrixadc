@@ -156,6 +156,53 @@ func testAccCheckTmformssoactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTmformssoaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmformssoaction.tf_tmformssoaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmformssoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmformssoactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Tmformssoaction.Type(), "my_formsso_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmformssoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmformssoactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTmformssoaction_import(t *testing.T) {
+	const resAddr = "citrixadc_tmformssoaction.tf_tmformssoaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmformssoaction_basic},
+			{
+				Config:                  testAccTmformssoaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccTmformssoactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

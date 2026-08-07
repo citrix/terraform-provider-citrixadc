@@ -115,6 +115,53 @@ func testAccCheckNstrafficdomainDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNstrafficdomain_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain.tf_trafficdomain"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstrafficdomain_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomainExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nstrafficdomain.Type(), "2"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNstrafficdomain_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomainExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNstrafficdomain_import(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain.tf_trafficdomain"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomainDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNstrafficdomain_basic},
+			{
+				Config:                  testAccNstrafficdomain_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNstrafficdomainDataSource_basic = `
 
 	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {

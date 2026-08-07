@@ -128,3 +128,22 @@ const testAccNtpparamDataSource_basic = `
 data "citrixadc_ntpparam" "test" {
 }
 `
+
+func TestAccNtpparam_import(t *testing.T) {
+	const resAddr = "citrixadc_ntpparam.tf_ntpparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNtpparam_basic},
+			{
+				Config:                  testAccNtpparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -63,6 +64,59 @@ func TestAccQuicbridgeprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_quicbridgeprofile.tfAcc_quicbridge", "routingalgorithm", "PLAINTEXT"),
 					resource.TestCheckResourceAttr("citrixadc_quicbridgeprofile.tfAcc_quicbridge", "serveridlength", "6"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccQuicbridgeprofile_selfHealing(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	const resAddr = "citrixadc_quicbridgeprofile.tfAcc_quicbridge"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckQuicbridgeprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQuicbridgeprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicbridgeprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Quicbridgeprofile.Type(), "tfAcc_quicbridge"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccQuicbridgeprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckQuicbridgeprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccQuicbridgeprofile_import(t *testing.T) {
+	if isCpxRun {
+		t.Skip("No support in CPX")
+	}
+	const resAddr = "citrixadc_quicbridgeprofile.tfAcc_quicbridge"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckQuicbridgeprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccQuicbridgeprofile_add},
+			{
+				Config:                  testAccQuicbridgeprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

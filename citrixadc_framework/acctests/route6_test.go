@@ -80,6 +80,34 @@ func TestAccRoute6_basic(t *testing.T) {
 	})
 }
 
+func TestAccRoute6_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_route6.tf_route6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRoute6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute6Exist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Route6.Type(), "", []string{"network:2001%3Adb8%3A85a3%3A%3A%2F64", "vlan:2"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRoute6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute6Exist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckRoute6Exist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -46,6 +46,34 @@ func TestAccRewriteaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccRewriteaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rewriteaction.tf_rewrite_action"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewriteactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewriteaction_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Rewriteaction.Type(), "tf_rewrite_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRewriteaction_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckRewriteactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -127,6 +155,25 @@ resource "citrixadc_rewriteaction" "tf_rewrite_action" {
     type = "delete"
 }
 `
+
+func TestAccRewriteaction_import(t *testing.T) {
+	const resAddr = "citrixadc_rewriteaction.tf_rewrite_action"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewriteactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRewriteaction_step1},
+			{
+				Config:                  testAccRewriteaction_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 const testAccRewriteactionDataSource_basic = `
 resource "citrixadc_rewriteaction" "tf_rewrite_action_ds" {

@@ -269,6 +269,59 @@ func TestAccClusternodeDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccClusternode_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternode.tf_clusternode"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternode_basic_nogroup_config,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternodeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Clusternode.Type(), "2", []string{"clearnodegroupconfig:YES"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternode_basic_nogroup_config,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternodeExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccClusternode_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternode.tf_clusternode"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternode_basic_nogroup_config},
+			{
+				Config:                  testAccClusternode_basic_nogroup_config,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccClusternodeDataSource_basic = `
 
 

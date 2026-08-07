@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -77,6 +78,25 @@ func TestAccLsngroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_lsngroup", "nattype", "DYNAMIC"),
 					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_lsngroup", "snmptraplimit", "100"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLsngroup_import(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup.tf_lsngroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsngroup_basic},
+			{
+				Config:                  testAccLsngroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -144,6 +164,34 @@ func testAccCheckLsngroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLsngroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup.tf_lsngroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsngroup.Type(), "my_lsngroup"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsngroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroupExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 const testAccLsngroupDataSource_basic = `

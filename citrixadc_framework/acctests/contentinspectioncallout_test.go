@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -99,6 +100,34 @@ func TestAccContentinspectioncallout_basic(t *testing.T) {
 	})
 }
 
+func TestAccContentinspectioncallout_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectioncallout.tf_contentinspectioncalloout"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectioncalloutDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectioncallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectioncalloutExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Contentinspectioncallout.Type(), "my_ci_callout"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccContentinspectioncallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectioncalloutExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckContentinspectioncalloutExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -161,6 +190,25 @@ func testAccCheckContentinspectioncalloutDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccContentinspectioncallout_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectioncallout.tf_contentinspectioncalloout"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectioncalloutDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectioncallout_basic},
+			{
+				Config:                  testAccContentinspectioncallout_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccContentinspectioncalloutDataSource_basic(t *testing.T) {

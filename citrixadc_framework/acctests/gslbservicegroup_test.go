@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -143,6 +144,34 @@ func TestAccGslbservicegroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "healthmonitor", "NO"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "sitename", "Site-Local"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccGslbservicegroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbservicegroup.tf_gslbservicegroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicegroup_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbservicegroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Gslbservicegroup.Type(), "test_gslbvservicegroup"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbservicegroup_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbservicegroupExist(resAddr, nil)),
 			},
 		},
 	})

@@ -61,6 +61,25 @@ func TestAccSnmpengineid_basic(t *testing.T) {
 	})
 }
 
+func TestAccSnmpengineid_import(t *testing.T) {
+	const resAddr = "citrixadc_snmpengineid.tf_snmpengineid"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmpengineid_basic},
+			{
+				Config:                  testAccSnmpengineid_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSnmpengineidExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

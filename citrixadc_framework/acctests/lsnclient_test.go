@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -136,6 +137,53 @@ data "citrixadc_lsnclient" "tf_lsnclient_ds" {
 	clientname = citrixadc_lsnclient.tf_lsnclient_ds.clientname
 }
 `
+
+func TestAccLsnclient_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient.tf_lsnclient"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnclient_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclientExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnclient.Type(), "my_lsnclient"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnclient_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnclientExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnclient_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnclient.tf_lsnclient"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnclientDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnclient_basic},
+			{
+				Config:                  testAccLsnclient_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccLsnclientDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

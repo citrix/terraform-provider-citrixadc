@@ -145,6 +145,25 @@ func TestAccRewriteparamDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccRewriteparam_import(t *testing.T) {
+	const resAddr = "citrixadc_rewriteparam.tf_rewriteparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewriteparamDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRewriteparam_basic},
+			{
+				Config:                  testAccRewriteparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccRewriteparamDataSource_basic = `
 data "citrixadc_rewriteparam" "test" {
 }

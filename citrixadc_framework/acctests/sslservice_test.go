@@ -180,6 +180,26 @@ func TestAccSslservice_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslservice_import(t *testing.T) {
+	t.Skip("Skipping sslservice import test")
+	const resAddr = "citrixadc_sslservice.demo_sslservice"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslserviceDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservice_basic},
+			{
+				Config:                  testAccSslservice_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslserviceExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

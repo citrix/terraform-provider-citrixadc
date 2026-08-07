@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -135,6 +136,53 @@ func testAccCheckAuthenticationnoauthactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationnoauthaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationnoauthaction.tf_noauthaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnoauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnoauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationnoauthactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationnoauthaction.Type(), "tf_noauthaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationnoauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationnoauthactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationnoauthaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationnoauthaction.tf_noauthaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnoauthactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationnoauthaction_add},
+			{
+				Config:                  testAccAuthenticationnoauthaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccAuthenticationnoauthactionDataSource_basic(t *testing.T) {

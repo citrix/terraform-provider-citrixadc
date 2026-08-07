@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -115,6 +116,53 @@ func testAccCheckBotsignatureDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccBotsignature_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botsignature.tf_botsignature"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotsignatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotsignature_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotsignatureExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Botsignature.Type(), "tf_botsignature"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotsignature_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotsignatureExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccBotsignature_import(t *testing.T) {
+	const resAddr = "citrixadc_botsignature.tf_botsignature"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotsignatureDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotsignature_basic},
+			{
+				Config:                  testAccBotsignature_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
 }
 
 const testAccBotsignatureDataSource_basic = `

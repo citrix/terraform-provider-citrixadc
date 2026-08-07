@@ -159,6 +159,53 @@ func testAccCheckNsacl6Destroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsacl6_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsacl6.tf_nsacl6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsacl6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsacl6_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsacl6Exist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsacl6.Type(), "tf_nsacl6"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsacl6_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsacl6Exist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsacl6_import(t *testing.T) {
+	const resAddr = "citrixadc_nsacl6.tf_nsacl6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsacl6Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsacl6_add},
+			{
+				Config:                  testAccNsacl6_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNsacl6DataSource_basic = `
 	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
 		td        = 2

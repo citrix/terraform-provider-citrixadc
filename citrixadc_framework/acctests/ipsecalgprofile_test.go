@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -135,6 +136,53 @@ func testAccCheckIpsecalgprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIpsecalgprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipsecalgprofile.tf_ipsecalgprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpsecalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecalgprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ipsecalgprofile.Type(), "my_ipsecalgprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpsecalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecalgprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIpsecalgprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_ipsecalgprofile.tf_ipsecalgprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsecalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpsecalgprofile_basic},
+			{
+				Config:                  testAccIpsecalgprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccIpsecalgprofileDataSource_basic = `

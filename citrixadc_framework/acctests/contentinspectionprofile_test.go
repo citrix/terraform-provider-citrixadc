@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -67,6 +68,25 @@ func TestAccContentinspectionprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionprofile.tf_contentinspectionprofile", "ingressinterface", "LA/3"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionprofile.tf_contentinspectionprofile", "egressinterface", "LA/2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionprofile.tf_contentinspectionprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectionprofile_basic},
+			{
+				Config:                  testAccContentinspectionprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -134,6 +154,34 @@ func testAccCheckContentinspectionprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccContentinspectionprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionprofile.tf_contentinspectionprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Contentinspectionprofile.Type(), "my_ci_profile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccContentinspectionprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionprofileExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 const testAccContentinspectionprofileDataSource_basic = `

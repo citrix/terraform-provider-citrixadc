@@ -104,6 +104,25 @@ func testAccCheckLldpparamExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccLldpparam_import(t *testing.T) {
+	const resAddr = "citrixadc_lldpparam.tf_lldpparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccLldpparam_basic},
+			{
+				Config:                  testAccLldpparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLldpparamDataSource_basic = `
 	resource "citrixadc_lldpparam" "tf_lldpparam" {
 		holdtimetxmult = 3

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -67,6 +68,25 @@ func TestAccFeoaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_feoaction", "imgshrinktoattrib", "true"),
 					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_feoaction", "imggiftopng", "true"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFeoaction_import(t *testing.T) {
+	const resAddr = "citrixadc_feoaction.tf_feoaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeoactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccFeoaction_basic},
+			{
+				Config:                  testAccFeoaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -153,6 +173,34 @@ func TestAccFeoactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "jsminify", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "htmlminify", "true"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFeoaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_feoaction.tf_feoaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Feoaction.Type(), "my_feoaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccFeoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoactionExist(resAddr, nil)),
 			},
 		},
 	})

@@ -109,6 +109,25 @@ func testAccCheckIptunnelparamExist(n string, id *string) resource.TestCheckFunc
 	}
 }
 
+func TestAccIptunnelparam_import(t *testing.T) {
+	const resAddr = "citrixadc_iptunnelparam.tf_iptunnelparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccIptunnelparam_add},
+			{
+				Config:                  testAccIptunnelparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccIptunnelparamDataSource_basic = `
 
 	resource "citrixadc_iptunnelparam" "tf_iptunnelparam" {

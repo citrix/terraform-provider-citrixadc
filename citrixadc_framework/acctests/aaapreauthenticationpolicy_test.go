@@ -79,6 +79,34 @@ func TestAccAaapreauthenticationpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAaapreauthenticationpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaapreauthenticationpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Aaapreauthenticationpolicy.Type(), "my_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaapreauthenticationpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAaapreauthenticationpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -141,6 +169,25 @@ func testAccCheckAaapreauthenticationpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAaapreauthenticationpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaapreauthenticationpolicy_basic},
+			{
+				Config:                  testAccAaapreauthenticationpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccAaapreauthenticationpolicyDataSource_basic = `

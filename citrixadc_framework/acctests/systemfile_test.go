@@ -69,6 +69,25 @@ func TestAccSystemfile_base64(t *testing.T) {
 	})
 }
 
+func TestAccSystemfile_import(t *testing.T) {
+	const resAddr = "citrixadc_systemfile.tf_file"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemfileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemfile_basic_step1},
+			{
+				Config:                  testAccSystemfile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSystemfileExist(n string, id *string, pathData []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

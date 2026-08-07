@@ -79,6 +79,34 @@ func TestAccVxlan_basic(t *testing.T) {
 	})
 }
 
+func TestAccVxlan_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vxlan.tf_vxlan"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlan_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vxlan.Type(), "123"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVxlan_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckVxlanExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -141,6 +169,25 @@ func testAccCheckVxlanDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVxlan_import(t *testing.T) {
+	const resAddr = "citrixadc_vxlan.tf_vxlan"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlanDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVxlan_add},
+			{
+				Config:                  testAccVxlan_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccVxlanDataSource_basic = `

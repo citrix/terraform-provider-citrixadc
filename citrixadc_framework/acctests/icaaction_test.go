@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -96,6 +97,53 @@ func TestAccIcaaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icaaction.tf_icaaction", "name", "my_ica_action"),
 					resource.TestCheckResourceAttr("citrixadc_icaaction.tf_icaaction", "accessprofilename", "my_profile"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccIcaaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_icaaction.tf_icaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcaaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Icaaction.Type(), "my_ica_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIcaaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIcaaction_import(t *testing.T) {
+	const resAddr = "citrixadc_icaaction.tf_icaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcaactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIcaaction_basic},
+			{
+				Config:                  testAccIcaaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

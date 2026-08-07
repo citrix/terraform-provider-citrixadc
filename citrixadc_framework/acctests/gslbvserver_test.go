@@ -240,6 +240,53 @@ data "citrixadc_gslbvserver" "tf_gslbvserver" {
 }
 `
 
+func TestAccGslbvserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Gslbvserver.Type(), "GSLB-East-Coast-Vserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccGslbvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbvserver_basic},
+			{
+				Config:                  testAccGslbvserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"domain.#", "domain.0.%", "domain.0.cookietimeout", "domain.0.domainname", "domain.0.name", "domain.0.sitedomainttl", "domain.0.ttl", "domain.1.%", "domain.1.cookietimeout", "domain.1.domainname", "domain.1.name", "domain.1.sitedomainttl", "domain.1.ttl"},
+			},
+		},
+	})
+}
+
 func TestAccGslbvserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -106,6 +106,25 @@ func testAccCheckAaacertparamsExist(n string, id *string) resource.TestCheckFunc
 	}
 }
 
+func TestAccAaacertparams_import(t *testing.T) {
+	const resAddr = "citrixadc_aaacertparams.tf_aaacertparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAaacertparams_basic},
+			{
+				Config:                  testAccAaacertparams_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAaacertparamsDataSource_basic = `
 
 

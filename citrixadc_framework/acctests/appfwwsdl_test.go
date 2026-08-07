@@ -118,6 +118,53 @@ func testAccCheckAppfwwsdlDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwwsdl_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwwsdl.tf_appfwwsdl"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwwsdlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwwsdl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwwsdlExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwwsdl.Type(), "tf_appfwwsdl"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwwsdl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwwsdlExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwwsdl_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwwsdl.tf_appfwwsdl"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwwsdlDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwwsdl_basic},
+			{
+				Config:                  testAccAppfwwsdl_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "overwrite", "src"},
+			},
+		},
+	})
+}
+
 const testAccAppfwwsdlDataSource_basic = `
 	resource "citrixadc_systemfile" "tf_wsdl_ds" {
 		filename     = "sample_ds.wsdl"

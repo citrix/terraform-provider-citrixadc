@@ -75,6 +75,53 @@ func TestAccAuthenticationwebauthaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationwebauthaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationwebauthaction.tf_webauthaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationwebauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationwebauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationwebauthaction.Type(), "tf_webauthaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationwebauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationwebauthaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationwebauthaction.tf_webauthaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationwebauthactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationwebauthaction_add},
+			{
+				Config:                  testAccAuthenticationwebauthaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationwebauthactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

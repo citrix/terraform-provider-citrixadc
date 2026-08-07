@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -140,6 +141,53 @@ func testAccCheckIcapolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIcapolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_icapolicy.tf_icapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcapolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcapolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Icapolicy.Type(), "my_ica_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIcapolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcapolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIcapolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_icapolicy.tf_icapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcapolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIcapolicy_basic},
+			{
+				Config:                  testAccIcapolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccIcapolicyDataSource_basic(t *testing.T) {

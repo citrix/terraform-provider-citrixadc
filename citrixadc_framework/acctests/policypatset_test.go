@@ -128,6 +128,53 @@ func testAccCheckPolicypatsetDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccPolicypatset_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policypatset.tf_patset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicypatset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policypatset.Type(), "tf_patset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicypatset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPolicypatset_import(t *testing.T) {
+	const resAddr = "citrixadc_policypatset.tf_patset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicypatsetDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicypatset_basic_step1},
+			{
+				Config:                  testAccPolicypatset_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccPolicypatsetDataSource_basic = `
 	resource "citrixadc_policypatset" "tf_patset_ds" {
 		name = "tf_patset_ds"

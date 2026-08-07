@@ -87,6 +87,34 @@ func TestAccAuthenticationsamlidpprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationsamlidpprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlidpprofile.tf_samlidpprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslPrecheckforsamlidpprofile(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlidpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidpprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationsamlidpprofile.Type(), "tf_samlidpprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationsamlidpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidpprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationsamlidpprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -170,6 +198,25 @@ func testAccCheckAuthenticationsamlidpprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationsamlidpprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlidpprofile.tf_samlidpprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslPrecheckforsamlidpprofile(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlidpprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationsamlidpprofile_add},
+			{
+				Config:                  testAccAuthenticationsamlidpprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"sendpassword"},
+			},
+		},
+	})
 }
 
 const testAccAuthenticationsamlidpprofileDataSource_basic = `

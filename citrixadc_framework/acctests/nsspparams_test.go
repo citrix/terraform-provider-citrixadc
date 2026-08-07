@@ -129,6 +129,25 @@ func testAccCheckNsspparamsDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsspparams_import(t *testing.T) {
+	const resAddr = "citrixadc_nsspparams.tf_nsspparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsspparamsDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsspparams_add},
+			{
+				Config:                  testAccNsspparams_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNsspparamsDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

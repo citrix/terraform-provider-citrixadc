@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -87,6 +88,26 @@ func TestAccUserprotocol_basic(t *testing.T) {
 	})
 }
 
+func TestAccUserprotocol_import(t *testing.T) {
+	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
+	const resAddr = "citrixadc_userprotocol.tf_userprotocol"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserprotocolDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccUserprotocol_basic},
+			{
+				Config:                  testAccUserprotocol_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckUserprotocolExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -149,6 +170,35 @@ func testAccCheckUserprotocolDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccUserprotocol_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!")
+	const resAddr = "citrixadc_userprotocol.tf_userprotocol"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckUserprotocolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserprotocol_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckUserprotocolExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Userprotocol.Type(), "my_userprotocol"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccUserprotocol_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckUserprotocolExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 func TestAccUserprotocolDataSource_basic(t *testing.T) {

@@ -207,6 +207,53 @@ func testAccCheckDnsprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnsprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnsprofile.tf_add"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnsprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnsprofile.Type(), "tf_profile1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnsprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnsprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsprofile.tf_add"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsprofile_add},
+			{
+				Config:                  testAccDnsprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccDnsprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

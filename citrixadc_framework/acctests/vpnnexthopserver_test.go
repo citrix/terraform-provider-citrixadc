@@ -131,6 +131,53 @@ func testAccCheckVpnnexthopserverDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnnexthopserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnnexthopserver.tf_vpnnexthopserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnnexthopserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnnexthopserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnnexthopserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnnexthopserver.Type(), "tf_vpnnexthopserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnnexthopserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnnexthopserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnnexthopserver_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnnexthopserver.tf_vpnnexthopserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnnexthopserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnnexthopserver_add},
+			{
+				Config:                  testAccVpnnexthopserver_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccVpnnexthopserverDataSource_basic = `
 
 	resource "citrixadc_vpnnexthopserver" "tf_vpnnexthopserver" {

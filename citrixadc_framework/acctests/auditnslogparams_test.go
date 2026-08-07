@@ -126,6 +126,25 @@ func TestAccAuditnslogparamsDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditnslogparams_import(t *testing.T) {
+	const resAddr = "citrixadc_auditnslogparams.tf_auditnslogparams"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAuditnslogparams_basic},
+			{
+				Config:                  testAccAuditnslogparams_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuditnslogparamsDataSource_basic = `
 
 resource "citrixadc_auditnslogparams" "tf_auditnslogparams" {

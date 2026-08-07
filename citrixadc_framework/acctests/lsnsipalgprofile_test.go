@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -77,6 +78,25 @@ func TestAccLsnsipalgprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile", "sipsrcportrange", "4200"),
 					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile", "siptransportprotocol", "TCP"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLsnsipalgprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnsipalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnsipalgprofile_basic},
+			{
+				Config:                  testAccLsnsipalgprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -144,6 +164,34 @@ func testAccCheckLsnsipalgprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLsnsipalgprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnsipalgprofile.tf_lsnsipalgprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnsipalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnsipalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnsipalgprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnsipalgprofile.Type(), "my_lsn_sipalgprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnsipalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnsipalgprofileExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 const testAccLsnsipalgprofileDataSource_basic = `

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -143,6 +144,53 @@ func testAccCheckFeopolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccFeopolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_feopolicy.tf_feopolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeopolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeopolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeopolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Feopolicy.Type(), "my_feopolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccFeopolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeopolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccFeopolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_feopolicy.tf_feopolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeopolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccFeopolicy_basic},
+			{
+				Config:                  testAccFeopolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccFeopolicyDataSource_basic(t *testing.T) {

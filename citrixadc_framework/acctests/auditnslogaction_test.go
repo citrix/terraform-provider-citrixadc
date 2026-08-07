@@ -82,6 +82,53 @@ func TestAccAuditnslogaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditnslogaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_auditnslogaction.tf_auditnslogaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditnslogactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditnslogaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditnslogactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Auditnslogaction.Type(), "my_auditnslogaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuditnslogaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditnslogactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuditnslogaction_import(t *testing.T) {
+	const resAddr = "citrixadc_auditnslogaction.tf_auditnslogaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditnslogactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuditnslogaction_basic},
+			{
+				Config:                  testAccAuditnslogaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuditnslogactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

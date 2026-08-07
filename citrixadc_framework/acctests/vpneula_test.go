@@ -122,6 +122,53 @@ func testAccCheckVpneulaDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpneula_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpneula.tf_vpneula"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpneulaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpneula_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpneulaExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpneula.Type(), "tf_vpneula"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpneula_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpneulaExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpneula_import(t *testing.T) {
+	const resAddr = "citrixadc_vpneula.tf_vpneula"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpneulaDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpneula_basic},
+			{
+				Config:                  testAccVpneula_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccVpneulaDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -116,6 +116,25 @@ func testAccCheckLocationparameterExist(n string, id *string) resource.TestCheck
 	}
 }
 
+func TestAccLocationparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_locationparameter.tf_locationpara"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccLocationparameter_add},
+			{
+				Config:                  testAccLocationparameter_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccLocationparameterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

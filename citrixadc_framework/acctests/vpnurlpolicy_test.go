@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -83,6 +84,53 @@ func TestAccVpnurlpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "rule", "false"),
 					resource.TestCheckResourceAttr("citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "action", "tf_vpnurlaction"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnurlpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnurlpolicy.tf_vpnurlpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnurlpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnurlpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnurlpolicy.Type(), "new_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnurlpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnurlpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnurlpolicy.tf_vpnurlpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnurlpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnurlpolicy_add},
+			{
+				Config:                  testAccVpnurlpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

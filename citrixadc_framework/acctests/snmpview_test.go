@@ -175,3 +175,31 @@ func testAccCheckSnmpviewDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func TestAccSnmpview_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_snmpview.tf_snmpview"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Snmpview.Type(), "test_name", []string{"subtree:1.2.4.7"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist(resAddr, nil)),
+			},
+		},
+	})
+}

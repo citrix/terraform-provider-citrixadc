@@ -84,6 +84,34 @@ func TestAccDbdbprofile_basic(t *testing.T) {
 	})
 }
 
+func TestAccDbdbprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dbdbprofile.tf_dbdbprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbdbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbdbprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDbdbprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dbdbprofile.Type(), "my_dbprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDbdbprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDbdbprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckDbdbprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -146,6 +174,25 @@ func testAccCheckDbdbprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccDbdbprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_dbdbprofile.tf_dbdbprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbdbprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDbdbprofile_basic},
+			{
+				Config:                  testAccDbdbprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccDbdbprofileDataSource_basic(t *testing.T) {

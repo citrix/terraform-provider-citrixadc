@@ -124,6 +124,53 @@ const testAccPolicydatasetDataSource_basic = `
 	}
 `
 
+func TestAccPolicydataset_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policydataset.tf_dataset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicydatasetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicydataset_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicydatasetExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policydataset.Type(), "tf_dataset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicydataset_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicydatasetExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPolicydataset_import(t *testing.T) {
+	const resAddr = "citrixadc_policydataset.tf_dataset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicydatasetDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicydataset_basic},
+			{
+				Config:                  testAccPolicydataset_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccPolicydatasetDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -105,6 +105,25 @@ func testAccCheckNsratecontrolExist(n string, id *string) resource.TestCheckFunc
 	}
 }
 
+func TestAccNsratecontrol_import(t *testing.T) {
+	const resAddr = "citrixadc_nsratecontrol.tf_nsratecontrol"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsratecontrol_add},
+			{
+				Config:                  testAccNsratecontrol_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNsratecontrolDataSource_basic = `
 	resource "citrixadc_nsratecontrol" "tf_nsratecontrol" {
 		tcpthreshold    = 15

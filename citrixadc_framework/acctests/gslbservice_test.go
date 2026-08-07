@@ -497,6 +497,34 @@ resource "citrixadc_gslbservice" "tf_test_gslbservice" {
 }
 `
 
+func TestAccGslbservice_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbservice.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservice_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbserviceExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Gslbservice.Type(), "gslb1vservice"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbservice_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbserviceExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccGslbserviceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -512,6 +540,25 @@ func TestAccGslbserviceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "sitename", "Site-DS-East-Coast"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccGslbservice_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservice.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbservice_basic},
+			{
+				Config:                  testAccGslbservice_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

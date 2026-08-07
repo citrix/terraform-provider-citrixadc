@@ -65,6 +65,53 @@ func TestAccNsxmlnamespace_basic(t *testing.T) {
 	})
 }
 
+func TestAccNsxmlnamespace_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsxmlnamespace.tf_nsxmlnamespace"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsxmlnamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsxmlnamespace_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsxmlnamespaceExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsxmlnamespace.Type(), "tf_nsxmlnamespace"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsxmlnamespace_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsxmlnamespaceExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsxmlnamespace_import(t *testing.T) {
+	const resAddr = "citrixadc_nsxmlnamespace.tf_nsxmlnamespace"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsxmlnamespaceDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsxmlnamespace_add},
+			{
+				Config:                  testAccNsxmlnamespace_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNsxmlnamespaceExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

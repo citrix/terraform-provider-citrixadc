@@ -133,6 +133,53 @@ func testAccCheckVpnintranetapplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnintranetapplication_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnintranetapplication.tf_vpnintranetapplication"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnintranetapplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnintranetapplication_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnintranetapplicationExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnintranetapplication.Type(), "tf_vpnintranetapplication"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnintranetapplication_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnintranetapplicationExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnintranetapplication_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnintranetapplication.tf_vpnintranetapplication"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnintranetapplicationDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnintranetapplication_add},
+			{
+				Config:                  testAccVpnintranetapplication_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccVpnintranetapplicationDataSource_basic = `
 
 	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {

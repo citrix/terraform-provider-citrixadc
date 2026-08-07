@@ -53,6 +53,34 @@ resource "citrixadc_csvserver" "foo" {
 }
 `
 
+func TestAccCsvserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Csvserver.Type(), "terraform-cs"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccCsvserverDataSource_basic = `
 
 resource "citrixadc_csvserver" "foo" {
@@ -107,6 +135,25 @@ func TestAccCsvserver_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"citrixadc_csvserver.foo", "backuppersistencetimeout", "30"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsvserver_basic},
+			{
+				Config:                  testAccCsvserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

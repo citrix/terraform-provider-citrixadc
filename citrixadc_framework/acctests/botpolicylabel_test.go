@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -124,6 +125,53 @@ func TestAccBotpolicylabelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel.tf_botpolicylabel_ds", "labelname", "tf_botpolicylabel_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel.tf_botpolicylabel_ds", "comment", "DATASOURCE TEST COMMENT"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBotpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botpolicylabel.tf_Botpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Botpolicylabel.Type(), "tf_botpolicylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccBotpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_botpolicylabel.tf_Botpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotpolicylabel_basic},
+			{
+				Config:                  testAccBotpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

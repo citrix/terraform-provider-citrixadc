@@ -92,6 +92,25 @@ func TestAccAutoscaleaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAutoscaleaction_import(t *testing.T) {
+	const resAddr = "citrixadc_autoscaleaction.tf_autoscaleaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscaleactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAutoscaleaction_basic},
+			{
+				Config:                  testAccAutoscaleaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAutoscaleactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -154,6 +173,34 @@ func testAccCheckAutoscaleactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAutoscaleaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_autoscaleaction.tf_autoscaleaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscaleactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscaleaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscaleactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Autoscaleaction.Type(), "my_autoscaleaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAutoscaleaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscaleactionExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 const testAccAutoscaleactionDataSource_basic = `

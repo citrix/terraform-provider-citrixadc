@@ -66,6 +66,34 @@ func TestAccSnmpgroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccSnmpgroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_snmpgroup.tf_snmpgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpgroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Snmpgroup.Type(), "test_group", []string{"securitylevel:noAuthNoPriv"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSnmpgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpgroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckSnmpgroupExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -157,6 +185,25 @@ func testAccCheckSnmpgroupDestroy(s *terraform.State) error {
 
 	}
 	return nil
+}
+
+func TestAccSnmpgroup_import(t *testing.T) {
+	const resAddr = "citrixadc_snmpgroup.tf_snmpgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpgroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmpgroup_basic},
+			{
+				Config:                  testAccSnmpgroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccSnmpgroupDataSource_basic(t *testing.T) {

@@ -111,6 +111,25 @@ func testAccCheckNd6ravariablesExist(n string, id *string) resource.TestCheckFun
 	}
 }
 
+func TestAccNd6ravariables_import(t *testing.T) {
+	const resAddr = "citrixadc_nd6ravariables.tf_nd6ravariables"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNd6ravariables_basic},
+			{
+				Config:                  testAccNd6ravariables_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNd6ravariablesDataSource_basic = `
 
 	resource "citrixadc_nd6ravariables" "tf_nd6ravariables" {

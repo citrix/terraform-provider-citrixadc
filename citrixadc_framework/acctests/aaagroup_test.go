@@ -128,6 +128,53 @@ func testAccCheckAaagroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAaagroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup.tf_aaagroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaagroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Aaagroup.Type(), "my_group"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaagroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaagroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAaagroup_import(t *testing.T) {
+	const resAddr = "citrixadc_aaagroup.tf_aaagroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaagroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaagroup_basic},
+			{
+				Config:                  testAccAaagroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAaagroup_DataSource_basic = `
 
 	resource "citrixadc_aaagroup" "tf_aaagroup" {

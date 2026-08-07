@@ -97,6 +97,25 @@ func testAccCheckRsskeytypeExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccRsskeytype_import(t *testing.T) {
+	const resAddr = "citrixadc_rsskeytype.tf_rsskeytype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccRsskeytype_add},
+			{
+				Config:                  testAccRsskeytype_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccRsskeytypeDataSource_basic = `
 
 	resource "citrixadc_rsskeytype" "tf_rsskeytype" {

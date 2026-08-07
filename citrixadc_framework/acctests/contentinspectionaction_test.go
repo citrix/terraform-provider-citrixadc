@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -82,6 +83,25 @@ func TestAccContentinspectionaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "name", "my_ci_action"),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_contentinspectionaction", "type", "NOINSPECTION"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionaction_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionaction.tf_contentinspectionaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectionaction_basic},
+			{
+				Config:                  testAccContentinspectionaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -166,6 +186,34 @@ func TestAccContentinspectionactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionaction.tf_contentinspectionaction_ds", "serverip", "3.3.3.3"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionaction.tf_contentinspectionaction_ds", "ifserverdown", "CONTINUE"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionaction.tf_contentinspectionaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Contentinspectionaction.Type(), "my_ci_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccContentinspectionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionactionExist(resAddr, nil)),
 			},
 		},
 	})

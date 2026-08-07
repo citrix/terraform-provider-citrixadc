@@ -113,6 +113,53 @@ func testAccCheckAuthorizationpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthorizationpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicylabel.authorizationpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizationpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authorizationpolicylabel.Type(), "trans_http_url"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthorizationpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthorizationpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicylabel.authorizationpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthorizationpolicylabel_basic},
+			{
+				Config:                  testAccAuthorizationpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthorizationpolicylabelDataSource_basic = `
 
 resource "citrixadc_authorizationpolicylabel" "tf_authorizationpolicylabel" {

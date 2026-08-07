@@ -121,6 +121,58 @@ resource "citrixadc_nslicenseserver" "tf_licenseserver" {
 }
 `
 
+func TestAccNslicenseserver_selfHealing(t *testing.T) {
+	t.Skip("Skipping test because this needs changes for LAS")
+	const resAddr = "citrixadc_nslicenseserver.tf_licenseserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslicenseserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslicenseserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Nslicenseserver.Type(), "", []string{"servername:10.101.132.128"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNslicenseserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNslicenseserver_import(t *testing.T) {
+	t.Skip("Skipping test because this needs changes for LAS")
+	if isCpxRun {
+		t.Skip("Feature not supported in CPX")
+	}
+	const resAddr = "citrixadc_nslicenseserver.tf_licenseserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslicenseserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNslicenseserver_basic},
+			{
+				Config:                  testAccNslicenseserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNslicenseserverDataSource_basic(t *testing.T) {
 	t.Skip("Skipping test because this needs changes for LAS")
 	if isCpxRun {

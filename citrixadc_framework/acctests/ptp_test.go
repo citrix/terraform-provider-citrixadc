@@ -97,6 +97,25 @@ func testAccCheckPtpExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccPtp_import(t *testing.T) {
+	const resAddr = "citrixadc_ptp.tf_ptp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccPtp_add},
+			{
+				Config:                  testAccPtp_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccPtpDataSource_basic = `
 	resource "citrixadc_ptp" "tf_ptp_ds" {
 		state = "ENABLE"

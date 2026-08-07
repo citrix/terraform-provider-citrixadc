@@ -60,6 +60,34 @@ func TestAccCacheselector_basic(t *testing.T) {
 	})
 }
 
+func TestAccCacheselector_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cacheselector.tf_cacheselector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheselectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCacheselector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheselectorExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cacheselector.Type(), "my_cacheselector"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCacheselector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheselectorExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckCacheselectorExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -122,6 +150,25 @@ func testAccCheckCacheselectorDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccCacheselector_import(t *testing.T) {
+	const resAddr = "citrixadc_cacheselector.tf_cacheselector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheselectorDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCacheselector_basic},
+			{
+				Config:                  testAccCacheselector_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccCacheselectorDataSource_basic(t *testing.T) {

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -161,6 +162,53 @@ const testAccAuthenticationoauthidppolicyDataSource_basic = `
 		name = citrixadc_authenticationoauthidppolicy.tf_idppolicy.name
 	}
 `
+
+func TestAccAuthenticationoauthidppolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationoauthidppolicy.tf_idppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationoauthidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationoauthidppolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationoauthidppolicy.Type(), "tf_idppolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationoauthidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationoauthidppolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationoauthidppolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationoauthidppolicy.tf_idppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationoauthidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationoauthidppolicy_add},
+			{
+				Config:                  testAccAuthenticationoauthidppolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccAuthenticationoauthidppolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

@@ -111,6 +111,53 @@ func testAccCheckFisDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccFis_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_fis.tf_fis"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFisDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFis_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFisExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Fis.Type(), "tf_fis"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccFis_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFisExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccFis_import(t *testing.T) {
+	const resAddr = "citrixadc_fis.tf_fis"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFisDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccFis_basic},
+			{
+				Config:                  testAccFis_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccFisDataSource_basic = `
 	resource "citrixadc_fis" "tf_fis" {
 		name = "tf_fis_ds"  

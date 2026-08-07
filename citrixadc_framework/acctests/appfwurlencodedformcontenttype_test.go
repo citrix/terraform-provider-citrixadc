@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -110,6 +111,53 @@ func testAccCheckAppfwurlencodedformcontenttypeDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+func TestAccAppfwurlencodedformcontenttype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwurlencodedformcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwurlencodedformcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwurlencodedformcontenttypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwurlencodedformcontenttype.Type(), "tf_urlencodedformcontenttype"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwurlencodedformcontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwurlencodedformcontenttypeExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwurlencodedformcontenttype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwurlencodedformcontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwurlencodedformcontenttype_basic},
+			{
+				Config:                  testAccAppfwurlencodedformcontenttype_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccAppfwurlencodedformcontenttypeDataSource_basic = `

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -131,6 +132,34 @@ func testAccCheckVideooptimizationpacingactionDestroy(s *terraform.State) error 
 	return nil
 }
 
+func TestAccVideooptimizationpacingaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingaction.tf_pacingaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationpacingaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Videooptimizationpacingaction.Type(), "tf_pacingaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationpacingaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccVideooptimizationpacingactionDataSource_basic = `
 
 	resource "citrixadc_videooptimizationpacingaction" "tf_pacingaction" {
@@ -143,6 +172,25 @@ const testAccVideooptimizationpacingactionDataSource_basic = `
 		name = citrixadc_videooptimizationpacingaction.tf_pacingaction.name
 	}
 `
+
+func TestAccVideooptimizationpacingaction_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingaction.tf_pacingaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVideooptimizationpacingaction_add},
+			{
+				Config:                  testAccVideooptimizationpacingaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccVideooptimizationpacingactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

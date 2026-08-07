@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -108,6 +109,53 @@ func testAccCheckLbmetrictableDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLbmetrictable_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbmetrictable.tfAcc_lbmetrictable"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmetrictableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmetrictable_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmetrictableExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lbmetrictable.Type(), "tf_lbmetrictable"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbmetrictable_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmetrictableExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLbmetrictable_import(t *testing.T) {
+	const resAddr = "citrixadc_lbmetrictable.tfAcc_lbmetrictable"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmetrictableDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbmetrictable_add},
+			{
+				Config:                  testAccLbmetrictable_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccLbmetrictableDataSource_basic(t *testing.T) {

@@ -146,6 +146,25 @@ resource "citrixadc_nsfeature" "tf_nsfeature" {
 
 `
 
+func TestAccNsfeature_import(t *testing.T) {
+	const resAddr = "citrixadc_nsfeature.tf_nsfeature"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsfeature_basic_step1},
+			{
+				Config:                  testAccNsfeature_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNsfeatureDataSource_basic = `
 data "citrixadc_nsfeature" "tf_nsfeature_ds" {
 }

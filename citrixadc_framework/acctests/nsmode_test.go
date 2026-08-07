@@ -119,3 +119,22 @@ const testAccNsmodeDataSource_basic = `
 data "citrixadc_nsmode" "test" {
 }
 `
+
+func TestAccNsmode_import(t *testing.T) {
+	const resAddr = "citrixadc_nsmode.tf_nsmode"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNsmode_basic_step1},
+			{
+				Config:                  testAccNsmode_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

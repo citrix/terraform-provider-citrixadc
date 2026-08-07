@@ -111,6 +111,53 @@ func testAccCheckSslpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSslpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslpolicylabel.demo_sslpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslpolicylabel.Type(), "demo_sslpolicylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSslpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_sslpolicylabel.demo_sslpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslpolicylabel_basic},
+			{
+				Config:                  testAccSslpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccSslpolicylabelDataSource_basic = `
 
 	resource "citrixadc_sslpolicylabel" "tf_sslpolicylabel" {

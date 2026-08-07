@@ -160,6 +160,53 @@ const testAccAuthenticationdfapolicyDataSource_basic = `
 	}
 `
 
+func TestAccAuthenticationdfapolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationdfapolicy.td_dfapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationdfapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationdfapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationdfapolicy.Type(), "td_dfapolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationdfapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationdfapolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationdfapolicy.td_dfapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationdfapolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationdfapolicy_add},
+			{
+				Config:                  testAccAuthenticationdfapolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationdfapolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -120,6 +120,53 @@ func testAccCheckResponderhtmlpageDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccResponderhtmlpage_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderhtmlpage.tf_responder_page"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderhtmlpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderhtmlpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderhtmlpageExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Responderhtmlpage.Type(), "tf_responder_page"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderhtmlpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderhtmlpageExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccResponderhtmlpage_import(t *testing.T) {
+	const resAddr = "citrixadc_responderhtmlpage.tf_responder_page"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderhtmlpageDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderhtmlpage_basic},
+			{
+				Config:                  testAccResponderhtmlpage_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"src"},
+			},
+		},
+	})
+}
+
 const testAccResponderhtmlpageDataSource_basic = `
 resource "citrixadc_systemfile" "tf_html_page_ds" {
     filename = "tf_html_page_ds.html"

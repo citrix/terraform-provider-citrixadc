@@ -165,6 +165,53 @@ func testAccCheckAuthenticationsamlidppolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationsamlidppolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlidppolicy.tf_samlidppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidppolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationsamlidppolicy.Type(), "tf_samlidppolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationsamlidppolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidppolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationsamlidppolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlidppolicy.tf_samlidppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlidppolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationsamlidppolicy_add},
+			{
+				Config:                  testAccAuthenticationsamlidppolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthenticationsamlidppolicyDataSource_basic = `
 	resource "citrixadc_sslcertkey" "tf_sslcertkey_ds" {
 		certkey = "tf_sslcertkey_ds"

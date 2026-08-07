@@ -119,6 +119,25 @@ func testAccCheckNstimeoutExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccNstimeout_import(t *testing.T) {
+	const resAddr = "citrixadc_nstimeout.tf_nstimeout"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNstimeout_basic},
+			{
+				Config:                  testAccNstimeout_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNstimeoutDataSource_basic = `
 
 	resource "citrixadc_nstimeout" "tf_nstimeout" {

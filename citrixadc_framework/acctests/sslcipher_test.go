@@ -263,6 +263,64 @@ func testAccCheckSslcipherDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSslcipher_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipherDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcipher_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipherExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcipher.Type(), "tfAccsslcipher"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcipher_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcipherExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSslcipher_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipherDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcipher_add},
+			{
+				Config:            testAccSslcipher_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"ciphersuitebinding.#",
+					"ciphersuitebinding.0.%",
+					"ciphersuitebinding.0.ciphername",
+					"ciphersuitebinding.0.cipherpriority",
+					"ciphersuitebinding.1.%",
+					"ciphersuitebinding.1.ciphername",
+					"ciphersuitebinding.1.cipherpriority",
+					"ciphersuitebinding.2.%",
+					"ciphersuitebinding.2.ciphername",
+					"ciphersuitebinding.2.cipherpriority",
+				},
+			},
+		},
+	})
+}
+
 func TestAccSslcipherDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

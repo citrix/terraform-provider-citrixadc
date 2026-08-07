@@ -151,6 +151,53 @@ func testAccCheckNsassignmentDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsassignment_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsassignment.tf_nsassignment"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsassignmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsassignment_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsassignmentExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsassignment.Type(), "tf_nsassignment"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsassignment_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsassignmentExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsassignment_import(t *testing.T) {
+	const resAddr = "citrixadc_nsassignment.tf_nsassignment"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsassignmentDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsassignment_add},
+			{
+				Config:                  testAccNsassignment_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNsassignmentDataSource_basic = `
 	resource "citrixadc_nsvariable" "tf_nsvariable" {
 		name          = "tf_nsvariable"

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -130,6 +131,53 @@ func testAccCheckLsnrtspalgprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccLsnrtspalgprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnrtspalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnrtspalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnrtspalgprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnrtspalgprofile.Type(), "my_lsn_rtspalgprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnrtspalgprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnrtspalgprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnrtspalgprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnrtspalgprofile.tf_lsnrtspalgprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnrtspalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnrtspalgprofile_basic},
+			{
+				Config:                  testAccLsnrtspalgprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccLsnrtspalgprofileDataSource_basic = `

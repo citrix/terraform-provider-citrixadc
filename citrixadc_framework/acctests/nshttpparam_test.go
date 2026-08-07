@@ -121,6 +121,25 @@ func testAccCheckNshttpparamExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccNshttpparam_import(t *testing.T) {
+	const resAddr = "citrixadc_nshttpparam.tf_nshttpparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNshttpparam_add},
+			{
+				Config:                  testAccNshttpparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNshttpparamDataSource_basic = `
 	resource "citrixadc_nshttpparam" "tf_nshttpparam_ds" {
 		dropinvalreqs             = "ON"

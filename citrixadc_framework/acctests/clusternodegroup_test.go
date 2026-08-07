@@ -144,6 +144,59 @@ func testAccCheckClusternodegroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccClusternodegroup_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup.tf_clusternodegroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternodegroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Clusternodegroup.Type(), "my_clusternode"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternodegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternodegroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup.tf_clusternodegroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_basic},
+			{
+				Config:                  testAccClusternodegroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccClusternodegroupDataSource_basic(t *testing.T) {
 	if adcTestbed != "CLUSTER" {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)

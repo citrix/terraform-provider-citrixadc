@@ -75,6 +75,25 @@ func TestAccSnmpalarm_basic(t *testing.T) {
 	})
 }
 
+func TestAccSnmpalarm_import(t *testing.T) {
+	const resAddr = "citrixadc_snmpalarm.tf_snmpalarm"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSnmpalarm_basic},
+			{
+				Config:                  testAccSnmpalarm_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSnmpalarmExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

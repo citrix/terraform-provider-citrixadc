@@ -158,6 +158,56 @@ func TestAccCspolicyDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccCspolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cspolicy.foo_cspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.UnbindResource(service.Csvserver.Type(), "tst_policy_cs", service.Cspolicy.Type(), "test_policy", "policyname"); err != nil {
+						t.Fatalf("self-healing: out-of-band unbind failed: %v", err)
+					}
+					if err := client.DeleteResource(service.Cspolicy.Type(), "test_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCspolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_cspolicy.foo_cspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCspolicy_basic},
+			{
+				Config:                  testAccCspolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"csvserver", "priority", "targetlbvserver"},
+			},
+		},
+	})
+}
+
 const testAccCspolicyDataSource_basic = `
 
 resource "citrixadc_csvserver" "tf_cspolicy_ds" {

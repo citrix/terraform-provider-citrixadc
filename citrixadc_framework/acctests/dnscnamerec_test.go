@@ -138,6 +138,53 @@ func testAccCheckDnscnamerecDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnscnamerec_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnscnamerec.dnscnamerec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnscnamerecDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnscnamerec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnscnamerecExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnscnamerec.Type(), "citrixadc.cloud.com"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnscnamerec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnscnamerecExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnscnamerec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnscnamerec.dnscnamerec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnscnamerecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnscnamerec_basic},
+			{
+				Config:                  testAccDnscnamerec_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccDnscnamerecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

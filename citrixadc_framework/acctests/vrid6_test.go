@@ -75,6 +75,53 @@ func TestAccVrid6_basic(t *testing.T) {
 	})
 }
 
+func TestAccVrid6_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vrid6.tf_vrid6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVrid6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVrid6_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVrid6Exist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vrid6.Type(), "3"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVrid6_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVrid6Exist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVrid6_import(t *testing.T) {
+	const resAddr = "citrixadc_vrid6.tf_vrid6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVrid6Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVrid6_add},
+			{
+				Config:                  testAccVrid6_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"preemptiondelaytimer", "trackifnumpriority"},
+			},
+		},
+	})
+}
+
 func testAccCheckVrid6Exist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -364,6 +364,53 @@ const testAccIpsetDataSource_basic = `
 	}
 `
 
+func TestAccIpset_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipset.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpset_no_bindings,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ipset.Type(), "tf_test_ipset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpset_no_bindings,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIpset_import(t *testing.T) {
+	const resAddr = "citrixadc_ipset.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpset_no_bindings},
+			{
+				Config:                  testAccIpset_no_bindings,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccIpsetDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

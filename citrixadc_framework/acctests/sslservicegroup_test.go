@@ -133,6 +133,28 @@ func testAccCheckSslservicegroupDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSslservicegroup_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslservicegroup.tf_sslservicegroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservicegroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservicegroup_basic},
+			{
+				Config:                  testAccSslservicegroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccSslservicegroupDataSource_basic = `
 	resource "citrixadc_sslservicegroup" "tf_sslservicegroup" {
 		servicegroupname = citrixadc_servicegroup.tf_servicegroup.servicegroupname

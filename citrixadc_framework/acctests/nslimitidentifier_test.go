@@ -139,6 +139,53 @@ func testAccCheckNslimitidentifierDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNslimitidentifier_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nslimitidentifier.tf_nslimitidentifier"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslimitidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslimitidentifier_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslimitidentifierExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nslimitidentifier.Type(), "tf_nslimitidentifier"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNslimitidentifier_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslimitidentifierExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNslimitidentifier_import(t *testing.T) {
+	const resAddr = "citrixadc_nslimitidentifier.tf_nslimitidentifier"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslimitidentifierDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNslimitidentifier_add},
+			{
+				Config:                  testAccNslimitidentifier_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNslimitidentifierDataSource_basic = `
 
 	resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier_ds" {

@@ -87,6 +87,53 @@ func TestAccAuthenticationtacacspolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationtacacspolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationtacacspolicy.tf_tacacspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationtacacspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationtacacspolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationtacacspolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationtacacspolicy.Type(), "tf_tacacspolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationtacacspolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationtacacspolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationtacacspolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationtacacspolicy.tf_tacacspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationtacacspolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationtacacspolicy_add},
+			{
+				Config:                  testAccAuthenticationtacacspolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationtacacspolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -142,6 +142,26 @@ func testAccCheckIpv6Destroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccIpv6_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_ipv6.tf_ipv6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpv6Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpv6_basic},
+			{
+				Config:                  testAccIpv6_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccIpv6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

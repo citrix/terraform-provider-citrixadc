@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -124,6 +125,53 @@ func TestAccLbgroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "v6persistmasklen", "64"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "timeout", "10"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbgroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbgroup.tf_lbgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbgroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lbgroup.Type(), "tf_lbgroup"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbgroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLbgroup_import(t *testing.T) {
+	const resAddr = "citrixadc_lbgroup.tf_lbgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbgroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbgroup_basic},
+			{
+				Config:                  testAccLbgroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

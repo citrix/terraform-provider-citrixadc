@@ -177,6 +177,59 @@ resource "citrixadc_netprofile" "tf_netprofile" {
 
 `
 
+func TestAccNetprofile_selfHealing(t *testing.T) {
+	if isCpxRun {
+		t.Skip("CPX 12.0 is outdated for this resource")
+	}
+	const resAddr = "citrixadc_netprofile.tf_netprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Netprofile.Type(), "tf_netprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNetprofile_import(t *testing.T) {
+	if isCpxRun {
+		t.Skip("CPX 12.0 is outdated for this resource")
+	}
+	const resAddr = "citrixadc_netprofile.tf_netprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetprofile_basic_step1},
+			{
+				Config:                  testAccNetprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNetprofileDataSource_basic = `
 
 	resource "citrixadc_netprofile" "tf_netprofile" {

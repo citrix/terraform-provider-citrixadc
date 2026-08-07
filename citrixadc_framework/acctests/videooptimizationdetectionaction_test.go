@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -74,6 +75,53 @@ func TestAccVideooptimizationdetectionaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_videooptimizationdetectionaction.tf_detectionaction", "name", "tf_videooptimizationdetectionaction"),
 					resource.TestCheckResourceAttr("citrixadc_videooptimizationdetectionaction.tf_detectionaction", "type", "clear_text_abr"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationdetectionaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionaction.tf_detectionaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Videooptimizationdetectionaction.Type(), "tf_videooptimizationdetectionaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationdetectionaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationdetectionaction_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionaction.tf_detectionaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVideooptimizationdetectionaction_add},
+			{
+				Config:                  testAccVideooptimizationdetectionaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

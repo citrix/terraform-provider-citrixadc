@@ -137,6 +137,53 @@ func testAccCheckAppqoeactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppqoeaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appqoeaction.tf_appqoeaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoeactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoeaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoeactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appqoeaction.Type(), "my_appqoeaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppqoeaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoeactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppqoeaction_import(t *testing.T) {
+	const resAddr = "citrixadc_appqoeaction.tf_appqoeaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoeactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppqoeaction_basic},
+			{
+				Config:                  testAccAppqoeaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAppqoeactionDataSource_basic = `
 
 	resource "citrixadc_appqoeaction" "tf_appqoeaction" {

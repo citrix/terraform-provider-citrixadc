@@ -114,6 +114,25 @@ func testAccCheckL3paramExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccL3param_import(t *testing.T) {
+	const resAddr = "citrixadc_l3param.tf_l3param"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccL3param_basic},
+			{
+				Config:                  testAccL3param_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccL3paramDataSource_basic = `
 
 	resource "citrixadc_l3param" "tf_l3param" {

@@ -213,6 +213,25 @@ func testAccCheckLbroute6Destroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLbroute6_import(t *testing.T) {
+	const resAddr = "citrixadc_lbroute6.demo_route6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbroute6Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbroute6_basic},
+			{
+				Config:                  testAccLbroute6_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"td"},
+			},
+		},
+	})
+}
+
 const testAccLbroute6DataSource_basic = `
 resource "citrixadc_nsip6" "tf1_nsip6" {
     ipv6address = "22::1/64"

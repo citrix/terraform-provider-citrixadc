@@ -118,6 +118,25 @@ func testAccCheckSslparameterExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccSslparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_sslparameter.default"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSslparameter_basic},
+			{
+				Config:                  testAccSslparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSslparameterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

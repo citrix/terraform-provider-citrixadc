@@ -121,6 +121,25 @@ func testAccCheckIp6tunnelparamExist(n string, id *string) resource.TestCheckFun
 	}
 }
 
+func TestAccIp6tunnelparam_import(t *testing.T) {
+	const resAddr = "citrixadc_ip6tunnelparam.tf_ip6tunnelparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccIp6tunnelparam_add},
+			{
+				Config:                  testAccIp6tunnelparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccIp6tunnelparamDataSource_basic = `
 	resource "citrixadc_nsip6" "name" {
 		ipv6address = "2001:db8:100::fa/64"

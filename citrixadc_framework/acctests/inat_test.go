@@ -137,6 +137,34 @@ resource "citrixadc_inat" "foo" {
 }
 `
 
+func TestAccInat_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_inat.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckInatDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInat_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInatExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Inat.Type(), "ip4ip"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccInat_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInatExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
@@ -188,6 +216,25 @@ func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 	inatInstance.Td = utils.IntPtr(1)
 	testHelperVerifyImmutabilityFunc(c, t, inatType, inatName, inatInstance, "td")
 	inatInstance.Td = utils.IntPtr(0)
+}
+
+func TestAccInat_import(t *testing.T) {
+	const resAddr = "citrixadc_inat.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckInatDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccInat_basic},
+			{
+				Config:                  testAccInat_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccInatDataSource_basic = `

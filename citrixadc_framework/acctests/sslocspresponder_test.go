@@ -220,6 +220,53 @@ func testAccCheckSslocspresponderDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccSslocspresponder_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslocspresponder.tf_sslocspresponder"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslocspresponderDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslocspresponder_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslocspresponderExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslocspresponder.Type(), "tf_sslocspresponder"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslocspresponder_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslocspresponderExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSslocspresponder_import(t *testing.T) {
+	const resAddr = "citrixadc_sslocspresponder.tf_sslocspresponder"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslocspresponderDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslocspresponder_basic},
+			{
+				Config:                  testAccSslocspresponder_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSslocspresponderDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

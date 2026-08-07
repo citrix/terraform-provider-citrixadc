@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -142,6 +143,53 @@ const testAccAuthenticationstorefrontauthactionDataSource_basic = `
 		name = citrixadc_authenticationstorefrontauthaction.tf_storefront_ds.name
 	}
 `
+
+func TestAccAuthenticationstorefrontauthaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationstorefrontauthaction.tf_storefront"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationstorefrontauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationstorefrontauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationstorefrontauthactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationstorefrontauthaction.Type(), "tf_storefront"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationstorefrontauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationstorefrontauthactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationstorefrontauthaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationstorefrontauthaction.tf_storefront"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationstorefrontauthactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationstorefrontauthaction_add},
+			{
+				Config:                  testAccAuthenticationstorefrontauthaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccAuthenticationstorefrontauthactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

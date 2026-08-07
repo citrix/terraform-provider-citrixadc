@@ -97,6 +97,25 @@ func testAccCheckExtendedmemoryparamExist(n string, id *string) resource.TestChe
 	}
 }
 
+func TestAccExtendedmemoryparam_import(t *testing.T) {
+	const resAddr = "citrixadc_extendedmemoryparam.tf_extendedmemoryparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccExtendedmemoryparam_add},
+			{
+				Config:                  testAccExtendedmemoryparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccExtendedmemoryparamDataSource_basic = `
 	resource "citrixadc_extendedmemoryparam" "tf_extendedmemoryparam" {
 		memlimit = 512

@@ -121,6 +121,25 @@ func testAccCheckCmpparameterExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccCmpparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_cmpparameter.tf_cmpparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccCmpparameter_basic},
+			{
+				Config:                  testAccCmpparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccCmpparameterDataSource_basic = `
 
 

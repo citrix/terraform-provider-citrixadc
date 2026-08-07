@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -168,6 +169,53 @@ const testAccAuthenticationepaactionDataSource_basic = `
 		name = citrixadc_authenticationepaaction.tf_epaaction_ds.name
 	}
 `
+
+func TestAccAuthenticationepaaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationepaaction.tf_epaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationepaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationepaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationepaactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationepaaction.Type(), "tf_epaaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationepaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationepaactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationepaaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationepaaction.tf_epaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationepaactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationepaaction_add},
+			{
+				Config:                  testAccAuthenticationepaaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccAuthenticationepaactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

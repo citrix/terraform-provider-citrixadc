@@ -128,6 +128,53 @@ func testAccCheckDnspolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnspolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnspolicylabel.dnspolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnspolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnspolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnspolicylabel.Type(), "label1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnspolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnspolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_dnspolicylabel.dnspolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnspolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnspolicylabel_add},
+			{
+				Config:                  testAccDnspolicylabel_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccDnspolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

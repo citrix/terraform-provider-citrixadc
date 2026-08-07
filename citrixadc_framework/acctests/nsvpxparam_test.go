@@ -120,6 +120,26 @@ func TestAccNsvpxparam_cluster(t *testing.T) {
 	})
 }
 
+func TestAccNsvpxparam_import(t *testing.T) {
+	t.Skip("Use case is applicable for standalone VPX")
+	const resAddr = "citrixadc_nsvpxparam.tf_vpxparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsvpxparamDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsvpxparam_basic_step1},
+			{
+				Config:                  testAccNsvpxparam_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckNsvpxparamExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -83,6 +83,53 @@ func TestAccAuthenticationnegotiatepolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuthenticationnegotiatepolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnegotiatepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationnegotiatepolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationnegotiatepolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationnegotiatepolicy.Type(), "tf_negotiatepolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationnegotiatepolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationnegotiatepolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationnegotiatepolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnegotiatepolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationnegotiatepolicy_add},
+			{
+				Config:                  testAccAuthenticationnegotiatepolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAuthenticationnegotiatepolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

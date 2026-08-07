@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -122,6 +123,53 @@ func testAccCheckVxlanvlanmapDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVxlanvlanmap_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vxlanvlanmap.tf_vxlanvlanmp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlanvlanmapDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlanvlanmap_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanvlanmapExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vxlanvlanmap.Type(), "tf_vxlanvlanmp"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVxlanvlanmap_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanvlanmapExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVxlanvlanmap_import(t *testing.T) {
+	const resAddr = "citrixadc_vxlanvlanmap.tf_vxlanvlanmp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlanvlanmapDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVxlanvlanmap_add},
+			{
+				Config:                  testAccVxlanvlanmap_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccVxlanvlanmapDataSource_basic = `

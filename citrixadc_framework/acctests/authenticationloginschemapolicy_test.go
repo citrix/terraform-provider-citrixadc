@@ -147,6 +147,53 @@ func testAccCheckAuthenticationloginschemapolicyDestroy(s *terraform.State) erro
 	return nil
 }
 
+func TestAccAuthenticationloginschemapolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationloginschemapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemapolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationloginschemapolicy.Type(), "tf_loginschemapolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationloginschemapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemapolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationloginschemapolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemapolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationloginschemapolicy_add},
+			{
+				Config:                  testAccAuthenticationloginschemapolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthenticationloginschemapolicyDataSource_basic = `
 
 resource "citrixadc_authenticationloginschema" "tf_loginschema_ds" {

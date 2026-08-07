@@ -101,6 +101,25 @@ func testAccCheckNstcpbufparamExist(n string, id *string) resource.TestCheckFunc
 	}
 }
 
+func TestAccNstcpbufparam_import(t *testing.T) {
+	const resAddr = "citrixadc_nstcpbufparam.tf_nstcpbufparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNstcpbufparam_add},
+			{
+				Config:                  testAccNstcpbufparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNstcpbufparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

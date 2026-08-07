@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -148,6 +149,55 @@ func testAccCheckSubscriberprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSubscriberprofile_selfHealing(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_subscriberprofile.tf_subscriberprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSubscriberprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Subscriberprofile.Type(), "10.222.74.185", []string{"vlan:1"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSubscriberprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSubscriberprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSubscriberprofile_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_subscriberprofile.tf_subscriberprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSubscriberprofile_basic},
+			{
+				Config:                  testAccSubscriberprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccSubscriberprofileDataSource_basic(t *testing.T) {

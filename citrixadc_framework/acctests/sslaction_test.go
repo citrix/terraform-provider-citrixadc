@@ -101,6 +101,59 @@ func TestAccSslactionDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccSslaction_selfHealing(t *testing.T) {
+	if isCpxRun {
+		t.Skip("sslaction clientcertverification attribute not supported in CPX12")
+	}
+	const resAddr = "citrixadc_sslaction.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslaction.Type(), "tf_sslaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSslaction_import(t *testing.T) {
+	if isCpxRun {
+		t.Skip("sslaction clientcertverification attribute not supported in CPX12")
+	}
+	const resAddr = "citrixadc_sslaction.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslaction_basic},
+			{
+				Config:                  testAccSslaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckSslactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -130,6 +130,53 @@ func testAccCheckCmppolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCmppolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicy.tf_cmppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmppolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cmppolicy.Type(), "tf_cmppolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCmppolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCmppolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicy.tf_cmppolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCmppolicy_basic_step1},
+			{
+				Config:                  testAccCmppolicy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccCmppolicyDataSource_basic = `
 
 resource "citrixadc_cmppolicy" "tf_cmppolicy" {

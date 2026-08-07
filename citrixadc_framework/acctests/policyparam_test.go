@@ -98,6 +98,25 @@ func testAccCheckPolicyparamExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccPolicyparam_import(t *testing.T) {
+	const resAddr = "citrixadc_policyparam.tf_policyparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicyparam_basic},
+			{
+				Config:                  testAccPolicyparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccPolicyparamDataSource_basic = `
 	resource "citrixadc_policyparam" "tf_policyparam_ds" {
 		timeout = 5000

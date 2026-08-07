@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -130,6 +131,53 @@ func testAccCheckAuthenticationcitrixauthactionDestroy(s *terraform.State) error
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationcitrixauthaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationcitrixauthaction.tf_citrixauthaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcitrixauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcitrixauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcitrixauthactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationcitrixauthaction.Type(), "tf_citrixauthaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationcitrixauthaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcitrixauthactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationcitrixauthaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationcitrixauthaction.tf_citrixauthaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcitrixauthactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationcitrixauthaction_add},
+			{
+				Config:                  testAccAuthenticationcitrixauthaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 const testAccAuthenticationcitrixauthactionDataSource_basic = `

@@ -533,6 +533,53 @@ resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
 }
 `
 
+func TestAccRewritepolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rewritepolicy.tf_rewrite_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicy_globalbinding_not_exists,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Rewritepolicy.Type(), "tf_rewrite_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRewritepolicy_globalbinding_not_exists,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccRewritepolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_rewritepolicy.tf_rewrite_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRewritepolicy_globalbinding_not_exists},
+			{
+				Config:                  testAccRewritepolicy_globalbinding_not_exists,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccRewritepolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

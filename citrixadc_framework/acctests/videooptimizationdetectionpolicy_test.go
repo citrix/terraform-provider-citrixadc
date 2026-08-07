@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -156,6 +157,53 @@ func testAccCheckVideooptimizationdetectionpolicyDestroy(s *terraform.State) err
 	}
 
 	return nil
+}
+
+func TestAccVideooptimizationdetectionpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Videooptimizationdetectionpolicy.Type(), "tf_videooptimizationdetectionpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationdetectionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationdetectionpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVideooptimizationdetectionpolicy_add},
+			{
+				Config:                  testAccVideooptimizationdetectionpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccVideooptimizationdetectionpolicyDataSource_basic(t *testing.T) {

@@ -129,6 +129,25 @@ func testAccCheckSubscriberparamExist(n string, id *string) resource.TestCheckFu
 	}
 }
 
+func TestAccSubscriberparam_import(t *testing.T) {
+	const resAddr = "citrixadc_subscriberparam.tf_subscriberparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSubscriberparam_basic},
+			{
+				Config:                  testAccSubscriberparam_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSubscriberparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

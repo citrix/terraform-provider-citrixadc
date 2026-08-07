@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -148,6 +149,53 @@ func testAccCheckVpnalwaysonprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnalwaysonprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnalwaysonprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnalwaysonprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnalwaysonprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnalwaysonprofile.Type(), "tf_vpnalwaysonprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnalwaysonprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnalwaysonprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnalwaysonprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnalwaysonprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnalwaysonprofile_basic},
+			{
+				Config:                  testAccVpnalwaysonprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccVpnalwaysonprofileDataSource_basic(t *testing.T) {

@@ -71,6 +71,34 @@ func TestAccChannel_basic(t *testing.T) {
 	})
 }
 
+func TestAccChannel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_channel.tf_channel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckChannelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Channel.Type(), "LA/3"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccChannel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckChannelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckChannelExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -133,6 +161,25 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccChannel_import(t *testing.T) {
+	const resAddr = "citrixadc_channel.tf_channel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccChannel_basic},
+			{
+				Config:                  testAccChannel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"speed"},
+			},
+		},
+	})
 }
 
 func TestAccChannelDataSource_basic(t *testing.T) {

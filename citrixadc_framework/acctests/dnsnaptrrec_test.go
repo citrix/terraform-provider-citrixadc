@@ -136,6 +136,25 @@ func testAccCheckDnsnaptrrecDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnsnaptrrec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsnaptrrec.dnsnaptrrec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsnaptrrecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsnaptrrec_basic},
+			{
+				Config:                  testAccDnsnaptrrec_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccDnsnaptrrecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

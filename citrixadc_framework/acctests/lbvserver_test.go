@@ -365,6 +365,34 @@ func TestAccLbvserver_cluster_ciphers(t *testing.T) {
 	})
 }
 
+func TestAccLbvserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lbvserver.Type(), "terraform-lb"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckLbvserverExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		//lintignore:R018
@@ -893,6 +921,27 @@ func TestAccLbvserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "port", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "servicetype", "HTTP"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_basic},
+			{
+				Config:            testAccLbvserver_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// NITRO omits these on default so they are absent after import
+				// (present as "" / "0" in the apply state).
+				ImportStateVerifyIgnore: []string{"backupvserver", "redirectfromport"},
 			},
 		},
 	})

@@ -77,6 +77,53 @@ func TestAccCachecontentgroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccCachecontentgroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cachecontentgroup.tf_cachecontentgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachecontentgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachecontentgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachecontentgroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cachecontentgroup.Type(), "my_cachecontentgroup"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCachecontentgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachecontentgroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCachecontentgroup_import(t *testing.T) {
+	const resAddr = "citrixadc_cachecontentgroup.tf_cachecontentgroup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachecontentgroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCachecontentgroup_basic},
+			{
+				Config:                  testAccCachecontentgroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCachecontentgroupExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

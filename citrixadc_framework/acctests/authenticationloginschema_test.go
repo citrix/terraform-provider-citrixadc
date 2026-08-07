@@ -135,6 +135,53 @@ func testAccCheckAuthenticationloginschemaDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationloginschema_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationloginschema.tf_loginschema"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationloginschema_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemaExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationloginschema.Type(), "tf_loginschema"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationloginschema_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationloginschemaExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationloginschema_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationloginschema.tf_loginschema"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemaDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationloginschema_add},
+			{
+				Config:                  testAccAuthenticationloginschema_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthenticationloginschemaDataSource_basic = `
 	resource "citrixadc_authenticationloginschema" "tf_loginschema_ds" {
 		name                    = "tf_loginschema_ds"

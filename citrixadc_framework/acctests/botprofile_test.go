@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -204,6 +205,53 @@ resource "citrixadc_botprofile" "tf_botprofile" {
 	bot_enable_tps = "OFF"
 }
 `
+
+func TestAccBotprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile.tf_botprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Botprofile.Type(), "tf_botprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccBotprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile.tf_botprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_basic},
+			{
+				Config:                  testAccBotprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func TestAccBotprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

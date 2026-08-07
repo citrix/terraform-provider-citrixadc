@@ -182,6 +182,53 @@ func testAccCheckVpnsessionpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnsessionpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnsessionpolicy.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnsessionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsessionpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnsessionpolicy.Type(), "tf_vpnsessionpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnsessionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsessionpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnsessionpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnsessionpolicy.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnsessionpolicy_add},
+			{
+				Config:                  testAccVpnsessionpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccVpnsessionpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -123,6 +123,25 @@ func testAccCheckNsconsoleloginpromptDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsconsoleloginprompt_import(t *testing.T) {
+	const resAddr = "citrixadc_nsconsoleloginprompt.tf_nsconsoleloginprompt"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsconsoleloginpromptDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsconsoleloginprompt_add},
+			{
+				Config:                  testAccNsconsoleloginprompt_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNsconsoleloginpromptDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

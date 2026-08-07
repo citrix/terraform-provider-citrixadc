@@ -217,3 +217,50 @@ func TestAccAppflowpolicyDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppflowpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicy.tf_appflowpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowpolicy_basic},
+			{
+				Config:                  testAccAppflowpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppflowpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicy.tf_appflowpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appflowpolicy.Type(), "test_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -146,6 +146,53 @@ func testAccCheckVpnclientlessaccesspolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnclientlessaccesspolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnclientlessaccesspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnclientlessaccesspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnclientlessaccesspolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnclientlessaccesspolicy.Type(), "tf_vpnclientlessaccesspolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnclientlessaccesspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnclientlessaccesspolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnclientlessaccesspolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnclientlessaccesspolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnclientlessaccesspolicy_basic},
+			{
+				Config:                  testAccVpnclientlessaccesspolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccVpnclientlessaccesspolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

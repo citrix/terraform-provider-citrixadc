@@ -123,6 +123,25 @@ func testAccCheckLbsipparametersExist(n string, id *string) resource.TestCheckFu
 	}
 }
 
+func TestAccLbsipparameters_import(t *testing.T) {
+	const resAddr = "citrixadc_lbsipparameters.tf_lbsipparameters"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccLbsipparameters_basic},
+			{
+				Config:                  testAccLbsipparameters_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLbsipparametersDataSource_basic = `
 	resource "citrixadc_lbsipparameters" "tf_lbsipparameters" {
 		addrportvip = "ENABLED"

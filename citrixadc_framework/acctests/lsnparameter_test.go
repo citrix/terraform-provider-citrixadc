@@ -102,6 +102,25 @@ func testAccCheckLsnparameterExist(n string, id *string) resource.TestCheckFunc 
 	}
 }
 
+func TestAccLsnparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnparameter.tf_lsnparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnparameter_basic},
+			{
+				Config:                  testAccLsnparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccLsnparameterDataSource_basic = `
 
 resource "citrixadc_lsnparameter" "tf_lsnparameter_ds" {

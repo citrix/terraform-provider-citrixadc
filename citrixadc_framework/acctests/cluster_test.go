@@ -252,6 +252,28 @@ resource "citrixadc_cluster" "tf_cluster" {
 }
 `
 
+func TestAccCluster_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_cluster.tf_cluster"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCluster_step1},
+			{
+				Config:                  testAccCluster_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccCluster_sdkv2StateUpgrade(t *testing.T) {
 	if adcTestbed != "CLUSTER" {
 		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)

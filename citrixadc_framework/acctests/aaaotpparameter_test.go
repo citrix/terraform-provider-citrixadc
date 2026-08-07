@@ -100,6 +100,25 @@ func testAccCheckAaaotpparameterExist(n string, id *string) resource.TestCheckFu
 	}
 }
 
+func TestAccAaaotpparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_aaaotpparameter.tf_aaaotpparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccAaaotpparameter_basic},
+			{
+				Config:                  testAccAaaotpparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAaaotpparameterDataSource_basic = `
 	resource "citrixadc_aaaotpparameter" "tf_aaaotpparameter" {
 		encryption = "OFF"

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -86,6 +87,53 @@ func TestAccIcalatencyprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_icalatencyprofile", "l7latencythresholdfactor", "100"),
 					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_icalatencyprofile", "l7latencywaittime", "80"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccIcalatencyprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_icalatencyprofile.tf_icalatencyprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcalatencyprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcalatencyprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcalatencyprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Icalatencyprofile.Type(), "my_ica_latencyprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIcalatencyprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcalatencyprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIcalatencyprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_icalatencyprofile.tf_icalatencyprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcalatencyprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIcalatencyprofile_basic},
+			{
+				Config:                  testAccIcalatencyprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

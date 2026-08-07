@@ -101,6 +101,25 @@ func testAccCheckArpparamExist(n string, id *string) resource.TestCheckFunc {
 	}
 }
 
+func TestAccArpparam_import(t *testing.T) {
+	const resAddr = "citrixadc_arpparam.tf_arpparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccArpparam_add},
+			{
+				Config:                  testAccArpparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccArpparamDataSource_basic = `
 
 	resource "citrixadc_arpparam" "tf_arpparam" {

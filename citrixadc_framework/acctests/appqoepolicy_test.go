@@ -165,6 +165,53 @@ func testAccCheckAppqoepolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppqoepolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appqoepolicy.tf_appqoepolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoepolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoepolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appqoepolicy.Type(), "my_appqoepolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppqoepolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoepolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppqoepolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_appqoepolicy.tf_appqoepolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoepolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppqoepolicy_basic},
+			{
+				Config:                  testAccAppqoepolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccAppqoepolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -130,6 +130,53 @@ func testAccCheckAaapreauthenticationactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAaapreauthenticationaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaapreauthenticationaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Aaapreauthenticationaction.Type(), "tf_aaapreauthenticationaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaapreauthenticationaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAaapreauthenticationaction_import(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaapreauthenticationaction_basic},
+			{
+				Config:                  testAccAaapreauthenticationaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAaapreauthenticationactionDataSource_basic = `
 
 	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {

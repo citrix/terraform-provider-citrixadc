@@ -140,6 +140,25 @@ func testAccCheckSubscriberradiusinterfaceExist(n string, id *string) resource.T
 	}
 }
 
+func TestAccSubscriberradiusinterface_import(t *testing.T) {
+	const resAddr = "citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSubscriberradiusinterface_basic},
+			{
+				Config:                  testAccSubscriberradiusinterface_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccSubscriberradiusinterfaceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

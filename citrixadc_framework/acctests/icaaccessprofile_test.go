@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -172,6 +173,53 @@ func testAccCheckIcaaccessprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccIcaaccessprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_icaaccessprofile.tf_icaaccessprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcaaccessprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIcaaccessprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaaccessprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Icaaccessprofile.Type(), "my_ica_accessprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIcaaccessprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaaccessprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIcaaccessprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_icaaccessprofile.tf_icaaccessprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcaaccessprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIcaaccessprofile_basic},
+			{
+				Config:                  testAccIcaaccessprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccIcaaccessprofileDataSource_basic(t *testing.T) {

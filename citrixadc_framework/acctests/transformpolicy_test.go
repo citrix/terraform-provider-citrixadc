@@ -78,6 +78,34 @@ func TestAccTransformpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccTransformpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_transformpolicy.tf_trans_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Transformpolicy.Type(), "tf_trans_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTransformpolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckTransformpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -140,6 +168,25 @@ func testAccCheckTransformpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccTransformpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_transformpolicy.tf_trans_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTransformpolicy_basic_step1},
+			{
+				Config:                  testAccTransformpolicy_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
 }
 
 func TestAccTransformpolicyDataSource_basic(t *testing.T) {

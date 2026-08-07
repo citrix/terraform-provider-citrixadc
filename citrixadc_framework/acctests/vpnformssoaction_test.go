@@ -110,6 +110,25 @@ func TestAccVpnformssoaction_basic(t *testing.T) {
 	})
 }
 
+func TestAccVpnformssoaction_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnformssoaction.tf_vpnformssoaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnformssoaction_basic},
+			{
+				Config:                  testAccVpnformssoaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckVpnformssoactionExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -172,6 +191,34 @@ func testAccCheckVpnformssoactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnformssoaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnformssoaction.tf_vpnformssoaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnformssoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnformssoactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnformssoaction.Type(), "tf_vpnformssoaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnformssoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnformssoactionExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 const testAccVpnformssoactionDataSource_basic = `

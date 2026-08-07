@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -71,6 +72,53 @@ func TestAccLsnhttphdrlogprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile", "logversion", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile", "loghost", "ENABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLsnhttphdrlogprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnhttphdrlogprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnhttphdrlogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnhttphdrlogprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnhttphdrlogprofile.Type(), "my_lsn_httphdrlogprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnhttphdrlogprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnhttphdrlogprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnhttphdrlogprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnhttphdrlogprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnhttphdrlogprofile_basic},
+			{
+				Config:                  testAccLsnhttphdrlogprofile_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})

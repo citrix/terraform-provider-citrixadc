@@ -143,3 +143,50 @@ func TestAccAppfwjsoncontenttypeDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwjsoncontenttype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwjsoncontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwjsoncontenttype_basic},
+			{
+				Config:                  testAccAppfwjsoncontenttype_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppfwjsoncontenttype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwjsoncontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwjsoncontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsoncontenttypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwjsoncontenttype.Type(), "tf_Acc.*test"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwjsoncontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsoncontenttypeExist(resAddr, nil)),
+			},
+		},
+	})
+}

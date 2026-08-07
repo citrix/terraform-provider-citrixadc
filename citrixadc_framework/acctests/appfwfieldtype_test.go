@@ -160,3 +160,50 @@ func TestAccAppfwfieldtypeDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAppfwfieldtype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwfieldtype.tfAcc_appfwfieldtype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwfieldtypeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwfieldtype_add},
+			{
+				Config:                  testAccAppfwfieldtype_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppfwfieldtype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwfieldtype.tfAcc_appfwfieldtype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwfieldtypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwfieldtype_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwfieldtypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwfieldtype.Type(), "tfAcc_appfwfieldtype"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwfieldtype_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwfieldtypeExist(resAddr, nil)),
+			},
+		},
+	})
+}

@@ -89,6 +89,25 @@ func TestAccDnssrvrec_basic(t *testing.T) {
 	})
 }
 
+func TestAccDnssrvrec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnssrvrec.dnssrvrec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssrvrecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnssrvrec_add},
+			{
+				Config:                  testAccDnssrvrec_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckDnssrvrecExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

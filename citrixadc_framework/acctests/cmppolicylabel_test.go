@@ -69,6 +69,53 @@ func TestAccCmppolicylabel_basic(t *testing.T) {
 	})
 }
 
+func TestAccCmppolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicylabel.tf_cmppolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmppolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cmppolicylabel.Type(), "my_cmppolicy_label"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCmppolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCmppolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicylabel.tf_cmppolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCmppolicylabel_basic},
+			{
+				Config:                  testAccCmppolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckCmppolicylabelExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

@@ -278,6 +278,53 @@ const testAccServicegroupDataSource_basic = `
 	}
 `
 
+func TestAccServicegroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_servicegroup.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Servicegroup.Type(), "test_servicegroup"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccServicegroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckServicegroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccServicegroup_import(t *testing.T) {
+	const resAddr = "citrixadc_servicegroup.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServicegroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccServicegroup_basic},
+			{
+				Config:                  testAccServicegroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delay", "graceful", "lbvservers", "servicegroupmembers"},
+			},
+		},
+	})
+}
+
 func TestAccServicegroupDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

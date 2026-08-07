@@ -92,7 +92,12 @@ func (r *Nd6Resource) Create(ctx context.Context, req resource.CreateRequest, re
 	tflog.Trace(ctx, "Created nd6 resource")
 
 	// Read the updated state back
-	r.readNd6FromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNd6FromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nd6 not found on ADC immediately after creation")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -110,7 +115,18 @@ func (r *Nd6Resource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	tflog.Debug(ctx, "Reading nd6 resource")
 
-	r.readNd6FromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNd6FromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Self-healing: the nd6 entry no longer exists on the ADC. Remove it from
+	// state so Terraform plans a recreate (SDK v2 d.SetId("") drift contract).
+	if !found {
+		tflog.Debug(ctx, "nd6 not found on ADC; removing from state for recreation")
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -135,7 +151,12 @@ func (r *Nd6Resource) Update(ctx context.Context, req resource.UpdateRequest, re
 	tflog.Debug(ctx, "Update is a no-op for nd6; all attributes are RequiresReplace")
 
 	// Read the current state back
-	r.readNd6FromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNd6FromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nd6 not found on ADC")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -179,8 +200,12 @@ func (r *Nd6Resource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	tflog.Trace(ctx, "Deleted nd6 resource")
 }
 
-// Helper function to read nd6 data from API
-func (r *Nd6Resource) readNd6FromApi(ctx context.Context, data *Nd6ResourceModel, diags *diag.Diagnostics) {
+// Helper function to read nd6 data from API. Returns found=false (without adding
+// a diagnostic) when the specific nd6 entry no longer exists on the ADC, so
+// callers can distinguish drift (Read: remove from state and recreate) from a
+// post-write inconsistency (Create/Update: report an error). A genuine
+// transport/API error is reported via diags and also returns found=false.
+func (r *Nd6Resource) readNd6FromApi(ctx context.Context, data *Nd6ResourceModel, diags *diag.Diagnostics) bool {
 	neighbor_Name := data.Neighbor.ValueString()
 
 	// Default to "0" for td and nodeid if not set
@@ -201,13 +226,12 @@ func (r *Nd6Resource) readNd6FromApi(ctx context.Context, data *Nd6ResourceModel
 	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nd6, got error: %s", err))
-		return
+		return false
 	}
 
-	// Resource is missing
+	// Resource is missing (no nd6 entries at all on the ADC)
 	if len(dataArr) == 0 {
-		diags.AddError("Client Error", "nd6 returned empty array")
-		return
+		return false
 	}
 
 	// Iterate through results to find the one with the right id
@@ -243,11 +267,11 @@ func (r *Nd6Resource) readNd6FromApi(ctx context.Context, data *Nd6ResourceModel
 		}
 	}
 
-	// Resource is missing
+	// Resource is missing (this specific nd6 entry is gone)
 	if foundIndex == -1 {
-		diags.AddError("Client Error", fmt.Sprintf("nd6 with neighbor %s not found", neighbor_Name))
-		return
+		return false
 	}
 
 	nd6SetAttrFromGet(ctx, data, dataArr[foundIndex])
+	return true
 }

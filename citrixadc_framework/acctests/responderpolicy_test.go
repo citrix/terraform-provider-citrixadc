@@ -567,6 +567,53 @@ data "citrixadc_responderpolicy" "tf_responder_policy_ds" {
 }
 `
 
+func TestAccResponderpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicy.tf_responder_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicy_globalbinding_not_exists,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Responderpolicy.Type(), "tf_responder_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderpolicy_globalbinding_not_exists,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccResponderpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicy.tf_responder_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderpolicy_globalbinding_not_exists},
+			{
+				Config:                  testAccResponderpolicy_globalbinding_not_exists,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccResponderpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

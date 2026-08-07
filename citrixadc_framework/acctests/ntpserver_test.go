@@ -230,6 +230,53 @@ func TestAccNtpserverDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccNtpserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ntpserver.tf_ntpserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNtpserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNtpserver_basic_ip,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNtpserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ntpserver.Type(), "10.222.74.200"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNtpserver_basic_ip,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNtpserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNtpserver_import(t *testing.T) {
+	const resAddr = "citrixadc_ntpserver.tf_ntpserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNtpserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNtpserver_basic_ip},
+			{
+				Config:                  testAccNtpserver_basic_ip,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"serverip", "servername"},
+			},
+		},
+	})
+}
+
 const testAccNtpserverDataSource_basic = `
 
 resource "citrixadc_ntpserver" "tf_ntpserver_ds" {

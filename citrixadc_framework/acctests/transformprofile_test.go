@@ -84,6 +84,53 @@ func TestAccTransformprofile_lean(t *testing.T) {
 	})
 }
 
+func TestAccTransformprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_transformprofile.tf_trans_profile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Transformprofile.Type(), "tf_trans_profile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTransformprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTransformprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_transformprofile.tf_trans_profile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTransformprofile_basic_step1},
+			{
+				Config:                  testAccTransformprofile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckTransformprofileExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

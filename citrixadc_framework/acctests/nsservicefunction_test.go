@@ -143,6 +143,53 @@ func testAccCheckNsservicefunctionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsservicefunction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsservicefunction.tf_servicefunc"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicefunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsservicefunction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicefunctionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsservicefunction.Type(), "tf_servicefunc"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsservicefunction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicefunctionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsservicefunction_import(t *testing.T) {
+	const resAddr = "citrixadc_nsservicefunction.tf_servicefunc"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicefunctionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsservicefunction_add},
+			{
+				Config:                  testAccNsservicefunction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNsservicefunctionDataSource_basic = `
 	resource "citrixadc_vlan" "tf_vlan" {
 		vlanid    = 25

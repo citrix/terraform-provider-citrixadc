@@ -114,6 +114,25 @@ func testAccCheckNslicenseparametersExist(n string, id *string) resource.TestChe
 	}
 }
 
+func TestAccNslicenseparameters_import(t *testing.T) {
+	const resAddr = "citrixadc_nslicenseparameters.tf_nslicenseparameters"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccNslicenseparameters_add},
+			{
+				Config:                  testAccNslicenseparameters_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNslicenseparametersDataSource_basic = `
 
 	resource "citrixadc_nslicenseparameters" "tf_nslicenseparameters" {

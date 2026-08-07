@@ -142,6 +142,53 @@ func TestAccAutoscalepolicyDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccAutoscalepolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_autoscalepolicy.tf_autoscalepolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscalepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoscalepolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscalepolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Autoscalepolicy.Type(), "my_autoscaleprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAutoscalepolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscalepolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAutoscalepolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_autoscalepolicy.tf_autoscalepolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAutoscalepolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAutoscalepolicy_basic},
+			{
+				Config:                  testAccAutoscalepolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func testAccCheckAutoscalepolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

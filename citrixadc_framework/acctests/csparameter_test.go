@@ -124,6 +124,25 @@ func testAccCheckCsparameterDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCsparameter_import(t *testing.T) {
+	const resAddr = "citrixadc_csparameter.tf_csparameter"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsparameterDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCsparameter_basic},
+			{
+				Config:                  testAccCsparameter_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccCsparameterDataSource_basic = `
 
 	resource "citrixadc_csparameter" "tf_csparameter" {
