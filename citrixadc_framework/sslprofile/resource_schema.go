@@ -284,7 +284,13 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Name for the SSL profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the profile is created.",
 			},
 			"nodefaultbindings": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					// GH #1438: nodefaultbindings is create-only (NITRO rejects it on update
+					// with errorcode 278 "Invalid argument [nodefaultbindings]"). Force replace
+					// only when the user changes the configured value.
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
 				Description: "Control default bindings for the SSL profile.",
 			},
 			"nodefaultcipherbindings": schema.BoolAttribute{
@@ -868,9 +874,9 @@ func sslprofileGetTheUpdatePayloadFromthePlan(ctx context.Context, data *Sslprof
 	if !data.Maxrenegrate.IsNull() && !data.Maxrenegrate.IsUnknown() {
 		sslprofile.Maxrenegrate = utils.IntPtr(int(data.Maxrenegrate.ValueInt64()))
 	}
-	if !data.Nodefaultbindings.IsNull() && !data.Nodefaultbindings.IsUnknown() {
-		sslprofile.Nodefaultbindings = data.Nodefaultbindings.ValueString()
-	}
+	// GH #1438: nodefaultbindings is create-only (present in add payload, absent from the
+	// update payload; NITRO rejects it on set with errorcode 278 "Invalid argument
+	// [nodefaultbindings]"). It is therefore EXCLUDED from the set/update payload.
 	if !data.Ocspstapling.IsNull() && !data.Ocspstapling.IsUnknown() {
 		sslprofile.Ocspstapling = data.Ocspstapling.ValueString()
 	}
