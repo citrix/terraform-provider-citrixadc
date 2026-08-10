@@ -56,8 +56,9 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Algorithm to generate the key.",
 			},
@@ -77,8 +78,9 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Common prefix for the names of the generated public and private key files and the Delegation Signer (DS) resource record. During key generation, the .key, .private, and .ds suffixes are appended automatically to the file name prefix to produce the names of the public key, the private key, and the DS record, respectively.",
 			},
@@ -93,8 +95,9 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Size of the key, in bits.",
 			},
@@ -102,8 +105,9 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of key to create.",
 			},
@@ -171,8 +175,9 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "URL (protocol, host, path, and file name) from where the DNS key file will be imported. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access. This is a mandatory argument",
 			},
@@ -198,8 +203,9 @@ func (r *DnskeyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the zone for which to create a key.",
 			},

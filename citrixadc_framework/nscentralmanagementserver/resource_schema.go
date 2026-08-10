@@ -74,7 +74,9 @@ func (r *NscentralmanagementserverResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: replace only when the version is actually set in config, so the
+					// auto-populated default never forces destroy+recreate on provider upgrade.
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Default:     int64default.StaticInt64(1),
 				Description: "Increment this version to signal a adcpassword_wo update.",
@@ -130,7 +132,9 @@ func (r *NscentralmanagementserverResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: replace only when the version is actually set in config, so the
+					// auto-populated default never forces destroy+recreate on provider upgrade.
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Default:     int64default.StaticInt64(1),
 				Description: "Increment this version to signal a password_wo update.",

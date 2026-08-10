@@ -80,8 +80,9 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of and, optionally, path to the CA certificate file.\n/nsconfig/ssl/ is the default path.",
 			},
@@ -89,8 +90,9 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of and, optionally, path to the CA key file. /nsconfig/ssl/ is the default path",
 			},
@@ -117,8 +119,9 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of and, optionally, path to the CRL file to be generated. The list of certificates that have been revoked is obtained from the index file. /nsconfig/ssl/ is the default path.",
 			},
@@ -126,8 +129,9 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of and, optionally, path to the file containing the serial numbers of all the certificates that are revoked. Revoked certificates are appended to the file. /nsconfig/ssl/ is the default path",
 			},
@@ -135,8 +139,9 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Input format of the CRL file. The two formats supported on the appliance are:\nPEM - Privacy Enhanced Mail.\nDER - Distinguished Encoding Rule.",
 			},
@@ -181,8 +186,9 @@ func (r *SslcrlResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of and, optionally, path to the certificate to be revoked. /nsconfig/ssl/ is the default path.",
 			},

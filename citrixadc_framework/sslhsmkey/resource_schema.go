@@ -96,6 +96,9 @@ func (r *SslhsmkeyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed: true,
 				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
+					// GH #1436: Update() PUTs the full create payload with no update-builder, so an
+					// in-place _wo_version bump on upgrade risks an unsupported/rejected NITRO update;
+					// keep RequiresReplace so the transition stays a (supported) replace.
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Increment this version to signal a password_wo update.",

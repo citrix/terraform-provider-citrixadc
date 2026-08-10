@@ -169,6 +169,9 @@ func (r *IpsecprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed: true,
 				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
+					// GH #1436: ipsecprofile is add+delete-only (no NITRO 'set' command), so the
+					// _wo_version bump must force replace; RequiresReplaceIfConfigured would turn the
+					// upgrade null->default transition into an unsupported in-place update (ec1088).
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Increment this version to signal a psk_wo update.",

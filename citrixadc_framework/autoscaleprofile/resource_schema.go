@@ -127,6 +127,7 @@ func autoscaleprofileGetThePayloadFromthePlan(ctx context.Context, data *Autosca
 // It therefore EXCLUDES the create-only attr:
 //   - type is create-only (RequiresReplace, present in the add payload only, absent
 //     from the update payload) - excluded here.
+//
 // The name key is retained because it is required to address the resource in PUT.
 func autoscaleprofileGetTheUpdatePayloadFromthePlan(ctx context.Context, data *AutoscaleprofileResourceModel) autoscale.Autoscaleprofile {
 	tflog.Debug(ctx, "In autoscaleprofileGetTheUpdatePayloadFromthePlan Function")
