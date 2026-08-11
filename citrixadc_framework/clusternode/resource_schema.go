@@ -141,9 +141,10 @@ func clusternodeGetThePayloadFromthePlan(ctx context.Context, data *ClusternodeR
 }
 
 // clusternodeGetTheUpdatablePayloadFromThePlan builds the update (PUT) payload restricted
-// to NITRO-updatable fields. ipaddress is ForceNew/RequiresReplace (not updatable), and
-// force/clearnodegroupconfig are delete-time args, so all three are excluded. This mirrors
-// the SDK v2 updateClusternodeFunc.
+// to NITRO-updatable fields. It excludes the create-only params (ipaddress and nodegroup),
+// which are present in the NITRO add payload but ABSENT from the update payload and must not
+// be sent in the PUT. force/clearnodegroupconfig are delete-time args and are also excluded.
+// This mirrors the reference gslbservicegroup update builder (name key + only updatable attrs).
 func clusternodeGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *ClusternodeResourceModel) cluster.Clusternode {
 	tflog.Debug(ctx, "In clusternodeGetTheUpdatablePayloadFromThePlan Function")
 
@@ -160,9 +161,6 @@ func clusternodeGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Clu
 	}
 	if !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		clusternode.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
-	}
-	if !data.Nodegroup.IsNull() && !data.Nodegroup.IsUnknown() {
-		clusternode.Nodegroup = data.Nodegroup.ValueString()
 	}
 	if !data.Delay.IsNull() && !data.Delay.IsUnknown() {
 		clusternode.Delay = utils.IntPtr(int(data.Delay.ValueInt64()))

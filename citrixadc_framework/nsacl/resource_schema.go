@@ -420,9 +420,10 @@ func nsaclGetThePayloadFromthePlan(ctx context.Context, data *NsaclResourceModel
 }
 
 // nsaclGetTheUpdatablePayloadFromThePlan builds the payload for the NITRO
-// update (change) call. It excludes ForceNew attributes (type and the four
-// dataset attributes), the rename-only newname, and state (which is driven by
-// the enable/disable action, not the change action).
+// update (change) call. It excludes the create-only attributes (type, td, ttl,
+// state, and the four dataset attributes - present in the NITRO add payload but
+// absent from the update payload), the rename-only newname, and state (which is
+// driven by the enable/disable action, not the change action).
 func nsaclGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *NsaclResourceModel) ns.Nsacl {
 	tflog.Debug(ctx, "In nsaclGetTheUpdatablePayloadFromThePlan Function")
 
@@ -499,12 +500,8 @@ func nsaclGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *NsaclReso
 	if !data.Stateful.IsNull() && !data.Stateful.IsUnknown() {
 		nsacl.Stateful = data.Stateful.ValueString()
 	}
-	if !data.Td.IsNull() && !data.Td.IsUnknown() {
-		nsacl.Td = utils.IntPtr(int(data.Td.ValueInt64()))
-	}
-	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
-		nsacl.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
-	}
+	// td and ttl are create-only (present in the NITRO add payload but absent
+	// from the update payload); they must not be sent in the PUT.
 	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
 		nsacl.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
 	}

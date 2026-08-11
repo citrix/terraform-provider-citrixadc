@@ -172,10 +172,6 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		crvserver.Backupvserver = data.Backupvserver.ValueString()
 		hasChange = true
 	}
-	if !data.Cachetype.IsUnknown() && !data.Cachetype.Equal(state.Cachetype) {
-		crvserver.Cachetype = data.Cachetype.ValueString()
-		hasChange = true
-	}
 	if !data.Cachevserver.IsUnknown() && !data.Cachevserver.Equal(state.Cachevserver) {
 		crvserver.Cachevserver = data.Cachevserver.ValueString()
 		hasChange = true
@@ -212,14 +208,6 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		crvserver.Downstateflush = data.Downstateflush.ValueString()
 		hasChange = true
 	}
-	if !data.Format.IsUnknown() && !data.Format.Equal(state.Format) {
-		crvserver.Format = data.Format.ValueString()
-		hasChange = true
-	}
-	if !data.Ghost.IsUnknown() && !data.Ghost.Equal(state.Ghost) {
-		crvserver.Ghost = data.Ghost.ValueString()
-		hasChange = true
-	}
 	if !data.Httpprofilename.IsUnknown() && !data.Httpprofilename.Equal(state.Httpprofilename) {
 		crvserver.Httpprofilename = data.Httpprofilename.ValueString()
 		hasChange = true
@@ -252,10 +240,6 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		crvserver.Listenpriority = utils.IntPtr(int(data.Listenpriority.ValueInt64()))
 		hasChange = true
 	}
-	if !data.Map.IsUnknown() && !data.Map.Equal(state.Map) {
-		crvserver.Map = data.Map.ValueString()
-		hasChange = true
-	}
 	if !data.Netprofile.IsUnknown() && !data.Netprofile.Equal(state.Netprofile) {
 		crvserver.Netprofile = data.Netprofile.ValueString()
 		hasChange = true
@@ -266,10 +250,6 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Originusip.IsUnknown() && !data.Originusip.Equal(state.Originusip) {
 		crvserver.Originusip = data.Originusip.ValueString()
-		hasChange = true
-	}
-	if !data.Port.IsUnknown() && !data.Port.Equal(state.Port) {
-		crvserver.Port = utils.IntPtr(int(data.Port.ValueInt64()))
 		hasChange = true
 	}
 	if !data.Precedence.IsUnknown() && !data.Precedence.Equal(state.Precedence) {
@@ -288,10 +268,6 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		crvserver.Probesuccessresponsecode = data.Probesuccessresponsecode.ValueString()
 		hasChange = true
 	}
-	if !data.Range.IsUnknown() && !data.Range.Equal(state.Range) {
-		crvserver.Range = utils.IntPtr(int(data.Range.ValueInt64()))
-		hasChange = true
-	}
 	if !data.Redirect.IsUnknown() && !data.Redirect.Equal(state.Redirect) {
 		crvserver.Redirect = data.Redirect.ValueString()
 		hasChange = true
@@ -308,18 +284,6 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		crvserver.Rhistate = data.Rhistate.ValueString()
 		hasChange = true
 	}
-	if !data.Servicetype.IsUnknown() && !data.Servicetype.Equal(state.Servicetype) {
-		crvserver.Servicetype = data.Servicetype.ValueString()
-		hasChange = true
-	}
-	if !data.Sopersistencetimeout.IsUnknown() && !data.Sopersistencetimeout.Equal(state.Sopersistencetimeout) {
-		crvserver.Sopersistencetimeout = utils.IntPtr(int(data.Sopersistencetimeout.ValueInt64()))
-		hasChange = true
-	}
-	if !data.Sothreshold.IsUnknown() && !data.Sothreshold.Equal(state.Sothreshold) {
-		crvserver.Sothreshold = utils.IntPtr(int(data.Sothreshold.ValueInt64()))
-		hasChange = true
-	}
 	if !data.Srcipexpr.IsUnknown() && !data.Srcipexpr.Equal(state.Srcipexpr) {
 		crvserver.Srcipexpr = data.Srcipexpr.ValueString()
 		hasChange = true
@@ -330,10 +294,6 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Tcpprofilename.IsUnknown() && !data.Tcpprofilename.Equal(state.Tcpprofilename) {
 		crvserver.Tcpprofilename = data.Tcpprofilename.ValueString()
-		hasChange = true
-	}
-	if !data.Td.IsUnknown() && !data.Td.Equal(state.Td) {
-		crvserver.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 		hasChange = true
 	}
 	if !data.Useoriginipportforcache.IsUnknown() && !data.Useoriginipportforcache.Equal(state.Useoriginipportforcache) {

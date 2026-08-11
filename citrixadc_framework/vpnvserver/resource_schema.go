@@ -484,11 +484,12 @@ func vpnvserverGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverRes
 
 // vpnvserverGetTheUpdatablePayloadFromThePlan builds the NITRO set/update body,
 // mirroring the SDK v2 update contract: it includes ONLY the attributes that
-// actually changed (and are known & non-null). The create-only key attributes
-// name and servicetype (both RequiresReplace/ForceNew) are never part of a set
-// payload — NITRO rejects servicetype on set with errorcode 278
-// ("Invalid argument [servicetype]"). newname is rename-only (?action=rename).
-// The bool return reports whether any updateable attribute changed.
+// actually changed (and are known & non-null). It EXCLUDES every create-only
+// param — the ones present in the NITRO add payload but absent from the update
+// payload: servicetype, port, range, state and deploymenttype (plus the name key,
+// also RequiresReplace/ForceNew). NITRO rejects any of these on set with errorcode
+// 278 ("Invalid argument"). newname is rename-only (?action=rename). The bool
+// return reports whether any updateable attribute changed.
 func vpnvserverGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *VpnvserverResourceModel, state *VpnvserverResourceModel) (vpn.Vpnvserver, bool) {
 	tflog.Debug(ctx, "In vpnvserverGetTheUpdatablePayloadFromThePlan Function")
 
@@ -527,10 +528,8 @@ func vpnvserverGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Vpnv
 		vpnvserver.Comment = data.Comment.ValueString()
 		hasChange = true
 	}
-	if !data.Deploymenttype.Equal(state.Deploymenttype) && !data.Deploymenttype.IsUnknown() && !data.Deploymenttype.IsNull() {
-		vpnvserver.Deploymenttype = data.Deploymenttype.ValueString()
-		hasChange = true
-	}
+	// deploymenttype is create-only (present in the NITRO add payload, absent from
+	// the update payload); NITRO rejects it on set (errorcode 278). Excluded here.
 	if !data.Devicecert.Equal(state.Devicecert) && !data.Devicecert.IsUnknown() && !data.Devicecert.IsNull() {
 		vpnvserver.Devicecert = data.Devicecert.ValueString()
 		hasChange = true
@@ -623,18 +622,14 @@ func vpnvserverGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Vpnv
 		vpnvserver.Pcoipvserverprofilename = data.Pcoipvserverprofilename.ValueString()
 		hasChange = true
 	}
-	if !data.Port.Equal(state.Port) && !data.Port.IsUnknown() && !data.Port.IsNull() {
-		vpnvserver.Port = utils.IntPtr(int(data.Port.ValueInt64()))
-		hasChange = true
-	}
+	// port is create-only (present in the NITRO add payload, absent from the update
+	// payload); NITRO rejects it on set (errorcode 278). Excluded here.
 	if !data.Quicprofilename.Equal(state.Quicprofilename) && !data.Quicprofilename.IsUnknown() && !data.Quicprofilename.IsNull() {
 		vpnvserver.Quicprofilename = data.Quicprofilename.ValueString()
 		hasChange = true
 	}
-	if !data.Range.Equal(state.Range) && !data.Range.IsUnknown() && !data.Range.IsNull() {
-		vpnvserver.Range = utils.IntPtr(int(data.Range.ValueInt64()))
-		hasChange = true
-	}
+	// range is create-only (present in the NITRO add payload, absent from the update
+	// payload); NITRO rejects it on set (errorcode 278). Excluded here.
 	if !data.Rdpserverprofilename.Equal(state.Rdpserverprofilename) && !data.Rdpserverprofilename.IsUnknown() && !data.Rdpserverprofilename.IsNull() {
 		vpnvserver.Rdpserverprofilename = data.Rdpserverprofilename.ValueString()
 		hasChange = true
@@ -651,10 +646,8 @@ func vpnvserverGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Vpnv
 		vpnvserver.Secureprivateaccess = data.Secureprivateaccess.ValueString()
 		hasChange = true
 	}
-	if !data.State.Equal(state.State) && !data.State.IsUnknown() && !data.State.IsNull() {
-		vpnvserver.State = data.State.ValueString()
-		hasChange = true
-	}
+	// state is create-only via add (toggled through enable/disable, not accepted in
+	// the NITRO update payload); NITRO rejects it on set (errorcode 278). Excluded here.
 	if !data.Tcpprofilename.Equal(state.Tcpprofilename) && !data.Tcpprofilename.IsUnknown() && !data.Tcpprofilename.IsNull() {
 		vpnvserver.Tcpprofilename = data.Tcpprofilename.ValueString()
 		hasChange = true

@@ -160,8 +160,9 @@ func (r *DnsactionResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	if hasChange {
-		// Named resource - use UpdateResource (NITRO update is PUT)
-		dnsaction := dnsactionGetThePayloadFromthePlan(ctx, &data)
+		// Named resource - use UpdateResource (NITRO update is PUT).
+		// Use the update builder which excludes the create-only attr (actiontype).
+		dnsaction := dnsactionGetTheUpdatePayloadFromThePlan(ctx, &data)
 		dnsactionName := data.Actionname.ValueString()
 		_, err := r.client.UpdateResource(service.Dnsaction.Type(), dnsactionName, &dnsaction)
 		if err != nil {

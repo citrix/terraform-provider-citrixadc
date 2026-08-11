@@ -126,6 +126,41 @@ func dnsactionGetThePayloadFromthePlan(ctx context.Context, data *DnsactionResou
 	return dnsaction
 }
 
+// dnsactionGetTheUpdatePayloadFromThePlan builds the SET (update/PUT) payload.
+// It EXCLUDES the create-only attr (actiontype), which is present in the NITRO
+// add payload but absent from the update payload and must not be sent on a PUT.
+// It carries the actionname name key plus only the genuinely updateable attrs.
+func dnsactionGetTheUpdatePayloadFromThePlan(ctx context.Context, data *DnsactionResourceModel) dns.Dnsaction {
+	tflog.Debug(ctx, "In dnsactionGetTheUpdatePayloadFromThePlan Function")
+
+	dnsaction := dns.Dnsaction{}
+	// actionname is the name key, required to address the resource in PUT.
+	if !data.Actionname.IsNull() && !data.Actionname.IsUnknown() {
+		dnsaction.Actionname = data.Actionname.ValueString()
+	}
+	if !data.Dnsprofilename.IsNull() && !data.Dnsprofilename.IsUnknown() {
+		dnsaction.Dnsprofilename = data.Dnsprofilename.ValueString()
+	}
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
+		var ipaddressList []string
+		data.Ipaddress.ElementsAs(ctx, &ipaddressList, false)
+		dnsaction.Ipaddress = ipaddressList
+	}
+	if !data.Preferredloclist.IsNull() && !data.Preferredloclist.IsUnknown() {
+		var preferredloclistList []string
+		data.Preferredloclist.ElementsAs(ctx, &preferredloclistList, false)
+		dnsaction.Preferredloclist = preferredloclistList
+	}
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
+		dnsaction.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
+	}
+	if !data.Viewname.IsNull() && !data.Viewname.IsUnknown() {
+		dnsaction.Viewname = data.Viewname.ValueString()
+	}
+
+	return dnsaction
+}
+
 func dnsactionSetAttrFromGet(ctx context.Context, data *DnsactionResourceModel, getResponseData map[string]interface{}) *DnsactionResourceModel {
 	tflog.Debug(ctx, "In dnsactionSetAttrFromGet Function")
 

@@ -188,12 +188,15 @@ func (r *CachecontentgroupResource) Update(ctx context.Context, req resource.Upd
 		attributesToUnset = append(attributesToUnset, "removecookies")
 	}
 
-	// Create API request body from the model
-	cachecontentgroup := cachecontentgroupGetThePayloadFromtheConfig(ctx, &data)
+	// Build the SET (PUT) payload. Unlike the create payload it EXCLUDES the
+	// create-only attr (type) and the flush/GET-only filter attrs so the PUT does
+	// not leak create-only params (Pattern 9: add-vs-set payload drift).
+	cachecontentgroup := cachecontentgroupGetTheUpdatePayloadFromThePlan(ctx, &data)
 
 	// Make API call
-	// Named resource - use UpdateResource
-	cachecontentgroupName := data.Name.ValueString()
+	// Named resource - use UpdateResource. Address by the live name (data.Id).
+	cachecontentgroupName := data.Id.ValueString()
+	cachecontentgroup.Name = cachecontentgroupName
 	_, err := r.client.UpdateResource(service.Cachecontentgroup.Type(), cachecontentgroupName, &cachecontentgroup)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cachecontentgroup, got error: %s", err))

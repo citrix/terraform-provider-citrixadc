@@ -125,25 +125,12 @@ func (r *AzurekeyvaultResource) Update(ctx context.Context, req resource.UpdateR
 
 	tflog.Debug(ctx, "Updating azurekeyvault resource")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-
-	if hasChange {
-		// Create API request body from the model
-		azurekeyvault := azurekeyvaultGetThePayloadFromthePlan(ctx, &data)
-		// Make API call
-		// Named resource - use UpdateResource
-		name_value := data.Name.ValueString()
-		_, err := r.client.UpdateResource(service.Azurekeyvault.Type(), name_value, &azurekeyvault)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update azurekeyvault, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated azurekeyvault resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for azurekeyvault resource, skipping update")
-	}
+	// No in-place update: every settable attribute of azurekeyvault is ForceNew
+	// (RequiresReplace) and NITRO exposes no "update" operation for this resource
+	// (only add/delete/get), so any change triggers a destroy+recreate and this
+	// method is never invoked with a real diff. The prior UpdateResource(PUT) call
+	// was dead code (a PUT would be rejected) and has been removed. If a future
+	// schema change makes an attribute non-ForceNew, add a proper update path here.
 
 	// Read the updated state back
 	if !r.readAzurekeyvaultFromApi(ctx, &data, &resp.Diagnostics) {

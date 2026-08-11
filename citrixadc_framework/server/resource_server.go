@@ -174,10 +174,8 @@ func (r *ServerResource) Update(ctx context.Context, req resource.UpdateRequest,
 		server.Ipaddress = data.Ipaddress.ValueString()
 		hasChange = true
 	}
-	if !data.Querytype.Equal(state.Querytype) {
-		server.Querytype = data.Querytype.ValueString()
-		hasChange = true
-	}
+	// querytype is a create-only param on the NITRO API; it must not be sent in
+	// the update (PUT) payload, so it is intentionally not set here.
 	if !data.Translationip.Equal(state.Translationip) {
 		server.Translationip = data.Translationip.ValueString()
 		hasChange = true

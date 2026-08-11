@@ -359,6 +359,10 @@ func nspbr6GetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Nspbr6Re
 // fails with errorcode 383 ("SET operations on PBR for changing iptunnel not allowed. Remove
 // and add PBR with new iptunnel"), even when the value is unchanged. The "state" attribute is
 // excluded here — enable/disable is driven separately via the NITRO action.
+//
+// Create-only attributes (per the NITRO add-vs-update payloads: td, state, ownergroup) are
+// NEVER emitted here: NITRO accepts them only in the ADD body and rejects them in a PUT.
+// "state" is handled via the enable/disable action; "td" and "ownergroup" are omitted entirely.
 func nspbr6GetTheChangedPayloadFromThePlan(ctx context.Context, data *Nspbr6ResourceModel, state *Nspbr6ResourceModel) ns.Nspbr6 {
 	tflog.Debug(ctx, "In nspbr6GetTheChangedPayloadFromThePlan Function")
 
@@ -411,9 +415,7 @@ func nspbr6GetTheChangedPayloadFromThePlan(ctx context.Context, data *Nspbr6Reso
 	if !data.Nexthopvlan.Equal(state.Nexthopvlan) && !data.Nexthopvlan.IsNull() && !data.Nexthopvlan.IsUnknown() {
 		nspbr6.Nexthopvlan = utils.IntPtr(int(data.Nexthopvlan.ValueInt64()))
 	}
-	if !data.Ownergroup.Equal(state.Ownergroup) && !data.Ownergroup.IsNull() && !data.Ownergroup.IsUnknown() {
-		nspbr6.Ownergroup = data.Ownergroup.ValueString()
-	}
+	// ownergroup is create-only (ADD payload only, rejected in PUT) - excluded from the SET payload.
 	if !data.Priority.Equal(state.Priority) && !data.Priority.IsNull() && !data.Priority.IsUnknown() {
 		nspbr6.Priority = utils.IntPtr(int(data.Priority.ValueInt64()))
 	}
@@ -447,9 +449,7 @@ func nspbr6GetTheChangedPayloadFromThePlan(ctx context.Context, data *Nspbr6Reso
 	if !data.Srcportval.Equal(state.Srcportval) && !data.Srcportval.IsNull() && !data.Srcportval.IsUnknown() {
 		nspbr6.Srcportval = data.Srcportval.ValueString()
 	}
-	if !data.Td.Equal(state.Td) && !data.Td.IsNull() && !data.Td.IsUnknown() {
-		nspbr6.Td = utils.IntPtr(int(data.Td.ValueInt64()))
-	}
+	// td is create-only (ADD payload only, rejected in PUT) - excluded from the SET payload.
 	if !data.Vlan.Equal(state.Vlan) && !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
 		nspbr6.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
 	}
@@ -481,7 +481,6 @@ func nspbr6HasNonStateChange(data *Nspbr6ResourceModel, state *Nspbr6ResourceMod
 		!data.Nexthop.Equal(state.Nexthop) ||
 		!data.Nexthopval.Equal(state.Nexthopval) ||
 		!data.Nexthopvlan.Equal(state.Nexthopvlan) ||
-		!data.Ownergroup.Equal(state.Ownergroup) ||
 		!data.Priority.Equal(state.Priority) ||
 		!data.Protocol.Equal(state.Protocol) ||
 		!data.Protocolnumber.Equal(state.Protocolnumber) ||
@@ -493,7 +492,6 @@ func nspbr6HasNonStateChange(data *Nspbr6ResourceModel, state *Nspbr6ResourceMod
 		!data.Srcport.Equal(state.Srcport) ||
 		!data.Srcportop.Equal(state.Srcportop) ||
 		!data.Srcportval.Equal(state.Srcportval) ||
-		!data.Td.Equal(state.Td) ||
 		!data.Vlan.Equal(state.Vlan) ||
 		!data.Vxlan.Equal(state.Vxlan) ||
 		!data.Vxlanvlanmap.Equal(state.Vxlanvlanmap)

@@ -1660,10 +1660,9 @@ func appfwprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Ap
 		appfwprofile.Defaultfieldformattype = data.Defaultfieldformattype.ValueString()
 		hasChange = true
 	}
-	if !data.Defaults.Equal(state.Defaults) {
-		appfwprofile.Defaults = data.Defaults.ValueString()
-		hasChange = true
-	}
+	// defaults is create-only (present in the NITRO add payload but absent from the
+	// update/set payload). Sending it in a PUT triggers an invalid-argument error,
+	// so it is intentionally excluded from the update builder.
 	if !data.Denyurlaction.Equal(state.Denyurlaction) {
 		var denyurlactionList []string
 		data.Denyurlaction.ElementsAs(ctx, &denyurlactionList, false)

@@ -131,13 +131,17 @@ func forwardingsessionGetThePayloadFromthePlan(ctx context.Context, data *Forwar
 	return forwardingsession
 }
 
-// forwardingsessionGetTheUpdatablePayloadFromThePlan builds the payload restricted to
-// NITRO-updatable fields. netmask and network are ForceNew (RequiresReplace) and never
-// reach Update, so they are excluded. td mirrors the SDK v2 update contract (no ForceNew).
-func forwardingsessionGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *ForwardingsessionResourceModel) network.Forwardingsession {
-	tflog.Debug(ctx, "In forwardingsessionGetTheUpdatablePayloadFromThePlan Function")
+// forwardingsessionGetTheUpdatePayloadFromThePlan builds the SET (update/PUT) payload.
+// Pattern 9 (add-vs-set payload drift): the authoritative NITRO add-vs-update payloads
+// mark network, netmask and td as create-only (present in the ADD payload, absent from
+// the UPDATE payload), so they are EXCLUDED here. network and netmask are also ForceNew
+// (RequiresReplace) and never reach Update. Only the name key and the genuinely
+// updateable attributes are carried.
+func forwardingsessionGetTheUpdatePayloadFromThePlan(ctx context.Context, data *ForwardingsessionResourceModel) network.Forwardingsession {
+	tflog.Debug(ctx, "In forwardingsessionGetTheUpdatePayloadFromThePlan Function")
 
 	forwardingsession := network.Forwardingsession{}
+	// name is the key, required to address the resource in PUT.
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		forwardingsession.Name = data.Name.ValueString()
 	}
@@ -155,9 +159,6 @@ func forwardingsessionGetTheUpdatablePayloadFromThePlan(ctx context.Context, dat
 	}
 	if !data.Sourceroutecache.IsNull() && !data.Sourceroutecache.IsUnknown() {
 		forwardingsession.Sourceroutecache = data.Sourceroutecache.ValueString()
-	}
-	if !data.Td.IsNull() && !data.Td.IsUnknown() {
-		forwardingsession.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
 	return forwardingsession

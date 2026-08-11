@@ -156,10 +156,13 @@ func (r *ForwardingsessionResource) Update(ctx context.Context, req resource.Upd
 
 	if hasChange {
 		// Create API request body from the model, restricted to NITRO-updatable fields
-		forwardingsession := forwardingsessionGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// (excludes create-only params network, netmask, td).
+		forwardingsession := forwardingsessionGetTheUpdatePayloadFromThePlan(ctx, &data)
+		// Set the name key to the live id so the PUT addresses the existing resource.
+		forwardingsession.Name = data.Id.ValueString()
 		// Make API call
 		// Named resource - use UpdateResource
-		forwardingsessionName := data.Name.ValueString()
+		forwardingsessionName := data.Id.ValueString()
 		_, err := r.client.UpdateResource(service.Forwardingsession.Type(), forwardingsessionName, &forwardingsession)
 		if err != nil {
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update forwardingsession, got error: %s", err))

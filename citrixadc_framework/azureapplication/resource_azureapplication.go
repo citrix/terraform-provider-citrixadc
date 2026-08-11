@@ -114,14 +114,12 @@ func (r *AzureapplicationResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *AzureapplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, config, state AzureapplicationResourceModel
+	var data, state AzureapplicationResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	// Read write-only attributes from config (they are nullified in plan)
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,36 +130,14 @@ func (r *AzureapplicationResource) Update(ctx context.Context, req resource.Upda
 
 	tflog.Debug(ctx, "Updating azureapplication resource")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-	// Check secret attribute clientsecret or its version tracker
-	if !data.Clientsecret.Equal(state.Clientsecret) {
-		tflog.Debug(ctx, fmt.Sprintf("clientsecret has changed for azureapplication"))
-		hasChange = true
-	} else if !data.ClientsecretWoVersion.Equal(state.ClientsecretWoVersion) {
-		tflog.Debug(ctx, fmt.Sprintf("clientsecret_wo_version has changed for azureapplication"))
-		hasChange = true
-	}
-
-	if hasChange {
-		// Create API request body from the model
-		// Get payload from plan (regular attributes)
-		azureapplication := azureapplicationGetThePayloadFromthePlan(ctx, &data)
-		// Add write-only attributes from config to the payload
-		azureapplicationGetThePayloadFromtheConfig(ctx, &config, &azureapplication)
-		// Make API call
-		// Named resource - use UpdateResource
-		name_value := data.Name.ValueString()
-		_, err := r.client.UpdateResource(service.Azureapplication.Type(), name_value, &azureapplication)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update azureapplication, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated azureapplication resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for azureapplication resource, skipping update")
-	}
+	// No in-place update: every settable attribute of azureapplication is ForceNew
+	// (RequiresReplace) — including the write-only clientsecret and its version
+	// tracker — and NITRO exposes no "update" operation (only add/delete/get). Any
+	// change (e.g. rotating clientsecret) triggers a destroy+recreate, so this method
+	// is never invoked with a real diff. The prior UpdateResource(PUT) call was dead
+	// code (a PUT would be rejected) and has been removed along with the now-unused
+	// config read. If a future schema change makes an attribute non-ForceNew, add a
+	// proper update path here.
 
 	// Read the updated state back
 	if !r.readAzureapplicationFromApi(ctx, &data, &resp.Diagnostics) {

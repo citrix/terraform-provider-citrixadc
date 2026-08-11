@@ -306,8 +306,6 @@ func nsaclHasUpdatableChange(data, state *NsaclResourceModel) bool {
 		!data.Srcportop.Equal(state.Srcportop) ||
 		!data.Srcportval.Equal(state.Srcportval) ||
 		!data.Stateful.Equal(state.Stateful) ||
-		!data.Td.Equal(state.Td) ||
-		!data.Ttl.Equal(state.Ttl) ||
 		!data.Vlan.Equal(state.Vlan) ||
 		!data.Vxlan.Equal(state.Vxlan)
 }

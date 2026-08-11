@@ -168,14 +168,9 @@ func (r *VxlanResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			hasChange = true
 		}
 	}
-	if !data.Protocol.Equal(state.Protocol) {
-		vxlan.Protocol = data.Protocol.ValueString()
-		hasChange = true
-	}
-	if !data.Type.Equal(state.Type) {
-		vxlan.Type = data.Type.ValueString()
-		hasChange = true
-	}
+	// protocol and type are create-only (add-update) params per NITRO: they
+	// cannot be sent in the UPDATE (PUT) payload, so they are intentionally not
+	// set here even when changed.
 	if !data.Vlan.Equal(state.Vlan) {
 		vxlan.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
 		hasChange = true

@@ -114,14 +114,12 @@ func (r *IpsecprofileResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *IpsecprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, config, state IpsecprofileResourceModel
+	var data, state IpsecprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	// Read write-only attributes from config (they are nullified in plan)
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,36 +130,14 @@ func (r *IpsecprofileResource) Update(ctx context.Context, req resource.UpdateRe
 
 	tflog.Debug(ctx, "Updating ipsecprofile resource")
 
-	// Check if there are any changes in updateable attributes
-	hasChange := false
-	// Check secret attribute psk or its version tracker
-	if !data.Psk.Equal(state.Psk) {
-		tflog.Debug(ctx, fmt.Sprintf("psk has changed for ipsecprofile"))
-		hasChange = true
-	} else if !data.PskWoVersion.Equal(state.PskWoVersion) {
-		tflog.Debug(ctx, fmt.Sprintf("psk_wo_version has changed for ipsecprofile"))
-		hasChange = true
-	}
-
-	if hasChange {
-		// Create API request body from the model
-		// Get payload from plan (regular attributes)
-		ipsecprofile := ipsecprofileGetThePayloadFromthePlan(ctx, &data)
-		// Add write-only attributes from config to the payload
-		ipsecprofileGetThePayloadFromtheConfig(ctx, &config, &ipsecprofile)
-		// Make API call
-		// Named resource - use UpdateResource
-		name_value := data.Name.ValueString()
-		_, err := r.client.UpdateResource(service.Ipsecprofile.Type(), name_value, &ipsecprofile)
-		if err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ipsecprofile, got error: %s", err))
-			return
-		}
-
-		tflog.Trace(ctx, "Updated ipsecprofile resource")
-	} else {
-		tflog.Debug(ctx, "No changes detected for ipsecprofile resource, skipping update")
-	}
+	// No in-place update: every settable attribute of ipsecprofile is ForceNew
+	// (RequiresReplace) — including the write-only psk and its version tracker — and
+	// NITRO exposes no "update" operation (only add/delete/get). Any change (e.g.
+	// rotating psk) triggers a destroy+recreate, so this method is never invoked with
+	// a real diff. The prior UpdateResource(PUT) call was dead code (a PUT would be
+	// rejected) and has been removed along with the now-unused config read. If a
+	// future schema change makes an attribute non-ForceNew, add a proper update path
+	// here.
 
 	// Read the updated state back
 	if !r.readIpsecprofileFromApi(ctx, &data, &resp.Diagnostics) {

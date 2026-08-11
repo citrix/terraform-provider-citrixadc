@@ -158,9 +158,10 @@ func (r *DnsnameserverResource) Update(ctx context.Context, req resource.UpdateR
 		idSlice := strings.SplitN(data.Id.ValueString(), ",", 2)
 		name := idSlice[0]
 
+		// dnsvservername is a create-only (ForceNew) parameter and is not accepted
+		// by the NITRO update (PUT) call, so it is intentionally omitted here.
 		dnsnameserver := dns.Dnsnameserver{
 			Ip:             data.Ip.ValueString(),
-			Dnsvservername: data.Dnsvservername.ValueString(),
 			Dnsprofilename: data.Dnsprofilename.ValueString(),
 		}
 

@@ -462,6 +462,142 @@ func cachecontentgroupGetThePayloadFromtheConfig(ctx context.Context, data *Cach
 	return cachecontentgroup
 }
 
+// cachecontentgroupGetTheUpdatePayloadFromThePlan builds the SET (update/PUT) payload.
+// Pattern 9 (add-vs-set payload drift): it EXCLUDES the create-only attr (type)
+// and the non-write flush/GET-only filter attrs (host, query, selectorvalue,
+// tosecondary), which are present in neither the NITRO add nor update payload. It
+// carries only the genuinely updateable attributes plus the name key.
+func cachecontentgroupGetTheUpdatePayloadFromThePlan(ctx context.Context, data *CachecontentgroupResourceModel) cache.Cachecontentgroup {
+	tflog.Debug(ctx, "In cachecontentgroupGetTheUpdatePayloadFromThePlan Function")
+
+	cachecontentgroup := cache.Cachecontentgroup{}
+	// name is the key, required to address the resource in PUT.
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		cachecontentgroup.Name = data.Name.ValueString()
+	}
+	if !data.Absexpiry.IsNull() && !data.Absexpiry.IsUnknown() {
+		var absexpiryList []string
+		data.Absexpiry.ElementsAs(ctx, &absexpiryList, false)
+		cachecontentgroup.Absexpiry = absexpiryList
+	}
+	if !data.Absexpirygmt.IsNull() && !data.Absexpirygmt.IsUnknown() {
+		var absexpirygmtList []string
+		data.Absexpirygmt.ElementsAs(ctx, &absexpirygmtList, false)
+		cachecontentgroup.Absexpirygmt = absexpirygmtList
+	}
+	if !data.Alwaysevalpolicies.IsNull() && !data.Alwaysevalpolicies.IsUnknown() {
+		cachecontentgroup.Alwaysevalpolicies = data.Alwaysevalpolicies.ValueString()
+	}
+	if !data.Cachecontrol.IsNull() && !data.Cachecontrol.IsUnknown() {
+		cachecontentgroup.Cachecontrol = data.Cachecontrol.ValueString()
+	}
+	if !data.Expireatlastbyte.IsNull() && !data.Expireatlastbyte.IsUnknown() {
+		cachecontentgroup.Expireatlastbyte = data.Expireatlastbyte.ValueString()
+	}
+	if !data.Flashcache.IsNull() && !data.Flashcache.IsUnknown() {
+		cachecontentgroup.Flashcache = data.Flashcache.ValueString()
+	}
+	if !data.Heurexpiryparam.IsNull() && !data.Heurexpiryparam.IsUnknown() {
+		cachecontentgroup.Heurexpiryparam = utils.IntPtr(int(data.Heurexpiryparam.ValueInt64()))
+	}
+	if !data.Hitparams.IsNull() && !data.Hitparams.IsUnknown() {
+		var hitparamsList []string
+		data.Hitparams.ElementsAs(ctx, &hitparamsList, false)
+		cachecontentgroup.Hitparams = hitparamsList
+	}
+	if !data.Hitselector.IsNull() && !data.Hitselector.IsUnknown() {
+		cachecontentgroup.Hitselector = data.Hitselector.ValueString()
+	}
+	if !data.Ignoreparamvaluecase.IsNull() && !data.Ignoreparamvaluecase.IsUnknown() {
+		cachecontentgroup.Ignoreparamvaluecase = data.Ignoreparamvaluecase.ValueString()
+	}
+	if !data.Ignorereloadreq.IsNull() && !data.Ignorereloadreq.IsUnknown() {
+		cachecontentgroup.Ignorereloadreq = data.Ignorereloadreq.ValueString()
+	}
+	if !data.Ignorereqcachinghdrs.IsNull() && !data.Ignorereqcachinghdrs.IsUnknown() {
+		cachecontentgroup.Ignorereqcachinghdrs = data.Ignorereqcachinghdrs.ValueString()
+	}
+	if !data.Insertage.IsNull() && !data.Insertage.IsUnknown() {
+		cachecontentgroup.Insertage = data.Insertage.ValueString()
+	}
+	if !data.Insertetag.IsNull() && !data.Insertetag.IsUnknown() {
+		cachecontentgroup.Insertetag = data.Insertetag.ValueString()
+	}
+	if !data.Insertvia.IsNull() && !data.Insertvia.IsUnknown() {
+		cachecontentgroup.Insertvia = data.Insertvia.ValueString()
+	}
+	if !data.Invalparams.IsNull() && !data.Invalparams.IsUnknown() {
+		var invalparamsList []string
+		data.Invalparams.ElementsAs(ctx, &invalparamsList, false)
+		cachecontentgroup.Invalparams = invalparamsList
+	}
+	if !data.Invalrestrictedtohost.IsNull() && !data.Invalrestrictedtohost.IsUnknown() {
+		cachecontentgroup.Invalrestrictedtohost = data.Invalrestrictedtohost.ValueString()
+	}
+	if !data.Invalselector.IsNull() && !data.Invalselector.IsUnknown() {
+		cachecontentgroup.Invalselector = data.Invalselector.ValueString()
+	}
+	if !data.Lazydnsresolve.IsNull() && !data.Lazydnsresolve.IsUnknown() {
+		cachecontentgroup.Lazydnsresolve = data.Lazydnsresolve.ValueString()
+	}
+	if !data.Matchcookies.IsNull() && !data.Matchcookies.IsUnknown() {
+		cachecontentgroup.Matchcookies = data.Matchcookies.ValueString()
+	}
+	if !data.Maxressize.IsNull() && !data.Maxressize.IsUnknown() {
+		cachecontentgroup.Maxressize = utils.IntPtr(int(data.Maxressize.ValueInt64()))
+	}
+	if !data.Memlimit.IsNull() && !data.Memlimit.IsUnknown() {
+		cachecontentgroup.Memlimit = utils.IntPtr(int(data.Memlimit.ValueInt64()))
+	}
+	if !data.Minhits.IsNull() && !data.Minhits.IsUnknown() {
+		cachecontentgroup.Minhits = utils.IntPtr(int(data.Minhits.ValueInt64()))
+	}
+	if !data.Minressize.IsNull() && !data.Minressize.IsUnknown() {
+		cachecontentgroup.Minressize = utils.IntPtr(int(data.Minressize.ValueInt64()))
+	}
+	if !data.Persistha.IsNull() && !data.Persistha.IsUnknown() {
+		cachecontentgroup.Persistha = data.Persistha.ValueString()
+	}
+	if !data.Pinned.IsNull() && !data.Pinned.IsUnknown() {
+		cachecontentgroup.Pinned = data.Pinned.ValueString()
+	}
+	if !data.Polleverytime.IsNull() && !data.Polleverytime.IsUnknown() {
+		cachecontentgroup.Polleverytime = data.Polleverytime.ValueString()
+	}
+	if !data.Prefetch.IsNull() && !data.Prefetch.IsUnknown() {
+		cachecontentgroup.Prefetch = data.Prefetch.ValueString()
+	}
+	if !data.Prefetchmaxpending.IsNull() && !data.Prefetchmaxpending.IsUnknown() {
+		cachecontentgroup.Prefetchmaxpending = utils.IntPtr(int(data.Prefetchmaxpending.ValueInt64()))
+	}
+	if !data.Prefetchperiod.IsNull() && !data.Prefetchperiod.IsUnknown() {
+		cachecontentgroup.Prefetchperiod = utils.IntPtr(int(data.Prefetchperiod.ValueInt64()))
+	}
+	if !data.Prefetchperiodmillisec.IsNull() && !data.Prefetchperiodmillisec.IsUnknown() {
+		cachecontentgroup.Prefetchperiodmillisec = utils.IntPtr(int(data.Prefetchperiodmillisec.ValueInt64()))
+	}
+	if !data.Quickabortsize.IsNull() && !data.Quickabortsize.IsUnknown() {
+		cachecontentgroup.Quickabortsize = utils.IntPtr(int(data.Quickabortsize.ValueInt64()))
+	}
+	if !data.Relexpiry.IsNull() && !data.Relexpiry.IsUnknown() {
+		cachecontentgroup.Relexpiry = utils.IntPtr(int(data.Relexpiry.ValueInt64()))
+	}
+	if !data.Relexpirymillisec.IsNull() && !data.Relexpirymillisec.IsUnknown() {
+		cachecontentgroup.Relexpirymillisec = utils.IntPtr(int(data.Relexpirymillisec.ValueInt64()))
+	}
+	if !data.Removecookies.IsNull() && !data.Removecookies.IsUnknown() {
+		cachecontentgroup.Removecookies = data.Removecookies.ValueString()
+	}
+	if !data.Weaknegrelexpiry.IsNull() && !data.Weaknegrelexpiry.IsUnknown() {
+		cachecontentgroup.Weaknegrelexpiry = utils.IntPtr(int(data.Weaknegrelexpiry.ValueInt64()))
+	}
+	if !data.Weakposrelexpiry.IsNull() && !data.Weakposrelexpiry.IsUnknown() {
+		cachecontentgroup.Weakposrelexpiry = utils.IntPtr(int(data.Weakposrelexpiry.ValueInt64()))
+	}
+
+	return cachecontentgroup
+}
+
 func cachecontentgroupSetAttrFromGet(ctx context.Context, data *CachecontentgroupResourceModel, getResponseData map[string]interface{}) *CachecontentgroupResourceModel {
 	tflog.Debug(ctx, "In cachecontentgroupSetAttrFromGet Function")
 
