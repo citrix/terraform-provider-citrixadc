@@ -37,7 +37,9 @@ func (r *ApispecResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the encrypted API spec. Must be in NetScaler format",
 			},

@@ -235,11 +235,9 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes, but add
-					// UseStateForUnknown so the Computed value populated by the GET on refresh does not
-					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Transport type used to send auditlogs to syslog server. Default type is UDP.",
 			},
@@ -363,6 +361,127 @@ func auditsyslogactionGetThePayloadFromthePlan(ctx context.Context, data *Audits
 	if !data.Transport.IsNull() && !data.Transport.IsUnknown() {
 		auditsyslogaction.Transport = data.Transport.ValueString()
 	}
+	if !data.Urlfiltering.IsNull() && !data.Urlfiltering.IsUnknown() {
+		auditsyslogaction.Urlfiltering = data.Urlfiltering.ValueString()
+	}
+	if !data.Userdefinedauditlog.IsNull() && !data.Userdefinedauditlog.IsUnknown() {
+		auditsyslogaction.Userdefinedauditlog = data.Userdefinedauditlog.ValueString()
+	}
+
+	return auditsyslogaction
+}
+
+// auditsyslogactionGetTheUpdatePayloadFromthePlan builds the SET (update/PUT) payload.
+// Pattern (add-vs-set payload drift): it EXCLUDES the create-only attr
+// (transport) that appears in the NITRO add Request Payload but NOT in the
+// update Request Payload. It carries the name key (needed to address the PUT)
+// plus the genuinely updateable attributes.
+func auditsyslogactionGetTheUpdatePayloadFromthePlan(ctx context.Context, data *AuditsyslogactionResourceModel) audit.Auditsyslogaction {
+	tflog.Debug(ctx, "In auditsyslogactionGetTheUpdatePayloadFromthePlan Function")
+
+	// Create API request body from the model
+	auditsyslogaction := audit.Auditsyslogaction{}
+	if !data.Acl.IsNull() && !data.Acl.IsUnknown() {
+		auditsyslogaction.Acl = data.Acl.ValueString()
+	}
+	if !data.Alg.IsNull() && !data.Alg.IsUnknown() {
+		auditsyslogaction.Alg = data.Alg.ValueString()
+	}
+	if !data.Appflowexport.IsNull() && !data.Appflowexport.IsUnknown() {
+		auditsyslogaction.Appflowexport = data.Appflowexport.ValueString()
+	}
+	if !data.Contentinspectionlog.IsNull() && !data.Contentinspectionlog.IsUnknown() {
+		auditsyslogaction.Contentinspectionlog = data.Contentinspectionlog.ValueString()
+	}
+	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
+		auditsyslogaction.Dateformat = data.Dateformat.ValueString()
+	}
+	if !data.Dns.IsNull() && !data.Dns.IsUnknown() {
+		auditsyslogaction.Dns = data.Dns.ValueString()
+	}
+	if !data.Domainresolvenow.IsNull() && !data.Domainresolvenow.IsUnknown() {
+		auditsyslogaction.Domainresolvenow = data.Domainresolvenow.ValueBool()
+	}
+	if !data.Domainresolveretry.IsNull() && !data.Domainresolveretry.IsUnknown() {
+		auditsyslogaction.Domainresolveretry = utils.IntPtr(int(data.Domainresolveretry.ValueInt64()))
+	}
+	if !data.Httpauthtoken.IsNull() && !data.Httpauthtoken.IsUnknown() {
+		auditsyslogaction.Httpauthtoken = data.Httpauthtoken.ValueString()
+	}
+	// Skip write-only attribute: httpauthtoken_wo
+	// Skip version tracker attribute: httpauthtoken_wo_version
+	if !data.Httpendpointurl.IsNull() && !data.Httpendpointurl.IsUnknown() {
+		auditsyslogaction.Httpendpointurl = data.Httpendpointurl.ValueString()
+	}
+	if !data.Lbvservername.IsNull() && !data.Lbvservername.IsUnknown() {
+		auditsyslogaction.Lbvservername = data.Lbvservername.ValueString()
+	}
+	if !data.Logfacility.IsNull() && !data.Logfacility.IsUnknown() {
+		auditsyslogaction.Logfacility = data.Logfacility.ValueString()
+	}
+	if !data.Loglevel.IsNull() && !data.Loglevel.IsUnknown() {
+		var loglevelList []string
+		data.Loglevel.ElementsAs(ctx, &loglevelList, false)
+		auditsyslogaction.Loglevel = loglevelList
+	}
+	if !data.Lsn.IsNull() && !data.Lsn.IsUnknown() {
+		auditsyslogaction.Lsn = data.Lsn.ValueString()
+	}
+	if !data.Managementlog.IsNull() && !data.Managementlog.IsUnknown() {
+		var managementlogList []string
+		data.Managementlog.ElementsAs(ctx, &managementlogList, false)
+		auditsyslogaction.Managementlog = managementlogList
+	}
+	if !data.Maxlogdatasizetohold.IsNull() && !data.Maxlogdatasizetohold.IsUnknown() {
+		auditsyslogaction.Maxlogdatasizetohold = utils.IntPtr(int(data.Maxlogdatasizetohold.ValueInt64()))
+	}
+	if !data.Mgmtloglevel.IsNull() && !data.Mgmtloglevel.IsUnknown() {
+		var mgmtloglevelList []string
+		data.Mgmtloglevel.ElementsAs(ctx, &mgmtloglevelList, false)
+		auditsyslogaction.Mgmtloglevel = mgmtloglevelList
+	}
+	// name is the key, required to address the resource in PUT.
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		auditsyslogaction.Name = data.Name.ValueString()
+	}
+	if !data.Netprofile.IsNull() && !data.Netprofile.IsUnknown() {
+		auditsyslogaction.Netprofile = data.Netprofile.ValueString()
+	}
+	if !data.Protocolviolations.IsNull() && !data.Protocolviolations.IsUnknown() {
+		auditsyslogaction.Protocolviolations = data.Protocolviolations.ValueString()
+	}
+	if !data.Serverdomainname.IsNull() && !data.Serverdomainname.IsUnknown() {
+		auditsyslogaction.Serverdomainname = data.Serverdomainname.ValueString()
+	}
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() {
+		auditsyslogaction.Serverip = data.Serverip.ValueString()
+	}
+	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
+		auditsyslogaction.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
+	}
+	if !data.Sslinterception.IsNull() && !data.Sslinterception.IsUnknown() {
+		auditsyslogaction.Sslinterception = data.Sslinterception.ValueString()
+	}
+	if !data.Streamanalytics.IsNull() && !data.Streamanalytics.IsUnknown() {
+		auditsyslogaction.Streamanalytics = data.Streamanalytics.ValueString()
+	}
+	if !data.Subscriberlog.IsNull() && !data.Subscriberlog.IsUnknown() {
+		auditsyslogaction.Subscriberlog = data.Subscriberlog.ValueString()
+	}
+	if !data.Syslogcompliance.IsNull() && !data.Syslogcompliance.IsUnknown() {
+		auditsyslogaction.Syslogcompliance = data.Syslogcompliance.ValueString()
+	}
+	if !data.Tcp.IsNull() && !data.Tcp.IsUnknown() {
+		auditsyslogaction.Tcp = data.Tcp.ValueString()
+	}
+	if !data.Tcpprofilename.IsNull() && !data.Tcpprofilename.IsUnknown() {
+		auditsyslogaction.Tcpprofilename = data.Tcpprofilename.ValueString()
+	}
+	if !data.Timezone.IsNull() && !data.Timezone.IsUnknown() {
+		auditsyslogaction.Timezone = data.Timezone.ValueString()
+	}
+	// transport is create-only (present in the NITRO add payload, absent from the
+	// update payload; ADC returns error 278 if sent in a PUT) - included in add payload only.
 	if !data.Urlfiltering.IsNull() && !data.Urlfiltering.IsUnknown() {
 		auditsyslogaction.Urlfiltering = data.Urlfiltering.ValueString()
 	}

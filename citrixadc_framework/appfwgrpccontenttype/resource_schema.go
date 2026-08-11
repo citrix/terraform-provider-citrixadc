@@ -39,7 +39,9 @@ func (r *AppfwgrpccontenttypeResource) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is gRPC content type a regular expression?",
 			},

@@ -3,6 +3,7 @@ package sslcrl
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
@@ -17,6 +18,7 @@ import (
 var _ resource.Resource = &SslcrlResource{}
 var _ resource.ResourceWithConfigure = (*SslcrlResource)(nil)
 var _ resource.ResourceWithImportState = (*SslcrlResource)(nil)
+var _ resource.ResourceWithValidateConfig = (*SslcrlResource)(nil)
 
 func NewSslcrlResource() resource.Resource {
 	return &SslcrlResource{}
@@ -42,6 +44,50 @@ func (r *SslcrlResource) Configure(ctx context.Context, req resource.ConfigureRe
 	}
 	// Set the client for the resource.
 	r.client = *req.ProviderData.(**service.NitroClient)
+}
+
+// ValidateConfig enforces that the CRL auto-refresh schedule attributes (day,
+// time) are only set when auto-refresh is enabled. NITRO silently ignores day
+// and time when refresh is not "ENABLED" (it stores day=0 / time=00:00), which
+// otherwise surfaces at apply time as a confusing "Provider produced inconsistent
+// result after apply" error. Failing fast at plan time gives a clear, actionable
+// message instead.
+func (r *SslcrlResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data SslcrlResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// If refresh is unknown (e.g. sourced from another resource's computed
+	// attribute), the dependency cannot be evaluated here; defer to apply time.
+	if data.Refresh.IsUnknown() {
+		return
+	}
+	refreshEnabled := !data.Refresh.IsNull() && strings.EqualFold(data.Refresh.ValueString(), "ENABLED")
+	if refreshEnabled {
+		return
+	}
+
+	const detailFmt = "%q configures the CRL auto-refresh schedule and is only applied when \"refresh\" is set to \"ENABLED\". " +
+		"The NetScaler silently ignores it otherwise (storing %s), which causes a \"Provider produced inconsistent result after apply\" error. " +
+		"Set refresh = \"ENABLED\" or remove %q."
+
+	if !data.Day.IsNull() && !data.Day.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("day"),
+			"Invalid attribute combination",
+			fmt.Sprintf(detailFmt, "day", "day=0", "day"),
+		)
+	}
+	if !data.Time.IsNull() && !data.Time.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("time"),
+			"Invalid attribute combination",
+			fmt.Sprintf(detailFmt, "time", "time=00:00", "time"),
+		)
+	}
 }
 
 func (r *SslcrlResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -203,7 +249,7 @@ func (r *SslcrlResource) Update(ctx context.Context, req resource.UpdateRequest,
 	if hasChange {
 		// Create API request body from the model
 		// Get payload from plan (regular attributes)
-		sslcrl := sslcrlGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		sslcrl := sslcrlGetTheUpdatePayloadFromthePlan(ctx, &data)
 		// Add write-only attributes from config to the payload
 		sslcrlGetThePayloadFromtheConfig(ctx, &config, &sslcrl)
 		// Make API call

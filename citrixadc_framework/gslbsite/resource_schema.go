@@ -58,11 +58,9 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes; add
-					// UseStateForUnknown so the GET-populated Computed value on refresh does not
-					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Cluster IP address. Specify this parameter to connect to the remote cluster site for GSLB auto-sync. Note: The cluster IP address is defined when creating the cluster.",
 			},
@@ -81,10 +79,9 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// NOT ForceNew in SDK v2 (newname is the rename helper) -> drop the spurious
-					// RequiresReplace added during migration; UseStateForUnknown keeps this
-					// un-echoed Computed value stable across a refresh.
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "New name for the GSLB site.",
 			},
@@ -103,11 +100,9 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes; add
-					// UseStateForUnknown so the GET-populated Computed value on refresh does not
-					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IP address to be used to globally access the remote cluster when it is deployed behind a NAT. It can be same as the normal cluster IP address.",
 			},
@@ -153,7 +148,9 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 			"sitepassword_wo_version": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: replace only when the version is actually set in config, so the
+					// auto-populated default never forces destroy+recreate on provider upgrade.
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Increment this version to signal a sitepassword_wo update.",
 			},
@@ -161,11 +158,9 @@ func (r *GslbsiteResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes; add
-					// UseStateForUnknown so the GET-populated Computed value on refresh does not
-					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of site to create. If the type is not specified, the appliance automatically detects and sets the type on the basis of the IP address being assigned to the site. If the specified site IP address is owned by the appliance (for example, a MIP address or SNIP address), the site is a local site. Otherwise, it is a remote site.",
 			},
@@ -237,28 +232,41 @@ func gslbsiteGetThePayloadFromthePlan(ctx context.Context, data *GslbsiteResourc
 	return gslbsite
 }
 
-func gslbsiteGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *GslbsiteResourceModel) gslb.Gslbsite {
-	tflog.Debug(ctx, "In gslbsiteGetTheUpdatablePayloadFromThePlan Function")
+// gslbsiteGetTheUpdatePayloadFromthePlan builds the SET (update/PUT) payload.
+// Pattern 9 (add-vs-set payload drift): per nitro_rest/gslb/gslbsite.html the PUT
+// update payload EXCLUDES the create-only attrs that appear only in the add payload
+// (sitetype, clip, publicclip, sitepassword). It also EXCLUDES the rename-only
+// newname (wired in Update via ?action=rename). It carries only the genuinely
+// updateable attributes plus the sitename key needed to address the PUT.
+func gslbsiteGetTheUpdatePayloadFromthePlan(ctx context.Context, data *GslbsiteResourceModel) gslb.Gslbsite {
+	tflog.Debug(ctx, "In gslbsiteGetTheUpdatePayloadFromthePlan Function")
 
 	// Create API request body from the model, restricted to NITRO-updatable fields
 	gslbsite := gslb.Gslbsite{}
+	// sitename is the name key, required to address the resource in PUT.
+	if !data.Sitename.IsNull() && !data.Sitename.IsUnknown() {
+		gslbsite.Sitename = data.Sitename.ValueString()
+	}
 	if !data.Backupparentlist.IsNull() && !data.Backupparentlist.IsUnknown() {
 		var backupparentlistList []string
 		data.Backupparentlist.ElementsAs(ctx, &backupparentlistList, false)
 		gslbsite.Backupparentlist = backupparentlistList
 	}
+	// clip is create-only (add payload only) - excluded from the set payload.
 	if !data.Metricexchange.IsNull() && !data.Metricexchange.IsUnknown() {
 		gslbsite.Metricexchange = data.Metricexchange.ValueString()
 	}
 	if !data.Naptrreplacementsuffix.IsNull() && !data.Naptrreplacementsuffix.IsUnknown() {
 		gslbsite.Naptrreplacementsuffix = data.Naptrreplacementsuffix.ValueString()
 	}
+	// newname is rename-only - excluded from add/set payloads (wired via ?action=rename).
 	if !data.Nwmetricexchange.IsNull() && !data.Nwmetricexchange.IsUnknown() {
 		gslbsite.Nwmetricexchange = data.Nwmetricexchange.ValueString()
 	}
 	if !data.Parentsite.IsNull() && !data.Parentsite.IsUnknown() {
 		gslbsite.Parentsite = data.Parentsite.ValueString()
 	}
+	// publicclip is create-only (add payload only) - excluded from the set payload.
 	if !data.Publicip.IsNull() && !data.Publicip.IsUnknown() {
 		gslbsite.Publicip = data.Publicip.ValueString()
 	}
@@ -268,9 +276,8 @@ func gslbsiteGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Gslbsi
 	if !data.Siteipaddress.IsNull() && !data.Siteipaddress.IsUnknown() {
 		gslbsite.Siteipaddress = data.Siteipaddress.ValueString()
 	}
-	if !data.Sitename.IsNull() && !data.Sitename.IsUnknown() {
-		gslbsite.Sitename = data.Sitename.ValueString()
-	}
+	// sitepassword is create-only (add payload only) - excluded from the set payload.
+	// sitetype is create-only (add payload only) - excluded from the set payload.
 	if !data.Triggermonitor.IsNull() && !data.Triggermonitor.IsUnknown() {
 		gslbsite.Triggermonitor = data.Triggermonitor.ValueString()
 	}

@@ -69,7 +69,9 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of and, optionally, path to the X509 certificate file that is used to form the certificate-key pair.",
 			},
@@ -77,7 +79,9 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the FIPS key that was created inside the Hardware Security Module (HSM) of a FIPS appliance, or a key that was imported into the HSM.",
 			},
@@ -85,7 +89,9 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Input format of the certificate and the private-key files. The three formats supported by the appliance are: PEM - Privacy Enhanced Mail, DER - Distinguished Encoding Rule, PFX - Personal Information Exchange.",
 			},
@@ -93,7 +99,9 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of and, optionally, path to the private-key file that is used to form the certificate-key pair.",
 			},
@@ -101,7 +109,9 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Override the check for matching domain names during a certificate update operation.",
 			},
@@ -110,7 +120,9 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Computed:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Pass phrase used to encrypt the private-key. Required when updating an encrypted private-key in PEM format.",
 			},
@@ -118,7 +130,9 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Passphrase that was used to encrypt the private-key. Use this option to load encrypted private-keys in PEM format.",
 			},
@@ -126,7 +140,9 @@ func (r *SslCertKeyUpdateResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the Certificate Authority certificate-key pair to which to link a certificate-key pair.",
 			},

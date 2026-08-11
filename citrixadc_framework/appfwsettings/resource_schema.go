@@ -118,7 +118,8 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: not ForceNew in SDKv2; keep prior value on refresh, no forced replace.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Log requests that are so malformed that application firewall parsing doesn't occur.",
 			},

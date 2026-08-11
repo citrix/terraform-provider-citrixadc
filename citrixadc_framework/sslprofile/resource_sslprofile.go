@@ -679,7 +679,16 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	sslprofile.Sslprofiletype = ""
 
 	if hasChange {
-		// `sslprofile` already holds name + only the changed fields (delta payload built above).
+		// Create API request body from the model
+		// Get the SET (update) payload from plan. Per sslprofile.html, sslprofiletype
+		// is create-only (present in the add payload, absent from the update payload)
+		// and is EXCLUDED by the update builder; the "set sslprofile" call would
+		// otherwise reject it (e.g. errorcode 278 "Invalid argument [sslprofiletype]").
+		// A genuine change to sslprofiletype still forces a full destroy+recreate via
+		// RequiresReplace. ciphername IS accepted by the update payload, so it is kept.
+		sslprofile := sslprofileGetTheUpdatePayloadFromthePlan(ctx, &data)
+		// Add write-only attributes from config to the payload
+		sslprofileGetThePayloadFromtheConfig(ctx, &config, &sslprofile)
 		// Make API call
 		// Named resource - use UpdateResource
 		name_value := data.Name.ValueString()

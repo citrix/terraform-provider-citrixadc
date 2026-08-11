@@ -47,7 +47,9 @@ func (r *SslhsmkeyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of HSM.",
 			},
@@ -55,7 +57,9 @@ func (r *SslhsmkeyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the key. optionally, for Thales, path to the HSM key file; /var/opt/nfast/kmdata/local/ is the default path. Applies when HSMTYPE is THALES or KEYVAULT.",
 			},
@@ -63,7 +67,9 @@ func (r *SslhsmkeyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of keystore object representing HSM where key is stored. For example, name of keyvault object or azurekeyvault authentication object. Applies only to KEYVAULT type HSM.",
 			},
@@ -87,6 +93,9 @@ func (r *SslhsmkeyResource) Schema(ctx context.Context, req resource.SchemaReque
 			"password_wo_version": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
+					// GH #1436: Update() PUTs the full create payload with no update-builder, so an
+					// in-place _wo_version bump on upgrade risks an unsupported/rejected NITRO update;
+					// keep RequiresReplace so the transition stays a (supported) replace.
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Increment this version to signal a password_wo update.",
@@ -95,7 +104,9 @@ func (r *SslhsmkeyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Serial number of the partition on which the key is present. Applies only to SafeNet HSM.",
 			},

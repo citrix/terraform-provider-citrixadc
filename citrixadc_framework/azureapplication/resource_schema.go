@@ -40,7 +40,9 @@ func (r *AzureapplicationResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Application ID that is generated when an application is created in Azure Active Directory using either the Azure CLI or the Azure portal (GUI)",
 			},
@@ -64,6 +66,9 @@ func (r *AzureapplicationResource) Schema(ctx context.Context, req resource.Sche
 			"clientsecret_wo_version": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
+					// GH #1436: Update() PUTs the full create payload with no update-builder, so an
+					// in-place _wo_version bump on upgrade risks an unsupported/rejected NITRO update;
+					// keep RequiresReplace so the transition stays a (supported) replace.
 					int64planmodifier.RequiresReplace(),
 				},
 				Description: "Increment this version to signal a clientsecret_wo update.",
@@ -79,7 +84,9 @@ func (r *AzureapplicationResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "ID of the directory inside Azure Active Directory in which the application was created",
 			},
@@ -87,7 +94,9 @@ func (r *AzureapplicationResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "URL from where access token can be obtained. If the token end point is not specified, the default value is https://login.microsoftonline.com/<tenant id>.",
 			},

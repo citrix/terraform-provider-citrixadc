@@ -62,7 +62,9 @@ func (r *LbpolicylabelResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Protocols supported by the policylabel. Available Types are :\n* HTTP - HTTP requests.\n* DNS - DNS request.\n* OTHERTCP - OTHERTCP request.\n* SIP_UDP - SIP_UDP request.\n* SIP_TCP - SIP_TCP request.\n* MYSQL - MYSQL request.\n* MSSQL - MSSQL request.\n* ORACLE - ORACLE request.\n* NAT - NAT request.\n* DIAMETER - DIAMETER request.\n* RADIUS - RADIUS request.\n* MQTT - MQTT request.\n* QUIC_BRIDGE - QUIC_BRIDGE request.\n* HTTP_QUIC - HTTP_QUIC request.",
 			},

@@ -121,8 +121,16 @@ func autoscaleprofileGetThePayloadFromthePlan(ctx context.Context, data *Autosca
 	return autoscaleprofile
 }
 
-func autoscaleprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AutoscaleprofileResourceModel) autoscale.Autoscaleprofile {
-	tflog.Debug(ctx, "In autoscaleprofileGetTheUpdatablePayloadFromThePlan Function")
+// autoscaleprofileGetTheUpdatePayloadFromthePlan builds the SET (update/PUT) payload.
+// Pattern 9 (add-vs-set payload drift): per nitro_rest/autoscale/autoscaleprofile.html
+// the update (PUT) Request Payload accepts only {name, url, apikey, sharedsecret}.
+// It therefore EXCLUDES the create-only attr:
+//   - type is create-only (RequiresReplace, present in the add payload only, absent
+//     from the update payload) - excluded here.
+//
+// The name key is retained because it is required to address the resource in PUT.
+func autoscaleprofileGetTheUpdatePayloadFromthePlan(ctx context.Context, data *AutoscaleprofileResourceModel) autoscale.Autoscaleprofile {
+	tflog.Debug(ctx, "In autoscaleprofileGetTheUpdatePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	autoscaleprofile := autoscale.Autoscaleprofile{}
@@ -131,6 +139,7 @@ func autoscaleprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data
 	}
 	// Skip write-only attribute: apikey_wo
 	// Skip version tracker attribute: apikey_wo_version
+	// name is the key, required to address the resource in PUT.
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		autoscaleprofile.Name = data.Name.ValueString()
 	}
@@ -139,6 +148,7 @@ func autoscaleprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data
 	}
 	// Skip write-only attribute: sharedsecret_wo
 	// Skip version tracker attribute: sharedsecret_wo_version
+	// type is create-only (RequiresReplace) - excluded from the update/set payload.
 	if !data.Url.IsNull() && !data.Url.IsUnknown() {
 		autoscaleprofile.Url = data.Url.ValueString()
 	}

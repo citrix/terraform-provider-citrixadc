@@ -284,7 +284,13 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Name for the SSL profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the profile is created.",
 			},
 			"nodefaultbindings": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					// GH #1438: nodefaultbindings is create-only (NITRO rejects it on update
+					// with errorcode 278 "Invalid argument [nodefaultbindings]"). Force replace
+					// only when the user changes the configured value.
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+				},
 				Description: "Control default bindings for the SSL profile.",
 			},
 			"nodefaultcipherbindings": schema.BoolAttribute{
@@ -464,12 +470,9 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes; add
-					// UseStateForUnknown so the GET-populated Computed value on refresh does not
-					// drift null->value and force a spurious parent replace on the v2 -> Framework
-					// upgrade (which would cascade-drop child sslcipher/ecccurve/sslcertkey bindings).
+					// GH #1436: carry prior value forward; replace only when a configured value changes.
 					stringplanmodifier.UseStateForUnknown(),
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of profile. Front end profiles apply to the entity that receives requests from a client. Backend profiles apply to the entity that sends client requests to a server.",
 			},
@@ -733,6 +736,232 @@ func sslprofileGetThePayloadFromthePlan(ctx context.Context, data *SslprofileRes
 	if !data.Sslprofiletype.IsNull() && !data.Sslprofiletype.IsUnknown() {
 		sslprofile.Sslprofiletype = data.Sslprofiletype.ValueString()
 	}
+	if !data.Sslredirect.IsNull() && !data.Sslredirect.IsUnknown() {
+		sslprofile.Sslredirect = data.Sslredirect.ValueString()
+	}
+	if !data.Ssltriggertimeout.IsNull() && !data.Ssltriggertimeout.IsUnknown() {
+		sslprofile.Ssltriggertimeout = utils.IntPtr(int(data.Ssltriggertimeout.ValueInt64()))
+	}
+	if !data.Strictcachecks.IsNull() && !data.Strictcachecks.IsUnknown() {
+		sslprofile.Strictcachecks = data.Strictcachecks.ValueString()
+	}
+	if !data.Strictsigdigestcheck.IsNull() && !data.Strictsigdigestcheck.IsUnknown() {
+		sslprofile.Strictsigdigestcheck = data.Strictsigdigestcheck.ValueString()
+	}
+	if !data.Tls1.IsNull() && !data.Tls1.IsUnknown() {
+		sslprofile.Tls1 = data.Tls1.ValueString()
+	}
+	if !data.Tls11.IsNull() && !data.Tls11.IsUnknown() {
+		sslprofile.Tls11 = data.Tls11.ValueString()
+	}
+	if !data.Tls12.IsNull() && !data.Tls12.IsUnknown() {
+		sslprofile.Tls12 = data.Tls12.ValueString()
+	}
+	if !data.Tls13.IsNull() && !data.Tls13.IsUnknown() {
+		sslprofile.Tls13 = data.Tls13.ValueString()
+	}
+	if !data.Tls13sessionticketsperauthcontext.IsNull() && !data.Tls13sessionticketsperauthcontext.IsUnknown() {
+		sslprofile.Tls13sessionticketsperauthcontext = utils.IntPtr(int(data.Tls13sessionticketsperauthcontext.ValueInt64()))
+	}
+	if !data.Zerorttearlydata.IsNull() && !data.Zerorttearlydata.IsUnknown() {
+		sslprofile.Zerorttearlydata = data.Zerorttearlydata.ValueString()
+	}
+
+	return sslprofile
+}
+
+// sslprofileGetTheUpdatePayloadFromthePlan builds the SET (update/PUT) payload.
+// Per nitro_rest/ssl/sslprofile.html, sslprofiletype is present in the "add"
+// (create) Request Payload but ABSENT from the "update" Request Payload, making
+// it create-only: the "set sslprofile" call rejects it (e.g. errorcode 278
+// "Invalid argument [sslprofiletype]"). It is therefore EXCLUDED here. A genuine
+// change to sslprofiletype still forces a full destroy+recreate via
+// RequiresReplace. ciphername IS accepted by the update payload, so (unlike the
+// earlier inline over-exclusion) it is KEPT here.
+func sslprofileGetTheUpdatePayloadFromthePlan(ctx context.Context, data *SslprofileResourceModel) ssl.Sslprofile {
+	tflog.Debug(ctx, "In sslprofileGetTheUpdatePayloadFromthePlan Function")
+
+	// Create API request body from the model
+	sslprofile := ssl.Sslprofile{}
+	// name is the resource key, required to address the resource in the PUT.
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		sslprofile.Name = data.Name.ValueString()
+	}
+	if !data.Allowextendedmastersecret.IsNull() && !data.Allowextendedmastersecret.IsUnknown() {
+		sslprofile.Allowextendedmastersecret = data.Allowextendedmastersecret.ValueString()
+	}
+	if !data.Allowunknownsni.IsNull() && !data.Allowunknownsni.IsUnknown() {
+		sslprofile.Allowunknownsni = data.Allowunknownsni.ValueString()
+	}
+	if !data.Alpnprotocol.IsNull() && !data.Alpnprotocol.IsUnknown() {
+		sslprofile.Alpnprotocol = data.Alpnprotocol.ValueString()
+	}
+	if !data.Ciphername.IsNull() && !data.Ciphername.IsUnknown() {
+		sslprofile.Ciphername = data.Ciphername.ValueString()
+	}
+	if !data.Cipherpriority.IsNull() && !data.Cipherpriority.IsUnknown() {
+		sslprofile.Cipherpriority = utils.IntPtr(int(data.Cipherpriority.ValueInt64()))
+	}
+	if !data.Cipherredirect.IsNull() && !data.Cipherredirect.IsUnknown() {
+		sslprofile.Cipherredirect = data.Cipherredirect.ValueString()
+	}
+	if !data.Cipherurl.IsNull() && !data.Cipherurl.IsUnknown() {
+		sslprofile.Cipherurl = data.Cipherurl.ValueString()
+	}
+	if !data.Cleartextport.IsNull() && !data.Cleartextport.IsUnknown() {
+		sslprofile.Cleartextport = utils.IntPtr(int(data.Cleartextport.ValueInt64()))
+	}
+	if !data.Clientauth.IsNull() && !data.Clientauth.IsUnknown() {
+		sslprofile.Clientauth = data.Clientauth.ValueString()
+	}
+	if !data.Clientauthuseboundcachain.IsNull() && !data.Clientauthuseboundcachain.IsUnknown() {
+		sslprofile.Clientauthuseboundcachain = data.Clientauthuseboundcachain.ValueString()
+	}
+	if !data.Clientcert.IsNull() && !data.Clientcert.IsUnknown() {
+		sslprofile.Clientcert = data.Clientcert.ValueString()
+	}
+	if !data.Commonname.IsNull() && !data.Commonname.IsUnknown() {
+		sslprofile.Commonname = data.Commonname.ValueString()
+	}
+	if !data.Defaultsni.IsNull() && !data.Defaultsni.IsUnknown() {
+		sslprofile.Defaultsni = data.Defaultsni.ValueString()
+	}
+	if !data.Denysslreneg.IsNull() && !data.Denysslreneg.IsUnknown() {
+		sslprofile.Denysslreneg = data.Denysslreneg.ValueString()
+	}
+	if !data.Dh.IsNull() && !data.Dh.IsUnknown() {
+		sslprofile.Dh = data.Dh.ValueString()
+	}
+	if !data.Dhcount.IsNull() && !data.Dhcount.IsUnknown() {
+		sslprofile.Dhcount = utils.IntPtr(int(data.Dhcount.ValueInt64()))
+	}
+	if !data.Dhekeyexchangewithpsk.IsNull() && !data.Dhekeyexchangewithpsk.IsUnknown() {
+		sslprofile.Dhekeyexchangewithpsk = data.Dhekeyexchangewithpsk.ValueString()
+	}
+	if !data.Dhfile.IsNull() && !data.Dhfile.IsUnknown() {
+		sslprofile.Dhfile = data.Dhfile.ValueString()
+	}
+	if !data.Dhkeyexpsizelimit.IsNull() && !data.Dhkeyexpsizelimit.IsUnknown() {
+		sslprofile.Dhkeyexpsizelimit = data.Dhkeyexpsizelimit.ValueString()
+	}
+	if !data.Dropreqwithnohostheader.IsNull() && !data.Dropreqwithnohostheader.IsUnknown() {
+		sslprofile.Dropreqwithnohostheader = data.Dropreqwithnohostheader.ValueString()
+	}
+	if !data.Encryptedclienthello.IsNull() && !data.Encryptedclienthello.IsUnknown() {
+		sslprofile.Encryptedclienthello = data.Encryptedclienthello.ValueString()
+	}
+	if !data.Encrypttriggerpktcount.IsNull() && !data.Encrypttriggerpktcount.IsUnknown() {
+		sslprofile.Encrypttriggerpktcount = utils.IntPtr(int(data.Encrypttriggerpktcount.ValueInt64()))
+	}
+	if !data.Ersa.IsNull() && !data.Ersa.IsUnknown() {
+		sslprofile.Ersa = data.Ersa.ValueString()
+	}
+	if !data.Ersacount.IsNull() && !data.Ersacount.IsUnknown() {
+		sslprofile.Ersacount = utils.IntPtr(int(data.Ersacount.ValueInt64()))
+	}
+	if !data.Hsts.IsNull() && !data.Hsts.IsUnknown() {
+		sslprofile.Hsts = data.Hsts.ValueString()
+	}
+	if !data.Includesubdomains.IsNull() && !data.Includesubdomains.IsUnknown() {
+		sslprofile.Includesubdomains = data.Includesubdomains.ValueString()
+	}
+	if !data.Insertionencoding.IsNull() && !data.Insertionencoding.IsUnknown() {
+		sslprofile.Insertionencoding = data.Insertionencoding.ValueString()
+	}
+	if !data.Maxage.IsNull() && !data.Maxage.IsUnknown() {
+		sslprofile.Maxage = utils.IntPtr(int(data.Maxage.ValueInt64()))
+	}
+	if !data.Maxrenegrate.IsNull() && !data.Maxrenegrate.IsUnknown() {
+		sslprofile.Maxrenegrate = utils.IntPtr(int(data.Maxrenegrate.ValueInt64()))
+	}
+	// GH #1438: nodefaultbindings is create-only (present in add payload, absent from the
+	// update payload; NITRO rejects it on set with errorcode 278 "Invalid argument
+	// [nodefaultbindings]"). It is therefore EXCLUDED from the set/update payload.
+	if !data.Ocspstapling.IsNull() && !data.Ocspstapling.IsUnknown() {
+		sslprofile.Ocspstapling = data.Ocspstapling.ValueString()
+	}
+	if !data.Preload.IsNull() && !data.Preload.IsUnknown() {
+		sslprofile.Preload = data.Preload.ValueString()
+	}
+	if !data.Prevsessionkeylifetime.IsNull() && !data.Prevsessionkeylifetime.IsUnknown() {
+		sslprofile.Prevsessionkeylifetime = utils.IntPtr(int(data.Prevsessionkeylifetime.ValueInt64()))
+	}
+	if !data.Pushenctrigger.IsNull() && !data.Pushenctrigger.IsUnknown() {
+		sslprofile.Pushenctrigger = data.Pushenctrigger.ValueString()
+	}
+	if !data.Pushenctriggertimeout.IsNull() && !data.Pushenctriggertimeout.IsUnknown() {
+		sslprofile.Pushenctriggertimeout = utils.IntPtr(int(data.Pushenctriggertimeout.ValueInt64()))
+	}
+	if !data.Pushflag.IsNull() && !data.Pushflag.IsUnknown() {
+		sslprofile.Pushflag = utils.IntPtr(int(data.Pushflag.ValueInt64()))
+	}
+	if !data.Quantumsize.IsNull() && !data.Quantumsize.IsUnknown() {
+		sslprofile.Quantumsize = data.Quantumsize.ValueString()
+	}
+	if !data.Redirectportrewrite.IsNull() && !data.Redirectportrewrite.IsUnknown() {
+		sslprofile.Redirectportrewrite = data.Redirectportrewrite.ValueString()
+	}
+	if !data.Sendclosenotify.IsNull() && !data.Sendclosenotify.IsUnknown() {
+		sslprofile.Sendclosenotify = data.Sendclosenotify.ValueString()
+	}
+	if !data.Serverauth.IsNull() && !data.Serverauth.IsUnknown() {
+		sslprofile.Serverauth = data.Serverauth.ValueString()
+	}
+	if !data.Sessionkeylifetime.IsNull() && !data.Sessionkeylifetime.IsUnknown() {
+		sslprofile.Sessionkeylifetime = utils.IntPtr(int(data.Sessionkeylifetime.ValueInt64()))
+	}
+	if !data.Sessionticket.IsNull() && !data.Sessionticket.IsUnknown() {
+		sslprofile.Sessionticket = data.Sessionticket.ValueString()
+	}
+	if !data.Sessionticketkeydata.IsNull() && !data.Sessionticketkeydata.IsUnknown() {
+		sslprofile.Sessionticketkeydata = data.Sessionticketkeydata.ValueString()
+	}
+	// Skip write-only attribute: sessionticketkeydata_wo
+	// Skip version tracker attribute: sessionticketkeydata_wo_version
+	if !data.Sessionticketkeyrefresh.IsNull() && !data.Sessionticketkeyrefresh.IsUnknown() {
+		sslprofile.Sessionticketkeyrefresh = data.Sessionticketkeyrefresh.ValueString()
+	}
+	if !data.Sessionticketlifetime.IsNull() && !data.Sessionticketlifetime.IsUnknown() {
+		sslprofile.Sessionticketlifetime = utils.IntPtr(int(data.Sessionticketlifetime.ValueInt64()))
+	}
+	if !data.Sessreuse.IsNull() && !data.Sessreuse.IsUnknown() {
+		sslprofile.Sessreuse = data.Sessreuse.ValueString()
+	}
+	if !data.Sesstimeout.IsNull() && !data.Sesstimeout.IsUnknown() {
+		sslprofile.Sesstimeout = utils.IntPtr(int(data.Sesstimeout.ValueInt64()))
+	}
+	if !data.Skipclientcertpolicycheck.IsNull() && !data.Skipclientcertpolicycheck.IsUnknown() {
+		sslprofile.Skipclientcertpolicycheck = data.Skipclientcertpolicycheck.ValueString()
+	}
+	if !data.Snienable.IsNull() && !data.Snienable.IsUnknown() {
+		sslprofile.Snienable = data.Snienable.ValueString()
+	}
+	if !data.Snihttphostmatch.IsNull() && !data.Snihttphostmatch.IsUnknown() {
+		sslprofile.Snihttphostmatch = data.Snihttphostmatch.ValueString()
+	}
+	if !data.Ssl3.IsNull() && !data.Ssl3.IsUnknown() {
+		sslprofile.Ssl3 = data.Ssl3.ValueString()
+	}
+	if !data.Sslclientlogs.IsNull() && !data.Sslclientlogs.IsUnknown() {
+		sslprofile.Sslclientlogs = data.Sslclientlogs.ValueString()
+	}
+	if !data.Sslimaxsessperserver.IsNull() && !data.Sslimaxsessperserver.IsUnknown() {
+		sslprofile.Sslimaxsessperserver = utils.IntPtr(int(data.Sslimaxsessperserver.ValueInt64()))
+	}
+	if !data.Sslinterception.IsNull() && !data.Sslinterception.IsUnknown() {
+		sslprofile.Sslinterception = data.Sslinterception.ValueString()
+	}
+	if !data.Ssliocspcheck.IsNull() && !data.Ssliocspcheck.IsUnknown() {
+		sslprofile.Ssliocspcheck = data.Ssliocspcheck.ValueString()
+	}
+	if !data.Sslireneg.IsNull() && !data.Sslireneg.IsUnknown() {
+		sslprofile.Sslireneg = data.Sslireneg.ValueString()
+	}
+	if !data.Ssllogprofile.IsNull() && !data.Ssllogprofile.IsUnknown() {
+		sslprofile.Ssllogprofile = data.Ssllogprofile.ValueString()
+	}
+	// sslprofiletype is create-only (present in add payload, absent from update
+	// payload per sslprofile.html) - EXCLUDED from the set/update payload.
 	if !data.Sslredirect.IsNull() && !data.Sslredirect.IsUnknown() {
 		sslprofile.Sslredirect = data.Sslredirect.ValueString()
 	}

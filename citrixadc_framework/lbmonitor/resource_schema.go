@@ -154,9 +154,10 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// snmpoid is NOT ForceNew in SDK v2 (updatable Computed field). Drop the
-					// spurious RequiresReplace added during migration; carry the prior value
-					// forward so a GET-populated value on refresh does not force a replace.
+					// Not ForceNew in the legacy SDKv2 resource. Carry the prior value
+					// forward on refresh so an unset Computed attribute is not planned as
+					// unknown and does not spuriously force destroy+recreate after the
+					// SDKv2->Framework migration (GH #1436).
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "SNMP OID for SNMP monitors.",
@@ -303,9 +304,10 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// hostname is NOT ForceNew in SDK v2 (updatable Computed field). Drop the
-					// spurious RequiresReplace added during migration; carry the prior value
-					// forward so a GET-populated value on refresh does not force a replace.
+					// Not ForceNew in the legacy SDKv2 resource. Carry the prior value
+					// forward on refresh so an unset Computed attribute is not planned as
+					// unknown and does not spuriously force destroy+recreate after the
+					// SDKv2->Framework migration (GH #1436).
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Hostname in the FQDN format (Example: porche.cars.org). Applicable to STOREFRONT monitors.",
@@ -605,11 +607,14 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes, but add
-					// UseStateForUnknown so a Computed value the GET populates on refresh does not
-					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
-					stringplanmodifier.RequiresReplace(),
+					// ForceNew in the legacy SDKv2 resource. Carry the prior value forward
+					// on refresh (UseStateForUnknown) and only force replacement when the
+					// user actually sets and changes it (RequiresReplaceIfConfigured).
+					// Order matters: USFU must run first so the replace check compares the
+					// resolved prior value, not the unknown planned by the framework, which
+					// is what caused the spurious destroy+recreate on upgrade (GH #1436).
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The name of the service group to which the monitor is to be bound.",
 			},
@@ -617,11 +622,14 @@ func (r *LbmonitorResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					// ForceNew in SDK v2 -> keep RequiresReplace for genuine user changes, but add
-					// UseStateForUnknown so a Computed value the GET populates on refresh does not
-					// drift null->value and force a spurious replace on the v2 -> Framework upgrade.
-					stringplanmodifier.RequiresReplace(),
+					// ForceNew in the legacy SDKv2 resource. Carry the prior value forward
+					// on refresh (UseStateForUnknown) and only force replacement when the
+					// user actually sets and changes it (RequiresReplaceIfConfigured).
+					// Order matters: USFU must run first so the replace check compares the
+					// resolved prior value, not the unknown planned by the framework, which
+					// is what caused the spurious destroy+recreate on upgrade (GH #1436).
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The name of the service to which the monitor is bound.",
 			},
