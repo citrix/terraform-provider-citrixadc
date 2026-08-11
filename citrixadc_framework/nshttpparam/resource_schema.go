@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -39,46 +41,55 @@ func (r *NshttpparamResource) Schema(ctx context.Context, req resource.SchemaReq
 			"conmultiplex": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Reuse server connections for requests from more than one client connections.",
 			},
 			"dropinvalreqs": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Drop invalid HTTP requests or responses.",
 			},
 			"http2serverside": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable/Disable HTTP/2 on server side",
 			},
 			"ignoreconnectcodingscheme": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Ignore Coding scheme in CONNECT request.",
 			},
 			"insnssrvrhdr": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable or disable Citrix ADC server header insertion for Citrix ADC generated HTTP responses.",
 			},
 			"logerrresp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Server header value to be inserted.",
 			},
 			"markconnreqinval": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Mark CONNECT requests as invalid.",
 			},
 			"markhttp09inval": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Mark HTTP/0.9 requests as invalid.",
 			},
 			"maxreusepool": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Maximum limit on the number of connections, from the Citrix ADC to a particular server that are kept in the reuse pool. This setting is helpful for optimal memory utilization and for reducing the idle connections to the server just after the peak time.",
 			},
 			"nssrvrhdr": schema.StringAttribute{

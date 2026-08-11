@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -214,6 +215,93 @@ func TestAccLsnappsprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The unset test exercises the unset-eligible attributes of lsnappsprofile that
+// can be set together on a single TCP profile: filtering, ippooling, mapping,
+// tcpproxy. l2info is excluded because NITRO rejects (errorcode 257) enabling it
+// together with tcpproxy=ENABLED. td is excluded because setting a non-default
+// value requires a pre-existing traffic domain on the appliance. Filtering must
+// be at least as strict as mapping, so both are set to ENDPOINT-INDEPENDENT.
+const testAccLsnappsprofile_unset_step1 = `
+resource "citrixadc_lsnappsprofile" "tf_unset" {
+  appsprofilename   = "tf_test_lsnappsprofile_unset"
+  transportprotocol = "TCP"
+  filtering         = "ENDPOINT-INDEPENDENT"
+  ippooling         = "PAIRED"
+  mapping           = "ENDPOINT-INDEPENDENT"
+  tcpproxy          = "ENABLED"
+}
+`
+
+const testAccLsnappsprofile_unset_step2 = `
+resource "citrixadc_lsnappsprofile" "tf_unset" {
+  appsprofilename   = "tf_test_lsnappsprofile_unset"
+  transportprotocol = "TCP"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccLsnappsprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnappsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLsnappsprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnappsprofileExist("citrixadc_lsnappsprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnappsprofile.tf_unset", "filtering", "ENDPOINT-INDEPENDENT"),
+					resource.TestCheckResourceAttr("citrixadc_lsnappsprofile.tf_unset", "ippooling", "PAIRED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnappsprofile.tf_unset", "mapping", "ENDPOINT-INDEPENDENT"),
+					resource.TestCheckResourceAttr("citrixadc_lsnappsprofile.tf_unset", "tcpproxy", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccLsnappsprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnappsprofileExist("citrixadc_lsnappsprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnappsprofile.tf_unset", "filtering", "ADDRESS-PORT-DEPENDENT"),
+					resource.TestCheckResourceAttr("citrixadc_lsnappsprofile.tf_unset", "ippooling", "RANDOM"),
+					resource.TestCheckResourceAttr("citrixadc_lsnappsprofile.tf_unset", "mapping", "ADDRESS-PORT-DEPENDENT"),
+					resource.TestCheckResourceAttr("citrixadc_lsnappsprofile.tf_unset", "tcpproxy", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLsnappsprofileADCValue("tf_test_lsnappsprofile_unset", "mapping", "ADDRESS-PORT-DEPENDENT"),
+					testAccCheckLsnappsprofileADCValue("tf_test_lsnappsprofile_unset", "tcpproxy", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLsnappsprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckLsnappsprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lsnappsprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lsnappsprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lsnappsprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccLsnappsprofileDataSource_basic(t *testing.T) {

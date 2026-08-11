@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -81,6 +82,7 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging of AppFlow information.",
 			},
 			"arp": schema.StringAttribute{
@@ -166,6 +168,7 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"icmpvsrresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PASSIVE"),
 				Description: "Criterion for responding to PING requests sent to this virtual server. If ACTIVE, respond only if the virtual server is available. If PASSIVE, respond even if the virtual server is not available.",
 			},
 			"ipset": schema.StringAttribute{
@@ -321,6 +324,7 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"useportrange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Use a port number from the port range (set by using the set ns param command, or in the Create Virtual Server (Cache Redirection) dialog box) as the source port in the requests sent to the origin server.",
 			},
 			"via": schema.StringAttribute{

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -175,6 +176,92 @@ func TestAccSpilloverpolicy_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// spilloverpolicy has exactly one spec-unsettable, mutable attribute: comment
+// (name/rule/action are mandatory; newname is rename-only). Step 1 sets comment
+// to a non-default value; step 2 removes it so the provider must unset it,
+// reverting the appliance to the NITRO default (empty).
+const testAccSpilloverpolicy_unset_step1 = `
+	resource "citrixadc_spilloveraction" "tf_spilloveraction_unset" {
+		name   = "tf_spilloveraction_unset"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_unset" {
+		name    = "tf_spilloverpolicy_unset"
+		rule    = "true"
+		action  = citrixadc_spilloveraction.tf_spilloveraction_unset.name
+		comment = "unset-test-comment"
+	}
+`
+
+const testAccSpilloverpolicy_unset_step2 = `
+	resource "citrixadc_spilloveraction" "tf_spilloveraction_unset" {
+		name   = "tf_spilloveraction_unset"
+		action = "SPILLOVER"
+	}
+	resource "citrixadc_spilloverpolicy" "tf_unset" {
+		name   = "tf_spilloverpolicy_unset"
+		rule   = "true"
+		action = citrixadc_spilloveraction.tf_spilloveraction_unset.name
+		# comment removed from config -> the provider must unset it (revert to "").
+	}
+`
+
+func TestAccSpilloverpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSpilloverpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccSpilloverpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpilloverpolicyExist("citrixadc_spilloverpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_spilloverpolicy.tf_unset", "comment", "unset-test-comment"),
+				),
+			},
+			{
+				// Removing comment must unset it: state reverts to the NITRO default
+				// (empty) and the implicit post-apply plan must be empty.
+				Config: testAccSpilloverpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpilloverpolicyExist("citrixadc_spilloverpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_spilloverpolicy.tf_unset", "comment", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSpilloverpolicyADCValue("tf_spilloverpolicy_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSpilloverpolicyADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. A missing/nil attribute is treated as empty.
+func testAccCheckSpilloverpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Spilloverpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("spilloverpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("spilloverpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckSpilloverpolicyExist(n string, id *string) resource.TestCheckFunc {

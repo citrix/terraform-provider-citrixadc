@@ -112,12 +112,15 @@ func (r *AutoscalepolicyResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *AutoscalepolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AutoscalepolicyResourceModel
+	var data, config, state AutoscalepolicyResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to distinguish an attribute removed from config (-> unset) from
+	// one merely changed (-> update).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,6 +160,7 @@ func (r *AutoscalepolicyResource) Update(ctx context.Context, req resource.Updat
 	// unnamed URL (payload carries the name), matching the SDK v2 implementation's
 	// use of UpdateUnnamedResource.
 	hasChange := false
+	attributesToUnset := []string{}
 	autoscalepolicy := autoscale.Autoscalepolicy{
 		Name: data.Id.ValueString(),
 	}
@@ -167,13 +171,21 @@ func (r *AutoscalepolicyResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for autoscalepolicy")
-		autoscalepolicy.Comment = data.Comment.ValueString()
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			autoscalepolicy.Comment = data.Comment.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for autoscalepolicy")
-		autoscalepolicy.Logaction = data.Logaction.ValueString()
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			autoscalepolicy.Logaction = data.Logaction.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for autoscalepolicy")
@@ -190,6 +202,17 @@ func (r *AutoscalepolicyResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated autoscalepolicy resource")
 	} else {
 		tflog.Debug(ctx, "No mutable changes detected for autoscalepolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. data.Id holds the current live name (== name, or newname
+	// after a rename), so the unset always targets the live object.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Autoscalepolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset autoscalepolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. Capture the user-facing name and newname

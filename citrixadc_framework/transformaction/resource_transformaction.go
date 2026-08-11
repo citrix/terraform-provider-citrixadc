@@ -117,12 +117,14 @@ func (r *TransformactionResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *TransformactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state TransformactionResourceModel
+	var data, config, state TransformactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -134,34 +136,68 @@ func (r *TransformactionResource) Update(ctx context.Context, req resource.Updat
 	tflog.Debug(ctx, "Updating transformaction resource")
 
 	// name and profilename are ForceNew (RequiresReplace) and never reach Update as a
-	// change. Detect changes only on the updateable attributes.
+	// change. Detect changes only on the updateable attributes. For unsettable
+	// attributes removed from config, collect them so the appliance reverts them.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
-		hasChange = true
+		if config.Comment.IsNull() {
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cookiedomainfrom.Equal(state.Cookiedomainfrom) {
-		hasChange = true
+		if config.Cookiedomainfrom.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cookiedomainfrom")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cookiedomaininto.Equal(state.Cookiedomaininto) {
-		hasChange = true
+		if config.Cookiedomaininto.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cookiedomaininto")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Priority.Equal(state.Priority) {
 		hasChange = true
 	}
 	if !data.Requrlfrom.Equal(state.Requrlfrom) {
-		hasChange = true
+		if config.Requrlfrom.IsNull() {
+			attributesToUnset = append(attributesToUnset, "requrlfrom")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Requrlinto.Equal(state.Requrlinto) {
-		hasChange = true
+		if config.Requrlinto.IsNull() {
+			attributesToUnset = append(attributesToUnset, "requrlinto")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Resurlfrom.Equal(state.Resurlfrom) {
-		hasChange = true
+		if config.Resurlfrom.IsNull() {
+			attributesToUnset = append(attributesToUnset, "resurlfrom")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Resurlinto.Equal(state.Resurlinto) {
-		hasChange = true
+		if config.Resurlinto.IsNull() {
+			attributesToUnset = append(attributesToUnset, "resurlinto")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.State.Equal(state.State) {
-		hasChange = true
+		if config.State.IsNull() {
+			attributesToUnset = append(attributesToUnset, "state")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -174,6 +210,17 @@ func (r *TransformactionResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated transformaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for transformaction resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. Done after any update so a default the update payload
+	// carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Transformaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset transformaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

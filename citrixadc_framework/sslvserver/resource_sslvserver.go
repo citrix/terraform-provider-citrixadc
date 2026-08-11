@@ -111,12 +111,14 @@ func (r *SslvserverResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *SslvserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SslvserverResourceModel
+	var data, config, state SslvserverResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,6 +128,67 @@ func (r *SslvserverResource) Update(ctx context.Context, req resource.UpdateRequ
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating sslvserver resource")
+
+	// Determine attributes that were removed from config so they can be unset
+	// (reverted to NITRO defaults) after the update.
+	attributesToUnset := []string{}
+	if !data.Cipherredirect.Equal(state.Cipherredirect) && config.Cipherredirect.IsNull() {
+		attributesToUnset = append(attributesToUnset, "cipherredirect")
+	}
+	if !data.Cleartextport.Equal(state.Cleartextport) && config.Cleartextport.IsNull() {
+		attributesToUnset = append(attributesToUnset, "cleartextport")
+	}
+	if !data.Clientauth.Equal(state.Clientauth) && config.Clientauth.IsNull() {
+		attributesToUnset = append(attributesToUnset, "clientauth")
+	}
+	if !data.Ersa.Equal(state.Ersa) && config.Ersa.IsNull() {
+		attributesToUnset = append(attributesToUnset, "ersa")
+	}
+	if !data.Hsts.Equal(state.Hsts) && config.Hsts.IsNull() {
+		attributesToUnset = append(attributesToUnset, "hsts")
+	}
+	if !data.Ocspstapling.Equal(state.Ocspstapling) && config.Ocspstapling.IsNull() {
+		attributesToUnset = append(attributesToUnset, "ocspstapling")
+	}
+	if !data.Redirectportrewrite.Equal(state.Redirectportrewrite) && config.Redirectportrewrite.IsNull() {
+		attributesToUnset = append(attributesToUnset, "redirectportrewrite")
+	}
+	if !data.Sendclosenotify.Equal(state.Sendclosenotify) && config.Sendclosenotify.IsNull() {
+		attributesToUnset = append(attributesToUnset, "sendclosenotify")
+	}
+	if !data.Sesstimeout.Equal(state.Sesstimeout) && config.Sesstimeout.IsNull() {
+		attributesToUnset = append(attributesToUnset, "sesstimeout")
+	}
+	if !data.Snienable.Equal(state.Snienable) && config.Snienable.IsNull() {
+		attributesToUnset = append(attributesToUnset, "snienable")
+	}
+	if !data.Ssl3.Equal(state.Ssl3) && config.Ssl3.IsNull() {
+		attributesToUnset = append(attributesToUnset, "ssl3")
+	}
+	if !data.Sslclientlogs.Equal(state.Sslclientlogs) && config.Sslclientlogs.IsNull() {
+		attributesToUnset = append(attributesToUnset, "sslclientlogs")
+	}
+	if !data.Sslredirect.Equal(state.Sslredirect) && config.Sslredirect.IsNull() {
+		attributesToUnset = append(attributesToUnset, "sslredirect")
+	}
+	if !data.Strictsigdigestcheck.Equal(state.Strictsigdigestcheck) && config.Strictsigdigestcheck.IsNull() {
+		attributesToUnset = append(attributesToUnset, "strictsigdigestcheck")
+	}
+	if !data.Tls1.Equal(state.Tls1) && config.Tls1.IsNull() {
+		attributesToUnset = append(attributesToUnset, "tls1")
+	}
+	if !data.Tls11.Equal(state.Tls11) && config.Tls11.IsNull() {
+		attributesToUnset = append(attributesToUnset, "tls11")
+	}
+	if !data.Tls12.Equal(state.Tls12) && config.Tls12.IsNull() {
+		attributesToUnset = append(attributesToUnset, "tls12")
+	}
+	if !data.Tls13.Equal(state.Tls13) && config.Tls13.IsNull() {
+		attributesToUnset = append(attributesToUnset, "tls13")
+	}
+	if !data.Tls13sessionticketsperauthcontext.Equal(state.Tls13sessionticketsperauthcontext) && config.Tls13sessionticketsperauthcontext.IsNull() {
+		attributesToUnset = append(attributesToUnset, "tls13sessionticketsperauthcontext")
+	}
 
 	// All attributes except vservername (RequiresReplace) are updateable. Push the full
 	// configured payload via UpdateResource, matching SDK v2 semantics.
@@ -139,6 +202,16 @@ func (r *SslvserverResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	tflog.Trace(ctx, "Updated sslvserver resource")
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"vservername": sslvserverName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Sslvserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslvserver attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readSslvserverFromApi(ctx, &data, &resp.Diagnostics) {

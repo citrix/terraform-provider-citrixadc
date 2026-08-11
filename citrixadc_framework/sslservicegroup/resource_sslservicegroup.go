@@ -110,12 +110,14 @@ func (r *SslservicegroupResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *SslservicegroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SslservicegroupResourceModel
+	var data, config, state SslservicegroupResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,50 +131,105 @@ func (r *SslservicegroupResource) Update(ctx context.Context, req resource.Updat
 	// Check whether any updateable attribute changed (servicegroupname is
 	// ForceNew and never reaches Update).
 	hasChange := false
+	attributesToUnset := []string{}
+	// commonname has no documented NITRO default, so it is not unset here.
 	if !data.Commonname.Equal(state.Commonname) {
 		hasChange = true
 	}
 	if !data.Ocspstapling.Equal(state.Ocspstapling) {
-		hasChange = true
+		if config.Ocspstapling.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ocspstapling")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sendclosenotify.Equal(state.Sendclosenotify) {
-		hasChange = true
+		if config.Sendclosenotify.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sendclosenotify")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Serverauth.Equal(state.Serverauth) {
-		hasChange = true
+		if config.Serverauth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverauth")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sessreuse.Equal(state.Sessreuse) {
-		hasChange = true
+		if config.Sessreuse.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessreuse")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sesstimeout.Equal(state.Sesstimeout) {
-		hasChange = true
+		if config.Sesstimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sesstimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Snienable.Equal(state.Snienable) {
-		hasChange = true
+		if config.Snienable.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "snienable")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssl3.Equal(state.Ssl3) {
-		hasChange = true
+		if config.Ssl3.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssl3")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sslclientlogs.Equal(state.Sslclientlogs) {
-		hasChange = true
+		if config.Sslclientlogs.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslclientlogs")
+		} else {
+			hasChange = true
+		}
 	}
+	// sslprofile has no documented NITRO default, so it is not unset here.
 	if !data.Sslprofile.Equal(state.Sslprofile) {
 		hasChange = true
 	}
 	if !data.Strictsigdigestcheck.Equal(state.Strictsigdigestcheck) {
-		hasChange = true
+		if config.Strictsigdigestcheck.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "strictsigdigestcheck")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tls1.Equal(state.Tls1) {
-		hasChange = true
+		if config.Tls1.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tls1")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tls11.Equal(state.Tls11) {
-		hasChange = true
+		if config.Tls11.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tls11")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tls12.Equal(state.Tls12) {
-		hasChange = true
+		if config.Tls12.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tls12")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tls13.Equal(state.Tls13) {
-		hasChange = true
+		if config.Tls13.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tls13")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -186,6 +243,16 @@ func (r *SslservicegroupResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated sslservicegroup resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for sslservicegroup resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"servicegroupname": data.Servicegroupname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Sslservicegroup.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslservicegroup attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

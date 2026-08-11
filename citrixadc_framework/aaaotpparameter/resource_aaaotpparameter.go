@@ -106,12 +106,14 @@ func (r *AaaotpparameterResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *AaaotpparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AaaotpparameterResourceModel
+	var data, config, state AaaotpparameterResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -122,18 +124,50 @@ func (r *AaaotpparameterResource) Update(ctx context.Context, req resource.Updat
 
 	tflog.Debug(ctx, "Updating aaaotpparameter resource")
 
-	// Create API request body from the model
-	aaaotpparameter := aaaotpparameterGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// Unnamed singleton resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Aaaotpparameter.Type(), &aaaotpparameter)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaaotpparameter, got error: %s", err))
-		return
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Encryption.Equal(state.Encryption) {
+		tflog.Debug(ctx, "encryption has changed for aaaotpparameter")
+		if config.Encryption.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "encryption")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxotpdevices.Equal(state.Maxotpdevices) {
+		tflog.Debug(ctx, "maxotpdevices has changed for aaaotpparameter")
+		if config.Maxotpdevices.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxotpdevices")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated aaaotpparameter resource")
+	if hasChange {
+		// Create API request body from the model
+		aaaotpparameter := aaaotpparameterGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call
+		// Unnamed singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Aaaotpparameter.Type(), &aaaotpparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaaotpparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated aaaotpparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for aaaotpparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Aaaotpparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaaotpparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readAaaotpparameterFromApi(ctx, &data, &resp.Diagnostics) {

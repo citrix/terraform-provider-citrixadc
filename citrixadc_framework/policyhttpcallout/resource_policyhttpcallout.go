@@ -173,6 +173,11 @@ func (r *PolicyhttpcalloutResource) Update(ctx context.Context, req resource.Upd
 	// Check if there are any changes in updateable attributes.
 	// name and returntype are ForceNew/RequiresReplace and never reach Update.
 	hasChange := false
+	// attributesToUnset collects independent (non-mutually-exclusive) attributes
+	// removed from config so they are reverted to NITRO defaults with a single
+	// ?action=unset call after the update. The mutually-exclusive request-shaping
+	// attributes above are handled by the pre-update unset block (order matters).
+	attributesToUnset := []string{}
 	if !data.Bodyexpr.Equal(state.Bodyexpr) {
 		tflog.Debug(ctx, "bodyexpr has changed for policyhttpcallout")
 		hasChange = true
@@ -183,7 +188,11 @@ func (r *PolicyhttpcalloutResource) Update(ctx context.Context, req resource.Upd
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for policyhttpcallout")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Fullreqexpr.Equal(state.Fullreqexpr) {
 		tflog.Debug(ctx, "fullreqexpr has changed for policyhttpcallout")
@@ -215,7 +224,11 @@ func (r *PolicyhttpcalloutResource) Update(ctx context.Context, req resource.Upd
 	}
 	if !data.Resultexpr.Equal(state.Resultexpr) {
 		tflog.Debug(ctx, "resultexpr has changed for policyhttpcallout")
-		hasChange = true
+		if config.Resultexpr.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "resultexpr")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Scheme.Equal(state.Scheme) {
 		tflog.Debug(ctx, "scheme has changed for policyhttpcallout")
@@ -243,6 +256,17 @@ func (r *PolicyhttpcalloutResource) Update(ctx context.Context, req resource.Upd
 		tflog.Trace(ctx, "Updated policyhttpcallout resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for policyhttpcallout resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Policyhttpcallout.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset policyhttpcallout attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -222,6 +223,92 @@ func TestAccIcalatencyprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The icalatencyprofile unset test exercises every unset-eligible attribute:
+// step1 sets all mutable attributes to valid non-default values, step2 removes
+// them so the provider must unset them (revert to the documented NITRO
+// defaults).
+const testAccIcalatencyprofile_unset_step1 = `
+resource "citrixadc_icalatencyprofile" "tf_unset" {
+	name                     = "tf_test_icalatencyprofile_unset"
+	l7latencymonitoring      = "ENABLED"
+	l7latencythresholdfactor = 120
+	l7latencywaittime        = 100
+	l7latencynotifyinterval  = 50
+	l7latencymaxnotifycount  = 30
+}
+`
+
+const testAccIcalatencyprofile_unset_step2 = `
+resource "citrixadc_icalatencyprofile" "tf_unset" {
+	name = "tf_test_icalatencyprofile_unset"
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccIcalatencyprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcalatencyprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccIcalatencyprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcalatencyprofileExist("citrixadc_icalatencyprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencymonitoring", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencythresholdfactor", "120"),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencywaittime", "100"),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencynotifyinterval", "50"),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencymaxnotifycount", "30"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccIcalatencyprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcalatencyprofileExist("citrixadc_icalatencyprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencymonitoring", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencythresholdfactor", "4"),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencywaittime", "20"),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencynotifyinterval", "20"),
+					resource.TestCheckResourceAttr("citrixadc_icalatencyprofile.tf_unset", "l7latencymaxnotifycount", "5"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckIcalatencyprofileADCValue("tf_test_icalatencyprofile_unset", "l7latencymonitoring", "DISABLED"),
+					testAccCheckIcalatencyprofileADCValue("tf_test_icalatencyprofile_unset", "l7latencythresholdfactor", "4"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckIcalatencyprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckIcalatencyprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Icalatencyprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("icalatencyprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("icalatencyprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccIcalatencyprofileDataSource_basic(t *testing.T) {

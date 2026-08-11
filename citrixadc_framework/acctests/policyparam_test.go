@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -115,6 +117,76 @@ func testAccCheckPolicyparamExist(n string, id *string) resource.TestCheckFunc {
 			return fmt.Errorf("policyparam %s not found", n)
 		}
 
+		return nil
+	}
+}
+
+// policyparam is a singleton; timeout is its only unset-eligible attribute.
+// NITRO default is 3900.
+const testAccPolicyparam_unset_step1 = `
+	resource "citrixadc_policyparam" "tf_unset" {
+		timeout = 1000
+	}
+`
+
+const testAccPolicyparam_unset_step2 = `
+	resource "citrixadc_policyparam" "tf_unset" {
+		# timeout removed from config -> the provider must unset it
+		# (revert to the NITRO default, 3900).
+	}
+`
+
+func TestAccPolicyparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// policyparam resource does not have DELETE operation
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccPolicyparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyparamExist("citrixadc_policyparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_policyparam.tf_unset", "timeout", "1000"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the documented NITRO default, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccPolicyparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyparamExist("citrixadc_policyparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_policyparam.tf_unset", "timeout", "3900"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckPolicyparamADCValue("timeout", "3900"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckPolicyparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckPolicyparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Policyparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("policyparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("policyparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
 		return nil
 	}
 }

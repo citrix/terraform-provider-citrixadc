@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -151,6 +152,79 @@ func TestAccRnatparam_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// step1 sets both unsettable attrs to non-default values; step2 removes them
+// so the provider must unset them, reverting to NITRO spec defaults
+// (tcpproxy=ENABLED, srcippersistency=DISABLED).
+const testAccRnatparam_unset_step1 = `
+	resource "citrixadc_rnatparam" "tf_unset" {
+		tcpproxy         = "DISABLED"
+		srcippersistency = "ENABLED"
+	}
+`
+
+const testAccRnatparam_unset_step2 = `
+	resource "citrixadc_rnatparam" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccRnatparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccRnatparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnatparamExist("citrixadc_rnatparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnatparam.tf_unset", "tcpproxy", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_rnatparam.tf_unset", "srcippersistency", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults, and the implicit post-apply plan
+				// must be empty.
+				Config: testAccRnatparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnatparamExist("citrixadc_rnatparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnatparam.tf_unset", "tcpproxy", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_rnatparam.tf_unset", "srcippersistency", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckRnatparamADCValue("tcpproxy", "ENABLED"),
+					testAccCheckRnatparamADCValue("srcippersistency", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRnatparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckRnatparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Rnatparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("rnatparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("rnatparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccRnatparamDataSource_basic(t *testing.T) {

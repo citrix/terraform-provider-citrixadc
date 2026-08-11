@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -40,12 +41,13 @@ func (r *BridgetableResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "The ID of the bridgetable resource.",
 			},
 			"bridgeage": schema.Int64Attribute{
-				// Optional+Computed, no Default. bridgeage is a table-wide
-				// setting whose default (300) is supplied by the ADC. A schema
-				// Default without Computed is invalid; SDK v2 kept this
-				// Optional+Computed with no Default.
+				// Optional+Computed with the documented NITRO default (300). The
+				// Default is required so that removing bridgeage from config
+				// produces a plan diff (300 vs the prior value), which drives the
+				// Update method to unset it back to the appliance default.
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(300),
 				Description: "Time-out value for the bridge table entries, in seconds. The new value applies only to the entries that are dynamically learned after the new value is set. Previously existing bridge table entries expire after the previously configured time-out value.",
 			},
 			"devicevlan": schema.Int64Attribute{

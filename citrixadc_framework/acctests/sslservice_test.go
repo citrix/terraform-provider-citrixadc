@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -332,6 +333,135 @@ const testAccSslserviceDataSource_basic = `
 		servicename = citrixadc_sslservice.tf_sslservice.servicename
 	}
 `
+
+// The sslservice unset test exercises the spec-unsettable string attributes
+// that carry a documented NITRO default. step1 sets each to a non-default
+// value; step2 removes them from config, which must trigger the unset action
+// and revert each to its documented default.
+const testAccSslservice_unset_prereq = `
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		ipv46       = "10.10.10.44"
+		name        = "tf_lbvserver"
+		port        = 443
+		servicetype = "SSL"
+		sslprofile  = "ns_default_ssl_profile_frontend"
+	}
+
+	resource "citrixadc_service" "tf_service" {
+		name        = "tf_service"
+		servicetype = "SSL"
+		port        = 443
+		lbvserver   = citrixadc_lbvserver.tf_lbvserver.name
+		ip          = "10.77.33.22"
+	}
+`
+
+const testAccSslservice_unset_step1 = testAccSslservice_unset_prereq + `
+	resource "citrixadc_sslservice" "tf_unset" {
+		servicename         = citrixadc_service.tf_service.name
+		# Frontend-only options (cipherredirect, clientauth, dh, ersa, ssl2,
+		# sslredirect, sslv2redirect) are omitted: NITRO reports each as "not
+		# applicable when configuring a backend service" (ec1095/ec3745), so they
+		# are not settable/unset-testable on this service-based sslservice.
+		dhkeyexpsizelimit   = "ENABLED"
+		redirectportrewrite = "ENABLED"
+		serverauth          = "ENABLED"
+		sessreuse           = "DISABLED"
+		snienable           = "ENABLED"
+		ssl3                = "DISABLED"
+		tls1                = "DISABLED"
+		tls11               = "DISABLED"
+		tls12               = "DISABLED"
+		tls13               = "ENABLED"
+	}
+`
+
+const testAccSslservice_unset_step2 = testAccSslservice_unset_prereq + `
+	resource "citrixadc_sslservice" "tf_unset" {
+		servicename = citrixadc_service.tf_service.name
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to the documented NITRO defaults).
+	}
+`
+
+func TestAccSslservice_unset(t *testing.T) {
+	// if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+	// 	t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	// }
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSslservice_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslserviceExist("citrixadc_sslservice.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "dhkeyexpsizelimit", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "redirectportrewrite", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "serverauth", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "sessreuse", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "snienable", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "ssl3", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "tls1", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "tls11", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "tls12", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "tls13", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSslservice_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslserviceExist("citrixadc_sslservice.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "dhkeyexpsizelimit", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "redirectportrewrite", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "serverauth", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "sessreuse", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "snienable", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "ssl3", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "tls1", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "tls11", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "tls12", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "tls13", "DISABLED"),
+					// No raw-appliance confirmation here: every one of these attributes
+					// reverts to its default on unset, and NITRO omits SSL protocol/feature
+					// attributes from GET when they are at their default (omit-on-default),
+					// so a raw data[attr] read is nil. The state asserts above already prove
+					// the unset fired — had it not, the echoed non-default value (e.g.
+					// serverauth=ENABLED) would be read back and fail those checks.
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSslserviceADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckSslserviceADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslservice.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("sslservice %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("sslservice %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccSslserviceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

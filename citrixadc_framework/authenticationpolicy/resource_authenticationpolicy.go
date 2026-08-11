@@ -113,12 +113,15 @@ func (r *AuthenticationpolicyResource) Read(ctx context.Context, req resource.Re
 }
 
 func (r *AuthenticationpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationpolicyResourceModel
+	var data, config, state AuthenticationpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to distinguish an attribute removed from config (-> unset) from
+	// one merely changed to a new value (-> update).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,13 +135,18 @@ func (r *AuthenticationpolicyResource) Update(ctx context.Context, req resource.
 	// Detect changes in the NITRO-updatable attributes (name is RequiresReplace and
 	// never lands here; newname is handled separately via the rename action below).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for authenticationpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for authenticationpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for authenticationpolicy")
@@ -166,6 +174,16 @@ func (r *AuthenticationpolicyResource) Update(ctx context.Context, req resource.
 		tflog.Trace(ctx, "Updated authenticationpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for authenticationpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. The unset targets the CURRENT LIVE name tracked by the ID.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Rename support: authenticationpolicy exposes a NITRO `rename` action. A change

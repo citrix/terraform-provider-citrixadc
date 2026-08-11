@@ -8,7 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -39,16 +41,19 @@ func (r *Onlinkipv6prefixResource) Schema(ctx context.Context, req resource.Sche
 			"autonomusprefix": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "RA Prefix Autonomus flag.",
 			},
 			"decrementprefixlifetimes": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "RA Prefix Autonomus flag.",
 			},
 			"depricateprefix": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Depricate the prefix.",
 			},
 			"ipv6prefix": schema.StringAttribute{
@@ -61,16 +66,19 @@ func (r *Onlinkipv6prefixResource) Schema(ctx context.Context, req resource.Sche
 			"onlinkprefix": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "RA Prefix onlink flag.",
 			},
 			"prefixpreferredlifetime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(604800),
 				Description: "Preferred life time of the prefix, in seconds.",
 			},
 			"prefixvalidelifetime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(2592000),
 				Description: "Valide life time of the prefix, in seconds.",
 			},
 		},

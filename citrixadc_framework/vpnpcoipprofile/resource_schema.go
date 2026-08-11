@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -39,6 +41,7 @@ func (r *VpnpcoipprofileResource) Schema(ctx context.Context, req resource.Schem
 			"icvverification": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "ICV verification for PCOIP transport packets.",
 			},
 			"name": schema.StringAttribute{
@@ -51,6 +54,7 @@ func (r *VpnpcoipprofileResource) Schema(ctx context.Context, req resource.Schem
 			"sessionidletimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(180),
 				Description: "PCOIP Idle Session timeout",
 			},
 		},

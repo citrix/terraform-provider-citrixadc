@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,14 +41,23 @@ func (r *IcapolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"comment": schema.StringAttribute{
 				// SDK v2 parity: Optional + Computed (mutable via NITRO update).
+				// NITRO supports unset for this attribute. An Optional+Computed attr
+				// with no Default is sticky on config-removal (no plan diff -> Update
+				// never runs -> unset never fires), so a Default is required. comment
+				// has no documented NITRO default; its unset state is "absent", which
+				// this resource represents as the empty string.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Any type of information about this ICA policy.",
 			},
 			"logaction": schema.StringAttribute{
 				// SDK v2 parity: Optional + Computed (mutable via NITRO update).
+				// NITRO supports unset for this attribute. See comment above re: the
+				// Default requirement; logaction's unset state is "absent" ("").
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Name of the messagelog action to use for requests that match this policy.",
 			},
 			"name": schema.StringAttribute{
@@ -82,10 +92,13 @@ func icapolicyGetThePayloadFromthePlan(ctx context.Context, data *IcapolicyResou
 	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		icapolicy.Action = data.Action.ValueString()
 	}
-	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+	// comment/logaction carry an empty-string Default (needed to drive unset on
+	// config-removal). An empty value means "unset"/absent, so it must not be sent
+	// in the add payload.
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() && data.Comment.ValueString() != "" {
 		icapolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() && data.Logaction.ValueString() != "" {
 		icapolicy.Logaction = data.Logaction.ValueString()
 	}
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
@@ -108,10 +121,12 @@ func icapolicyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Icapo
 	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		icapolicy.Action = data.Action.ValueString()
 	}
-	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+	// Empty comment/logaction mean "unset"/absent (see create payload note); they
+	// are handled via the NITRO unset action, not the update PUT body.
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() && data.Comment.ValueString() != "" {
 		icapolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() && data.Logaction.ValueString() != "" {
 		icapolicy.Logaction = data.Logaction.ValueString()
 	}
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
@@ -132,15 +147,18 @@ func icapolicySetAttrFromGet(ctx context.Context, data *IcapolicyResourceModel, 
 	if val, ok := getResponseData["action"]; ok && val != nil {
 		data.Action = types.StringValue(val.(string))
 	}
+	// comment/logaction carry an empty-string Default; represent an absent value as
+	// "" (not null) so the read-back is consistent with the planned default and the
+	// post-unset state.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		data.Comment = types.StringValue("")
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))
 	} else {
-		data.Logaction = types.StringNull()
+		data.Logaction = types.StringValue("")
 	}
 	// name is the user-facing key. Once a rename has happened (via newname), the live
 	// object name (tracked by data.Id) diverges from the configured name, and GET

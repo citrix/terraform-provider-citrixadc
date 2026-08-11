@@ -236,6 +236,91 @@ func TestAccPcpserver_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// pcpserver unset test: port is the only spec-unsettable mutable attribute
+// (documented NITRO default 5351). Step 1 sets a non-default port; step 2
+// removes it so the provider must unset it, reverting to the NITRO default.
+const testAccPcpserver_unset_step1 = `
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.186"
+		netmask   = "255.255.255.0"
+		type      = "SNIP"
+	}
+
+	resource "citrixadc_pcpserver" "tf_unset" {
+		name       = "tf_pcpserver_unset"
+		ipaddress  = "10.222.74.186"
+		port       = 5352
+		depends_on = [citrixadc_nsip.tf_nsip]
+	}
+`
+
+const testAccPcpserver_unset_step2 = `
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.186"
+		netmask   = "255.255.255.0"
+		type      = "SNIP"
+	}
+
+	resource "citrixadc_pcpserver" "tf_unset" {
+		name       = "tf_pcpserver_unset"
+		ipaddress  = "10.222.74.186"
+		# port removed from config -> provider must unset it (revert to 5351).
+		depends_on = [citrixadc_nsip.tf_nsip]
+	}
+`
+
+func TestAccPcpserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPcpserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applied and persisted.
+				Config: testAccPcpserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPcpserverExist("citrixadc_pcpserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_pcpserver.tf_unset", "port", "5352"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state reverts to the
+				// documented NITRO default and the implicit post-apply plan is empty.
+				Config: testAccPcpserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPcpserverExist("citrixadc_pcpserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_pcpserver.tf_unset", "port", "5351"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckPcpserverADCValue("tf_pcpserver_unset", "port", "5351"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckPcpserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckPcpserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Pcpserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("pcpserver %s not found on appliance", name)
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("pcpserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccPcpserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -241,6 +242,120 @@ func TestAccIcaaccessprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// All 14 mutable attributes are Optional+Computed with a documented NITRO
+// default of "DISABLED", so every one is unset-eligible. Step 1 sets them all
+// to the non-default "DEFAULT"; step 2 removes them and the provider must unset
+// them (revert to "DISABLED").
+const testAccIcaaccessprofile_unset_step1 = `
+resource "citrixadc_icaaccessprofile" "tf_unset" {
+  name                         = "tf_test_icaaccessprofile_unset"
+  clientaudioredirection       = "DEFAULT"
+  clientclipboardredirection   = "DEFAULT"
+  clientcomportredirection     = "DEFAULT"
+  clientdriveredirection       = "DEFAULT"
+  clientprinterredirection     = "DEFAULT"
+  clienttwaindeviceredirection = "DEFAULT"
+  clientusbdriveredirection    = "DEFAULT"
+  connectclientlptports        = "DEFAULT"
+  draganddrop                  = "DEFAULT"
+  fido2redirection             = "DEFAULT"
+  localremotedatasharing       = "DEFAULT"
+  multistream                  = "DEFAULT"
+  smartcardredirection         = "DEFAULT"
+  wiaredirection               = "DEFAULT"
+}
+`
+
+const testAccIcaaccessprofile_unset_step2 = `
+resource "citrixadc_icaaccessprofile" "tf_unset" {
+  name = "tf_test_icaaccessprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults, "DISABLED").
+}
+`
+
+func TestAccIcaaccessprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcaaccessprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccIcaaccessprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcaaccessprofileExist("citrixadc_icaaccessprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientaudioredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientclipboardredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientcomportredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientdriveredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientprinterredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clienttwaindeviceredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientusbdriveredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "connectclientlptports", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "draganddrop", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "fido2redirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "localremotedatasharing", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "multistream", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "smartcardredirection", "DEFAULT"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "wiaredirection", "DEFAULT"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccIcaaccessprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcaaccessprofileExist("citrixadc_icaaccessprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientaudioredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientclipboardredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientcomportredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientdriveredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientprinterredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clienttwaindeviceredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "clientusbdriveredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "connectclientlptports", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "draganddrop", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "fido2redirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "localremotedatasharing", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "multistream", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "smartcardredirection", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaaccessprofile.tf_unset", "wiaredirection", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckIcaaccessprofileADCValue("tf_test_icaaccessprofile_unset", "clientaudioredirection", "DISABLED"),
+					testAccCheckIcaaccessprofileADCValue("tf_test_icaaccessprofile_unset", "draganddrop", "DISABLED"),
+					testAccCheckIcaaccessprofileADCValue("tf_test_icaaccessprofile_unset", "wiaredirection", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckIcaaccessprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckIcaaccessprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Icaaccessprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("icaaccessprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("icaaccessprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccIcaaccessprofileDataSource_basic(t *testing.T) {

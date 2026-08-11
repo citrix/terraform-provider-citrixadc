@@ -114,12 +114,14 @@ func (r *CachepolicyResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *CachepolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state CachepolicyResourceModel
+	var data, config, state CachepolicyResourceModel
 
 	// Read Terraform prior state to preserve the ID (live name)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to distinguish "removed from config" (unset) from "changed value"
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -156,6 +158,9 @@ func (r *CachepolicyResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check whether any NITRO-updatable attribute changed.
 	hasChange := false
+	// attributesToUnset collects Optional attributes removed from config so the
+	// appliance reverts them to their NITRO defaults via ?action=unset.
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for cachepolicy")
 		hasChange = true
@@ -174,7 +179,11 @@ func (r *CachepolicyResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Storeingroup.Equal(state.Storeingroup) {
 		tflog.Debug(ctx, "storeingroup has changed for cachepolicy")
-		hasChange = true
+		if config.Storeingroup.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "storeingroup")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, "undefaction has changed for cachepolicy")
@@ -195,6 +204,17 @@ func (r *CachepolicyResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated cachepolicy resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for cachepolicy resource")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// NITRO defaults. The unset key is the CURRENT LIVE name (data.Id), which
+	// reflects any rename performed above.
+	unsetIdPayload := map[string]interface{}{
+		"policyname": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Cachepolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset cachepolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back. Preserve the user-facing policyname and the

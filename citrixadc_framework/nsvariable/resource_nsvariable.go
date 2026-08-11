@@ -109,12 +109,14 @@ func (r *NsvariableResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NsvariableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsvariableResourceModel
+	var data, config, state NsvariableResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,25 +129,46 @@ func (r *NsvariableResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for nsvariable")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Expires.Equal(state.Expires) {
 		tflog.Debug(ctx, "expires has changed for nsvariable")
-		hasChange = true
+		if config.Expires.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "expires")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Iffull.Equal(state.Iffull) {
 		tflog.Debug(ctx, "iffull has changed for nsvariable")
-		hasChange = true
+		if config.Iffull.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "iffull")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ifnovalue.Equal(state.Ifnovalue) {
 		tflog.Debug(ctx, "ifnovalue has changed for nsvariable")
-		hasChange = true
+		if config.Ifnovalue.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ifnovalue")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ifvaluetoobig.Equal(state.Ifvaluetoobig) {
 		tflog.Debug(ctx, "ifvaluetoobig has changed for nsvariable")
-		hasChange = true
+		if config.Ifvaluetoobig.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ifvaluetoobig")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Init.Equal(state.Init) {
 		tflog.Debug(ctx, "init has changed for nsvariable")
@@ -164,6 +187,16 @@ func (r *NsvariableResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated nsvariable resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nsvariable resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsvariable.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsvariable attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

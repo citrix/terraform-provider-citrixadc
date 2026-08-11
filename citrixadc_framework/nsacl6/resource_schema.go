@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -145,9 +146,11 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "ICMP Message type to match against the message type of an incoming IPv6 ICMP packet. For example, to block DESTINATION UNREACHABLE messages, you must specify 3 as the ICMP type.\n\nNote: This parameter can be specified only for the ICMP protocol.",
 			},
 			"logstate": schema.StringAttribute{
-				// SDK v2: Optional+Computed, no Default (read from ADC).
+				// Optional+Computed with NITRO default so config-removal produces a
+				// plan diff and the unset fires in Update.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable logging of events related to the ACL6 rule. The log messages are stored in the configured syslog or auditlog server.",
 			},
 			"newname": schema.StringAttribute{
@@ -177,7 +180,6 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "Protocol, identified by protocol number, to match against the protocol of an incoming IPv6 packet.",
 			},
 			"ratelimit": schema.Int64Attribute{
-				// SDK v2: Optional+Computed, no Default (read from ADC).
 				Optional:    true,
 				Computed:    true,
 				Description: "Maximum number of log messages to be generated per second. If you set this parameter, you must enable the Log State parameter.",
@@ -203,7 +205,8 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "MAC address to match against the source MAC address of an incoming IPv6 packet.",
 			},
 			"srcmacmask": schema.StringAttribute{
-				// SDK v2: Optional+Computed, no Default (read from ADC).
+				// SDK v2: Optional+Computed, no Default (read from ADC). Not unset-wired:
+				// NITRO requires srcMac as a prerequisite for srcMacMask.
 				Optional:    true,
 				Computed:    true,
 				Description: "Used to define range of Source MAC address. It takes string of 0 and 1, 0s are for exact match and 1s for wildcard. For matching first 3 bytes of MAC address, srcMacMask value \"000000111111\".",
@@ -231,8 +234,11 @@ func (r *Nsacl6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Description: "State of the ACL6.",
 			},
 			"stateful": schema.StringAttribute{
+				// Optional+Computed with NITRO default so config-removal produces a
+				// plan diff and the unset fires in Update.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "If stateful option is enabled, transparent sessions are created for the traffic hitting this ACL6 and not hitting any other features like LB, INAT etc.",
 			},
 			"td": schema.Int64Attribute{

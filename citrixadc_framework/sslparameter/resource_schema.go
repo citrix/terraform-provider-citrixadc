@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -55,6 +57,7 @@ func (r *SslparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"crlmemorysizemb": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(256),
 				Description: "Maximum memory size to use for certificate revocation lists (CRLs). This parameter reserves memory for a CRL but sets a limit to the maximum memory that the CRLs loaded on the appliance can consume.",
 			},
 			"cryptodevdisablelimit": schema.Int64Attribute{
@@ -75,11 +78,13 @@ func (r *SslparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"dropreqwithnohostheader": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Host header check for SNI enabled sessions. If this check is enabled and the HTTP request does not contain the host header for SNI enabled sessions(i.e vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension), the request is dropped.",
 			},
 			"encrypttriggerpktcount": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(45),
 				Description: "Maximum number of queued packets after which encryption is triggered. Use this setting for SSL transactions that send small packets from server to Citrix ADC.",
 			},
 			"heterogeneoussslhw": schema.StringAttribute{
@@ -95,21 +100,25 @@ func (r *SslparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"insertcertspace": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "To insert space between lines in the certificate header of request",
 			},
 			"insertionencoding": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("Unicode"),
 				Description: "Encoding method used to insert the subject or issuer's name in HTTP requests to servers.",
 			},
 			"ndcppcompliancecertcheck": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Determines whether or not additional checks are carried out during a TLS handshake when validating an X.509 certificate received from the peer.",
 			},
 			"ocspcachesize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(10),
 				Description: "Size, per packet engine, in megabytes, of the OCSP cache. A maximum of 10% of the packet engine memory can be assigned. Because the maximum allowed packet engine memory is 4GB, the maximum value that can be assigned to the OCSP cache is approximately 410 MB.",
 			},
 			"operationqueuelimit": schema.Int64Attribute{
@@ -120,6 +129,7 @@ func (r *SslparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"pushenctriggertimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "PUSH encryption trigger timeout value. The timeout value is applied only if you set the Push Encryption Trigger parameter to Timer in the SSL virtual server settings.",
 			},
 			"pushflag": schema.Int64Attribute{
@@ -130,11 +140,13 @@ func (r *SslparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"quantumsize": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("8192"),
 				Description: "Amount of data to collect before the data is pushed to the crypto hardware for encryption. For large downloads, a larger quantum size better utilizes the crypto resources.",
 			},
 			"sendclosenotify": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Send an SSL Close-Notify message to the client at the end of a transaction.",
 			},
 			"sigdigesttype": schema.ListAttribute{
@@ -146,6 +158,7 @@ func (r *SslparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"snihttphostmatch": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("CERT"),
 				Description: "Controls how the HTTP 'Host' header value is validated. These checks are performed only if the session is SNI enabled (i.e when vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension) and HTTP request contains 'Host' header.",
 			},
 			"softwarecryptothreshold": schema.Int64Attribute{
@@ -156,6 +169,7 @@ func (r *SslparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"sslierrorcache": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable dynamically learning and caching the learned information to make the subsequent interception or bypass decision. When enabled, NS does the lookup of this cached data to do early bypass.",
 			},
 			"sslimaxerrorcachemem": schema.Int64Attribute{
@@ -166,21 +180,25 @@ func (r *SslparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"ssltriggertimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(100),
 				Description: "Time, in milliseconds, after which encryption is triggered for transactions that are not tracked on the Citrix ADC because their length is not known. There can be a delay of up to 10ms from the specified timeout value before the packet is pushed into the queue.",
 			},
 			"strictcachecks": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enable strict CA certificate checks on the appliance.",
 			},
 			"undefactioncontrol": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("CLIENTAUTH"),
 				Description: "Name of the undefined built-in control action: CLIENTAUTH, NOCLIENTAUTH, NOOP, RESET, or DROP.",
 			},
 			"undefactiondata": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NOOP"),
 				Description: "Name of the undefined built-in data action: NOOP, RESET or DROP.",
 			},
 		},

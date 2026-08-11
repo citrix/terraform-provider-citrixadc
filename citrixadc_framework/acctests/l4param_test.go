@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -151,6 +152,74 @@ func TestAccL4param_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// l4param unset test: step1 sets both mutable attrs to non-default values,
+// step2 removes them so the provider must unset them (revert to NITRO
+// defaults: l2connmethod=MacVlanChannel, l4switch=DISABLED).
+const testAccL4param_unset_step1 = `
+	resource "citrixadc_l4param" "tf_unset" {
+		l2connmethod = "Channel"
+		l4switch     = "ENABLED"
+	}
+`
+
+const testAccL4param_unset_step2 = `
+	resource "citrixadc_l4param" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccL4param_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccL4param_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckL4paramExist("citrixadc_l4param.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_l4param.tf_unset", "l2connmethod", "Channel"),
+					resource.TestCheckResourceAttr("citrixadc_l4param.tf_unset", "l4switch", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccL4param_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckL4paramExist("citrixadc_l4param.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_l4param.tf_unset", "l2connmethod", "MacVlanChannel"),
+					resource.TestCheckResourceAttr("citrixadc_l4param.tf_unset", "l4switch", "DISABLED"),
+					testAccCheckL4paramADCValue("l2connmethod", "MacVlanChannel"),
+					testAccCheckL4paramADCValue("l4switch", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckL4paramADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckL4paramADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.L4param.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("l4param not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("l4param: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccL4paramDataSource_basic(t *testing.T) {

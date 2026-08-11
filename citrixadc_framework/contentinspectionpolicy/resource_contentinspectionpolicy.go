@@ -110,12 +110,14 @@ func (r *ContentinspectionpolicyResource) Read(ctx context.Context, req resource
 }
 
 func (r *ContentinspectionpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ContentinspectionpolicyResourceModel
+	var data, config, state ContentinspectionpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID / detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -155,13 +157,18 @@ func (r *ContentinspectionpolicyResource) Update(ctx context.Context, req resour
 	// Regular attribute update (rule, action, comment, logaction, undefaction) via
 	// the NITRO PUT (unnamed) endpoint, mirroring the SDK v2 UpdateUnnamedResource.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for contentinspectionpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for contentinspectionpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for contentinspectionpolicy")
@@ -189,6 +196,16 @@ func (r *ContentinspectionpolicyResource) Update(ctx context.Context, req resour
 		tflog.Trace(ctx, "Updated contentinspectionpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for contentinspectionpolicy resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Target the live object name (post-rename aware) via data.Id.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Contentinspectionpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset contentinspectionpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back. Capture the user-facing name/newname before the

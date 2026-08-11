@@ -186,12 +186,14 @@ func servicegroupPayloadHasMutableFields(payload *basic.Servicegroup) bool {
 }
 
 func (r *ServicegroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ServicegroupResourceModel
+	var data, config, state ServicegroupResourceModel
 
 	// Read Terraform prior state to preserve ID and diff convenience blocks
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -202,6 +204,40 @@ func (r *ServicegroupResource) Update(ctx context.Context, req resource.UpdateRe
 	servicegroupName := data.Id.ValueString()
 
 	tflog.Debug(ctx, "Updating servicegroup resource")
+
+	// Collect mutable attributes that were removed from config so they are reverted
+	// to their NITRO defaults via ?action=unset. The unsetOnRemove plan modifiers on
+	// these attributes force the planned value to unknown on config removal, so a
+	// diff against prior state is detected here. For each attribute being unset we
+	// copy the prior-state value back into data so it does not, by itself, flip
+	// servicegroupAttrsChanged (which would trigger a full base SET carrying other
+	// read-back defaults like nameserver=0.0.0.0 that NITRO rejects). The subsequent
+	// read-back repopulates data from the appliance.
+	attributesToUnset := []string{}
+	if !data.Appflowlog.Equal(state.Appflowlog) && config.Appflowlog.IsNull() {
+		attributesToUnset = append(attributesToUnset, "appflowlog")
+		data.Appflowlog = state.Appflowlog
+	}
+	if !data.Cacheable.Equal(state.Cacheable) && config.Cacheable.IsNull() {
+		attributesToUnset = append(attributesToUnset, "cacheable")
+		data.Cacheable = state.Cacheable
+	}
+	if !data.Downstateflush.Equal(state.Downstateflush) && config.Downstateflush.IsNull() {
+		attributesToUnset = append(attributesToUnset, "downstateflush")
+		data.Downstateflush = state.Downstateflush
+	}
+	if !data.Healthmonitor.Equal(state.Healthmonitor) && config.Healthmonitor.IsNull() {
+		attributesToUnset = append(attributesToUnset, "healthmonitor")
+		data.Healthmonitor = state.Healthmonitor
+	}
+	if !data.Monconnectionclose.Equal(state.Monconnectionclose) && config.Monconnectionclose.IsNull() {
+		attributesToUnset = append(attributesToUnset, "monconnectionclose")
+		data.Monconnectionclose = state.Monconnectionclose
+	}
+	if !data.Sp.Equal(state.Sp) && config.Sp.IsNull() {
+		attributesToUnset = append(attributesToUnset, "sp")
+		data.Sp = state.Sp
+	}
 
 	// Determine which convenience-block changes to apply.
 	planLbvservers := setToStringSlice(ctx, data.Lbvservers, &resp.Diagnostics)
@@ -298,6 +334,15 @@ func (r *ServicegroupResource) Update(ctx context.Context, req resource.UpdateRe
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Error enabling/disabling servicegroup %s, got error: %s", servicegroupName, err))
 			return
 		}
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{
+		"servicegroupname": servicegroupName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Servicegroup.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset servicegroup attributes, got error: %s", err))
+		return
 	}
 
 	tflog.Trace(ctx, "Updated servicegroup resource")

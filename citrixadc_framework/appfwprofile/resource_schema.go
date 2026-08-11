@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -252,6 +253,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"checkrequestheaders": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Check request headers as well as web forms for injected SQL and cross-site scripts.",
 			},
 			"clientipexpression": schema.StringAttribute{
@@ -730,6 +732,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"semicolonfieldseparator": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Allow ';' as a form field separator in URL queries and POST form bodies.",
 			},
 			"sessioncookiename": schema.StringAttribute{
@@ -740,6 +743,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"sessionlessfieldconsistency": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Perform sessionless Field Consistency Checks.",
 			},
 			"sessionlessurlclosure": schema.StringAttribute{
@@ -807,6 +811,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"streaming": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Setting this option converts content-length form submission requests (requests with content-type \"application/x-www-form-urlencoded\" or \"multipart/form-data\") to chunked requests when atleast one of the following protections : Signatures, SQL injection protection, XSS protection, form field consistency protection, starturl closure, CSRF tagging, JSON SQL, JSON XSS, JSON DOS is enabled. Please make sure that the backend server accepts chunked requests before enabling this option. Citrix recommends enabling this option for large request sizes(>20MB).",
 			},
 			"stripcomments": schema.StringAttribute{
@@ -827,6 +832,7 @@ func (r *AppfwprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"trace": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Toggle  the state of trace",
 			},
 			"type": schema.ListAttribute{

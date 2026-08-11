@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -124,12 +125,14 @@ func (r *BridgetableResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *BridgetableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state BridgetableResourceModel
+	var data, config, state BridgetableResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -140,9 +143,20 @@ func (r *BridgetableResource) Update(ctx context.Context, req resource.UpdateReq
 
 	tflog.Debug(ctx, "Updating bridgetable resource")
 
+	hasChange := false
+	attributesToUnset := []string{}
+
 	// Only bridgeage is updateable in place; all other attributes are RequiresReplace.
 	if !data.Bridgeage.Equal(state.Bridgeage) {
-		tflog.Debug(ctx, "bridgeage has changed for bridgetable, starting update")
+		tflog.Debug(ctx, "bridgeage has changed for bridgetable")
+		if config.Bridgeage.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bridgeage")
+		} else {
+			hasChange = true
+		}
+	}
+
+	if hasChange {
 		bridgeagePayload := bridgetableGetTheBridgeagePayload(ctx, &data)
 		if err := r.client.UpdateUnnamedResource(service.Bridgetable.Type(), &bridgeagePayload); err != nil {
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update bridgetable, got error: %s", err))
@@ -151,6 +165,15 @@ func (r *BridgetableResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated bridgetable resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for bridgetable resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. bridgeage is a table-wide setting, so the unset carries no
+	// identifying key (matches the NITRO unset payload: {"bridgeage":true}).
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Bridgetable.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset bridgetable attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

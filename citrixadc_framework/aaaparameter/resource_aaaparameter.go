@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -95,12 +96,14 @@ func (r *AaaparameterResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *AaaparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AaaparameterResourceModel
+	var data, config, state AaaparameterResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -110,6 +113,40 @@ func (r *AaaparameterResource) Update(ctx context.Context, req resource.UpdateRe
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating aaaparameter resource")
+
+	// Determine which attributes were removed from config so they can be unset
+	// (reverted to their NITRO defaults) on the appliance.
+	attributesToUnset := []string{}
+	if !data.Aaadloglevel.Equal(state.Aaadloglevel) && config.Aaadloglevel.IsNull() {
+		attributesToUnset = append(attributesToUnset, "aaadloglevel")
+	}
+	if !data.Apitokencache.Equal(state.Apitokencache) && config.Apitokencache.IsNull() {
+		attributesToUnset = append(attributesToUnset, "apitokencache")
+	}
+	if !data.Defaultcspheader.Equal(state.Defaultcspheader) && config.Defaultcspheader.IsNull() {
+		attributesToUnset = append(attributesToUnset, "defaultcspheader")
+	}
+	if !data.Enablesessionstickiness.Equal(state.Enablesessionstickiness) && config.Enablesessionstickiness.IsNull() {
+		attributesToUnset = append(attributesToUnset, "enablesessionstickiness")
+	}
+	if !data.Enhancedepa.Equal(state.Enhancedepa) && config.Enhancedepa.IsNull() {
+		attributesToUnset = append(attributesToUnset, "enhancedepa")
+	}
+	if !data.Httponlycookie.Equal(state.Httponlycookie) && config.Httponlycookie.IsNull() {
+		attributesToUnset = append(attributesToUnset, "httponlycookie")
+	}
+	if !data.Loginencryption.Equal(state.Loginencryption) && config.Loginencryption.IsNull() {
+		attributesToUnset = append(attributesToUnset, "loginencryption")
+	}
+	if !data.Maxkbquestions.Equal(state.Maxkbquestions) && config.Maxkbquestions.IsNull() {
+		attributesToUnset = append(attributesToUnset, "maxkbquestions")
+	}
+	if !data.Persistentloginattempts.Equal(state.Persistentloginattempts) && config.Persistentloginattempts.IsNull() {
+		attributesToUnset = append(attributesToUnset, "persistentloginattempts")
+	}
+	if !data.Securityinsights.Equal(state.Securityinsights) && config.Securityinsights.IsNull() {
+		attributesToUnset = append(attributesToUnset, "securityinsights")
+	}
 
 	// Create API request body from the model
 	aaaparameter := aaaparameterGetThePayloadFromtheConfig(ctx, &data)
@@ -123,6 +160,14 @@ func (r *AaaparameterResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	tflog.Trace(ctx, "Updated aaaparameter resource")
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. Singleton resource -> empty id payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Aaaparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaaparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readAaaparameterFromApi(ctx, &data, &resp.Diagnostics)

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -47,11 +48,13 @@ func (r *AppfwconfidfieldResource) Schema(ctx context.Context, req resource.Sche
 			"isregex": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NOTREGEX"),
 				Description: "Method of specifying the form field name. Available settings function as follows:\n* REGEX. Form field is a regular expression.\n* NOTREGEX. Form field is a literal string.",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable the confidential field designation.",
 			},
 			"url": schema.StringAttribute{

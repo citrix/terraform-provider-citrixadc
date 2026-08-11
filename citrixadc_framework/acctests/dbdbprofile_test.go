@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -214,6 +215,91 @@ func TestAccDbdbprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The dbdbprofile unset test covers all spec-unsettable, mutable attributes
+// that carry a documented NITRO default: conmultiplex, enablecachingconmuxoff,
+// interpretquery and stickiness. Step1 sets them to non-default values; step2
+// removes them from config so the provider must unset them (revert to NITRO
+// defaults).
+const testAccDbdbprofile_unset_step1 = `
+resource "citrixadc_dbdbprofile" "tf_unset" {
+  name                   = "tf_test_dbdbprofile_unset"
+  conmultiplex           = "DISABLED"
+  enablecachingconmuxoff = "ENABLED"
+  interpretquery         = "NO"
+  stickiness             = "YES"
+}
+`
+
+const testAccDbdbprofile_unset_step2 = `
+resource "citrixadc_dbdbprofile" "tf_unset" {
+  name = "tf_test_dbdbprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccDbdbprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbdbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccDbdbprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbdbprofileExist("citrixadc_dbdbprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_unset", "conmultiplex", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_unset", "enablecachingconmuxoff", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_unset", "interpretquery", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_unset", "stickiness", "YES"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccDbdbprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbdbprofileExist("citrixadc_dbdbprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_unset", "conmultiplex", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_unset", "enablecachingconmuxoff", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_unset", "interpretquery", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_dbdbprofile.tf_unset", "stickiness", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckDbdbprofileADCValue("tf_test_dbdbprofile_unset", "conmultiplex", "ENABLED"),
+					testAccCheckDbdbprofileADCValue("tf_test_dbdbprofile_unset", "interpretquery", "YES"),
+					testAccCheckDbdbprofileADCValue("tf_test_dbdbprofile_unset", "stickiness", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDbdbprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckDbdbprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dbdbprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("dbdbprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("dbdbprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccDbdbprofileDataSource_basic(t *testing.T) {

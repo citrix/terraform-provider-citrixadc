@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -146,6 +148,95 @@ func testAccCheckIcaparameterExist(n string, id *string) resource.TestCheckFunc 
 			return fmt.Errorf("icaparameter %s not found", n)
 		}
 
+		return nil
+	}
+}
+
+// icaparameter is a singleton. step1 sets every unset-eligible attribute to a
+// non-default value; step2 removes them all so the provider must unset them,
+// reverting each to its documented NITRO default.
+const testAccIcaparameter_unset_step1 = `
+resource "citrixadc_icaparameter" "tf_unset" {
+	dfpersistence        = "ENABLED"
+	edtpmtuddf           = "DISABLED"
+	edtpmtuddftimeout    = 200
+	edtpmtudrediscovery  = "ENABLED"
+	enablesronhafailover = "YES"
+	hdxinsightnonnsap    = "NO"
+	l7latencyfrequency   = 30
+}
+`
+
+const testAccIcaparameter_unset_step2 = `
+resource "citrixadc_icaparameter" "tf_unset" {
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccIcaparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccIcaparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcaparameterExist("citrixadc_icaparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "dfpersistence", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "edtpmtuddf", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "edtpmtuddftimeout", "200"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "edtpmtudrediscovery", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "enablesronhafailover", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "hdxinsightnonnsap", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "l7latencyfrequency", "30"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccIcaparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcaparameterExist("citrixadc_icaparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "dfpersistence", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "edtpmtuddf", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "edtpmtuddftimeout", "100"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "edtpmtudrediscovery", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "enablesronhafailover", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "hdxinsightnonnsap", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_icaparameter.tf_unset", "l7latencyfrequency", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckIcaparameterADCValue("dfpersistence", "DISABLED"),
+					testAccCheckIcaparameterADCValue("edtpmtuddf", "ENABLED"),
+					testAccCheckIcaparameterADCValue("enablesronhafailover", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckIcaparameterADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckIcaparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Icaparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("icaparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("icaparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
 		return nil
 	}
 }

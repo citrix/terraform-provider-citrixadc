@@ -109,12 +109,14 @@ func (r *LsnappsprofileResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *LsnappsprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsnappsprofileResourceModel
+	var data, config, state LsnappsprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,25 +129,46 @@ func (r *LsnappsprofileResource) Update(ctx context.Context, req resource.Update
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Filtering.Equal(state.Filtering) {
 		tflog.Debug(ctx, "filtering has changed for lsnappsprofile")
-		hasChange = true
+		if config.Filtering.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "filtering")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ippooling.Equal(state.Ippooling) {
 		tflog.Debug(ctx, "ippooling has changed for lsnappsprofile")
-		hasChange = true
+		if config.Ippooling.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ippooling")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.L2info.Equal(state.L2info) {
 		tflog.Debug(ctx, "l2info has changed for lsnappsprofile")
-		hasChange = true
+		if config.L2info.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l2info")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Mapping.Equal(state.Mapping) {
 		tflog.Debug(ctx, "mapping has changed for lsnappsprofile")
-		hasChange = true
+		if config.Mapping.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "mapping")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tcpproxy.Equal(state.Tcpproxy) {
 		tflog.Debug(ctx, "tcpproxy has changed for lsnappsprofile")
-		hasChange = true
+		if config.Tcpproxy.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tcpproxy")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Td.Equal(state.Td) {
 		tflog.Debug(ctx, "td has changed for lsnappsprofile")
@@ -165,6 +188,17 @@ func (r *LsnappsprofileResource) Update(ctx context.Context, req resource.Update
 		tflog.Trace(ctx, "Updated lsnappsprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lsnappsprofile resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. Done after the update so any default the update
+	// payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"appsprofilename": data.Appsprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsnappsprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsnappsprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

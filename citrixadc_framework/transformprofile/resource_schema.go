@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -31,6 +32,7 @@ func (r *TransformprofileResource) Schema(ctx context.Context, req resource.Sche
 			"comment": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments to preserve information about this URL Transformation profile.",
 			},
 			"name": schema.StringAttribute{
@@ -40,6 +42,7 @@ func (r *TransformprofileResource) Schema(ctx context.Context, req resource.Sche
 			"onlytransformabsurlinbody": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "In the HTTP body, transform only absolute URLs. Relative URLs are ignored.",
 			},
 			"type": schema.StringAttribute{

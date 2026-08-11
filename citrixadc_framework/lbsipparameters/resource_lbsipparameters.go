@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -95,10 +96,14 @@ func (r *LbsipparametersResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *LbsipparametersResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LbsipparametersResourceModel
+	var data, config, state LbsipparametersResourceModel
 
+	// Read Terraform prior state to detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +111,89 @@ func (r *LbsipparametersResource) Update(ctx context.Context, req resource.Updat
 
 	tflog.Debug(ctx, "Updating lbsipparameters resource")
 
-	// Create API request body from the model
-	lbsipparameters := lbsipparametersGetThePayloadFromtheConfig(ctx, &data)
-
-	// Singleton resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbsipparameters, got error: %s", err))
-		return
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Addrportvip.Equal(state.Addrportvip) {
+		tflog.Debug(ctx, "addrportvip has changed for lbsipparameters")
+		if config.Addrportvip.IsNull() {
+			attributesToUnset = append(attributesToUnset, "addrportvip")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Retrydur.Equal(state.Retrydur) {
+		tflog.Debug(ctx, "retrydur has changed for lbsipparameters")
+		if config.Retrydur.IsNull() {
+			attributesToUnset = append(attributesToUnset, "retrydur")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Rnatdstport.Equal(state.Rnatdstport) {
+		tflog.Debug(ctx, "rnatdstport has changed for lbsipparameters")
+		if config.Rnatdstport.IsNull() {
+			attributesToUnset = append(attributesToUnset, "rnatdstport")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Rnatsecuredstport.Equal(state.Rnatsecuredstport) {
+		tflog.Debug(ctx, "rnatsecuredstport has changed for lbsipparameters")
+		if config.Rnatsecuredstport.IsNull() {
+			attributesToUnset = append(attributesToUnset, "rnatsecuredstport")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Rnatsecuresrcport.Equal(state.Rnatsecuresrcport) {
+		tflog.Debug(ctx, "rnatsecuresrcport has changed for lbsipparameters")
+		if config.Rnatsecuresrcport.IsNull() {
+			attributesToUnset = append(attributesToUnset, "rnatsecuresrcport")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Rnatsrcport.Equal(state.Rnatsrcport) {
+		tflog.Debug(ctx, "rnatsrcport has changed for lbsipparameters")
+		if config.Rnatsrcport.IsNull() {
+			attributesToUnset = append(attributesToUnset, "rnatsrcport")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Sip503ratethreshold.Equal(state.Sip503ratethreshold) {
+		tflog.Debug(ctx, "sip503ratethreshold has changed for lbsipparameters")
+		if config.Sip503ratethreshold.IsNull() {
+			attributesToUnset = append(attributesToUnset, "sip503ratethreshold")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated lbsipparameters resource")
+	if hasChange {
+		// Create API request body from the model
+		lbsipparameters := lbsipparametersGetThePayloadFromtheConfig(ctx, &data)
+
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Lbsipparameters.Type(), &lbsipparameters)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbsipparameters, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated lbsipparameters resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lbsipparameters resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Lbsipparameters.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbsipparameters attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readLbsipparametersFromApi(ctx, &data, &resp.Diagnostics)

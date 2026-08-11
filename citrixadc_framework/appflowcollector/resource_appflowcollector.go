@@ -110,12 +110,14 @@ func (r *AppflowcollectorResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *AppflowcollectorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AppflowcollectorResourceModel
+	var data, config, state AppflowcollectorResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,7 @@ func (r *AppflowcollectorResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Ipaddress.Equal(state.Ipaddress) {
 		tflog.Debug(ctx, "ipaddress has changed for appflowcollector")
 		hasChange = true
@@ -138,7 +141,11 @@ func (r *AppflowcollectorResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Port.Equal(state.Port) {
 		tflog.Debug(ctx, "port has changed for appflowcollector")
-		hasChange = true
+		if config.Port.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "port")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -156,6 +163,16 @@ func (r *AppflowcollectorResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated appflowcollector resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for appflowcollector resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Appflowcollector.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appflowcollector attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

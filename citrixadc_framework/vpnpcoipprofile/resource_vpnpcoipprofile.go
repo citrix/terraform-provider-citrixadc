@@ -111,12 +111,14 @@ func (r *VpnpcoipprofileResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *VpnpcoipprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnpcoipprofileResourceModel
+	var data, config, state VpnpcoipprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,17 +131,26 @@ func (r *VpnpcoipprofileResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Conserverurl.Equal(state.Conserverurl) {
 		tflog.Debug(ctx, "conserverurl has changed for vpnpcoipprofile")
 		hasChange = true
 	}
 	if !data.Icvverification.Equal(state.Icvverification) {
 		tflog.Debug(ctx, "icvverification has changed for vpnpcoipprofile")
-		hasChange = true
+		if config.Icvverification.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "icvverification")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sessionidletimeout.Equal(state.Sessionidletimeout) {
 		tflog.Debug(ctx, "sessionidletimeout has changed for vpnpcoipprofile")
-		hasChange = true
+		if config.Sessionidletimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessionidletimeout")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -157,6 +168,16 @@ func (r *VpnpcoipprofileResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated vpnpcoipprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for vpnpcoipprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnpcoipprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnpcoipprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

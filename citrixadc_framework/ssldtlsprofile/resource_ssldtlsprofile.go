@@ -111,12 +111,14 @@ func (r *SsldtlsprofileResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *SsldtlsprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SsldtlsprofileResourceModel
+	var data, config, state SsldtlsprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,41 +131,78 @@ func (r *SsldtlsprofileResource) Update(ctx context.Context, req resource.Update
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Helloverifyrequest.Equal(state.Helloverifyrequest) {
 		tflog.Debug(ctx, "helloverifyrequest has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Helloverifyrequest.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "helloverifyrequest")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Initialretrytimeout.Equal(state.Initialretrytimeout) {
 		tflog.Debug(ctx, "initialretrytimeout has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Initialretrytimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "initialretrytimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxbadmacignorecount.Equal(state.Maxbadmacignorecount) {
 		tflog.Debug(ctx, "maxbadmacignorecount has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Maxbadmacignorecount.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxbadmacignorecount")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxholdqlen.Equal(state.Maxholdqlen) {
 		tflog.Debug(ctx, "maxholdqlen has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Maxholdqlen.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxholdqlen")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxpacketsize.Equal(state.Maxpacketsize) {
 		tflog.Debug(ctx, "maxpacketsize has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Maxpacketsize.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxpacketsize")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxrecordsize.Equal(state.Maxrecordsize) {
 		tflog.Debug(ctx, "maxrecordsize has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Maxrecordsize.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxrecordsize")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxretrytime.Equal(state.Maxretrytime) {
 		tflog.Debug(ctx, "maxretrytime has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Maxretrytime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxretrytime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pmtudiscovery.Equal(state.Pmtudiscovery) {
 		tflog.Debug(ctx, "pmtudiscovery has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Pmtudiscovery.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "pmtudiscovery")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Terminatesession.Equal(state.Terminatesession) {
 		tflog.Debug(ctx, "terminatesession has changed for ssldtlsprofile")
-		hasChange = true
+		if config.Terminatesession.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "terminatesession")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -181,6 +220,17 @@ func (r *SsldtlsprofileResource) Update(ctx context.Context, req resource.Update
 		tflog.Trace(ctx, "Updated ssldtlsprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for ssldtlsprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Ssldtlsprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ssldtlsprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

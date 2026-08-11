@@ -110,12 +110,14 @@ func (r *StreamidentifierResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *StreamidentifierResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state StreamidentifierResourceModel
+	var data, config, state StreamidentifierResourceModel
 
 	// Read Terraform prior state to preserve ID and perform change detection
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,13 +130,18 @@ func (r *StreamidentifierResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Acceptancethreshold.Equal(state.Acceptancethreshold) {
 		tflog.Debug(ctx, "acceptancethreshold has changed for streamidentifier")
 		hasChange = true
 	}
 	if !data.Appflowlog.Equal(state.Appflowlog) {
 		tflog.Debug(ctx, "appflowlog has changed for streamidentifier")
-		hasChange = true
+		if config.Appflowlog.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "appflowlog")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Breachthreshold.Equal(state.Breachthreshold) {
 		tflog.Debug(ctx, "breachthreshold has changed for streamidentifier")
@@ -142,19 +149,35 @@ func (r *StreamidentifierResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Interval.Equal(state.Interval) {
 		tflog.Debug(ctx, "interval has changed for streamidentifier")
-		hasChange = true
+		if config.Interval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "interval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Log.Equal(state.Log) {
 		tflog.Debug(ctx, "log has changed for streamidentifier")
-		hasChange = true
+		if config.Log.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "log")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Loginterval.Equal(state.Loginterval) {
 		tflog.Debug(ctx, "loginterval has changed for streamidentifier")
-		hasChange = true
+		if config.Loginterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "loginterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Loglimit.Equal(state.Loglimit) {
 		tflog.Debug(ctx, "loglimit has changed for streamidentifier")
-		hasChange = true
+		if config.Loglimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "loglimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxtransactionthreshold.Equal(state.Maxtransactionthreshold) {
 		tflog.Debug(ctx, "maxtransactionthreshold has changed for streamidentifier")
@@ -166,7 +189,11 @@ func (r *StreamidentifierResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Samplecount.Equal(state.Samplecount) {
 		tflog.Debug(ctx, "samplecount has changed for streamidentifier")
-		hasChange = true
+		if config.Samplecount.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "samplecount")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Selectorname.Equal(state.Selectorname) {
 		tflog.Debug(ctx, "selectorname has changed for streamidentifier")
@@ -174,15 +201,27 @@ func (r *StreamidentifierResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Snmptrap.Equal(state.Snmptrap) {
 		tflog.Debug(ctx, "snmptrap has changed for streamidentifier")
-		hasChange = true
+		if config.Snmptrap.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "snmptrap")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sort.Equal(state.Sort) {
 		tflog.Debug(ctx, "sort has changed for streamidentifier")
-		hasChange = true
+		if config.Sort.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sort")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Trackackonlypackets.Equal(state.Trackackonlypackets) {
 		tflog.Debug(ctx, "trackackonlypackets has changed for streamidentifier")
-		hasChange = true
+		if config.Trackackonlypackets.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trackackonlypackets")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tracktransactions.Equal(state.Tracktransactions) {
 		tflog.Debug(ctx, "tracktransactions has changed for streamidentifier")
@@ -201,6 +240,16 @@ func (r *StreamidentifierResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated streamidentifier resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for streamidentifier resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Streamidentifier.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset streamidentifier attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

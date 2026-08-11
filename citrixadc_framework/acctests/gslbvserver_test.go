@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
@@ -306,6 +307,106 @@ func TestAccGslbvserver_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The gslbvserver unset test covers the type-independent, low-prerequisite
+// unset-eligible attributes for a plain HTTP GSLB vserver. step1 sets each to a
+// valid non-default value; step2 removes them, and the provider must unset them
+// (revert to the documented NITRO defaults) with an empty post-apply plan.
+const testAccGslbvserver_unset_step1 = `
+resource "citrixadc_gslbvserver" "tf_unset" {
+  name                   = "tf_test_gslbvserver_unset"
+  servicetype            = "HTTP"
+  appflowlog             = "DISABLED"
+  considereffectivestate = "STATE_ONLY"
+  disableprimaryondown   = "ENABLED"
+  dnsrecordtype          = "AAAA"
+  ecs                    = "ENABLED"
+  ecsaddrvalidation      = "ENABLED"
+  edr                    = "ENABLED"
+  lbmethod               = "ROUNDROBIN"
+  toggleorder            = "DESCENDING"
+}
+`
+
+const testAccGslbvserver_unset_step2 = `
+resource "citrixadc_gslbvserver" "tf_unset" {
+  name        = "tf_test_gslbvserver_unset"
+  servicetype = "HTTP"
+  # All unset-eligible attributes removed from config -> the provider must unset
+  # them (revert to the documented NITRO defaults).
+}
+`
+
+func TestAccGslbvserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccGslbvserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("citrixadc_gslbvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "considereffectivestate", "STATE_ONLY"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "disableprimaryondown", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "dnsrecordtype", "AAAA"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "ecs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "ecsaddrvalidation", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "edr", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "lbmethod", "ROUNDROBIN"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "toggleorder", "DESCENDING"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccGslbvserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("citrixadc_gslbvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "considereffectivestate", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "disableprimaryondown", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "dnsrecordtype", "A"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "ecs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "ecsaddrvalidation", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "edr", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "lbmethod", "LEASTCONNECTION"),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver.tf_unset", "toggleorder", "ASCENDING"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckGslbvserverADCValue("tf_test_gslbvserver_unset", "appflowlog", "ENABLED"),
+					testAccCheckGslbvserverADCValue("tf_test_gslbvserver_unset", "edr", "DISABLED"),
+					testAccCheckGslbvserverADCValue("tf_test_gslbvserver_unset", "lbmethod", "LEASTCONNECTION"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckGslbvserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckGslbvserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbvserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("gslbvserver %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("gslbvserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccGslbvserverDataSource_basic(t *testing.T) {

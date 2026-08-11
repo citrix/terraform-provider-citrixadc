@@ -111,12 +111,14 @@ func (r *NsipResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *NsipResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsipResourceModel
+	var data, config, state NsipResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read the raw config to detect attributes removed from config (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -137,30 +139,43 @@ func (r *NsipResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		Ipaddress: ipaddress,
 	}
 	hasChange := false
+	attributesToUnset := []string{}
 
 	if !data.Advertiseondefaultpartition.Equal(state.Advertiseondefaultpartition) && !data.Advertiseondefaultpartition.IsUnknown() {
 		nsip.Advertiseondefaultpartition = data.Advertiseondefaultpartition.ValueString()
 		hasChange = true
 	}
 	if !data.Arp.Equal(state.Arp) && !data.Arp.IsUnknown() {
-		nsip.Arp = data.Arp.ValueString()
-		hasChange = true
+		if config.Arp.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "arp")
+		} else {
+			nsip.Arp = data.Arp.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Arpowner.Equal(state.Arpowner) && !data.Arpowner.IsUnknown() {
 		nsip.Arpowner = utils.IntPtr(int(data.Arpowner.ValueInt64()))
 		hasChange = true
 	}
 	if !data.Arpresponse.Equal(state.Arpresponse) && !data.Arpresponse.IsUnknown() {
-		nsip.Arpresponse = data.Arpresponse.ValueString()
-		hasChange = true
+		if config.Arpresponse.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "arpresponse")
+		} else {
+			nsip.Arpresponse = data.Arpresponse.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Bgp.Equal(state.Bgp) && !data.Bgp.IsUnknown() {
 		nsip.Bgp = data.Bgp.ValueString()
 		hasChange = true
 	}
 	if !data.Decrementttl.Equal(state.Decrementttl) && !data.Decrementttl.IsUnknown() {
-		nsip.Decrementttl = data.Decrementttl.ValueString()
-		hasChange = true
+		if config.Decrementttl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "decrementttl")
+		} else {
+			nsip.Decrementttl = data.Decrementttl.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Dynamicrouting.Equal(state.Dynamicrouting) && !data.Dynamicrouting.IsUnknown() {
 		nsip.Dynamicrouting = data.Dynamicrouting.ValueString()
@@ -187,8 +202,12 @@ func (r *NsipResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		hasChange = true
 	}
 	if !data.Icmpresponse.Equal(state.Icmpresponse) && !data.Icmpresponse.IsUnknown() {
-		nsip.Icmpresponse = data.Icmpresponse.ValueString()
-		hasChange = true
+		if config.Icmpresponse.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "icmpresponse")
+		} else {
+			nsip.Icmpresponse = data.Icmpresponse.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Metric.Equal(state.Metric) && !data.Metric.IsUnknown() {
 		nsip.Metric = utils.IntPtr(int(data.Metric.ValueInt64()))
@@ -199,8 +218,12 @@ func (r *NsipResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		hasChange = true
 	}
 	if !data.Mptcpadvertise.Equal(state.Mptcpadvertise) && !data.Mptcpadvertise.IsUnknown() {
-		nsip.Mptcpadvertise = data.Mptcpadvertise.ValueString()
-		hasChange = true
+		if config.Mptcpadvertise.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "mptcpadvertise")
+		} else {
+			nsip.Mptcpadvertise = data.Mptcpadvertise.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Networkroute.Equal(state.Networkroute) && !data.Networkroute.IsUnknown() {
 		nsip.Networkroute = data.Networkroute.ValueString()
@@ -272,6 +295,18 @@ func (r *NsipResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		tflog.Trace(ctx, "Updated nsip resource")
 	} else {
 		tflog.Debug(ctx, "No non-state changes detected for nsip resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. Run after the update so any default the update payload may
+	// have carried is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"ipaddress": ipaddress,
+		"td":        r.trafficDomain(&data),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsip.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsip %s attributes, got error: %s", ipaddress, err))
+		return
 	}
 
 	// Handle enable/disable via the state action (state is not a PUT field).

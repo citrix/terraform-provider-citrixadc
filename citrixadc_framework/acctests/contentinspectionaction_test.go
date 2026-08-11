@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -238,6 +239,108 @@ func TestAccContentinspectionaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The contentinspectionaction unset test covers the two spec-unsettable,
+// mutable attributes (serverport, ifserverdown) on an ICAP action. Step 1 sets
+// them to non-default values; step 2 removes them so the provider must issue a
+// NITRO ?action=unset, reverting them to the documented defaults
+// (serverport=1344, ifserverdown=RESET).
+const testAccContentinspectionaction_unset_step1 = `
+	resource "citrixadc_nsicapprofile" "tf_nsicapprofile_unset" {
+		name             = "unset-profile"
+		uri              = "/example"
+		mode             = "REQMOD"
+		reqtimeout       = 4
+		reqtimeoutaction = "RESET"
+		preview          = "ENABLED"
+		previewlength    = 4096
+	}
+	resource "citrixadc_contentinspectionaction" "tf_unset" {
+		name            = "tf_ci_action_unset"
+		type            = "ICAP"
+		icapprofilename = citrixadc_nsicapprofile.tf_nsicapprofile_unset.name
+		serverip        = "2.2.2.2"
+		serverport      = 2048
+		ifserverdown    = "DROP"
+	}
+`
+
+const testAccContentinspectionaction_unset_step2 = `
+	resource "citrixadc_nsicapprofile" "tf_nsicapprofile_unset" {
+		name             = "unset-profile"
+		uri              = "/example"
+		mode             = "REQMOD"
+		reqtimeout       = 4
+		reqtimeoutaction = "RESET"
+		preview          = "ENABLED"
+		previewlength    = 4096
+	}
+	resource "citrixadc_contentinspectionaction" "tf_unset" {
+		name            = "tf_ci_action_unset"
+		type            = "ICAP"
+		icapprofilename = citrixadc_nsicapprofile.tf_nsicapprofile_unset.name
+		serverip        = "2.2.2.2"
+		# serverport and ifserverdown removed from config -> provider must unset
+		# them (revert to NITRO defaults 1344 / RESET).
+	}
+`
+
+func TestAccContentinspectionaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccContentinspectionaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionactionExist("citrixadc_contentinspectionaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_unset", "serverport", "2048"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_unset", "ifserverdown", "DROP"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccContentinspectionaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionactionExist("citrixadc_contentinspectionaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_unset", "serverport", "1344"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionaction.tf_unset", "ifserverdown", "RESET"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckContentinspectionactionADCValue("tf_ci_action_unset", "serverport", "1344"),
+					testAccCheckContentinspectionactionADCValue("tf_ci_action_unset", "ifserverdown", "RESET"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckContentinspectionactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckContentinspectionactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Contentinspectionaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("contentinspectionaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("contentinspectionaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccContentinspectionactionDataSource_basic = `

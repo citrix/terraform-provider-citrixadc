@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -50,10 +52,12 @@ func (r *Route6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed:    true,
 				Description: "Advertise this route.",
 			},
-			// SDK v2: Optional + Computed (no Default)
+			// SDK v2: Optional + Computed. Default added so removing it from config
+			// produces a plan diff and the provider can NITRO-unset it (spec default: 1).
 			"cost": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Positive integer used by the routing algorithms to determine preference for this route. The lower the cost, the higher the preference.",
 			},
 			// SDK v2: Optional + Computed (no ForceNew)
@@ -62,10 +66,11 @@ func (r *Route6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed:    true,
 				Description: "To get a detailed view.",
 			},
-			// SDK v2: Optional + Computed (no Default)
+			// SDK v2: Optional + Computed. Default added for NITRO-unset support (spec default: 1).
 			"distance": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Administrative distance of this route from the appliance.",
 			},
 			// SDK v2: Optional + Computed
@@ -90,10 +95,11 @@ func (r *Route6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed:    true,
 				Description: "Name of the monitor, of type ND6 or PING, configured on the Citrix ADC to monitor this route.",
 			},
-			// SDK v2: Optional + Computed (no Default)
+			// SDK v2: Optional + Computed. Default added for NITRO-unset support (spec default: DISABLED).
 			"msr": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Monitor this route with a monitor of type ND6 or PING.",
 			},
 			// SDK v2: Required + ForceNew
@@ -134,10 +140,11 @@ func (r *Route6Resource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed:    true,
 				Description: "Integer value that uniquely identifies a VXLAN through which the Citrix ADC forwards the packets for this route.",
 			},
-			// SDK v2: Optional + Computed (no Default)
+			// SDK v2: Optional + Computed. Default added for NITRO-unset support (spec default: 1).
 			"weight": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Positive integer used by the routing algorithms to determine preference for this route over others of equal cost. The lower the weight, the higher the preference.",
 			},
 		},

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -32,11 +33,13 @@ func (r *SubscriberradiusinterfaceResource) Schema(ctx context.Context, req reso
 				Description: "Name of RADIUS LISTENING service that will process RADIUS accounting requests.",
 			},
 			"radiusinterimasstart": schema.StringAttribute{
-				// SDK v2 had this attribute as Optional+Computed with NO Default;
-				// the value is read back from the ADC. (A Default is invalid
-				// without Computed, and adding one would diverge from SDK v2.)
+				// Optional+Computed. A schema Default matching the NITRO server
+				// default ("DISABLED") is required so that removing this attribute
+				// from config produces a plan diff, which lets Update fire the
+				// NITRO unset operation (otherwise the attribute would be sticky).
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Treat radius interim message as start radius messages.",
 			},
 		},

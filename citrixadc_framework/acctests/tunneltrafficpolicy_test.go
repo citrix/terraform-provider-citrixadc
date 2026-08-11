@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -203,6 +204,101 @@ func TestAccTunneltrafficpolicy_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// tunneltrafficpolicy's unset-eligible attributes are comment and logaction,
+// the two attributes NITRO's ?action=unset payload documents. Both are
+// Optional+Computed and unset cleanly (revert to the empty NITRO default).
+// action is not unsettable and rule/name are policy-core/key, so they are
+// excluded. Setting logaction requires a prerequisite audit message action.
+const testAccTunneltrafficpolicy_unset_step1 = `
+resource "citrixadc_auditmessageaction" "tf_msgaction" {
+	name              = "tf_unset_ttp_msgaction"
+	loglevel          = "INFORMATIONAL"
+	stringbuilderexpr = "\"tunneltrafficpolicy unset test\""
+}
+resource "citrixadc_tunneltrafficpolicy" "tf_unset" {
+	name      = "tf_test_ttp_unset"
+	rule      = "true"
+	action    = "COMPRESS"
+	comment   = "unset test comment"
+	logaction = citrixadc_auditmessageaction.tf_msgaction.name
+}
+`
+
+const testAccTunneltrafficpolicy_unset_step2 = `
+resource "citrixadc_auditmessageaction" "tf_msgaction" {
+	name              = "tf_unset_ttp_msgaction"
+	loglevel          = "INFORMATIONAL"
+	stringbuilderexpr = "\"tunneltrafficpolicy unset test\""
+}
+resource "citrixadc_tunneltrafficpolicy" "tf_unset" {
+	name   = "tf_test_ttp_unset"
+	rule   = "true"
+	action = "COMPRESS"
+	# comment and logaction removed from config -> provider must unset them.
+}
+`
+
+func TestAccTunneltrafficpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTunneltrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccTunneltrafficpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTunneltrafficpolicyExist("citrixadc_tunneltrafficpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tunneltrafficpolicy.tf_unset", "comment", "unset test comment"),
+					resource.TestCheckResourceAttr("citrixadc_tunneltrafficpolicy.tf_unset", "logaction", "tf_unset_ttp_msgaction"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the empty NITRO default, the implicit
+				// post-apply plan must be empty, and the appliance confirms it.
+				Config: testAccTunneltrafficpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTunneltrafficpolicyExist("citrixadc_tunneltrafficpolicy.tf_unset", nil),
+					// After unset, NITRO omits these from GET, so they read back as null
+					// (absent from state) -- assert the revert directly on the appliance
+					// instead, and rely on the implicit empty-plan check.
+					testAccCheckTunneltrafficpolicyADCValue("tf_test_ttp_unset", "comment", ""),
+					testAccCheckTunneltrafficpolicyADCValue("tf_test_ttp_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckTunneltrafficpolicyADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset actually
+// reverted it. An unset attribute is omitted from the GET response, which reads
+// back as an empty string here.
+func testAccCheckTunneltrafficpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Tunneltrafficpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("tunneltrafficpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("tunneltrafficpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccTunneltrafficpolicyDataSource_basic(t *testing.T) {

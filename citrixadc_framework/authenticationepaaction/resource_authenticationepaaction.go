@@ -110,12 +110,14 @@ func (r *AuthenticationepaactionResource) Read(ctx context.Context, req resource
 }
 
 func (r *AuthenticationepaactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationepaactionResourceModel
+	var data, config, state AuthenticationepaactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,17 +130,26 @@ func (r *AuthenticationepaactionResource) Update(ctx context.Context, req resour
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Csecexpr.Equal(state.Csecexpr) {
 		tflog.Debug(ctx, "csecexpr has changed for authenticationepaaction")
 		hasChange = true
 	}
 	if !data.Defaultepagroup.Equal(state.Defaultepagroup) {
 		tflog.Debug(ctx, "defaultepagroup has changed for authenticationepaaction")
-		hasChange = true
+		if config.Defaultepagroup.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "defaultepagroup")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Deletefiles.Equal(state.Deletefiles) {
 		tflog.Debug(ctx, "deletefiles has changed for authenticationepaaction")
-		hasChange = true
+		if config.Deletefiles.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "deletefiles")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Deviceposture.Equal(state.Deviceposture) {
 		tflog.Debug(ctx, "deviceposture has changed for authenticationepaaction")
@@ -146,11 +157,19 @@ func (r *AuthenticationepaactionResource) Update(ctx context.Context, req resour
 	}
 	if !data.Killprocess.Equal(state.Killprocess) {
 		tflog.Debug(ctx, "killprocess has changed for authenticationepaaction")
-		hasChange = true
+		if config.Killprocess.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "killprocess")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Quarantinegroup.Equal(state.Quarantinegroup) {
 		tflog.Debug(ctx, "quarantinegroup has changed for authenticationepaaction")
-		hasChange = true
+		if config.Quarantinegroup.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "quarantinegroup")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -168,6 +187,16 @@ func (r *AuthenticationepaactionResource) Update(ctx context.Context, req resour
 		tflog.Trace(ctx, "Updated authenticationepaaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationepaaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationepaaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationepaaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

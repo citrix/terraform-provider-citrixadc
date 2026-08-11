@@ -108,12 +108,14 @@ func (r *IcapolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *IcapolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state IcapolicyResourceModel
+	var data, config, state IcapolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -152,17 +154,26 @@ func (r *IcapolicyResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Handle in-place attribute updates via NITRO update (PUT).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for icapolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for icapolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for icapolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for icapolicy")
@@ -183,6 +194,17 @@ func (r *IcapolicyResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated icapolicy resource")
 	} else {
 		tflog.Debug(ctx, "No attribute changes detected for icapolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. The unset must target the CURRENT LIVE name (post-rename),
+	// which is tracked by data.Id.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Icapolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset icapolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. The resource may now be physically named newName,

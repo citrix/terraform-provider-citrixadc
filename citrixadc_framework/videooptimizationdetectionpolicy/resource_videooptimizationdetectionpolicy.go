@@ -114,12 +114,14 @@ func (r *VideooptimizationdetectionpolicyResource) Read(ctx context.Context, req
 }
 
 func (r *VideooptimizationdetectionpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VideooptimizationdetectionpolicyResourceModel
+	var data, config, state VideooptimizationdetectionpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,17 +159,26 @@ func (r *VideooptimizationdetectionpolicyResource) Update(ctx context.Context, r
 	// newname is handled above, so only action/rule/comment/logaction/undefaction land
 	// here. NITRO exposes an update (set) endpoint for this resource, so use UpdateResource.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for videooptimizationdetectionpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for videooptimizationdetectionpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for videooptimizationdetectionpolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for videooptimizationdetectionpolicy")
@@ -175,7 +186,11 @@ func (r *VideooptimizationdetectionpolicyResource) Update(ctx context.Context, r
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, "undefaction has changed for videooptimizationdetectionpolicy")
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -190,6 +205,17 @@ func (r *VideooptimizationdetectionpolicyResource) Update(ctx context.Context, r
 		tflog.Trace(ctx, "Updated videooptimizationdetectionpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for videooptimizationdetectionpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The live object name is tracked by data.Id
+	// (== newname after a rename above), so address the unset by data.Id.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Videooptimizationdetectionpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset videooptimizationdetectionpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. Capture the user-facing plan values (name/newname) and

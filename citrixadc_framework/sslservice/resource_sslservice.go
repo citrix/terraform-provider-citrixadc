@@ -109,12 +109,14 @@ func (r *SslserviceResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *SslserviceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SslserviceResourceModel
+	var data, config, state SslserviceResourceModel
 
 	// Read Terraform prior state to preserve the ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (unset candidates)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,6 +134,32 @@ func (r *SslserviceResource) Update(ctx context.Context, req resource.UpdateRequ
 	// cannot change (RequiresReplace), so use the current name for the update.
 	sslservice, hasChange := sslserviceGetThePayloadForUpdate(ctx, &data, &state)
 
+	// Collect attributes that were removed from config so they can be reverted
+	// to their NITRO defaults via the unset action (mirrors analyticsprofile).
+	attributesToUnset := []string{}
+	appendUnset := func(name string, plan, prior, cfg types.String) {
+		if !plan.Equal(prior) && cfg.IsNull() {
+			attributesToUnset = append(attributesToUnset, name)
+		}
+	}
+	appendUnset("cipherredirect", data.Cipherredirect, state.Cipherredirect, config.Cipherredirect)
+	appendUnset("clientauth", data.Clientauth, state.Clientauth, config.Clientauth)
+	appendUnset("dh", data.Dh, state.Dh, config.Dh)
+	appendUnset("dhkeyexpsizelimit", data.Dhkeyexpsizelimit, state.Dhkeyexpsizelimit, config.Dhkeyexpsizelimit)
+	appendUnset("ersa", data.Ersa, state.Ersa, config.Ersa)
+	appendUnset("redirectportrewrite", data.Redirectportrewrite, state.Redirectportrewrite, config.Redirectportrewrite)
+	appendUnset("serverauth", data.Serverauth, state.Serverauth, config.Serverauth)
+	appendUnset("sessreuse", data.Sessreuse, state.Sessreuse, config.Sessreuse)
+	appendUnset("snienable", data.Snienable, state.Snienable, config.Snienable)
+	appendUnset("ssl2", data.Ssl2, state.Ssl2, config.Ssl2)
+	appendUnset("ssl3", data.Ssl3, state.Ssl3, config.Ssl3)
+	appendUnset("sslredirect", data.Sslredirect, state.Sslredirect, config.Sslredirect)
+	appendUnset("sslv2redirect", data.Sslv2redirect, state.Sslv2redirect, config.Sslv2redirect)
+	appendUnset("tls1", data.Tls1, state.Tls1, config.Tls1)
+	appendUnset("tls11", data.Tls11, state.Tls11, config.Tls11)
+	appendUnset("tls12", data.Tls12, state.Tls12, config.Tls12)
+	appendUnset("tls13", data.Tls13, state.Tls13, config.Tls13)
+
 	sslserviceName := data.Servicename.ValueString()
 	if hasChange {
 		_, err := r.client.UpdateResource(service.Sslservice.Type(), sslserviceName, &sslservice)
@@ -139,6 +167,17 @@ func (r *SslserviceResource) Update(ctx context.Context, req resource.UpdateRequ
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslservice %s, got error: %s", sslserviceName, err))
 			return
 		}
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. Done after the update so any value the update payload
+	// carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"servicename": sslserviceName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Sslservice.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslservice attributes, got error: %s", err))
+		return
 	}
 
 	tflog.Trace(ctx, "Updated sslservice resource")

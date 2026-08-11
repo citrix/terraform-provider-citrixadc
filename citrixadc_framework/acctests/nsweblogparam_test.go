@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -139,6 +140,75 @@ const testAccNsweblogparamDataSource_basic = `
 data "citrixadc_nsweblogparam" "test" {
 }
 `
+
+// buffersizemb is the only spec-unsettable attribute (documented NITRO default
+// value 16); the customreqhdrs/customrsphdrs lists have no documented server
+// default and are therefore not unset-eligible.
+const testAccNsweblogparam_unset_step1 = `
+	resource "citrixadc_nsweblogparam" "tf_unset" {
+		buffersizemb = 32
+	}
+`
+
+const testAccNsweblogparam_unset_step2 = `
+	resource "citrixadc_nsweblogparam" "tf_unset" {
+		# buffersizemb removed from config -> the provider must unset it
+		# (revert to the NITRO default, 16).
+	}
+`
+
+func TestAccNsweblogparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccNsweblogparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsweblogparamExist("citrixadc_nsweblogparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsweblogparam.tf_unset", "buffersizemb", "32"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default and the implicit
+				// post-apply plan must be empty.
+				Config: testAccNsweblogparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsweblogparamExist("citrixadc_nsweblogparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsweblogparam.tf_unset", "buffersizemb", "16"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsweblogparamADCValue("buffersizemb", "16"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsweblogparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNsweblogparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsweblogparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsweblogparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nsweblogparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccNsweblogparam_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{

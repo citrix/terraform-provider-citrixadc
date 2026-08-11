@@ -8,7 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -41,26 +43,31 @@ func (r *NsvariableResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"comment": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Comments associated with this variable.",
 			},
 			"expires": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Value expiration in seconds. If the value is not referenced within the expiration period it will be deleted. 0 (the default) means no expiration.",
 			},
 			"iffull": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("lru"),
 				Description: "Action to perform if an assignment to a map exceeds its configured max-entries:\n   lru - (default) reuse the least recently used entry in the map.\n   undef - force the assignment to return an undefined (Undef) result to the policy executing the assignment.",
 			},
 			"ifnovalue": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("init"),
 				Description: "Action to perform if on a variable reference in an expression if the variable is single-valued and uninitialized\nor if the variable is a map and there is no value for the specified key:\n   init - (default) initialize the single-value variable, or create a map entry for the key and the initial value,\nusing the -init value or its default.\n   undef - force the expression evaluation to return an undefined (Undef) result to the policy executing the expression.",
 			},
 			"ifvaluetoobig": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("truncate"),
 				Description: "Action to perform if an value is assigned to a text variable that exceeds its configured max-size,\nor if a key is used that exceeds its configured max-size:\n   truncate - (default) truncate the text string to the first max-size bytes and proceed.\n   undef - force the assignment or expression evaluation to return an undefined (Undef) result to the policy executing the assignment or expression.",
 			},
 			"init": schema.StringAttribute{

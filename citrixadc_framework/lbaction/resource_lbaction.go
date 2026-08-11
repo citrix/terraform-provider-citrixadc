@@ -110,12 +110,14 @@ func (r *LbactionResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *LbactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LbactionResourceModel
+	var data, config, state LbactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -152,9 +154,14 @@ func (r *LbactionResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Regular update (comment/value) via NITRO PUT.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for lbaction")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Value.Equal(state.Value) {
 		tflog.Debug(ctx, "value has changed for lbaction")
@@ -174,6 +181,16 @@ func (r *LbactionResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated lbaction resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for lbaction resource")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Address the current live name (== newname after a rename, else name).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lbaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back, preserving the user-facing key/rename inputs so a

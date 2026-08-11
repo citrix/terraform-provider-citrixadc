@@ -110,12 +110,14 @@ func (r *AuthenticationstorefrontauthactionResource) Read(ctx context.Context, r
 }
 
 func (r *AuthenticationstorefrontauthactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationstorefrontauthactionResourceModel
+	var data, config, state AuthenticationstorefrontauthactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (to unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,17 +130,26 @@ func (r *AuthenticationstorefrontauthactionResource) Update(ctx context.Context,
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Serverurl.Equal(state.Serverurl) {
 		tflog.Debug(ctx, "serverurl has changed for authenticationstorefrontauthaction")
 		hasChange = true
 	}
 	if !data.Domain.Equal(state.Domain) {
 		tflog.Debug(ctx, "domain has changed for authenticationstorefrontauthaction")
-		hasChange = true
+		if config.Domain.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "domain")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, "defaultauthenticationgroup has changed for authenticationstorefrontauthaction")
-		hasChange = true
+		if config.Defaultauthenticationgroup.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "defaultauthenticationgroup")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -156,6 +167,16 @@ func (r *AuthenticationstorefrontauthactionResource) Update(ctx context.Context,
 		tflog.Trace(ctx, "Updated authenticationstorefrontauthaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationstorefrontauthaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationstorefrontauthaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationstorefrontauthaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

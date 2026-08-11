@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -109,12 +110,14 @@ func (r *VxlanResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *VxlanResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VxlanResourceModel
+	var data, config, state VxlanResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,7 +128,59 @@ func (r *VxlanResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	tflog.Debug(ctx, "Updating vxlan resource")
 
-	vxlan, hasChange := vxlanGetTheUpdatablePayloadFromThePlan(ctx, &data, &state)
+	vxlan := network.Vxlan{}
+	if !data.Vxlanid.IsNull() && !data.Vxlanid.IsUnknown() {
+		vxlan.Id = utils.IntPtr(int(data.Vxlanid.ValueInt64()))
+	}
+
+	hasChange := false
+	attributesToUnset := []string{}
+
+	if !data.Dynamicrouting.Equal(state.Dynamicrouting) {
+		if config.Dynamicrouting.IsNull() {
+			attributesToUnset = append(attributesToUnset, "dynamicrouting")
+		} else {
+			vxlan.Dynamicrouting = data.Dynamicrouting.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Innervlantagging.Equal(state.Innervlantagging) {
+		if config.Innervlantagging.IsNull() {
+			attributesToUnset = append(attributesToUnset, "innervlantagging")
+		} else {
+			vxlan.Innervlantagging = data.Innervlantagging.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Ipv6dynamicrouting.Equal(state.Ipv6dynamicrouting) {
+		if config.Ipv6dynamicrouting.IsNull() {
+			attributesToUnset = append(attributesToUnset, "ipv6dynamicrouting")
+		} else {
+			vxlan.Ipv6dynamicrouting = data.Ipv6dynamicrouting.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Port.Equal(state.Port) {
+		if config.Port.IsNull() {
+			attributesToUnset = append(attributesToUnset, "port")
+		} else {
+			vxlan.Port = utils.IntPtr(int(data.Port.ValueInt64()))
+			hasChange = true
+		}
+	}
+	if !data.Protocol.Equal(state.Protocol) {
+		vxlan.Protocol = data.Protocol.ValueString()
+		hasChange = true
+	}
+	if !data.Type.Equal(state.Type) {
+		vxlan.Type = data.Type.ValueString()
+		hasChange = true
+	}
+	if !data.Vlan.Equal(state.Vlan) {
+		vxlan.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
+		hasChange = true
+	}
+
 	if hasChange {
 		// Named resource - use UpdateResource keyed on the live ID
 		vxlanIdStr := data.Id.ValueString()
@@ -137,6 +192,16 @@ func (r *VxlanResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		tflog.Trace(ctx, "Updated vxlan resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for vxlan resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. The vxlan key is "id" (the VXLAN Network Identifier).
+	unsetIdPayload := map[string]interface{}{
+		"id": data.Vxlanid.ValueInt64(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vxlan.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vxlan attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -107,6 +108,85 @@ func testAccCheckAppqoeparameterExist(n string, id *string) resource.TestCheckFu
 			return fmt.Errorf("appqoeparameter %s not found", n)
 		}
 
+		return nil
+	}
+}
+
+// appqoeparameter is a singleton. The unset test sets all four mutable
+// attributes to non-default values, then removes them from config; the provider
+// must unset them so the appliance reverts to the documented NITRO defaults.
+const testAccAppqoeparameter_unset_step1 = `
+	resource "citrixadc_appqoeparameter" "tf_unset" {
+		sessionlife         = 400
+		avgwaitingclient    = 500
+		maxaltrespbandwidth = 200
+		dosattackthresh     = 1000
+	}
+`
+
+const testAccAppqoeparameter_unset_step2 = `
+	resource "citrixadc_appqoeparameter" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccAppqoeparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAppqoeparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppqoeparameterExist("citrixadc_appqoeparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appqoeparameter.tf_unset", "sessionlife", "400"),
+					resource.TestCheckResourceAttr("citrixadc_appqoeparameter.tf_unset", "avgwaitingclient", "500"),
+					resource.TestCheckResourceAttr("citrixadc_appqoeparameter.tf_unset", "maxaltrespbandwidth", "200"),
+					resource.TestCheckResourceAttr("citrixadc_appqoeparameter.tf_unset", "dosattackthresh", "1000"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults, and the implicit post-apply plan is empty.
+				Config: testAccAppqoeparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppqoeparameterExist("citrixadc_appqoeparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appqoeparameter.tf_unset", "sessionlife", "300"),
+					resource.TestCheckResourceAttr("citrixadc_appqoeparameter.tf_unset", "avgwaitingclient", "1000000"),
+					resource.TestCheckResourceAttr("citrixadc_appqoeparameter.tf_unset", "maxaltrespbandwidth", "100"),
+					resource.TestCheckResourceAttr("citrixadc_appqoeparameter.tf_unset", "dosattackthresh", "2000"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppqoeparameterADCValue("sessionlife", "300"),
+					testAccCheckAppqoeparameterADCValue("dosattackthresh", "2000"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppqoeparameterADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckAppqoeparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appqoeparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("appqoeparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("appqoeparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
 		return nil
 	}
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -30,28 +31,32 @@ func (r *FeoparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "The ID of the feoparameter resource.",
 			},
-			// Optional+Computed (no Default) to match the SDK v2 contract: the
-			// ADC always returns these values (NITRO defaults), so they are read
-			// back and computed rather than defaulted in the schema. A schema
-			// Default without Computed is invalid and panics the framework.
+			// Optional+Computed with a schema Default matching the documented NITRO
+			// default. The Default is required so that removing the attribute from
+			// config produces a plan diff (revert to default) that drives Update to
+			// unset it; without it an Optional+Computed attr is sticky on removal.
 			"cssinlinethressize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1024),
 				Description: "Threshold value of the file size (in bytes) for converting external CSS files to inline CSS files.",
 			},
 			"imginlinethressize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1024),
 				Description: "Maximum file size of an image (in bytes), for coverting linked images to inline images.",
 			},
 			"jpegqualitypercent": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(75),
 				Description: "The percentage value of a JPEG image quality to be reduced. Range: 0 - 100",
 			},
 			"jsinlinethressize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1024),
 				Description: "Threshold value of the file size (in bytes), for converting external JavaScript files to inline JavaScript files.",
 			},
 		},

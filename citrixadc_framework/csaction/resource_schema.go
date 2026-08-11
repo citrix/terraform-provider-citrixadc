@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -34,8 +35,16 @@ func (r *CsactionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description: "The ID of the csaction resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO has no server-echoed default for comment (it is simply
+				// absent when empty). An Optional+Computed attribute with no
+				// Default is sticky on config-removal: dropping it from config
+				// produces no plan diff, so Update never runs and the unset never
+				// fires. A "" Default makes removal produce a diff that Update can
+				// translate into an ?action=unset (and matches the empty-string
+				// value read back after the unset).
+				Default:     stringdefault.StaticString(""),
 				Description: "Comments associated with this cs action.",
 			},
 			"name": schema.StringAttribute{
@@ -108,7 +117,10 @@ func csactionSetAttrFromGet(ctx context.Context, data *CsactionResourceModel, ge
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		// NITRO omits comment when empty. Represent that as "" (not null) so it
+		// matches the schema's "" default after an ?action=unset, avoiding a
+		// spurious "inconsistent result" / permanent-diff.
+		data.Comment = types.StringValue("")
 	}
 	// name is the user-facing key. Once a rename has happened (via newname), the
 	// live object name (tracked by data.Id) diverges from the configured name, and

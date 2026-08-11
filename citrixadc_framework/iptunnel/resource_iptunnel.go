@@ -127,6 +127,7 @@ func (r *IptunnelResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Only destport, tosinherit and vlantagging are updatable in place (SDK v2 parity).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Destport.Equal(state.Destport) {
 		tflog.Debug(ctx, "destport has changed for iptunnel")
 		hasChange = true
@@ -151,6 +152,17 @@ func (r *IptunnelResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated iptunnel resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for iptunnel resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Iptunnel.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset iptunnel attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

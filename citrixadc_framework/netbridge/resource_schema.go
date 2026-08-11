@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -37,9 +38,12 @@ func (r *NetbridgeResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The name of the network bridge.",
 			},
 			"vxlanvlanmap": schema.StringAttribute{
-				// SDK v2: Optional + Computed, updateable (no Default)
+				// SDK v2: Optional + Computed, updateable.
+				// A Default is required so that removing the attribute from config
+				// produces a plan diff, allowing Update to fire the NITRO unset.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "The vlan to vxlan mapping to be applied to this netbridge.",
 			},
 		},

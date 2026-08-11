@@ -111,12 +111,14 @@ func (r *NetbridgeResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *NetbridgeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NetbridgeResourceModel
+	var data, config, state NetbridgeResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,9 +131,14 @@ func (r *NetbridgeResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Vxlanvlanmap.Equal(state.Vxlanvlanmap) {
 		tflog.Debug(ctx, "vxlanvlanmap has changed for netbridge")
-		hasChange = true
+		if config.Vxlanvlanmap.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "vxlanvlanmap")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -149,6 +156,16 @@ func (r *NetbridgeResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated netbridge resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for netbridge resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Netbridge.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset netbridge attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

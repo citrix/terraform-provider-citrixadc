@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -216,6 +217,73 @@ func TestAccVpnclientlessaccessprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccVpnclientlessaccessprofile_unset_step1 = `
+	resource "citrixadc_vpnclientlessaccessprofile" "tf_unset" {
+		profilename             = "tf_vpnclra_unset"
+		requirepersistentcookie = "ON"
+	}
+`
+
+const testAccVpnclientlessaccessprofile_unset_step2 = `
+	resource "citrixadc_vpnclientlessaccessprofile" "tf_unset" {
+		profilename = "tf_vpnclra_unset"
+		# requirepersistentcookie removed -> provider must unset it (revert to "OFF").
+	}
+`
+
+func TestAccVpnclientlessaccessprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnclientlessaccessprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccVpnclientlessaccessprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnclientlessaccessprofileExist("citrixadc_vpnclientlessaccessprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnclientlessaccessprofile.tf_unset", "requirepersistentcookie", "ON"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state reverts to the
+				// documented NITRO default ("OFF"), the implicit post-apply plan
+				// must be empty, and the appliance itself confirms the revert.
+				Config: testAccVpnclientlessaccessprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnclientlessaccessprofileExist("citrixadc_vpnclientlessaccessprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnclientlessaccessprofile.tf_unset", "requirepersistentcookie", "OFF"),
+					testAccCheckVpnclientlessaccessprofileADCValue("tf_vpnclra_unset", "requirepersistentcookie", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVpnclientlessaccessprofileADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckVpnclientlessaccessprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnclientlessaccessprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vpnclientlessaccessprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vpnclientlessaccessprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccVpnclientlessaccessprofileDataSource_basic(t *testing.T) {

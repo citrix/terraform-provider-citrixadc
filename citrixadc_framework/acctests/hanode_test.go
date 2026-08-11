@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -262,6 +263,103 @@ func TestAccHanode_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The hanode unset test runs against the permanent local self-node (id 0) so it
+// works on a standalone appliance. Step 1 sets the unset-eligible mutable
+// attributes to non-default values; step 2 removes them from config, which must
+// unset them back to their documented NITRO defaults.
+const testAccHanode_unset_step1 = `
+resource "citrixadc_hanode" "tf_unset" {
+	hanode_id            = 0
+	deadinterval         = 30
+	failsafe             = "ON"
+	haprop               = "DISABLED"
+	hasync               = "DISABLED"
+	hellointerval        = 400
+	maxflips             = 5
+	maxfliptime          = 60
+	syncstatusstrictmode = "ENABLED"
+}
+`
+
+const testAccHanode_unset_step2 = `
+resource "citrixadc_hanode" "tf_unset" {
+	hanode_id = 0
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccHanode_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// CheckDestroy is nil: hanode 0 is the permanent local self-node and can
+		// never be deleted.
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccHanode_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist("citrixadc_hanode.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "deadinterval", "30"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "failsafe", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "haprop", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "hasync", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "hellointerval", "400"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "maxflips", "5"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "maxfliptime", "60"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "syncstatusstrictmode", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccHanode_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHanodeExist("citrixadc_hanode.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "deadinterval", "3"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "failsafe", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "haprop", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "hasync", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "hellointerval", "200"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "maxflips", "0"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "maxfliptime", "0"),
+					resource.TestCheckResourceAttr("citrixadc_hanode.tf_unset", "syncstatusstrictmode", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckHanodeADCValue("0", "deadinterval", "3"),
+					testAccCheckHanodeADCValue("0", "hellointerval", "200"),
+					testAccCheckHanodeADCValue("0", "failsafe", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckHanodeADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckHanodeADCValue(id, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Hanode.Type(), id)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("hanode %s not found on appliance", id)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("hanode %s: appliance attr %q = %q, want %q (unset did not revert it)", id, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckHanodeDestroy(s *terraform.State) error {

@@ -110,12 +110,14 @@ func (r *LbgroupResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *LbgroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LbgroupResourceModel
+	var data, config, state LbgroupResourceModel
 
 	// Read Terraform prior state to preserve the live ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -146,8 +148,13 @@ func (r *LbgroupResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	// Check whether any updatable attribute changed.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Backuppersistencetimeout.Equal(state.Backuppersistencetimeout) {
-		hasChange = true
+		if config.Backuppersistencetimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "backuppersistencetimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cookiedomain.Equal(state.Cookiedomain) {
 		hasChange = true
@@ -171,13 +178,21 @@ func (r *LbgroupResource) Update(ctx context.Context, req resource.UpdateRequest
 		hasChange = true
 	}
 	if !data.Timeout.Equal(state.Timeout) {
-		hasChange = true
+		if config.Timeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "timeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Usevserverpersistency.Equal(state.Usevserverpersistency) {
 		hasChange = true
 	}
 	if !data.V6persistmasklen.Equal(state.V6persistmasklen) {
-		hasChange = true
+		if config.V6persistmasklen.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "v6persistmasklen")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -192,6 +207,16 @@ func (r *LbgroupResource) Update(ctx context.Context, req resource.UpdateRequest
 		tflog.Trace(ctx, "Updated lbgroup resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lbgroup resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Keyed off the current live name (after rename).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lbgroup.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbgroup attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

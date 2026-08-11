@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -42,8 +43,13 @@ func (r *AuditmessageactionResource) Schema(ctx context.Context, req resource.Sc
 				Description: "Audit log level, which specifies the severity level of the log message being generated..\nThe following loglevels are valid:\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.",
 			},
 			"logtonewnslog": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default for logtonewnslog is "NO". A Default is required so
+				// that removing the attribute from config produces a plan diff,
+				// which lets the Update method detect the removal and issue an
+				// unset (reverting the appliance to its default).
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Send the message to the new nslog.",
 			},
 			"name": schema.StringAttribute{

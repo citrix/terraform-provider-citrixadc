@@ -16,6 +16,57 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while the prior state
+// holds a value other than the NITRO default. This makes Terraform detect a
+// change (unknown != prior) and call Update, which issues the NITRO
+// ?action=unset -- without it an Optional+Computed attribute is "sticky" and
+// removal is a silent no-op.
+//
+// It intentionally does nothing on create (no prior state) so the value is not
+// forced into the create payload -- important here because ifserverdown/serverport
+// are rejected by NITRO on a NOINSPECTION action. It also does nothing once the
+// prior state already equals the default, avoiding a perpetual post-unset plan
+// diff (NITRO always echoes the default back on GET for these attributes).
+type unsetOnRemoveStringModifier struct{ defaultValue string }
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while prior state differs from the default, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" && req.StateValue.ValueString() != m.defaultValue {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
+// unsetOnRemoveInt64Modifier is the Int64 counterpart of unsetOnRemoveStringModifier.
+type unsetOnRemoveInt64Modifier struct{ defaultValue int64 }
+
+func (m unsetOnRemoveInt64Modifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while prior state differs from the default, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveInt64Modifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveInt64Modifier) PlanModifyInt64(_ context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueInt64() != 0 && req.StateValue.ValueInt64() != m.defaultValue {
+		resp.PlanValue = types.Int64Unknown()
+	}
+}
+
 // ContentinspectionactionResourceModel describes the resource data model.
 type ContentinspectionactionResourceModel struct {
 	Id              types.String `tfsdk:"id"`
@@ -42,8 +93,11 @@ func (r *ContentinspectionactionResource) Schema(ctx context.Context, req resour
 				Description: "Name of the ICAP profile to be attached to the contentInspection action.",
 			},
 			"ifserverdown": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{defaultValue: "RESET"},
+				},
 				Description: "Name of the action to perform if the Vserver representing the remote service is not UP. This is not supported for NOINSPECTION Type. The Supported actions are:\n* RESET - Reset the client connection by closing it. The client program, such as a browser, will handle this and may inform the user. The client may then resend the request if desired.\n* DROP - Drop the request without sending a response to the user.\n* CONTINUE - It bypasses the ContentIsnpection and Continues/resumes the Traffic-Flow to Client/Server.",
 			},
 			"name": schema.StringAttribute{
@@ -64,8 +118,11 @@ func (r *ContentinspectionactionResource) Schema(ctx context.Context, req resour
 				Description: "Name of the LB vserver or service",
 			},
 			"serverport": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					unsetOnRemoveInt64Modifier{defaultValue: 1344},
+				},
 				Description: "Port of remoteService",
 			},
 			"type": schema.StringAttribute{

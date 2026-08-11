@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -96,10 +97,14 @@ func (r *AaapreauthenticationparameterResource) Read(ctx context.Context, req re
 }
 
 func (r *AaapreauthenticationparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaapreauthenticationparameterResourceModel
+	var data, config, state AaapreauthenticationparameterResourceModel
 
+	// Read Terraform prior state
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -107,18 +112,53 @@ func (r *AaapreauthenticationparameterResource) Update(ctx context.Context, req 
 
 	tflog.Debug(ctx, "Updating aaapreauthenticationparameter resource")
 
-	// Create API request body from the model
-	aaapreauthenticationparameter := aaapreauthenticationparameterGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// Unnamed/singleton resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationparameter.Type(), &aaapreauthenticationparameter)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaapreauthenticationparameter, got error: %s", err))
-		return
+	// Determine attributes to unset (removed from config -> revert to defaults)
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Preauthenticationaction.Equal(state.Preauthenticationaction) {
+		if config.Preauthenticationaction.IsNull() {
+			attributesToUnset = append(attributesToUnset, "preauthenticationaction")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Rule.Equal(state.Rule) {
+		if config.Rule.IsNull() {
+			attributesToUnset = append(attributesToUnset, "rule")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Killprocess.Equal(state.Killprocess) {
+		hasChange = true
+	}
+	if !data.Deletefiles.Equal(state.Deletefiles) {
+		hasChange = true
 	}
 
-	tflog.Trace(ctx, "Updated aaapreauthenticationparameter resource")
+	if hasChange {
+		// Create API request body from the model
+		aaapreauthenticationparameter := aaapreauthenticationparameterGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call
+		// Unnamed/singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Aaapreauthenticationparameter.Type(), &aaapreauthenticationparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaapreauthenticationparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated aaapreauthenticationparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for aaapreauthenticationparameter resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Aaapreauthenticationparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaapreauthenticationparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readAaapreauthenticationparameterFromApi(ctx, &data, &resp.Diagnostics)

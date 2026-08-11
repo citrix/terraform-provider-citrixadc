@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -201,6 +202,95 @@ func TestAccChannel_import(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The channel unset test covers the unset-eligible attributes that are echoed
+// by NITRO GET and carry a documented server default: state (ENABLED),
+// mtu (1500), tagall (OFF), hamonitor (ON), haheartbeat (ON). Each is given a
+// non-default value in step1 and removed from config in step2; the provider
+// must unset them so the appliance reverts to the NITRO defaults.
+const testAccChannel_unset_step1 = `
+	resource "citrixadc_channel" "tf_unset" {
+		channel_id  = "LA/3"
+		state       = "DISABLED"
+		mtu         = 1600
+		tagall      = "ON"
+		hamonitor   = "OFF"
+		haheartbeat = "OFF"
+	}
+`
+
+const testAccChannel_unset_step2 = `
+	resource "citrixadc_channel" "tf_unset" {
+		channel_id = "LA/3"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccChannel_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccChannel_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExist("citrixadc_channel.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "state", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "mtu", "1600"),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "tagall", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "hamonitor", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "haheartbeat", "OFF"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccChannel_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExist("citrixadc_channel.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "state", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "mtu", "1500"),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "tagall", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "hamonitor", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_channel.tf_unset", "haheartbeat", "ON"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckChannelADCValue("LA/3", "state", "ENABLED"),
+					testAccCheckChannelADCValue("LA/3", "mtu", "1500"),
+					testAccCheckChannelADCValue("LA/3", "tagall", "OFF"),
+					testAccCheckChannelADCValue("LA/3", "hamonitor", "ON"),
+					testAccCheckChannelADCValue("LA/3", "haheartbeat", "ON"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckChannelADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckChannelADCValue(id, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Channel.Type(), id)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("channel %s not found on appliance", id)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("channel %s: appliance attr %q = %q, want %q (unset did not revert it)", id, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccChannelDataSource_basic(t *testing.T) {

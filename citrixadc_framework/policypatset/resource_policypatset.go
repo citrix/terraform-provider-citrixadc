@@ -109,12 +109,14 @@ func (r *PolicypatsetResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *PolicypatsetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state PolicypatsetResourceModel
+	var data, config, state PolicypatsetResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config (to detect attributes removed from config -> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,9 +129,14 @@ func (r *PolicypatsetResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Only "dynamic" is NITRO-updatable (all other attributes are RequiresReplace).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Dynamic.Equal(state.Dynamic) {
 		tflog.Debug(ctx, "dynamic has changed for policypatset, starting update")
-		hasChange = true
+		if config.Dynamic.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dynamic")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -145,6 +152,17 @@ func (r *PolicypatsetResource) Update(ctx context.Context, req resource.UpdateRe
 		tflog.Trace(ctx, "Updated policypatset resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for policypatset resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Policypatset.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset policypatset attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

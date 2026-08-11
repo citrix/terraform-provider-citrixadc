@@ -112,12 +112,14 @@ func (r *UservserverResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *UservserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state UservserverResourceModel
+	var data, config, state UservserverResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,9 +134,14 @@ func (r *UservserverResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Detect changes on updateable, non-state attributes (SDK v2 updateUservserverFunc).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for uservserver")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultlb.Equal(state.Defaultlb) {
 		tflog.Debug(ctx, "defaultlb has changed for uservserver")
@@ -146,7 +153,11 @@ func (r *UservserverResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Params.Equal(state.Params) {
 		tflog.Debug(ctx, "params has changed for uservserver")
-		hasChange = true
+		if config.Params.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "Params")
+		} else {
+			hasChange = true
+		}
 	}
 
 	// state is toggled via the enable/disable action, not UpdateResource (SDK v2 doUservserverStateChange).
@@ -169,6 +180,17 @@ func (r *UservserverResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated uservserver resource")
 	} else {
 		tflog.Debug(ctx, "No in-place attribute changes detected for uservserver resource")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Uservserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset uservserver attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

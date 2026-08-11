@@ -113,12 +113,14 @@ func (r *Nsip6Resource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *Nsip6Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Nsip6ResourceModel
+	var data, config, state Nsip6ResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -139,6 +141,7 @@ func (r *Nsip6Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Ipv6address: data.Ipv6address.ValueString(),
 	}
 	hasChange := false
+	attributesToUnset := []string{}
 
 	if !data.Advertiseondefaultpartition.IsUnknown() && !data.Advertiseondefaultpartition.Equal(state.Advertiseondefaultpartition) {
 		nsip6.Advertiseondefaultpartition = data.Advertiseondefaultpartition.ValueString()
@@ -185,8 +188,12 @@ func (r *Nsip6Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 		hasChange = true
 	}
 	if !data.Mgmtaccess.IsUnknown() && !data.Mgmtaccess.Equal(state.Mgmtaccess) {
-		nsip6.Mgmtaccess = data.Mgmtaccess.ValueString()
-		hasChange = true
+		if config.Mgmtaccess.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "mgmtaccess")
+		} else {
+			nsip6.Mgmtaccess = data.Mgmtaccess.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Mptcpadvertise.IsUnknown() && !data.Mptcpadvertise.Equal(state.Mptcpadvertise) {
 		nsip6.Mptcpadvertise = data.Mptcpadvertise.ValueString()
@@ -217,8 +224,12 @@ func (r *Nsip6Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 		hasChange = true
 	}
 	if !data.Restrictaccess.IsUnknown() && !data.Restrictaccess.Equal(state.Restrictaccess) {
-		nsip6.Restrictaccess = data.Restrictaccess.ValueString()
-		hasChange = true
+		if config.Restrictaccess.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "restrictaccess")
+		} else {
+			nsip6.Restrictaccess = data.Restrictaccess.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Snmp.IsUnknown() && !data.Snmp.Equal(state.Snmp) {
 		nsip6.Snmp = data.Snmp.ValueString()
@@ -266,6 +277,20 @@ func (r *Nsip6Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 		tflog.Trace(ctx, "Updated nsip6 resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nsip6 resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The resource is keyed by ipv6address (which cannot
+	// go in the URL path); it is carried in the unset body along with td.
+	unsetIdPayload := map[string]interface{}{
+		"ipv6address": data.Ipv6address.ValueString(),
+	}
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		unsetIdPayload["td"] = int(data.Td.ValueInt64())
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsip6.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsip6 attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

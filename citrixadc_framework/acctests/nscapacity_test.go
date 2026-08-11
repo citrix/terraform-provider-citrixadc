@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -122,6 +124,77 @@ func TestAccNscapacityDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccNscapacity_unset_step1 applies a pooled-license capacity with a
+// non-default bandwidth (spec-unsettable attribute).
+const testAccNscapacity_unset_step1 = `
+resource "citrixadc_nscapacity" "tf_unset" {
+	bandwidth = 100
+	unit      = "Mbps"
+	edition   = "Platinum"
+}
+`
+
+// testAccNscapacity_unset_step2 removes every optional attribute; the removed
+// spec-unsettable "bandwidth" must be reverted to its appliance default via the
+// NITRO ?action=unset operation.
+const testAccNscapacity_unset_step2 = `
+resource "citrixadc_nscapacity" "tf_unset" {
+}
+`
+
+func TestAccNscapacity_unset(t *testing.T) {
+	t.Skip("Requires License Server Configuration.")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccNscapacity_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nscapacity.tf_unset", "bandwidth", "100"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccNscapacity_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscapacityExist("citrixadc_nscapacity.tf_unset", nil),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNscapacityADCValue("bandwidth", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNscapacityADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. nscapacity is a singleton, so it is fetched with an empty name.
+func testAccCheckNscapacityADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nscapacity.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nscapacity not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nscapacity: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNscapacity_import(t *testing.T) {

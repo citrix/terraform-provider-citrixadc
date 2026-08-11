@@ -112,12 +112,14 @@ func (r *AuthenticationsamlidppolicyResource) Read(ctx context.Context, req reso
 }
 
 func (r *AuthenticationsamlidppolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationsamlidppolicyResourceModel
+	var data, config, state AuthenticationsamlidppolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,13 +159,18 @@ func (r *AuthenticationsamlidppolicyResource) Update(ctx context.Context, req re
 
 	// Check if there are any changes in updateable attributes.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for authenticationsamlidppolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for authenticationsamlidppolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for authenticationsamlidppolicy")
@@ -195,6 +202,17 @@ func (r *AuthenticationsamlidppolicyResource) Update(ctx context.Context, req re
 		tflog.Trace(ctx, "Updated authenticationsamlidppolicy resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for authenticationsamlidppolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. The unset must identify the object by its CURRENT LIVE name
+	// (tracked by the ID), matching the update path above.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationsamlidppolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationsamlidppolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back. Capture the plan key values and restore them after

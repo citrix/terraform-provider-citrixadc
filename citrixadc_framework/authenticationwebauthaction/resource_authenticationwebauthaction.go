@@ -111,12 +111,14 @@ func (r *AuthenticationwebauthactionResource) Read(ctx context.Context, req reso
 }
 
 func (r *AuthenticationwebauthactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationwebauthactionResourceModel
+	var data, config, state AuthenticationwebauthactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,56 +131,125 @@ func (r *AuthenticationwebauthactionResource) Update(ctx context.Context, req re
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Attribute1.Equal(state.Attribute1) {
-		hasChange = true
+		if config.Attribute1.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute1")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute10.Equal(state.Attribute10) {
-		hasChange = true
+		if config.Attribute10.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute10")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute11.Equal(state.Attribute11) {
-		hasChange = true
+		if config.Attribute11.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute11")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute12.Equal(state.Attribute12) {
-		hasChange = true
+		if config.Attribute12.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute12")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute13.Equal(state.Attribute13) {
-		hasChange = true
+		if config.Attribute13.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute13")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute14.Equal(state.Attribute14) {
-		hasChange = true
+		if config.Attribute14.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute14")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute15.Equal(state.Attribute15) {
-		hasChange = true
+		if config.Attribute15.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute15")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute16.Equal(state.Attribute16) {
-		hasChange = true
+		if config.Attribute16.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute16")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute2.Equal(state.Attribute2) {
-		hasChange = true
+		if config.Attribute2.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute2")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute3.Equal(state.Attribute3) {
-		hasChange = true
+		if config.Attribute3.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute3")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute4.Equal(state.Attribute4) {
-		hasChange = true
+		if config.Attribute4.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute4")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute5.Equal(state.Attribute5) {
-		hasChange = true
+		if config.Attribute5.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute5")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute6.Equal(state.Attribute6) {
-		hasChange = true
+		if config.Attribute6.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute6")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute7.Equal(state.Attribute7) {
-		hasChange = true
+		if config.Attribute7.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute7")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute8.Equal(state.Attribute8) {
-		hasChange = true
+		if config.Attribute8.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute8")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Attribute9.Equal(state.Attribute9) {
-		hasChange = true
+		if config.Attribute9.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attribute9")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
-		hasChange = true
+		if config.Defaultauthenticationgroup.IsNull() {
+			attributesToUnset = append(attributesToUnset, "defaultauthenticationgroup")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Fullreqexpr.Equal(state.Fullreqexpr) {
 		hasChange = true
@@ -211,6 +282,17 @@ func (r *AuthenticationwebauthactionResource) Update(ctx context.Context, req re
 		tflog.Trace(ctx, "Updated authenticationwebauthaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationwebauthaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationwebauthaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationwebauthaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -110,12 +110,14 @@ func (r *AuthenticationcertactionResource) Read(ctx context.Context, req resourc
 }
 
 func (r *AuthenticationcertactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationcertactionResourceModel
+	var data, config, state AuthenticationcertactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,7 @@ func (r *AuthenticationcertactionResource) Update(ctx context.Context, req resou
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, "defaultauthenticationgroup has changed for authenticationcertaction")
 		hasChange = true
@@ -138,7 +141,11 @@ func (r *AuthenticationcertactionResource) Update(ctx context.Context, req resou
 	}
 	if !data.Twofactor.Equal(state.Twofactor) {
 		tflog.Debug(ctx, "twofactor has changed for authenticationcertaction")
-		hasChange = true
+		if config.Twofactor.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "twofactor")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Usernamefield.Equal(state.Usernamefield) {
 		tflog.Debug(ctx, "usernamefield has changed for authenticationcertaction")
@@ -160,6 +167,16 @@ func (r *AuthenticationcertactionResource) Update(ctx context.Context, req resou
 		tflog.Trace(ctx, "Updated authenticationcertaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationcertaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationcertaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationcertaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -174,12 +174,14 @@ func (r *ServiceResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ServiceResourceModel
+	var data, config, state ServiceResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (unset candidates).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -193,6 +195,30 @@ func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	// Detect changes on non-ForceNew, non-action attributes.
 	hasChange := serviceHasUpdatableChange(&data, &state)
+
+	// Collect attributes removed from config so they can be unset (reverted to
+	// their NITRO defaults) after the base update. Each attribute has a schema
+	// Default matching its documented NITRO default, so removal from config
+	// produces a real plan diff that drives this Update.
+	attributesToUnset := []string{}
+	if !data.Accessdown.Equal(state.Accessdown) && config.Accessdown.IsNull() {
+		attributesToUnset = append(attributesToUnset, "accessdown")
+	}
+	if !data.Appflowlog.Equal(state.Appflowlog) && config.Appflowlog.IsNull() {
+		attributesToUnset = append(attributesToUnset, "appflowlog")
+	}
+	if !data.Cacheable.Equal(state.Cacheable) && config.Cacheable.IsNull() {
+		attributesToUnset = append(attributesToUnset, "cacheable")
+	}
+	if !data.Downstateflush.Equal(state.Downstateflush) && config.Downstateflush.IsNull() {
+		attributesToUnset = append(attributesToUnset, "downstateflush")
+	}
+	if !data.Healthmonitor.Equal(state.Healthmonitor) && config.Healthmonitor.IsNull() {
+		attributesToUnset = append(attributesToUnset, "healthmonitor")
+	}
+	if !data.Processlocal.Equal(state.Processlocal) && config.Processlocal.IsNull() {
+		attributesToUnset = append(attributesToUnset, "processlocal")
+	}
 	// Only treat state as changed when the plan carries a real, known value
 	// (SDK v2 parity: state change was driven by an explicit config change).
 	stateChange := !data.State.IsNull() && !data.State.IsUnknown() &&
@@ -296,6 +322,17 @@ func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Error enabling/disabling service %s: %s", serviceName, err))
 			return
 		}
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Done after the base update so any default value the update payload
+	// carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": serviceName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Service.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset service attributes, got error: %s", err))
+		return
 	}
 
 	tflog.Trace(ctx, "Updated service resource")

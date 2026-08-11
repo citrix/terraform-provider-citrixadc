@@ -14,6 +14,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // RewriteactionResourceModel describes the resource data model.
 type RewriteactionResourceModel struct {
 	Id                types.String `tfsdk:"id"`
@@ -37,8 +64,14 @@ func (r *RewriteactionResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"comment": schema.StringAttribute{
 				// SDK v2: Optional+Computed, not ForceNew.
-				Optional:    true,
-				Computed:    true,
+				// unsetOnRemoveStringModifier makes config-removal plan the attr as
+				// Unknown so Update runs and the NITRO unset op fires, while allowing
+				// import to round-trip cleanly (no injected Default).
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Comment. Can be used to preserve information about this rewrite action.",
 			},
 			"name": schema.StringAttribute{
@@ -63,9 +96,15 @@ func (r *RewriteactionResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"refinesearch": schema.StringAttribute{
 				// SDK v2: Optional+Computed, not ForceNew.
-				Optional:    true,
-				Computed:    true,
-				Description: "Specify additional criteria to refine the results of the search. \nAlways starts with the \"extend(m,n)\" operation, where 'm' specifies number of bytes to the left of selected data and 'n' specifies number of bytes to the right of selected data to extend the selected area.\nYou can use refineSearch only on body expressions, and for the INSERT_BEFORE_ALL, INSERT_AFTER_ALL, REPLACE_ALL, and DELETE_ALL action types.\nExample: -refineSearch 'EXTEND(10, 20).REGEX_SELECT(re~0x[0-9a-zA-Z]+~).",
+				// unsetOnRemoveStringModifier makes config-removal plan the attr as
+				// Unknown so Update runs and the NITRO unset op fires, while allowing
+				// import to round-trip cleanly (no injected Default).
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
+				Description: "Specify additional criteria to refine the results of the search.\nAlways starts with the \"extend(m,n)\" operation, where 'm' specifies number of bytes to the left of selected data and 'n' specifies number of bytes to the right of selected data to extend the selected area.\nYou can use refineSearch only on body expressions, and for the INSERT_BEFORE_ALL, INSERT_AFTER_ALL, REPLACE_ALL, and DELETE_ALL action types.\nExample: -refineSearch 'EXTEND(10, 20).REGEX_SELECT(re~0x[0-9a-zA-Z]+~).",
 			},
 			"search": schema.StringAttribute{
 				// SDK v2: Optional+Computed, not ForceNew.

@@ -290,6 +290,93 @@ func TestAccResponderaction_import(t *testing.T) {
 	})
 }
 
+// The responderaction unset test uses type "redirect", the only type that
+// accepts comment, reasonphrase and responsestatuscode together (respondwith
+// rejects responsestatuscode/headers; reasonphrase has a min length of 1). Each
+// of these Optional+Computed attributes is wired for NITRO ?action=unset via an
+// unsetOnRemove plan modifier: removing it from config reverts it on the
+// appliance (GET no longer returns it).
+const testAccResponderaction_unset_step1 = `
+resource "citrixadc_responderaction" "tf_unset" {
+  name               = "tf_responderaction_unset"
+  type               = "redirect"
+  target             = "\"http://backupsite.com\" + HTTP.REQ.URL"
+  comment            = "unset test comment"
+  reasonphrase       = "\"Moved\""
+  responsestatuscode = 307
+}
+`
+
+const testAccResponderaction_unset_step2 = `
+resource "citrixadc_responderaction" "tf_unset" {
+  name   = "tf_responderaction_unset"
+  type   = "redirect"
+  target = "\"http://backupsite.com\" + HTTP.REQ.URL"
+  # comment, reasonphrase and responsestatuscode removed from config -> the
+  # provider must unset them (revert to NITRO defaults / absent).
+}
+`
+
+func TestAccResponderaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccResponderaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderactionExist("citrixadc_responderaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderaction.tf_unset", "comment", "unset test comment"),
+					resource.TestCheckResourceAttr("citrixadc_responderaction.tf_unset", "reasonphrase", "\"Moved\""),
+					resource.TestCheckResourceAttr("citrixadc_responderaction.tf_unset", "responsestatuscode", "307"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance no longer
+				// returns them, and the implicit post-apply plan must be empty.
+				Config: testAccResponderaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderactionExist("citrixadc_responderaction.tf_unset", nil),
+					// Independent appliance-level confirmation the unset took effect
+					// (unset reverts these to absent on the appliance).
+					testAccCheckResponderactionADCValue("tf_responderaction_unset", "comment", ""),
+					testAccCheckResponderactionADCValue("tf_responderaction_unset", "reasonphrase", ""),
+					testAccCheckResponderactionADCValue("tf_responderaction_unset", "responsestatuscode", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckResponderactionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. want "" means the attribute is expected to be absent/empty.
+func testAccCheckResponderactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Responderaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("responderaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("responderaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccResponderaction_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

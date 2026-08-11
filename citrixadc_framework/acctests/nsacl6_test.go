@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -249,6 +250,86 @@ func TestAccNsacl6_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The nsacl6 unset test covers the spec-unsettable, mutable attributes that
+// have a documented NITRO default: logstate (DISABLED) and stateful (NO).
+// srcmacmask is spec-unsettable too but requires srcMac as a prerequisite
+// (NITRO errorcode 1093), so it is excluded. ratelimit is excluded because it
+// requires logstate=ENABLED as a prerequisite (errorcode 1093) and is not an
+// unset target.
+const testAccNsacl6_unset_step1 = `
+	resource "citrixadc_nsacl6" "tf_nsacl6_unset" {
+		acl6name   = "tf_nsacl6_unset"
+		acl6action = "ALLOW"
+		logstate   = "ENABLED"
+		stateful   = "YES"
+	}
+`
+
+const testAccNsacl6_unset_step2 = `
+	resource "citrixadc_nsacl6" "tf_nsacl6_unset" {
+		acl6name   = "tf_nsacl6_unset"
+		acl6action = "ALLOW"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccNsacl6_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsacl6Destroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNsacl6_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsacl6Exist("citrixadc_nsacl6.tf_nsacl6_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsacl6.tf_nsacl6_unset", "logstate", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsacl6.tf_nsacl6_unset", "stateful", "YES"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNsacl6_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsacl6Exist("citrixadc_nsacl6.tf_nsacl6_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsacl6.tf_nsacl6_unset", "logstate", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsacl6.tf_nsacl6_unset", "stateful", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsacl6ADCValue("tf_nsacl6_unset", "logstate", "DISABLED"),
+					testAccCheckNsacl6ADCValue("tf_nsacl6_unset", "stateful", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsacl6ADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNsacl6ADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsacl6.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsacl6 %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nsacl6 %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNsacl6DataSource_basic(t *testing.T) {

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -201,6 +202,90 @@ func testAccCheckBotpolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+// The botpolicy unset test covers the mutable, spec-unsettable attributes
+// comment and undefaction. logaction is also wired for unset but requires a
+// pre-existing bot messagelog action to set to a non-default value, so it is not
+// exercised here. After unset, undefaction reverts to the NITRO default "None"
+// and comment reverts to absent (no value).
+const testAccBotpolicy_unset_step1 = `
+	resource citrixadc_botpolicy tfAcc_botpolicy_unset {
+		name        = "tfAcc_botpolicy_unset"
+		profilename = "BOT_BYPASS"
+		rule        = "true"
+		comment     = "UNSET PROBE COMMENT"
+		undefaction = "RESET"
+	}
+`
+
+const testAccBotpolicy_unset_step2 = `
+	resource citrixadc_botpolicy tfAcc_botpolicy_unset {
+		name        = "tfAcc_botpolicy_unset"
+		profilename = "BOT_BYPASS"
+		rule        = "true"
+		# comment and undefaction removed from config -> provider must unset them
+		# (revert to NITRO defaults).
+	}
+`
+
+func TestAccBotpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccBotpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotpolicyExist("citrixadc_botpolicy.tfAcc_botpolicy_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_botpolicy.tfAcc_botpolicy_unset", "comment", "UNSET PROBE COMMENT"),
+					resource.TestCheckResourceAttr("citrixadc_botpolicy.tfAcc_botpolicy_unset", "undefaction", "RESET"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to NITRO defaults and the implicit post-apply
+				// plan must be empty.
+				Config: testAccBotpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotpolicyExist("citrixadc_botpolicy.tfAcc_botpolicy_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_botpolicy.tfAcc_botpolicy_unset", "undefaction", "None"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckBotpolicyADCValue("tfAcc_botpolicy_unset", "undefaction", "None"),
+					testAccCheckBotpolicyADCValue("tfAcc_botpolicy_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckBotpolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. An empty want matches an absent attribute.
+func testAccCheckBotpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Botpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("botpolicy %s not found on appliance", name)
+		}
+		var got string
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("botpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccBotpolicyDataSource_basic(t *testing.T) {

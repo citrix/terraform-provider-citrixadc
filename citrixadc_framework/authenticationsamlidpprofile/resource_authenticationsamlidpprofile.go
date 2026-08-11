@@ -111,12 +111,14 @@ func (r *AuthenticationsamlidpprofileResource) Read(ctx context.Context, req res
 }
 
 func (r *AuthenticationsamlidpprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationsamlidpprofileResourceModel
+	var data, config, state AuthenticationsamlidpprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,6 +128,34 @@ func (r *AuthenticationsamlidpprofileResource) Update(ctx context.Context, req r
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating authenticationsamlidpprofile resource")
+
+	// Determine attributes that were removed from config so they can be unset
+	// (reverted to their NITRO defaults) on the appliance.
+	attributesToUnset := []string{}
+	if !data.Digestmethod.Equal(state.Digestmethod) && config.Digestmethod.IsNull() {
+		attributesToUnset = append(attributesToUnset, "digestmethod")
+	}
+	if !data.Logoutbinding.Equal(state.Logoutbinding) && config.Logoutbinding.IsNull() {
+		attributesToUnset = append(attributesToUnset, "logoutbinding")
+	}
+	if !data.Nameidformat.Equal(state.Nameidformat) && config.Nameidformat.IsNull() {
+		attributesToUnset = append(attributesToUnset, "nameidformat")
+	}
+	if !data.Rejectunsignedrequests.Equal(state.Rejectunsignedrequests) && config.Rejectunsignedrequests.IsNull() {
+		attributesToUnset = append(attributesToUnset, "rejectunsignedrequests")
+	}
+	if !data.Samlbinding.Equal(state.Samlbinding) && config.Samlbinding.IsNull() {
+		attributesToUnset = append(attributesToUnset, "samlbinding")
+	}
+	if !data.Signassertion.Equal(state.Signassertion) && config.Signassertion.IsNull() {
+		attributesToUnset = append(attributesToUnset, "signassertion")
+	}
+	if !data.Signaturealg.Equal(state.Signaturealg) && config.Signaturealg.IsNull() {
+		attributesToUnset = append(attributesToUnset, "signaturealg")
+	}
+	if !data.Skewtime.Equal(state.Skewtime) && config.Skewtime.IsNull() {
+		attributesToUnset = append(attributesToUnset, "skewtime")
+	}
 
 	// Build the payload from the plan and update the resource
 	authenticationsamlidpprofile := authenticationsamlidpprofileGetThePayloadFromtheConfig(ctx, &data)
@@ -140,6 +170,16 @@ func (r *AuthenticationsamlidpprofileResource) Update(ctx context.Context, req r
 	}
 
 	tflog.Trace(ctx, "Updated authenticationsamlidpprofile resource")
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationsamlidpprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationsamlidpprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readAuthenticationsamlidpprofileFromApi(ctx, &data, &resp.Diagnostics) {

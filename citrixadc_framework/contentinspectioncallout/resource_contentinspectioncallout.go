@@ -109,12 +109,14 @@ func (r *ContentinspectioncalloutResource) Read(ctx context.Context, req resourc
 }
 
 func (r *ContentinspectioncalloutResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ContentinspectioncalloutResourceModel
+	var data, config, state ContentinspectioncalloutResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,6 +129,7 @@ func (r *ContentinspectioncalloutResource) Update(ctx context.Context, req resou
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for contentinspectioncallout")
 		hasChange = true
@@ -153,7 +156,11 @@ func (r *ContentinspectioncalloutResource) Update(ctx context.Context, req resou
 	}
 	if !data.Serverport.Equal(state.Serverport) {
 		tflog.Debug(ctx, "serverport has changed for contentinspectioncallout")
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -170,6 +177,16 @@ func (r *ContentinspectioncalloutResource) Update(ctx context.Context, req resou
 		tflog.Trace(ctx, "Updated contentinspectioncallout resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for contentinspectioncallout resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Contentinspectioncallout.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset contentinspectioncallout attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -192,11 +193,15 @@ func TestAccVpntrafficaction_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{Config: testAccVpntrafficaction_add},
 			{
-				Config:                  testAccVpntrafficaction_add,
-				ResourceName:            resAddr,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				Config:            testAccVpntrafficaction_add,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// proxy, userexpression and passwdexpression carry an empty-string
+				// schema default so they can be unset. NITRO omits them from GET when
+				// empty, so a fresh import reads them back as null and they cannot
+				// round-trip through import verification.
+				ImportStateVerifyIgnore: []string{"proxy", "userexpression", "passwdexpression"},
 			},
 		},
 	})
@@ -221,6 +226,92 @@ func TestAccVpntrafficaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The vpntrafficaction unset test covers every attribute NITRO documents in its
+// unset payload (wanscaler, proxy, userexpression, passwdexpression).
+// step1 sets them to valid non-default values; step2 removes them from config so
+// the provider must unset them (revert to NITRO defaults).
+const testAccVpntrafficaction_unset_step1 = `
+
+	resource "citrixadc_vpntrafficaction" "tf_unset" {
+		name             = "tf_unset_action"
+		qual             = "http"
+		proxy            = "10.0.0.1:8080"
+		userexpression   = "http.req.header(\"username\")"
+		passwdexpression = "http.req.header(\"password\")"
+	}
+`
+
+const testAccVpntrafficaction_unset_step2 = `
+
+	resource "citrixadc_vpntrafficaction" "tf_unset" {
+		name = "tf_unset_action"
+		qual = "http"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccVpntrafficaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpntrafficactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVpntrafficaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpntrafficactionExist("citrixadc_vpntrafficaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpntrafficaction.tf_unset", "proxy", "10.0.0.1:8080"),
+					resource.TestCheckResourceAttr("citrixadc_vpntrafficaction.tf_unset", "userexpression", "http.req.header(\"username\")"),
+					resource.TestCheckResourceAttr("citrixadc_vpntrafficaction.tf_unset", "passwdexpression", "http.req.header(\"password\")"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccVpntrafficaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpntrafficactionExist("citrixadc_vpntrafficaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpntrafficaction.tf_unset", "proxy", ""),
+					resource.TestCheckResourceAttr("citrixadc_vpntrafficaction.tf_unset", "userexpression", ""),
+					resource.TestCheckResourceAttr("citrixadc_vpntrafficaction.tf_unset", "passwdexpression", ""),
+					// Independent appliance-level confirmation the unset took effect:
+					// NITRO omits these attributes from GET once reverted to their
+					// defaults, so the appliance no longer reports the non-default value.
+					testAccCheckVpntrafficactionADCValue("tf_unset_action", "proxy", "<nil>"),
+					testAccCheckVpntrafficactionADCValue("tf_unset_action", "userexpression", "<nil>"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVpntrafficactionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckVpntrafficactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpntrafficaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vpntrafficaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vpntrafficaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccVpntrafficactionDataSource_basic(t *testing.T) {

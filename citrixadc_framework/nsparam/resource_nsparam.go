@@ -110,12 +110,14 @@ func (r *NsparamResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *NsparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsparamResourceModel
+	var data, config, state NsparamResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,6 +127,45 @@ func (r *NsparamResource) Update(ctx context.Context, req resource.UpdateRequest
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating nsparam resource")
+
+	// Detect attributes that were removed from config (config null but the value
+	// changed from prior state). Each such attribute is reverted to its NITRO
+	// default via ?action=unset. Attributes carry a schema Default equal to the
+	// server default, so removal produces a plan diff that reaches this Update.
+	attributesToUnset := []string{}
+	if !data.Advancedanalyticsstats.Equal(state.Advancedanalyticsstats) && config.Advancedanalyticsstats.IsNull() {
+		attributesToUnset = append(attributesToUnset, "advancedanalyticsstats")
+	}
+	if !data.Aftpallowrandomsourceport.Equal(state.Aftpallowrandomsourceport) && config.Aftpallowrandomsourceport.IsNull() {
+		attributesToUnset = append(attributesToUnset, "aftpallowrandomsourceport")
+	}
+	if !data.Securecookie.Equal(state.Securecookie) && config.Securecookie.IsNull() {
+		attributesToUnset = append(attributesToUnset, "securecookie")
+	}
+	if !data.Tcpcip.Equal(state.Tcpcip) && config.Tcpcip.IsNull() {
+		attributesToUnset = append(attributesToUnset, "tcpcip")
+	}
+	if !data.Proxyprotocol.Equal(state.Proxyprotocol) && config.Proxyprotocol.IsNull() {
+		attributesToUnset = append(attributesToUnset, "proxyprotocol")
+	}
+	if !data.Pmtumin.Equal(state.Pmtumin) && config.Pmtumin.IsNull() {
+		attributesToUnset = append(attributesToUnset, "pmtumin")
+	}
+	if !data.Pmtutimeout.Equal(state.Pmtutimeout) && config.Pmtutimeout.IsNull() {
+		attributesToUnset = append(attributesToUnset, "pmtutimeout")
+	}
+	if !data.Grantquotamaxclient.Equal(state.Grantquotamaxclient) && config.Grantquotamaxclient.IsNull() {
+		attributesToUnset = append(attributesToUnset, "grantquotamaxclient")
+	}
+	if !data.Exclusivequotamaxclient.Equal(state.Exclusivequotamaxclient) && config.Exclusivequotamaxclient.IsNull() {
+		attributesToUnset = append(attributesToUnset, "exclusivequotamaxclient")
+	}
+	if !data.Grantquotaspillover.Equal(state.Grantquotaspillover) && config.Grantquotaspillover.IsNull() {
+		attributesToUnset = append(attributesToUnset, "grantquotaspillover")
+	}
+	if !data.Exclusivequotaspillover.Equal(state.Exclusivequotaspillover) && config.Exclusivequotaspillover.IsNull() {
+		attributesToUnset = append(attributesToUnset, "exclusivequotaspillover")
+	}
 
 	// NOTE: In SDK v2 every attribute was ForceNew, so this Update path is only
 	// reached for non-force-new changes. It re-pushes the configured attributes to
@@ -139,6 +180,16 @@ func (r *NsparamResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	tflog.Trace(ctx, "Updated nsparam resource")
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. Done after the update so any default value the update
+	// payload carried is superseded by the unset. nsparam is a singleton, so the
+	// id payload is empty.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nsparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readNsparamFromApi(ctx, &data, &resp.Diagnostics) {

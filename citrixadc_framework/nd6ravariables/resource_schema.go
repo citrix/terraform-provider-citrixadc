@@ -8,6 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -44,66 +46,79 @@ func (r *Nd6ravariablesResource) Schema(ctx context.Context, req resource.Schema
 			"ceaserouteradv": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Cease router advertisements on this vlan.",
 			},
 			"currhoplimit": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(64),
 				Description: "Current Hop limit.",
 			},
 			"defaultlifetime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1800),
 				Description: "Default life time, in seconds.",
 			},
 			"linkmtu": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "The Link MTU.",
 			},
 			"managedaddrconfig": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Value to be placed in the Managed address configuration flag field.",
 			},
 			"maxrtadvinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(600),
 				Description: "Maximum time allowed between unsolicited multicast RAs, in seconds.",
 			},
 			"minrtadvinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(198),
 				Description: "Minimum time interval between RA messages, in seconds.",
 			},
 			"onlyunicastrtadvresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Send only Unicast Router Advertisements in respond to Router Solicitations.",
 			},
 			"otheraddrconfig": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Value to be placed in the Other configuration flag field.",
 			},
 			"reachabletime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Reachable time, in milliseconds.",
 			},
 			"retranstime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Retransmission time, in milliseconds.",
 			},
 			"sendrouteradv": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "whether the router sends periodic RAs and responds to Router Solicitations.",
 			},
 			"srclinklayeraddroption": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Include source link layer address option in RA messages.",
 			},
 			"vlan": schema.Int64Attribute{

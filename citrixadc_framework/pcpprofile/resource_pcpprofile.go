@@ -110,12 +110,14 @@ func (r *PcpprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *PcpprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state PcpprofileResourceModel
+	var data, config, state PcpprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,29 +130,54 @@ func (r *PcpprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Announcemulticount.Equal(state.Announcemulticount) {
 		tflog.Debug(ctx, "announcemulticount has changed for pcpprofile")
-		hasChange = true
+		if config.Announcemulticount.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "announcemulticount")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Mapping.Equal(state.Mapping) {
 		tflog.Debug(ctx, "mapping has changed for pcpprofile")
-		hasChange = true
+		if config.Mapping.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "mapping")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxmaplife.Equal(state.Maxmaplife) {
 		tflog.Debug(ctx, "maxmaplife has changed for pcpprofile")
-		hasChange = true
+		if config.Maxmaplife.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxmaplife")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Minmaplife.Equal(state.Minmaplife) {
 		tflog.Debug(ctx, "minmaplife has changed for pcpprofile")
-		hasChange = true
+		if config.Minmaplife.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "minmaplife")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Peer.Equal(state.Peer) {
 		tflog.Debug(ctx, "peer has changed for pcpprofile")
-		hasChange = true
+		if config.Peer.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "peer")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Thirdparty.Equal(state.Thirdparty) {
 		tflog.Debug(ctx, "thirdparty has changed for pcpprofile")
-		hasChange = true
+		if config.Thirdparty.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "thirdparty")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -168,6 +195,17 @@ func (r *PcpprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated pcpprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for pcpprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Pcpprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset pcpprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

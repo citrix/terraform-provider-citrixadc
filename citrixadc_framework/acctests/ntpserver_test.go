@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -296,6 +297,94 @@ func TestAccNtpserver_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccNtpserver_unset_step1 sets the unset-eligible attributes to valid
+// NON-default values; step2 removes them so the provider must unset them,
+// reverting to the NITRO defaults (minpoll=6, maxpoll=10,
+// preferredntpserver=NO, autokey=false).
+const testAccNtpserver_unset_step1 = `
+resource "citrixadc_ntpserver" "tf_unset" {
+	serverip           = "10.222.74.201"
+	minpoll            = 5
+	maxpoll            = 11
+	preferredntpserver = "YES"
+	autokey            = true
+}
+`
+
+const testAccNtpserver_unset_step2 = `
+resource "citrixadc_ntpserver" "tf_unset" {
+	serverip = "10.222.74.201"
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccNtpserver_unset(t *testing.T) {
+	const resAddr = "citrixadc_ntpserver.tf_unset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNtpserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNtpserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNtpserverExist(resAddr, nil),
+					resource.TestCheckResourceAttr(resAddr, "minpoll", "5"),
+					resource.TestCheckResourceAttr(resAddr, "maxpoll", "11"),
+					resource.TestCheckResourceAttr(resAddr, "preferredntpserver", "YES"),
+					resource.TestCheckResourceAttr(resAddr, "autokey", "true"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the NITRO defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccNtpserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNtpserverExist(resAddr, nil),
+					resource.TestCheckResourceAttr(resAddr, "minpoll", "6"),
+					resource.TestCheckResourceAttr(resAddr, "maxpoll", "10"),
+					resource.TestCheckResourceAttr(resAddr, "preferredntpserver", "NO"),
+					resource.TestCheckResourceAttr(resAddr, "autokey", "false"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNtpserverADCValue("10.222.74.201", "minpoll", "6"),
+					testAccCheckNtpserverADCValue("10.222.74.201", "maxpoll", "10"),
+					testAccCheckNtpserverADCValue("10.222.74.201", "preferredntpserver", "NO"),
+					testAccCheckNtpserverADCValue("10.222.74.201", "autokey", "false"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNtpserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. The identifier matches either serverip or servername.
+func testAccCheckNtpserverADCValue(identifier, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Ntpserver.Type())
+		if err != nil {
+			return err
+		}
+		for _, v := range dataArr {
+			if v["serverip"] == identifier || v["servername"] == identifier {
+				got := strings.TrimSpace(fmt.Sprintf("%v", v[attr]))
+				if got != want {
+					return fmt.Errorf("ntpserver %s: appliance attr %q = %q, want %q (unset did not revert it)", identifier, attr, got, want)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("ntpserver %s not found on appliance", identifier)
+	}
 }
 
 const testAccNtpserverDataSource_basic = `

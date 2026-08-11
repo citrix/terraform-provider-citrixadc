@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -165,6 +167,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"attributeconsumingserviceindex": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(255),
 				Description: "Index/ID of the attribute specification at Identity Provider (IdP). IdP will locate attributes requested by SP using this index and send those attributes in Assertion",
 			},
 			"attributes": schema.StringAttribute{
@@ -196,16 +199,19 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"digestmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("SHA256"),
 				Description: "Algorithm to be used to compute/verify digest for SAML transactions",
 			},
 			"enforceusername": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Option to choose whether the username that is extracted from SAML assertion can be edited in login page while doing second factor",
 			},
 			"forceauthn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option that forces authentication at the Identity Provider (IdP) that receives Citrix ADC's request",
 			},
 			"groupnamefield": schema.StringAttribute{
@@ -216,6 +222,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"logoutbinding": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("POST"),
 				Description: "This element specifies the transport mechanism of saml logout messages.",
 			},
 			"logouturl": schema.StringAttribute{
@@ -254,16 +261,19 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"requestedauthncontext": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("exact"),
 				Description: "This element specifies the authentication context requirements of authentication statements returned in the response.",
 			},
 			"samlacsindex": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(255),
 				Description: "Index/ID of the metadata entry corresponding to this configuration.",
 			},
 			"samlbinding": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("POST"),
 				Description: "This element specifies the transport mechanism of saml messages.",
 			},
 			"samlidpcertname": schema.StringAttribute{
@@ -284,6 +294,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"samlrejectunsignedassertion": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Reject unsigned SAML assertions. ON option results in rejection of Assertion that is received without signature. STRICT option ensures that both Response and Assertion are signed.",
 			},
 			"samlsigningcertname": schema.StringAttribute{
@@ -294,6 +305,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"samltwofactor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to enable second factor after SAML",
 			},
 			"samluserfield": schema.StringAttribute{
@@ -304,16 +316,19 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"sendthumbprint": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to send thumbprint instead of x509 certificate in SAML request",
 			},
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("RSA-SHA256"),
 				Description: "Algorithm to be used to sign/verify SAML transactions",
 			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "This option specifies the allowed clock skew in number of minutes that Citrix ADC ServiceProvider allows on an incoming assertion. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
 			"statechecks": schema.StringAttribute{
@@ -324,6 +339,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"storesamlresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to store entire SAML Response through the life of user session.",
 			},
 		},

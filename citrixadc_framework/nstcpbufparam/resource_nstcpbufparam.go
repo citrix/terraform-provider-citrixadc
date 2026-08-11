@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -117,17 +118,48 @@ func (r *NstcpbufparamResource) Update(ctx context.Context, req resource.UpdateR
 
 	tflog.Debug(ctx, "Updating nstcpbufparam resource")
 
-	// Create API request body from configured values (mirrors SDK v2 d.GetRawConfig()).
-	nstcpbufparam := nstcpbufparamGetThePayloadFromtheConfig(ctx, &config)
-
-	// Singleton resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Nstcpbufparam.Type(), &nstcpbufparam)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstcpbufparam, got error: %s", err))
-		return
+	// Determine changed attributes and which were removed from config (unset).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Memlimit.Equal(state.Memlimit) {
+		tflog.Debug(ctx, "memlimit has changed for nstcpbufparam")
+		if config.Memlimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "memlimit")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Size.Equal(state.Size) {
+		tflog.Debug(ctx, "size has changed for nstcpbufparam")
+		if config.Size.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "size")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated nstcpbufparam resource")
+	if hasChange {
+		// Create API request body from configured values (mirrors SDK v2 d.GetRawConfig()).
+		nstcpbufparam := nstcpbufparamGetThePayloadFromtheConfig(ctx, &config)
+
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Nstcpbufparam.Type(), &nstcpbufparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstcpbufparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nstcpbufparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nstcpbufparam resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nstcpbufparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nstcpbufparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNstcpbufparamFromApi(ctx, &data, &resp.Diagnostics)

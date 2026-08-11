@@ -109,12 +109,14 @@ func (r *SsllogprofileResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *SsllogprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SsllogprofileResourceModel
+	var data, config, state SsllogprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,21 +130,38 @@ func (r *SsllogprofileResource) Update(ctx context.Context, req resource.UpdateR
 	// Check if there are any changes in updateable attributes
 	// (name is ForceNew/RequiresReplace and never reaches Update)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Ssllogclauth.Equal(state.Ssllogclauth) {
 		tflog.Debug(ctx, "ssllogclauth has changed for ssllogprofile")
-		hasChange = true
+		if config.Ssllogclauth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssllogclauth")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssllogclauthfailures.Equal(state.Ssllogclauthfailures) {
 		tflog.Debug(ctx, "ssllogclauthfailures has changed for ssllogprofile")
-		hasChange = true
+		if config.Ssllogclauthfailures.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssllogclauthfailures")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sslloghs.Equal(state.Sslloghs) {
 		tflog.Debug(ctx, "sslloghs has changed for ssllogprofile")
-		hasChange = true
+		if config.Sslloghs.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslloghs")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sslloghsfailures.Equal(state.Sslloghsfailures) {
 		tflog.Debug(ctx, "sslloghsfailures has changed for ssllogprofile")
-		hasChange = true
+		if config.Sslloghsfailures.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslloghsfailures")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -159,6 +178,16 @@ func (r *SsllogprofileResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated ssllogprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for ssllogprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Ssllogprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ssllogprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

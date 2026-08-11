@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -47,30 +49,43 @@ func (r *DnsactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The type of DNS action that is being configured.",
 			},
 			"dnsprofilename": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Name of the DNS profile to be associated with the transaction for which the action is chosen",
 			},
 			"ipaddress": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				Description: "List of IP address to be returned in case of rewrite_response actiontype. They can be of IPV4 or IPV6 type.\n        In case of set command We will remove all the IP address previously present in the action and will add new once given in set dns action command.",
 			},
 			"preferredloclist": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The location list in priority order used for the given action.",
 			},
 			"ttl": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3600),
 				Description: "Time to live, in seconds.",
 			},
 			"viewname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "The view name that must be used for the given action.",
 			},
 		},

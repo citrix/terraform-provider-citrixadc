@@ -8,7 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -57,6 +59,7 @@ func (r *TmformssoactionResource) Schema(ctx context.Context, req resource.Schem
 			"nvtype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DYNAMIC"),
 				Description: "Type of processing of the name-value pair. If you specify STATIC, the values configured by the administrator are used. For DYNAMIC, the response is parsed, and the form is extracted and then submitted.",
 			},
 			"passwdfield": schema.StringAttribute{
@@ -66,6 +69,7 @@ func (r *TmformssoactionResource) Schema(ctx context.Context, req resource.Schem
 			"responsesize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(8096),
 				Description: "Number of bytes, in the response, to parse for extracting the forms.",
 			},
 			"ssosuccessrule": schema.StringAttribute{
@@ -75,6 +79,7 @@ func (r *TmformssoactionResource) Schema(ctx context.Context, req resource.Schem
 			"submitmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("GET"),
 				Description: "HTTP method used by the single sign-on form to send the logon credentials to the logon server. Applies only to STATIC name-value type.",
 			},
 			"userfield": schema.StringAttribute{

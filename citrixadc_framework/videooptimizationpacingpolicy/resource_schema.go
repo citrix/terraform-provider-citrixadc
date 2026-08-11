@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -38,13 +39,19 @@ func (r *VideooptimizationpacingpolicyResource) Schema(ctx context.Context, req 
 				Description: "Name of the videooptimization pacing action to perform if the request matches this videooptimization pacing policy.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Default "" makes config-removal produce a plan diff so Update runs
+				// and the attribute can be unset (reverted to the NITRO default of empty).
+				Default:     stringdefault.StaticString(""),
 				Description: "Any type of information about this videooptimization pacing policy.",
 			},
 			"logaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Default "" makes config-removal produce a plan diff so Update runs
+				// and the attribute can be unset (reverted to the NITRO default of empty).
+				Default:     stringdefault.StaticString(""),
 				Description: "Name of the messagelog action to use for requests that match this policy.",
 			},
 			// SDK v2 had name as Required + ForceNew -> RequiresReplace for backward compatibility.
@@ -112,15 +119,18 @@ func videooptimizationpacingpolicySetAttrFromGet(ctx context.Context, data *Vide
 	} else {
 		data.Action = types.StringNull()
 	}
+	// comment/logaction have a schema Default of "" (empty). NITRO omits them from
+	// GET once unset, so coalesce absence to "" to match the Default and avoid a
+	// "provider produced inconsistent result after apply" after an unset.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		data.Comment = types.StringValue("")
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))
 	} else {
-		data.Logaction = types.StringNull()
+		data.Logaction = types.StringValue("")
 	}
 	// name: preserve the user-configured value; only adopt it from GET when unset
 	// (import case, where state carries only the ID). This avoids clobbering the

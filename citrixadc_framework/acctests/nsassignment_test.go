@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -239,6 +240,104 @@ func TestAccNsassignment_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The nsassignment unset test covers the only spec-unsettable mutable
+// attribute: comment. Step 1 sets it to a non-default value; step 2 removes it
+// from config so the provider must issue a NITRO unset (reverting to the empty
+// default).
+const testAccNsassignment_unset_step1 = `
+	resource "citrixadc_nsvariable" "tf_nsvariable" {
+		name          = "tf_nsvariable"
+		type          = "text(20)"
+		scope         = "global"
+		iffull        = "undef"
+		ifvaluetoobig = "undef"
+		ifnovalue     = "init"
+		comment       = "Testing"
+	}
+	resource "citrixadc_nsassignment" "tf_unset" {
+		name     = "tf_test_nsassignment_unset"
+		variable = join("", ["$", citrixadc_nsvariable.tf_nsvariable.name])
+		set      = "1"
+		comment  = "unset_me"
+	}
+`
+
+const testAccNsassignment_unset_step2 = `
+	resource "citrixadc_nsvariable" "tf_nsvariable" {
+		name          = "tf_nsvariable"
+		type          = "text(20)"
+		scope         = "global"
+		iffull        = "undef"
+		ifvaluetoobig = "undef"
+		ifnovalue     = "init"
+		comment       = "Testing"
+	}
+	resource "citrixadc_nsassignment" "tf_unset" {
+		name     = "tf_test_nsassignment_unset"
+		variable = join("", ["$", citrixadc_nsvariable.tf_nsvariable.name])
+		set      = "1"
+		# comment removed from config -> the provider must unset it.
+	}
+`
+
+func TestAccNsassignment_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsassignmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccNsassignment_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsassignmentExist("citrixadc_nsassignment.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsassignment.tf_unset", "comment", "unset_me"),
+				),
+			},
+			{
+				// Removing comment must unset it: state reverts to the NITRO
+				// default (empty), the implicit post-apply plan must be empty,
+				// and the appliance confirms the revert.
+				Config: testAccNsassignment_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsassignmentExist("citrixadc_nsassignment.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsassignment.tf_unset", "comment", ""),
+					testAccCheckNsassignmentADCValue("tf_test_nsassignment_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsassignmentADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckNsassignmentADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsassignment.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsassignment %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		// NITRO omits an empty/default string attribute from GET, so a reverted
+		// value comes back as a missing key (nil) -> treat that as empty.
+		if _, present := data[attr]; !present || got == "<nil>" {
+			got = ""
+		}
+		if got != want {
+			return fmt.Errorf("nsassignment %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNsassignmentDataSource_basic(t *testing.T) {

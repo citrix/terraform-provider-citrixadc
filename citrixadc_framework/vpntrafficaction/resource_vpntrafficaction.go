@@ -109,12 +109,14 @@ func (r *VpntrafficactionResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *VpntrafficactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpntrafficactionResourceModel
+	var data, config, state VpntrafficactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,6 +129,7 @@ func (r *VpntrafficactionResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Apptimeout.Equal(state.Apptimeout) {
 		tflog.Debug(ctx, "apptimeout has changed for vpntrafficaction")
 		hasChange = true
@@ -149,11 +152,19 @@ func (r *VpntrafficactionResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Passwdexpression.Equal(state.Passwdexpression) {
 		tflog.Debug(ctx, "passwdexpression has changed for vpntrafficaction")
-		hasChange = true
+		if config.Passwdexpression.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "passwdexpression")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Proxy.Equal(state.Proxy) {
 		tflog.Debug(ctx, "proxy has changed for vpntrafficaction")
-		hasChange = true
+		if config.Proxy.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proxy")
+		} else {
+			hasChange = true
+		}
 	}
 	// qual is is_updateable:false (RequiresReplace) - a change to it forces
 	// recreation and never reaches Update, so it is not checked here.
@@ -167,7 +178,11 @@ func (r *VpntrafficactionResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Userexpression.Equal(state.Userexpression) {
 		tflog.Debug(ctx, "userexpression has changed for vpntrafficaction")
-		hasChange = true
+		if config.Userexpression.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "userexpression")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Wanscaler.Equal(state.Wanscaler) {
 		tflog.Debug(ctx, "wanscaler has changed for vpntrafficaction")
@@ -188,6 +203,17 @@ func (r *VpntrafficactionResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated vpntrafficaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for vpntrafficaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpntrafficaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpntrafficaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

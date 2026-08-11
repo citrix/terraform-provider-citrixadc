@@ -149,12 +149,14 @@ func (r *CspolicyResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *CspolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state CspolicyResourceModel
+	var data, config, state CspolicyResourceModel
 
 	// Read Terraform prior state (for change detection and the live name/ID).
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -184,6 +186,7 @@ func (r *CspolicyResource) Update(ctx context.Context, req resource.UpdateReques
 	// Detect changes on the updateable NITRO attributes.
 	cspolicy := cs.Cspolicy{Policyname: liveName}
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for cspolicy")
 		cspolicy.Action = data.Action.ValueString()
@@ -191,8 +194,12 @@ func (r *CspolicyResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for cspolicy")
-		cspolicy.Logaction = data.Logaction.ValueString()
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			cspolicy.Logaction = data.Logaction.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for cspolicy")
@@ -220,6 +227,16 @@ func (r *CspolicyResource) Update(ctx context.Context, req resource.UpdateReques
 			return
 		}
 		tflog.Trace(ctx, "Updated cspolicy resource")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Target the live policy name (post-rename aware) via liveName.
+	unsetIdPayload := map[string]interface{}{
+		"policyname": liveName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Cspolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset cspolicy attributes, got error: %s", err))
+		return
 	}
 
 	if csvserverSet && (priorityChanged || lbvserverChanged) {

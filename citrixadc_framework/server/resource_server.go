@@ -121,12 +121,14 @@ func (r *ServerResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *ServerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ServerResourceModel
+	var data, config, state ServerResourceModel
 
 	// Read Terraform prior state to preserve ID / live name
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -146,10 +148,15 @@ func (r *ServerResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 	hasChange := false
 	stateChange := false
+	attributesToUnset := []string{}
 
 	if !data.Comment.Equal(state.Comment) {
-		server.Comment = data.Comment.ValueString()
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			server.Comment = data.Comment.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Domainresolvenow.Equal(state.Domainresolvenow) {
 		server.Domainresolvenow = data.Domainresolvenow.ValueBool()
@@ -197,8 +204,18 @@ func (r *ServerResource) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 	}
-	if !hasChange && !stateChange {
+	if !hasChange && !stateChange && len(attributesToUnset) == 0 {
 		tflog.Debug(ctx, "No changes detected for server resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": serverName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Server.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset server attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

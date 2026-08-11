@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -121,6 +122,7 @@ func (r *GslbvserverResource) Schema(ctx context.Context, req resource.SchemaReq
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging appflow flow information",
 			},
 			"backupip": schema.StringAttribute{
@@ -151,6 +153,7 @@ func (r *GslbvserverResource) Schema(ctx context.Context, req resource.SchemaReq
 			"considereffectivestate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "If the primary state of all bound GSLB services is DOWN, consider the effective states of all the GSLB services, obtained through the Metrics Exchange Protocol (MEP), when determining the state of the GSLB virtual server. To consider the effective state, set the parameter to STATE_ONLY. To disregard the effective state, set the parameter to NONE.\n\nThe effective state of a GSLB service is the ability of the corresponding virtual server to serve traffic. The effective state of the load balancing virtual server, which is transferred to the GSLB service, is UP even if only one virtual server in the backup chain of virtual servers is in the UP state.",
 			},
 			"cookie_domain": schema.StringAttribute{
@@ -166,11 +169,13 @@ func (r *GslbvserverResource) Schema(ctx context.Context, req resource.SchemaReq
 			"disableprimaryondown": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Continue to direct traffic to the backup chain even after the primary GSLB virtual server returns to the UP state. Used when spillover is configured for the virtual server.",
 			},
 			"dnsrecordtype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("A"),
 				Description: "DNS record type to associate with the GSLB virtual server's domain name.",
 			},
 			"domainname": schema.StringAttribute{
@@ -186,16 +191,19 @@ func (r *GslbvserverResource) Schema(ctx context.Context, req resource.SchemaReq
 			"ecs": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "If enabled, respond with EDNS Client Subnet (ECS) option in the response for a DNS query with ECS. The ECS address will be used for persistence and spillover persistence (if enabled) instead of the LDNS address. Persistence mask is ignored if ECS is enabled.",
 			},
 			"ecsaddrvalidation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Validate if ECS address is a private or unroutable address and in such cases, use the LDNS IP.",
 			},
 			"edr": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send clients an empty DNS response when the GSLB virtual server is DOWN.",
 			},
 			"iptype": schema.StringAttribute{
@@ -206,6 +214,7 @@ func (r *GslbvserverResource) Schema(ctx context.Context, req resource.SchemaReq
 			"lbmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("LEASTCONNECTION"),
 				Description: "Load balancing method for the GSLB virtual server.",
 			},
 			"mir": schema.StringAttribute{
@@ -322,6 +331,7 @@ func (r *GslbvserverResource) Schema(ctx context.Context, req resource.SchemaReq
 			"toggleorder": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ASCENDING"),
 				Description: "Configure this option to toggle order preference",
 			},
 			"tolerance": schema.Int64Attribute{

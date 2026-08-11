@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -73,6 +74,7 @@ func (r *NsipResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"arp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Respond to ARP requests for this IP address.",
 			},
 			"arpowner": schema.Int64Attribute{
@@ -83,6 +85,7 @@ func (r *NsipResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"arpresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Respond to ARP requests for a Virtual IP (VIP) address on the basis of the states of the virtual servers associated with that VIP.",
 			},
 			"bgp": schema.StringAttribute{
@@ -93,6 +96,7 @@ func (r *NsipResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"decrementttl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Decrement TTL by 1 when ENABLED.This setting is applicable only for UDP traffic.",
 			},
 			"dynamicrouting": schema.StringAttribute{
@@ -128,6 +132,7 @@ func (r *NsipResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"icmpresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Respond to ICMP requests for a Virtual IP (VIP) address on the basis of the states of the virtual servers associated with that VIP.",
 			},
 			"ipaddress": schema.StringAttribute{
@@ -150,6 +155,7 @@ func (r *NsipResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"mptcpadvertise": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "If enabled, this IP will be advertised by Citrix ADC to MPTCP enabled clients as part of ADD_ADDR option.",
 			},
 			"netmask": schema.StringAttribute{

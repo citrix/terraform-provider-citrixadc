@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -54,11 +56,13 @@ func (r *VpnformssoactionResource) Schema(ctx context.Context, req resource.Sche
 			"namevaluepair": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Other name-value pair attributes to send to the server, in addition to sending the user name and password. Value names are separated by an ampersand (&), such as in name1=value1&name2=value2.",
 			},
 			"nvtype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DYNAMIC"),
 				Description: "How to process the name-value pair. Available settings function as follows:\n* STATIC - The administrator-configured values are used.\n* DYNAMIC - The response is parsed, the form is extracted, and then submitted.",
 			},
 			"passwdfield": schema.StringAttribute{
@@ -71,6 +75,7 @@ func (r *VpnformssoactionResource) Schema(ctx context.Context, req resource.Sche
 			"responsesize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(8096),
 				Description: "Maximum number of bytes to allow in the response size. Specifies the number of bytes in the response to be parsed for extracting the forms.",
 			},
 			"ssosuccessrule": schema.StringAttribute{
@@ -83,6 +88,7 @@ func (r *VpnformssoactionResource) Schema(ctx context.Context, req resource.Sche
 			"submitmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("GET"),
 				Description: "HTTP method (GET or POST) used by the single sign-on form to send the logon credentials to the logon server.",
 			},
 			"userfield": schema.StringAttribute{

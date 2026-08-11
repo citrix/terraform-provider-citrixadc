@@ -8,6 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -15,6 +18,33 @@ import (
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
 
 // FeoactionResourceModel describes the resource data model.
 type FeoactionResourceModel struct {
@@ -53,109 +83,136 @@ func (r *FeoactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the feoaction resource.",
 			},
 			"cachemaxage": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 				Description: "Maxage for cache extension.",
 			},
 			"clientsidemeasurements": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Send AppFlow records about the web pages optimized by this action. The records provide FEO statistics, such as the number of HTTP requests that have been reduced for this page. You must enable the Appflow feature before enabling this parameter.",
 			},
 			"convertimporttolink": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Convert CSS import statements to HTML link tags.",
 			},
 			"csscombine": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Combine one or more CSS files into one file.",
 			},
 			"cssimginline": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Inline small images (less than 2KB) referred within CSS files as background-URLs",
 			},
 			"cssinline": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Inline CSS files, whose size is less than 2KB, within the main page.",
 			},
 			"cssminify": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Remove comments and whitespaces from CSSs.",
 			},
 			"cssmovetohead": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Move any CSS file present within the body tag of an HTML page to the head tag.",
 			},
 			"dnsshards": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Set of domain names that replaces the parent domain.",
 			},
 			"domainsharding": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Domain name of the server",
 			},
 			"htmlminify": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Remove comments and whitespaces from an HTML page.",
 			},
 			"imggiftopng": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Convert GIF image formats to PNG formats.",
 			},
 			"imginline": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Inline images whose size is less than 2KB.",
 			},
 			"imglazyload": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Download images, only when the user scrolls the page to view them.",
 			},
 			"imgshrinktoattrib": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Shrink image dimensions as per the height and width attributes specified in the <img> tag.",
 			},
 			"imgtojpegxr": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Convert JPEG, GIF, PNG image formats to JXR format.",
 			},
 			"imgtowebp": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Convert JPEG, GIF, PNG image formats to WEBP format.",
 			},
 			"jpgoptimize": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Remove non-image data such as comments from JPEG images.",
 			},
 			"jsinline": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Convert linked JavaScript files (less than 2KB) to inline JavaScript files.",
 			},
 			"jsminify": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Remove comments and whitespaces from JavaScript.",
 			},
 			"jsmovetoend": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Move any JavaScript present in the body tag to the end of the body tag.",
 			},
 			"name": schema.StringAttribute{
@@ -168,6 +225,7 @@ func (r *FeoactionResource) Schema(ctx context.Context, req resource.SchemaReque
 			"pageextendcache": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 				Description: "Extend the time period during which the browser can use the cached resource.",
 			},
 		},

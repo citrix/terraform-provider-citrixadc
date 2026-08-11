@@ -14,6 +14,48 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier makes an Optional+Computed attribute unset-managed
+// without ever putting an invalid value into the add/update payload and without
+// causing a perpetual diff.
+//
+//   - config supplied            -> use the config value (no-op here).
+//   - no prior state (create)    -> leave planned value unknown so the payload
+//     builder skips it (the appliance applies its own default).
+//   - removed from config, prior state already the server default -> keep the
+//     prior state so there is no diff and no repeated unset.
+//   - removed from config, prior state a non-default value -> force the planned
+//     value unknown. That both (a) makes Terraform detect a change so Update runs
+//     the NITRO ?action=unset, and (b) keeps the value out of the update payload
+//     (the payload builder skips unknown), which matters here because the
+//     server-default values ("Use Global" / "None") are NOT valid inputs to add
+//     or update and would be rejected with errorcode 2818.
+type unsetOnRemoveStringModifier struct{ defaultValue string }
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Unset-manages the attribute on config removal without emitting an invalid payload value or a perpetual diff."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if !req.ConfigValue.IsNull() {
+		return
+	}
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.StateValue.ValueString() == m.defaultValue {
+		// Already at the server default: keep it stable, no diff, no re-unset.
+		resp.PlanValue = req.StateValue
+		return
+	}
+	// A previously-set, non-default value was removed: force a change so Update
+	// issues the unset, and keep the (invalid-as-input) default out of the payload.
+	resp.PlanValue = types.StringUnknown()
+}
+
 // RewritepolicyGlobalbindingModel is one element of the globalbinding set.
 type RewritepolicyGlobalbindingModel struct {
 	Globalbindtype         types.String `tfsdk:"globalbindtype"`
@@ -111,13 +153,24 @@ func (r *RewritepolicyResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Name of the rewrite action to perform if the request or response matches this rewrite policy.\nThere are also some built-in actions which can be used. These are:\n* NOREWRITE - Send the request from the client to the server or response from the server to the client without making any changes in the message.\n* RESET - Resets the client connection by closing it. The client program, such as a browser, will handle this and may inform the user. The client may then resend the request if desired.\n* DROP - Drop the request without sending a response to the user.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					// comment has no valid NITRO unset default that reads back
+					// stably, so it is not unset-managed. Carry the prior state
+					// forward when omitted instead of flipping to unknown, which
+					// would otherwise force a spurious update carrying invalid
+					// default values for the unset-managed attributes.
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Any comments to preserve information about this rewrite policy.",
 			},
 			"logaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{defaultValue: "None"},
+				},
 				Description: "Name of messagelog action to use when a request matches this policy.",
 			},
 			"name": schema.StringAttribute{
@@ -134,8 +187,11 @@ func (r *RewritepolicyResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Expression against which traffic is evaluated.\n\nThe following requirements apply only to the Citrix ADC CLI:\n* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.\n* If the expression itself includes double quotation marks, escape the quotations by using the \\ character. \n* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.",
 			},
 			"undefaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{defaultValue: "Use Global"},
+				},
 				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.",
 			},
 		},

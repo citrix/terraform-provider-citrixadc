@@ -110,12 +110,14 @@ func (r *PcpserverResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *PcpserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state PcpserverResourceModel
+	var data, config, state PcpserverResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,13 +131,18 @@ func (r *PcpserverResource) Update(ctx context.Context, req resource.UpdateReque
 	// Check if there are any changes in updateable attributes
 	// (ipaddress and name are RequiresReplace and never reach Update)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Pcpprofile.Equal(state.Pcpprofile) {
 		tflog.Debug(ctx, "pcpprofile has changed for pcpserver")
 		hasChange = true
 	}
 	if !data.Port.Equal(state.Port) {
 		tflog.Debug(ctx, "port has changed for pcpserver")
-		hasChange = true
+		if config.Port.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "port")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -149,6 +156,16 @@ func (r *PcpserverResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated pcpserver resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for pcpserver resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Pcpserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset pcpserver attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

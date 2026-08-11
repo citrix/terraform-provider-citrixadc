@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,31 +37,37 @@ func (r *SmppparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			"addrnpi": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Numbering Plan Indicator, such as landline, data, or WAP client, used in the ESME address sent in the bind request.",
 			},
 			"addrrange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(`\d*`),
 				Description: "Set of SME addresses, sent in the bind request, serviced by the ESME.",
 			},
 			"addrton": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Type of Number, such as an international number or a national number, used in the ESME address sent in the bind request.",
 			},
 			"clientmode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("TRANSCEIVER"),
 				Description: "Mode in which the client binds to the ADC. Applicable settings function as follows:\n* TRANSCEIVER - Client can send and receive messages to and from the message center.\n* TRANSMITTERONLY - Client can only send messages.\n* RECEIVERONLY - Client can only receive messages.",
 			},
 			"msgqueue": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Queue SMPP messages if a client that is capable of receiving the destination address messages is not available.",
 			},
 			"msgqueuesize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(10000),
 				Description: "Maximum number of SMPP messages that can be queued. After the limit is reached, the Citrix ADC sends a deliver_sm_resp PDU, with an appropriate error message, to the message center.",
 			},
 		},

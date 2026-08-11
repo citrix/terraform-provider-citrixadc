@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -453,6 +454,100 @@ const testAccNstcpparamDataSource_basic = `
 		depends_on = [citrixadc_nstcpparam.tf_nstcpparam]
 	}
 `
+
+// The nstcpparam unset test covers the unset-eligible attributes that carry a
+// schema Default so that removing them from config routes through Update and
+// triggers a NITRO unset (revert to the documented default). All are global TCP
+// parameters with no cross-attribute prerequisite.
+const testAccNstcpparam_unset_step1 = `
+resource "citrixadc_nstcpparam" "tf_unset" {
+	mptcpmaxpendingsf         = 2
+	mptcppendingjointhreshold = 10
+	mptcpsfreplacetimeout     = 20
+	mptcpsftimeout            = 10
+	oooqsize                  = 500
+	rfc5961chlgacklimit       = 2200
+	tcpfastopencookietimeout  = 130
+	wsval                     = 9
+}
+`
+
+const testAccNstcpparam_unset_step2 = `
+resource "citrixadc_nstcpparam" "tf_unset" {
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccNstcpparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstcpparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNstcpparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpparamExist("citrixadc_nstcpparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "mptcpmaxpendingsf", "2"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "mptcppendingjointhreshold", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "mptcpsfreplacetimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "mptcpsftimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "oooqsize", "500"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "rfc5961chlgacklimit", "2200"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "tcpfastopencookietimeout", "130"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "wsval", "9"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNstcpparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpparamExist("citrixadc_nstcpparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "mptcpmaxpendingsf", "4"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "mptcppendingjointhreshold", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "mptcpsfreplacetimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "mptcpsftimeout", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "oooqsize", "300"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "rfc5961chlgacklimit", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "tcpfastopencookietimeout", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpparam.tf_unset", "wsval", "8"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNstcpparamADCValue("oooqsize", "300"),
+					testAccCheckNstcpparamADCValue("wsval", "8"),
+					testAccCheckNstcpparamADCValue("mptcpmaxpendingsf", "4"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNstcpparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. nstcpparam is a singleton, so it is fetched with an empty name.
+func testAccCheckNstcpparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nstcpparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nstcpparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nstcpparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccNstcpparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

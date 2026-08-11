@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -114,12 +115,14 @@ func (r *NtpserverResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *NtpserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NtpserverResourceModel
+	var data, config, state NtpserverResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config so attributes removed from config can be unset
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -130,17 +133,71 @@ func (r *NtpserverResource) Update(ctx context.Context, req resource.UpdateReque
 
 	tflog.Debug(ctx, "Updating ntpserver resource")
 
-	// Create API request body from the model
-	ntpserver := ntpserverGetThePayloadFromtheConfig(ctx, &data)
-
-	// Singleton-style update: PUT with serverip/servername in the payload (SDK v2 parity).
-	err := r.client.UpdateUnnamedResource(service.Ntpserver.Type(), &ntpserver)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ntpserver, got error: %s", err))
-		return
+	// Detect changes and, for attributes removed from config, mark them for unset
+	// so the appliance reverts them to their NITRO defaults.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Autokey.Equal(state.Autokey) {
+		if config.Autokey.IsNull() {
+			attributesToUnset = append(attributesToUnset, "autokey")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxpoll.Equal(state.Maxpoll) {
+		if config.Maxpoll.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxpoll")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Minpoll.Equal(state.Minpoll) {
+		if config.Minpoll.IsNull() {
+			attributesToUnset = append(attributesToUnset, "minpoll")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Preferredntpserver.Equal(state.Preferredntpserver) {
+		if config.Preferredntpserver.IsNull() {
+			attributesToUnset = append(attributesToUnset, "preferredntpserver")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Key.Equal(state.Key) {
+		hasChange = true
 	}
 
-	tflog.Trace(ctx, "Updated ntpserver resource")
+	if hasChange {
+		// Create API request body from the model
+		ntpserver := ntpserverGetThePayloadFromtheConfig(ctx, &data)
+
+		// Singleton-style update: PUT with serverip/servername in the payload (SDK v2 parity).
+		err := r.client.UpdateUnnamedResource(service.Ntpserver.Type(), &ntpserver)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ntpserver, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated ntpserver resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for ntpserver resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. The unset key is serverip/servername (the resource key).
+	unsetIdPayload := map[string]interface{}{}
+	if !data.Serverip.IsNull() && !data.Serverip.IsUnknown() && data.Serverip.ValueString() != "" {
+		unsetIdPayload["serverip"] = data.Serverip.ValueString()
+	}
+	if !data.Servername.IsNull() && !data.Servername.IsUnknown() && data.Servername.ValueString() != "" {
+		unsetIdPayload["servername"] = data.Servername.ValueString()
+	}
+	if err := utils.ExecuteUnset(r.client, service.Ntpserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ntpserver attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readNtpserverFromApi(ctx, &data, &resp.Diagnostics) {

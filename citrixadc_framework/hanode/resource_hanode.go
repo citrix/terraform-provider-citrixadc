@@ -118,12 +118,14 @@ func (r *HanodeResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *HanodeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state HanodeResourceModel
+	var data, config, state HanodeResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -136,17 +138,30 @@ func (r *HanodeResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Deadinterval.Equal(state.Deadinterval) {
 		tflog.Debug(ctx, "deadinterval has changed for hanode")
-		hasChange = true
+		if config.Deadinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "deadinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Failsafe.Equal(state.Failsafe) {
 		tflog.Debug(ctx, "failsafe has changed for hanode")
-		hasChange = true
+		if config.Failsafe.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "failsafe")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Haprop.Equal(state.Haprop) {
 		tflog.Debug(ctx, "haprop has changed for hanode")
-		hasChange = true
+		if config.Haprop.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "haprop")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Hastatus.Equal(state.Hastatus) {
 		tflog.Debug(ctx, "hastatus has changed for hanode")
@@ -154,11 +169,19 @@ func (r *HanodeResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 	if !data.Hasync.Equal(state.Hasync) {
 		tflog.Debug(ctx, "hasync has changed for hanode")
-		hasChange = true
+		if config.Hasync.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "hasync")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Hellointerval.Equal(state.Hellointerval) {
 		tflog.Debug(ctx, "hellointerval has changed for hanode")
-		hasChange = true
+		if config.Hellointerval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "hellointerval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Inc.Equal(state.Inc) {
 		tflog.Debug(ctx, "inc has changed for hanode")
@@ -166,15 +189,27 @@ func (r *HanodeResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 	if !data.Maxflips.Equal(state.Maxflips) {
 		tflog.Debug(ctx, "maxflips has changed for hanode")
-		hasChange = true
+		if config.Maxflips.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxflips")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxfliptime.Equal(state.Maxfliptime) {
 		tflog.Debug(ctx, "maxfliptime has changed for hanode")
-		hasChange = true
+		if config.Maxfliptime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxfliptime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Syncstatusstrictmode.Equal(state.Syncstatusstrictmode) {
 		tflog.Debug(ctx, "syncstatusstrictmode has changed for hanode")
-		hasChange = true
+		if config.Syncstatusstrictmode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "syncstatusstrictmode")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Syncvlan.Equal(state.Syncvlan) {
 		tflog.Debug(ctx, "syncvlan has changed for hanode")
@@ -193,6 +228,17 @@ func (r *HanodeResource) Update(ctx context.Context, req resource.UpdateRequest,
 		tflog.Trace(ctx, "Updated hanode resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for hanode resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults. The hanode id (unnamed self/peer node key)
+	// carries the identifying field in the unset payload.
+	unsetIdPayload := map[string]interface{}{
+		"id": int(data.Hanodeid.ValueInt64()),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Hanode.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset hanode attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

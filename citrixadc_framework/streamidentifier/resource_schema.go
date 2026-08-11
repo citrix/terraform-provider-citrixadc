@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -52,6 +54,7 @@ func (r *StreamidentifierResource) Schema(ctx context.Context, req resource.Sche
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable/disable Appflow logging for stream identifier",
 			},
 			"breachthreshold": schema.Int64Attribute{
@@ -62,21 +65,25 @@ func (r *StreamidentifierResource) Schema(ctx context.Context, req resource.Sche
 			"interval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Number of minutes of data to use when calculating session statistics (number of requests, bandwidth, and response times). The interval is a moving window that keeps the most recently collected data. Older data is discarded at regular intervals.",
 			},
 			"log": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Location where objects collected on the identifier will be logged.",
 			},
 			"loginterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "Time interval in minutes for logging the collected objects.\nLog interval should be greater than or equal to the inteval \nof the stream identifier.",
 			},
 			"loglimit": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(100),
 				Description: "Maximum number of objects to be logged in the log interval.",
 			},
 			"maxtransactionthreshold": schema.Int64Attribute{
@@ -99,6 +106,7 @@ func (r *StreamidentifierResource) Schema(ctx context.Context, req resource.Sche
 			"samplecount": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Size of the sample from which to select a request for evaluation. The smaller the sample count, the more accurate is the statistical data. To evaluate all requests, set the sample count to 1. However, such a low setting can result in excessive consumption of memory and processing resources.",
 			},
 			"selectorname": schema.StringAttribute{
@@ -109,16 +117,19 @@ func (r *StreamidentifierResource) Schema(ctx context.Context, req resource.Sche
 			"snmptrap": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable/disable SNMP trap for stream identifier",
 			},
 			"sort": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("REQUESTS"),
 				Description: "Sort stored records by the specified statistics column, in descending order. Performed during data collection, the sorting enables real-time data evaluation through Citrix ADC policies (for example, compression and caching policies) that use functions such as IS_TOP(n).",
 			},
 			"trackackonlypackets": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Track ack only packets as well. This setting is applicable only when packet rate limiting is being used.",
 			},
 			"tracktransactions": schema.StringAttribute{

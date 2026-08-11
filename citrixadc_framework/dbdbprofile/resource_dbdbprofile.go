@@ -111,12 +111,14 @@ func (r *DbdbprofileResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *DbdbprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state DbdbprofileResourceModel
+	var data, config, state DbdbprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,17 +131,30 @@ func (r *DbdbprofileResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Conmultiplex.Equal(state.Conmultiplex) {
 		tflog.Debug(ctx, "conmultiplex has changed for dbdbprofile")
-		hasChange = true
+		if config.Conmultiplex.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "conmultiplex")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Enablecachingconmuxoff.Equal(state.Enablecachingconmuxoff) {
 		tflog.Debug(ctx, "enablecachingconmuxoff has changed for dbdbprofile")
-		hasChange = true
+		if config.Enablecachingconmuxoff.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "enablecachingconmuxoff")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Interpretquery.Equal(state.Interpretquery) {
 		tflog.Debug(ctx, "interpretquery has changed for dbdbprofile")
-		hasChange = true
+		if config.Interpretquery.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "interpretquery")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Kcdaccount.Equal(state.Kcdaccount) {
 		tflog.Debug(ctx, "kcdaccount has changed for dbdbprofile")
@@ -147,7 +162,11 @@ func (r *DbdbprofileResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Stickiness.Equal(state.Stickiness) {
 		tflog.Debug(ctx, "stickiness has changed for dbdbprofile")
-		hasChange = true
+		if config.Stickiness.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "stickiness")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -164,6 +183,16 @@ func (r *DbdbprofileResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated dbdbprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for dbdbprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dbdbprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dbdbprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

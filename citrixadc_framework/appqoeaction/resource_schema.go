@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -90,6 +91,7 @@ func (r *AppqoeactionResource) Schema(ctx context.Context, req resource.SchemaRe
 			"numretries": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("3"),
 				Description: "Retry count",
 			},
 			"polqdepth": schema.Int64Attribute{
@@ -115,6 +117,7 @@ func (r *AppqoeactionResource) Schema(ctx context.Context, req resource.SchemaRe
 			"retryonreset": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Retry on TCP Reset",
 			},
 			"retryontimeout": schema.Int64Attribute{

@@ -110,12 +110,14 @@ func (r *BotprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state BotprofileResourceModel
+	var data, config, state BotprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,23 +130,48 @@ func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Addcookieflags.Equal(state.Addcookieflags) {
-		hasChange = true
+		if config.Addcookieflags.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "addcookieflags")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.BotEnableBlackList.Equal(state.BotEnableBlackList) {
-		hasChange = true
+		if config.BotEnableBlackList.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_black_list")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.BotEnableIpReputation.Equal(state.BotEnableIpReputation) {
-		hasChange = true
+		if config.BotEnableIpReputation.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_ip_reputation")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.BotEnableRateLimit.Equal(state.BotEnableRateLimit) {
-		hasChange = true
+		if config.BotEnableRateLimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_rate_limit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.BotEnableTps.Equal(state.BotEnableTps) {
-		hasChange = true
+		if config.BotEnableTps.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_tps")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.BotEnableWhiteList.Equal(state.BotEnableWhiteList) {
-		hasChange = true
+		if config.BotEnableWhiteList.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bot_enable_white_list")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientipexpression.Equal(state.Clientipexpression) {
 		hasChange = true
@@ -153,7 +180,11 @@ func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		hasChange = true
 	}
 	if !data.Devicefingerprint.Equal(state.Devicefingerprint) {
-		hasChange = true
+		if config.Devicefingerprint.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "devicefingerprint")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Devicefingerprintaction.Equal(state.Devicefingerprintaction) {
 		hasChange = true
@@ -168,7 +199,11 @@ func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		hasChange = true
 	}
 	if !data.Headlessbrowserdetection.Equal(state.Headlessbrowserdetection) {
-		hasChange = true
+		if config.Headlessbrowserdetection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "headlessbrowserdetection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Kmdetection.Equal(state.Kmdetection) {
 		hasChange = true
@@ -198,7 +233,11 @@ func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		hasChange = true
 	}
 	if !data.Trap.Equal(state.Trap) {
-		hasChange = true
+		if config.Trap.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trap")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Trapaction.Equal(state.Trapaction) {
 		hasChange = true
@@ -207,7 +246,11 @@ func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		hasChange = true
 	}
 	if !data.Verboseloglevel.Equal(state.Verboseloglevel) {
-		hasChange = true
+		if config.Verboseloglevel.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "verboseloglevel")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -227,6 +270,17 @@ func (r *BotprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated botprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for botprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Botprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset botprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

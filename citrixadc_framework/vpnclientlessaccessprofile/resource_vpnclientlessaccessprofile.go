@@ -110,12 +110,14 @@ func (r *VpnclientlessaccessprofileResource) Read(ctx context.Context, req resou
 }
 
 func (r *VpnclientlessaccessprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnclientlessaccessprofileResourceModel
+	var data, config, state VpnclientlessaccessprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,18 +128,56 @@ func (r *VpnclientlessaccessprofileResource) Update(ctx context.Context, req res
 
 	tflog.Debug(ctx, "Updating vpnclientlessaccessprofile resource")
 
-	// Create API request body from the model
-	vpnclientlessaccessprofile := vpnclientlessaccessprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Determine whether a normal update is needed and which attributes were
+	// removed from config and must be unset (reverted to NITRO defaults).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Requirepersistentcookie.Equal(state.Requirepersistentcookie) {
+		tflog.Debug(ctx, "requirepersistentcookie has changed for vpnclientlessaccessprofile")
+		if config.Requirepersistentcookie.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "requirepersistentcookie")
+		} else {
+			hasChange = true
+		}
+	}
+	// Other mutable attributes always go through UpdateResource when changed.
+	if !data.Clientconsumedcookies.Equal(state.Clientconsumedcookies) ||
+		!data.Javascriptrewritepolicylabel.Equal(state.Javascriptrewritepolicylabel) ||
+		!data.Regexforfindingcustomurls.Equal(state.Regexforfindingcustomurls) ||
+		!data.Regexforfindingurlincss.Equal(state.Regexforfindingurlincss) ||
+		!data.Regexforfindingurlinjavascript.Equal(state.Regexforfindingurlinjavascript) ||
+		!data.Regexforfindingurlinxcomponent.Equal(state.Regexforfindingurlinxcomponent) ||
+		!data.Regexforfindingurlinxml.Equal(state.Regexforfindingurlinxml) ||
+		!data.Reqhdrrewritepolicylabel.Equal(state.Reqhdrrewritepolicylabel) ||
+		!data.Reshdrrewritepolicylabel.Equal(state.Reshdrrewritepolicylabel) ||
+		!data.Urlrewritepolicylabel.Equal(state.Urlrewritepolicylabel) {
+		hasChange = true
+	}
 
 	// Named resource - use UpdateResource
 	profilename_value := data.Profilename.ValueString()
-	_, err := r.client.UpdateResource(service.Vpnclientlessaccessprofile.Type(), profilename_value, &vpnclientlessaccessprofile)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnclientlessaccessprofile, got error: %s", err))
-		return
+	if hasChange {
+		// Create API request body from the model
+		vpnclientlessaccessprofile := vpnclientlessaccessprofileGetThePayloadFromtheConfig(ctx, &data)
+		_, err := r.client.UpdateResource(service.Vpnclientlessaccessprofile.Type(), profilename_value, &vpnclientlessaccessprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnclientlessaccessprofile, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated vpnclientlessaccessprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnclientlessaccessprofile resource, skipping update")
 	}
 
-	tflog.Trace(ctx, "Updated vpnclientlessaccessprofile resource")
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"profilename": data.Profilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnclientlessaccessprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnclientlessaccessprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readVpnclientlessaccessprofileFromApi(ctx, &data, &resp.Diagnostics) {

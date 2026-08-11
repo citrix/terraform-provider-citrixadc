@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -169,3 +170,77 @@ data "citrixadc_nsdhcpparams" "tf_nsdhcpparams" {
 	depends_on = [citrixadc_nsdhcpparams.tf_nsdhcpparams]
 }
 `
+
+// Unset test: step1 sets the unset-eligible attributes to non-default values
+// ("ON"), step2 removes them so the provider must unset them (revert to the
+// documented NITRO defaults, "OFF").
+const testAccNsdhcpparams_unset_step1 = `
+	resource "citrixadc_nsdhcpparams" "tf_unset" {
+		dhcpclient = "ON"
+		saveroute  = "ON"
+	}
+`
+
+const testAccNsdhcpparams_unset_step2 = `
+	resource "citrixadc_nsdhcpparams" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults, "OFF").
+	}
+`
+
+func TestAccNsdhcpparams_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNsdhcpparams_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsdhcpparamsExist("citrixadc_nsdhcpparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsdhcpparams.tf_unset", "dhcpclient", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_nsdhcpparams.tf_unset", "saveroute", "ON"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNsdhcpparams_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsdhcpparamsExist("citrixadc_nsdhcpparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsdhcpparams.tf_unset", "dhcpclient", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_nsdhcpparams.tf_unset", "saveroute", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsdhcpparamsADCValue("dhcpclient", "OFF"),
+					testAccCheckNsdhcpparamsADCValue("saveroute", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsdhcpparamsADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckNsdhcpparamsADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsdhcpparams.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsdhcpparams not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nsdhcpparams: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}

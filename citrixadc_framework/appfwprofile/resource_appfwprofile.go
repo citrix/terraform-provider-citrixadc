@@ -111,12 +111,14 @@ func (r *AppfwprofileResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *AppfwprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AppfwprofileResourceModel
+	var data, config, state AppfwprofileResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -130,6 +132,25 @@ func (r *AppfwprofileResource) Update(ctx context.Context, req resource.UpdateRe
 	// Build payload restricted to updatable fields that actually changed
 	appfwprofile, hasChange := appfwprofileGetTheUpdatablePayloadFromThePlan(ctx, &data, &state)
 
+	// Collect attributes removed from config so they can be unset (reverted to
+	// their NITRO defaults) after the update.
+	attributesToUnset := []string{}
+	if !data.Checkrequestheaders.Equal(state.Checkrequestheaders) && config.Checkrequestheaders.IsNull() {
+		attributesToUnset = append(attributesToUnset, "checkrequestheaders")
+	}
+	if !data.Semicolonfieldseparator.Equal(state.Semicolonfieldseparator) && config.Semicolonfieldseparator.IsNull() {
+		attributesToUnset = append(attributesToUnset, "semicolonfieldseparator")
+	}
+	if !data.Sessionlessfieldconsistency.Equal(state.Sessionlessfieldconsistency) && config.Sessionlessfieldconsistency.IsNull() {
+		attributesToUnset = append(attributesToUnset, "sessionlessfieldconsistency")
+	}
+	if !data.Streaming.Equal(state.Streaming) && config.Streaming.IsNull() {
+		attributesToUnset = append(attributesToUnset, "streaming")
+	}
+	if !data.Trace.Equal(state.Trace) && config.Trace.IsNull() {
+		attributesToUnset = append(attributesToUnset, "trace")
+	}
+
 	if hasChange {
 		// Named resource - use UpdateResource
 		appfwprofileName := data.Name.ValueString()
@@ -142,6 +163,16 @@ func (r *AppfwprofileResource) Update(ctx context.Context, req resource.UpdateRe
 		tflog.Trace(ctx, "Updated appfwprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for appfwprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Appfwprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appfwprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

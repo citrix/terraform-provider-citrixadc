@@ -120,12 +120,14 @@ func (r *NetprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NetprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NetprofileResourceModel
+	var data, config, state NetprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset them)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -140,25 +142,42 @@ func (r *NetprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	// at the NITRO layer (excluded from the update payload) and is not ForceNew in
 	// SDK v2, so it is intentionally not part of change detection.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Mbf.Equal(state.Mbf) {
 		tflog.Debug(ctx, "mbf has changed for netprofile")
 		hasChange = true
 	}
 	if !data.Overridelsn.Equal(state.Overridelsn) {
 		tflog.Debug(ctx, "overridelsn has changed for netprofile")
-		hasChange = true
+		if config.Overridelsn.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "overridelsn")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Proxyprotocol.Equal(state.Proxyprotocol) {
 		tflog.Debug(ctx, "proxyprotocol has changed for netprofile")
-		hasChange = true
+		if config.Proxyprotocol.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proxyprotocol")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Proxyprotocolaftertlshandshake.Equal(state.Proxyprotocolaftertlshandshake) {
 		tflog.Debug(ctx, "proxyprotocolaftertlshandshake has changed for netprofile")
-		hasChange = true
+		if config.Proxyprotocolaftertlshandshake.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proxyprotocolaftertlshandshake")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Proxyprotocoltxversion.Equal(state.Proxyprotocoltxversion) {
 		tflog.Debug(ctx, "proxyprotocoltxversion has changed for netprofile")
-		hasChange = true
+		if config.Proxyprotocoltxversion.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "proxyprotocoltxversion")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Srcip.Equal(state.Srcip) {
 		tflog.Debug(ctx, "srcip has changed for netprofile")
@@ -166,7 +185,11 @@ func (r *NetprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	if !data.Srcippersistency.Equal(state.Srcippersistency) {
 		tflog.Debug(ctx, "srcippersistency has changed for netprofile")
-		hasChange = true
+		if config.Srcippersistency.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "srcippersistency")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -182,6 +205,17 @@ func (r *NetprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated netprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for netprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Netprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset netprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

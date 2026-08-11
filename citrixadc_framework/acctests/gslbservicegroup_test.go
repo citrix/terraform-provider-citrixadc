@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -196,6 +197,103 @@ func TestAccGslbservicegroup_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The gslbservicegroup unset test covers the mutable, documented-default,
+// unset-eligible attributes: appflowlog (ENABLED), downstateflush (ENABLED),
+// healthmonitor (YES). Step 1 sets them to non-default values; step 2 removes
+// them from config so the provider issues the NITRO unset, reverting each to its
+// appliance default.
+const testAccGslbservicegroup_unset_step1 = `
+resource "citrixadc_gslbservicegroup" "tf_unset" {
+	servicegroupname = "tf_gslbsg_unset"
+	servicetype      = "HTTP"
+	sitename         = citrixadc_gslbsite.site_local.sitename
+	appflowlog       = "DISABLED"
+	downstateflush   = "DISABLED"
+	healthmonitor    = "NO"
+}
+resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+}
+`
+
+const testAccGslbservicegroup_unset_step2 = `
+resource "citrixadc_gslbservicegroup" "tf_unset" {
+	servicegroupname = "tf_gslbsg_unset"
+	servicetype      = "HTTP"
+	sitename         = citrixadc_gslbsite.site_local.sitename
+	# unset-eligible attributes removed -> provider must revert to NITRO defaults.
+}
+resource "citrixadc_gslbsite" "site_local" {
+	sitename        = "Site-Local"
+	siteipaddress   = "172.31.96.234"
+	sessionexchange = "DISABLED"
+	sitepassword    = "password123"
+}
+`
+
+func TestAccGslbservicegroup_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbservicegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccGslbservicegroup_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservicegroupExist("citrixadc_gslbservicegroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_unset", "downstateflush", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_unset", "healthmonitor", "NO"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccGslbservicegroup_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbservicegroupExist("citrixadc_gslbservicegroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_unset", "downstateflush", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservicegroup.tf_unset", "healthmonitor", "YES"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckGslbservicegroupADCValue("tf_gslbsg_unset", "appflowlog", "ENABLED"),
+					testAccCheckGslbservicegroupADCValue("tf_gslbsg_unset", "downstateflush", "ENABLED"),
+					testAccCheckGslbservicegroupADCValue("tf_gslbsg_unset", "healthmonitor", "YES"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckGslbservicegroupADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckGslbservicegroupADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbservicegroup.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("gslbservicegroup %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("gslbservicegroup %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckGslbservicegroupExist(n string, id *string) resource.TestCheckFunc {

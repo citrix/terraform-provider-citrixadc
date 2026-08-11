@@ -110,12 +110,14 @@ func (r *LsngroupResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *LsngroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsngroupResourceModel
+	var data, config, state LsngroupResourceModel
 
 	// Read prior state (to preserve ID and detect changes)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -130,11 +132,20 @@ func (r *LsngroupResource) Update(ctx context.Context, req resource.UpdateReques
 	// attributes (clientname, allocpolicy, ip6profile, nattype) trigger a
 	// resource replacement and never reach Update.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Ftp.Equal(state.Ftp) {
-		hasChange = true
+		if config.Ftp.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ftp")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ftpcm.Equal(state.Ftpcm) {
-		hasChange = true
+		if config.Ftpcm.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ftpcm")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logging.Equal(state.Logging) {
 		hasChange = true
@@ -143,22 +154,42 @@ func (r *LsngroupResource) Update(ctx context.Context, req resource.UpdateReques
 		hasChange = true
 	}
 	if !data.Pptp.Equal(state.Pptp) {
-		hasChange = true
+		if config.Pptp.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "pptp")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rtspalg.Equal(state.Rtspalg) {
-		hasChange = true
+		if config.Rtspalg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rtspalg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sessionlogging.Equal(state.Sessionlogging) {
 		hasChange = true
 	}
 	if !data.Sessionsync.Equal(state.Sessionsync) {
-		hasChange = true
+		if config.Sessionsync.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessionsync")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sipalg.Equal(state.Sipalg) {
-		hasChange = true
+		if config.Sipalg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sipalg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Snmptraplimit.Equal(state.Snmptraplimit) {
-		hasChange = true
+		if config.Snmptraplimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "snmptraplimit")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -172,6 +203,16 @@ func (r *LsngroupResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated lsngroup resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lsngroup resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. The unset key for lsngroup is groupname.
+	unsetIdPayload := map[string]interface{}{
+		"groupname": data.Groupname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsngroup.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsngroup attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

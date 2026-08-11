@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -36,16 +37,19 @@ func (r *DbdbprofileResource) Schema(ctx context.Context, req resource.SchemaReq
 			"conmultiplex": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Use the same server-side connection for multiple client-side requests. Default is enabled.",
 			},
 			"enablecachingconmuxoff": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable caching when connection multiplexing is OFF.",
 			},
 			"interpretquery": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "If ENABLED, inspect the query and update the connection information, if required. If DISABLED, forward the query to the server.",
 			},
 			"kcdaccount": schema.StringAttribute{
@@ -63,6 +67,7 @@ func (r *DbdbprofileResource) Schema(ctx context.Context, req resource.SchemaReq
 			"stickiness": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "If the queries are related to each other, forward to the same backend server.",
 			},
 		},

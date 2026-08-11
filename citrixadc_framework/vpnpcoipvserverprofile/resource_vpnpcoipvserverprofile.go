@@ -110,12 +110,14 @@ func (r *VpnpcoipvserverprofileResource) Read(ctx context.Context, req resource.
 }
 
 func (r *VpnpcoipvserverprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnpcoipvserverprofileResourceModel
+	var data, config, state VpnpcoipvserverprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,13 +130,18 @@ func (r *VpnpcoipvserverprofileResource) Update(ctx context.Context, req resourc
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Logindomain.Equal(state.Logindomain) {
 		tflog.Debug(ctx, "logindomain has changed for vpnpcoipvserverprofile")
 		hasChange = true
 	}
 	if !data.Udpport.Equal(state.Udpport) {
 		tflog.Debug(ctx, "udpport has changed for vpnpcoipvserverprofile")
-		hasChange = true
+		if config.Udpport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "udpport")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -152,6 +159,16 @@ func (r *VpnpcoipvserverprofileResource) Update(ctx context.Context, req resourc
 		tflog.Trace(ctx, "Updated vpnpcoipvserverprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for vpnpcoipvserverprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnpcoipvserverprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnpcoipvserverprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

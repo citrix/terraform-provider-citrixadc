@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -211,6 +212,98 @@ const testAccAuthenticationpolicyDataSource_basic = `
 		name = citrixadc_authenticationpolicy.tf_authenticationpolicy.name
 	}
 `
+
+// authenticationpolicy exposes one cleanly-unsettable optional attribute:
+// comment. undefaction is not echoed back by NITRO GET (write-only-ish) and
+// logaction requires a valid audit messagelog action, so neither is a reliable
+// unset candidate; only comment is exercised here.
+const testAccAuthenticationpolicy_unset_step1 = `
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "ldapaction_unset"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationpolicy" "tf_unset" {
+		name    = "tf_authenticationpolicy_unset"
+		rule    = "true"
+		action  = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+		comment = "unset_me"
+	}
+`
+
+const testAccAuthenticationpolicy_unset_step2 = `
+	resource "citrixadc_authenticationldapaction" "tf_authenticationldapaction" {
+		name          = "ldapaction_unset"
+		serverip      = "1.2.3.4"
+		serverport    = 8080
+		authtimeout   = 1
+		ldaploginname = "username"
+	}
+	resource "citrixadc_authenticationpolicy" "tf_unset" {
+		name   = "tf_authenticationpolicy_unset"
+		rule   = "true"
+		action = citrixadc_authenticationldapaction.tf_authenticationldapaction.name
+		# comment removed from config -> provider must unset it (revert to default "").
+	}
+`
+
+func TestAccAuthenticationpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccAuthenticationpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpolicyExist("citrixadc_authenticationpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpolicy.tf_unset", "comment", "unset_me"),
+				),
+			},
+			{
+				// Removing comment must unset it: state reverts to the NITRO default
+				// (empty) and the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationpolicyExist("citrixadc_authenticationpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationpolicy.tf_unset", "comment", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationpolicyADCValue("tf_authenticationpolicy_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationpolicyADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset actually
+// reverted it. A missing key is treated as the empty default.
+func testAccCheckAuthenticationpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("authenticationpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccAuthenticationpolicy_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{

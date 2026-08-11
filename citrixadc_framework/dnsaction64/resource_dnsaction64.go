@@ -111,12 +111,14 @@ func (r *Dnsaction64Resource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *Dnsaction64Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Dnsaction64ResourceModel
+	var data, config, state Dnsaction64ResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,13 +131,22 @@ func (r *Dnsaction64Resource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Excluderule.Equal(state.Excluderule) {
 		tflog.Debug(ctx, "excluderule has changed for dnsaction64")
-		hasChange = true
+		if config.Excluderule.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "excluderule")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Mappedrule.Equal(state.Mappedrule) {
 		tflog.Debug(ctx, "mappedrule has changed for dnsaction64")
-		hasChange = true
+		if config.Mappedrule.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "mappedrule")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Prefix.Equal(state.Prefix) {
 		tflog.Debug(ctx, "prefix has changed for dnsaction64")
@@ -157,6 +168,16 @@ func (r *Dnsaction64Resource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated dnsaction64 resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for dnsaction64 resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"actionname": data.Actionname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsaction64.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsaction64 attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

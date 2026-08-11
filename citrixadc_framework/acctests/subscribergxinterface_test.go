@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -187,6 +189,112 @@ func TestAccSubscribergxinterface_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The subscribergxinterface unset test covers the unset-eligible attributes:
+// every attribute wired into attributesToUnset (those the NITRO spec lists in the
+// unset payload AND that have a documented server default). service/vserver/
+// servicepathavp/servicepathvendorid/pcrfrealm/nodeid are excluded (no documented
+// unset default or not in the unset payload).
+const testAccSubscribergxinterface_unset_step1 = `
+	resource "citrixadc_subscribergxinterface" "tf_unset" {
+		cerrequesttimeout         = 10
+		healthcheck               = "YES"
+		healthcheckttl            = 60
+		holdonsubscriberabsence   = "NO"
+		idlettl                   = 1000
+		negativettl               = 700
+		negativettllimitedsuccess = "YES"
+		purgesdbongxfailure       = "YES"
+		requestretryattempts      = 5
+		requesttimeout            = 20
+		revalidationtimeout       = 100
+	}
+`
+
+const testAccSubscribergxinterface_unset_step2 = `
+	resource "citrixadc_subscribergxinterface" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to their documented NITRO defaults).
+	}
+`
+
+func TestAccSubscribergxinterface_unset(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSubscribergxinterface_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscribergxinterfaceExist("citrixadc_subscribergxinterface.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "cerrequesttimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "healthcheck", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "healthcheckttl", "60"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "holdonsubscriberabsence", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "idlettl", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "negativettl", "700"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "negativettllimitedsuccess", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "purgesdbongxfailure", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "requestretryattempts", "5"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "requesttimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "revalidationtimeout", "100"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccSubscribergxinterface_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscribergxinterfaceExist("citrixadc_subscribergxinterface.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "cerrequesttimeout", "0"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "healthcheck", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "healthcheckttl", "30"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "holdonsubscriberabsence", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "idlettl", "900"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "negativettl", "600"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "negativettllimitedsuccess", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "purgesdbongxfailure", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "requestretryattempts", "3"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "requesttimeout", "10"),
+					resource.TestCheckResourceAttr("citrixadc_subscribergxinterface.tf_unset", "revalidationtimeout", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSubscribergxinterfaceADCValue("healthcheck", "NO"),
+					testAccCheckSubscribergxinterfaceADCValue("holdonsubscriberabsence", "YES"),
+					testAccCheckSubscribergxinterfaceADCValue("requesttimeout", "10"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSubscribergxinterfaceADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset actually
+// reverted it. subscribergxinterface is a singleton, so it is read with an empty
+// resource name.
+func testAccCheckSubscribergxinterfaceADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Subscribergxinterface.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("subscribergxinterface not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("subscribergxinterface: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSubscribergxinterfaceDataSource_basic(t *testing.T) {

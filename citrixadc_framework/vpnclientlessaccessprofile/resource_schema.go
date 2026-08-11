@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -86,8 +87,11 @@ func (r *VpnclientlessaccessprofileResource) Schema(ctx context.Context, req res
 				Description: "Name of the configured Request rewrite policy label.  If you do not specify a policy label name, then requests are not rewritten.",
 			},
 			"requirepersistentcookie": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO documented default so removing the attribute from config
+				// produces a plan diff, allowing Update to fire the unset.
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Specify whether a persistent session cookie is set and accepted for clientless access. If this parameter is set to ON, COM objects, such as MSOffice, which are invoked by the browser can access the files using clientless access. Use caution because the persistent cookie is stored on the disk.",
 			},
 			"reshdrrewritepolicylabel": schema.StringAttribute{

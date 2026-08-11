@@ -9,12 +9,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
 
 // TmtrafficactionResourceModel describes the resource data model.
 type TmtrafficactionResourceModel struct {
@@ -69,6 +97,7 @@ func (r *TmtrafficactionResource) Schema(ctx context.Context, req resource.Schem
 			"kcdaccount": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("None"),
 				Description: "Kerberos constrained delegation account name",
 			},
 			"name": schema.StringAttribute{
@@ -79,13 +108,17 @@ func (r *TmtrafficactionResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Name for the traffic action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after a traffic action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"passwdexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "expression that will be evaluated to obtain password for SingleSignOn",
 			},
 			"persistentcookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Use persistent cookies for the traffic session. A persistent cookie remains on the user device and is sent with each HTTP request. The cookie becomes stale if the session ends.",
 			},
 			"samlssoprofile": schema.StringAttribute{
@@ -99,8 +132,11 @@ func (r *TmtrafficactionResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Use single sign-on for the resource that the user is accessing now.",
 			},
 			"userexpression": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "expression that will be evaluated to obtain username for SingleSignOn",
 			},
 		},

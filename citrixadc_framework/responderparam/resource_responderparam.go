@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -99,10 +100,14 @@ func (r *ResponderparamResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *ResponderparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ResponderparamResourceModel
+	var data, config, state ResponderparamResourceModel
 
+	// Read Terraform prior state
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config (attributes removed from config are null here, not in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -110,17 +115,49 @@ func (r *ResponderparamResource) Update(ctx context.Context, req resource.Update
 
 	tflog.Debug(ctx, "Updating responderparam resource")
 
-	// Create API request body from the model (singleton).
-	responderparam := responderparamGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call — singleton uses UpdateUnnamedResource (matches SDK v2).
-	err := r.client.UpdateUnnamedResource(service.Responderparam.Type(), &responderparam)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update responderparam, got error: %s", err))
-		return
+	// Determine changed attributes and which were removed from config (-> unset).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Timeout.Equal(state.Timeout) {
+		tflog.Debug(ctx, "timeout has changed for responderparam")
+		if config.Timeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "timeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Undefaction.Equal(state.Undefaction) {
+		tflog.Debug(ctx, "undefaction has changed for responderparam")
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated responderparam resource")
+	if hasChange {
+		// Create API request body from the model (singleton).
+		responderparam := responderparamGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call — singleton uses UpdateUnnamedResource (matches SDK v2).
+		err := r.client.UpdateUnnamedResource(service.Responderparam.Type(), &responderparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update responderparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated responderparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for responderparam resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Singleton resource -> empty id payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Responderparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset responderparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readResponderparamFromApi(ctx, &data, &resp.Diagnostics)

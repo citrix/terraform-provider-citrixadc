@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -238,6 +239,109 @@ func TestAccNstcpprofile_import(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccNstcpprofile_unset_step1 = `
+resource "citrixadc_nstcpprofile" "tf_unset" {
+  name              = "tf_test_nstcpprofile_unset"
+  ws                = "DISABLED"
+  sack              = "DISABLED"
+  ackaggregation    = "ENABLED"
+  nagle             = "ENABLED"
+  ecn               = "ENABLED"
+  rfc5961compliance = "ENABLED"
+  timestamp         = "ENABLED"
+  mptcp             = "ENABLED"
+  taillossprobe     = "ENABLED"
+  maxburst          = 10
+  dupackthresh      = 5
+  minrto            = 2000
+}
+`
+
+const testAccNstcpprofile_unset_step2 = `
+resource "citrixadc_nstcpprofile" "tf_unset" {
+  name = "tf_test_nstcpprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccNstcpprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNstcpprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "ws", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "sack", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "ackaggregation", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "nagle", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "ecn", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "rfc5961compliance", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "timestamp", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "mptcp", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "taillossprobe", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "maxburst", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "dupackthresh", "5"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "minrto", "2000"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNstcpprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstcpprofileExist("citrixadc_nstcpprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "ws", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "sack", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "ackaggregation", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "nagle", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "ecn", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "rfc5961compliance", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "timestamp", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "mptcp", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "taillossprobe", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "maxburst", "6"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "dupackthresh", "3"),
+					resource.TestCheckResourceAttr("citrixadc_nstcpprofile.tf_unset", "minrto", "1000"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNstcpprofileADCValue("tf_test_nstcpprofile_unset", "ws", "ENABLED"),
+					testAccCheckNstcpprofileADCValue("tf_test_nstcpprofile_unset", "ackaggregation", "DISABLED"),
+					testAccCheckNstcpprofileADCValue("tf_test_nstcpprofile_unset", "maxburst", "6"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNstcpprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNstcpprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nstcpprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nstcpprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nstcpprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNstcpprofile_sdkv2StateUpgrade(t *testing.T) {

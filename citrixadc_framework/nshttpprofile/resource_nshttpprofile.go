@@ -111,12 +111,14 @@ func (r *NshttpprofileResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *NshttpprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NshttpprofileResourceModel
+	var data, config, state NshttpprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,6 +128,92 @@ func (r *NshttpprofileResource) Update(ctx context.Context, req resource.UpdateR
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating nshttpprofile resource")
+
+	// Determine which unset-eligible attributes were removed from config so the
+	// appliance reverts them to their NITRO defaults. An attribute is unset only
+	// when it changed relative to prior state AND is absent from config.
+	attributesToUnset := []string{}
+	if !data.Adpttimeout.Equal(state.Adpttimeout) && config.Adpttimeout.IsNull() {
+		attributesToUnset = append(attributesToUnset, "adpttimeout")
+	}
+	if !data.Allowonlywordcharactersandhyphen.Equal(state.Allowonlywordcharactersandhyphen) && config.Allowonlywordcharactersandhyphen.IsNull() {
+		attributesToUnset = append(attributesToUnset, "allowonlywordcharactersandhyphen")
+	}
+	if !data.Altsvc.Equal(state.Altsvc) && config.Altsvc.IsNull() {
+		attributesToUnset = append(attributesToUnset, "altsvc")
+	}
+	if !data.Cmponpush.Equal(state.Cmponpush) && config.Cmponpush.IsNull() {
+		attributesToUnset = append(attributesToUnset, "cmponpush")
+	}
+	if !data.Conmultiplex.Equal(state.Conmultiplex) && config.Conmultiplex.IsNull() {
+		attributesToUnset = append(attributesToUnset, "conmultiplex")
+	}
+	if !data.Dropextracrlf.Equal(state.Dropextracrlf) && config.Dropextracrlf.IsNull() {
+		attributesToUnset = append(attributesToUnset, "dropextracrlf")
+	}
+	if !data.Dropextradata.Equal(state.Dropextradata) && config.Dropextradata.IsNull() {
+		attributesToUnset = append(attributesToUnset, "dropextradata")
+	}
+	if !data.Dropinvalreqs.Equal(state.Dropinvalreqs) && config.Dropinvalreqs.IsNull() {
+		attributesToUnset = append(attributesToUnset, "dropinvalreqs")
+	}
+	if !data.Grpclengthdelimitation.Equal(state.Grpclengthdelimitation) && config.Grpclengthdelimitation.IsNull() {
+		attributesToUnset = append(attributesToUnset, "grpclengthdelimitation")
+	}
+	if !data.Hostheadervalidation.Equal(state.Hostheadervalidation) && config.Hostheadervalidation.IsNull() {
+		attributesToUnset = append(attributesToUnset, "hostheadervalidation")
+	}
+	if !data.Http2.Equal(state.Http2) && config.Http2.IsNull() {
+		attributesToUnset = append(attributesToUnset, "http2")
+	}
+	if !data.Http2altsvcframe.Equal(state.Http2altsvcframe) && config.Http2altsvcframe.IsNull() {
+		attributesToUnset = append(attributesToUnset, "http2altsvcframe")
+	}
+	if !data.Http2direct.Equal(state.Http2direct) && config.Http2direct.IsNull() {
+		attributesToUnset = append(attributesToUnset, "http2direct")
+	}
+	if !data.Http2extendedconnect.Equal(state.Http2extendedconnect) && config.Http2extendedconnect.IsNull() {
+		attributesToUnset = append(attributesToUnset, "http2extendedconnect")
+	}
+	if !data.Http2strictcipher.Equal(state.Http2strictcipher) && config.Http2strictcipher.IsNull() {
+		attributesToUnset = append(attributesToUnset, "http2strictcipher")
+	}
+	if !data.Http3.Equal(state.Http3) && config.Http3.IsNull() {
+		attributesToUnset = append(attributesToUnset, "http3")
+	}
+	if !data.Http3webtransport.Equal(state.Http3webtransport) && config.Http3webtransport.IsNull() {
+		attributesToUnset = append(attributesToUnset, "http3webtransport")
+	}
+	if !data.Markconnreqinval.Equal(state.Markconnreqinval) && config.Markconnreqinval.IsNull() {
+		attributesToUnset = append(attributesToUnset, "markconnreqinval")
+	}
+	if !data.Markhttp09inval.Equal(state.Markhttp09inval) && config.Markhttp09inval.IsNull() {
+		attributesToUnset = append(attributesToUnset, "markhttp09inval")
+	}
+	if !data.Markhttpheaderextrawserror.Equal(state.Markhttpheaderextrawserror) && config.Markhttpheaderextrawserror.IsNull() {
+		attributesToUnset = append(attributesToUnset, "markhttpheaderextrawserror")
+	}
+	if !data.Markrfc7230noncompliantinval.Equal(state.Markrfc7230noncompliantinval) && config.Markrfc7230noncompliantinval.IsNull() {
+		attributesToUnset = append(attributesToUnset, "markrfc7230noncompliantinval")
+	}
+	if !data.Marktracereqinval.Equal(state.Marktracereqinval) && config.Marktracereqinval.IsNull() {
+		attributesToUnset = append(attributesToUnset, "marktracereqinval")
+	}
+	if !data.Passprotocolupgrade.Equal(state.Passprotocolupgrade) && config.Passprotocolupgrade.IsNull() {
+		attributesToUnset = append(attributesToUnset, "passprotocolupgrade")
+	}
+	if !data.Persistentetag.Equal(state.Persistentetag) && config.Persistentetag.IsNull() {
+		attributesToUnset = append(attributesToUnset, "persistentetag")
+	}
+	if !data.Rtsptunnel.Equal(state.Rtsptunnel) && config.Rtsptunnel.IsNull() {
+		attributesToUnset = append(attributesToUnset, "rtsptunnel")
+	}
+	if !data.Weblog.Equal(state.Weblog) && config.Weblog.IsNull() {
+		attributesToUnset = append(attributesToUnset, "weblog")
+	}
+	if !data.Websocket.Equal(state.Websocket) && config.Websocket.IsNull() {
+		attributesToUnset = append(attributesToUnset, "websocket")
+	}
 
 	// Create API request body from the plan (only known, configured attributes are sent)
 	nshttpprofile := nshttpprofileGetThePayloadFromtheConfig(ctx, &data)
@@ -140,6 +228,17 @@ func (r *NshttpprofileResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	tflog.Trace(ctx, "Updated nshttpprofile resource")
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nshttpprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nshttpprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readNshttpprofileFromApi(ctx, &data, &resp.Diagnostics) {

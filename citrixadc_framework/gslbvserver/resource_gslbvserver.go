@@ -137,12 +137,14 @@ func (r *GslbvserverResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *GslbvserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state GslbvserverResourceModel
+	var data, config, state GslbvserverResourceModel
 
 	// Read Terraform prior state to preserve ID and to compute changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -189,6 +191,49 @@ func (r *GslbvserverResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	} else {
 		tflog.Debug(ctx, "No updatable field changes detected for gslbvserver resource")
+	}
+
+	// Collect attributes that were removed from config so the appliance reverts them
+	// to their NITRO defaults via the unset action. Each of these has a schema Default
+	// so config removal produces a plan diff (data != state) that lands in Update.
+	attributesToUnset := []string{}
+	if !data.Appflowlog.Equal(state.Appflowlog) && config.Appflowlog.IsNull() {
+		attributesToUnset = append(attributesToUnset, "appflowlog")
+	}
+	if !data.Considereffectivestate.Equal(state.Considereffectivestate) && config.Considereffectivestate.IsNull() {
+		attributesToUnset = append(attributesToUnset, "considereffectivestate")
+	}
+	if !data.Disableprimaryondown.Equal(state.Disableprimaryondown) && config.Disableprimaryondown.IsNull() {
+		attributesToUnset = append(attributesToUnset, "disableprimaryondown")
+	}
+	if !data.Dnsrecordtype.Equal(state.Dnsrecordtype) && config.Dnsrecordtype.IsNull() {
+		attributesToUnset = append(attributesToUnset, "dnsrecordtype")
+	}
+	if !data.Ecs.Equal(state.Ecs) && config.Ecs.IsNull() {
+		attributesToUnset = append(attributesToUnset, "ecs")
+	}
+	if !data.Ecsaddrvalidation.Equal(state.Ecsaddrvalidation) && config.Ecsaddrvalidation.IsNull() {
+		attributesToUnset = append(attributesToUnset, "ecsaddrvalidation")
+	}
+	if !data.Edr.Equal(state.Edr) && config.Edr.IsNull() {
+		attributesToUnset = append(attributesToUnset, "edr")
+	}
+	if !data.Lbmethod.Equal(state.Lbmethod) && config.Lbmethod.IsNull() {
+		attributesToUnset = append(attributesToUnset, "lbmethod")
+	}
+	if !data.Toggleorder.Equal(state.Toggleorder) && config.Toggleorder.IsNull() {
+		attributesToUnset = append(attributesToUnset, "toggleorder")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	// Done after the update so any default value the update payload carried for a
+	// removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": liveName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Gslbvserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset gslbvserver attributes, got error: %s", err))
+		return
 	}
 
 	// State (ENABLED/DISABLED) is not part of the update payload; it is driven by the

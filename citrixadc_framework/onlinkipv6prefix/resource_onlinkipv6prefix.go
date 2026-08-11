@@ -110,12 +110,14 @@ func (r *Onlinkipv6prefixResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *Onlinkipv6prefixResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Onlinkipv6prefixResourceModel
+	var data, config, state Onlinkipv6prefixResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,29 +130,54 @@ func (r *Onlinkipv6prefixResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Autonomusprefix.Equal(state.Autonomusprefix) {
 		tflog.Debug(ctx, "autonomusprefix has changed for onlinkipv6prefix")
-		hasChange = true
+		if config.Autonomusprefix.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "autonomusprefix")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Decrementprefixlifetimes.Equal(state.Decrementprefixlifetimes) {
 		tflog.Debug(ctx, "decrementprefixlifetimes has changed for onlinkipv6prefix")
-		hasChange = true
+		if config.Decrementprefixlifetimes.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "decrementprefixlifetimes")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Depricateprefix.Equal(state.Depricateprefix) {
 		tflog.Debug(ctx, "depricateprefix has changed for onlinkipv6prefix")
-		hasChange = true
+		if config.Depricateprefix.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "depricateprefix")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Onlinkprefix.Equal(state.Onlinkprefix) {
 		tflog.Debug(ctx, "onlinkprefix has changed for onlinkipv6prefix")
-		hasChange = true
+		if config.Onlinkprefix.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "onlinkprefix")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Prefixpreferredlifetime.Equal(state.Prefixpreferredlifetime) {
 		tflog.Debug(ctx, "prefixpreferredlifetime has changed for onlinkipv6prefix")
-		hasChange = true
+		if config.Prefixpreferredlifetime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "prefixpreferredlifetime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Prefixvalidelifetime.Equal(state.Prefixvalidelifetime) {
 		tflog.Debug(ctx, "prefixvalidelifetime has changed for onlinkipv6prefix")
-		hasChange = true
+		if config.Prefixvalidelifetime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "prefixvalidelifetime")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -168,6 +195,16 @@ func (r *Onlinkipv6prefixResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated onlinkipv6prefix resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for onlinkipv6prefix resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. Keyed on ipv6prefix (carried in the unset body).
+	unsetIdPayload := map[string]interface{}{
+		"ipv6prefix": data.Ipv6prefix.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Onlinkipv6prefix.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset onlinkipv6prefix attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

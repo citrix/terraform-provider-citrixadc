@@ -110,12 +110,14 @@ func (r *CsparameterResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *CsparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state CsparameterResourceModel
+	var data, config, state CsparameterResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,9 +130,14 @@ func (r *CsparameterResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Stateupdate.Equal(state.Stateupdate) {
 		tflog.Debug(ctx, "stateupdate has changed for csparameter")
-		hasChange = true
+		if config.Stateupdate.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "stateupdate")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -147,6 +154,14 @@ func (r *CsparameterResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated csparameter resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for csparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Csparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset csparameter attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

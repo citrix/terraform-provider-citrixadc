@@ -110,12 +110,14 @@ func (r *FeoactionResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *FeoactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state FeoactionResourceModel
+	var data, config, state FeoactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,37 +130,66 @@ func (r *FeoactionResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Cachemaxage.Equal(state.Cachemaxage) {
 		tflog.Debug(ctx, "cachemaxage has changed for feoaction")
 		hasChange = true
 	}
 	if !data.Clientsidemeasurements.Equal(state.Clientsidemeasurements) {
 		tflog.Debug(ctx, "clientsidemeasurements has changed for feoaction")
-		hasChange = true
+		if config.Clientsidemeasurements.IsNull() {
+			attributesToUnset = append(attributesToUnset, "clientsidemeasurements")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Convertimporttolink.Equal(state.Convertimporttolink) {
 		tflog.Debug(ctx, "convertimporttolink has changed for feoaction")
-		hasChange = true
+		if config.Convertimporttolink.IsNull() {
+			attributesToUnset = append(attributesToUnset, "convertimporttolink")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Csscombine.Equal(state.Csscombine) {
 		tflog.Debug(ctx, "csscombine has changed for feoaction")
-		hasChange = true
+		if config.Csscombine.IsNull() {
+			attributesToUnset = append(attributesToUnset, "csscombine")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cssimginline.Equal(state.Cssimginline) {
 		tflog.Debug(ctx, "cssimginline has changed for feoaction")
-		hasChange = true
+		if config.Cssimginline.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cssimginline")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cssinline.Equal(state.Cssinline) {
 		tflog.Debug(ctx, "cssinline has changed for feoaction")
-		hasChange = true
+		if config.Cssinline.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cssinline")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cssminify.Equal(state.Cssminify) {
 		tflog.Debug(ctx, "cssminify has changed for feoaction")
-		hasChange = true
+		if config.Cssminify.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cssminify")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cssmovetohead.Equal(state.Cssmovetohead) {
 		tflog.Debug(ctx, "cssmovetohead has changed for feoaction")
-		hasChange = true
+		if config.Cssmovetohead.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cssmovetohead")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dnsshards.Equal(state.Dnsshards) {
 		tflog.Debug(ctx, "dnsshards has changed for feoaction")
@@ -166,55 +197,107 @@ func (r *FeoactionResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Domainsharding.Equal(state.Domainsharding) {
 		tflog.Debug(ctx, "domainsharding has changed for feoaction")
-		hasChange = true
+		if config.Domainsharding.IsNull() {
+			attributesToUnset = append(attributesToUnset, "domainsharding")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Htmlminify.Equal(state.Htmlminify) {
 		tflog.Debug(ctx, "htmlminify has changed for feoaction")
-		hasChange = true
+		if config.Htmlminify.IsNull() {
+			attributesToUnset = append(attributesToUnset, "htmlminify")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Imggiftopng.Equal(state.Imggiftopng) {
 		tflog.Debug(ctx, "imggiftopng has changed for feoaction")
-		hasChange = true
+		if config.Imggiftopng.IsNull() {
+			attributesToUnset = append(attributesToUnset, "imggiftopng")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Imginline.Equal(state.Imginline) {
 		tflog.Debug(ctx, "imginline has changed for feoaction")
-		hasChange = true
+		if config.Imginline.IsNull() {
+			attributesToUnset = append(attributesToUnset, "imginline")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Imglazyload.Equal(state.Imglazyload) {
 		tflog.Debug(ctx, "imglazyload has changed for feoaction")
-		hasChange = true
+		if config.Imglazyload.IsNull() {
+			attributesToUnset = append(attributesToUnset, "imglazyload")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Imgshrinktoattrib.Equal(state.Imgshrinktoattrib) {
 		tflog.Debug(ctx, "imgshrinktoattrib has changed for feoaction")
-		hasChange = true
+		if config.Imgshrinktoattrib.IsNull() {
+			attributesToUnset = append(attributesToUnset, "imgshrinktoattrib")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Imgtojpegxr.Equal(state.Imgtojpegxr) {
 		tflog.Debug(ctx, "imgtojpegxr has changed for feoaction")
-		hasChange = true
+		if config.Imgtojpegxr.IsNull() {
+			attributesToUnset = append(attributesToUnset, "imgtojpegxr")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Imgtowebp.Equal(state.Imgtowebp) {
 		tflog.Debug(ctx, "imgtowebp has changed for feoaction")
-		hasChange = true
+		if config.Imgtowebp.IsNull() {
+			attributesToUnset = append(attributesToUnset, "imgtowebp")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Jpgoptimize.Equal(state.Jpgoptimize) {
 		tflog.Debug(ctx, "jpgoptimize has changed for feoaction")
-		hasChange = true
+		if config.Jpgoptimize.IsNull() {
+			attributesToUnset = append(attributesToUnset, "jpgoptimize")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Jsinline.Equal(state.Jsinline) {
 		tflog.Debug(ctx, "jsinline has changed for feoaction")
-		hasChange = true
+		if config.Jsinline.IsNull() {
+			attributesToUnset = append(attributesToUnset, "jsinline")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Jsminify.Equal(state.Jsminify) {
 		tflog.Debug(ctx, "jsminify has changed for feoaction")
-		hasChange = true
+		if config.Jsminify.IsNull() {
+			attributesToUnset = append(attributesToUnset, "jsminify")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Jsmovetoend.Equal(state.Jsmovetoend) {
 		tflog.Debug(ctx, "jsmovetoend has changed for feoaction")
-		hasChange = true
+		if config.Jsmovetoend.IsNull() {
+			attributesToUnset = append(attributesToUnset, "jsmovetoend")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pageextendcache.Equal(state.Pageextendcache) {
 		tflog.Debug(ctx, "pageextendcache has changed for feoaction")
-		hasChange = true
+		if config.Pageextendcache.IsNull() {
+			attributesToUnset = append(attributesToUnset, "pageextendcache")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -231,6 +314,16 @@ func (r *FeoactionResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated feoaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for feoaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Feoaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset feoaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

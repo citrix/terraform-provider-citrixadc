@@ -7,8 +7,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -66,6 +68,7 @@ func (r *LsngroupResource) Schema(ctx context.Context, req resource.SchemaReques
 			"ftp": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("ENABLED"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -74,6 +77,7 @@ func (r *LsngroupResource) Schema(ctx context.Context, req resource.SchemaReques
 			"ftpcm": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("DISABLED"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -126,6 +130,7 @@ func (r *LsngroupResource) Schema(ctx context.Context, req resource.SchemaReques
 			"pptp": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("DISABLED"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -134,6 +139,7 @@ func (r *LsngroupResource) Schema(ctx context.Context, req resource.SchemaReques
 			"rtspalg": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("DISABLED"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -150,6 +156,7 @@ func (r *LsngroupResource) Schema(ctx context.Context, req resource.SchemaReques
 			"sessionsync": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("ENABLED"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -158,6 +165,7 @@ func (r *LsngroupResource) Schema(ctx context.Context, req resource.SchemaReques
 			"sipalg": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("DISABLED"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -166,6 +174,7 @@ func (r *LsngroupResource) Schema(ctx context.Context, req resource.SchemaReques
 			"snmptraplimit": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				Default:  int64default.StaticInt64(100),
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
 				},

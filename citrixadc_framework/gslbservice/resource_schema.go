@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -84,11 +85,13 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging appflow flow information.",
 			},
 			"cip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Insert the client's IP address header in the request forwarded to the GSLB service.",
 			},
 			"cipheader": schema.StringAttribute{
@@ -143,6 +146,7 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 			"healthmonitor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Monitor the health of the GSLB service.",
 			},
 			"ip": schema.StringAttribute{

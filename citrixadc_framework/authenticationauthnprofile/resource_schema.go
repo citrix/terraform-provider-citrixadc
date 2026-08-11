@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,8 +45,11 @@ func (r *AuthenticationauthnprofileResource) Schema(ctx context.Context, req res
 				Description: "Hostname of the authentication vserver to which user must be redirected for authentication.",
 			},
 			"authenticationlevel": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO server default is 0; setting it here so removing the
+				// attribute from config produces a plan diff that drives the unset.
+				Default:     int64default.StaticInt64(0),
 				Description: "Authentication weight or level of the vserver to which this will bound. This is used to order TM vservers based on the protection required. A session that is created by authenticating against TM vserver at given level cannot be used to access TM vserver at a higher level.",
 			},
 			"authnvsname": schema.StringAttribute{

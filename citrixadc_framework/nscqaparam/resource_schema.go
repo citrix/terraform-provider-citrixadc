@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -49,6 +51,7 @@ func (r *NscqaparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"harqretxdelay": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "HARQ retransmission delay (in ms).",
 			},
 			"lr1coeflist": schema.StringAttribute{
@@ -59,6 +62,7 @@ func (r *NscqaparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"lr1probthresh": schema.Float64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     float64default.StaticFloat64(0),
 				Description: "Probability threshold values for LR model to differentiate between NET1 and reset(NET2 and NET3).",
 			},
 			"lr2coeflist": schema.StringAttribute{
@@ -74,16 +78,19 @@ func (r *NscqaparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"minrttnet1": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "MIN RTT (in ms) for the first network.",
 			},
 			"minrttnet2": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "MIN RTT (in ms) for the second network.",
 			},
 			"minrttnet3": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "MIN RTT (in ms) for the third network.",
 			},
 			"net1cclscale": schema.StringAttribute{

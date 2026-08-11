@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -210,6 +211,79 @@ func TestAccVpnpcoipprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccVpnpcoipprofile_unset_step1 = `
+	resource "citrixadc_vpnpcoipprofile" "tf_unset" {
+		name               = "tf_test_vpnpcoipprofile_unset"
+		conserverurl       = "http://www.example.com"
+		icvverification    = "ENABLED"
+		sessionidletimeout = 120
+	}
+`
+
+const testAccVpnpcoipprofile_unset_step2 = `
+	resource "citrixadc_vpnpcoipprofile" "tf_unset" {
+		name         = "tf_test_vpnpcoipprofile_unset"
+		conserverurl = "http://www.example.com"
+		# icvverification and sessionidletimeout removed -> provider must unset
+		# them (revert to NITRO defaults: DISABLED / 180).
+	}
+`
+
+func TestAccVpnpcoipprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnpcoipprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVpnpcoipprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnpcoipprofileExist("citrixadc_vpnpcoipprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnpcoipprofile.tf_unset", "icvverification", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnpcoipprofile.tf_unset", "sessionidletimeout", "120"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccVpnpcoipprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnpcoipprofileExist("citrixadc_vpnpcoipprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnpcoipprofile.tf_unset", "icvverification", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vpnpcoipprofile.tf_unset", "sessionidletimeout", "180"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVpnpcoipprofileADCValue("tf_test_vpnpcoipprofile_unset", "icvverification", "DISABLED"),
+					testAccCheckVpnpcoipprofileADCValue("tf_test_vpnpcoipprofile_unset", "sessionidletimeout", "180"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVpnpcoipprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset reverted it.
+func testAccCheckVpnpcoipprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnpcoipprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vpnpcoipprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vpnpcoipprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccVpnpcoipprofileDataSource_basic(t *testing.T) {

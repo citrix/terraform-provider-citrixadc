@@ -17,10 +17,12 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAuditnslogparams_basic = `
@@ -164,6 +166,115 @@ func TestAccAuditnslogparams_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// auditnslogparams is a singleton config resource. The unset test sets every
+// unset-eligible attribute to a valid non-default value, then removes them all
+// from config: the provider must issue a NITRO ?action=unset so the appliance
+// reverts each to its documented default.
+const testAccAuditnslogparams_unset_step1 = `
+	resource "citrixadc_auditnslogparams" "tf_unset" {
+		acl                  = "ENABLED"
+		alg                  = "ENABLED"
+		appflowexport        = "ENABLED"
+		contentinspectionlog = "ENABLED"
+		dateformat           = "DDMMYYYY"
+		logfacility          = "LOCAL1"
+		lsn                  = "ENABLED"
+		protocolviolations   = "ALL"
+		sslinterception      = "ENABLED"
+		subscriberlog        = "ENABLED"
+		tcp                  = "ALL"
+		timezone             = "LOCAL_TIME"
+		userdefinedauditlog  = "YES"
+	}
+`
+
+const testAccAuditnslogparams_unset_step2 = `
+	resource "citrixadc_auditnslogparams" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccAuditnslogparams_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAuditnslogparams_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditnslogparamsExist("citrixadc_auditnslogparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "acl", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "alg", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "appflowexport", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "contentinspectionlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "dateformat", "DDMMYYYY"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "logfacility", "LOCAL1"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "lsn", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "protocolviolations", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "sslinterception", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "subscriberlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "tcp", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "timezone", "LOCAL_TIME"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "userdefinedauditlog", "YES"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAuditnslogparams_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditnslogparamsExist("citrixadc_auditnslogparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "acl", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "alg", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "appflowexport", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "contentinspectionlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "dateformat", "MMDDYYYY"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "logfacility", "LOCAL0"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "lsn", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "protocolviolations", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "sslinterception", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "subscriberlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "tcp", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "timezone", "GMT_TIME"),
+					resource.TestCheckResourceAttr("citrixadc_auditnslogparams.tf_unset", "userdefinedauditlog", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuditnslogparamsADCValue("acl", "DISABLED"),
+					testAccCheckAuditnslogparamsADCValue("tcp", "NONE"),
+					testAccCheckAuditnslogparamsADCValue("userdefinedauditlog", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuditnslogparamsADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckAuditnslogparamsADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Auditnslogparams.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("auditnslogparams not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("auditnslogparams: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccAuditnslogparamsDataSource_basic = `

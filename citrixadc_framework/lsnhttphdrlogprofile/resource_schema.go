@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -41,24 +42,29 @@ func (r *LsnhttphdrlogprofileResource) Schema(ctx context.Context, req resource.
 				Description: "The name of the HTTP header logging Profile.",
 			},
 			"loghost": schema.StringAttribute{
-				// SDK v2: Optional + Computed, no Default (value read back from ADC)
+				// SDK v2: Optional + Computed. Default added so config-removal produces
+				// a plan diff, letting Update fire the NITRO unset (revert to default).
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Host information is logged if option is enabled.",
 			},
 			"logmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "HTTP method information is logged if option is enabled.",
 			},
 			"logurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "URL information is logged if option is enabled.",
 			},
 			"logversion": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Version information is logged if option is enabled.",
 			},
 		},

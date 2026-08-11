@@ -110,12 +110,14 @@ func (r *AppflowactionResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *AppflowactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AppflowactionResourceModel
+	var data, config, state AppflowactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,45 +130,86 @@ func (r *AppflowactionResource) Update(ctx context.Context, req resource.UpdateR
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Botinsight.Equal(state.Botinsight) {
 		tflog.Debug(ctx, "botinsight has changed for appflowaction")
-		hasChange = true
+		if config.Botinsight.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "botinsight")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ciinsight.Equal(state.Ciinsight) {
 		tflog.Debug(ctx, "ciinsight has changed for appflowaction")
-		hasChange = true
+		if config.Ciinsight.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ciinsight")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientsidemeasurements.Equal(state.Clientsidemeasurements) {
 		tflog.Debug(ctx, "clientsidemeasurements has changed for appflowaction")
-		hasChange = true
+		if config.Clientsidemeasurements.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientsidemeasurements")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Collectors.Equal(state.Collectors) {
 		tflog.Debug(ctx, "collectors has changed for appflowaction")
-		hasChange = true
+		if config.Collectors.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "collectors")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for appflowaction")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Distributionalgorithm.Equal(state.Distributionalgorithm) {
 		tflog.Debug(ctx, "distributionalgorithm has changed for appflowaction")
-		hasChange = true
+		if config.Distributionalgorithm.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "distributionalgorithm")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Pagetracking.Equal(state.Pagetracking) {
 		tflog.Debug(ctx, "pagetracking has changed for appflowaction")
-		hasChange = true
+		if config.Pagetracking.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "pagetracking")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Securityinsight.Equal(state.Securityinsight) {
 		tflog.Debug(ctx, "securityinsight has changed for appflowaction")
-		hasChange = true
+		if config.Securityinsight.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "securityinsight")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Videoanalytics.Equal(state.Videoanalytics) {
 		tflog.Debug(ctx, "videoanalytics has changed for appflowaction")
-		hasChange = true
+		if config.Videoanalytics.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "videoanalytics")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Webinsight.Equal(state.Webinsight) {
 		tflog.Debug(ctx, "webinsight has changed for appflowaction")
-		hasChange = true
+		if config.Webinsight.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "webinsight")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -184,6 +227,16 @@ func (r *AppflowactionResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated appflowaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for appflowaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Appflowaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appflowaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

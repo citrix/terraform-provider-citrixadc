@@ -118,12 +118,14 @@ func (r *Route6Resource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *Route6Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Route6ResourceModel
+	var data, config, state Route6ResourceModel
 
 	// Read Terraform prior state to preserve the ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read raw config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -134,17 +136,95 @@ func (r *Route6Resource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	tflog.Debug(ctx, "Updating route6 resource")
 
-	// route6 update is PUT /nitro/v1/config/route6 (unnamed, full identifying
-	// payload). Only network/mgmt are RequiresReplace, so any other attribute
-	// change reaches here and is pushed via UpdateUnnamedResource.
-	route6 := route6GetThePayloadForUpdate(ctx, &data)
-	err := r.client.UpdateUnnamedResource(service.Route6.Type(), &route6)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update route6, got error: %s", err))
-		return
+	// Detect whether any mutable attribute changed (network/mgmt are
+	// RequiresReplace so they never reach here). Attributes removed from config
+	// that support NITRO unset are collected instead of being pushed.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Advertise.Equal(state.Advertise) {
+		hasChange = true
+	}
+	if !data.Cost.Equal(state.Cost) {
+		if config.Cost.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cost")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Distance.Equal(state.Distance) {
+		if config.Distance.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "distance")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Gateway.Equal(state.Gateway) {
+		hasChange = true
+	}
+	if !data.Monitor.Equal(state.Monitor) {
+		hasChange = true
+	}
+	if !data.Msr.Equal(state.Msr) {
+		if config.Msr.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "msr")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Td.Equal(state.Td) {
+		hasChange = true
+	}
+	if !data.Vlan.Equal(state.Vlan) {
+		hasChange = true
+	}
+	if !data.Vxlan.Equal(state.Vxlan) {
+		hasChange = true
+	}
+	if !data.Weight.Equal(state.Weight) {
+		if config.Weight.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "weight")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated route6 resource")
+	if hasChange {
+		// route6 update is PUT /nitro/v1/config/route6 (unnamed, full identifying
+		// payload). Any non-ForceNew attribute change is pushed via
+		// UpdateUnnamedResource.
+		route6 := route6GetThePayloadForUpdate(ctx, &data)
+		err := r.client.UpdateUnnamedResource(service.Route6.Type(), &route6)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update route6, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated route6 resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for route6 resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. route6 is an unnamed resource identified by network plus the
+	// route-identity keys; include them so NITRO locates the exact route.
+	unsetIdPayload := map[string]interface{}{
+		"network": data.Network.ValueString(),
+	}
+	if !data.Gateway.IsNull() && !data.Gateway.IsUnknown() && data.Gateway.ValueString() != "" {
+		unsetIdPayload["gateway"] = data.Gateway.ValueString()
+	}
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
+		unsetIdPayload["vlan"] = int(data.Vlan.ValueInt64())
+	}
+	if !data.Vxlan.IsNull() && !data.Vxlan.IsUnknown() && data.Vxlan.ValueInt64() != 0 {
+		unsetIdPayload["vxlan"] = int(data.Vxlan.ValueInt64())
+	}
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		unsetIdPayload["td"] = int(data.Td.ValueInt64())
+	}
+	if err := utils.ExecuteUnset(r.client, service.Route6.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset route6 attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	found := r.readRoute6FromApi(ctx, &data, &resp.Diagnostics)

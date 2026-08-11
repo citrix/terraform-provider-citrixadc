@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,15 +42,19 @@ func (r *QuicbridgeprofileResource) Schema(ctx context.Context, req resource.Sch
 				Description: "Name for the QUIC profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@),equals sign (=), and hyphen (-) characters. Cannot be changed after the profile is created.",
 			},
 			"routingalgorithm": schema.StringAttribute{
-				// SDK v2: Optional+Computed, no Default (value read back from ADC).
+				// Optional+Computed with NITRO default so config-removal produces a
+				// plan diff and the unset path in Update fires.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PLAINTEXT"),
 				Description: "Routing algorithm to generate routable connection IDs.",
 			},
 			"serveridlength": schema.Int64Attribute{
-				// SDK v2: Optional+Computed, no Default (value read back from ADC).
+				// Optional+Computed with NITRO default so config-removal produces a
+				// plan diff and the unset path in Update fires.
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(4),
 				Description: "Length of serverid to encode/decode server information",
 			},
 		},

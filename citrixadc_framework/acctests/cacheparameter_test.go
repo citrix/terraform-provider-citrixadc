@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -163,6 +164,81 @@ func TestAccCacheparameter_import(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The cacheparameter unset test covers the read/write attributes that have a
+// documented NITRO server default (cacheevictionpolicy=RELAXED,
+// maxpostlen=4096). Step 1 sets non-default values; step 2 removes them so the
+// provider unsets them (reverts to defaults).
+const testAccCacheparameter_unset_step1 = `
+	resource "citrixadc_cacheparameter" "tf_unset" {
+		cacheevictionpolicy = "MODERATE"
+		maxpostlen          = 6000
+	}
+`
+
+const testAccCacheparameter_unset_step2 = `
+	resource "citrixadc_cacheparameter" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccCacheparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccCacheparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCacheparameterExist("citrixadc_cacheparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_unset", "cacheevictionpolicy", "MODERATE"),
+					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_unset", "maxpostlen", "6000"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccCacheparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCacheparameterExist("citrixadc_cacheparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_unset", "cacheevictionpolicy", "RELAXED"),
+					resource.TestCheckResourceAttr("citrixadc_cacheparameter.tf_unset", "maxpostlen", "4096"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCacheparameterADCValue("cacheevictionpolicy", "RELAXED"),
+					testAccCheckCacheparameterADCValue("maxpostlen", "4096"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCacheparameterADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckCacheparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Cacheparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("cacheparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("cacheparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccCacheparameterDataSource_basic(t *testing.T) {

@@ -110,12 +110,14 @@ func (r *IcaactionResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *IcaactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state IcaactionResourceModel
+	var data, config, state IcaactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,9 +130,14 @@ func (r *IcaactionResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Accessprofilename.Equal(state.Accessprofilename) {
 		tflog.Debug(ctx, "accessprofilename has changed for icaaction")
-		hasChange = true
+		if config.Accessprofilename.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "accessprofilename")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Latencyprofilename.Equal(state.Latencyprofilename) {
 		tflog.Debug(ctx, "latencyprofilename has changed for icaaction")
@@ -152,6 +159,16 @@ func (r *IcaactionResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated icaaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for icaaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Icaaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset icaaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

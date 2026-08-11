@@ -109,12 +109,14 @@ func (r *Nsacl6Resource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *Nsacl6Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Nsacl6ResourceModel
+	var data, config, state Nsacl6ResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,6 +131,7 @@ func (r *Nsacl6Resource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	// Detect changes in updatable attributes (state is handled separately via enable/disable)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Acl6action.Equal(state.Acl6action) {
 		hasChange = true
 	}
@@ -172,7 +175,11 @@ func (r *Nsacl6Resource) Update(ctx context.Context, req resource.UpdateRequest,
 		hasChange = true
 	}
 	if !data.Logstate.Equal(state.Logstate) {
-		hasChange = true
+		if config.Logstate.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logstate")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Nodeid.Equal(state.Nodeid) {
 		hasChange = true
@@ -214,7 +221,11 @@ func (r *Nsacl6Resource) Update(ctx context.Context, req resource.UpdateRequest,
 		hasChange = true
 	}
 	if !data.Stateful.Equal(state.Stateful) {
-		hasChange = true
+		if config.Stateful.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "stateful")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Td.Equal(state.Td) {
 		hasChange = true
@@ -239,6 +250,17 @@ func (r *Nsacl6Resource) Update(ctx context.Context, req resource.UpdateRequest,
 		tflog.Trace(ctx, "Updated nsacl6 resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for nsacl6 resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"acl6name": data.Acl6name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsacl6.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsacl6 attributes, got error: %s", err))
+		return
 	}
 
 	// Handle state change (ENABLED/DISABLED) via enable/disable action, matching SDK v2

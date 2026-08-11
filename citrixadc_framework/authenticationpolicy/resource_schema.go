@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -39,8 +40,13 @@ func (r *AuthenticationpolicyResource) Schema(ctx context.Context, req resource.
 				Description: "Name of the authentication action to be performed if the policy matches.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Default "" makes removing comment from config produce a plan diff
+				// (an Optional+Computed attr with no Default is sticky on removal, so
+				// Update would never run and the unset would never fire). NITRO's
+				// server default for comment is empty (GET omits it when unset).
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments to preserve information about this policy.",
 			},
 			"logaction": schema.StringAttribute{
@@ -119,7 +125,10 @@ func authenticationpolicySetAttrFromGet(ctx context.Context, data *Authenticatio
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		// comment is Optional+Computed with Default "". NITRO omits comment from
+		// GET when it is unset, so map the absent value to "" (not null) to match
+		// the schema default and avoid an inconsistent-result error after an unset.
+		data.Comment = types.StringValue("")
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))
@@ -166,7 +175,10 @@ func authenticationpolicySetAttrFromGetForDatasource(ctx context.Context, data *
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		// comment is Optional+Computed with Default "". NITRO omits comment from
+		// GET when it is unset, so map the absent value to "" (not null) to match
+		// the schema default and avoid an inconsistent-result error after an unset.
+		data.Comment = types.StringValue("")
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))

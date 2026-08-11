@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -90,16 +92,19 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"ackaggregation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable ACK Aggregation.",
 			},
 			"ackonpush": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Send immediate positive acknowledgement (ACK) on receipt of TCP packets with PUSH flag.",
 			},
 			"applyadaptivetcp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Apply Adaptive TCP optimizations",
 			},
 			"buffersize": schema.Int64Attribute{
@@ -110,11 +115,13 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"burstratecontrol": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "TCP Burst Rate Control DISABLED/FIXED/DYNAMIC. FIXED requires a TCP rate to be set.",
 			},
 			"clientiptcpoption": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Client IP in TCP options",
 			},
 			"clientiptcpoptionnumber": schema.Int64Attribute{
@@ -125,61 +132,73 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"delayedack": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(100),
 				Description: "Timeout for TCP delayed ACK, in milliseconds.",
 			},
 			"dropestconnontimeout": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Silently drop tcp established connections on idle timeout",
 			},
 			"drophalfclosedconnontimeout": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Silently drop tcp half closed connections on idle timeout",
 			},
 			"dsack": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable DSACK.",
 			},
 			"dupackthresh": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "TCP dupack threshold.",
 			},
 			"dynamicreceivebuffering": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable dynamic receive buffering. When enabled, allows the receive buffer to be adjusted dynamically based on memory and network conditions.\nNote: The buffer size argument must be set for dynamic adjustments to take place.",
 			},
 			"ecn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable TCP Explicit Congestion Notification.",
 			},
 			"establishclientconn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("AUTOMATIC"),
 				Description: "Establishing Client Client connection on First data/ Final-ACK / Automatic",
 			},
 			"fack": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable FACK (Forward ACK).",
 			},
 			"flavor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("BIC"),
 				Description: "Set TCP congestion control algorithm.",
 			},
 			"frto": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable FRTO (Forward RTO-Recovery).",
 			},
 			"hystart": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable CUBIC Hystart",
 			},
 			"initialcwnd": schema.Int64Attribute{
@@ -190,6 +209,7 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"ka": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send periodic TCP keep-alive (KA) probes to check if peer is still up.",
 			},
 			"kaconnidletime": schema.Int64Attribute{
@@ -210,16 +230,19 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"kaprobeupdatelastactivity": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Update last activity for the connection after receiving keep-alive (KA) probes.",
 			},
 			"maxburst": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(6),
 				Description: "Maximum number of TCP segments allowed in a burst.",
 			},
 			"maxcwnd": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(524288),
 				Description: "TCP Maximum Congestion Window.",
 			},
 			"maxpktpermss": schema.Int64Attribute{
@@ -230,31 +253,37 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"minrto": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1000),
 				Description: "Minimum retransmission timeout, in milliseconds, specified in 10-millisecond increments (value must yield a whole number if divided by  10).",
 			},
 			"mpcapablecbit": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Set C bit in MP-CAPABLE Syn-Ack sent by Citrix ADC",
 			},
 			"mptcp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable Multipath TCP.",
 			},
 			"mptcpdropdataonpreestsf": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable silently dropping the data on Pre-Established subflow. When enabled, DSS data packets are dropped silently instead of dropping the connection when data is received on pre established subflow.",
 			},
 			"mptcpfastopen": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable Multipath TCP fastopen. When enabled, DSS data packets are accepted before receiving the third ack of SYN handshake.",
 			},
 			"mptcpsessiontimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "MPTCP session timeout in seconds. If this value is not set, idle MPTCP sessions are flushed after vserver's client idle timeout.",
 			},
 			"mss": schema.Int64Attribute{
@@ -265,6 +294,7 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"nagle": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable the Nagle algorithm on TCP connections.",
 			},
 			"name": schema.StringAttribute{
@@ -282,31 +312,37 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"pktperretx": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Maximum limit on the number of packets that should be retransmitted on receiving a partial ACK.",
 			},
 			"rateqmax": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Maximum connection queue size in bytes, when BurstRateControl is used",
 			},
 			"rfc5961compliance": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable RFC 5961 compliance to protect against tcp spoofing(RST/SYN/Data). When enabled, will be compliant with RFC 5961.",
 			},
 			"rstmaxack": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable acceptance of RST that is out of window yet echoes highest ACK sequence number. Useful only in proxy mode.",
 			},
 			"rstwindowattenuate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable RST window attenuation to protect against spoofing. When enabled, will reply with corrective ACK when a sequence number is invalid.",
 			},
 			"sack": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable Selective ACKnowledgement (SACK).",
 			},
 			"sendbuffsize": schema.Int64Attribute{
@@ -317,66 +353,79 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			"sendclientportintcpoption": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send Client Port number along with Client IP in TCP-Options. ClientIpTcpOption must be ENABLED",
 			},
 			"slowstartincr": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(2),
 				Description: "Multiplier that determines the rate at which slow start increases the size of the TCP transmission window after each acknowledgement of successful transmission.",
 			},
 			"slowstartthreshold": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(524288),
 				Description: "TCP Slow Start Threhsold Value.",
 			},
 			"spoofsyndrop": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable drop of invalid SYN packets to protect against spoofing. When disabled, established connections will be reset when a SYN packet is received.",
 			},
 			"syncookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable the SYNCOOKIE mechanism for TCP handshake with clients. Disabling SYNCOOKIE prevents SYN attack protection on the Citrix ADC.",
 			},
 			"taillossprobe": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "TCP tail loss probe optimizations",
 			},
 			"tcpfastopen": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable TCP Fastopen. When enabled, NS can receive or send Data in SYN or SYN-ACK packets.",
 			},
 			"tcpfastopencookiesize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(8),
 				Description: "TCP FastOpen Cookie size. This accepts only even numbers. Odd number is trimmed down to nearest even number.",
 			},
 			"tcpmode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("TRANSPARENT"),
 				Description: "TCP Optimization modes TRANSPARENT / ENDPOINT.",
 			},
 			"tcprate": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "TCP connection payload send rate in Kb/s",
 			},
 			"tcpsegoffload": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("AUTOMATIC"),
 				Description: "Offload TCP segmentation to the NIC. If set to AUTOMATIC, TCP segmentation will be offloaded to the NIC, if the NIC supports it.",
 			},
 			"timestamp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or Disable TCP Timestamp option (RFC 1323)",
 			},
 			"ws": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable window scaling.",
 			},
 			"wsval": schema.Int64Attribute{

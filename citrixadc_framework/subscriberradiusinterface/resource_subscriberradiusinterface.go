@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -96,12 +97,14 @@ func (r *SubscriberradiusinterfaceResource) Read(ctx context.Context, req resour
 }
 
 func (r *SubscriberradiusinterfaceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SubscriberradiusinterfaceResourceModel
+	var data, config, state SubscriberradiusinterfaceResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -114,13 +117,18 @@ func (r *SubscriberradiusinterfaceResource) Update(ctx context.Context, req reso
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Listeningservice.Equal(state.Listeningservice) {
 		tflog.Debug(ctx, "listeningservice has changed for subscriberradiusinterface")
 		hasChange = true
 	}
 	if !data.Radiusinterimasstart.Equal(state.Radiusinterimasstart) {
 		tflog.Debug(ctx, "radiusinterimasstart has changed for subscriberradiusinterface")
-		hasChange = true
+		if config.Radiusinterimasstart.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "radiusinterimasstart")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -135,6 +143,14 @@ func (r *SubscriberradiusinterfaceResource) Update(ctx context.Context, req reso
 		}
 	} else {
 		tflog.Debug(ctx, "No changes detected for subscriberradiusinterface resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Subscriberradiusinterface.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset subscriberradiusinterface attributes, got error: %s", err))
+		return
 	}
 
 	tflog.Trace(ctx, "Updated subscriberradiusinterface resource")

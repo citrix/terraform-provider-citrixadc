@@ -110,12 +110,14 @@ func (r *AutoscaleactionResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *AutoscaleactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AutoscaleactionResourceModel
+	var data, config, state AutoscaleactionResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,7 @@ func (r *AutoscaleactionResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Parameters.Equal(state.Parameters) {
 		tflog.Debug(ctx, "parameters has changed for autoscaleaction")
 		hasChange = true
@@ -138,11 +141,19 @@ func (r *AutoscaleactionResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Quiettime.Equal(state.Quiettime) {
 		tflog.Debug(ctx, "quiettime has changed for autoscaleaction")
-		hasChange = true
+		if config.Quiettime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "quiettime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Vmdestroygraceperiod.Equal(state.Vmdestroygraceperiod) {
 		tflog.Debug(ctx, "vmdestroygraceperiod has changed for autoscaleaction")
-		hasChange = true
+		if config.Vmdestroygraceperiod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "vmdestroygraceperiod")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Vserver.Equal(state.Vserver) {
 		tflog.Debug(ctx, "vserver has changed for autoscaleaction")
@@ -160,6 +171,16 @@ func (r *AutoscaleactionResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated autoscaleaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for autoscaleaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Autoscaleaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset autoscaleaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

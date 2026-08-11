@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -101,6 +102,7 @@ func (r *ServiceResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"accessdown": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Use Layer 2 mode to bridge the packets sent to this service if it is marked as DOWN. If the service is DOWN, and this parameter is disabled, the packets are dropped.",
 			},
 			"all": schema.BoolAttribute{
@@ -111,11 +113,13 @@ func (r *ServiceResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging of AppFlow information.",
 			},
 			"cacheable": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Use the transparent cache redirection virtual server to forward requests to the cache server.\nNote: Do not specify this parameter if you set the Cache Type parameter.",
 			},
 			"cachetype": schema.StringAttribute{
@@ -190,6 +194,7 @@ func (r *ServiceResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"downstateflush": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Flush all active transactions associated with a service whose state transitions from UP to DOWN.",
 			},
 			"graceful": schema.StringAttribute{
@@ -206,6 +211,7 @@ func (r *ServiceResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"healthmonitor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Monitor the health of this service.",
 			},
 			"httpprofilename": schema.StringAttribute{
@@ -294,6 +300,7 @@ func (r *ServiceResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"processlocal": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "By turning on this option packets destined to a service in a cluster will not under go any steering.",
 			},
 			"quicprofilename": schema.StringAttribute{

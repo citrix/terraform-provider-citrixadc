@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -43,6 +44,7 @@ func (r *VlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"dynamicrouting": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable dynamic routing on this VLAN.",
 			},
 			"vlanid": schema.Int64Attribute{
@@ -55,6 +57,7 @@ func (r *VlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"ipv6dynamicrouting": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable all IPv6 dynamic routing protocols on this VLAN. Note: For the ENABLED setting to work, you must configure IPv6 dynamic routing protocols from the VTYSH command line.",
 			},
 			"mtu": schema.Int64Attribute{
@@ -65,6 +68,7 @@ func (r *VlanResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"sharing": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "If sharing is enabled, then this vlan can be shared across multiple partitions by binding it to all those partitions. If sharing is disabled, then this vlan can be bound to only one of the partitions.",
 			},
 		},

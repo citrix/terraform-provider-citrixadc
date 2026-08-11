@@ -110,12 +110,14 @@ func (r *ClusternodegroupResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *ClusternodegroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ClusternodegroupResourceModel
+	var data, config, state ClusternodegroupResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates to unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,6 +131,7 @@ func (r *ClusternodegroupResource) Update(ctx context.Context, req resource.Upda
 	// Check if there are any changes in updateable attributes.
 	// name and sticky are ForceNew (RequiresReplace) and never reach Update.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Priority.Equal(state.Priority) {
 		tflog.Debug(ctx, "priority has changed for clusternodegroup")
 		hasChange = true
@@ -139,7 +142,11 @@ func (r *ClusternodegroupResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Strict.Equal(state.Strict) {
 		tflog.Debug(ctx, "strict has changed for clusternodegroup")
-		hasChange = true
+		if config.Strict.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "strict")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -157,6 +164,17 @@ func (r *ClusternodegroupResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated clusternodegroup resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for clusternodegroup resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The NITRO unset is an unnamed POST that carries
+	// "name" in the body to identify the target nodegroup.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Clusternodegroup.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset clusternodegroup attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

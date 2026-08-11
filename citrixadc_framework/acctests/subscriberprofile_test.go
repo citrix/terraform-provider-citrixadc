@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -220,6 +221,82 @@ func TestAccSubscriberprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// servicepath is the only attribute the NITRO subscriberprofile spec documents
+// as unsettable (it appears in the ?action=unset payload example). step1 sets it
+// to a non-default value; step2 removes it, so the provider must issue the unset
+// and the appliance reverts it to its default (empty).
+const testAccSubscriberprofile_unset_step1 = `
+resource "citrixadc_subscriberprofile" "tf_unset" {
+	ip          = "10.222.74.186"
+	vlan        = 1
+	servicepath = "tf_test_servicepath"
+}
+`
+
+const testAccSubscriberprofile_unset_step2 = `
+resource "citrixadc_subscriberprofile" "tf_unset" {
+	ip   = "10.222.74.186"
+	vlan = 1
+	# servicepath removed from config -> the provider must unset it
+	# (revert to the NITRO default, empty).
+}
+`
+
+func TestAccSubscriberprofile_unset(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccSubscriberprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriberprofileExist("citrixadc_subscriberprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_subscriberprofile.tf_unset", "servicepath", "tf_test_servicepath"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccSubscriberprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriberprofileExist("citrixadc_subscriberprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_subscriberprofile.tf_unset", "servicepath", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSubscriberprofileADCValue("10.222.74.186", "servicepath", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSubscriberprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckSubscriberprofileADCValue(ip, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Subscriberprofile.Type(), ip)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("subscriberprofile %s not found on appliance", ip)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("subscriberprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", ip, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSubscriberprofileDataSource_basic(t *testing.T) {

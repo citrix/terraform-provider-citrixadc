@@ -115,12 +115,14 @@ func (r *DnssrvrecResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *DnssrvrecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state DnssrvrecResourceModel
+	var data, config, state DnssrvrecResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -133,6 +135,7 @@ func (r *DnssrvrecResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Ecssubnet.Equal(state.Ecssubnet) {
 		tflog.Debug(ctx, "ecssubnet has changed for dnssrvrec")
 		hasChange = true
@@ -151,7 +154,11 @@ func (r *DnssrvrecResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Ttl.Equal(state.Ttl) {
 		tflog.Debug(ctx, "ttl has changed for dnssrvrec")
-		hasChange = true
+		if config.Ttl.IsNull() { // removed from config -> unset it (revert to 3600)
+			attributesToUnset = append(attributesToUnset, "ttl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Weight.Equal(state.Weight) {
 		tflog.Debug(ctx, "weight has changed for dnssrvrec")
@@ -171,6 +178,17 @@ func (r *DnssrvrecResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated dnssrvrec resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for dnssrvrec resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. domain and target identify the record.
+	unsetIdPayload := map[string]interface{}{
+		"domain": data.Domain.ValueString(),
+		"target": data.Target.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnssrvrec.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnssrvrec attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -206,6 +207,85 @@ func TestAccCachepolicy_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The cachepolicy unset test covers storeingroup, the one unset-eligible
+// attribute that reverts to a documented, round-trippable NITRO default
+// ("DEFAULT"). Step 1 sets it to a non-default value; step 2 removes it from
+// config and the provider must unset it so the appliance reverts to "DEFAULT".
+// (undefaction is excluded: its NITRO revert value "Use Global" is not a valid
+// input value, so it cannot be cleanly wired for unset.)
+const testAccCachepolicy_unset_step1 = `
+resource "citrixadc_cachepolicy" "tf_unset" {
+	policyname   = "tf_test_cachepolicy_unset"
+	rule         = "true"
+	action       = "CACHE"
+	storeingroup = "BASEFILE"
+}
+`
+
+const testAccCachepolicy_unset_step2 = `
+resource "citrixadc_cachepolicy" "tf_unset" {
+	policyname = "tf_test_cachepolicy_unset"
+	rule       = "true"
+	action     = "CACHE"
+	# storeingroup removed from config -> the provider must unset it (revert to
+	# the NITRO default "DEFAULT").
+}
+`
+
+func TestAccCachepolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccCachepolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCachepolicyExist("citrixadc_cachepolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cachepolicy.tf_unset", "storeingroup", "BASEFILE"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the documented NITRO default, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccCachepolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCachepolicyExist("citrixadc_cachepolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cachepolicy.tf_unset", "storeingroup", "DEFAULT"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCachepolicyADCValue("tf_test_cachepolicy_unset", "storeingroup", "DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCachepolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckCachepolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Cachepolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("cachepolicy %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("cachepolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccCachepolicyDataSource_basic(t *testing.T) {

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -360,6 +361,88 @@ func TestAccNsacl_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The nsacl unset test covers the mutable, documented-default attributes wired
+// into attributesToUnset: logstate (default DISABLED) and stateful (default NO).
+const testAccNsacl_unset_step1 = `
+resource "citrixadc_nsacl" "tf_unset" {
+  aclname   = "tf_test_acc_nsacl_unset"
+  aclaction = "ALLOW"
+  priority  = "100"
+  srcipval  = "192.168.10.22"
+  destipval = "172.17.0.20"
+  logstate  = "ENABLED"
+  stateful  = "YES"
+}
+`
+
+const testAccNsacl_unset_step2 = `
+resource "citrixadc_nsacl" "tf_unset" {
+  aclname   = "tf_test_acc_nsacl_unset"
+  aclaction = "ALLOW"
+  priority  = "100"
+  srcipval  = "192.168.10.22"
+  destipval = "172.17.0.20"
+  # logstate, stateful removed from config -> provider must unset them (revert
+  # to NITRO defaults).
+}
+`
+
+func TestAccNsacl_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsaclDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNsacl_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsaclExist("citrixadc_nsacl.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsacl.tf_unset", "logstate", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsacl.tf_unset", "stateful", "YES"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccNsacl_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsaclExist("citrixadc_nsacl.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsacl.tf_unset", "logstate", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsacl.tf_unset", "stateful", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsaclADCValue("tf_test_acc_nsacl_unset", "logstate", "DISABLED"),
+					testAccCheckNsaclADCValue("tf_test_acc_nsacl_unset", "stateful", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsaclADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckNsaclADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsacl.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsacl %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nsacl %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNsaclDataSource_basic(t *testing.T) {

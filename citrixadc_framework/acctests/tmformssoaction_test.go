@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -222,6 +223,88 @@ func TestAccTmformssoaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: nvtype, responsesize and submitmethod have documented NITRO
+// defaults (DYNAMIC / 8096 / GET). submitmethod applies only to STATIC
+// name-value type, so step1 sets nvtype = STATIC to make submitmethod valid.
+const testAccTmformssoaction_unset_step1 = `
+	resource "citrixadc_tmformssoaction" "tf_unset" {
+		name           = "tf_test_tmformssoaction_unset"
+		actionurl      = "/logon.php"
+		userfield      = "loginID"
+		passwdfield    = "passwd"
+		ssosuccessrule = "HTTP.RES.HEADER(\"Set-Cookie\").CONTAINS(\"LogonID\")"
+		nvtype         = "STATIC"
+		submitmethod   = "POST"
+		responsesize   = 4096
+	}
+`
+
+const testAccTmformssoaction_unset_step2 = `
+	resource "citrixadc_tmformssoaction" "tf_unset" {
+		name           = "tf_test_tmformssoaction_unset"
+		actionurl      = "/logon.php"
+		userfield      = "loginID"
+		passwdfield    = "passwd"
+		ssosuccessrule = "HTTP.RES.HEADER(\"Set-Cookie\").CONTAINS(\"LogonID\")"
+		# nvtype, submitmethod, responsesize removed -> provider must unset them
+		# (revert to NITRO defaults DYNAMIC / GET / 8096).
+	}
+`
+
+func TestAccTmformssoaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmformssoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmformssoaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmformssoactionExist("citrixadc_tmformssoaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmformssoaction.tf_unset", "nvtype", "STATIC"),
+					resource.TestCheckResourceAttr("citrixadc_tmformssoaction.tf_unset", "submitmethod", "POST"),
+					resource.TestCheckResourceAttr("citrixadc_tmformssoaction.tf_unset", "responsesize", "4096"),
+				),
+			},
+			{
+				Config: testAccTmformssoaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmformssoactionExist("citrixadc_tmformssoaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmformssoaction.tf_unset", "nvtype", "DYNAMIC"),
+					resource.TestCheckResourceAttr("citrixadc_tmformssoaction.tf_unset", "submitmethod", "GET"),
+					resource.TestCheckResourceAttr("citrixadc_tmformssoaction.tf_unset", "responsesize", "8096"),
+					testAccCheckTmformssoactionADCValue("tf_test_tmformssoaction_unset", "nvtype", "DYNAMIC"),
+					testAccCheckTmformssoactionADCValue("tf_test_tmformssoaction_unset", "submitmethod", "GET"),
+					testAccCheckTmformssoactionADCValue("tf_test_tmformssoaction_unset", "responsesize", "8096"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckTmformssoactionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset took effect.
+func testAccCheckTmformssoactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Tmformssoaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("tmformssoaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("tmformssoaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccTmformssoactionDataSource_basic(t *testing.T) {

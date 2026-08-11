@@ -110,12 +110,14 @@ func (r *ClusterinstanceResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *ClusterinstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ClusterinstanceResourceModel
+	var data, config, state ClusterinstanceResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,25 +130,46 @@ func (r *ClusterinstanceResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes (clid is RequiresReplace)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Backplanebasedview.Equal(state.Backplanebasedview) {
 		tflog.Debug(ctx, "backplanebasedview has changed for clusterinstance")
-		hasChange = true
+		if config.Backplanebasedview.IsNull() {
+			attributesToUnset = append(attributesToUnset, "backplanebasedview")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clusterproxyarp.Equal(state.Clusterproxyarp) {
 		tflog.Debug(ctx, "clusterproxyarp has changed for clusterinstance")
-		hasChange = true
+		if config.Clusterproxyarp.IsNull() {
+			attributesToUnset = append(attributesToUnset, "clusterproxyarp")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Deadinterval.Equal(state.Deadinterval) {
 		tflog.Debug(ctx, "deadinterval has changed for clusterinstance")
-		hasChange = true
+		if config.Deadinterval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "deadinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dfdretainl2params.Equal(state.Dfdretainl2params) {
 		tflog.Debug(ctx, "dfdretainl2params has changed for clusterinstance")
-		hasChange = true
+		if config.Dfdretainl2params.IsNull() {
+			attributesToUnset = append(attributesToUnset, "dfdretainl2params")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Hellointerval.Equal(state.Hellointerval) {
 		tflog.Debug(ctx, "hellointerval has changed for clusterinstance")
-		hasChange = true
+		if config.Hellointerval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "hellointerval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Inc.Equal(state.Inc) {
 		tflog.Debug(ctx, "inc has changed for clusterinstance")
@@ -158,27 +181,51 @@ func (r *ClusterinstanceResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Preemption.Equal(state.Preemption) {
 		tflog.Debug(ctx, "preemption has changed for clusterinstance")
-		hasChange = true
+		if config.Preemption.IsNull() {
+			attributesToUnset = append(attributesToUnset, "preemption")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Processlocal.Equal(state.Processlocal) {
 		tflog.Debug(ctx, "processlocal has changed for clusterinstance")
-		hasChange = true
+		if config.Processlocal.IsNull() {
+			attributesToUnset = append(attributesToUnset, "processlocal")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Quorumtype.Equal(state.Quorumtype) {
 		tflog.Debug(ctx, "quorumtype has changed for clusterinstance")
-		hasChange = true
+		if config.Quorumtype.IsNull() {
+			attributesToUnset = append(attributesToUnset, "quorumtype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Retainconnectionsoncluster.Equal(state.Retainconnectionsoncluster) {
 		tflog.Debug(ctx, "retainconnectionsoncluster has changed for clusterinstance")
-		hasChange = true
+		if config.Retainconnectionsoncluster.IsNull() {
+			attributesToUnset = append(attributesToUnset, "retainconnectionsoncluster")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Secureheartbeats.Equal(state.Secureheartbeats) {
 		tflog.Debug(ctx, "secureheartbeats has changed for clusterinstance")
-		hasChange = true
+		if config.Secureheartbeats.IsNull() {
+			attributesToUnset = append(attributesToUnset, "secureheartbeats")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Syncstatusstrictmode.Equal(state.Syncstatusstrictmode) {
 		tflog.Debug(ctx, "syncstatusstrictmode has changed for clusterinstance")
-		hasChange = true
+		if config.Syncstatusstrictmode.IsNull() {
+			attributesToUnset = append(attributesToUnset, "syncstatusstrictmode")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -195,6 +242,16 @@ func (r *ClusterinstanceResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated clusterinstance resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for clusterinstance resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. clid identifies the clusterinstance for the unset.
+	unsetIdPayload := map[string]interface{}{
+		"clid": int(data.Clid.ValueInt64()),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Clusterinstance.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset clusterinstance attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

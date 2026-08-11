@@ -14,6 +14,38 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward and
+// removal is a silent no-op. Unlike a schema Default it injects no value into the
+// add/update payload (unknown values are skipped), which matters here because the
+// NITRO defaults are pseudo-values rejected by add/update.
+// defaultValue is the value the attribute reverts to after a NITRO unset (the
+// appliance echoes it back on GET). The modifier skips the unknown-forcing when
+// the prior state already equals this value, otherwise removal from config would
+// perpetually re-plan (the post-unset value is non-empty).
+type unsetOnRemoveStringModifier struct{ defaultValue string }
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-default value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	sv := req.StateValue.ValueString()
+	if req.ConfigValue.IsNull() && sv != "" && sv != m.defaultValue {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // ResponderpolicyGlobalbindingModel is one element of the globalbinding set.
 type ResponderpolicyGlobalbindingModel struct {
 	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
@@ -124,8 +156,15 @@ func (r *ResponderpolicyResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Any type of information about this responder policy.",
 			},
 			"logaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Removal from config must trigger an unset (revert to NITRO default
+				// "None"). The NITRO default is a pseudo-value that cannot be sent in
+				// an add/update payload, so a schema Default cannot be used; instead
+				// this modifier forces the plan to unknown on removal so Update runs.
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{defaultValue: "None"},
+				},
 				Description: "Name of the messagelog action to use for requests that match this policy.",
 			},
 			"name": schema.StringAttribute{
@@ -142,8 +181,15 @@ func (r *ResponderpolicyResource) Schema(ctx context.Context, req resource.Schem
 				Description: "Expression that the policy uses to determine whether to respond to the specified request.",
 			},
 			"undefaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Removal from config must trigger an unset (revert to NITRO default
+				// "Use Global"). That pseudo-value cannot be sent in an add/update
+				// payload, so a schema Default cannot be used; this modifier forces
+				// the plan to unknown on removal so Update runs.
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{defaultValue: "Use Global"},
+				},
 				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF).",
 			},
 		},

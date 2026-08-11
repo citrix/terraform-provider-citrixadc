@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -235,6 +236,112 @@ func TestAccNat64_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: netprofile is the only unset-eligible attribute (name is the key,
+// acl6name is required). Step 1 sets netprofile to a non-default value; step 2
+// removes it so the provider must issue a NITRO ?action=unset, reverting it on
+// the appliance.
+const testAccNat64_unset_step1 = `
+	resource "citrixadc_nsacl6" "tf_nsacl6_unset" {
+		acl6name   = "tf_nsacl6_unset"
+		acl6action = "ALLOW"
+		logstate   = "ENABLED"
+		stateful   = "NO"
+		ratelimit  = 120
+		state      = "ENABLED"
+		priority   = 20
+		protocol   = "TCP"
+	}
+	resource "citrixadc_netprofile" "tf_netprofile_unset" {
+		name                   = "tf_netprofile_unset"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_nat64" "tf_nat64_unset" {
+		name       = "tf_nat64_unset"
+		acl6name   = citrixadc_nsacl6.tf_nsacl6_unset.acl6name
+		netprofile = citrixadc_netprofile.tf_netprofile_unset.name
+	}
+`
+
+const testAccNat64_unset_step2 = `
+	resource "citrixadc_nsacl6" "tf_nsacl6_unset" {
+		acl6name   = "tf_nsacl6_unset"
+		acl6action = "ALLOW"
+		logstate   = "ENABLED"
+		stateful   = "NO"
+		ratelimit  = 120
+		state      = "ENABLED"
+		priority   = 20
+		protocol   = "TCP"
+	}
+	resource "citrixadc_netprofile" "tf_netprofile_unset" {
+		name                   = "tf_netprofile_unset"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_nat64" "tf_nat64_unset" {
+		name     = "tf_nat64_unset"
+		acl6name = citrixadc_nsacl6.tf_nsacl6_unset.acl6name
+		# netprofile removed from config -> provider must unset it.
+	}
+`
+
+func TestAccNat64_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNat64Destroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccNat64_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNat64Exist("citrixadc_nat64.tf_nat64_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nat64.tf_nat64_unset", "netprofile", "tf_netprofile_unset"),
+				),
+			},
+			{
+				// Removing netprofile must unset it: state reverts to the NITRO
+				// default (empty) and the implicit post-apply plan must be empty.
+				Config: testAccNat64_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNat64Exist("citrixadc_nat64.tf_nat64_unset", nil),
+					resource.TestCheckNoResourceAttr("citrixadc_nat64.tf_nat64_unset", "netprofile"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNat64ADCValue("tf_nat64_unset", "netprofile", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNat64ADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckNat64ADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nat64.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nat64 %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("nat64 %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccNat64DataSource_basic = `

@@ -108,12 +108,14 @@ func (r *LocationparameterResource) Read(ctx context.Context, req resource.ReadR
 }
 
 func (r *LocationparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LocationparameterResourceModel
+	var data, config, state LocationparameterResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,13 +128,18 @@ func (r *LocationparameterResource) Update(ctx context.Context, req resource.Upd
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Context.Equal(state.Context) {
 		tflog.Debug(ctx, "context has changed for locationparameter")
 		hasChange = true
 	}
 	if !data.Matchwildcardtoany.Equal(state.Matchwildcardtoany) {
 		tflog.Debug(ctx, "matchwildcardtoany has changed for locationparameter")
-		hasChange = true
+		if config.Matchwildcardtoany.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "matchwildcardtoany")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Q1label.Equal(state.Q1label) {
 		tflog.Debug(ctx, "q1label has changed for locationparameter")
@@ -174,6 +181,14 @@ func (r *LocationparameterResource) Update(ctx context.Context, req resource.Upd
 		tflog.Trace(ctx, "Updated locationparameter resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for locationparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Locationparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset locationparameter attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

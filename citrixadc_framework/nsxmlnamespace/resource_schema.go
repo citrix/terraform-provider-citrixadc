@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -36,8 +37,14 @@ func (r *NsxmlnamespaceResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"description": schema.StringAttribute{
 				// SDK v2: Optional + Computed, updateable.
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// An Optional+Computed attribute with no Default is sticky on
+				// config-removal (no plan diff -> Update never runs -> unset never
+				// fires). NITRO has no configured description when it is unset;
+				// default to "" so removing it from config produces a plan diff and
+				// matches the read-back (description absent from GET).
+				Default:     stringdefault.StaticString(""),
 				Description: "Description for the prefix.",
 			},
 			"prefix": schema.StringAttribute{
@@ -63,7 +70,7 @@ func nsxmlnamespaceGetThePayloadFromthePlan(ctx context.Context, data *Nsxmlname
 	if !data.Namespace.IsNull() && !data.Namespace.IsUnknown() {
 		nsxmlnamespace.Namespace = data.Namespace.ValueString()
 	}
-	if !data.Description.IsNull() && !data.Description.IsUnknown() {
+	if !data.Description.IsNull() && !data.Description.IsUnknown() && data.Description.ValueString() != "" {
 		nsxmlnamespace.Description = data.Description.ValueString()
 	}
 
@@ -88,7 +95,9 @@ func nsxmlnamespaceSetAttrFromGet(ctx context.Context, data *NsxmlnamespaceResou
 	if val, ok := getResponseData["description"]; ok && val != nil {
 		data.Description = types.StringValue(val.(string))
 	} else {
-		data.Description = types.StringNull()
+		// NITRO omits description when it is unset; represent that as "" to match
+		// the schema Default and keep Optional+Computed results consistent.
+		data.Description = types.StringValue("")
 	}
 	if val, ok := getResponseData["prefix"]; ok && val != nil {
 		data.Prefix = types.StringValue(val.(string))

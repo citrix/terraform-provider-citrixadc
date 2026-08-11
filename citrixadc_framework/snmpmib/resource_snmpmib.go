@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -95,10 +96,12 @@ func (r *SnmpmibResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *SnmpmibResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SnmpmibResourceModel
+	var data, config, state SnmpmibResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan and config into the models
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +109,70 @@ func (r *SnmpmibResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	tflog.Debug(ctx, "Updating snmpmib resource")
 
-	// Create API request body from the plan
-	snmpmib := snmpmibGetThePayloadFromtheConfig(ctx, &data)
-
-	// snmpmib is a singleton (unnamed) resource - push config with UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpmib, got error: %s", err))
-		return
+	// Detect changes and collect attributes removed from config so they can be
+	// reverted to their ADC defaults via a single ?action=unset call.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Contact.Equal(state.Contact) {
+		tflog.Debug(ctx, "contact has changed for snmpmib")
+		if config.Contact.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "contact")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Customid.Equal(state.Customid) {
+		tflog.Debug(ctx, "customid has changed for snmpmib")
+		if config.Customid.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "customid")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Location.Equal(state.Location) {
+		tflog.Debug(ctx, "location has changed for snmpmib")
+		if config.Location.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "location")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Name.Equal(state.Name) {
+		tflog.Debug(ctx, "name has changed for snmpmib")
+		if config.Name.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "name")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Ownernode.Equal(state.Ownernode) {
+		tflog.Debug(ctx, "ownernode has changed for snmpmib")
+		hasChange = true
 	}
 
-	tflog.Trace(ctx, "Updated snmpmib resource")
+	if hasChange {
+		// Create API request body from the plan
+		snmpmib := snmpmibGetThePayloadFromtheConfig(ctx, &data)
+
+		// snmpmib is a singleton (unnamed) resource - push config with UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Snmpmib.Type(), &snmpmib)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpmib, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated snmpmib resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for snmpmib resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. snmpmib is a singleton, so no identifying key is needed.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Snmpmib.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset snmpmib attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back (also sets data.Id)
 	r.readSnmpmibFromApi(ctx, &data, &resp.Diagnostics)

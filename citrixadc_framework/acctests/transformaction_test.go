@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -239,6 +240,111 @@ func TestAccTransformaction_sdkv2StateUpgrade(t *testing.T) {
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccTransformaction_basic_step1,
 				Check:                    resource.ComposeTestCheckFunc(testAccCheckTransformactionExist("citrixadc_transformaction.tf_trans_action", nil)),
+			},
+		},
+	})
+}
+
+// testAccCheckTransformactionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. An attribute that NITRO omits after unset is treated as "".
+func testAccCheckTransformactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Transformaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("transformaction %s not found on appliance", name)
+		}
+		var got string
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("transformaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+const testAccTransformaction_unset_step1 = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+  name = "tf_trans_profile1"
+}
+
+resource "citrixadc_transformaction" "tf_unset" {
+  name             = "tf_test_transformaction_unset"
+  profilename      = citrixadc_transformprofile.tf_trans_profile1.name
+  priority         = 100
+  requrlfrom       = "http://m3.mydomain.com/(.*)"
+  requrlinto       = "https://exp-proxy-v1.api.mydomain.com/$1"
+  resurlfrom       = "https://exp-proxy-v1.api.mydomain.com/(.*)"
+  resurlinto       = "https://m3.mydomain.com/$1"
+  cookiedomainfrom = "old.mydomain.com"
+  cookiedomaininto = "new.mydomain.com"
+  comment          = "unset test comment"
+  state            = "DISABLED"
+}
+`
+
+const testAccTransformaction_unset_step2 = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+  name = "tf_trans_profile1"
+}
+
+resource "citrixadc_transformaction" "tf_unset" {
+  name        = "tf_test_transformaction_unset"
+  profilename = citrixadc_transformprofile.tf_trans_profile1.name
+  priority    = 100
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccTransformaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccTransformaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformactionExist("citrixadc_transformaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "requrlfrom", "http://m3.mydomain.com/(.*)"),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "requrlinto", "https://exp-proxy-v1.api.mydomain.com/$1"),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "resurlfrom", "https://exp-proxy-v1.api.mydomain.com/(.*)"),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "resurlinto", "https://m3.mydomain.com/$1"),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "cookiedomainfrom", "old.mydomain.com"),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "cookiedomaininto", "new.mydomain.com"),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "comment", "unset test comment"),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "state", "DISABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccTransformaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformactionExist("citrixadc_transformaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformaction.tf_unset", "state", "ENABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckTransformactionADCValue("tf_test_transformaction_unset", "state", "ENABLED"),
+					testAccCheckTransformactionADCValue("tf_test_transformaction_unset", "requrlfrom", ""),
+					testAccCheckTransformactionADCValue("tf_test_transformaction_unset", "requrlinto", ""),
+					testAccCheckTransformactionADCValue("tf_test_transformaction_unset", "resurlfrom", ""),
+					testAccCheckTransformactionADCValue("tf_test_transformaction_unset", "resurlinto", ""),
+					testAccCheckTransformactionADCValue("tf_test_transformaction_unset", "cookiedomainfrom", ""),
+					testAccCheckTransformactionADCValue("tf_test_transformaction_unset", "cookiedomaininto", ""),
+					testAccCheckTransformactionADCValue("tf_test_transformaction_unset", "comment", ""),
+				),
 			},
 		},
 	})

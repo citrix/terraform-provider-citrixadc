@@ -471,6 +471,111 @@ func TestAccDnsnameserver_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// dnsprofilename is the only in-place-updateable, unset-eligible attribute on
+// dnsnameserver (ip/dnsvservername/local/state/type are the key or ForceNew).
+// Step 1 associates a DNS profile; step 2 removes it from config, which the
+// provider translates into a NITRO unset that clears the association (reverts
+// to the empty default).
+const testAccDnsnameserver_unset_step1 = `
+	resource "citrixadc_dnsprofile" "dnsprofile_unset" {
+		dnsprofilename         = "tf_unset_profile"
+		dnsquerylogging        = "DISABLED"
+		dnsanswerseclogging    = "DISABLED"
+		dnsextendedlogging     = "DISABLED"
+		dnserrorlogging        = "DISABLED"
+		cacherecords           = "ENABLED"
+		cachenegativeresponses = "ENABLED"
+		dropmultiqueryrequest  = "DISABLED"
+		cacheecsresponses      = "DISABLED"
+	}
+
+	resource "citrixadc_dnsnameserver" "tf_unset" {
+		ip             = "192.0.2.40"
+		type           = "UDP"
+		state          = "ENABLED"
+		dnsprofilename = citrixadc_dnsprofile.dnsprofile_unset.dnsprofilename
+	}
+`
+
+const testAccDnsnameserver_unset_step2 = `
+	resource "citrixadc_dnsprofile" "dnsprofile_unset" {
+		dnsprofilename         = "tf_unset_profile"
+		dnsquerylogging        = "DISABLED"
+		dnsanswerseclogging    = "DISABLED"
+		dnsextendedlogging     = "DISABLED"
+		dnserrorlogging        = "DISABLED"
+		cacherecords           = "ENABLED"
+		cachenegativeresponses = "ENABLED"
+		dropmultiqueryrequest  = "DISABLED"
+		cacheecsresponses      = "DISABLED"
+	}
+
+	resource "citrixadc_dnsnameserver" "tf_unset" {
+		ip    = "192.0.2.40"
+		type  = "UDP"
+		state = "ENABLED"
+		# dnsprofilename removed from config -> provider must unset it.
+	}
+`
+
+func TestAccDnsnameserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsnameserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applied and persisted.
+				Config: testAccDnsnameserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsnameserverExist("citrixadc_dnsnameserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.tf_unset", "dnsprofilename", "tf_unset_profile"),
+				),
+			},
+			{
+				// Removing dnsprofilename must unset it: state reverts to the
+				// empty default, the implicit post-apply plan is empty, and the
+				// appliance confirms the association was cleared.
+				Config: testAccDnsnameserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsnameserverExist("citrixadc_dnsnameserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsnameserver.tf_unset", "dnsprofilename", ""),
+					testAccCheckDnsnameserverADCValue("192.0.2.40", "UDP", "dnsprofilename", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDnsnameserverADCValue asserts an attribute's value directly on
+// the appliance for the entry matching ip and type, proving the unset took
+// effect (empty want matches an omitted/blank attribute).
+func testAccCheckDnsnameserverADCValue(ip, dnsType, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Dnsnameserver.Type())
+		if err != nil {
+			return err
+		}
+		for _, v := range dataArr {
+			if v["ip"] == ip && v["type"] == dnsType {
+				got := ""
+				if raw, ok := v[attr]; ok && raw != nil {
+					got = strings.TrimSpace(fmt.Sprintf("%v", raw))
+				}
+				if got != want {
+					return fmt.Errorf("dnsnameserver %s/%s: appliance attr %q = %q, want %q (unset did not revert it)", ip, dnsType, attr, got, want)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("dnsnameserver %s/%s not found on appliance", ip, dnsType)
+	}
+}
+
 func TestAccDnsnameserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

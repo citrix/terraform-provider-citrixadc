@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -54,6 +56,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"aaadloglevel": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("INFORMATIONAL"),
 				Description: "AAAD log level, which specifies the types of AAAD events to log in nsvpn.log.\nAvailable values function as follows:\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.",
 			},
 			"aaadnatip": schema.StringAttribute{
@@ -69,6 +72,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"apitokencache": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Option to enable/disable API cache feature.",
 			},
 			"defaultauthtype": schema.StringAttribute{
@@ -79,6 +83,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"defaultcspheader": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Parameter to enable/disable default CSP header",
 			},
 			"dynaddr": schema.StringAttribute{
@@ -94,6 +99,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"enablesessionstickiness": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enables/Disables stickiness to authentication servers",
 			},
 			"enablestaticpagecaching": schema.StringAttribute{
@@ -104,6 +110,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"enhancedepa": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Parameter to enable/disable EPA v2 functionality",
 			},
 			"failedlogintimeout": schema.Int64Attribute{
@@ -119,11 +126,13 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"httponlycookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Parameter to set/reset HttpOnly Flag for NSC_AAAC/NSC_TMAS cookies in nfactor",
 			},
 			"loginencryption": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Parameter to encrypt login information for nFactor flow",
 			},
 			"maxaaausers": schema.Int64Attribute{
@@ -134,6 +143,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"maxkbquestions": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(2),
 				Description: "This will set maximum number of Questions to be asked for KB Validation. Default value is 2, Max Value is 6",
 			},
 			"maxloginattempts": schema.Int64Attribute{
@@ -149,6 +159,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"persistentloginattempts": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Persistent storage of unsuccessful user login attempts",
 			},
 			"pwdexpirynotificationdays": schema.Int64Attribute{
@@ -164,6 +175,7 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"securityinsights": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will send the security insight records to the configured collectors when request comes to Authentication endpoint.\n* If cs vserver is frontend with Authentication vserver as target for cs action, then record is sent using Authentication vserver name.\n* If vpn/lb/cs vserver are configured with Authentication ON, then then record is sent using vpn/lb/cs vserver name accordingly.\n* If authentication vserver is frontend, then record is sent using Authentication vserver name.",
 			},
 			"tokenintrospectioninterval": schema.Int64Attribute{

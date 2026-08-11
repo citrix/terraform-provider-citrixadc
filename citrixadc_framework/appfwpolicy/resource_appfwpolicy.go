@@ -111,12 +111,14 @@ func (r *AppfwpolicyResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *AppfwpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AppfwpolicyResourceModel
+	var data, config, state AppfwpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,13 +131,22 @@ func (r *AppfwpolicyResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for appfwpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for appfwpolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Profilename.Equal(state.Profilename) {
 		tflog.Debug(ctx, "profilename has changed for appfwpolicy")
@@ -161,6 +172,16 @@ func (r *AppfwpolicyResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated appfwpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for appfwpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Appfwpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appfwpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

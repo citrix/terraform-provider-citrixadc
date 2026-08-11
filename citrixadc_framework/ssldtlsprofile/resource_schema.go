@@ -8,7 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -42,36 +44,43 @@ func (r *SsldtlsprofileResource) Schema(ctx context.Context, req resource.Schema
 			"helloverifyrequest": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Send a Hello Verify request to validate the client.",
 			},
 			"initialretrytimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Initial time out value to retransmit the last flight sent from the NetScaler.",
 			},
 			"maxbadmacignorecount": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(100),
 				Description: "Maximum number of bad MAC errors to ignore for a connection prior disconnect. Disabling parameter terminateSession terminates session immediately when bad MAC is detected in the connection.",
 			},
 			"maxholdqlen": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(32),
 				Description: "Maximum number of datagrams that can be queued at DTLS layer for processing",
 			},
 			"maxpacketsize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(120),
 				Description: "Maximum number of packets to reassemble. This value helps protect against a fragmented packet attack.",
 			},
 			"maxrecordsize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1459),
 				Description: "Maximum size of records that can be sent if PMTU is disabled.",
 			},
 			"maxretrytime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Wait for the specified time, in seconds, before resending the request.",
 			},
 			"name": schema.StringAttribute{
@@ -84,11 +93,13 @@ func (r *SsldtlsprofileResource) Schema(ctx context.Context, req resource.Schema
 			"pmtudiscovery": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Source for the maximum record size value. If ENABLED, the value is taken from the PMTU table. If DISABLED, the value is taken from the profile.",
 			},
 			"terminatesession": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Terminate the session if the message authentication code (MAC) of the client and server do not match.",
 			},
 		},

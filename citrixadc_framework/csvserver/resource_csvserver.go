@@ -146,12 +146,14 @@ func csvserverPayloadHasMutableFields(payload *cs.Csvserver) bool {
 }
 
 func (r *CsvserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state CsvserverResourceModel
+	var data, config, state CsvserverResourceModel
 
 	// Read Terraform prior state to preserve ID / detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates to unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -161,6 +163,22 @@ func (r *CsvserverResource) Update(ctx context.Context, req resource.UpdateReque
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating csvserver resource")
+
+	// Collect attributes that were removed from config so they can be reverted to
+	// their NITRO defaults via ?action=unset after the base SET.
+	attributesToUnset := []string{}
+	if !data.Appflowlog.Equal(state.Appflowlog) && config.Appflowlog.IsNull() {
+		attributesToUnset = append(attributesToUnset, "appflowlog")
+	}
+	if !data.Clttimeout.Equal(state.Clttimeout) && config.Clttimeout.IsNull() {
+		attributesToUnset = append(attributesToUnset, "clttimeout")
+	}
+	if !data.Icmpvsrresponse.Equal(state.Icmpvsrresponse) && config.Icmpvsrresponse.IsNull() {
+		attributesToUnset = append(attributesToUnset, "icmpvsrresponse")
+	}
+	if !data.L2conn.Equal(state.L2conn) && config.L2conn.IsNull() {
+		attributesToUnset = append(attributesToUnset, "l2conn")
+	}
 
 	// The current live name on the appliance (tracks the ID, which follows any
 	// prior rename).
@@ -223,6 +241,17 @@ func (r *CsvserverResource) Update(ctx context.Context, req resource.UpdateReque
 	// Reconcile the convenience-block bindings against prior state.
 	r.applyBindingsOnUpdate(ctx, liveName, &data, &state, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. Done after the base SET so any default value the SET
+	// payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": liveName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Csvserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset csvserver attributes, got error: %s", err))
 		return
 	}
 

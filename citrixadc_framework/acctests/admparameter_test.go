@@ -17,9 +17,11 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"testing"
 )
 
 const testAccAdmparameter_basic = `
@@ -98,6 +100,74 @@ func TestAccAdmparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccAdmparameter_unset_step1 = `
+	resource "citrixadc_admparameter" "tf_unset" {
+		admserviceconnect = "DISABLED"
+	}
+`
+
+const testAccAdmparameter_unset_step2 = `
+	resource "citrixadc_admparameter" "tf_unset" {
+		# admserviceconnect removed from config -> the provider must unset it
+		# (revert to NITRO default, "ENABLED").
+	}
+`
+
+func TestAccAdmparameter_unset(t *testing.T) {
+	t.Skip("Autoconnect cannot be disabled for Citrix Internal NetScalers")
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccAdmparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAdmparameterExist("citrixadc_admparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_admparameter.tf_unset", "admserviceconnect", "DISABLED"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the documented NITRO default, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAdmparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAdmparameterExist("citrixadc_admparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_admparameter.tf_unset", "admserviceconnect", "ENABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAdmparameterADCValue("admserviceconnect", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAdmparameterADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. admparameter is an unnamed singleton, so it is read with an empty name.
+func testAccCheckAdmparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("admparameter", "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("admparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("admparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckAdmparameterExist(n string, id *string) resource.TestCheckFunc {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,11 +32,13 @@ func (r *NstcpbufparamResource) Schema(ctx context.Context, req resource.SchemaR
 			"memlimit": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(64),
 				Description: "Maximum memory, in megabytes, that can be used for buffering.",
 			},
 			"size": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(64),
 				Description: "TCP buffering size per connection, in kilobytes.",
 			},
 		},

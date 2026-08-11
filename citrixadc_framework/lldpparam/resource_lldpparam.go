@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -97,12 +98,14 @@ func (r *LldpparamResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *LldpparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LldpparamResourceModel
+	var data, config, state LldpparamResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -113,18 +116,50 @@ func (r *LldpparamResource) Update(ctx context.Context, req resource.UpdateReque
 
 	tflog.Debug(ctx, "Updating lldpparam resource")
 
-	// Create API request body from the model
-	lldpparam := lldpparamGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// Singleton resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Lldpparam.Type(), &lldpparam)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lldpparam, got error: %s", err))
-		return
+	// Detect attributes removed from config so they can be unset (reverted to defaults).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Holdtimetxmult.Equal(state.Holdtimetxmult) {
+		if config.Holdtimetxmult.IsNull() {
+			attributesToUnset = append(attributesToUnset, "holdtimetxmult")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Timer.Equal(state.Timer) {
+		if config.Timer.IsNull() {
+			attributesToUnset = append(attributesToUnset, "timer")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Mode.Equal(state.Mode) {
+		hasChange = true
 	}
 
-	tflog.Trace(ctx, "Updated lldpparam resource")
+	if hasChange {
+		// Create API request body from the model
+		lldpparam := lldpparamGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Lldpparam.Type(), &lldpparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lldpparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated lldpparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lldpparam resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Lldpparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lldpparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readLldpparamFromApi(ctx, &data, &resp.Diagnostics)

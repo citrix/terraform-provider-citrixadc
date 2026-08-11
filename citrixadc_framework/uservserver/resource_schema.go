@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -39,14 +40,22 @@ func (r *UservserverResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			// SDK v2: Optional. NITRO struct field "Params" (json:"Params"). Updateable in-place.
 			"params": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Default added so removing it from config produces a plan diff,
+				// letting Update fire the NITRO unset (spec has no documented
+				// default; unset reverts it to empty).
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments associated with the protocol.",
 			},
 			// SDK v2: Optional+Computed, updateable.
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Default added so removing it from config produces a plan diff,
+				// letting Update fire the NITRO unset (spec has no documented
+				// default; unset reverts it to empty).
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments that you might want to associate with the virtual server.",
 			},
 			// SDK v2: Required, updateable (no ForceNew).

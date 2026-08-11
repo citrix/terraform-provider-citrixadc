@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,11 +41,13 @@ func (r *Dnsaction64Resource) Schema(ctx context.Context, req resource.SchemaReq
 			"excluderule": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "The expression to select the criteria for eliminating the corresponding ipv6 addresses from the response.",
 			},
 			"mappedrule": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "The expression to select the criteria for ipv4 addresses to be used for synthesis.\n                      Only if the mappedrule is evaluated to true the corresponding ipv4 address is used for synthesis using respective prefix,\n                      otherwise the A RR is discarded",
 			},
 			"prefix": schema.StringAttribute{
@@ -88,12 +91,16 @@ func dnsaction64SetAttrFromGet(ctx context.Context, data *Dnsaction64ResourceMod
 	if val, ok := getResponseData["excluderule"]; ok && val != nil {
 		data.Excluderule = types.StringValue(val.(string))
 	} else {
-		data.Excluderule = types.StringNull()
+		// NITRO omits excluderule from GET once it is unset; map that absence to
+		// the schema default ("") so plan (Optional+Computed default) and state agree.
+		data.Excluderule = types.StringValue("")
 	}
 	if val, ok := getResponseData["mappedrule"]; ok && val != nil {
 		data.Mappedrule = types.StringValue(val.(string))
 	} else {
-		data.Mappedrule = types.StringNull()
+		// NITRO omits mappedrule from GET once it is unset; map that absence to
+		// the schema default ("") so plan (Optional+Computed default) and state agree.
+		data.Mappedrule = types.StringValue("")
 	}
 	if val, ok := getResponseData["prefix"]; ok && val != nil {
 		data.Prefix = types.StringValue(val.(string))

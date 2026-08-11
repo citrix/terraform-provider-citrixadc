@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -213,6 +214,98 @@ data "citrixadc_crpolicy" "crpolicy_data" {
     policyname = citrixadc_crpolicy.crpolicy.policyname
 }
 `
+
+// crpolicy's only unset-eligible attribute is logaction: action is not
+// unsettable (NITRO rejects ?action=unset with "Invalid argument [action]") and
+// rule/policyname are required/key. logaction is Optional+Computed and unsets
+// cleanly (revert to the empty NITRO default). Setting it requires a prerequisite
+// audit message action.
+const testAccCrpolicy_unset_step1 = `
+resource "citrixadc_auditmessageaction" "tf_msgaction" {
+	name              = "tf_unset_crpolicy_msgaction"
+	loglevel          = "INFORMATIONAL"
+	stringbuilderexpr = "\"crpolicy unset test\""
+}
+resource "citrixadc_crpolicy" "tf_unset" {
+	policyname = "tf_test_crpolicy_unset"
+	rule       = "true"
+	action     = "CACHE"
+	logaction  = citrixadc_auditmessageaction.tf_msgaction.name
+}
+`
+
+const testAccCrpolicy_unset_step2 = `
+resource "citrixadc_auditmessageaction" "tf_msgaction" {
+	name              = "tf_unset_crpolicy_msgaction"
+	loglevel          = "INFORMATIONAL"
+	stringbuilderexpr = "\"crpolicy unset test\""
+}
+resource "citrixadc_crpolicy" "tf_unset" {
+	policyname = "tf_test_crpolicy_unset"
+	rule       = "true"
+	action     = "CACHE"
+	# logaction removed from config -> provider must unset it.
+}
+`
+
+func TestAccCrpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccCrpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrpolicyExist("citrixadc_crpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_crpolicy.tf_unset", "logaction", "tf_unset_crpolicy_msgaction"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the empty NITRO default, the implicit
+				// post-apply plan must be empty, and the appliance confirms it.
+				Config: testAccCrpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrpolicyExist("citrixadc_crpolicy.tf_unset", nil),
+					// After unset, NITRO omits logaction from GET, so it reads back as
+					// null (absent from state) -- assert the revert directly on the
+					// appliance instead, and rely on the implicit empty-plan check.
+					testAccCheckCrpolicyADCValue("tf_test_crpolicy_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCrpolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. An unset attribute is omitted from the GET response, which reads back as an
+// empty string here.
+func testAccCheckCrpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Crpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("crpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("crpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccCrpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

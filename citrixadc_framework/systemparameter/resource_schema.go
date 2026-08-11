@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -59,6 +61,7 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			"cliloglevel": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("INFORMATIONAL"),
 				Description: "Audit log level, which specifies the types of events to log for cli executed commands.\nAvailable values function as follows:\n* EMERGENCY - Events that indicate an immediate crisis on the server.\n* ALERT - Events that might require action.\n* CRITICAL - Events that indicate an imminent server crisis.\n* ERROR - Events that indicate some type of error.\n* WARNING - Events that require action in the near future.\n* NOTICE - Events that the administrator should know about.\n* INFORMATIONAL - All but low-level events.\n* DEBUG - All events, in extreme detail.",
 			},
 			"daystoexpire": schema.Int64Attribute{
@@ -69,6 +72,7 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			"doppler": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable Doppler",
 			},
 			"fipsusermode": schema.StringAttribute{
@@ -84,6 +88,7 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			"googleanalytics": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable Google analytics",
 			},
 			"localauth": schema.StringAttribute{
@@ -109,11 +114,13 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			"natpcbforceflushlimit": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(2147483647),
 				Description: "Flush the system if the number of Network Address Translation Protocol Control Blocks (NATPCBs) exceeds this value.",
 			},
 			"natpcbrstontimeout": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send a reset signal to client and server connections when their NATPCBs time out. Avoids the buildup of idle TCP connections on both the sides.",
 			},
 			"passwordhistorycontrol": schema.StringAttribute{
@@ -134,21 +141,25 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			"rbaonresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable Role-Based Authentication (RBA) on responses.",
 			},
 			"reauthonauthparamchange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable External user reauthentication when authentication parameter changes",
 			},
 			"removesensitivefiles": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Use this option to remove the sensitive files from the system like authorise keys, public keys etc. The commands which will remove sensitive files when this system paramter is enabled are rm cluster instance, rm cluster node, rm ha node, clear config full, join cluster and add cluster instance.",
 			},
 			"restrictedtimeout": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable/Disable the restricted timeout behaviour. When enabled, timeout cannot be configured beyond admin configured timeout  and also it will have the [minimum - maximum] range check. When disabled, timeout will have the old behaviour. By default the value is disabled",
 			},
 			"strongpassword": schema.StringAttribute{
@@ -159,11 +170,13 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(900),
 				Description: "CLI session inactivity timeout, in seconds. If Restrictedtimeout argument is enabled, Timeout can have values in the range [300-86400] seconds.\nIf Restrictedtimeout argument is disabled, Timeout can have values in the range [0, 10-100000000] seconds. Default value is 900 seconds.",
 			},
 			"totalauthtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(20),
 				Description: "Total time a request can take for authentication/authorization",
 			},
 			"wafprotection": schema.ListAttribute{

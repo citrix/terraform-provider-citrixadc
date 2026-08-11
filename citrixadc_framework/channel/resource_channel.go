@@ -109,12 +109,14 @@ func (r *ChannelResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *ChannelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ChannelResourceModel
+	var data, config, state ChannelResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,18 +127,92 @@ func (r *ChannelResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	tflog.Debug(ctx, "Updating channel resource")
 
-	// Create API request body from the model.
-	// channel is updated via a PUT to /config/channel with the "id" in the body
-	// (no name in the URL), matching the SDK v2 behavior.
-	channel := channelGetThePayloadFromtheConfig(ctx, &data)
+	// Determine whether an update is needed and which attributes were removed
+	// from config (to be unset back to their NITRO defaults).
+	hasChange := false
+	attributesToUnset := []string{}
 
-	err := r.client.UpdateUnnamedResource(service.Channel.Type(), &channel)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update channel, got error: %s", err))
-		return
+	// Unsettable attributes: removed from config -> unset; otherwise update.
+	if !data.State.Equal(state.State) {
+		if config.State.IsNull() {
+			attributesToUnset = append(attributesToUnset, "state")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Mtu.Equal(state.Mtu) {
+		if config.Mtu.IsNull() {
+			attributesToUnset = append(attributesToUnset, "mtu")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Tagall.Equal(state.Tagall) {
+		if config.Tagall.IsNull() {
+			attributesToUnset = append(attributesToUnset, "tagall")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Hamonitor.Equal(state.Hamonitor) {
+		if config.Hamonitor.IsNull() {
+			attributesToUnset = append(attributesToUnset, "hamonitor")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Haheartbeat.Equal(state.Haheartbeat) {
+		if config.Haheartbeat.IsNull() {
+			attributesToUnset = append(attributesToUnset, "haheartbeat")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated channel resource")
+	// Remaining updatable attributes: any change triggers an update.
+	if !data.Ifnum.Equal(state.Ifnum) ||
+		!data.Mode.Equal(state.Mode) ||
+		!data.Conndistr.Equal(state.Conndistr) ||
+		!data.Macdistr.Equal(state.Macdistr) ||
+		!data.Lamac.Equal(state.Lamac) ||
+		!data.Speed.Equal(state.Speed) ||
+		!data.Flowctl.Equal(state.Flowctl) ||
+		!data.Trunk.Equal(state.Trunk) ||
+		!data.Ifalias.Equal(state.Ifalias) ||
+		!data.Throughput.Equal(state.Throughput) ||
+		!data.Lrminthroughput.Equal(state.Lrminthroughput) ||
+		!data.Linkredundancy.Equal(state.Linkredundancy) ||
+		!data.Bandwidthhigh.Equal(state.Bandwidthhigh) ||
+		!data.Bandwidthnormal.Equal(state.Bandwidthnormal) {
+		hasChange = true
+	}
+
+	if hasChange {
+		// Create API request body from the model.
+		// channel is updated via a PUT to /config/channel with the "id" in the body
+		// (no name in the URL), matching the SDK v2 behavior.
+		channel := channelGetThePayloadFromtheConfig(ctx, &data)
+
+		err := r.client.UpdateUnnamedResource(service.Channel.Type(), &channel)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update channel, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated channel resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for channel resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. channel's primary key is "id".
+	unsetIdPayload := map[string]interface{}{
+		"id": data.ChannelId.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Channel.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset channel attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readChannelFromApi(ctx, &data, &resp.Diagnostics) {

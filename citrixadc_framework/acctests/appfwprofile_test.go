@@ -601,6 +601,88 @@ func TestAccAppfwprofile_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// The appfwprofile unset test covers type-independent, no-prerequisite string
+// toggles whose NITRO default is "OFF". Step 1 sets them to the non-default
+// "ON"; step 2 removes them from config, which must unset them (revert to
+// "OFF"). The implicit post-apply empty-plan check plus appliance-level
+// assertions confirm the unset took effect.
+const testAccAppfwprofile_unset_step1 = `
+resource citrixadc_appfwprofile tf_unset {
+  name                        = "tf_test_appfwprofile_unset"
+  checkrequestheaders         = "ON"
+  semicolonfieldseparator     = "ON"
+  sessionlessfieldconsistency = "ON"
+  streaming                   = "ON"
+  trace                       = "ON"
+}
+`
+
+const testAccAppfwprofile_unset_step2 = `
+resource citrixadc_appfwprofile tf_unset {
+  name = "tf_test_appfwprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults, "OFF").
+}
+`
+
+func TestAccAppfwprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofileExist("citrixadc_appfwprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "checkrequestheaders", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "semicolonfieldseparator", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "sessionlessfieldconsistency", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "streaming", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "trace", "ON"),
+				),
+			},
+			{
+				Config: testAccAppfwprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofileExist("citrixadc_appfwprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "checkrequestheaders", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "semicolonfieldseparator", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "sessionlessfieldconsistency", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "streaming", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "trace", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppfwprofileADCValue("tf_test_appfwprofile_unset", "streaming", "OFF"),
+					testAccCheckAppfwprofileADCValue("tf_test_appfwprofile_unset", "trace", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppfwprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckAppfwprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appfwprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("appfwprofile %s not found on appliance", name)
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("appfwprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccAppfwprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -164,6 +165,109 @@ const testAccNd6ravariablesDataSource_basic = `
 		vlan = citrixadc_nd6ravariables.tf_nd6ravariables.vlan
 	}
 `
+
+// step1 sets every unset-eligible attribute to a valid non-default value
+// (respecting the RA interval constraints: minrtadvinterval <= 0.75 *
+// maxrtadvinterval and defaultlifetime >= maxrtadvinterval).
+const testAccNd6ravariables_unset_step1 = `
+	resource "citrixadc_nd6ravariables" "tf_unset" {
+		vlan                     = 1
+		ceaserouteradv           = "YES"
+		srclinklayeraddroption   = "NO"
+		onlyunicastrtadvresponse = "YES"
+		managedaddrconfig        = "YES"
+		otheraddrconfig          = "YES"
+		currhoplimit             = 32
+		maxrtadvinterval         = 700
+		minrtadvinterval         = 300
+		linkmtu                  = 1400
+		reachabletime            = 1000
+		retranstime              = 500
+		defaultlifetime          = 2000
+	}
+`
+
+// step2 removes all unset-eligible attributes (key only) -> the provider must
+// unset them (revert to NITRO defaults).
+const testAccNd6ravariables_unset_step2 = `
+	resource "citrixadc_nd6ravariables" "tf_unset" {
+		vlan = 1
+	}
+`
+
+func TestAccNd6ravariables_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNd6ravariables_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNd6ravariablesExist("citrixadc_nd6ravariables.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "ceaserouteradv", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "srclinklayeraddroption", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "onlyunicastrtadvresponse", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "managedaddrconfig", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "otheraddrconfig", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "currhoplimit", "32"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "maxrtadvinterval", "700"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "minrtadvinterval", "300"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "linkmtu", "1400"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "reachabletime", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "retranstime", "500"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "defaultlifetime", "2000"),
+				),
+			},
+			{
+				Config: testAccNd6ravariables_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNd6ravariablesExist("citrixadc_nd6ravariables.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "ceaserouteradv", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "srclinklayeraddroption", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "onlyunicastrtadvresponse", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "managedaddrconfig", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "otheraddrconfig", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "currhoplimit", "64"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "maxrtadvinterval", "600"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "minrtadvinterval", "198"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "linkmtu", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "reachabletime", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "retranstime", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nd6ravariables.tf_unset", "defaultlifetime", "1800"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNd6ravariablesADCValue("1", "ceaserouteradv", "NO"),
+					testAccCheckNd6ravariablesADCValue("1", "currhoplimit", "64"),
+					testAccCheckNd6ravariablesADCValue("1", "srclinklayeraddroption", "YES"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNd6ravariablesADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckNd6ravariablesADCValue(vlan, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nd6ravariables.Type(), vlan)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nd6ravariables vlan %s not found on appliance", vlan)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nd6ravariables vlan %s: appliance attr %q = %q, want %q (unset did not revert it)", vlan, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccNd6ravariablesDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

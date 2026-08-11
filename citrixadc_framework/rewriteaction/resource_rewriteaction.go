@@ -121,12 +121,14 @@ func (r *RewriteactionResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *RewriteactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state RewriteactionResourceModel
+	var data, config, state RewriteactionResourceModel
 
 	// Read Terraform prior state to preserve ID / live name
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -163,13 +165,22 @@ func (r *RewriteactionResource) Update(ctx context.Context, req resource.UpdateR
 
 	// Regular (in-place) update of the NITRO-updatable attributes.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for rewriteaction")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Refinesearch.Equal(state.Refinesearch) {
 		tflog.Debug(ctx, "refinesearch has changed for rewriteaction")
-		hasChange = true
+		if config.Refinesearch.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refinesearch")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Search.Equal(state.Search) {
 		tflog.Debug(ctx, "search has changed for rewriteaction")
@@ -197,6 +208,17 @@ func (r *RewriteactionResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated rewriteaction resource")
 	} else {
 		tflog.Debug(ctx, "No in-place changes detected for rewriteaction resource")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// NITRO defaults. Keyed by the CURRENT LIVE name (data.Id), which after a rename
+	// is newName.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Rewriteaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset rewriteaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. Preserve the user-facing key/rename inputs across

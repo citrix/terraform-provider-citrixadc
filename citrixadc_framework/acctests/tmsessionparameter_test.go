@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -170,6 +171,94 @@ func TestAccTmsessionparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// tmsessionparameter is a singleton config resource. Step1 sets the
+// unset-eligible attributes (each with a documented NITRO default) to
+// non-default values; step2 removes them so the provider must unset them,
+// reverting the appliance to the documented defaults.
+const testAccTmsessionparameter_unset_step1 = `
+resource "citrixadc_tmsessionparameter" "tf_unset" {
+	defaultauthorizationaction = "ALLOW"
+	homepage                   = "http://example.com"
+	httponlycookie             = "NO"
+	sesstimeout                = 40
+	sso                        = "ON"
+	ssocredential              = "SECONDARY"
+}
+`
+
+const testAccTmsessionparameter_unset_step2 = `
+resource "citrixadc_tmsessionparameter" "tf_unset" {
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to the documented NITRO defaults).
+}
+`
+
+func TestAccTmsessionparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccTmsessionparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmsessionparameterExist("citrixadc_tmsessionparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "defaultauthorizationaction", "ALLOW"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "homepage", "http://example.com"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "httponlycookie", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "sesstimeout", "40"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "sso", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "ssocredential", "SECONDARY"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccTmsessionparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmsessionparameterExist("citrixadc_tmsessionparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "defaultauthorizationaction", "DENY"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "homepage", "None"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "httponlycookie", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "sesstimeout", "30"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "sso", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionparameter.tf_unset", "ssocredential", "PRIMARY"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckTmsessionparameterADCValue("defaultauthorizationaction", "DENY"),
+					testAccCheckTmsessionparameterADCValue("sso", "OFF"),
+					testAccCheckTmsessionparameterADCValue("httponlycookie", "YES"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckTmsessionparameterADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckTmsessionparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Tmsessionparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("tmsessionparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("tmsessionparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccTmsessionparameterDataSource_basic(t *testing.T) {

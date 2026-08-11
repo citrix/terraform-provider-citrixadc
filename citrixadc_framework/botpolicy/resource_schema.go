@@ -8,10 +8,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward
+// and removal is a silent no-op. Because these attributes revert to no value
+// (absent from GET) after unset, marking the plan unknown also avoids a
+// "provider produced inconsistent result" error, which a static Default would
+// trigger.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
 
 // BotpolicyResourceModel describes the resource data model.
 type BotpolicyResourceModel struct {
@@ -34,13 +63,22 @@ func (r *BotpolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the botpolicy resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Any type of information about this bot policy.",
 			},
 			"logaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO always echoes logaction with the non-empty default "None",
+				// and unset reverts it to "None". A static Default (not the
+				// unset-on-remove modifier, which is for attributes that revert to
+				// absent) keeps the plan stable when logaction is unconfigured while
+				// still producing a diff -> unset when a set value is removed.
+				Default:     stringdefault.StaticString("None"),
 				Description: "Name of the messagelog action to use for requests that match this policy.",
 			},
 			"name": schema.StringAttribute{
@@ -76,8 +114,13 @@ func (r *BotpolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Expression that the policy uses to determine whether to apply bot profile on the specified request.",
 			},
 			"undefaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO always echoes undefaction with the non-empty default "None",
+				// and unset reverts it to "None". Use a static Default so an
+				// unconfigured undefaction stays stable across plans while a removed
+				// set value still diffs -> unset.
+				Default:     stringdefault.StaticString("None"),
 				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition.",
 			},
 		},
@@ -95,7 +138,10 @@ func botpolicyGetThePayloadFromthePlan(ctx context.Context, data *BotpolicyResou
 	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		botpolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
+	// "None" is NITRO's read-back sentinel for "no action"; it is not a valid
+	// input value (POST/PUT reject it), so it is never sent in the payload. It is
+	// also the value the appliance reverts to on unset.
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() && data.Logaction.ValueString() != "None" {
 		botpolicy.Logaction = data.Logaction.ValueString()
 	}
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
@@ -108,7 +154,9 @@ func botpolicyGetThePayloadFromthePlan(ctx context.Context, data *BotpolicyResou
 	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		botpolicy.Rule = data.Rule.ValueString()
 	}
-	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
+	// "None" is the read-back sentinel / unset revert value for undefaction and is
+	// rejected as an input, so it is never sent in the payload.
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() && data.Undefaction.ValueString() != "None" {
 		botpolicy.Undefaction = data.Undefaction.ValueString()
 	}
 

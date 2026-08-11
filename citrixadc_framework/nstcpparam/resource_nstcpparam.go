@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -96,10 +97,13 @@ func (r *NstcpparamResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NstcpparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NstcpparamResourceModel
+	var data, config, state NstcpparamResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan, and config into the models
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -107,10 +111,76 @@ func (r *NstcpparamResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	tflog.Debug(ctx, "Updating nstcpparam resource")
 
-	// All configurable attributes are RequiresReplaceIfConfigured (SDK v2
+	// Most configurable attributes are RequiresReplaceIfConfigured (SDK v2
 	// ForceNew), so a configured change is handled by recreate rather than
 	// Update. This branch still pushes the config to keep computed-value
 	// resolution consistent.
+	//
+	// A handful of attributes carry a schema Default so that removing them from
+	// config produces a plan diff (Default value vs. prior non-default state),
+	// routing through Update. For those, if the attribute is now absent from
+	// config, we unset it on the appliance so it reverts to its NITRO default.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Mptcpmaxpendingsf.Equal(state.Mptcpmaxpendingsf) {
+		if config.Mptcpmaxpendingsf.IsNull() {
+			attributesToUnset = append(attributesToUnset, "mptcpmaxpendingsf")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Mptcppendingjointhreshold.Equal(state.Mptcppendingjointhreshold) {
+		if config.Mptcppendingjointhreshold.IsNull() {
+			attributesToUnset = append(attributesToUnset, "mptcppendingjointhreshold")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Mptcpsfreplacetimeout.Equal(state.Mptcpsfreplacetimeout) {
+		if config.Mptcpsfreplacetimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "mptcpsfreplacetimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Mptcpsftimeout.Equal(state.Mptcpsftimeout) {
+		if config.Mptcpsftimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "mptcpsftimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Oooqsize.Equal(state.Oooqsize) {
+		if config.Oooqsize.IsNull() {
+			attributesToUnset = append(attributesToUnset, "oooqsize")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Rfc5961chlgacklimit.Equal(state.Rfc5961chlgacklimit) {
+		if config.Rfc5961chlgacklimit.IsNull() {
+			attributesToUnset = append(attributesToUnset, "rfc5961chlgacklimit")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Tcpfastopencookietimeout.Equal(state.Tcpfastopencookietimeout) {
+		if config.Tcpfastopencookietimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "tcpfastopencookietimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Wsval.Equal(state.Wsval) {
+		if config.Wsval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "wsval")
+		} else {
+			hasChange = true
+		}
+	}
+
+	_ = hasChange
+
 	nstcpparam := nstcpparamGetThePayloadFromtheConfig(ctx, &data)
 
 	err := r.client.UpdateUnnamedResource(service.Nstcpparam.Type(), &nstcpparam)
@@ -120,6 +190,16 @@ func (r *NstcpparamResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	tflog.Trace(ctx, "Updated nstcpparam resource")
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. nstcpparam is a singleton (unnamed) resource, so the
+	// unset id payload is empty. Done after the update so any default value the
+	// update payload carried is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nstcpparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nstcpparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back (data.Id carried over from plan/prior state)
 	r.readNstcpparamFromApi(ctx, &data, &resp.Diagnostics)

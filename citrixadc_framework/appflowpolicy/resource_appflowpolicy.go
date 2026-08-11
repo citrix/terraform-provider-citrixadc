@@ -111,12 +111,14 @@ func (r *AppflowpolicyResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *AppflowpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AppflowpolicyResourceModel
+	var data, config, state AppflowpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,13 +131,18 @@ func (r *AppflowpolicyResource) Update(ctx context.Context, req resource.UpdateR
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for appflowpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for appflowpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for appflowpolicy")
@@ -143,7 +150,11 @@ func (r *AppflowpolicyResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, "undefaction has changed for appflowpolicy")
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -161,6 +172,16 @@ func (r *AppflowpolicyResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated appflowpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for appflowpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Appflowpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appflowpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

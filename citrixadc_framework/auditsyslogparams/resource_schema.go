@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -68,6 +69,7 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 			"dateformat": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("MMDDYYYY"),
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY - U.S. style month/date/year format.\n* DDMMYYYY. European style  -date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
 			},
 			"dns": schema.StringAttribute{
@@ -94,6 +96,7 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 			"protocolviolations": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Log protocol violations",
 			},
 			"serverip": schema.StringAttribute{
@@ -114,6 +117,7 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 			"streamanalytics": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Export log stream analytics statistics to syslog server",
 			},
 			"subscriberlog": schema.StringAttribute{
@@ -124,6 +128,7 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 			"tcp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Log TCP messages.",
 			},
 			"timezone": schema.StringAttribute{

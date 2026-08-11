@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -273,6 +274,116 @@ func TestAccDnsprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The dnsprofile unset test exercises every unset-eligible (Optional, mutable,
+// non-key) attribute. step1 sets all of them to non-default values; step2
+// removes them from config so the provider must unset them, reverting each to
+// its documented NITRO default.
+const testAccDnsprofile_unset_step1 = `
+resource "citrixadc_dnsprofile" "tf_unset" {
+  dnsprofilename               = "tf_dnsprofile_unset"
+  recursiveresolution          = "ENABLED"
+  dnsquerylogging              = "ENABLED"
+  dnsanswerseclogging          = "ENABLED"
+  dnsextendedlogging           = "ENABLED"
+  dnserrorlogging              = "ENABLED"
+  cacherecords                 = "DISABLED"
+  cachenegativeresponses       = "DISABLED"
+  dropmultiqueryrequest        = "ENABLED"
+  cacheecsresponses            = "ENABLED"
+  insertecs                    = "ENABLED"
+  replaceecs                   = "ENABLED"
+  maxcacheableecsprefixlength  = 16
+  maxcacheableecsprefixlength6 = 64
+}
+`
+
+const testAccDnsprofile_unset_step2 = `
+resource "citrixadc_dnsprofile" "tf_unset" {
+  dnsprofilename = "tf_dnsprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccDnsprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccDnsprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsprofileExist("citrixadc_dnsprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "recursiveresolution", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dnsquerylogging", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dnsanswerseclogging", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dnsextendedlogging", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dnserrorlogging", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "cacherecords", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "cachenegativeresponses", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dropmultiqueryrequest", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "cacheecsresponses", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "insertecs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "replaceecs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "maxcacheableecsprefixlength", "16"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "maxcacheableecsprefixlength6", "64"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccDnsprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsprofileExist("citrixadc_dnsprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "recursiveresolution", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dnsquerylogging", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dnsanswerseclogging", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dnsextendedlogging", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dnserrorlogging", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "cacherecords", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "cachenegativeresponses", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "dropmultiqueryrequest", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "cacheecsresponses", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "insertecs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "replaceecs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "maxcacheableecsprefixlength", "32"),
+					resource.TestCheckResourceAttr("citrixadc_dnsprofile.tf_unset", "maxcacheableecsprefixlength6", "128"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckDnsprofileADCValue("tf_dnsprofile_unset", "recursiveresolution", "DISABLED"),
+					testAccCheckDnsprofileADCValue("tf_dnsprofile_unset", "cacherecords", "ENABLED"),
+					testAccCheckDnsprofileADCValue("tf_dnsprofile_unset", "maxcacheableecsprefixlength", "32"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDnsprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckDnsprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnsprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("dnsprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("dnsprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccDnsprofileDataSource_basic(t *testing.T) {

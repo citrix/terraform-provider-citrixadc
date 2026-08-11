@@ -109,12 +109,14 @@ func (r *VpnurlResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *VpnurlResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnurlResourceModel
+	var data, config, state VpnurlResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,17 +127,91 @@ func (r *VpnurlResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	tflog.Debug(ctx, "Updating vpnurl resource")
 
-	vpnurl := vpnurlGetThePayloadFromtheConfig(ctx, &data)
-
-	// Named resource - use UpdateResource keyed on urlname
-	urlname := data.Urlname.ValueString()
-	_, err := r.client.UpdateResource(service.Vpnurl.Type(), urlname, &vpnurl)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnurl, got error: %s", err))
-		return
+	// Determine whether there is an actual update and/or attributes to unset.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Actualurl.Equal(state.Actualurl) {
+		hasChange = true
+	}
+	if !data.Linkname.Equal(state.Linkname) {
+		hasChange = true
+	}
+	if !data.Appjson.Equal(state.Appjson) {
+		if config.Appjson.IsNull() {
+			attributesToUnset = append(attributesToUnset, "appjson")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Applicationtype.Equal(state.Applicationtype) {
+		if config.Applicationtype.IsNull() {
+			attributesToUnset = append(attributesToUnset, "applicationtype")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Clientlessaccess.Equal(state.Clientlessaccess) {
+		if config.Clientlessaccess.IsNull() {
+			attributesToUnset = append(attributesToUnset, "clientlessaccess")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Comment.Equal(state.Comment) {
+		if config.Comment.IsNull() {
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Iconurl.Equal(state.Iconurl) {
+		if config.Iconurl.IsNull() {
+			attributesToUnset = append(attributesToUnset, "iconurl")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Ssotype.Equal(state.Ssotype) {
+		if config.Ssotype.IsNull() {
+			attributesToUnset = append(attributesToUnset, "ssotype")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Vservername.Equal(state.Vservername) {
+		if config.Vservername.IsNull() {
+			attributesToUnset = append(attributesToUnset, "vservername")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated vpnurl resource")
+	urlname := data.Urlname.ValueString()
+
+	if hasChange {
+		vpnurl := vpnurlGetThePayloadFromtheConfig(ctx, &data)
+
+		// Named resource - use UpdateResource keyed on urlname
+		_, err := r.client.UpdateResource(service.Vpnurl.Type(), urlname, &vpnurl)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnurl, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated vpnurl resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for vpnurl resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"urlname": urlname,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnurl.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnurl attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readVpnurlFromApi(ctx, &data, &resp.Diagnostics) {

@@ -125,12 +125,14 @@ func (r *ResponderpolicyResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *ResponderpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ResponderpolicyResourceModel
+	var data, config, state ResponderpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID and diff the bindings.
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates to unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -144,6 +146,7 @@ func (r *ResponderpolicyResource) Update(ctx context.Context, req resource.Updat
 
 	// Check for changes in the base (scalar) attributes.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for responderpolicy")
 		hasChange = true
@@ -158,7 +161,11 @@ func (r *ResponderpolicyResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for responderpolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for responderpolicy")
@@ -166,12 +173,28 @@ func (r *ResponderpolicyResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, "undefaction has changed for responderpolicy")
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
 		responderpolicy := responderpolicyGetThePayloadFromthePlan(ctx, &data)
 		responderpolicy.Name = responderpolicyName
+		// Attributes queued for unset must not be sent in the update payload:
+		// their values are reverted to NITRO defaults by the unset call below,
+		// and some defaults (e.g. undefaction "Use Global", logaction "None")
+		// are rejected as invalid when supplied in an update PUT.
+		for _, a := range attributesToUnset {
+			switch a {
+			case "undefaction":
+				responderpolicy.Undefaction = ""
+			case "logaction":
+				responderpolicy.Logaction = ""
+			}
+		}
 		_, err := r.client.UpdateResource(service.Responderpolicy.Type(), responderpolicyName, &responderpolicy)
 		if err != nil {
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update responderpolicy, got error: %s", err))
@@ -180,6 +203,16 @@ func (r *ResponderpolicyResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated responderpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No base attribute changes detected for responderpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": responderpolicyName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Responderpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset responderpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Reconcile the convenience-block bindings against prior state.

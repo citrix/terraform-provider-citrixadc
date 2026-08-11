@@ -109,12 +109,14 @@ func (r *NspartitionResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *NspartitionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NspartitionResourceModel
+	var data, config, state NspartitionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,25 +129,42 @@ func (r *NspartitionResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Force.Equal(state.Force) {
 		tflog.Debug(ctx, "force has changed for nspartition")
 		hasChange = true
 	}
 	if !data.Maxbandwidth.Equal(state.Maxbandwidth) {
 		tflog.Debug(ctx, "maxbandwidth has changed for nspartition")
-		hasChange = true
+		if config.Maxbandwidth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxbandwidth")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxconn.Equal(state.Maxconn) {
 		tflog.Debug(ctx, "maxconn has changed for nspartition")
-		hasChange = true
+		if config.Maxconn.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxconn")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxmemlimit.Equal(state.Maxmemlimit) {
 		tflog.Debug(ctx, "maxmemlimit has changed for nspartition")
-		hasChange = true
+		if config.Maxmemlimit.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxmemlimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Minbandwidth.Equal(state.Minbandwidth) {
 		tflog.Debug(ctx, "minbandwidth has changed for nspartition")
-		hasChange = true
+		if config.Minbandwidth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "minbandwidth")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Partitionmac.Equal(state.Partitionmac) {
 		tflog.Debug(ctx, "partitionmac has changed for nspartition")
@@ -169,6 +188,16 @@ func (r *NspartitionResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated nspartition resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nspartition resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"partitionname": data.Partitionname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nspartition.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nspartition attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

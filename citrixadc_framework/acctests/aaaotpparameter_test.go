@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -138,6 +140,75 @@ func TestAccAaaotpparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccAaaotpparameter_unset_step1 = `
+	resource "citrixadc_aaaotpparameter" "tf_unset" {
+		encryption    = "ON"
+		maxotpdevices = 7
+	}
+`
+
+const testAccAaaotpparameter_unset_step2 = `
+	resource "citrixadc_aaaotpparameter" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults: encryption=OFF, maxotpdevices=4).
+	}
+`
+
+func TestAccAaaotpparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAaaotpparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaotpparameterExist("citrixadc_aaaotpparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaotpparameter.tf_unset", "encryption", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_aaaotpparameter.tf_unset", "maxotpdevices", "7"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccAaaotpparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaotpparameterExist("citrixadc_aaaotpparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaotpparameter.tf_unset", "encryption", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_aaaotpparameter.tf_unset", "maxotpdevices", "4"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAaaotpparameterADCValue("encryption", "OFF"),
+					testAccCheckAaaotpparameterADCValue("maxotpdevices", "4"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAaaotpparameterADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset reverted it.
+func testAccCheckAaaotpparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaaotpparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("aaaotpparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("aaaotpparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccAaaotpparameterDataSource_basic = `

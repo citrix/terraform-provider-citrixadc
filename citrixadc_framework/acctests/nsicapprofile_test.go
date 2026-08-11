@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -182,6 +183,101 @@ func TestAccNsicapprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The nsicapprofile unset test covers the spec-unsettable attributes that have
+// a documented NITRO server default: preview (DISABLED), previewlength (4096),
+// connectionkeepalive (ENABLED), allow204 (ENABLED), reqtimeout (0) and
+// reqtimeoutaction (RESET). uri and mode are Required/mandatory (not
+// unsettable); the free-form string attributes (hostheader, useragent,
+// queryparams, inserticapheaders, inserthttprequest, logaction) have no
+// documented default and are excluded.
+const testAccNsicapprofile_unset_step1 = `
+resource "citrixadc_nsicapprofile" "tf_unset" {
+  name                = "tf_nsicapprofile_unset"
+  uri                 = "/avscan"
+  mode                = "REQMOD"
+  preview             = "ENABLED"
+  previewlength       = 2048
+  connectionkeepalive = "DISABLED"
+  allow204            = "DISABLED"
+  reqtimeout          = 30
+  reqtimeoutaction    = "BYPASS"
+}
+`
+
+const testAccNsicapprofile_unset_step2 = `
+resource "citrixadc_nsicapprofile" "tf_unset" {
+  name = "tf_nsicapprofile_unset"
+  uri  = "/avscan"
+  mode = "REQMOD"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccNsicapprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsicapprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNsicapprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsicapprofileExist("citrixadc_nsicapprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "preview", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "previewlength", "2048"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "connectionkeepalive", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "allow204", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "reqtimeout", "30"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "reqtimeoutaction", "BYPASS"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNsicapprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsicapprofileExist("citrixadc_nsicapprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "preview", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "previewlength", "4096"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "connectionkeepalive", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "allow204", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "reqtimeout", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nsicapprofile.tf_unset", "reqtimeoutaction", "RESET"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsicapprofileADCValue("tf_nsicapprofile_unset", "preview", "DISABLED"),
+					testAccCheckNsicapprofileADCValue("tf_nsicapprofile_unset", "reqtimeoutaction", "RESET"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsicapprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNsicapprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsicapprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsicapprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nsicapprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckNsicapprofileExist(n string, id *string) resource.TestCheckFunc {

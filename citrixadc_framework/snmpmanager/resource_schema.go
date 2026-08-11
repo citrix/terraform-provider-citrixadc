@@ -15,6 +15,41 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
+// domainresolveretryDefault is the documented NITRO server default for
+// domainresolveretry (minimum and default value is 5).
+const domainresolveretryDefault = 5
+
+// unsetOnRemoveInt64Modifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while prior state still
+// holds a non-default value. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward and
+// removal is a silent no-op. A static schema Default cannot be used here because
+// domainresolveretry is rejected outright on IP-based managers, which would break
+// the basic create flow. It intentionally does nothing once state already equals
+// the server default, avoiding a perpetual "known after apply" plan diff after
+// the unset has reverted the value.
+type unsetOnRemoveInt64Modifier struct {
+	defaultValue int64
+}
+
+func (m unsetOnRemoveInt64Modifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-default value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveInt64Modifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveInt64Modifier) PlanModifyInt64(_ context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueInt64() != m.defaultValue {
+		resp.PlanValue = types.Int64Unknown()
+	}
+}
+
 // SnmpmanagerResourceModel describes the resource data model.
 type SnmpmanagerResourceModel struct {
 	Id                 types.String `tfsdk:"id"`
@@ -36,8 +71,11 @@ func (r *SnmpmanagerResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			// domainresolveretry: SDK v2 TypeInt, Optional+Computed (no Default, no ForceNew) - updateable.
 			"domainresolveretry": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					unsetOnRemoveInt64Modifier{defaultValue: domainresolveretryDefault},
+				},
 				Description: "Amount of time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the SNMP manager if the last query failed. This parameter is valid for host-name based SNMP managers only. After a query succeeds, the TTL determines the wait time. The minimum and default value is 5.",
 			},
 			// ipaddress: SDK v2 TypeString, Required + ForceNew -> RequiresReplace().

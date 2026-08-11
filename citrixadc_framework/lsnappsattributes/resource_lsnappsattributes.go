@@ -109,12 +109,14 @@ func (r *LsnappsattributesResource) Read(ctx context.Context, req resource.ReadR
 }
 
 func (r *LsnappsattributesResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsnappsattributesResourceModel
+	var data, config, state LsnappsattributesResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,9 +130,14 @@ func (r *LsnappsattributesResource) Update(ctx context.Context, req resource.Upd
 	// Only sessiontimeout is updateable in place; name/port/transportprotocol are
 	// ForceNew and force recreation instead of reaching Update.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Sessiontimeout.Equal(state.Sessiontimeout) {
 		tflog.Debug(ctx, "sessiontimeout has changed for lsnappsattributes")
-		hasChange = true
+		if config.Sessiontimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessiontimeout")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -144,6 +151,16 @@ func (r *LsnappsattributesResource) Update(ctx context.Context, req resource.Upd
 		tflog.Trace(ctx, "Updated lsnappsattributes resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lsnappsattributes resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsnappsattributes.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsnappsattributes attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

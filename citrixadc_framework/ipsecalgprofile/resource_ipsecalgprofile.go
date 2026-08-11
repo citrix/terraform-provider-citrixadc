@@ -111,12 +111,14 @@ func (r *IpsecalgprofileResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *IpsecalgprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state IpsecalgprofileResourceModel
+	var data, config, state IpsecalgprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,21 +131,38 @@ func (r *IpsecalgprofileResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Connfailover.Equal(state.Connfailover) {
 		tflog.Debug(ctx, "connfailover has changed for ipsecalgprofile")
-		hasChange = true
+		if config.Connfailover.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "connfailover")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Espgatetimeout.Equal(state.Espgatetimeout) {
 		tflog.Debug(ctx, "espgatetimeout has changed for ipsecalgprofile")
-		hasChange = true
+		if config.Espgatetimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "espgatetimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Espsessiontimeout.Equal(state.Espsessiontimeout) {
 		tflog.Debug(ctx, "espsessiontimeout has changed for ipsecalgprofile")
-		hasChange = true
+		if config.Espsessiontimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "espsessiontimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ikesessiontimeout.Equal(state.Ikesessiontimeout) {
 		tflog.Debug(ctx, "ikesessiontimeout has changed for ipsecalgprofile")
-		hasChange = true
+		if config.Ikesessiontimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ikesessiontimeout")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -161,6 +180,16 @@ func (r *IpsecalgprofileResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated ipsecalgprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for ipsecalgprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Ipsecalgprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ipsecalgprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

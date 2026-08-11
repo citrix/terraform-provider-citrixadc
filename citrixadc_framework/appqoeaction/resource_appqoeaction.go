@@ -110,12 +110,14 @@ func (r *AppqoeactionResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *AppqoeactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AppqoeactionResourceModel
+	var data, config, state AppqoeactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,7 @@ func (r *AppqoeactionResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Check if there are any changes in NITRO-updatable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Altcontentpath.Equal(state.Altcontentpath) {
 		tflog.Debug(ctx, "altcontentpath has changed for appqoeaction")
 		hasChange = true
@@ -154,7 +157,11 @@ func (r *AppqoeactionResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	if !data.Numretries.Equal(state.Numretries) {
 		tflog.Debug(ctx, "numretries has changed for appqoeaction")
-		hasChange = true
+		if config.Numretries.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "numretries")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Polqdepth.Equal(state.Polqdepth) {
 		tflog.Debug(ctx, "polqdepth has changed for appqoeaction")
@@ -170,7 +177,11 @@ func (r *AppqoeactionResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	if !data.Retryonreset.Equal(state.Retryonreset) {
 		tflog.Debug(ctx, "retryonreset has changed for appqoeaction")
-		hasChange = true
+		if config.Retryonreset.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "retryonreset")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Retryontimeout.Equal(state.Retryontimeout) {
 		tflog.Debug(ctx, "retryontimeout has changed for appqoeaction")
@@ -196,6 +207,16 @@ func (r *AppqoeactionResource) Update(ctx context.Context, req resource.UpdateRe
 		tflog.Trace(ctx, "Updated appqoeaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for appqoeaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Appqoeaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appqoeaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

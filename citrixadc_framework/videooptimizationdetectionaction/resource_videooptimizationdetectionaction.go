@@ -111,12 +111,14 @@ func (r *VideooptimizationdetectionactionResource) Read(ctx context.Context, req
 }
 
 func (r *VideooptimizationdetectionactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VideooptimizationdetectionactionResourceModel
+	var data, config, state VideooptimizationdetectionactionResourceModel
 
 	// Read Terraform prior state to preserve ID / detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (unset candidates)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -155,13 +157,18 @@ func (r *VideooptimizationdetectionactionResource) Update(ctx context.Context, r
 
 	// Detect changes in the NITRO-updatable attributes (type, comment).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Type.Equal(state.Type) {
 		tflog.Debug(ctx, "type has changed for videooptimizationdetectionaction")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for videooptimizationdetectionaction")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -177,6 +184,14 @@ func (r *VideooptimizationdetectionactionResource) Update(ctx context.Context, r
 		tflog.Trace(ctx, "Updated videooptimizationdetectionaction resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for videooptimizationdetectionaction resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. Addressed by the current live name (== data.Id).
+	unsetIdPayload := map[string]interface{}{"name": data.Id.ValueString()}
+	if err := utils.ExecuteUnset(r.client, service.Videooptimizationdetectionaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset videooptimizationdetectionaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. The live object may now be named newName, so we

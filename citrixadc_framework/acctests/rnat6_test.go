@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -156,6 +157,79 @@ func TestAccRnat6_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// rnat6 unset coverage: srcippersistency is the only type-independent,
+// mutable, spec-unsettable attribute with a documented NITRO default
+// (DISABLED). ownergroup (default DEFAULT_NG) requires a cluster node group to
+// set a non-default value and redirectport has no documented default, so both
+// are excluded.
+const testAccRnat6_unset_step1 = `
+resource "citrixadc_rnat6" "tf_unset" {
+	name             = "tf_rnat6_unset"
+	network          = "2005::/64"
+	srcippersistency = "ENABLED"
+}
+`
+
+const testAccRnat6_unset_step2 = `
+resource "citrixadc_rnat6" "tf_unset" {
+	name    = "tf_rnat6_unset"
+	network = "2005::/64"
+	# srcippersistency removed -> provider must unset it (revert to DISABLED).
+}
+`
+
+func TestAccRnat6_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccRnat6_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnat6Exist("citrixadc_rnat6.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat6.tf_unset", "srcippersistency", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default and the implicit
+				// post-apply plan must be empty.
+				Config: testAccRnat6_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnat6Exist("citrixadc_rnat6.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat6.tf_unset", "srcippersistency", "DISABLED"),
+					testAccCheckRnat6ADCValue("tf_rnat6_unset", "srcippersistency", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRnat6ADCValue asserts an attribute's value directly on the
+// appliance, proving the unset actually reverted it.
+func testAccCheckRnat6ADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Rnat6.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("rnat6 %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("rnat6 %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccRnat6_import(t *testing.T) {

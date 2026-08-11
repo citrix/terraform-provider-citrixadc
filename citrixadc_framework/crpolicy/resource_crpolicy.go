@@ -111,12 +111,15 @@ func (r *CrpolicyResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *CrpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state CrpolicyResourceModel
+	var data, config, state CrpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to distinguish an attribute removed from config (-> unset) from
+	// one merely changed (-> update).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -155,6 +158,7 @@ func (r *CrpolicyResource) Update(ctx context.Context, req resource.UpdateReques
 
 	// Regular update for the mutable, non-key attributes (PUT /crpolicy).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for crpolicy")
 		hasChange = true
@@ -165,7 +169,11 @@ func (r *CrpolicyResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for crpolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -182,6 +190,17 @@ func (r *CrpolicyResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated crpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for crpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. data.Id holds the current live name (== policyname, or
+	// newname after a rename), so the unset always targets the live object.
+	unsetIdPayload := map[string]interface{}{
+		"policyname": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Crpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset crpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. The resource may now be physically named newName,

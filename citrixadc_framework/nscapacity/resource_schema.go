@@ -7,11 +7,81 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward and
+// removal is a silent no-op. It intentionally does nothing when the config still
+// carries a value, on create (no prior state), or when the prior value is already
+// empty (avoids churn). A schema Default is NOT used here because this singleton's
+// payload builder pushes every non-null/known value, so a Default would corrupt
+// the (mutually-exclusive) licensing payload on create.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
+// unsetOnRemoveInt64Modifier is the Int64 counterpart of unsetOnRemoveStringModifier.
+type unsetOnRemoveInt64Modifier struct{}
+
+func (m unsetOnRemoveInt64Modifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-zero value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveInt64Modifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveInt64Modifier) PlanModifyInt64(_ context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueInt64() != 0 {
+		resp.PlanValue = types.Int64Unknown()
+	}
+}
+
+// unsetOnRemoveBoolModifier is the Bool counterpart of unsetOnRemoveStringModifier.
+type unsetOnRemoveBoolModifier struct{}
+
+func (m unsetOnRemoveBoolModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior true value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveBoolModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveBoolModifier) PlanModifyBool(_ context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueBool() {
+		resp.PlanValue = types.BoolUnknown()
+	}
+}
 
 // NscapacityResourceModel describes the resource data model.
 type NscapacityResourceModel struct {
@@ -38,6 +108,9 @@ func (r *NscapacityResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:    true,
 				Computed:    true,
 				Description: "System bandwidth limit.",
+				PlanModifiers: []planmodifier.Int64{
+					unsetOnRemoveInt64Modifier{},
+				},
 			},
 			"edition": schema.StringAttribute{
 				Optional:    true,
@@ -58,6 +131,9 @@ func (r *NscapacityResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:    true,
 				Computed:    true,
 				Description: "appliance platform type.",
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 			},
 			"unit": schema.StringAttribute{
 				Optional:    true,
@@ -73,6 +149,9 @@ func (r *NscapacityResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:    true,
 				Computed:    true,
 				Description: "licensed using vcpu pool.",
+				PlanModifiers: []planmodifier.Bool{
+					unsetOnRemoveBoolModifier{},
+				},
 			},
 		},
 	}

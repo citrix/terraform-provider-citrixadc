@@ -8,8 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -148,6 +150,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging appflow flow information",
 			},
 			"authentication": schema.StringAttribute{
@@ -203,6 +206,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"clttimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(180),
 				Description: "Idle time, in seconds, after which the client connection is terminated. The default values are:\n180 seconds for HTTP/SSL-based services.\n9000 seconds for other TCP-based services.\n120 seconds for DNS-based services.\n120 seconds for other UDP-based services.",
 			},
 			"comment": schema.StringAttribute{
@@ -278,6 +282,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"icmpvsrresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PASSIVE"),
 				Description: "Can be active or passive",
 			},
 			"insertvserveripport": schema.StringAttribute{
@@ -308,6 +313,7 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"l2conn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Use L2 Parameters to identify a connection",
 			},
 			"listenpolicy": schema.StringAttribute{

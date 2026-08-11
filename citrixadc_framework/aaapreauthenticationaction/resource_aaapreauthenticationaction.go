@@ -110,12 +110,14 @@ func (r *AaapreauthenticationactionResource) Read(ctx context.Context, req resou
 }
 
 func (r *AaapreauthenticationactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AaapreauthenticationactionResourceModel
+	var data, config, state AaapreauthenticationactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset them)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,17 +130,30 @@ func (r *AaapreauthenticationactionResource) Update(ctx context.Context, req res
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Defaultepagroup.Equal(state.Defaultepagroup) {
 		tflog.Debug(ctx, "defaultepagroup has changed for aaapreauthenticationaction")
-		hasChange = true
+		if config.Defaultepagroup.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "defaultepagroup")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Deletefiles.Equal(state.Deletefiles) {
 		tflog.Debug(ctx, "deletefiles has changed for aaapreauthenticationaction")
-		hasChange = true
+		if config.Deletefiles.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "deletefiles")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Killprocess.Equal(state.Killprocess) {
 		tflog.Debug(ctx, "killprocess has changed for aaapreauthenticationaction")
-		hasChange = true
+		if config.Killprocess.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "killprocess")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Preauthenticationaction.Equal(state.Preauthenticationaction) {
 		tflog.Debug(ctx, "preauthenticationaction has changed for aaapreauthenticationaction")
@@ -160,6 +175,16 @@ func (r *AaapreauthenticationactionResource) Update(ctx context.Context, req res
 		tflog.Trace(ctx, "Updated aaapreauthenticationaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for aaapreauthenticationaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Aaapreauthenticationaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset aaapreauthenticationaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

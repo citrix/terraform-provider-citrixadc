@@ -196,6 +196,81 @@ func TestAccNsxmlnamespace_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// testAccCheckNsxmlnamespaceADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. An empty want asserts the attribute is absent/empty on the box.
+func testAccCheckNsxmlnamespaceADCValue(prefix, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nsxmlnamespace.Type(), prefix)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nsxmlnamespace %s not found on appliance", prefix)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = fmt.Sprintf("%v", v)
+		}
+		if got != want {
+			return fmt.Errorf("nsxmlnamespace %s: appliance attr %q = %q, want %q (unset did not revert it)", prefix, attr, got, want)
+		}
+		return nil
+	}
+}
+
+const testAccNsxmlnamespace_unset_step1 = `
+resource "citrixadc_nsxmlnamespace" "tf_unset" {
+	prefix      = "tf_nsxmlnamespace_unset"
+	namespace   = "http://www.w3.org/2001/04/xmlenc#"
+	description = "unset_desc"
+}
+`
+
+const testAccNsxmlnamespace_unset_step2 = `
+resource "citrixadc_nsxmlnamespace" "tf_unset" {
+	prefix    = "tf_nsxmlnamespace_unset"
+	namespace = "http://www.w3.org/2001/04/xmlenc#"
+	# description removed from config -> the provider must unset it (revert to
+	# the NITRO default: no configured description).
+}
+`
+
+func TestAccNsxmlnamespace_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsxmlnamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccNsxmlnamespace_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsxmlnamespaceExist("citrixadc_nsxmlnamespace.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsxmlnamespace.tf_unset", "description", "unset_desc"),
+					testAccCheckNsxmlnamespaceADCValue("tf_nsxmlnamespace_unset", "description", "unset_desc"),
+				),
+			},
+			{
+				// Removing description must unset it: state (read back from the
+				// appliance) reverts to the NITRO default, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccNsxmlnamespace_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsxmlnamespaceExist("citrixadc_nsxmlnamespace.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsxmlnamespace.tf_unset", "description", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsxmlnamespaceADCValue("tf_nsxmlnamespace_unset", "description", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNsxmlnamespaceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -525,6 +525,103 @@ func TestAccGslbservice_selfHealing(t *testing.T) {
 	})
 }
 
+const testAccGslbservice_unset_step1 = `
+resource "citrixadc_gslbsite" "tf_unset_site" {
+  sitename        = "tf_unset_site"
+  siteipaddress   = "192.168.44.55"
+  sessionexchange = "DISABLED"
+  sitepassword    = "password123"
+}
+
+resource "citrixadc_gslbservice" "tf_unset" {
+  ip              = "192.168.44.60"
+  port            = "80"
+  servicename     = "tf_test_gslbservice_unset"
+  servicetype     = "HTTP"
+  sitename        = citrixadc_gslbsite.tf_unset_site.sitename
+  appflowlog      = "DISABLED"
+  cip             = "ENABLED"
+  healthmonitor   = "NO"
+}
+`
+
+const testAccGslbservice_unset_step2 = `
+resource "citrixadc_gslbsite" "tf_unset_site" {
+  sitename        = "tf_unset_site"
+  siteipaddress   = "192.168.44.55"
+  sessionexchange = "DISABLED"
+  sitepassword    = "password123"
+}
+
+resource "citrixadc_gslbservice" "tf_unset" {
+  ip          = "192.168.44.60"
+  port        = "80"
+  servicename = "tf_test_gslbservice_unset"
+  servicetype = "HTTP"
+  sitename    = citrixadc_gslbsite.tf_unset_site.sitename
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccGslbservice_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccGslbservice_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "cip", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "healthmonitor", "NO"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccGslbservice_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "cip", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "healthmonitor", "YES"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckGslbserviceADCValue("tf_test_gslbservice_unset", "appflowlog", "ENABLED"),
+					testAccCheckGslbserviceADCValue("tf_test_gslbservice_unset", "healthmonitor", "YES"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckGslbserviceADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckGslbserviceADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbservice.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("gslbservice %s not found on appliance", name)
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("gslbservice %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccGslbservice_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

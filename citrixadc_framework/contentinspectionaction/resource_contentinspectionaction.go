@@ -110,12 +110,14 @@ func (r *ContentinspectionactionResource) Read(ctx context.Context, req resource
 }
 
 func (r *ContentinspectionactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ContentinspectionactionResourceModel
+	var data, config, state ContentinspectionactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,13 +130,18 @@ func (r *ContentinspectionactionResource) Update(ctx context.Context, req resour
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Icapprofilename.Equal(state.Icapprofilename) {
 		tflog.Debug(ctx, "icapprofilename has changed for contentinspectionaction")
 		hasChange = true
 	}
 	if !data.Ifserverdown.Equal(state.Ifserverdown) {
 		tflog.Debug(ctx, "ifserverdown has changed for contentinspectionaction")
-		hasChange = true
+		if config.Ifserverdown.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ifserverdown")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Serverip.Equal(state.Serverip) {
 		tflog.Debug(ctx, "serverip has changed for contentinspectionaction")
@@ -146,7 +153,11 @@ func (r *ContentinspectionactionResource) Update(ctx context.Context, req resour
 	}
 	if !data.Serverport.Equal(state.Serverport) {
 		tflog.Debug(ctx, "serverport has changed for contentinspectionaction")
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -163,6 +174,16 @@ func (r *ContentinspectionactionResource) Update(ctx context.Context, req resour
 		tflog.Trace(ctx, "Updated contentinspectionaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for contentinspectionaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Contentinspectionaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset contentinspectionaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

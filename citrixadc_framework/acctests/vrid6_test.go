@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -205,6 +206,94 @@ func TestAccVrid6_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: step1 sets the unset-eligible attributes to non-default values,
+// step2 removes them so the provider must unset them (revert to NITRO defaults).
+const testAccVrid6_unset_step1 = `
+	resource "citrixadc_vrid6" "tf_unset" {
+		vrid6_id             = 7
+		priority             = 100
+		preemption           = "DISABLED"
+		sharing              = "ENABLED"
+		tracking             = "ALL"
+		preemptiondelaytimer = 10
+		trackifnumpriority   = 5
+	}
+`
+
+const testAccVrid6_unset_step2 = `
+	resource "citrixadc_vrid6" "tf_unset" {
+		vrid6_id = 7
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccVrid6_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVrid6Destroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVrid6_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVrid6Exist("citrixadc_vrid6.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "priority", "100"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "preemption", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "sharing", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "tracking", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "preemptiondelaytimer", "10"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "trackifnumpriority", "5"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccVrid6_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVrid6Exist("citrixadc_vrid6.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "priority", "255"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "preemption", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "sharing", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "tracking", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "preemptiondelaytimer", "0"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6.tf_unset", "trackifnumpriority", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVrid6ADCValue("7", "priority", "255"),
+					testAccCheckVrid6ADCValue("7", "preemption", "ENABLED"),
+					testAccCheckVrid6ADCValue("7", "tracking", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVrid6ADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckVrid6ADCValue(id, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vrid6.Type(), id)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vrid6 %s not found on appliance", id)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vrid6 %s: appliance attr %q = %q, want %q (unset did not revert it)", id, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccVrid6DataSource_basic = `

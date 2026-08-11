@@ -109,12 +109,14 @@ func (r *VpnformssoactionResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *VpnformssoactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnformssoactionResourceModel
+	var data, config, state VpnformssoactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,21 +130,38 @@ func (r *VpnformssoactionResource) Update(ctx context.Context, req resource.Upda
 	// Only the non-ForceNew attributes can reach Update; the ForceNew attributes
 	// (actionurl, name, passwdfield, ssosuccessrule, userfield) trigger a replace.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Namevaluepair.Equal(state.Namevaluepair) {
 		tflog.Debug(ctx, "namevaluepair has changed for vpnformssoaction")
-		hasChange = true
+		if config.Namevaluepair.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "namevaluepair")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Nvtype.Equal(state.Nvtype) {
 		tflog.Debug(ctx, "nvtype has changed for vpnformssoaction")
-		hasChange = true
+		if config.Nvtype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nvtype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Responsesize.Equal(state.Responsesize) {
 		tflog.Debug(ctx, "responsesize has changed for vpnformssoaction")
-		hasChange = true
+		if config.Responsesize.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "responsesize")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Submitmethod.Equal(state.Submitmethod) {
 		tflog.Debug(ctx, "submitmethod has changed for vpnformssoaction")
-		hasChange = true
+		if config.Submitmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "submitmethod")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -158,6 +177,16 @@ func (r *VpnformssoactionResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated vpnformssoaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for vpnformssoaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnformssoaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnformssoaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -109,12 +109,14 @@ func (r *DnssoarecResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *DnssoarecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state DnssoarecResourceModel
+	var data, config, state DnssoarecResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,7 @@ func (r *DnssoarecResource) Update(ctx context.Context, req resource.UpdateReque
 	// Check if there are any changes in updateable attributes
 	// (domain is the primary key and is RequiresReplace, so it never reaches Update)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Contact.Equal(state.Contact) {
 		tflog.Debug(ctx, "contact has changed for dnssoarec")
 		hasChange = true
@@ -138,11 +141,19 @@ func (r *DnssoarecResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Expire.Equal(state.Expire) {
 		tflog.Debug(ctx, "expire has changed for dnssoarec")
-		hasChange = true
+		if config.Expire.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "expire")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Minimum.Equal(state.Minimum) {
 		tflog.Debug(ctx, "minimum has changed for dnssoarec")
-		hasChange = true
+		if config.Minimum.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "minimum")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Nodeid.Equal(state.Nodeid) {
 		tflog.Debug(ctx, "nodeid has changed for dnssoarec")
@@ -154,19 +165,35 @@ func (r *DnssoarecResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Refresh.Equal(state.Refresh) {
 		tflog.Debug(ctx, "refresh has changed for dnssoarec")
-		hasChange = true
+		if config.Refresh.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "refresh")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Retry.Equal(state.Retry) {
 		tflog.Debug(ctx, "retry has changed for dnssoarec")
-		hasChange = true
+		if config.Retry.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "retry")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Serial.Equal(state.Serial) {
 		tflog.Debug(ctx, "serial has changed for dnssoarec")
-		hasChange = true
+		if config.Serial.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serial")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ttl.Equal(state.Ttl) {
 		tflog.Debug(ctx, "ttl has changed for dnssoarec")
-		hasChange = true
+		if config.Ttl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ttl")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -183,6 +210,17 @@ func (r *DnssoarecResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated dnssoarec resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for dnssoarec resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"domain": data.Domain.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnssoarec.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnssoarec attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

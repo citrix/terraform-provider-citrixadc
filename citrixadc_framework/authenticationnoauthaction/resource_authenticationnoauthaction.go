@@ -110,12 +110,14 @@ func (r *AuthenticationnoauthactionResource) Read(ctx context.Context, req resou
 }
 
 func (r *AuthenticationnoauthactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationnoauthactionResourceModel
+	var data, config, state AuthenticationnoauthactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,9 +130,14 @@ func (r *AuthenticationnoauthactionResource) Update(ctx context.Context, req res
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Defaultauthenticationgroup.Equal(state.Defaultauthenticationgroup) {
 		tflog.Debug(ctx, "defaultauthenticationgroup has changed for authenticationnoauthaction")
-		hasChange = true
+		if config.Defaultauthenticationgroup.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "defaultauthenticationgroup")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -148,6 +155,16 @@ func (r *AuthenticationnoauthactionResource) Update(ctx context.Context, req res
 		tflog.Trace(ctx, "Updated authenticationnoauthaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationnoauthaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationnoauthaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationnoauthaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

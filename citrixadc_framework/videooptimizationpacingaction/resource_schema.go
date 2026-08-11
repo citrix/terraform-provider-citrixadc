@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -34,9 +35,14 @@ func (r *VideooptimizationpacingactionResource) Schema(ctx context.Context, req 
 				Description: "The ID of the videooptimizationpacingaction resource.",
 			},
 			"comment": schema.StringAttribute{
-				// SDK v2 parity: Optional + Computed (no server-side default).
+				// SDK v2 parity: Optional + Computed. A schema Default of "" is required
+				// so that removing comment from config produces a plan diff (Optional +
+				// Computed with no Default is sticky on removal and Update never runs),
+				// which is what drives the NITRO unset. NITRO has no documented default
+				// for comment - unsetting reverts it to empty, matching "".
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Comment. Any type of information about this video optimization detection action.",
 			},
 			"name": schema.StringAttribute{
@@ -96,7 +102,10 @@ func videooptimizationpacingactionSetAttrFromGet(ctx context.Context, data *Vide
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		// comment is Optional+Computed with a "" Default. When NITRO omits it (never
+		// set, or after an unset) resolve to "" - not null - so the read-back value
+		// matches the planned default and no inconsistent-result / spurious-diff arises.
+		data.Comment = types.StringValue("")
 	}
 	// name is the user-facing key. After a rename (via newname) the live object name
 	// (tracked by data.Id) diverges from the configured name, and GET returns the live

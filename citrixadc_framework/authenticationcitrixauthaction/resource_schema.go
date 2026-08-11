@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -32,11 +33,13 @@ func (r *AuthenticationcitrixauthactionResource) Schema(ctx context.Context, req
 			"authentication": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Authentication needs to be disabled for searching user object without performing authentication.",
 			},
 			"authenticationtype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("CITRIXCONNECTOR"),
 				Description: "Type of the Citrix Authentication implementation. Default implementation uses Citrix Cloud Connector.",
 			},
 			"name": schema.StringAttribute{

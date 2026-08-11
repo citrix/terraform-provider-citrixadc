@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -14,6 +15,57 @@ import (
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveInt64Modifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-zero value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already zero (avoids churn).
+type unsetOnRemoveInt64Modifier struct{}
+
+func (m unsetOnRemoveInt64Modifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-zero value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveInt64Modifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveInt64Modifier) PlanModifyInt64(ctx context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
+	// Record whether the attribute is present in configuration so the unset is
+	// forced only on a GENUINE removal (previously set -> now absent). This guard
+	// is required because the appliance reports vmdestroygraceperiod for some
+	// action types (e.g. SCALE_DOWN) even when the user never configured it; the
+	// plain "config null && state non-zero" rule would then perpetually plan an
+	// unset for a never-configured attribute. The key is namespaced by attribute
+	// path so the shared modifier type is safe if reused for multiple attributes.
+	privKey := "unsetonremove:" + req.Path.String()
+	if !req.ConfigValue.IsUnknown() && resp.Private != nil {
+		if req.ConfigValue.IsNull() {
+			resp.Private.SetKey(ctx, privKey, []byte("false"))
+		} else {
+			resp.Private.SetKey(ctx, privKey, []byte("true"))
+		}
+	}
+
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueInt64() != 0 {
+		wasConfigured := false
+		if req.Private != nil {
+			if v, d := req.Private.GetKey(ctx, privKey); !d.HasError() && string(v) == "true" {
+				wasConfigured = true
+			}
+		}
+		if wasConfigured {
+			resp.PlanValue = types.Int64Unknown()
+		}
+	}
+}
 
 // AutoscaleactionResourceModel describes the resource data model.
 type AutoscaleactionResourceModel struct {
@@ -53,8 +105,12 @@ func (r *AutoscaleactionResource) Schema(ctx context.Context, req resource.Schem
 				Description: "AutoScale profile name.",
 			},
 			"quiettime": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default (see autoscaleaction.html). A Default is required so
+				// that removing the attribute from config produces a plan diff that
+				// drives Update -> unset (Optional+Computed with no Default is sticky).
+				Default:     int64default.StaticInt64(300),
 				Description: "Time in seconds no other policy is evaluated or action is taken",
 			},
 			"type": schema.StringAttribute{
@@ -65,8 +121,11 @@ func (r *AutoscaleactionResource) Schema(ctx context.Context, req resource.Schem
 				Description: "The type of action.",
 			},
 			"vmdestroygraceperiod": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					unsetOnRemoveInt64Modifier{},
+				},
 				Description: "Time in minutes a VM is kept in inactive state before destroying",
 			},
 			"vserver": schema.StringAttribute{

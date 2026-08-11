@@ -13,6 +13,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // SslpolicyResourceModel describes the resource data model.
 type SslpolicyResourceModel struct {
 	Id          types.String `tfsdk:"id"`
@@ -38,8 +65,15 @@ func (r *SslpolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Name of the built-in or user-defined action to perform on the request. Available built-in actions are NOOP, RESET, DROP, CLIENTAUTH, NOCLIENTAUTH, INTERCEPT AND BYPASS.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// unsetOnRemove drives unset-on-removal without a sticky Default:
+				// removing the attr from config plans it as unknown so Update runs
+				// the NITRO ?action=unset, and import round-trips cleanly (no Default
+				// injecting a spurious "" that GET omits).
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Any comments associated with this policy.",
 			},
 			"name": schema.StringAttribute{
@@ -63,8 +97,12 @@ func (r *SslpolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "Expression, against which traffic is evaluated.\n\nThe following requirements apply only to the Citrix ADC CLI:\n* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.\n* If the expression itself includes double quotation marks, escape the quotations by using the  character.\n* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.",
 			},
 			"undefaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// unsetOnRemove drives unset-on-removal (see comment attr).
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Name of the action to be performed when the result of rule evaluation is undefined. Possible values for control policies: CLIENTAUTH, NOCLIENTAUTH, NOOP, RESET, DROP. Possible values for data policies: NOOP, RESET, DROP and BYPASS",
 			},
 		},

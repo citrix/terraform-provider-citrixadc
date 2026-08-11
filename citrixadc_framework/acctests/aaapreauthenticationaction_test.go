@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -64,6 +65,85 @@ func TestAccAaapreauthenticationaction_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The unset test covers the spec-unsettable, mutable string attributes:
+// defaultepagroup, deletefiles, killprocess. step1 sets them to non-default
+// values; step2 removes them from config -> the provider must issue the NITRO
+// ?action=unset so the appliance reverts them (they become absent -> null).
+const testAccAaapreauthenticationaction_unset_step1 = `
+	resource "citrixadc_aaapreauthenticationaction" "tf_unset" {
+		name                    = "tf_test_aaapreauthaction_unset"
+		preauthenticationaction = "ALLOW"
+		defaultepagroup         = "tf_epa_grp"
+		deletefiles             = "/var/tmp/unset/hello.txt"
+		killprocess             = "badproc.exe"
+	}
+`
+
+const testAccAaapreauthenticationaction_unset_step2 = `
+	resource "citrixadc_aaapreauthenticationaction" "tf_unset" {
+		name                    = "tf_test_aaapreauthaction_unset"
+		preauthenticationaction = "ALLOW"
+		# defaultepagroup, deletefiles, killprocess removed from config -> unset.
+	}
+`
+
+func TestAccAaapreauthenticationaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAaapreauthenticationaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaapreauthenticationactionExist("citrixadc_aaapreauthenticationaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationaction.tf_unset", "defaultepagroup", "tf_epa_grp"),
+					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationaction.tf_unset", "deletefiles", "/var/tmp/unset/hello.txt"),
+					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationaction.tf_unset", "killprocess", "badproc.exe"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance reverts
+				// them (absent), and the implicit post-apply plan must be empty.
+				Config: testAccAaapreauthenticationaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaapreauthenticationactionExist("citrixadc_aaapreauthenticationaction.tf_unset", nil),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAaapreauthenticationactionADCUnset("tf_test_aaapreauthaction_unset", "defaultepagroup"),
+					testAccCheckAaapreauthenticationactionADCUnset("tf_test_aaapreauthaction_unset", "deletefiles"),
+					testAccCheckAaapreauthenticationactionADCUnset("tf_test_aaapreauthaction_unset", "killprocess"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAaapreauthenticationactionADCUnset asserts an attribute is absent
+// (or empty) directly on the appliance, proving the unset actually reverted it.
+func testAccCheckAaapreauthenticationactionADCUnset(name, attr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaapreauthenticationaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("aaapreauthenticationaction %s not found on appliance", name)
+		}
+		if v, ok := data[attr]; ok {
+			got := strings.TrimSpace(fmt.Sprintf("%v", v))
+			if got != "" {
+				return fmt.Errorf("aaapreauthenticationaction %s: appliance attr %q = %q, want absent/empty (unset did not revert it)", name, attr, got)
+			}
+		}
+		return nil
+	}
 }
 
 func testAccCheckAaapreauthenticationactionExist(n string, id *string) resource.TestCheckFunc {

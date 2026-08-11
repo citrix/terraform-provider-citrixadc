@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -210,6 +211,78 @@ func TestAccBridgegroup_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccBridgegroup_unset_step1 = `
+	resource "citrixadc_bridgegroup" "tf_unset" {
+		bridgegroup_id     = 3
+		dynamicrouting     = "ENABLED"
+		ipv6dynamicrouting = "ENABLED"
+	}
+`
+
+const testAccBridgegroup_unset_step2 = `
+	resource "citrixadc_bridgegroup" "tf_unset" {
+		bridgegroup_id = 3
+		# unset-eligible attributes removed from config -> provider must unset
+		# them (revert to NITRO defaults, "DISABLED").
+	}
+`
+
+func TestAccBridgegroup_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccBridgegroup_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBridgegroupExist("citrixadc_bridgegroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_bridgegroup.tf_unset", "dynamicrouting", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_bridgegroup.tf_unset", "ipv6dynamicrouting", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccBridgegroup_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBridgegroupExist("citrixadc_bridgegroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_bridgegroup.tf_unset", "dynamicrouting", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_bridgegroup.tf_unset", "ipv6dynamicrouting", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckBridgegroupADCValue("3", "dynamicrouting", "DISABLED"),
+					testAccCheckBridgegroupADCValue("3", "ipv6dynamicrouting", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckBridgegroupADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckBridgegroupADCValue(id, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Bridgegroup.Type(), id)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("bridgegroup %s not found on appliance", id)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("bridgegroup %s: appliance attr %q = %q, want %q (unset did not revert it)", id, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccBridgegroupDataSource_basic(t *testing.T) {

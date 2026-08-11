@@ -109,12 +109,14 @@ func (r *SslocspresponderResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *SslocspresponderResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SslocspresponderResourceModel
+	var data, config, state SslocspresponderResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,7 @@ func (r *SslocspresponderResource) Update(ctx context.Context, req resource.Upda
 	// Check if there are any changes in updateable attributes.
 	// name, respondercert, signingcert are RequiresReplace and never reach Update.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Batchingdelay.Equal(state.Batchingdelay) {
 		tflog.Debug(ctx, "batchingdelay has changed for sslocspresponder")
 		hasChange = true
@@ -138,15 +141,27 @@ func (r *SslocspresponderResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Cache.Equal(state.Cache) {
 		tflog.Debug(ctx, "cache has changed for sslocspresponder")
-		hasChange = true
+		if config.Cache.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cache")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cachetimeout.Equal(state.Cachetimeout) {
 		tflog.Debug(ctx, "cachetimeout has changed for sslocspresponder")
-		hasChange = true
+		if config.Cachetimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cachetimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httpmethod.Equal(state.Httpmethod) {
 		tflog.Debug(ctx, "httpmethod has changed for sslocspresponder")
-		hasChange = true
+		if config.Httpmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httpmethod")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Insertclientcert.Equal(state.Insertclientcert) {
 		tflog.Debug(ctx, "insertclientcert has changed for sslocspresponder")
@@ -158,7 +173,11 @@ func (r *SslocspresponderResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Producedattimeskew.Equal(state.Producedattimeskew) {
 		tflog.Debug(ctx, "producedattimeskew has changed for sslocspresponder")
-		hasChange = true
+		if config.Producedattimeskew.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "producedattimeskew")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Resptimeout.Equal(state.Resptimeout) {
 		tflog.Debug(ctx, "resptimeout has changed for sslocspresponder")
@@ -166,7 +185,11 @@ func (r *SslocspresponderResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Trustresponder.Equal(state.Trustresponder) {
 		tflog.Debug(ctx, "trustresponder has changed for sslocspresponder")
-		hasChange = true
+		if config.Trustresponder.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trustresponder")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Url.Equal(state.Url) {
 		tflog.Debug(ctx, "url has changed for sslocspresponder")
@@ -190,6 +213,16 @@ func (r *SslocspresponderResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated sslocspresponder resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for sslocspresponder resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Sslocspresponder.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslocspresponder attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

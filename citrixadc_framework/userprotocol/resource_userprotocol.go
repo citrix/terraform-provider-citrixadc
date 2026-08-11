@@ -109,12 +109,14 @@ func (r *UserprotocolResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *UserprotocolResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state UserprotocolResourceModel
+	var data, config, state UserprotocolResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,9 +129,14 @@ func (r *UserprotocolResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Only `comment` is updatable in SDK v2; name/extension/transport are ForceNew.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for userprotocol")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -143,6 +150,17 @@ func (r *UserprotocolResource) Update(ctx context.Context, req resource.UpdateRe
 		tflog.Trace(ctx, "Updated userprotocol resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for userprotocol resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Userprotocol.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset userprotocol attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

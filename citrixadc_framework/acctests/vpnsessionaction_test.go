@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -232,6 +233,79 @@ func TestAccVpnsessionaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The vpnsessionaction unset test covers the only attribute with a documented
+// NITRO server default (advancedclientlessvpnmode, default DISABLED). Step 1
+// sets it to a non-default value; step 2 removes it from config, and the
+// provider must unset it (revert to DISABLED).
+const testAccVpnsessionaction_unset_step1 = `
+	resource "citrixadc_vpnsessionaction" "tf_unset" {
+		name                      = "tf_test_vpnsessionaction_unset"
+		advancedclientlessvpnmode = "ENABLED"
+	}
+`
+
+const testAccVpnsessionaction_unset_step2 = `
+	resource "citrixadc_vpnsessionaction" "tf_unset" {
+		name = "tf_test_vpnsessionaction_unset"
+		# advancedclientlessvpnmode removed from config -> provider must unset it
+		# (revert to NITRO default, "DISABLED").
+	}
+`
+
+func TestAccVpnsessionaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccVpnsessionaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnsessionactionExist("citrixadc_vpnsessionaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.tf_unset", "advancedclientlessvpnmode", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccVpnsessionaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnsessionactionExist("citrixadc_vpnsessionaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnsessionaction.tf_unset", "advancedclientlessvpnmode", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVpnsessionactionADCValue("tf_test_vpnsessionaction_unset", "advancedclientlessvpnmode", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVpnsessionactionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckVpnsessionactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnsessionaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vpnsessionaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vpnsessionaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccVpnsessionactionDataSource_basic(t *testing.T) {

@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -167,6 +169,91 @@ func TestAccSubscriberparam_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccSubscriberparam_unset covers the spec-unsettable, mutable attributes of
+// subscriberparam (idleaction, idlettl, interfacetype, keytype). keytype =
+// IPANDVLAN is only valid when interfacetype = GxOnly, so step1 sets that
+// combination; step2 removes every unset-eligible attribute so the provider
+// unsets them (revert to NITRO defaults: keytype=IP, interfacetype=None,
+// idlettl=0, idleaction=ccrTerminate). ipv6prefixlookuplist is NOT unsettable
+// per the NITRO spec (absent from the unset payload) and is left out.
+const testAccSubscriberparam_unset_step1 = `
+resource "citrixadc_subscriberparam" "tf_unset" {
+	keytype       = "IPANDVLAN"
+	interfacetype = "GxOnly"
+	idlettl       = 50
+	idleaction    = "delete"
+}
+`
+
+const testAccSubscriberparam_unset_step2 = `
+resource "citrixadc_subscriberparam" "tf_unset" {
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccSubscriberparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSubscriberparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriberparamExist("citrixadc_subscriberparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_subscriberparam.tf_unset", "keytype", "IPANDVLAN"),
+					resource.TestCheckResourceAttr("citrixadc_subscriberparam.tf_unset", "interfacetype", "GxOnly"),
+					resource.TestCheckResourceAttr("citrixadc_subscriberparam.tf_unset", "idlettl", "50"),
+					resource.TestCheckResourceAttr("citrixadc_subscriberparam.tf_unset", "idleaction", "delete"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSubscriberparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriberparamExist("citrixadc_subscriberparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_subscriberparam.tf_unset", "keytype", "IP"),
+					resource.TestCheckResourceAttr("citrixadc_subscriberparam.tf_unset", "interfacetype", "None"),
+					resource.TestCheckResourceAttr("citrixadc_subscriberparam.tf_unset", "idlettl", "0"),
+					resource.TestCheckResourceAttr("citrixadc_subscriberparam.tf_unset", "idleaction", "ccrTerminate"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSubscriberparamADCValue("keytype", "IP"),
+					testAccCheckSubscriberparamADCValue("interfacetype", "None"),
+					testAccCheckSubscriberparamADCValue("idleaction", "ccrTerminate"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSubscriberparamADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckSubscriberparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Subscriberparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("subscriberparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("subscriberparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSubscriberparamDataSource_basic(t *testing.T) {

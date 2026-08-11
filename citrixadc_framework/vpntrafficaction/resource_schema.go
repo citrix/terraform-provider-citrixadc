@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -42,28 +44,47 @@ func (r *VpntrafficactionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the vpntrafficaction resource.",
 			},
 			"apptimeout": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Optional+Computed without a documented default: retain the prior
+				// state value when omitted from config so an unrelated update
+				// (e.g. an unset of another attribute) does not spuriously mark it
+				// as "known after apply" and force an empty update payload.
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 				Description: "Maximum amount of time, in minutes, a user can stay logged on to the web application.",
 			},
 			"formssoaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Name of the form-based single sign-on profile. Form-based single sign-on allows users to log on one time to all protected applications in your network, instead of requiring them to log on separately to access each one.",
 			},
 			"fta": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Specify file type association, which is a list of file extensions that users are allowed to open.",
 			},
 			"hdx": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Provide hdx proxy to the ICA traffic",
 			},
 			"kcdaccount": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Kerberos constrained delegation account name",
 			},
 			"name": schema.StringAttribute{
@@ -76,11 +97,13 @@ func (r *VpntrafficactionResource) Schema(ctx context.Context, req resource.Sche
 			"passwdexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "expression that will be evaluated to obtain password for SingleSignOn",
 			},
 			"proxy": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "IP address and Port of the proxy server to be used for HTTP access for this request.",
 			},
 			"qual": schema.StringAttribute{
@@ -94,23 +117,33 @@ func (r *VpntrafficactionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Protocol, either HTTP or TCP, to be used with the action.",
 			},
 			"samlssoprofile": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Profile to be used for doing SAML SSO to remote relying party",
 			},
 			"sso": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Provide single sign-on to the web application.\n	    NOTE : Authentication mechanisms like Basic-authentication  require the user credentials to be sent in plaintext which is not secure if the server is running on HTTP (instead of HTTPS).",
 			},
 			"userexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "expression that will be evaluated to obtain username for SingleSignOn",
 			},
 			"wanscaler": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Description: "Use the Repeater Plug-in to optimize network traffic.",
 			},
 		},

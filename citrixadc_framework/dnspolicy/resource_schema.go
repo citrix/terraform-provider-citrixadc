@@ -14,6 +14,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // DnspolicyResourceModel describes the resource data model.
 type DnspolicyResourceModel struct {
 	Id                types.String `tfsdk:"id"`
@@ -52,8 +79,14 @@ func (r *DnspolicyResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The dns packet must be dropped.",
 			},
 			"logaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO omits logaction when unset. Instead of a Default (which would
+				// break import round-trip), the plan modifier marks the value unknown
+				// when removed from config so the Update path fires the NITRO unset.
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Name of the messagelog action to use for requests that match this policy.",
 			},
 			"name": schema.StringAttribute{

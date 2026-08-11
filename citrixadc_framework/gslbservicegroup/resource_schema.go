@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -61,8 +62,13 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the gslbservicegroup resource.",
 			},
 			"appflowlog": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is ENABLED. Declaring the Default makes a
+				// config-removal produce a plan diff (default) so the Update
+				// method runs and issues the unset. The default equals the
+				// appliance default, so basic/upgrade stay green.
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging of AppFlow information for the specified GSLB service group.",
 			},
 			"autodelayedtrofs": schema.StringAttribute{
@@ -121,8 +127,11 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The time allowed (in seconds) for a graceful shutdown. During this period, new connections or requests will continue to be sent to this service for clients who already have a persistent session on the system. Connections or requests from fresh or new clients who do not yet have a persistence sessions on the system will not be sent to the service. Instead, they will be load balanced among other available services. After the delay time expires, no new requests or connections will be sent to the service.",
 			},
 			"downstateflush": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is ENABLED; declared so config-removal triggers
+				// unset without regressing basic/upgrade.
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Flush all active transactions associated with all the services in the GSLB service group whose state transitions from UP to DOWN. Do not enable this option for applications that must complete their transactions.",
 			},
 			"dup_weight": schema.Int64Attribute{
@@ -138,8 +147,11 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
 			},
 			"healthmonitor": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is YES; declared so config-removal triggers
+				// unset without regressing basic/upgrade.
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Monitor the health of this GSLB service.Available settings function are as follows:\nYES - Send probes to check the health of the GSLB service.\nNO - Do not send probes to check the health of the GSLB service. With the NO option, the appliance shows the service as UP at all times.",
 			},
 			"includemembers": schema.BoolAttribute{

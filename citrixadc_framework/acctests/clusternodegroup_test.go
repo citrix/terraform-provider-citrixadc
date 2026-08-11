@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -142,6 +143,78 @@ func testAccCheckClusternodegroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+const testAccClusternodegroup_unset_step1 = `
+
+resource "citrixadc_clusternodegroup" "tf_unset" {
+	name   = "tf_unset_clusternode"
+	strict = "YES"
+}
+`
+
+const testAccClusternodegroup_unset_step2 = `
+
+resource "citrixadc_clusternodegroup" "tf_unset" {
+	name = "tf_unset_clusternode"
+	# strict removed from config -> provider must unset it (revert to NITRO default "NO").
+}
+`
+
+func TestAccClusternodegroup_unset(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccClusternodegroup_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroupExist("citrixadc_clusternodegroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_unset", "strict", "YES"),
+				),
+			},
+			{
+				// Removing strict must unset it: state reverts to the documented
+				// NITRO default ("NO") and the implicit post-apply plan is empty.
+				Config: testAccClusternodegroup_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroupExist("citrixadc_clusternodegroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup.tf_unset", "strict", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckClusternodegroupADCValue("tf_unset_clusternode", "strict", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckClusternodegroupADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckClusternodegroupADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Clusternodegroup.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("clusternodegroup %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("clusternodegroup %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccClusternodegroup_selfHealing(t *testing.T) {

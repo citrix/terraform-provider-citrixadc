@@ -9,7 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -42,21 +44,25 @@ func (r *PcpprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"announcemulticount": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("10"),
 				Description: "Integer value that identify the number announce message to be send.",
 			},
 			"mapping": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "This argument is for enabling/disabling the MAP opcode  of current PCP Profile",
 			},
 			"maxmaplife": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(86400),
 				Description: "Integer value that identify the maximum mapping lifetime (in seconds) for a pcp profile. default(86400s = 24Hours).",
 			},
 			"minmaplife": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(120),
 				Description: "Integer value that identify the minimum mapping lifetime (in seconds) for a pcp profile. default(120s)",
 			},
 			"name": schema.StringAttribute{
@@ -70,11 +76,13 @@ func (r *PcpprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"peer": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "This argument is for enabling/disabling the PEER opcode of current PCP Profile",
 			},
 			"thirdparty": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "This argument is for enabling/disabling the THIRD PARTY opcode of current PCP Profile",
 			},
 		},

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -151,6 +152,7 @@ func (r *NsaclResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"logstate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or disable logging of events related to the extended ACL rule. The log messages are stored in the configured syslog or auditlog server.",
 			},
 			"newname": schema.StringAttribute{
@@ -246,6 +248,7 @@ func (r *NsaclResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"stateful": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "If stateful option is enabled, transparent sessions are created for the traffic hitting this ACL and not hitting any other features like LB, INAT etc.",
 			},
 			"td": schema.Int64Attribute{

@@ -108,12 +108,14 @@ func (r *AuthenticationoauthidppolicyResource) Read(ctx context.Context, req res
 }
 
 func (r *AuthenticationoauthidppolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationoauthidppolicyResourceModel
+	var data, config, state AuthenticationoauthidppolicyResourceModel
 
 	// Read Terraform prior state to preserve ID / detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -151,17 +153,26 @@ func (r *AuthenticationoauthidppolicyResource) Update(ctx context.Context, req r
 
 	// Regular update branch: detect changes in the NITRO-updatable attributes.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for authenticationoauthidppolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for authenticationoauthidppolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for authenticationoauthidppolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for authenticationoauthidppolicy")
@@ -169,7 +180,11 @@ func (r *AuthenticationoauthidppolicyResource) Update(ctx context.Context, req r
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, "undefaction has changed for authenticationoauthidppolicy")
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -185,6 +200,16 @@ func (r *AuthenticationoauthidppolicyResource) Update(ctx context.Context, req r
 		tflog.Trace(ctx, "Updated authenticationoauthidppolicy resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for authenticationoauthidppolicy resource")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. Addressed by the live object name (== data.Id).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationoauthidppolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationoauthidppolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back. Preserve the plan's user-facing key attributes across

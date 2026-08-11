@@ -110,12 +110,14 @@ func (r *IcalatencyprofileResource) Read(ctx context.Context, req resource.ReadR
 }
 
 func (r *IcalatencyprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state IcalatencyprofileResourceModel
+	var data, config, state IcalatencyprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,25 +130,46 @@ func (r *IcalatencyprofileResource) Update(ctx context.Context, req resource.Upd
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.L7latencymaxnotifycount.Equal(state.L7latencymaxnotifycount) {
 		tflog.Debug(ctx, "l7latencymaxnotifycount has changed for icalatencyprofile")
-		hasChange = true
+		if config.L7latencymaxnotifycount.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencymaxnotifycount")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.L7latencymonitoring.Equal(state.L7latencymonitoring) {
 		tflog.Debug(ctx, "l7latencymonitoring has changed for icalatencyprofile")
-		hasChange = true
+		if config.L7latencymonitoring.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencymonitoring")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.L7latencynotifyinterval.Equal(state.L7latencynotifyinterval) {
 		tflog.Debug(ctx, "l7latencynotifyinterval has changed for icalatencyprofile")
-		hasChange = true
+		if config.L7latencynotifyinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencynotifyinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.L7latencythresholdfactor.Equal(state.L7latencythresholdfactor) {
 		tflog.Debug(ctx, "l7latencythresholdfactor has changed for icalatencyprofile")
-		hasChange = true
+		if config.L7latencythresholdfactor.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencythresholdfactor")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.L7latencywaittime.Equal(state.L7latencywaittime) {
 		tflog.Debug(ctx, "l7latencywaittime has changed for icalatencyprofile")
-		hasChange = true
+		if config.L7latencywaittime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencywaittime")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -164,6 +187,16 @@ func (r *IcalatencyprofileResource) Update(ctx context.Context, req resource.Upd
 		tflog.Trace(ctx, "Updated icalatencyprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for icalatencyprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Icalatencyprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset icalatencyprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

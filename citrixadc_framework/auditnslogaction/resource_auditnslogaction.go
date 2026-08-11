@@ -110,12 +110,14 @@ func (r *AuditnslogactionResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *AuditnslogactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuditnslogactionResourceModel
+	var data, config, state AuditnslogactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,20 +130,41 @@ func (r *AuditnslogactionResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Acl.Equal(state.Acl) {
-		hasChange = true
+		if config.Acl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "acl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Alg.Equal(state.Alg) {
-		hasChange = true
+		if config.Alg.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "alg")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Appflowexport.Equal(state.Appflowexport) {
-		hasChange = true
+		if config.Appflowexport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "appflowexport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Contentinspectionlog.Equal(state.Contentinspectionlog) {
-		hasChange = true
+		if config.Contentinspectionlog.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "contentinspectionlog")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dateformat.Equal(state.Dateformat) {
-		hasChange = true
+		if config.Dateformat.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dateformat")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Domainresolvenow.Equal(state.Domainresolvenow) {
 		hasChange = true
@@ -150,16 +173,28 @@ func (r *AuditnslogactionResource) Update(ctx context.Context, req resource.Upda
 		hasChange = true
 	}
 	if !data.Logfacility.Equal(state.Logfacility) {
-		hasChange = true
+		if config.Logfacility.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logfacility")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Loglevel.Equal(state.Loglevel) {
 		hasChange = true
 	}
 	if !data.Lsn.Equal(state.Lsn) {
-		hasChange = true
+		if config.Lsn.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "lsn")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Protocolviolations.Equal(state.Protocolviolations) {
-		hasChange = true
+		if config.Protocolviolations.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "protocolviolations")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Serverdomainname.Equal(state.Serverdomainname) {
 		hasChange = true
@@ -168,25 +203,49 @@ func (r *AuditnslogactionResource) Update(ctx context.Context, req resource.Upda
 		hasChange = true
 	}
 	if !data.Serverport.Equal(state.Serverport) {
-		hasChange = true
+		if config.Serverport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "serverport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sslinterception.Equal(state.Sslinterception) {
-		hasChange = true
+		if config.Sslinterception.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sslinterception")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Subscriberlog.Equal(state.Subscriberlog) {
-		hasChange = true
+		if config.Subscriberlog.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "subscriberlog")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tcp.Equal(state.Tcp) {
-		hasChange = true
+		if config.Tcp.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tcp")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Timezone.Equal(state.Timezone) {
-		hasChange = true
+		if config.Timezone.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "timezone")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Urlfiltering.Equal(state.Urlfiltering) {
 		hasChange = true
 	}
 	if !data.Userdefinedauditlog.Equal(state.Userdefinedauditlog) {
-		hasChange = true
+		if config.Userdefinedauditlog.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "userdefinedauditlog")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -203,6 +262,17 @@ func (r *AuditnslogactionResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated auditnslogaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for auditnslogaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Auditnslogaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset auditnslogaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

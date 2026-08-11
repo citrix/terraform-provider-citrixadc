@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -30,8 +31,12 @@ func (r *PolicyparamResource) Schema(ctx context.Context, req resource.SchemaReq
 			// SDK v2 parity: timeout was Optional+Computed with NO Default and NO
 			// ForceNew (is_updateable=true). Value is read from the ADC when unset.
 			"timeout": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is 3900. Declaring it here makes config-removal
+				// produce a plan diff so the Update path can issue the unset;
+				// without a Default an Optional+Computed attr is sticky on removal.
+				Default:     int64default.StaticInt64(3900),
 				Description: "Maximum time in milliseconds to allow for processing expressions and policies without interruption. If the timeout is reached then the evaluation causes an UNDEF to be raised and no further processing is performed.",
 			},
 		},

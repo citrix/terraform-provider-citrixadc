@@ -111,12 +111,14 @@ func (r *DnsmxrecResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *DnsmxrecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state DnsmxrecResourceModel
+	var data, config, state DnsmxrecResourceModel
 
 	// Read Terraform prior state to detect changes and preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,6 +131,13 @@ func (r *DnsmxrecResource) Update(ctx context.Context, req resource.UpdateReques
 
 	dnsmxrec, hasChange := dnsmxrecGetTheUpdatablePayloadFromThePlan(ctx, &data, &state)
 
+	// Detect optional attributes removed from config so they can be unset
+	// (reverted to their NITRO defaults) after any update.
+	attributesToUnset := []string{}
+	if !data.Ttl.Equal(state.Ttl) && config.Ttl.IsNull() {
+		attributesToUnset = append(attributesToUnset, "ttl")
+	}
+
 	if hasChange {
 		// Named resource - use UpdateResource (domain is the resource name)
 		dnsmxrecName := data.Domain.ValueString()
@@ -140,6 +149,18 @@ func (r *DnsmxrecResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated dnsmxrec resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for dnsmxrec resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. The unset payload keys on domain and mx (both mandatory in
+	// the NITRO dnsmxrec unset operation).
+	unsetIdPayload := map[string]interface{}{
+		"domain": data.Domain.ValueString(),
+		"mx":     data.Mx.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsmxrec.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsmxrec attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

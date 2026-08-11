@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -98,6 +99,7 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging of AppFlow information for the specified service group.",
 			},
 			"autodelayedtrofs": schema.StringAttribute{
@@ -138,6 +140,7 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"cacheable": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Use the transparent cache redirection virtual server to forward the request to the cache server.",
 			},
 			"cachetype": schema.StringAttribute{
@@ -200,6 +203,7 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"downstateflush": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Flush all active transactions associated with all the services in the service group whose state transitions from UP to DOWN.",
 			},
 			"dupweight": schema.Int64Attribute{
@@ -222,6 +226,7 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"healthmonitor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Monitor the health of this service.",
 			},
 			"httpprofilename": schema.StringAttribute{
@@ -267,6 +272,7 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"monconnectionclose": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Close monitoring connections by sending the service a connection termination message with the specified bit set.",
 			},
 			"monitornamesvc": schema.StringAttribute{
@@ -352,6 +358,7 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"sp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable surge protection for the service group.",
 			},
 			"state": schema.StringAttribute{

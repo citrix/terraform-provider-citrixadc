@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -30,13 +31,21 @@ func (r *RnatparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			// from the ADC). The auto-gen wrongly added a Default here; removed to
 			// preserve the SDK v2 backward-compatible contract.
 			"srcippersistency": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Default added so removing the attribute from config produces a
+				// plan diff, allowing Update to fire the NITRO unset. Value matches
+				// the NITRO spec default for srcippersistency.
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable source ip persistency, which enables the Citrix ADC to use the RNAT ips using source ip.",
 			},
 			"tcpproxy": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Default added so removing the attribute from config produces a
+				// plan diff, allowing Update to fire the NITRO unset. Value matches
+				// the NITRO spec default for tcpproxy.
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable TCP proxy, which enables the Citrix ADC to optimize the RNAT TCP traffic by using Layer 4 features.",
 			},
 		},

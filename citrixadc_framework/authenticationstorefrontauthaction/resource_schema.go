@@ -13,6 +13,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward
+// and removal is a silent no-op. Because these attributes revert to no value
+// (absent from GET) after unset, marking the plan unknown also avoids a
+// "provider produced inconsistent result" error, which a static Default would
+// trigger.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // AuthenticationstorefrontauthactionResourceModel describes the resource data model.
 type AuthenticationstorefrontauthactionResourceModel struct {
 	Id                         types.String `tfsdk:"id"`
@@ -31,13 +59,19 @@ func (r *AuthenticationstorefrontauthactionResource) Schema(ctx context.Context,
 				Description: "The ID of the authenticationstorefrontauthaction resource.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "This is the default group that is chosen when the authentication succeeds in addition to extracted groups.",
 			},
 			"domain": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Domain of the server that is used for authentication. If users enter name without domain, this parameter is added to username in the authentication request to server.",
 			},
 			"name": schema.StringAttribute{

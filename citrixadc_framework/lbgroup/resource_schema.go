@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,6 +45,7 @@ func (r *LbgroupResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"backuppersistencetimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(2),
 				Description: "Time period, in minutes, for which backup persistence is in effect.",
 			},
 			"cookiedomain": schema.StringAttribute{
@@ -95,6 +97,7 @@ func (r *LbgroupResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(2),
 				Description: "Time period for which a persistence session is in effect.",
 			},
 			"usevserverpersistency": schema.StringAttribute{
@@ -105,6 +108,7 @@ func (r *LbgroupResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"v6persistmasklen": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(128),
 				Description: "Persistence mask to apply to source IPv6 addresses when creating source IP based persistence sessions.",
 			},
 		},

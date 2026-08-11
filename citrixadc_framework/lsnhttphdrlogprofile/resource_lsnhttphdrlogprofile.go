@@ -109,12 +109,14 @@ func (r *LsnhttphdrlogprofileResource) Read(ctx context.Context, req resource.Re
 }
 
 func (r *LsnhttphdrlogprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsnhttphdrlogprofileResourceModel
+	var data, config, state LsnhttphdrlogprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset them)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,21 +129,38 @@ func (r *LsnhttphdrlogprofileResource) Update(ctx context.Context, req resource.
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Loghost.Equal(state.Loghost) {
 		tflog.Debug(ctx, "loghost has changed for lsnhttphdrlogprofile")
-		hasChange = true
+		if config.Loghost.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "loghost")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logmethod.Equal(state.Logmethod) {
 		tflog.Debug(ctx, "logmethod has changed for lsnhttphdrlogprofile")
-		hasChange = true
+		if config.Logmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logmethod")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logurl.Equal(state.Logurl) {
 		tflog.Debug(ctx, "logurl has changed for lsnhttphdrlogprofile")
-		hasChange = true
+		if config.Logurl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logurl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logversion.Equal(state.Logversion) {
 		tflog.Debug(ctx, "logversion has changed for lsnhttphdrlogprofile")
-		hasChange = true
+		if config.Logversion.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logversion")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -156,6 +175,16 @@ func (r *LsnhttphdrlogprofileResource) Update(ctx context.Context, req resource.
 		tflog.Trace(ctx, "Updated lsnhttphdrlogprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lsnhttphdrlogprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"httphdrlogprofilename": data.Httphdrlogprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsnhttphdrlogprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsnhttphdrlogprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

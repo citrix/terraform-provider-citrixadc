@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -161,6 +162,104 @@ func TestAccIpsecparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// ipsecparameter is a singleton (global) resource. Step1 sets every
+// unset-eligible attribute to a valid non-default value; step2 removes them all
+// so the provider must unset them (revert to the documented NITRO defaults).
+const testAccIpsecparameter_unset_step1 = `
+resource "citrixadc_ipsecparameter" "tf_unset" {
+	ikeversion            = "V1"
+	encalgo               = ["AES256"]
+	hashalgo              = ["HMAC_SHA1"]
+	lifetime              = 480
+	livenesscheckinterval = 50
+	replaywindowsize      = 8192
+	ikeretryinterval      = 120
+	perfectforwardsecrecy = "ENABLE"
+	retransmissiontime    = 5
+}
+`
+
+const testAccIpsecparameter_unset_step2 = `
+resource "citrixadc_ipsecparameter" "tf_unset" {
+	# All unset-eligible scalar attributes removed from config -> the provider
+	# must unset them (revert to the NITRO defaults). encalgo/hashalgo are list
+	# attributes without a schema Default (sticky on removal) so they are kept in
+	# config and are not part of the unset set.
+	encalgo  = ["AES256"]
+	hashalgo = ["HMAC_SHA1"]
+}
+`
+
+func TestAccIpsecparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccIpsecparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecparameterExist("citrixadc_ipsecparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "ikeversion", "V1"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "encalgo.0", "AES256"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "hashalgo.0", "HMAC_SHA1"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "lifetime", "480"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "livenesscheckinterval", "50"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "replaywindowsize", "8192"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "ikeretryinterval", "120"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "perfectforwardsecrecy", "ENABLE"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "retransmissiontime", "5"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccIpsecparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpsecparameterExist("citrixadc_ipsecparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "ikeversion", "V2"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "lifetime", "28800"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "livenesscheckinterval", "10"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "replaywindowsize", "9216"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "ikeretryinterval", "60"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "perfectforwardsecrecy", "DISABLE"),
+					resource.TestCheckResourceAttr("citrixadc_ipsecparameter.tf_unset", "retransmissiontime", "1"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckIpsecparameterADCValue("ikeversion", "V2"),
+					testAccCheckIpsecparameterADCValue("perfectforwardsecrecy", "DISABLE"),
+					testAccCheckIpsecparameterADCValue("lifetime", "28800"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckIpsecparameterADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckIpsecparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Ipsecparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("ipsecparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("ipsecparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccIpsecparameterDataSource_basic(t *testing.T) {

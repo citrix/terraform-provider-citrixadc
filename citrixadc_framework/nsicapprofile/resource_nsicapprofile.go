@@ -110,12 +110,14 @@ func (r *NsicapprofileResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *NsicapprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsicapprofileResourceModel
+	var data, config, state NsicapprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,13 +130,22 @@ func (r *NsicapprofileResource) Update(ctx context.Context, req resource.UpdateR
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Allow204.Equal(state.Allow204) {
 		tflog.Debug(ctx, "allow204 has changed for nsicapprofile")
-		hasChange = true
+		if config.Allow204.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "allow204")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Connectionkeepalive.Equal(state.Connectionkeepalive) {
 		tflog.Debug(ctx, "connectionkeepalive has changed for nsicapprofile")
-		hasChange = true
+		if config.Connectionkeepalive.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "connectionkeepalive")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Hostheader.Equal(state.Hostheader) {
 		tflog.Debug(ctx, "hostheader has changed for nsicapprofile")
@@ -158,11 +169,19 @@ func (r *NsicapprofileResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Preview.Equal(state.Preview) {
 		tflog.Debug(ctx, "preview has changed for nsicapprofile")
-		hasChange = true
+		if config.Preview.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "preview")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Previewlength.Equal(state.Previewlength) {
 		tflog.Debug(ctx, "previewlength has changed for nsicapprofile")
-		hasChange = true
+		if config.Previewlength.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "previewlength")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Queryparams.Equal(state.Queryparams) {
 		tflog.Debug(ctx, "queryparams has changed for nsicapprofile")
@@ -170,11 +189,19 @@ func (r *NsicapprofileResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Reqtimeout.Equal(state.Reqtimeout) {
 		tflog.Debug(ctx, "reqtimeout has changed for nsicapprofile")
-		hasChange = true
+		if config.Reqtimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "reqtimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Reqtimeoutaction.Equal(state.Reqtimeoutaction) {
 		tflog.Debug(ctx, "reqtimeoutaction has changed for nsicapprofile")
-		hasChange = true
+		if config.Reqtimeoutaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "reqtimeoutaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Uri.Equal(state.Uri) {
 		tflog.Debug(ctx, "uri has changed for nsicapprofile")
@@ -199,6 +226,16 @@ func (r *NsicapprofileResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated nsicapprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nsicapprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsicapprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsicapprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

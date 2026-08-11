@@ -121,12 +121,14 @@ func (r *ResponderactionResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *ResponderactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ResponderactionResourceModel
+	var data, config, state ResponderactionResourceModel
 
 	// Read Terraform prior state to preserve ID / live name
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -164,13 +166,18 @@ func (r *ResponderactionResource) Update(ctx context.Context, req resource.Updat
 
 	// Regular (in-place) update of the NITRO-updatable attributes.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Bypasssafetycheck.Equal(state.Bypasssafetycheck) {
 		tflog.Debug(ctx, "bypasssafetycheck has changed for responderaction")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for responderaction")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Headers.Equal(state.Headers) {
 		tflog.Debug(ctx, "headers has changed for responderaction")
@@ -182,11 +189,19 @@ func (r *ResponderactionResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Reasonphrase.Equal(state.Reasonphrase) {
 		tflog.Debug(ctx, "reasonphrase has changed for responderaction")
-		hasChange = true
+		if config.Reasonphrase.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "reasonphrase")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Responsestatuscode.Equal(state.Responsestatuscode) {
 		tflog.Debug(ctx, "responsestatuscode has changed for responderaction")
-		hasChange = true
+		if config.Responsestatuscode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "responsestatuscode")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Target.Equal(state.Target) {
 		tflog.Debug(ctx, "target has changed for responderaction")
@@ -206,6 +221,17 @@ func (r *ResponderactionResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated responderaction resource")
 	} else {
 		tflog.Debug(ctx, "No in-place changes detected for responderaction resource")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The unset key is the CURRENT LIVE name (data.Id),
+	// which after a rename is newName.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Responderaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset responderaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. Preserve the user-facing key/rename inputs across

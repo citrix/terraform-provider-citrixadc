@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -441,16 +443,19 @@ func (r *VpnsamlssoprofileResource) Schema(ctx context.Context, req resource.Sch
 			"digestmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("SHA256"),
 				Description: "Algorithm to be used to compute/verify digest for SAML transactions",
 			},
 			"encryptassertion": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to encrypt assertion when Citrix ADC sends one.",
 			},
 			"encryptionalgorithm": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("AES256"),
 				Description: "Algorithm to be used to encrypt SAML assertion",
 			},
 			"name": schema.StringAttribute{
@@ -468,6 +473,7 @@ func (r *VpnsamlssoprofileResource) Schema(ctx context.Context, req resource.Sch
 			"nameidformat": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("transient"),
 				Description: "Format of Name Identifier sent in Assertion.",
 			},
 			"relaystaterule": schema.StringAttribute{
@@ -498,11 +504,13 @@ func (r *VpnsamlssoprofileResource) Schema(ctx context.Context, req resource.Sch
 			"signassertion": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ASSERTION"),
 				Description: "Option to sign portions of assertion when Citrix ADC IDP sends one. Based on the user selection, either Assertion or Response or Both or none can be signed",
 			},
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("RSA-SHA256"),
 				Description: "Algorithm to be used to sign/verify SAML transactions",
 			},
 			"signatureservice": schema.StringAttribute{
@@ -513,6 +521,7 @@ func (r *VpnsamlssoprofileResource) Schema(ctx context.Context, req resource.Sch
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "This option specifies the number of minutes on either side of current time that the assertion would be valid. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
 		},

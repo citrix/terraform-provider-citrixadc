@@ -110,12 +110,14 @@ func (r *LsnrtspalgprofileResource) Read(ctx context.Context, req resource.ReadR
 }
 
 func (r *LsnrtspalgprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsnrtspalgprofileResourceModel
+	var data, config, state LsnrtspalgprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,9 +131,14 @@ func (r *LsnrtspalgprofileResource) Update(ctx context.Context, req resource.Upd
 	// Check if there are any changes in updateable attributes
 	// (rtspalgprofilename is ForceNew/RequiresReplace and never reaches Update)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Rtspidletimeout.Equal(state.Rtspidletimeout) {
 		tflog.Debug(ctx, "rtspidletimeout has changed for lsnrtspalgprofile")
-		hasChange = true
+		if config.Rtspidletimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "rtspidletimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rtspportrange.Equal(state.Rtspportrange) {
 		tflog.Debug(ctx, "rtspportrange has changed for lsnrtspalgprofile")
@@ -157,6 +164,16 @@ func (r *LsnrtspalgprofileResource) Update(ctx context.Context, req resource.Upd
 		tflog.Trace(ctx, "Updated lsnrtspalgprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lsnrtspalgprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"rtspalgprofilename": data.Rtspalgprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsnrtspalgprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsnrtspalgprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

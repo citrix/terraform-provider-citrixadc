@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,8 +41,13 @@ func (r *SpilloverpolicyResource) Schema(ctx context.Context, req resource.Schem
 			// SDK v2: Optional + Computed (updateable, no default). NITRO echoes
 			// comment back on GET, so Optional+Computed is safe here.
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO unsets comment back to empty. An Optional+Computed attr with no
+				// Default is sticky on config-removal (no plan diff -> Update never runs
+				// -> unset never fires), so pin the server default ("" = no comment) to
+				// make removal produce a diff that drives the unset.
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments that you might want to associate with the spillover policy.",
 			},
 			// SDK v2: Required + ForceNew -> RequiresReplace. Changing the name

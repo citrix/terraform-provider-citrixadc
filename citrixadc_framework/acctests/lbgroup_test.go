@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -196,6 +197,91 @@ func TestAccLbgroup_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccLbgroup_unset covers the unset-eligible attributes with documented
+// NITRO server defaults: backuppersistencetimeout (2), timeout (2),
+// v6persistmasklen (128) and usevserverpersistency (DISABLED). Step 1 sets them
+// to non-default values; step 2 removes them so the provider must unset them
+// (revert to the NITRO defaults). persistencetype/persistencebackup are kept as
+// prerequisites in both steps.
+const testAccLbgroup_unset_step1 = `
+resource "citrixadc_lbgroup" "tf_unset" {
+	name                     = "tf_lbgroup_unset"
+	persistencetype          = "RULE"
+	persistencebackup        = "SOURCEIP"
+	backuppersistencetimeout = 20
+	timeout                  = 20
+	v6persistmasklen         = 64
+}
+`
+
+const testAccLbgroup_unset_step2 = `
+resource "citrixadc_lbgroup" "tf_unset" {
+	name              = "tf_lbgroup_unset"
+	persistencetype   = "RULE"
+	persistencebackup = "SOURCEIP"
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccLbgroup_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLbgroup_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbgroupExist("citrixadc_lbgroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbgroup.tf_unset", "backuppersistencetimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_lbgroup.tf_unset", "timeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_lbgroup.tf_unset", "v6persistmasklen", "64"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccLbgroup_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbgroupExist("citrixadc_lbgroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbgroup.tf_unset", "backuppersistencetimeout", "2"),
+					resource.TestCheckResourceAttr("citrixadc_lbgroup.tf_unset", "timeout", "2"),
+					resource.TestCheckResourceAttr("citrixadc_lbgroup.tf_unset", "v6persistmasklen", "128"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLbgroupADCValue("tf_lbgroup_unset", "timeout", "2"),
+					testAccCheckLbgroupADCValue("tf_lbgroup_unset", "backuppersistencetimeout", "2"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLbgroupADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckLbgroupADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbgroup.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lbgroup %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lbgroup %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckLbgroupExist(n string, id *string) resource.TestCheckFunc {

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -213,6 +214,85 @@ func TestAccAuthenticationloginschemapolicy_import(t *testing.T) {
 			},
 		},
 	})
+}
+
+// comment is the sole cleanly-unsettable attribute: after a NITRO ?action=unset
+// it reverts to its default (GET omits it). undefaction/logaction are excluded
+// because their "unset" value reads back as the non-empty string "Use Global",
+// which is rejected as a create/update input and would cause a perpetual diff.
+const testAccAuthenticationloginschemapolicy_unset_step1 = `
+	resource "citrixadc_authenticationloginschemapolicy" "tf_unset" {
+		name    = "tf_test_lsp_unset"
+		rule    = "true"
+		action  = "NOOP"
+		comment = "unset_probe_comment"
+	}
+`
+
+const testAccAuthenticationloginschemapolicy_unset_step2 = `
+	resource "citrixadc_authenticationloginschemapolicy" "tf_unset" {
+		name   = "tf_test_lsp_unset"
+		rule   = "true"
+		action = "NOOP"
+		# comment removed from config -> provider must unset it (revert to default).
+	}
+`
+
+func TestAccAuthenticationloginschemapolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccAuthenticationloginschemapolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationloginschemapolicyExist("citrixadc_authenticationloginschemapolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationloginschemapolicy.tf_unset", "comment", "unset_probe_comment"),
+					testAccCheckAuthenticationloginschemapolicyADCValue("tf_test_lsp_unset", "comment", "unset_probe_comment"),
+				),
+			},
+			{
+				// Removing comment must unset it: state reverts to the NITRO default
+				// (GET omits comment -> null) and the implicit post-apply plan is empty.
+				Config: testAccAuthenticationloginschemapolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationloginschemapolicyExist("citrixadc_authenticationloginschemapolicy.tf_unset", nil),
+					resource.TestCheckNoResourceAttr("citrixadc_authenticationloginschemapolicy.tf_unset", "comment"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationloginschemapolicyADCValue("tf_test_lsp_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationloginschemapolicyADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it. A want of "" asserts the attribute is absent (default).
+func testAccCheckAuthenticationloginschemapolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationloginschemapolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationloginschemapolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("authenticationloginschemapolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccAuthenticationloginschemapolicyDataSource_basic = `

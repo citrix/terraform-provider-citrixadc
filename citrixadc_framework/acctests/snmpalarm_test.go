@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -169,6 +170,84 @@ func TestAccSnmpalarmDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The snmpalarm unset test covers the alarm-independent unset-eligible
+// attributes (logging, severity) on the MEMORY alarm. thresholdvalue/normalvalue
+// have no documented server default, time is alarm-specific and not echoed on
+// GET, and state is applied through the enable/disable actions -- so they are
+// excluded from unset.
+const testAccSnmpalarm_unset_step1 = `
+resource "citrixadc_snmpalarm" "tf_unset" {
+	trapname = "MEMORY"
+	logging  = "DISABLED"
+	severity = "Critical"
+}
+`
+
+const testAccSnmpalarm_unset_step2 = `
+resource "citrixadc_snmpalarm" "tf_unset" {
+	trapname = "MEMORY"
+	# logging and severity removed from config -> the provider must unset them
+	# (revert to NITRO defaults: logging=ENABLED, severity=Unknown).
+}
+`
+
+func TestAccSnmpalarm_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSnmpalarm_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpalarmExist("citrixadc_snmpalarm.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpalarm.tf_unset", "logging", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_snmpalarm.tf_unset", "severity", "Critical"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSnmpalarm_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpalarmExist("citrixadc_snmpalarm.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpalarm.tf_unset", "logging", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_snmpalarm.tf_unset", "severity", "Unknown"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSnmpalarmADCValue("MEMORY", "logging", "ENABLED"),
+					testAccCheckSnmpalarmADCValue("MEMORY", "severity", "Unknown"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSnmpalarmADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckSnmpalarmADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Snmpalarm.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("snmpalarm %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("snmpalarm %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccSnmpalarmDataSource_basic = `

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -219,6 +220,93 @@ func TestAccSnmpmanager_selfHealing(t *testing.T) {
 			},
 		},
 	})
+}
+
+// domainresolveretry is the only unset-eligible attribute: it is Optional and
+// updateable (not the key, not ForceNew, not read-only) and has a documented
+// NITRO default of 5. NITRO rejects it on IP-based managers ("Domain resolve
+// retry cannot be given for IP based manager"), so the unset test uses a
+// host-name based manager, which in turn requires a DNS name server.
+const testAccSnmpmanager_unset_step1 = `
+resource "citrixadc_dnsnameserver" "tf_unset_ns" {
+  ip = "8.8.8.8"
+}
+
+resource "citrixadc_snmpmanager" "tf_unset" {
+  ipaddress          = "tfunsethost.example.com"
+  domainresolveretry = 10
+  depends_on         = [citrixadc_dnsnameserver.tf_unset_ns]
+}
+`
+
+const testAccSnmpmanager_unset_step2 = `
+resource "citrixadc_dnsnameserver" "tf_unset_ns" {
+  ip = "8.8.8.8"
+}
+
+resource "citrixadc_snmpmanager" "tf_unset" {
+  ipaddress  = "tfunsethost.example.com"
+  depends_on = [citrixadc_dnsnameserver.tf_unset_ns]
+  # domainresolveretry removed from config -> the provider must unset it
+  # (revert to the NITRO default of 5).
+}
+`
+
+func TestAccSnmpmanager_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpmanagerDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccSnmpmanager_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpmanagerExist("citrixadc_snmpmanager.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpmanager.tf_unset", "ipaddress", "tfunsethost.example.com"),
+					resource.TestCheckResourceAttr("citrixadc_snmpmanager.tf_unset", "domainresolveretry", "10"),
+					testAccCheckSnmpmanagerADCValue("tfunsethost.example.com", "domainresolveretry", "10"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the documented NITRO default (5), and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSnmpmanager_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpmanagerExist("citrixadc_snmpmanager.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmpmanager.tf_unset", "domainresolveretry", "5"),
+					testAccCheckSnmpmanagerADCValue("tfunsethost.example.com", "domainresolveretry", "5"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSnmpmanagerADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. snmpmanager is an array resource keyed by ipaddress.
+func testAccCheckSnmpmanagerADCValue(ipaddress, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Snmpmanager.Type())
+		if err != nil {
+			return err
+		}
+		for _, v := range dataArr {
+			if ip, ok := v["ipaddress"].(string); ok && ip == ipaddress {
+				got := strings.TrimSpace(fmt.Sprintf("%v", v[attr]))
+				if got != want {
+					return fmt.Errorf("snmpmanager %s: appliance attr %q = %q, want %q (unset did not revert it)", ipaddress, attr, got, want)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("snmpmanager %s not found on appliance", ipaddress)
+	}
 }
 
 func TestAccSnmpmanager_import(t *testing.T) {

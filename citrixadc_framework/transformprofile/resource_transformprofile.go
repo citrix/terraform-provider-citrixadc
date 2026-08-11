@@ -136,12 +136,14 @@ func (r *TransformprofileResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *TransformprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state TransformprofileResourceModel
+	var data, config, state TransformprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,15 +160,24 @@ func (r *TransformprofileResource) Update(ctx context.Context, req resource.Upda
 		Name: data.Name.ValueString(),
 	}
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for transformprofile")
-		payload.Comment = data.Comment.ValueString()
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			payload.Comment = data.Comment.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Onlytransformabsurlinbody.Equal(state.Onlytransformabsurlinbody) {
 		tflog.Debug(ctx, "onlytransformabsurlinbody has changed for transformprofile")
-		payload.Onlytransformabsurlinbody = data.Onlytransformabsurlinbody.ValueString()
-		hasChange = true
+		if config.Onlytransformabsurlinbody.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "onlytransformabsurlinbody")
+		} else {
+			payload.Onlytransformabsurlinbody = data.Onlytransformabsurlinbody.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Type.Equal(state.Type) {
 		tflog.Debug(ctx, "type has changed for transformprofile")
@@ -183,6 +194,16 @@ func (r *TransformprofileResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated transformprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for transformprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Transformprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset transformprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

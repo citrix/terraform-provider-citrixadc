@@ -110,12 +110,14 @@ func (r *Rnat6Resource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *Rnat6Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Rnat6ResourceModel
+	var data, config, state Rnat6ResourceModel
 
 	// Read Terraform prior state to detect changes and preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,20 @@ func (r *Rnat6Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	// Build payload restricted to NITRO-updatable fields (matches SDK v2).
 	rnat6, hasChange := rnat6GetTheUpdatablePayloadFromThePlan(ctx, &data, &state)
+
+	// srcippersistency: when removed from config, unset it (revert to NITRO
+	// default); otherwise include the new value in the update payload.
+	attributesToUnset := []string{}
+	if !data.Srcippersistency.Equal(state.Srcippersistency) {
+		tflog.Debug(ctx, "srcippersistency has changed for rnat6")
+		if config.Srcippersistency.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "srcippersistency")
+		} else if !data.Srcippersistency.IsUnknown() {
+			rnat6.Srcippersistency = data.Srcippersistency.ValueString()
+			hasChange = true
+		}
+	}
+
 	if hasChange {
 		err := r.client.UpdateUnnamedResource(service.Rnat6.Type(), &rnat6)
 		if err != nil {
@@ -137,6 +153,16 @@ func (r *Rnat6Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 		tflog.Trace(ctx, "Updated rnat6 resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for rnat6 resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Rnat6.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset rnat6 attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -8,8 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -53,6 +55,7 @@ func (r *ClusternodeResource) Schema(ctx context.Context, req resource.SchemaReq
 			"delay": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Applicable for Passive node and node becomes passive after this timeout (in minutes)",
 			},
 			"force": schema.BoolAttribute{
@@ -82,16 +85,19 @@ func (r *ClusternodeResource) Schema(ctx context.Context, req resource.SchemaReq
 			"priority": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(31),
 				Description: "Preference for selecting a node as the configuration coordinator. The node with the lowest priority value is selected as the configuration coordinator.\nWhen the current configuration coordinator goes down, the node with the next lowest priority is made the new configuration coordinator. When the original node comes back up, it will preempt the new configuration coordinator and take over as the configuration coordinator.\nNote: When priority is not configured for any of the nodes or if multiple nodes have the same priority, the cluster elects one of the nodes as the configuration coordinator.",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PASSIVE"),
 				Description: "Admin state of the cluster node. The available settings function as follows:\nACTIVE - The node serves traffic.\nSPARE - The node does not serve traffic unless an ACTIVE node goes down.\nPASSIVE - The node does not serve traffic, unless you change its state. PASSIVE state is useful during temporary maintenance activities in which you want the node to take part in the consensus protocol but not to serve traffic.",
 			},
 			"tunnelmode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "To set the tunnel mode",
 			},
 		},

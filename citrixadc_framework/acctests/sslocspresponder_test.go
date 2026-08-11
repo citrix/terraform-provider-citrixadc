@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -286,6 +287,95 @@ func TestAccSslocspresponder_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccSslocspresponder_unset_step1 sets the unset-eligible attributes to
+// valid NON-default values. testAccSslocspresponder_unset_step2 removes them
+// (keeping only the required name + url), so the provider must unset them and
+// the appliance must revert them to their NITRO defaults.
+const testAccSslocspresponder_unset_step1 = `
+	resource "citrixadc_sslocspresponder" "tf_unset" {
+		name               = "tf_sslocspresponder_unset"
+		url                = "http://www.citrix.com"
+		cache              = "ENABLED"
+		cachetimeout       = 100
+		httpmethod         = "GET"
+		producedattimeskew = 600
+		trustresponder     = true
+	}
+`
+
+const testAccSslocspresponder_unset_step2 = `
+	resource "citrixadc_sslocspresponder" "tf_unset" {
+		name = "tf_sslocspresponder_unset"
+		url  = "http://www.citrix.com"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccSslocspresponder_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslocspresponderDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSslocspresponder_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslocspresponderExist("citrixadc_sslocspresponder.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "cache", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "cachetimeout", "100"),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "httpmethod", "GET"),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "producedattimeskew", "600"),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "trustresponder", "true"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSslocspresponder_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslocspresponderExist("citrixadc_sslocspresponder.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "cache", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "cachetimeout", "1"),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "httpmethod", "POST"),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "producedattimeskew", "300"),
+					resource.TestCheckResourceAttr("citrixadc_sslocspresponder.tf_unset", "trustresponder", "false"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSslocspresponderADCValue("tf_sslocspresponder_unset", "cache", "DISABLED"),
+					testAccCheckSslocspresponderADCValue("tf_sslocspresponder_unset", "httpmethod", "POST"),
+					testAccCheckSslocspresponderADCValue("tf_sslocspresponder_unset", "producedattimeskew", "300"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSslocspresponderADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckSslocspresponderADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslocspresponder.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("sslocspresponder %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("sslocspresponder %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSslocspresponderDataSource_basic(t *testing.T) {

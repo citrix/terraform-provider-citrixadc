@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -176,6 +177,107 @@ func TestAccAaaparameter_import(t *testing.T) {
 			},
 		},
 	})
+}
+
+// aaaparameter is a singleton. Step 1 sets a set of unset-eligible toggle
+// attributes to valid non-default values; step 2 removes them from config so the
+// provider must unset them (revert to the documented NITRO defaults).
+const testAccAaaparameter_unset_step1 = `
+
+	resource "citrixadc_aaaparameter" "tf_aaaparameter" {
+		aaadloglevel            = "DEBUG"
+		apitokencache           = "ENABLED"
+		defaultcspheader        = "DISABLED"
+		enablesessionstickiness = "YES"
+		enhancedepa             = "ENABLED"
+		httponlycookie          = "DISABLED"
+		loginencryption         = "ENABLED"
+		maxkbquestions          = 4
+		persistentloginattempts = "ENABLED"
+		securityinsights        = "ENABLED"
+	}
+`
+
+const testAccAaaparameter_unset_step2 = `
+
+	resource "citrixadc_aaaparameter" "tf_aaaparameter" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccAaaparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAaaparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaparameterExist("citrixadc_aaaparameter.tf_aaaparameter", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "aaadloglevel", "DEBUG"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "apitokencache", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "defaultcspheader", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enablesessionstickiness", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enhancedepa", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "httponlycookie", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "loginencryption", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "maxkbquestions", "4"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "persistentloginattempts", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "securityinsights", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAaaparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaaparameterExist("citrixadc_aaaparameter.tf_aaaparameter", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "aaadloglevel", "INFORMATIONAL"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "apitokencache", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "defaultcspheader", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enablesessionstickiness", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "enhancedepa", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "httponlycookie", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "loginencryption", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "maxkbquestions", "2"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "persistentloginattempts", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_aaaparameter.tf_aaaparameter", "securityinsights", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAaaparameterADCValue("defaultcspheader", "ENABLED"),
+					testAccCheckAaaparameterADCValue("enablesessionstickiness", "NO"),
+					testAccCheckAaaparameterADCValue("httponlycookie", "ENABLED"),
+					testAccCheckAaaparameterADCValue("persistentloginattempts", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAaaparameterADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckAaaparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaaparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("aaaparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("aaaparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAaaparameter_sdkv2StateUpgrade(t *testing.T) {

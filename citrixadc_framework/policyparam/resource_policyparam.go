@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -96,10 +97,12 @@ func (r *PolicyparamResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *PolicyparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data PolicyparamResourceModel
+	var data, config, state PolicyparamResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan, and config into the models
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -110,17 +113,41 @@ func (r *PolicyparamResource) Update(ctx context.Context, req resource.UpdateReq
 	// Preserve ID from prior state (static singleton ID)
 	data.Id = types.StringValue("policyparam-config")
 
-	// Build payload from the plan
-	policyparam := policyparamGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call - singleton resource, use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Policyparam.Type(), &policyparam)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policyparam, got error: %s", err))
-		return
+	// Determine changes vs. removed-from-config attributes to unset.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Timeout.Equal(state.Timeout) {
+		tflog.Debug(ctx, "timeout has changed for policyparam")
+		if config.Timeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "timeout")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated policyparam resource")
+	if hasChange {
+		// Build payload from the plan
+		policyparam := policyparamGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call - singleton resource, use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Policyparam.Type(), &policyparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update policyparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated policyparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for policyparam resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Singleton resource -> empty id payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Policyparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset policyparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readPolicyparamFromApi(ctx, &data, &resp.Diagnostics)

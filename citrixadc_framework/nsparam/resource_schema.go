@@ -5,9 +5,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -67,8 +69,11 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"advancedanalyticsstats": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				// Default matches the NITRO server default so removing it from config
+				// produces a plan diff (Update runs -> ?action=unset) and, once reverted,
+				// a stable empty plan.
+				Default: stringdefault.StaticString("DISABLED"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Disable/Enable advanace analytics stats",
@@ -76,8 +81,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"aftpallowrandomsourceport": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("DISABLED"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Allow the FTP server to come from a random source port for active FTP data connections",
@@ -121,8 +126,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"exclusivequotamaxclient": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				Default:  int64default.StaticInt64(80),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Percentage of maxClient threshold to be divided equally among PEs.",
@@ -130,8 +135,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"exclusivequotaspillover": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				Default:  int64default.StaticInt64(80),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Percentage of spillover threshold to be divided equally among PEs.",
@@ -148,8 +153,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"grantquotamaxclient": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				Default:  int64default.StaticInt64(10),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining maxclient quota after distribution of exclusive quota to PEs.\n\nExample: In a 2 PE NetScaler system if configured maxclient is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20.",
@@ -157,8 +162,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"grantquotaspillover": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				Default:  int64default.StaticInt64(10),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Percentage of shared pool value granted to PE once PE exhausts the local exclusive quota. Where shared pool is the remaining spillover quota after distribution of exclusive quota to PEs.\n\nExample: In a 2 PE NetScaler system if configured spillover is 100 and exclusive quota is 80 percent then each PE will get 40 as local exclusive quota and 20 will be in shared pool. If configured grantQuota is 20 percent, then after exhausting its local exclusive quota PE borrows from shared pool in chunks of 4 i.e. 20 percent of 20.",
@@ -240,8 +245,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"pmtumin": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				Default:  int64default.StaticInt64(576),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Minimum path MTU value that Citrix ADC will process in the ICMP fragmentation needed message. If the ICMP message contains a value less than this value, then this value is used instead.",
@@ -249,8 +254,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"pmtutimeout": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				Default:  int64default.StaticInt64(10),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
 					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Interval, in minutes, for flushing the PMTU entries.",
@@ -258,8 +263,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"proxyprotocol": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("DISABLED"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Disable/Enable v1 or v2 proxy protocol header for client info insertion",
@@ -267,8 +272,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"securecookie": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("ENABLED"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enable or disable secure flag for persistence cookie.",
@@ -295,8 +300,8 @@ func (r *NsparamResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"tcpcip": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString("DISABLED"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enable or disable the insertion of the client TCP/IP header in TCP payload passed from the client to one, some, or all servers attached to the system. The passed address can then be accessed through a minor modification to the server.",

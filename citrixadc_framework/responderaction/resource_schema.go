@@ -16,6 +16,52 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward and
+// removal is a silent no-op. It does nothing when the config still carries a
+// value, on create (no prior state), or when the prior value is already empty.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
+// unsetOnRemoveInt64Modifier is the Int64 counterpart of unsetOnRemoveStringModifier.
+type unsetOnRemoveInt64Modifier struct{}
+
+func (m unsetOnRemoveInt64Modifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-zero value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveInt64Modifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveInt64Modifier) PlanModifyInt64(_ context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueInt64() != 0 {
+		resp.PlanValue = types.Int64Unknown()
+	}
+}
+
 // ResponderactionResourceModel describes the resource data model.
 type ResponderactionResourceModel struct {
 	Id                 types.String `tfsdk:"id"`
@@ -47,8 +93,11 @@ func (r *ResponderactionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"comment": schema.StringAttribute{
 				// SDK v2: Optional+Computed, not ForceNew.
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Comment. Any type of information about this responder action.",
 			},
 			"headers": schema.ListAttribute{
@@ -88,14 +137,20 @@ func (r *ResponderactionResource) Schema(ctx context.Context, req resource.Schem
 			},
 			"reasonphrase": schema.StringAttribute{
 				// SDK v2: Optional+Computed, not ForceNew.
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Expression specifying the reason phrase of the HTTP response. The reason phrase may be a string literal with quotes or a PI expression. For example: \"Invalid URL: \" + HTTP.REQ.URL",
 			},
 			"responsestatuscode": schema.Int64Attribute{
 				// SDK v2: TypeInt, Optional+Computed, not ForceNew.
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					unsetOnRemoveInt64Modifier{},
+				},
 				Description: "HTTP response status code, for example 200, 302, 404, etc. The default value for the redirect action type is 302 and for respondwithhtmlpage is 200",
 			},
 			"target": schema.StringAttribute{

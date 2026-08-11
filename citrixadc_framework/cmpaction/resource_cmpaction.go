@@ -110,12 +110,14 @@ func (r *CmpactionResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *CmpactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state CmpactionResourceModel
+	var data, config, state CmpactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,9 +130,14 @@ func (r *CmpactionResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Addvaryheader.Equal(state.Addvaryheader) {
 		tflog.Debug(ctx, "addvaryheader has changed for cmpaction")
-		hasChange = true
+		if config.Addvaryheader.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "addvaryheader")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cmptype.Equal(state.Cmptype) {
 		tflog.Debug(ctx, "cmptype has changed for cmpaction")
@@ -156,6 +163,16 @@ func (r *CmpactionResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated cmpaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for cmpaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Cmpaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset cmpaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

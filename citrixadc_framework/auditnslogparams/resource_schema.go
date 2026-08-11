@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -46,31 +47,37 @@ func (r *AuditnslogparamsResource) Schema(ctx context.Context, req resource.Sche
 			"acl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Configure auditing to log access control list (ACL) messages.",
 			},
 			"alg": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log the ALG messages",
 			},
 			"appflowexport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Export log messages to AppFlow collectors.\nAppflow collectors are entities to which log messages can be sent so that some action can be performed on them.",
 			},
 			"contentinspectionlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log Content Inspection event information",
 			},
 			"dateformat": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("MMDDYYYY"),
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY - U.S. style month/date/year format.\n* DDMMYYYY - European style date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
 			},
 			"logfacility": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("LOCAL0"),
 				Description: "Facility value, as defined in RFC 3164, assigned to the log message.\nLog facility values are numbers 0 to 7 (LOCAL0 through LOCAL7). Each number indicates where a specific message originated from, such as the Citrix ADC itself, the VPN, or external.",
 			},
 			"loglevel": schema.ListAttribute{
@@ -82,11 +89,13 @@ func (r *AuditnslogparamsResource) Schema(ctx context.Context, req resource.Sche
 			"lsn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log the LSN messages",
 			},
 			"protocolviolations": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Log protocol violations",
 			},
 			"serverip": schema.StringAttribute{
@@ -102,21 +111,25 @@ func (r *AuditnslogparamsResource) Schema(ctx context.Context, req resource.Sche
 			"sslinterception": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log SSL Interception event information",
 			},
 			"subscriberlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Log subscriber session event information",
 			},
 			"tcp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Configure auditing to log TCP messages.",
 			},
 			"timezone": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("GMT_TIME"),
 				Description: "Time zone used for date and timestamps in the logs.\nSupported settings are:\n* GMT_TIME - Coordinated Universal Time.\n* LOCAL_TIME - Use the server's timezone setting.",
 			},
 			"urlfiltering": schema.StringAttribute{
@@ -127,6 +140,7 @@ func (r *AuditnslogparamsResource) Schema(ctx context.Context, req resource.Sche
 			"userdefinedauditlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Log user-configurable log messages to nslog.\nSetting this parameter to NO causes auditing to ignore all user-configured message actions. Setting this parameter to YES causes auditing to log user-configured message actions that meet the other logging criteria.",
 			},
 		},

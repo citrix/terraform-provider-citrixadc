@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -194,6 +195,107 @@ func TestAccSystemparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccSystemparameter_unset_step1 sets every unset-eligible attribute to a
+// valid NON-default value.
+const testAccSystemparameter_unset_step1 = `
+resource "citrixadc_systemparameter" "tf_unset" {
+    rbaonresponse           = "DISABLED"
+    natpcbforceflushlimit   = 3000
+    natpcbrstontimeout      = "ENABLED"
+    timeout                 = 500
+    doppler                 = "DISABLED"
+    googleanalytics         = "ENABLED"
+    totalauthtimeout        = 30
+    cliloglevel             = "DEBUG"
+    reauthonauthparamchange = "ENABLED"
+    removesensitivefiles    = "ENABLED"
+    restrictedtimeout       = "ENABLED"
+}
+`
+
+// testAccSystemparameter_unset_step2 removes all unset-eligible attributes so
+// the provider must unset them (revert to the documented NITRO defaults).
+const testAccSystemparameter_unset_step2 = `
+resource "citrixadc_systemparameter" "tf_unset" {
+}
+`
+
+func TestAccSystemparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSystemparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemparameterExist("citrixadc_systemparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "rbaonresponse", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "natpcbforceflushlimit", "3000"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "natpcbrstontimeout", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "timeout", "500"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "doppler", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "googleanalytics", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "totalauthtimeout", "30"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "cliloglevel", "DEBUG"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "reauthonauthparamchange", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "removesensitivefiles", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "restrictedtimeout", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSystemparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemparameterExist("citrixadc_systemparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "rbaonresponse", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "natpcbforceflushlimit", "2147483647"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "natpcbrstontimeout", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "timeout", "900"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "doppler", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "googleanalytics", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "totalauthtimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "cliloglevel", "INFORMATIONAL"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "reauthonauthparamchange", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "removesensitivefiles", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_systemparameter.tf_unset", "restrictedtimeout", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSystemparameterADCValue("rbaonresponse", "ENABLED"),
+					testAccCheckSystemparameterADCValue("cliloglevel", "INFORMATIONAL"),
+					testAccCheckSystemparameterADCValue("timeout", "900"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSystemparameterADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckSystemparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Systemparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("systemparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("systemparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSystemparameterDataSource_basic(t *testing.T) {

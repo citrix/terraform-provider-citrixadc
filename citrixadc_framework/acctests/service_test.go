@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
@@ -508,6 +509,103 @@ func TestAccService_selfHealing(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The service unset test covers the mutable, spec-unsettable attributes that
+// have a documented NITRO default which is also a valid SET input value:
+// accessdown, appflowlog, cacheable, downstateflush, healthmonitor,
+// processlocal. Step 1 sets them to non-default values;
+// step 2 removes them from config so the provider must unset them (revert to
+// the documented NITRO defaults) and the implicit post-apply plan must be empty.
+const testAccService_unset_step1 = `
+resource "citrixadc_service" "tf_unset" {
+  name               = "tf_test_service_unset"
+  servicetype        = "HTTP"
+  ip                 = "10.222.111.56"
+  port               = 80
+  accessdown         = "YES"
+  appflowlog         = "DISABLED"
+  cacheable          = "YES"
+  downstateflush     = "DISABLED"
+  healthmonitor      = "NO"
+  processlocal       = "ENABLED"
+}
+`
+
+const testAccService_unset_step2 = `
+resource "citrixadc_service" "tf_unset" {
+  name        = "tf_test_service_unset"
+  servicetype = "HTTP"
+  ip          = "10.222.111.56"
+  port        = 80
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to the documented NITRO defaults).
+}
+`
+
+func TestAccService_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccService_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("citrixadc_service.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "accessdown", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "cacheable", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "downstateflush", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "healthmonitor", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "processlocal", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccService_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExist("citrixadc_service.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "accessdown", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "cacheable", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "downstateflush", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "healthmonitor", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_service.tf_unset", "processlocal", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckServiceADCValue("tf_test_service_unset", "accessdown", "NO"),
+					testAccCheckServiceADCValue("tf_test_service_unset", "healthmonitor", "YES"),
+					testAccCheckServiceADCValue("tf_test_service_unset", "appflowlog", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckServiceADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckServiceADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Service.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("service %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("service %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccService_sdkv2StateUpgrade(t *testing.T) {

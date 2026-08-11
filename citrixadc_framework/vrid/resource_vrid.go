@@ -110,12 +110,14 @@ func (r *VridResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *VridResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VridResourceModel
+	var data, config, state VridResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,7 @@ func (r *VridResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Check if there are any changes in updateable attributes (vrid_id is RequiresReplace)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.All.Equal(state.All) {
 		tflog.Debug(ctx, "all has changed for vrid")
 		hasChange = true
@@ -138,27 +141,51 @@ func (r *VridResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 	if !data.Preemption.Equal(state.Preemption) {
 		tflog.Debug(ctx, "preemption has changed for vrid")
-		hasChange = true
+		if config.Preemption.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "preemption")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Preemptiondelaytimer.Equal(state.Preemptiondelaytimer) {
 		tflog.Debug(ctx, "preemptiondelaytimer has changed for vrid")
-		hasChange = true
+		if config.Preemptiondelaytimer.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "preemptiondelaytimer")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Priority.Equal(state.Priority) {
 		tflog.Debug(ctx, "priority has changed for vrid")
-		hasChange = true
+		if config.Priority.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "priority")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sharing.Equal(state.Sharing) {
 		tflog.Debug(ctx, "sharing has changed for vrid")
-		hasChange = true
+		if config.Sharing.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sharing")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Trackifnumpriority.Equal(state.Trackifnumpriority) {
 		tflog.Debug(ctx, "trackifnumpriority has changed for vrid")
-		hasChange = true
+		if config.Trackifnumpriority.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trackifnumpriority")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tracking.Equal(state.Tracking) {
 		tflog.Debug(ctx, "tracking has changed for vrid")
-		hasChange = true
+		if config.Tracking.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tracking")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -173,6 +200,16 @@ func (r *VridResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		tflog.Trace(ctx, "Updated vrid resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for vrid resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"id": int(data.Vrid_id.ValueInt64()),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vrid.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vrid attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

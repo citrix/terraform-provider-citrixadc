@@ -220,6 +220,135 @@ func TestAccDnsparameter_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// TestAccDnsparameter_unset covers the spec-unsettable attributes that have a
+// documented NITRO server default. step1 sets them to non-default values; step2
+// removes them from config, so the provider must issue a NITRO unset that reverts
+// each to its documented default (also asserted directly on the appliance).
+const testAccDnsparameter_unset_step1 = `
+resource "citrixadc_dnsparameter" "tf_unset" {
+  autosavekeyops               = "ENABLED"
+  cacheecszeroprefix           = "DISABLED"
+  cachehitbypass               = "ENABLED"
+  cachenoexpire                = "ENABLED"
+  maxcachesize                 = 10
+  cacherecords                 = "NO"
+  dnsrootreferral              = "ENABLED"
+  dnssec                       = "DISABLED"
+  ecsmaxsubnets                = 5
+  maxnegcachettl               = 404800
+  maxttl                       = 404800
+  maxudppacketsize             = 1180
+  namelookuppriority           = "DNS"
+  recursion                    = "ENABLED"
+  resolutionorder              = "OnlyAAAAQuery"
+  resolvermaxactiveresolutions = 500
+  resolvermaxtcpconnections    = 110
+  resolvermaxtcptimeout        = 20
+  retries                      = 2
+  splitpktqueryprocessing      = "DROP"
+  zonetransfer                 = "ENABLED"
+}
+`
+
+const testAccDnsparameter_unset_step2 = `
+resource "citrixadc_dnsparameter" "tf_unset" {
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccDnsparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccDnsparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsparameterExist("citrixadc_dnsparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "autosavekeyops", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "cacheecszeroprefix", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "cachehitbypass", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "cachenoexpire", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "cacherecords", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "dnsrootreferral", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "dnssec", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "ecsmaxsubnets", "5"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "maxnegcachettl", "404800"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "maxttl", "404800"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "maxudppacketsize", "1180"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "namelookuppriority", "DNS"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "recursion", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "resolutionorder", "OnlyAAAAQuery"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "resolvermaxactiveresolutions", "500"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "resolvermaxtcpconnections", "110"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "resolvermaxtcptimeout", "20"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "retries", "2"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "splitpktqueryprocessing", "DROP"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "zonetransfer", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccDnsparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsparameterExist("citrixadc_dnsparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "autosavekeyops", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "cacheecszeroprefix", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "cachehitbypass", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "cachenoexpire", "DISABLED"),
+					resource.TestCheckNoResourceAttr("citrixadc_dnsparameter.tf_unset", "cacherecords"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "dnsrootreferral", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "dnssec", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "ecsmaxsubnets", "0"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "maxnegcachettl", "604800"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "maxttl", "604800"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "maxudppacketsize", "1280"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "namelookuppriority", "WINS"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "recursion", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "resolutionorder", "OnlyAQuery"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "resolvermaxactiveresolutions", "0"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "resolvermaxtcpconnections", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "resolvermaxtcptimeout", "5"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "retries", "5"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "splitpktqueryprocessing", "ALLOW"),
+					resource.TestCheckResourceAttr("citrixadc_dnsparameter.tf_unset", "zonetransfer", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckDnsparameterADCValue("recursion", "DISABLED"),
+					testAccCheckDnsparameterADCValue("maxttl", "604800"),
+					testAccCheckDnsparameterADCValue("splitpktqueryprocessing", "ALLOW"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDnsparameterADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckDnsparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnsparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("dnsparameter not found on appliance")
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("dnsparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccDnsparameter_import(t *testing.T) {
 	const resAddr = "citrixadc_dnsparameter.tf_dnsparameter"
 	resource.Test(t, resource.TestCase{

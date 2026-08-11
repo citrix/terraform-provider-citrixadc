@@ -110,12 +110,14 @@ func (r *IcaaccessprofileResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *IcaaccessprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state IcaaccessprofileResourceModel
+	var data, config, state IcaaccessprofileResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,61 +130,118 @@ func (r *IcaaccessprofileResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Clientaudioredirection.Equal(state.Clientaudioredirection) {
 		tflog.Debug(ctx, "clientaudioredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Clientaudioredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientaudioredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientclipboardredirection.Equal(state.Clientclipboardredirection) {
 		tflog.Debug(ctx, "clientclipboardredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Clientclipboardredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientclipboardredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientcomportredirection.Equal(state.Clientcomportredirection) {
 		tflog.Debug(ctx, "clientcomportredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Clientcomportredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientcomportredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientdriveredirection.Equal(state.Clientdriveredirection) {
 		tflog.Debug(ctx, "clientdriveredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Clientdriveredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientdriveredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientprinterredirection.Equal(state.Clientprinterredirection) {
 		tflog.Debug(ctx, "clientprinterredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Clientprinterredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientprinterredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clienttwaindeviceredirection.Equal(state.Clienttwaindeviceredirection) {
 		tflog.Debug(ctx, "clienttwaindeviceredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Clienttwaindeviceredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clienttwaindeviceredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientusbdriveredirection.Equal(state.Clientusbdriveredirection) {
 		tflog.Debug(ctx, "clientusbdriveredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Clientusbdriveredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientusbdriveredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Connectclientlptports.Equal(state.Connectclientlptports) {
 		tflog.Debug(ctx, "connectclientlptports has changed for icaaccessprofile")
-		hasChange = true
+		if config.Connectclientlptports.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "connectclientlptports")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Draganddrop.Equal(state.Draganddrop) {
 		tflog.Debug(ctx, "draganddrop has changed for icaaccessprofile")
-		hasChange = true
+		if config.Draganddrop.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "draganddrop")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Fido2redirection.Equal(state.Fido2redirection) {
 		tflog.Debug(ctx, "fido2redirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Fido2redirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "fido2redirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Localremotedatasharing.Equal(state.Localremotedatasharing) {
 		tflog.Debug(ctx, "localremotedatasharing has changed for icaaccessprofile")
-		hasChange = true
+		if config.Localremotedatasharing.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "localremotedatasharing")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Multistream.Equal(state.Multistream) {
 		tflog.Debug(ctx, "multistream has changed for icaaccessprofile")
-		hasChange = true
+		if config.Multistream.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "multistream")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Smartcardredirection.Equal(state.Smartcardredirection) {
 		tflog.Debug(ctx, "smartcardredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Smartcardredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "smartcardredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Wiaredirection.Equal(state.Wiaredirection) {
 		tflog.Debug(ctx, "wiaredirection has changed for icaaccessprofile")
-		hasChange = true
+		if config.Wiaredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "wiaredirection")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -198,6 +257,16 @@ func (r *IcaaccessprofileResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated icaaccessprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for icaaccessprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Icaaccessprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset icaaccessprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

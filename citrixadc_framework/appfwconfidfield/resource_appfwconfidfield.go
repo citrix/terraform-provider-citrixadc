@@ -114,12 +114,14 @@ func (r *AppfwconfidfieldResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *AppfwconfidfieldResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AppfwconfidfieldResourceModel
+	var data, config, state AppfwconfidfieldResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,17 +134,26 @@ func (r *AppfwconfidfieldResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for appfwconfidfield")
 		hasChange = true
 	}
 	if !data.Isregex.Equal(state.Isregex) {
 		tflog.Debug(ctx, "isregex has changed for appfwconfidfield")
-		hasChange = true
+		if config.Isregex.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "isregex")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.State.Equal(state.State) {
 		tflog.Debug(ctx, "state has changed for appfwconfidfield")
-		hasChange = true
+		if config.State.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "state")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -158,6 +169,18 @@ func (r *AppfwconfidfieldResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated appfwconfidfield resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for appfwconfidfield resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The composite key (fieldname,url) identifies the
+	// resource for the unset operation.
+	unsetIdPayload := map[string]interface{}{
+		"fieldname": data.Fieldname.ValueString(),
+		"url":       data.Url.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Appfwconfidfield.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appfwconfidfield attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

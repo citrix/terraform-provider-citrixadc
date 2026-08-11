@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -210,6 +211,85 @@ func TestAccAuthenticationstorefrontauthaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccAuthenticationstorefrontauthaction_unset_step1 = `
+	resource "citrixadc_authenticationstorefrontauthaction" "tf_unset" {
+		name                       = "tf_test_storefront_unset"
+		serverurl                  = "http://www.example.com/"
+		domain                     = "unset_domain"
+		defaultauthenticationgroup = "unset_group"
+	}
+`
+
+const testAccAuthenticationstorefrontauthaction_unset_step2 = `
+	resource "citrixadc_authenticationstorefrontauthaction" "tf_unset" {
+		name      = "tf_test_storefront_unset"
+		serverurl = "http://www.example.com/"
+		# domain and defaultauthenticationgroup removed from config -> the provider
+		# must unset them (revert to NITRO defaults, i.e. absent/empty).
+	}
+`
+
+func TestAccAuthenticationstorefrontauthaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationstorefrontauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAuthenticationstorefrontauthaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationstorefrontauthactionExist("citrixadc_authenticationstorefrontauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationstorefrontauthaction.tf_unset", "domain", "unset_domain"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationstorefrontauthaction.tf_unset", "defaultauthenticationgroup", "unset_group"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the NITRO defaults (empty), and the implicit
+				// post-apply plan must be empty.
+				Config: testAccAuthenticationstorefrontauthaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationstorefrontauthactionExist("citrixadc_authenticationstorefrontauthaction.tf_unset", nil),
+					resource.TestCheckNoResourceAttr("citrixadc_authenticationstorefrontauthaction.tf_unset", "domain"),
+					resource.TestCheckNoResourceAttr("citrixadc_authenticationstorefrontauthaction.tf_unset", "defaultauthenticationgroup"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationstorefrontauthactionADCValue("tf_test_storefront_unset", "domain", ""),
+					testAccCheckAuthenticationstorefrontauthactionADCValue("tf_test_storefront_unset", "defaultauthenticationgroup", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationstorefrontauthactionADCValue asserts an attribute's
+// value directly on the appliance (not just in Terraform state), proving the
+// unset actually reverted it. After unset NITRO omits the attribute from GET, so
+// the expected value is empty.
+func testAccCheckAuthenticationstorefrontauthactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationstorefrontauthaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationstorefrontauthaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("authenticationstorefrontauthaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAuthenticationstorefrontauthactionDataSource_basic(t *testing.T) {

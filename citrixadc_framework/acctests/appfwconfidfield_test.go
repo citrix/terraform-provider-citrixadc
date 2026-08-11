@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -189,6 +190,91 @@ func TestAccAppfwconfidfield_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccAppfwconfidfield_unset_step1 = `
+	resource "citrixadc_appfwconfidfield" "tf_unset" {
+		fieldname = "tf_confidfield_unset"
+		url       = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isregex   = "REGEX"
+		state     = "DISABLED"
+	}
+`
+
+const testAccAppfwconfidfield_unset_step2 = `
+	resource "citrixadc_appfwconfidfield" "tf_unset" {
+		fieldname = "tf_confidfield_unset"
+		url       = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		# isregex and state removed from config -> the provider must unset them
+		# (revert to NITRO defaults: NOTREGEX / ENABLED).
+	}
+`
+
+func TestAccAppfwconfidfield_unset(t *testing.T) {
+	const resAddr = "citrixadc_appfwconfidfield.tf_unset"
+	const fieldname = "tf_confidfield_unset"
+	const urlValue = `^https://sd2\-zgw\.test\.ctxns\.com/api/document/content$`
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwconfidfieldDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAppfwconfidfield_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwconfidfieldExist(resAddr, nil),
+					resource.TestCheckResourceAttr(resAddr, "isregex", "REGEX"),
+					resource.TestCheckResourceAttr(resAddr, "state", "DISABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAppfwconfidfield_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwconfidfieldExist(resAddr, nil),
+					resource.TestCheckResourceAttr(resAddr, "isregex", "NOTREGEX"),
+					resource.TestCheckResourceAttr(resAddr, "state", "ENABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppfwconfidfieldADCValue(fieldname, urlValue, "isregex", "NOTREGEX"),
+					testAccCheckAppfwconfidfieldADCValue(fieldname, urlValue, "state", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppfwconfidfieldADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckAppfwconfidfieldADCValue(fieldname, urlValue, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		argsMap := make(map[string]string)
+		argsMap["fieldname"] = url.QueryEscape(fieldname)
+		argsMap["url"] = url.QueryEscape(urlValue)
+		findParams := service.FindParams{
+			ResourceType: service.Appfwconfidfield.Type(),
+			ArgsMap:      argsMap,
+		}
+		dataArray, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		if len(dataArray) == 0 {
+			return fmt.Errorf("appfwconfidfield %s not found on appliance", fieldname)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", dataArray[0][attr]))
+		if got != want {
+			return fmt.Errorf("appfwconfidfield %s: appliance attr %q = %q, want %q (unset did not revert it)", fieldname, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAppfwconfidfield_import(t *testing.T) {

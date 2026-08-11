@@ -110,12 +110,14 @@ func (r *SubscriberparamResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *SubscriberparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SubscriberparamResourceModel
+	var data, config, state SubscriberparamResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,17 +130,30 @@ func (r *SubscriberparamResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Idleaction.Equal(state.Idleaction) {
 		tflog.Debug(ctx, "idleaction has changed for subscriberparam")
-		hasChange = true
+		if config.Idleaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "idleaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Idlettl.Equal(state.Idlettl) {
 		tflog.Debug(ctx, "idlettl has changed for subscriberparam")
-		hasChange = true
+		if config.Idlettl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "idlettl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Interfacetype.Equal(state.Interfacetype) {
 		tflog.Debug(ctx, "interfacetype has changed for subscriberparam")
-		hasChange = true
+		if config.Interfacetype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "interfacetype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ipv6prefixlookuplist.Equal(state.Ipv6prefixlookuplist) {
 		tflog.Debug(ctx, "ipv6prefixlookuplist has changed for subscriberparam")
@@ -146,7 +161,11 @@ func (r *SubscriberparamResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Keytype.Equal(state.Keytype) {
 		tflog.Debug(ctx, "keytype has changed for subscriberparam")
-		hasChange = true
+		if config.Keytype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "keytype")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -164,6 +183,14 @@ func (r *SubscriberparamResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated subscriberparam resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for subscriberparam resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Singleton resource -> empty id payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Subscriberparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset subscriberparam attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

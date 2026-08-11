@@ -110,12 +110,14 @@ func (r *BridgegroupResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *BridgegroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state BridgegroupResourceModel
+	var data, config, state BridgegroupResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,13 +130,22 @@ func (r *BridgegroupResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Dynamicrouting.Equal(state.Dynamicrouting) {
 		tflog.Debug(ctx, "dynamicrouting has changed for bridgegroup")
-		hasChange = true
+		if config.Dynamicrouting.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dynamicrouting")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ipv6dynamicrouting.Equal(state.Ipv6dynamicrouting) {
 		tflog.Debug(ctx, "ipv6dynamicrouting has changed for bridgegroup")
-		hasChange = true
+		if config.Ipv6dynamicrouting.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ipv6dynamicrouting")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -151,6 +162,16 @@ func (r *BridgegroupResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated bridgegroup resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for bridgegroup resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"id": data.Bridgegroupid.ValueInt64(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Bridgegroup.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset bridgegroup attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -31,8 +32,12 @@ func (r *UserprotocolResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "The ID of the userprotocol resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is an empty comment. An explicit Default is required
+				// so removing `comment` from config produces a plan diff (else the
+				// Optional+Computed attr is sticky and Update/unset never runs).
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments associated with the protocol.",
 			},
 			"extension": schema.StringAttribute{

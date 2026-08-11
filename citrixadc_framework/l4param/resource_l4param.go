@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -95,10 +96,14 @@ func (r *L4paramResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *L4paramResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data L4paramResourceModel
+	var data, config, state L4paramResourceModel
 
+	// Read Terraform prior state
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (they become null)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +111,49 @@ func (r *L4paramResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	tflog.Debug(ctx, "Updating l4param resource")
 
-	// Create API request body from the model
-	l4param := l4paramGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call. l4param is a singleton, so use UpdateUnnamedResource.
-	err := r.client.UpdateUnnamedResource(service.L4param.Type(), &l4param)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update l4param, got error: %s", err))
-		return
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.L2connmethod.Equal(state.L2connmethod) {
+		tflog.Debug(ctx, "l2connmethod has changed for l4param")
+		if config.L2connmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l2connmethod")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.L4switch.Equal(state.L4switch) {
+		tflog.Debug(ctx, "l4switch has changed for l4param")
+		if config.L4switch.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l4switch")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated l4param resource")
+	if hasChange {
+		// Create API request body from the model
+		l4param := l4paramGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call. l4param is a singleton, so use UpdateUnnamedResource.
+		err := r.client.UpdateUnnamedResource(service.L4param.Type(), &l4param)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update l4param, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated l4param resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for l4param resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.L4param.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset l4param attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readL4paramFromApi(ctx, &data, &resp.Diagnostics)

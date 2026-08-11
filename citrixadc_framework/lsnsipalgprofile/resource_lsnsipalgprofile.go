@@ -110,12 +110,14 @@ func (r *LsnsipalgprofileResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *LsnsipalgprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsnsipalgprofileResourceModel
+	var data, config, state LsnsipalgprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config (attributes removed from config are null here)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,18 +128,109 @@ func (r *LsnsipalgprofileResource) Update(ctx context.Context, req resource.Upda
 
 	tflog.Debug(ctx, "Updating lsnsipalgprofile resource")
 
-	// Create API request body from the model
-	lsnsipalgprofile := lsnsipalgprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Determine changed attributes and which were removed from config (unset).
+	hasChange := false
+	attributesToUnset := []string{}
 
-	// Make API call
-	// NITRO update is PUT /nitro/v1/config/lsnsipalgprofile (name carried in body) - matches SDK v2
-	err := r.client.UpdateUnnamedResource(service.Lsnsipalgprofile.Type(), &lsnsipalgprofile)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnsipalgprofile, got error: %s", err))
-		return
+	if !data.Datasessionidletimeout.Equal(state.Datasessionidletimeout) {
+		if config.Datasessionidletimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "datasessionidletimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Opencontactpinhole.Equal(state.Opencontactpinhole) {
+		if config.Opencontactpinhole.IsNull() {
+			attributesToUnset = append(attributesToUnset, "opencontactpinhole")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Openrecordroutepinhole.Equal(state.Openrecordroutepinhole) {
+		if config.Openrecordroutepinhole.IsNull() {
+			attributesToUnset = append(attributesToUnset, "openrecordroutepinhole")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Openregisterpinhole.Equal(state.Openregisterpinhole) {
+		if config.Openregisterpinhole.IsNull() {
+			attributesToUnset = append(attributesToUnset, "openregisterpinhole")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Openroutepinhole.Equal(state.Openroutepinhole) {
+		if config.Openroutepinhole.IsNull() {
+			attributesToUnset = append(attributesToUnset, "openroutepinhole")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Openviapinhole.Equal(state.Openviapinhole) {
+		if config.Openviapinhole.IsNull() {
+			attributesToUnset = append(attributesToUnset, "openviapinhole")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Registrationtimeout.Equal(state.Registrationtimeout) {
+		if config.Registrationtimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "registrationtimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Rport.Equal(state.Rport) {
+		if config.Rport.IsNull() {
+			attributesToUnset = append(attributesToUnset, "rport")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Sipsessiontimeout.Equal(state.Sipsessiontimeout) {
+		if config.Sipsessiontimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "sipsessiontimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	// Non-unsettable attributes only drive an update.
+	if !data.Sipdstportrange.Equal(state.Sipdstportrange) {
+		hasChange = true
+	}
+	if !data.Sipsrcportrange.Equal(state.Sipsrcportrange) {
+		hasChange = true
+	}
+	if !data.Siptransportprotocol.Equal(state.Siptransportprotocol) {
+		hasChange = true
 	}
 
-	tflog.Trace(ctx, "Updated lsnsipalgprofile resource")
+	if hasChange {
+		// Create API request body from the model
+		lsnsipalgprofile := lsnsipalgprofileGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call
+		// NITRO update is PUT /nitro/v1/config/lsnsipalgprofile (name carried in body) - matches SDK v2
+		err := r.client.UpdateUnnamedResource(service.Lsnsipalgprofile.Type(), &lsnsipalgprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnsipalgprofile, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated lsnsipalgprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsnsipalgprofile resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{
+		"sipalgprofilename": data.Sipalgprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsnsipalgprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsnsipalgprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readLsnsipalgprofileFromApi(ctx, &data, &resp.Diagnostics) {

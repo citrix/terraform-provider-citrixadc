@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -218,6 +219,90 @@ func TestAccCrvserverDataSource_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The crvserver unset test covers the type-independent, mutable attributes that
+// have a documented NITRO default and that NITRO's unset operation reverts
+// cleanly on an HTTP cr vserver. Other defaulted attributes (redirect, via,
+// reuse, downstateflush, disableprimaryondown, rhistate, useoriginipportforcache)
+// are NOT included: NITRO silently ignores the unset for them (the configured
+// value persists), so they cannot be unset cleanly.
+const testAccCrvserver_unset_step1 = `
+	resource "citrixadc_crvserver" "tf_unset" {
+		name            = "tf_crvserver_unset"
+		servicetype     = "HTTP"
+		appflowlog      = "DISABLED"
+		icmpvsrresponse = "ACTIVE"
+		useportrange    = "ON"
+	}
+`
+
+const testAccCrvserver_unset_step2 = `
+	resource "citrixadc_crvserver" "tf_unset" {
+		name        = "tf_crvserver_unset"
+		servicetype = "HTTP"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to the documented NITRO defaults).
+	}
+`
+
+func TestAccCrvserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccCrvserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserverExist("citrixadc_crvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_crvserver.tf_unset", "icmpvsrresponse", "ACTIVE"),
+					resource.TestCheckResourceAttr("citrixadc_crvserver.tf_unset", "useportrange", "ON"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccCrvserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserverExist("citrixadc_crvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_crvserver.tf_unset", "icmpvsrresponse", "PASSIVE"),
+					resource.TestCheckResourceAttr("citrixadc_crvserver.tf_unset", "useportrange", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCrvserverADCValue("tf_crvserver_unset", "appflowlog", "ENABLED"),
+					testAccCheckCrvserverADCValue("tf_crvserver_unset", "icmpvsrresponse", "PASSIVE"),
+					testAccCheckCrvserverADCValue("tf_crvserver_unset", "useportrange", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCrvserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckCrvserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Crvserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("crvserver %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("crvserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccCrvserverDataSource_basic = `

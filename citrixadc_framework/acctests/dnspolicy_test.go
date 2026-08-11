@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -161,6 +162,103 @@ func TestAccDnspolicy_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The only unset-eligible dnspolicy attribute is logaction. All other mutable
+// attributes (drop, cachebypass, actionname, viewname, preferredlocation,
+// preferredloclist) are rejected by NITRO with "Invalid argument" on unset, so
+// they are not wired for unset. logaction requires a messagelog action, so an
+// auditmessageaction prerequisite is created; drop=YES supplies the mandatory
+// policy action and is kept unchanged across both steps.
+const testAccDnspolicy_unset_step1 = `
+resource "citrixadc_auditmessageaction" "tf_dnspolicy_ma" {
+  name              = "tf_dnspolicy_unset_ma"
+  loglevel          = "INFORMATIONAL"
+  stringbuilderexpr = "\"dnspolicy unset test\""
+}
+
+resource "citrixadc_dnspolicy" "tf_unset" {
+  name      = "tf_dnspolicy_unset"
+  rule      = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+  drop      = "YES"
+  logaction = citrixadc_auditmessageaction.tf_dnspolicy_ma.name
+}
+`
+
+const testAccDnspolicy_unset_step2 = `
+resource "citrixadc_auditmessageaction" "tf_dnspolicy_ma" {
+  name              = "tf_dnspolicy_unset_ma"
+  loglevel          = "INFORMATIONAL"
+  stringbuilderexpr = "\"dnspolicy unset test\""
+}
+
+resource "citrixadc_dnspolicy" "tf_unset" {
+  name = "tf_dnspolicy_unset"
+  rule = "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"
+  drop = "YES"
+  # logaction removed from config -> the provider must unset it (revert to the
+  # NITRO default, an empty value).
+}
+`
+
+func TestAccDnspolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccDnspolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnspolicyExist("citrixadc_dnspolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnspolicy.tf_unset", "logaction", "tf_dnspolicy_unset_ma"),
+					testAccCheckDnspolicyADCValue("tf_dnspolicy_unset", "logaction", "tf_dnspolicy_unset_ma"),
+				),
+			},
+			{
+				// Removing logaction must unset it: state (read back from the
+				// appliance) reverts to the NITRO default and the implicit
+				// post-apply plan must be empty.
+				Config: testAccDnspolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnspolicyExist("citrixadc_dnspolicy.tf_unset", nil),
+					// Option B: no Default is injected, so after unset NITRO omits
+					// logaction and it reads back as null/absent in state.
+					resource.TestCheckNoResourceAttr("citrixadc_dnspolicy.tf_unset", "logaction"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckDnspolicyADCValue("tf_dnspolicy_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDnspolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. An absent attribute is treated as the empty string.
+func testAccCheckDnspolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Dnspolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("dnspolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("dnspolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckDnspolicyExist(n string, id *string) resource.TestCheckFunc {

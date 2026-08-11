@@ -109,12 +109,14 @@ func (r *Nat64Resource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *Nat64Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Nat64ResourceModel
+	var data, config, state Nat64ResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read raw config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,13 +129,18 @@ func (r *Nat64Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	// Check if there are any changes in updateable attributes (name is RequiresReplace)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Acl6name.Equal(state.Acl6name) {
 		tflog.Debug(ctx, "acl6name has changed for nat64")
 		hasChange = true
 	}
 	if !data.Netprofile.Equal(state.Netprofile) {
 		tflog.Debug(ctx, "netprofile has changed for nat64")
-		hasChange = true
+		if config.Netprofile.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "netprofile")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -148,6 +155,16 @@ func (r *Nat64Resource) Update(ctx context.Context, req resource.UpdateRequest, 
 		tflog.Trace(ctx, "Updated nat64 resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nat64 resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nat64.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nat64 attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

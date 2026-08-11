@@ -110,12 +110,14 @@ func (r *ClusternodeResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *ClusternodeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ClusternodeResourceModel
+	var data, config, state ClusternodeResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,13 +130,18 @@ func (r *ClusternodeResource) Update(ctx context.Context, req resource.UpdateReq
 
 	// Check if there are any changes in updateable attributes (matches SDK v2)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Backplane.Equal(state.Backplane) {
 		tflog.Debug(ctx, "backplane has changed for clusternode")
 		hasChange = true
 	}
 	if !data.Delay.Equal(state.Delay) {
 		tflog.Debug(ctx, "delay has changed for clusternode")
-		hasChange = true
+		if config.Delay.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "delay")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Nodegroup.Equal(state.Nodegroup) {
 		tflog.Debug(ctx, "nodegroup has changed for clusternode")
@@ -142,15 +149,27 @@ func (r *ClusternodeResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 	if !data.Priority.Equal(state.Priority) {
 		tflog.Debug(ctx, "priority has changed for clusternode")
-		hasChange = true
+		if config.Priority.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "priority")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.State.Equal(state.State) {
 		tflog.Debug(ctx, "state has changed for clusternode")
-		hasChange = true
+		if config.State.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "state")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tunnelmode.Equal(state.Tunnelmode) {
 		tflog.Debug(ctx, "tunnelmode has changed for clusternode")
-		hasChange = true
+		if config.Tunnelmode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tunnelmode")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -165,6 +184,17 @@ func (r *ClusternodeResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated clusternode resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for clusternode resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults. nodeid is the resource key and is required
+	// in the unset payload.
+	unsetIdPayload := map[string]interface{}{
+		"nodeid": data.Nodeid.ValueInt64(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Clusternode.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset clusternode attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

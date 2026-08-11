@@ -113,12 +113,14 @@ func (r *VpnurlactionResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *VpnurlactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnurlactionResourceModel
+	var data, config, state VpnurlactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -156,17 +158,30 @@ func (r *VpnurlactionResource) Update(ctx context.Context, req resource.UpdateRe
 	// Regular update of the mutable attributes. name is ForceNew (RequiresReplace)
 	// so it never changes here; every other non-rename attribute is updateable.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Actualurl.Equal(state.Actualurl) {
 		hasChange = true
 	}
 	if !data.Applicationtype.Equal(state.Applicationtype) {
-		hasChange = true
+		if config.Applicationtype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "applicationtype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Clientlessaccess.Equal(state.Clientlessaccess) {
-		hasChange = true
+		if config.Clientlessaccess.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientlessaccess")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Comment.Equal(state.Comment) {
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Iconurl.Equal(state.Iconurl) {
 		hasChange = true
@@ -178,10 +193,18 @@ func (r *VpnurlactionResource) Update(ctx context.Context, req resource.UpdateRe
 		hasChange = true
 	}
 	if !data.Ssotype.Equal(state.Ssotype) {
-		hasChange = true
+		if config.Ssotype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssotype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Vservername.Equal(state.Vservername) {
-		hasChange = true
+		if config.Vservername.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "vservername")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -198,6 +221,18 @@ func (r *VpnurlactionResource) Update(ctx context.Context, req resource.UpdateRe
 		tflog.Trace(ctx, "Updated vpnurlaction resource")
 	} else {
 		tflog.Debug(ctx, "No mutable changes detected for vpnurlaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	// Address the current live name (post-rename if a rename happened above).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnurlaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnurlaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. Preserve the user-facing key (name) and the

@@ -125,12 +125,14 @@ func (r *RewritepolicyResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *RewritepolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state RewritepolicyResourceModel
+	var data, config, state RewritepolicyResourceModel
 
 	// Read Terraform prior state to preserve ID and diff the bindings.
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates to unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -144,6 +146,7 @@ func (r *RewritepolicyResource) Update(ctx context.Context, req resource.UpdateR
 
 	// Check for changes in the base (scalar) attributes.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for rewritepolicy")
 		hasChange = true
@@ -154,7 +157,11 @@ func (r *RewritepolicyResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for rewritepolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for rewritepolicy")
@@ -162,7 +169,11 @@ func (r *RewritepolicyResource) Update(ctx context.Context, req resource.UpdateR
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, "undefaction has changed for rewritepolicy")
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -176,6 +187,17 @@ func (r *RewritepolicyResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated rewritepolicy resource")
 	} else {
 		tflog.Debug(ctx, "No base attribute changes detected for rewritepolicy resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. Done after the update so any value the update
+	// payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": rewritepolicyName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Rewritepolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset rewritepolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Reconcile the convenience-block bindings against prior state.

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -88,6 +89,79 @@ func TestAccAuthenticationcitrixauthaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccAuthenticationcitrixauthaction_unset_step1 = `
+resource "citrixadc_authenticationcitrixauthaction" "tf_unset" {
+  name               = "tf_test_citrixauthaction_unset"
+  authenticationtype = "ATHENA"
+  authentication     = "DISABLED"
+}
+`
+
+const testAccAuthenticationcitrixauthaction_unset_step2 = `
+resource "citrixadc_authenticationcitrixauthaction" "tf_unset" {
+  name = "tf_test_citrixauthaction_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccAuthenticationcitrixauthaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcitrixauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAuthenticationcitrixauthaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcitrixauthactionExist("citrixadc_authenticationcitrixauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcitrixauthaction.tf_unset", "authenticationtype", "ATHENA"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcitrixauthaction.tf_unset", "authentication", "DISABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAuthenticationcitrixauthaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcitrixauthactionExist("citrixadc_authenticationcitrixauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcitrixauthaction.tf_unset", "authenticationtype", "CITRIXCONNECTOR"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcitrixauthaction.tf_unset", "authentication", "ENABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationcitrixauthactionADCValue("tf_test_citrixauthaction_unset", "authenticationtype", "CITRIXCONNECTOR"),
+					testAccCheckAuthenticationcitrixauthactionADCValue("tf_test_citrixauthaction_unset", "authentication", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationcitrixauthactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationcitrixauthactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationcitrixauthaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationcitrixauthaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationcitrixauthaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckAuthenticationcitrixauthactionExist(n string, id *string) resource.TestCheckFunc {

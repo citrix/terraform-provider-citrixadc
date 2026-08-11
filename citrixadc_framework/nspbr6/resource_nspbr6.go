@@ -110,12 +110,14 @@ func (r *Nspbr6Resource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *Nspbr6Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Nspbr6ResourceModel
+	var data, config, state Nspbr6ResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,6 +129,14 @@ func (r *Nspbr6Resource) Update(ctx context.Context, req resource.UpdateRequest,
 	tflog.Debug(ctx, "Updating nspbr6 resource")
 
 	nspbr6Name := data.Name.ValueString()
+
+	// Detect attributes that were removed from config so they can be unset on the
+	// appliance (reverting to NITRO defaults). Only spec-unsettable mutable attrs
+	// are considered here.
+	attributesToUnset := []string{}
+	if !data.Msr.Equal(state.Msr) && config.Msr.IsNull() {
+		attributesToUnset = append(attributesToUnset, "msr")
+	}
 
 	// State (ENABLED/DISABLED) is handled via enable/disable action, not the update body (matches SDK v2)
 	stateChanged := !data.State.Equal(state.State) && !data.State.IsUnknown() && !data.State.IsNull()
@@ -151,6 +161,17 @@ func (r *Nspbr6Resource) Update(ctx context.Context, req resource.UpdateRequest,
 		tflog.Trace(ctx, "Updated nspbr6 resource")
 	} else {
 		tflog.Debug(ctx, "No non-state changes detected for nspbr6 resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. Done after the update so any default value the update
+	// payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nspbr6.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nspbr6 attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

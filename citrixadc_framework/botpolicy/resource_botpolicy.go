@@ -110,12 +110,14 @@ func (r *BotpolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *BotpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state BotpolicyResourceModel
+	var data, config, state BotpolicyResourceModel
 
 	// Read Terraform prior state to preserve the live object ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -147,17 +149,30 @@ func (r *BotpolicyResource) Update(ctx context.Context, req resource.UpdateReque
 	// Detect changes to in-place updatable attributes (name, rule and profilename
 	// are RequiresReplace and never reach Update).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, "undefaction has changed for botpolicy")
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for botpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for botpolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -173,6 +188,16 @@ func (r *BotpolicyResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated botpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No in-place changes detected for botpolicy resource")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Keyed on the live object name (post-rename if any).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Botpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset botpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

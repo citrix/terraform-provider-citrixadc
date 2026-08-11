@@ -113,12 +113,14 @@ func (r *AuthenticationloginschemapolicyResource) Read(ctx context.Context, req 
 }
 
 func (r *AuthenticationloginschemapolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationloginschemapolicyResourceModel
+	var data, config, state AuthenticationloginschemapolicyResourceModel
 
 	// Read Terraform prior state to preserve ID / detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read raw config to distinguish "removed from config" (-> unset) from "changed".
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -156,13 +158,18 @@ func (r *AuthenticationloginschemapolicyResource) Update(ctx context.Context, re
 
 	// Regular update: NITRO update is PUT for the mutable attributes.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for authenticationloginschemapolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for authenticationloginschemapolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for authenticationloginschemapolicy")
@@ -190,6 +197,16 @@ func (r *AuthenticationloginschemapolicyResource) Update(ctx context.Context, re
 		tflog.Trace(ctx, "Updated authenticationloginschemapolicy resource")
 	} else {
 		tflog.Debug(ctx, "No mutable changes detected for authenticationloginschemapolicy resource")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. Target the CURRENT LIVE name (== newname after a rename).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationloginschemapolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationloginschemapolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. Capture the plan's user-facing key attributes and

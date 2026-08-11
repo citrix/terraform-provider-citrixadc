@@ -110,12 +110,14 @@ func (r *LsntransportprofileResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *LsntransportprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsntransportprofileResourceModel
+	var data, config, state LsntransportprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset them)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,45 +130,86 @@ func (r *LsntransportprofileResource) Update(ctx context.Context, req resource.U
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Finrsttimeout.Equal(state.Finrsttimeout) {
 		tflog.Debug(ctx, "finrsttimeout has changed for lsntransportprofile")
-		hasChange = true
+		if config.Finrsttimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "finrsttimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Groupsessionlimit.Equal(state.Groupsessionlimit) {
 		tflog.Debug(ctx, "groupsessionlimit has changed for lsntransportprofile")
-		hasChange = true
+		if config.Groupsessionlimit.IsNull() {
+			attributesToUnset = append(attributesToUnset, "groupsessionlimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Portpreserveparity.Equal(state.Portpreserveparity) {
 		tflog.Debug(ctx, "portpreserveparity has changed for lsntransportprofile")
-		hasChange = true
+		if config.Portpreserveparity.IsNull() {
+			attributesToUnset = append(attributesToUnset, "portpreserveparity")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Portpreserverange.Equal(state.Portpreserverange) {
 		tflog.Debug(ctx, "portpreserverange has changed for lsntransportprofile")
-		hasChange = true
+		if config.Portpreserverange.IsNull() {
+			attributesToUnset = append(attributesToUnset, "portpreserverange")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Portquota.Equal(state.Portquota) {
 		tflog.Debug(ctx, "portquota has changed for lsntransportprofile")
-		hasChange = true
+		if config.Portquota.IsNull() {
+			attributesToUnset = append(attributesToUnset, "portquota")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sessionquota.Equal(state.Sessionquota) {
 		tflog.Debug(ctx, "sessionquota has changed for lsntransportprofile")
-		hasChange = true
+		if config.Sessionquota.IsNull() {
+			attributesToUnset = append(attributesToUnset, "sessionquota")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sessiontimeout.Equal(state.Sessiontimeout) {
 		tflog.Debug(ctx, "sessiontimeout has changed for lsntransportprofile")
-		hasChange = true
+		if config.Sessiontimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "sessiontimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Stuntimeout.Equal(state.Stuntimeout) {
 		tflog.Debug(ctx, "stuntimeout has changed for lsntransportprofile")
-		hasChange = true
+		if config.Stuntimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "stuntimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Syncheck.Equal(state.Syncheck) {
 		tflog.Debug(ctx, "syncheck has changed for lsntransportprofile")
-		hasChange = true
+		if config.Syncheck.IsNull() {
+			attributesToUnset = append(attributesToUnset, "syncheck")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Synidletimeout.Equal(state.Synidletimeout) {
 		tflog.Debug(ctx, "synidletimeout has changed for lsntransportprofile")
-		hasChange = true
+		if config.Synidletimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "synidletimeout")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -182,6 +225,16 @@ func (r *LsntransportprofileResource) Update(ctx context.Context, req resource.U
 		tflog.Trace(ctx, "Updated lsntransportprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lsntransportprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"transportprofilename": data.Transportprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsntransportprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsntransportprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

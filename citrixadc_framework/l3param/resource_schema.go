@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -35,10 +37,11 @@ type L3paramResourceModel struct {
 }
 
 func (r *L3paramResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	// Backward-compat: SDK v2 declared every attribute Optional+Computed with NO
-	// Terraform Default (values are read from the ADC). The auto-generated schema
-	// wrongly added Default without Computed. Match SDK v2 exactly: Optional+Computed,
-	// no Default.
+	// Every attribute is Optional+Computed. Each carries a Terraform Default equal
+	// to its documented NITRO default so that removing it from config produces a
+	// plan diff (Optional+Computed with no Default is sticky on removal, which would
+	// prevent the Update/unset path from ever firing). The defaults match the NITRO
+	// server defaults exactly, so a fresh appliance round-trips without diff.
 	resp.Schema = schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
@@ -49,81 +52,97 @@ func (r *L3paramResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"acllogtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5000),
 				Description: "Parameter to tune acl logging time",
 			},
 			"allowclasseipv4": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable/Disable IPv4 Class E address clients",
 			},
 			"dropdfflag": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable dropping the IP DF flag.",
 			},
 			"dropipfragments": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable dropping of IP fragments.",
 			},
 			"dynamicrouting": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable/Disable Dynamic routing on partition. This configuration is not applicable to default partition",
 			},
 			"externalloopback": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable external loopback.",
 			},
 			"forwardicmpfragments": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable forwarding of ICMP fragments.",
 			},
 			"icmpgenratethreshold": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(100),
 				Description: "NS generated ICMP pkts per 10ms rate threshold",
 			},
 			"implicitaclallow": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Do not apply ACLs for internal ports",
 			},
 			"implicitpbr": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable/Disable Policy Based Routing for control packets",
 			},
 			"ipv6dynamicrouting": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable/Disable IPv6 Dynamic routing",
 			},
 			"miproundrobin": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable round robin usage of mapped IPs.",
 			},
 			"overridernat": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "USNIP/USIP settings override RNAT settings for configured\n              service/virtual server traffic..",
 			},
 			"srcnat": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Perform NAT if only the source is in the private network",
 			},
 			"tnlpmtuwoconn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable/Disable learning PMTU of IP tunnel when ICMP error does not contain connection information.",
 			},
 			"usipserverstraypkt": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable detection of stray server side pkts in USIP mode.",
 			},
 		},

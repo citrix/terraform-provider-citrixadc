@@ -111,12 +111,14 @@ func (r *NspbrResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *NspbrResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NspbrResourceModel
+	var data, config, state NspbrResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -130,6 +132,7 @@ func (r *NspbrResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	// Detect changes on updatable attributes (name and iptunnelname are ForceNew;
 	// state is handled via the enable/disable action).
 	hasChange := false
+	attributesToUnset := []string{}
 	updatableAttrs := []struct {
 		name  string
 		equal bool
@@ -144,7 +147,6 @@ func (r *NspbrResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		{"detail", data.Detail.Equal(state.Detail)},
 		{"interface", data.Interface.Equal(state.Interface)},
 		{"monitor", data.Monitor.Equal(state.Monitor)},
-		{"msr", data.Msr.Equal(state.Msr)},
 		{"nexthop", data.Nexthop.Equal(state.Nexthop)},
 		{"nexthopval", data.Nexthopval.Equal(state.Nexthopval)},
 		{"ownergroup", data.Ownergroup.Equal(state.Ownergroup)},
@@ -155,7 +157,6 @@ func (r *NspbrResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		{"srcipop", data.Srcipop.Equal(state.Srcipop)},
 		{"srcipval", data.Srcipval.Equal(state.Srcipval)},
 		{"srcmac", data.Srcmac.Equal(state.Srcmac)},
-		{"srcmacmask", data.Srcmacmask.Equal(state.Srcmacmask)},
 		{"srcport", data.Srcport.Equal(state.Srcport)},
 		{"srcportop", data.Srcportop.Equal(state.Srcportop)},
 		{"srcportval", data.Srcportval.Equal(state.Srcportval)},
@@ -168,6 +169,17 @@ func (r *NspbrResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	for _, a := range updatableAttrs {
 		if !a.equal {
 			tflog.Debug(ctx, fmt.Sprintf("%s has changed for nspbr, starting update", a.name))
+			hasChange = true
+		}
+	}
+
+	// Unsettable attributes: when removed from config, revert them to the NITRO
+	// default via the unset action instead of sending an update.
+	if !data.Srcmacmask.Equal(state.Srcmacmask) {
+		tflog.Debug(ctx, "srcmacmask has changed for nspbr")
+		if config.Srcmacmask.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "srcmacmask")
+		} else {
 			hasChange = true
 		}
 	}
@@ -190,6 +202,16 @@ func (r *NspbrResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		tflog.Trace(ctx, "Updated nspbr resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for nspbr resource, skipping update call")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nspbr.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nspbr attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

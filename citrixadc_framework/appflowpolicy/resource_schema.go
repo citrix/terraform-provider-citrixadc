@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,6 +41,7 @@ func (r *AppflowpolicyResource) Schema(ctx context.Context, req resource.SchemaR
 			"comment": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments about this policy.",
 			},
 			"name": schema.StringAttribute{
@@ -65,6 +67,7 @@ func (r *AppflowpolicyResource) Schema(ctx context.Context, req resource.SchemaR
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Name of the appflow action to be associated with this policy when an undef event occurs.",
 			},
 		},
@@ -133,7 +136,8 @@ func appflowpolicySetAttrFromGet(ctx context.Context, data *AppflowpolicyResourc
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		// Absent after unset/default -> empty string to match schema Default
+		data.Comment = types.StringValue("")
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
@@ -154,7 +158,8 @@ func appflowpolicySetAttrFromGet(ctx context.Context, data *AppflowpolicyResourc
 	if val, ok := getResponseData["undefaction"]; ok && val != nil {
 		data.Undefaction = types.StringValue(val.(string))
 	} else {
-		data.Undefaction = types.StringNull()
+		// Absent after unset/default -> empty string to match schema Default
+		data.Undefaction = types.StringValue("")
 	}
 
 	// Set ID for the resource

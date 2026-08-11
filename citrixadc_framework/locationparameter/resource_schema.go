@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -40,6 +41,7 @@ func (r *LocationparameterResource) Schema(ctx context.Context, req resource.Sch
 			"matchwildcardtoany": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Indicates whether wildcard qualifiers should match any other\nqualifier including non-wildcard while evaluating\nlocation based expressions.\nPossible values: Yes, No, Expression.\n    Yes - Wildcard qualifiers match any other qualifiers.\n    No  - Wildcard qualifiers do not match non-wildcard\n          qualifiers, but match other wildcard qualifiers.\n    Expression - Wildcard qualifiers in an expression\n          match any qualifier in an LDNS location,\n          wildcard qualifiers in the LDNS location do not match\n          non-wildcard qualifiers in an expression",
 			},
 			"q1label": schema.StringAttribute{

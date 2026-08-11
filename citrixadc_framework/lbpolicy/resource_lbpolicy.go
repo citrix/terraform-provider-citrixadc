@@ -111,12 +111,14 @@ func (r *LbpolicyResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *LbpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LbpolicyResourceModel
+	var data, config, state LbpolicyResourceModel
 
 	// Read Terraform prior state to preserve the live ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -153,13 +155,18 @@ func (r *LbpolicyResource) Update(ctx context.Context, req resource.UpdateReques
 	// Detect changes in NITRO-updatable attributes (name is RequiresReplace and never
 	// reaches Update; newname is handled above).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for lbpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for lbpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for lbpolicy")
@@ -188,6 +195,17 @@ func (r *LbpolicyResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated lbpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No updatable changes detected for lbpolicy resource")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// NITRO defaults. Keyed by the CURRENT LIVE name (data.Id), which reflects any
+	// rename performed above.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lbpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back. Preserve the user-facing name and newname across

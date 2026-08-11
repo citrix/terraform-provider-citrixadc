@@ -109,12 +109,14 @@ func (r *SslpolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *SslpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SslpolicyResourceModel
+	var data, config, state SslpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (unset candidates)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,13 +131,18 @@ func (r *SslpolicyResource) Update(ctx context.Context, req resource.UpdateReque
 	// name is RequiresReplace and reqaction is not updateable via NITRO, so
 	// neither is checked here.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for sslpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for sslpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for sslpolicy")
@@ -143,7 +150,11 @@ func (r *SslpolicyResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Undefaction.Equal(state.Undefaction) {
 		tflog.Debug(ctx, "undefaction has changed for sslpolicy")
-		hasChange = true
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -158,6 +169,16 @@ func (r *SslpolicyResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated sslpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for sslpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Sslpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset sslpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

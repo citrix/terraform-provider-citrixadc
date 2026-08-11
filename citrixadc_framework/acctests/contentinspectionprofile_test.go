@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -207,6 +208,89 @@ func TestAccContentinspectionprofile_selfHealing(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: egressvlan and ingressvlan are the only unset-eligible attributes
+// per the NITRO spec (the unset payload lists only these two). VLAN 1 is the
+// default appliance VLAN, used here as a valid non-default value (the NITRO
+// default is 0). Removing the attributes from config must unset them, reverting
+// the appliance to 0.
+const testAccContentinspectionprofile_unset_step1 = `
+	resource "citrixadc_contentinspectionprofile" "tf_unset" {
+		name             = "tf_ci_profile_unset"
+		type             = "InlineInspection"
+		ingressinterface = "LA/2"
+		egressinterface  = "LA/3"
+		ingressvlan      = 1
+		egressvlan       = 1
+	}
+`
+
+const testAccContentinspectionprofile_unset_step2 = `
+	resource "citrixadc_contentinspectionprofile" "tf_unset" {
+		name             = "tf_ci_profile_unset"
+		type             = "InlineInspection"
+		ingressinterface = "LA/2"
+		egressinterface  = "LA/3"
+		# ingressvlan/egressvlan removed -> provider must unset them (revert to 0).
+	}
+`
+
+func TestAccContentinspectionprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default vlan values are applied and persisted.
+				Config: testAccContentinspectionprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionprofileExist("citrixadc_contentinspectionprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionprofile.tf_unset", "ingressvlan", "1"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionprofile.tf_unset", "egressvlan", "1"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the NITRO default (0), and the
+				// implicit post-apply plan must be empty.
+				Config: testAccContentinspectionprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectionprofileExist("citrixadc_contentinspectionprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionprofile.tf_unset", "ingressvlan", "0"),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectionprofile.tf_unset", "egressvlan", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckContentinspectionprofileADCValue("tf_ci_profile_unset", "ingressvlan", "0"),
+					testAccCheckContentinspectionprofileADCValue("tf_ci_profile_unset", "egressvlan", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckContentinspectionprofileADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckContentinspectionprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Contentinspectionprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("contentinspectionprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("contentinspectionprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccContentinspectionprofileDataSource_basic = `

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -30,9 +31,11 @@ func (r *NsweblogparamResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "The ID of the nsweblogparam resource.",
 			},
 			"buffersizemb": schema.Int64Attribute{
-				// SDK v2 parity: Optional + Computed, no Default (value read from ADC).
+				// Optional + Computed with the NITRO server default so that removing
+				// it from config produces a plan diff, letting Update fire the unset.
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(16),
 				Description: "Buffer size, in MB, allocated for log transaction data on the system. The maximum value is limited to the memory available on the system.",
 			},
 			"customreqhdrs": schema.ListAttribute{

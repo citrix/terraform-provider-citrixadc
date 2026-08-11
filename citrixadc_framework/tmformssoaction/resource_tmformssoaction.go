@@ -111,12 +111,14 @@ func (r *TmformssoactionResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *TmformssoactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state TmformssoactionResourceModel
+	var data, config, state TmformssoactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,19 +129,72 @@ func (r *TmformssoactionResource) Update(ctx context.Context, req resource.Updat
 
 	tflog.Debug(ctx, "Updating tmformssoaction resource")
 
-	// Create API request body from the model (name is included in the body).
-	// SDK v2 used UpdateUnnamedResource (PUT with name in the body) for this
-	// resource; preserve that backward-compatible behavior.
-	tmformssoaction := tmformssoactionGetThePayloadFromthePlan(ctx, &data)
-
-	// Make API call
-	err := r.client.UpdateUnnamedResource(service.Tmformssoaction.Type(), &tmformssoaction)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmformssoaction, got error: %s", err))
-		return
+	// Check for changes and attributes removed from config (to be unset).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Namevaluepair.Equal(state.Namevaluepair) {
+		hasChange = true
+	}
+	if !data.Nvtype.Equal(state.Nvtype) {
+		if config.Nvtype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "nvtype")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Responsesize.Equal(state.Responsesize) {
+		if config.Responsesize.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "responsesize")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Submitmethod.Equal(state.Submitmethod) {
+		if config.Submitmethod.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "submitmethod")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Actionurl.Equal(state.Actionurl) {
+		hasChange = true
+	}
+	if !data.Passwdfield.Equal(state.Passwdfield) {
+		hasChange = true
+	}
+	if !data.Ssosuccessrule.Equal(state.Ssosuccessrule) {
+		hasChange = true
+	}
+	if !data.Userfield.Equal(state.Userfield) {
+		hasChange = true
 	}
 
-	tflog.Trace(ctx, "Updated tmformssoaction resource")
+	if hasChange {
+		// Create API request body from the model (name is included in the body).
+		// SDK v2 used UpdateUnnamedResource (PUT with name in the body) for this
+		// resource; preserve that backward-compatible behavior.
+		tmformssoaction := tmformssoactionGetThePayloadFromthePlan(ctx, &data)
+
+		// Make API call
+		err := r.client.UpdateUnnamedResource(service.Tmformssoaction.Type(), &tmformssoaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmformssoaction, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated tmformssoaction resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for tmformssoaction resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Tmformssoaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset tmformssoaction attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readTmformssoactionFromApi(ctx, &data, &resp.Diagnostics) {

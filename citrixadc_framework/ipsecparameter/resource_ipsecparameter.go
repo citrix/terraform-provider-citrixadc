@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -100,12 +101,14 @@ func (r *IpsecparameterResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *IpsecparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state IpsecparameterResourceModel
+	var data, config, state IpsecparameterResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -116,18 +119,93 @@ func (r *IpsecparameterResource) Update(ctx context.Context, req resource.Update
 
 	tflog.Debug(ctx, "Updating ipsecparameter resource")
 
-	// Create API request body from the model
-	ipsecparameter := ipsecparameterGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// Unnamed (singleton) resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ipsecparameter, got error: %s", err))
-		return
+	// Determine attributes removed from config so they can be unset (reverted
+	// to their NITRO defaults) after the update.
+	hasChange := false
+	attributesToUnset := []string{}
+	// encalgo and hashalgo are list attributes without a schema Default, so they
+	// stay sticky when removed from config (no plan diff) and cannot be reliably
+	// unset here; they are intentionally excluded from the unset set.
+	if !data.Encalgo.Equal(state.Encalgo) && !config.Encalgo.IsNull() {
+		hasChange = true
+	}
+	if !data.Hashalgo.Equal(state.Hashalgo) && !config.Hashalgo.IsNull() {
+		hasChange = true
+	}
+	if !data.Ikeretryinterval.Equal(state.Ikeretryinterval) {
+		if config.Ikeretryinterval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "ikeretryinterval")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Ikeversion.Equal(state.Ikeversion) {
+		if config.Ikeversion.IsNull() {
+			attributesToUnset = append(attributesToUnset, "ikeversion")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Lifetime.Equal(state.Lifetime) {
+		if config.Lifetime.IsNull() {
+			attributesToUnset = append(attributesToUnset, "lifetime")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Livenesscheckinterval.Equal(state.Livenesscheckinterval) {
+		if config.Livenesscheckinterval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "livenesscheckinterval")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Perfectforwardsecrecy.Equal(state.Perfectforwardsecrecy) {
+		if config.Perfectforwardsecrecy.IsNull() {
+			attributesToUnset = append(attributesToUnset, "perfectforwardsecrecy")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Replaywindowsize.Equal(state.Replaywindowsize) {
+		if config.Replaywindowsize.IsNull() {
+			attributesToUnset = append(attributesToUnset, "replaywindowsize")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Retransmissiontime.Equal(state.Retransmissiontime) {
+		if config.Retransmissiontime.IsNull() {
+			attributesToUnset = append(attributesToUnset, "retransmissiontime")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated ipsecparameter resource")
+	if hasChange {
+		// Create API request body from the model
+		ipsecparameter := ipsecparameterGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call
+		// Unnamed (singleton) resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Ipsecparameter.Type(), &ipsecparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ipsecparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated ipsecparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for ipsecparameter resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. Singleton resource -> empty id payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Ipsecparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ipsecparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readIpsecparameterFromApi(ctx, &data, &resp.Diagnostics)

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,11 +41,13 @@ func (r *LsnlogprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"logcompact": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Logs in Compact Logging format if option is enabled.",
 			},
 			"logipfix": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Logs in IPFIX  format if option is enabled.",
 			},
 			"logprofilename": schema.StringAttribute{
@@ -57,11 +60,13 @@ func (r *LsnlogprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"logsessdeletion": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "LSN Session deletion will not be logged if disabled.",
 			},
 			"logsubscrinfo": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Subscriber ID information is logged if option is enabled.",
 			},
 		},

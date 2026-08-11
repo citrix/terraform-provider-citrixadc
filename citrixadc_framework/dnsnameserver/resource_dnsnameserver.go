@@ -123,12 +123,14 @@ func (r *DnsnameserverResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *DnsnameserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state DnsnameserverResourceModel
+	var data, config, state DnsnameserverResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (to unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -142,9 +144,14 @@ func (r *DnsnameserverResource) Update(ctx context.Context, req resource.UpdateR
 	// Only dnsprofilename is updateable in place; all other attributes are
 	// RequiresReplace (matching SDK v2 ForceNew) and therefore never reach Update.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Dnsprofilename.Equal(state.Dnsprofilename) {
 		tflog.Debug(ctx, "dnsprofilename has changed for dnsnameserver, starting update")
-		hasChange = true
+		if config.Dnsprofilename.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnsprofilename")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -166,6 +173,23 @@ func (r *DnsnameserverResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated dnsnameserver resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for dnsnameserver resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. The name server is keyed on ip (or dnsvservername) plus
+	// the protocol type, both of which the unset call requires.
+	unsetIdPayload := map[string]interface{}{}
+	if !data.Ip.IsNull() && data.Ip.ValueString() != "" {
+		unsetIdPayload["ip"] = data.Ip.ValueString()
+	} else if !data.Dnsvservername.IsNull() && data.Dnsvservername.ValueString() != "" {
+		unsetIdPayload["dnsvservername"] = data.Dnsvservername.ValueString()
+	}
+	if !data.Type.IsNull() && data.Type.ValueString() != "" {
+		unsetIdPayload["type"] = data.Type.ValueString()
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsnameserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsnameserver attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

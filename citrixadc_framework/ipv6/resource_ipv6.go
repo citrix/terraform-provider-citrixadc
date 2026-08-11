@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -98,11 +99,13 @@ func (r *Ipv6Resource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *Ipv6Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Ipv6ResourceModel
+	var data, config, state Ipv6ResourceModel
 
 	// Read Terraform prior state and plan data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (now null) -> unset
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -112,23 +115,44 @@ func (r *Ipv6Resource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Change detection across the updateable attributes (mirrors SDK v2 d.HasChange)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Dodad.Equal(state.Dodad) {
-		hasChange = true
+		if config.Dodad.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dodad")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Natprefix.Equal(state.Natprefix) {
 		hasChange = true
 	}
 	if !data.Ndbasereachtime.Equal(state.Ndbasereachtime) {
-		hasChange = true
+		if config.Ndbasereachtime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ndbasereachtime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ndretransmissiontime.Equal(state.Ndretransmissiontime) {
-		hasChange = true
+		if config.Ndretransmissiontime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ndretransmissiontime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ralearning.Equal(state.Ralearning) {
-		hasChange = true
+		if config.Ralearning.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ralearning")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Routerredirection.Equal(state.Routerredirection) {
-		hasChange = true
+		if config.Routerredirection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "routerredirection")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Td.Equal(state.Td) {
 		hasChange = true
@@ -149,6 +173,18 @@ func (r *Ipv6Resource) Update(ctx context.Context, req resource.UpdateRequest, r
 		tflog.Trace(ctx, "Updated ipv6 resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for ipv6 resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. ipv6 is keyed on the traffic domain (td); include it
+	// so the unset targets the correct traffic-domain entry.
+	unsetIdPayload := map[string]interface{}{}
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		unsetIdPayload["td"] = int(data.Td.ValueInt64())
+	}
+	if err := utils.ExecuteUnset(r.client, service.Ipv6.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ipv6 attributes, got error: %s", err))
+		return
 	}
 
 	// ID tracks the traffic domain (td); recompute in case td changed.

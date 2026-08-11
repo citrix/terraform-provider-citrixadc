@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -41,8 +42,11 @@ func (r *ContentinspectionprofileResource) Schema(ctx context.Context, req resou
 				Description: "Egress interface for CI profile.It is a mandatory argument while creating an ContentInspection profile of type INLINEINSPECTION or MIRROR.",
 			},
 			"egressvlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is 0; a schema Default is required so removing the
+				// attribute from config produces a plan diff that drives the unset.
+				Default:     int64default.StaticInt64(0),
 				Description: "Egress Vlan for CI",
 			},
 			"ingressinterface": schema.StringAttribute{
@@ -51,8 +55,11 @@ func (r *ContentinspectionprofileResource) Schema(ctx context.Context, req resou
 				Description: "Ingress interface for CI profile.It is a mandatory argument while creating an ContentInspection profile of IPS type.",
 			},
 			"ingressvlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is 0; a schema Default is required so removing the
+				// attribute from config produces a plan diff that drives the unset.
+				Default:     int64default.StaticInt64(0),
 				Description: "Ingress Vlan for CI",
 			},
 			"iptunnel": schema.StringAttribute{

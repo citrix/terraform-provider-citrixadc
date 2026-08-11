@@ -109,12 +109,14 @@ func (r *TmtrafficactionResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *TmtrafficactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state TmtrafficactionResourceModel
+	var data, config, state TmtrafficactionResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,6 +131,7 @@ func (r *TmtrafficactionResource) Update(ctx context.Context, req resource.Updat
 
 	// Detect changes in updateable attributes (name is ForceNew, not updateable)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Apptimeout.Equal(state.Apptimeout) {
 		hasChange = true
 	}
@@ -145,13 +148,25 @@ func (r *TmtrafficactionResource) Update(ctx context.Context, req resource.Updat
 		hasChange = true
 	}
 	if !data.Kcdaccount.Equal(state.Kcdaccount) {
-		hasChange = true
+		if config.Kcdaccount.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "kcdaccount")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Passwdexpression.Equal(state.Passwdexpression) {
-		hasChange = true
+		if config.Passwdexpression.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "passwdexpression")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Persistentcookie.Equal(state.Persistentcookie) {
-		hasChange = true
+		if config.Persistentcookie.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "persistentcookie")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Samlssoprofile.Equal(state.Samlssoprofile) {
 		hasChange = true
@@ -160,7 +175,11 @@ func (r *TmtrafficactionResource) Update(ctx context.Context, req resource.Updat
 		hasChange = true
 	}
 	if !data.Userexpression.Equal(state.Userexpression) {
-		hasChange = true
+		if config.Userexpression.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "userexpression")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -177,6 +196,17 @@ func (r *TmtrafficactionResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated tmtrafficaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for tmtrafficaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Tmtrafficaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset tmtrafficaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -45,16 +47,19 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 			"automaticconfigsync": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "GSLB configuration will be synced automatically to remote gslb sites if enabled.",
 			},
 			"dropldnsreq": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Drop LDNS requests if round-trip time (RTT) information is not available.",
 			},
 			"gslbconfigsyncmonitor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "If enabled, remote gslb site's rsync port will be monitored and site is considered for configuration sync only when the monitor is successful.",
 			},
 			"gslbsvcstatedelaytime": schema.Int64Attribute{
@@ -65,26 +70,31 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 			"gslbsyncinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(10),
 				Description: "Time duartion (in seconds) for which the gslb sync process will wait before checking for config changes.",
 			},
 			"gslbsynclocfiles": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "If disabled, Location files will not be synced to the remote sites as part of manual sync and automatic sync.",
 			},
 			"gslbsyncmode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("IncrementalSync"),
 				Description: "Mode in which configuration will be synced from master site to remote sites.",
 			},
 			"gslbsyncsaveconfigcommand": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "If enabled, 'save ns config' command will be treated as other GSLB commands and synced to GSLB nodes when auto gslb sync option is enabled.",
 			},
 			"ldnsentrytimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(180),
 				Description: "Time, in seconds, after which an inactive LDNS entry is removed.",
 			},
 			"ldnsmask": schema.StringAttribute{
@@ -101,11 +111,13 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 			"mepkeepalivetimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(10),
 				Description: "Time duartion (in seconds) during which if no new packets received by Local gslb site from Remote gslb site then mark the MEP connection DOWN",
 			},
 			"rtttolerance": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(5),
 				Description: "Tolerance, in milliseconds, for newly learned round-trip time (RTT) values. If the difference between the old RTT value and the newly computed RTT value is less than or equal to the specified tolerance value, the LDNS entry in the network metric table is not updated with the new RTT value. Prevents the exchange of metrics when variations in RTT values are negligible.",
 			},
 			"svcstatelearningtime": schema.Int64Attribute{
@@ -116,11 +128,13 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NOLBACTION"),
 				Description: "Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:\n* NOLBACTION - Does not consider LB action in making LB decision.\n* RESET - Reset the request and notify the user, so that the user can resend the request.\n* DROP - Drop the request without sending a response to the user.",
 			},
 			"v6ldnsmasklen": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(128),
 				Description: "Mask for creating LDNS entries for IPv6 source addresses. The mask is defined as the number of leading bits to consider, in the source IP address, when creating an LDNS entry.",
 			},
 		},

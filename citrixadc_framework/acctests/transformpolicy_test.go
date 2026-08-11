@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -208,6 +209,107 @@ func TestAccTransformpolicy_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The transformpolicy unset test covers the spec-unsettable attributes
+// (comment, logaction). Step 1 sets them to non-default values; step 2 removes
+// them from config so the provider issues the NITRO ?action=unset, reverting
+// them to their appliance defaults (empty).
+const testAccTransformpolicy_unset_step1 = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+  name = "tf_trans_profile1"
+}
+
+resource "citrixadc_auditmessageaction" "tf_unset_msgaction" {
+  name              = "tf_unset_msgaction"
+  loglevel          = "NOTICE"
+  stringbuilderexpr = "\"hello\""
+  logtonewnslog     = "YES"
+}
+
+resource "citrixadc_transformpolicy" "tf_trans_policy_unset" {
+  name        = "tf_trans_policy_unset"
+  profilename = citrixadc_transformprofile.tf_trans_profile1.name
+  rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
+  comment     = "managed by terraform"
+  logaction   = citrixadc_auditmessageaction.tf_unset_msgaction.name
+}
+`
+
+const testAccTransformpolicy_unset_step2 = `
+resource "citrixadc_transformprofile" "tf_trans_profile1" {
+  name = "tf_trans_profile1"
+}
+
+resource "citrixadc_auditmessageaction" "tf_unset_msgaction" {
+  name              = "tf_unset_msgaction"
+  loglevel          = "NOTICE"
+  stringbuilderexpr = "\"hello\""
+  logtonewnslog     = "YES"
+}
+
+resource "citrixadc_transformpolicy" "tf_trans_policy_unset" {
+  name        = "tf_trans_policy_unset"
+  profilename = citrixadc_transformprofile.tf_trans_profile1.name
+  rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
+  # comment and logaction removed -> provider must unset them.
+}
+`
+
+func TestAccTransformpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccTransformpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformpolicyExist("citrixadc_transformpolicy.tf_trans_policy_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformpolicy.tf_trans_policy_unset", "comment", "managed by terraform"),
+					resource.TestCheckResourceAttr("citrixadc_transformpolicy.tf_trans_policy_unset", "logaction", "tf_unset_msgaction"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance reverts
+				// them to their defaults (empty) and the implicit post-apply plan
+				// must be empty.
+				Config: testAccTransformpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformpolicyExist("citrixadc_transformpolicy.tf_trans_policy_unset", nil),
+					testAccCheckTransformpolicyADCValue("tf_trans_policy_unset", "comment", ""),
+					testAccCheckTransformpolicyADCValue("tf_trans_policy_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckTransformpolicyADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset reverted it.
+func testAccCheckTransformpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Transformpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("transformpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("transformpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccTransformpolicyDataSource_basic(t *testing.T) {

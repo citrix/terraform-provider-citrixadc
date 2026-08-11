@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -138,6 +139,89 @@ func TestAccNstimeout_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// nstimeout is a singleton. step1 sets the unset-eligible attributes to
+// non-default values; step2 removes them from config so the provider must unset
+// them, reverting each to its documented NITRO default.
+const testAccNstimeout_unset_step1 = `
+resource "citrixadc_nstimeout" "tf_unset" {
+	zombie            = 90
+	anyclient         = 1500
+	server            = 1500
+	httpclient        = 1500
+	reducedrsttimeout = 20
+}
+`
+
+const testAccNstimeout_unset_step2 = `
+resource "citrixadc_nstimeout" "tf_unset" {
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccNstimeout_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNstimeout_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstimeoutExist("citrixadc_nstimeout.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "zombie", "90"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "anyclient", "1500"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "server", "1500"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "httpclient", "1500"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "reducedrsttimeout", "20"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNstimeout_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstimeoutExist("citrixadc_nstimeout.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "zombie", "120"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "anyclient", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "server", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "httpclient", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nstimeout.tf_unset", "reducedrsttimeout", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNstimeoutADCValue("zombie", "120"),
+					testAccCheckNstimeoutADCValue("anyclient", "0"),
+					testAccCheckNstimeoutADCValue("reducedrsttimeout", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNstimeoutADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNstimeoutADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nstimeout.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nstimeout not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nstimeout: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNstimeout_import(t *testing.T) {

@@ -109,12 +109,14 @@ func (r *ContentinspectionprofileResource) Read(ctx context.Context, req resourc
 }
 
 func (r *ContentinspectionprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state ContentinspectionprofileResourceModel
+	var data, config, state ContentinspectionprofileResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,13 +129,18 @@ func (r *ContentinspectionprofileResource) Update(ctx context.Context, req resou
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Egressinterface.Equal(state.Egressinterface) {
 		tflog.Debug(ctx, "egressinterface has changed for contentinspectionprofile")
 		hasChange = true
 	}
 	if !data.Egressvlan.Equal(state.Egressvlan) {
 		tflog.Debug(ctx, "egressvlan has changed for contentinspectionprofile")
-		hasChange = true
+		if config.Egressvlan.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "egressvlan")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ingressinterface.Equal(state.Ingressinterface) {
 		tflog.Debug(ctx, "ingressinterface has changed for contentinspectionprofile")
@@ -141,7 +148,11 @@ func (r *ContentinspectionprofileResource) Update(ctx context.Context, req resou
 	}
 	if !data.Ingressvlan.Equal(state.Ingressvlan) {
 		tflog.Debug(ctx, "ingressvlan has changed for contentinspectionprofile")
-		hasChange = true
+		if config.Ingressvlan.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ingressvlan")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Iptunnel.Equal(state.Iptunnel) {
 		tflog.Debug(ctx, "iptunnel has changed for contentinspectionprofile")
@@ -163,6 +174,17 @@ func (r *ContentinspectionprofileResource) Update(ctx context.Context, req resou
 		tflog.Trace(ctx, "Updated contentinspectionprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for contentinspectionprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The unset URL carries no name; the name goes in
+	// the payload.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Contentinspectionprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset contentinspectionprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

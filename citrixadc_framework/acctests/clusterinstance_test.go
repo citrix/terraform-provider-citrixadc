@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -199,6 +200,107 @@ func TestAccClusterinstance_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccClusterinstance_unset_step1 = `
+resource "citrixadc_clusterinstance" "tf_unset" {
+	clid                       = 1
+	deadinterval               = 5
+	hellointerval              = 400
+	preemption                 = "ENABLED"
+	quorumtype                 = "NONE"
+	processlocal               = "ENABLED"
+	retainconnectionsoncluster = "YES"
+	backplanebasedview         = "ENABLED"
+	syncstatusstrictmode       = "ENABLED"
+	dfdretainl2params          = "ENABLED"
+	clusterproxyarp            = "DISABLED"
+	secureheartbeats           = "ENABLED"
+}
+`
+
+const testAccClusterinstance_unset_step2 = `
+resource "citrixadc_clusterinstance" "tf_unset" {
+	clid = 1
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to their documented NITRO defaults).
+}
+`
+
+func TestAccClusterinstance_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusterinstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccClusterinstance_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterinstanceExist("citrixadc_clusterinstance.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "deadinterval", "5"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "hellointerval", "400"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "preemption", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "quorumtype", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "processlocal", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "retainconnectionsoncluster", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "backplanebasedview", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "syncstatusstrictmode", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "dfdretainl2params", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "clusterproxyarp", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "secureheartbeats", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccClusterinstance_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterinstanceExist("citrixadc_clusterinstance.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "deadinterval", "3"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "hellointerval", "200"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "preemption", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "quorumtype", "MAJORITY"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "processlocal", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "retainconnectionsoncluster", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "backplanebasedview", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "syncstatusstrictmode", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "dfdretainl2params", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "clusterproxyarp", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_clusterinstance.tf_unset", "secureheartbeats", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckClusterinstanceADCValue("1", "quorumtype", "MAJORITY"),
+					testAccCheckClusterinstanceADCValue("1", "deadinterval", "3"),
+					testAccCheckClusterinstanceADCValue("1", "clusterproxyarp", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckClusterinstanceADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckClusterinstanceADCValue(id, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Clusterinstance.Type(), id)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("clusterinstance %s not found on appliance", id)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("clusterinstance %s: appliance attr %q = %q, want %q (unset did not revert it)", id, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccClusterinstanceDataSource_basic(t *testing.T) {

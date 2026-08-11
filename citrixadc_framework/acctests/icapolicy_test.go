@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -209,6 +210,113 @@ func TestAccIcapolicy_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: step1 sets the unset-eligible mutable attributes (comment,
+// logaction) to valid non-default values; step2 removes them from config so the
+// provider issues a NITRO unset, reverting them to their defaults (absent -> "").
+const testAccIcapolicy_unset_step1 = `
+
+	resource "citrixadc_icaaction" "tf_icaaction_unset" {
+		name              = "tf_ica_action_unset"
+		accessprofilename = "default_ica_accessprofile"
+	}
+
+	resource "citrixadc_auditmessageaction" "tf_msgaction_unset" {
+		name              = "tf_ica_msgaction_unset"
+		loglevel          = "NOTICE"
+		stringbuilderexpr = "\"ica unset test\""
+	}
+
+	resource "citrixadc_icapolicy" "tf_icapolicy_unset" {
+		name      = "tf_ica_policy_unset"
+		rule      = true
+		action    = citrixadc_icaaction.tf_icaaction_unset.name
+		comment   = "managed by terraform"
+		logaction = citrixadc_auditmessageaction.tf_msgaction_unset.name
+	}
+`
+
+const testAccIcapolicy_unset_step2 = `
+
+	resource "citrixadc_icaaction" "tf_icaaction_unset" {
+		name              = "tf_ica_action_unset"
+		accessprofilename = "default_ica_accessprofile"
+	}
+
+	resource "citrixadc_auditmessageaction" "tf_msgaction_unset" {
+		name              = "tf_ica_msgaction_unset"
+		loglevel          = "NOTICE"
+		stringbuilderexpr = "\"ica unset test\""
+	}
+
+	resource "citrixadc_icapolicy" "tf_icapolicy_unset" {
+		name   = "tf_ica_policy_unset"
+		rule   = true
+		action = citrixadc_icaaction.tf_icaaction_unset.name
+		# comment and logaction removed from config -> the provider must unset them
+		# (revert to NITRO defaults, i.e. absent / empty string).
+	}
+`
+
+func TestAccIcapolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIcapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccIcapolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy_unset", "comment", "managed by terraform"),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy_unset", "logaction", "tf_ica_msgaction_unset"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the defaults, and the implicit post-apply plan
+				// must be empty.
+				Config: testAccIcapolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIcapolicyExist("citrixadc_icapolicy.tf_icapolicy_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy_unset", "comment", ""),
+					resource.TestCheckResourceAttr("citrixadc_icapolicy.tf_icapolicy_unset", "logaction", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckIcapolicyADCValue("tf_ica_policy_unset", "comment", ""),
+					testAccCheckIcapolicyADCValue("tf_ica_policy_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckIcapolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. An absent attribute is treated as the empty string.
+func testAccCheckIcapolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Icapolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("icapolicy %s not found on appliance", name)
+		}
+		got := ""
+		if raw, ok := data[attr]; ok && raw != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", raw))
+		}
+		if got != want {
+			return fmt.Errorf("icapolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccIcapolicyDataSource_basic(t *testing.T) {

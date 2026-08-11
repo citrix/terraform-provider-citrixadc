@@ -110,12 +110,14 @@ func (r *CrvserverResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state CrvserverResourceModel
+	var data, config, state CrvserverResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -148,10 +150,15 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		Name: crvserverName,
 	}
 	hasChange := false
+	attributesToUnset := []string{}
 
 	if !data.Appflowlog.IsUnknown() && !data.Appflowlog.Equal(state.Appflowlog) {
-		crvserver.Appflowlog = data.Appflowlog.ValueString()
-		hasChange = true
+		if config.Appflowlog.IsNull() {
+			attributesToUnset = append(attributesToUnset, "appflowlog")
+		} else {
+			crvserver.Appflowlog = data.Appflowlog.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Arp.IsUnknown() && !data.Arp.Equal(state.Arp) {
 		crvserver.Arp = data.Arp.ValueString()
@@ -218,8 +225,12 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		hasChange = true
 	}
 	if !data.Icmpvsrresponse.IsUnknown() && !data.Icmpvsrresponse.Equal(state.Icmpvsrresponse) {
-		crvserver.Icmpvsrresponse = data.Icmpvsrresponse.ValueString()
-		hasChange = true
+		if config.Icmpvsrresponse.IsNull() {
+			attributesToUnset = append(attributesToUnset, "icmpvsrresponse")
+		} else {
+			crvserver.Icmpvsrresponse = data.Icmpvsrresponse.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Ipset.IsUnknown() && !data.Ipset.Equal(state.Ipset) {
 		crvserver.Ipset = data.Ipset.ValueString()
@@ -330,8 +341,12 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		hasChange = true
 	}
 	if !data.Useportrange.IsUnknown() && !data.Useportrange.Equal(state.Useportrange) {
-		crvserver.Useportrange = data.Useportrange.ValueString()
-		hasChange = true
+		if config.Useportrange.IsNull() {
+			attributesToUnset = append(attributesToUnset, "useportrange")
+		} else {
+			crvserver.Useportrange = data.Useportrange.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Via.IsUnknown() && !data.Via.Equal(state.Via) {
 		crvserver.Via = data.Via.ValueString()
@@ -356,6 +371,16 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated crvserver resource")
 	} else {
 		tflog.Debug(ctx, "No updatable-attribute changes detected for crvserver resource")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": crvserverName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Crvserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset crvserver attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -192,6 +193,106 @@ func TestAccLsnsipalgprofile_selfHealing(t *testing.T) {
 			},
 		},
 	})
+}
+
+// step1 sets every unset-eligible attribute to a valid non-default value;
+// step2 removes them (keeping only the key and the mandatory
+// siptransportprotocol) so the provider must unset them back to NITRO defaults.
+const testAccLsnsipalgprofile_unset_step1 = `
+resource "citrixadc_lsnsipalgprofile" "tf_unset" {
+	sipalgprofilename      = "tf_test_lsnsipalgprofile_unset"
+	siptransportprotocol   = "TCP"
+	sipsrcportrange        = "4400"
+	datasessionidletimeout = 200
+	sipsessiontimeout      = 700
+	registrationtimeout    = 90
+	opencontactpinhole     = "DISABLED"
+	openrecordroutepinhole = "DISABLED"
+	openregisterpinhole    = "DISABLED"
+	openroutepinhole       = "DISABLED"
+	openviapinhole         = "DISABLED"
+	rport                  = "DISABLED"
+}
+`
+
+const testAccLsnsipalgprofile_unset_step2 = `
+resource "citrixadc_lsnsipalgprofile" "tf_unset" {
+	sipalgprofilename    = "tf_test_lsnsipalgprofile_unset"
+	siptransportprotocol = "TCP"
+	sipsrcportrange      = "4400"
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to the documented NITRO defaults).
+}
+`
+
+func TestAccLsnsipalgprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnsipalgprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLsnsipalgprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnsipalgprofileExist("citrixadc_lsnsipalgprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "datasessionidletimeout", "200"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "sipsessiontimeout", "700"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "registrationtimeout", "90"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "opencontactpinhole", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "openrecordroutepinhole", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "openregisterpinhole", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "openroutepinhole", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "openviapinhole", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "rport", "DISABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccLsnsipalgprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsnsipalgprofileExist("citrixadc_lsnsipalgprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "datasessionidletimeout", "120"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "sipsessiontimeout", "600"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "registrationtimeout", "60"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "opencontactpinhole", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "openrecordroutepinhole", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "openregisterpinhole", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "openroutepinhole", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "openviapinhole", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsnsipalgprofile.tf_unset", "rport", "ENABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLsnsipalgprofileADCValue("tf_test_lsnsipalgprofile_unset", "opencontactpinhole", "ENABLED"),
+					testAccCheckLsnsipalgprofileADCValue("tf_test_lsnsipalgprofile_unset", "rport", "ENABLED"),
+					testAccCheckLsnsipalgprofileADCValue("tf_test_lsnsipalgprofile_unset", "sipsessiontimeout", "600"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLsnsipalgprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset reverted it.
+func testAccCheckLsnsipalgprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lsnsipalgprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lsnsipalgprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lsnsipalgprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccLsnsipalgprofile_sdkv2StateUpgrade(t *testing.T) {

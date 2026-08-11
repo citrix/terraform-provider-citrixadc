@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -227,6 +228,109 @@ func TestAccAppfwpolicy_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: step1 sets the unset-eligible attributes (comment, logaction) to
+// valid non-default values; step2 removes them from config so the provider must
+// issue the NITRO ?action=unset, reverting them to their defaults (absent -> null).
+const testAccAppfwpolicy_unset_step1 = `
+	resource citrixadc_appfwprofile tfAcc_appfwprofile_unset {
+		name = "tfAcc_appfwprofile_unset"
+		type = ["HTML"]
+	}
+
+	resource citrixadc_auditmessageaction tfAcc_msgact_unset {
+		name              = "tfAcc_msgact_unset"
+		loglevel          = "INFORMATIONAL"
+		stringbuilderexpr = "\"unset test\""
+	}
+
+	resource citrixadc_appfwpolicy tfAcc_appfwpolicy_unset {
+		name        = "tfAcc_appfwpolicy_unset"
+		profilename = citrixadc_appfwprofile.tfAcc_appfwprofile_unset.name
+		rule        = "true"
+		comment     = "unset acc comment"
+		logaction   = citrixadc_auditmessageaction.tfAcc_msgact_unset.name
+	}
+`
+
+const testAccAppfwpolicy_unset_step2 = `
+	resource citrixadc_appfwprofile tfAcc_appfwprofile_unset {
+		name = "tfAcc_appfwprofile_unset"
+		type = ["HTML"]
+	}
+
+	resource citrixadc_auditmessageaction tfAcc_msgact_unset {
+		name              = "tfAcc_msgact_unset"
+		loglevel          = "INFORMATIONAL"
+		stringbuilderexpr = "\"unset test\""
+	}
+
+	resource citrixadc_appfwpolicy tfAcc_appfwpolicy_unset {
+		name        = "tfAcc_appfwpolicy_unset"
+		profilename = citrixadc_appfwprofile.tfAcc_appfwprofile_unset.name
+		rule        = "true"
+		# comment and logaction removed from config -> provider must unset them.
+	}
+`
+
+func TestAccAppfwpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAppfwpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwpolicyExist("citrixadc_appfwpolicy.tfAcc_appfwpolicy_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwpolicy.tfAcc_appfwpolicy_unset", "comment", "unset acc comment"),
+					resource.TestCheckResourceAttr("citrixadc_appfwpolicy.tfAcc_appfwpolicy_unset", "logaction", "tfAcc_msgact_unset"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the NITRO default (absent -> empty), and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAppfwpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwpolicyExist("citrixadc_appfwpolicy.tfAcc_appfwpolicy_unset", nil),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppfwpolicyADCValue("tfAcc_appfwpolicy_unset", "comment", ""),
+					testAccCheckAppfwpolicyADCValue("tfAcc_appfwpolicy_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppfwpolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. After an unset the attribute is omitted from the GET response, so the
+// expected value for a reverted attribute is the empty string.
+func testAccCheckAppfwpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appfwpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("appfwpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("appfwpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAppfwpolicyDataSource_basic(t *testing.T) {

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -204,6 +205,77 @@ func TestAccAuthenticationnoauthaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccAuthenticationnoauthaction_unset_step1 = `
+	resource "citrixadc_authenticationnoauthaction" "tf_unset" {
+		name                       = "tf_noauthaction_unset"
+		defaultauthenticationgroup = "unset_group"
+	}
+`
+
+const testAccAuthenticationnoauthaction_unset_step2 = `
+	resource "citrixadc_authenticationnoauthaction" "tf_unset" {
+		name = "tf_noauthaction_unset"
+		# defaultauthenticationgroup removed from config -> provider must unset it
+		# (revert to the empty-string NITRO default).
+	}
+`
+
+func TestAccAuthenticationnoauthaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationnoauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccAuthenticationnoauthaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnoauthactionExist("citrixadc_authenticationnoauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationnoauthaction.tf_unset", "defaultauthenticationgroup", "unset_group"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state reverts to the NITRO
+				// default (empty string) and the implicit post-apply plan is empty.
+				Config: testAccAuthenticationnoauthaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationnoauthactionExist("citrixadc_authenticationnoauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationnoauthaction.tf_unset", "defaultauthenticationgroup", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationnoauthactionADCValue("tf_noauthaction_unset", "defaultauthenticationgroup", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationnoauthactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationnoauthactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationnoauthaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationnoauthaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("authenticationnoauthaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAuthenticationnoauthactionDataSource_basic(t *testing.T) {

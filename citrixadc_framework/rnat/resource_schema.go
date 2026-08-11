@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -54,6 +55,7 @@ func (r *RnatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"connfailover": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Synchronize all connection-related information for the RNAT sessions with the secondary ADC in a high availability (HA) pair.",
 			},
 			// SDK v2: Required + ForceNew.
@@ -118,6 +120,7 @@ func (r *RnatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"srcippersistency": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enables the Citrix ADC to use the same NAT IP address for all RNAT sessions initiated from a particular server.",
 			},
 			// SDK v2: Optional + Computed (updateable, no default).
@@ -130,6 +133,7 @@ func (r *RnatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"useproxyport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable source port proxying, which enables the Citrix ADC to use the RNAT ips using proxied source port.",
 			},
 		},

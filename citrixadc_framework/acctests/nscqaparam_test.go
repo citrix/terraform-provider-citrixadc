@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -143,6 +144,95 @@ func testAccCheckNscqaparamExist(n string, id *string) resource.TestCheckFunc {
 			return fmt.Errorf("nscqaparam %s not found", n)
 		}
 
+		return nil
+	}
+}
+
+// nscqaparam is a singleton. The unset test drives the numeric attributes that
+// have documented NITRO server defaults (0) and appear in the unset payload:
+// harqretxdelay, minrttnet1, minrttnet2, minrttnet3, lr1probthresh. Step1 sets
+// non-default values; step2 removes them so the provider unsets them (revert to
+// 0). The string attributes have no documented server default and are not
+// exercised here.
+const testAccNscqaparam_unset_step1 = `
+	resource "citrixadc_nscqaparam" "tf_unset" {
+		harqretxdelay = 10
+		minrttnet1    = 25
+		minrttnet2    = 30
+		minrttnet3    = 35
+		lr1probthresh = 0.2
+		lr1coeflist   = "intercept=4.95,thruputavg=5.92,iaiavg=-189.48,rttmin=-15.75,loaddelayavg=0.01,noisedelayavg=-2.59"
+		net1label     = "2g"
+	}
+`
+
+const testAccNscqaparam_unset_step2 = `
+	resource "citrixadc_nscqaparam" "tf_unset" {
+		# All unset-eligible numeric attributes removed from config -> the provider
+		# must unset them (revert to NITRO default 0).
+	}
+`
+
+func TestAccNscqaparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values applied and persisted.
+				Config: testAccNscqaparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscqaparamExist("citrixadc_nscqaparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "harqretxdelay", "10"),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "minrttnet1", "25"),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "minrttnet2", "30"),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "minrttnet3", "35"),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "lr1probthresh", "0.2"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults (0), the implicit post-apply plan must
+				// be empty, and the appliance itself must reflect the revert.
+				Config: testAccNscqaparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNscqaparamExist("citrixadc_nscqaparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "harqretxdelay", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "minrttnet1", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "minrttnet2", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "minrttnet3", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nscqaparam.tf_unset", "lr1probthresh", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					// (harqretxdelay/minrttnet1 are omitted from GET when at their
+					// default 0, so assert the ones NITRO always returns.)
+					testAccCheckNscqaparamADCValue("minrttnet2", "0"),
+					testAccCheckNscqaparamADCValue("minrttnet3", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNscqaparamADCValue asserts an attribute's value directly on the
+// appliance (singleton GET), proving the unset actually reverted it.
+func testAccCheckNscqaparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource("nscqaparam", "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nscqaparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nscqaparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
 		return nil
 	}
 }

@@ -109,12 +109,14 @@ func (r *InatResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *InatResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state InatResourceModel
+	var data, config, state InatResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (unset targets)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,13 +130,22 @@ func (r *InatResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	// Check if there are any changes in updateable attributes
 	// (publicip, td and name are RequiresReplace and never reach Update)
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Connfailover.Equal(state.Connfailover) {
 		tflog.Debug(ctx, "connfailover has changed for inat")
-		hasChange = true
+		if config.Connfailover.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "connfailover")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ftp.Equal(state.Ftp) {
 		tflog.Debug(ctx, "ftp has changed for inat")
-		hasChange = true
+		if config.Ftp.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ftp")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Mode.Equal(state.Mode) {
 		tflog.Debug(ctx, "mode has changed for inat")
@@ -150,15 +161,27 @@ func (r *InatResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 	if !data.Tcpproxy.Equal(state.Tcpproxy) {
 		tflog.Debug(ctx, "tcpproxy has changed for inat")
-		hasChange = true
+		if config.Tcpproxy.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tcpproxy")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Tftp.Equal(state.Tftp) {
 		tflog.Debug(ctx, "tftp has changed for inat")
-		hasChange = true
+		if config.Tftp.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "tftp")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Useproxyport.Equal(state.Useproxyport) {
 		tflog.Debug(ctx, "useproxyport has changed for inat")
-		hasChange = true
+		if config.Useproxyport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "useproxyport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Usip.Equal(state.Usip) {
 		tflog.Debug(ctx, "usip has changed for inat")
@@ -183,6 +206,16 @@ func (r *InatResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		tflog.Trace(ctx, "Updated inat resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for inat resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Inat.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset inat attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

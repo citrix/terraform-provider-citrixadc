@@ -14,6 +14,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward and
+// removal is a silent no-op.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // AuthenticationsamlidppolicyResourceModel describes the resource data model.
 type AuthenticationsamlidppolicyResourceModel struct {
 	Id          types.String `tfsdk:"id"`
@@ -39,13 +64,20 @@ func (r *AuthenticationsamlidppolicyResource) Schema(ctx context.Context, req re
 				Description: "Name of the profile to apply to requests or connections that match this policy.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Any comments to preserve information about this policy.",
 			},
 			"logaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Not unset-wired: NITRO always echoes a server default ("Use Global")
+				// for logaction and rejects an ?action=unset of it ("Invalid undef
+				// action or log action", errorcode 2818). Left as a plain
+				// Optional+Computed attribute.
 				Description: "Name of messagelog action to use when a request matches this policy.",
 			},
 			"name": schema.StringAttribute{
@@ -69,8 +101,11 @@ func (r *AuthenticationsamlidppolicyResource) Schema(ctx context.Context, req re
 				Description: "Expression which is evaluated to choose a profile for authentication.\n\nThe following requirements apply only to the Citrix ADC CLI:\n* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.\n* If the expression itself includes double quotation marks, escape the quotations by using the \\ character.\n* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.",
 			},
 			"undefaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Not unset-wired: NITRO always echoes a server default ("Use Global")
+				// for undefaction, so a config-removal plan modifier would produce a
+				// perpetual diff. Left as a plain Optional+Computed attribute.
 				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.",
 			},
 		},

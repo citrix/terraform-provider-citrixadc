@@ -109,12 +109,14 @@ func (r *NslimitidentifierResource) Read(ctx context.Context, req resource.ReadR
 }
 
 func (r *NslimitidentifierResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NslimitidentifierResourceModel
+	var data, config, state NslimitidentifierResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,13 +129,22 @@ func (r *NslimitidentifierResource) Update(ctx context.Context, req resource.Upd
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Limittype.Equal(state.Limittype) {
 		tflog.Debug(ctx, "limittype has changed for nslimitidentifier")
-		hasChange = true
+		if config.Limittype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "limittype")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxbandwidth.Equal(state.Maxbandwidth) {
 		tflog.Debug(ctx, "maxbandwidth has changed for nslimitidentifier")
-		hasChange = true
+		if config.Maxbandwidth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxbandwidth")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Mode.Equal(state.Mode) {
 		tflog.Debug(ctx, "mode has changed for nslimitidentifier")
@@ -145,15 +156,27 @@ func (r *NslimitidentifierResource) Update(ctx context.Context, req resource.Upd
 	}
 	if !data.Threshold.Equal(state.Threshold) {
 		tflog.Debug(ctx, "threshold has changed for nslimitidentifier")
-		hasChange = true
+		if config.Threshold.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "threshold")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Timeslice.Equal(state.Timeslice) {
 		tflog.Debug(ctx, "timeslice has changed for nslimitidentifier")
-		hasChange = true
+		if config.Timeslice.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "timeslice")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Trapsintimeslice.Equal(state.Trapsintimeslice) {
 		tflog.Debug(ctx, "trapsintimeslice has changed for nslimitidentifier")
-		hasChange = true
+		if config.Trapsintimeslice.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "trapsintimeslice")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -168,6 +191,16 @@ func (r *NslimitidentifierResource) Update(ctx context.Context, req resource.Upd
 		tflog.Trace(ctx, "Updated nslimitidentifier resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nslimitidentifier resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"limitidentifier": data.Limitidentifier.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nslimitidentifier.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nslimitidentifier attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

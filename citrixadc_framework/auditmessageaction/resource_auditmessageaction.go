@@ -110,12 +110,14 @@ func (r *AuditmessageactionResource) Read(ctx context.Context, req resource.Read
 }
 
 func (r *AuditmessageactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuditmessageactionResourceModel
+	var data, config, state AuditmessageactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,6 +130,7 @@ func (r *AuditmessageactionResource) Update(ctx context.Context, req resource.Up
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Bypasssafetycheck.Equal(state.Bypasssafetycheck) {
 		tflog.Debug(ctx, "bypasssafetycheck has changed for auditmessageaction")
 		hasChange = true
@@ -138,7 +141,11 @@ func (r *AuditmessageactionResource) Update(ctx context.Context, req resource.Up
 	}
 	if !data.Logtonewnslog.Equal(state.Logtonewnslog) {
 		tflog.Debug(ctx, "logtonewnslog has changed for auditmessageaction")
-		hasChange = true
+		if config.Logtonewnslog.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logtonewnslog")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Stringbuilderexpr.Equal(state.Stringbuilderexpr) {
 		tflog.Debug(ctx, "stringbuilderexpr has changed for auditmessageaction")
@@ -160,6 +167,16 @@ func (r *AuditmessageactionResource) Update(ctx context.Context, req resource.Up
 		tflog.Trace(ctx, "Updated auditmessageaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for auditmessageaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Auditmessageaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset auditmessageaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

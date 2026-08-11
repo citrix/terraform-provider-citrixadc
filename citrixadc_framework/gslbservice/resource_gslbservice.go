@@ -102,9 +102,11 @@ func (r *GslbserviceResource) Read(ctx context.Context, req resource.ReadRequest
 func (r *GslbserviceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data GslbserviceResourceModel
 	var state GslbserviceResourceModel
+	var config GslbserviceResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -115,14 +117,23 @@ func (r *GslbserviceResource) Update(ctx context.Context, req resource.UpdateReq
 
 	gslbservice := gslb.Gslbservice{Servicename: servicename}
 	hasChange := false
+	attributesToUnset := []string{}
 
 	if !data.Appflowlog.Equal(state.Appflowlog) {
-		gslbservice.Appflowlog = data.Appflowlog.ValueString()
-		hasChange = true
+		if config.Appflowlog.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "appflowlog")
+		} else {
+			gslbservice.Appflowlog = data.Appflowlog.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Cip.Equal(state.Cip) {
-		gslbservice.Cip = data.Cip.ValueString()
-		hasChange = true
+		if config.Cip.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cip")
+		} else {
+			gslbservice.Cip = data.Cip.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Cipheader.Equal(state.Cipheader) {
 		gslbservice.Cipheader = data.Cipheader.ValueString()
@@ -141,8 +152,12 @@ func (r *GslbserviceResource) Update(ctx context.Context, req resource.UpdateReq
 		hasChange = true
 	}
 	if !data.Healthmonitor.Equal(state.Healthmonitor) {
-		gslbservice.Healthmonitor = data.Healthmonitor.ValueString()
-		hasChange = true
+		if config.Healthmonitor.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "healthmonitor")
+		} else {
+			gslbservice.Healthmonitor = data.Healthmonitor.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Ipaddress.Equal(state.Ipaddress) {
 		gslbservice.Ipaddress = data.Ipaddress.ValueString()
@@ -223,6 +238,16 @@ func (r *GslbserviceResource) Update(ctx context.Context, req resource.UpdateReq
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update gslbservice %s, got error: %s", servicename, err))
 			return
 		}
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"servicename": data.Servicename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Gslbservice.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset gslbservice attributes, got error: %s", err))
+		return
 	}
 
 	// State change is applied via an enable/disable action, not the update payload.

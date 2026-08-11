@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -36,26 +37,31 @@ func (r *NslicenseparametersResource) Schema(ctx context.Context, req resource.S
 			"alert1gracetimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(6),
 				Description: "If ADC remains in grace for the configured hours then first grace alert will be raised",
 			},
 			"alert2gracetimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(240),
 				Description: "If ADC remains in grace for the configured hours then major grace alert will be raised",
 			},
 			"heartbeatinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(280),
 				Description: "Heartbeat between ADC and Licenseserver is configurable and applicable in case of pooled licensing",
 			},
 			"inventoryrefreshinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(360),
 				Description: "Inventory refresh interval between ADC and Licenseserver is configurable and applicable in case of pooled licensing",
 			},
 			"licenseexpiryalerttime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(30),
 				Description: "If ADC license contract expiry date is nearer then GUI/SNMP license expiry alert will be raised",
 			},
 		},

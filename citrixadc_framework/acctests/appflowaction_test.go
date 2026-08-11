@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -256,4 +257,96 @@ func TestAccAppflowaction_selfHealing(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccAppflowaction_unset_step1 = `
+	resource "citrixadc_appflowaction" "tf_unset" {
+		name                   = "tf_test_appflowaction_unset"
+		botinsight             = "ENABLED"
+		ciinsight              = "ENABLED"
+		clientsidemeasurements = "ENABLED"
+		distributionalgorithm  = "ENABLED"
+		pagetracking           = "ENABLED"
+		securityinsight        = "ENABLED"
+		videoanalytics         = "ENABLED"
+		webinsight             = "DISABLED"
+	}
+`
+
+const testAccAppflowaction_unset_step2 = `
+	resource "citrixadc_appflowaction" "tf_unset" {
+		name = "tf_test_appflowaction_unset"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccAppflowaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAppflowaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowactionExist("citrixadc_appflowaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "botinsight", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "ciinsight", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "clientsidemeasurements", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "distributionalgorithm", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "pagetracking", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "securityinsight", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "videoanalytics", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "webinsight", "DISABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAppflowaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowactionExist("citrixadc_appflowaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "botinsight", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "ciinsight", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "clientsidemeasurements", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "distributionalgorithm", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "pagetracking", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "securityinsight", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "videoanalytics", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_appflowaction.tf_unset", "webinsight", "ENABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppflowactionADCValue("tf_test_appflowaction_unset", "botinsight", "DISABLED"),
+					testAccCheckAppflowactionADCValue("tf_test_appflowaction_unset", "securityinsight", "DISABLED"),
+					testAccCheckAppflowactionADCValue("tf_test_appflowaction_unset", "webinsight", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppflowactionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckAppflowactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appflowaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("appflowaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("appflowaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }

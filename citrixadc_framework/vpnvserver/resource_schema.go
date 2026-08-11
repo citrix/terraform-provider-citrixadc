@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -89,6 +90,7 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Log AppFlow records that contain standard NetFlow or IPFIX information, such as time stamps for the beginning and end of a flow, packet count, and byte count. Also log records that contain application-level information, such as HTTP web addresses, HTTP request methods and response status codes, server response time, and latency.",
 			},
 			"authentication": schema.StringAttribute{
@@ -109,6 +111,7 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"cginfrahomepageredirect": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "When client requests ShareFile resources and Citrix Gateway detects that the user is unauthenticated or the user session has expired, disabling this option takes the user to the originally requested ShareFile resource after authentication (instead of taking the user to the default VPN home page)",
 			},
 			"comment": schema.StringAttribute{
@@ -129,6 +132,7 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"deviceposture": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable device posture",
 			},
 			"doublehop": schema.StringAttribute{
@@ -139,11 +143,13 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"downstateflush": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Close existing connections when the virtual server is marked DOWN, which means the server might have timed out. Disconnecting existing connections frees resources and in certain cases speeds recovery of overloaded load balancing setups. Enable this setting on servers in which the connections can safely be closed when they are marked DOWN.  Do not enable DOWN state flush on servers that must complete their transactions.",
 			},
 			"dtls": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "This option starts/stops the turn service on the vserver",
 			},
 			"failedlogintimeout": schema.Int64Attribute{
@@ -169,6 +175,7 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"icmpvsrresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PASSIVE"),
 				Description: "Criterion for responding to PING requests sent to this virtual server. If this parameter is set to ACTIVE, respond only if the virtual server is available. With the PASSIVE setting, respond even if the virtual server is not available.",
 			},
 			"ipset": schema.StringAttribute{
@@ -204,11 +211,13 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"loginonce": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "This option enables/disables seamless SSO for this Vserver.",
 			},
 			"logoutonsmartcardremoval": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to VPN plugin behavior when smartcard or its reader is removed",
 			},
 			"macepapluginupgrade": schema.StringAttribute{
@@ -273,6 +282,7 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"rhistate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PASSIVE"),
 				Description: "A host route is injected according to the setting on the virtual servers.\n            * If set to PASSIVE on all the virtual servers that share the IP address, the appliance always injects the hostroute.\n            * If set to ACTIVE on all the virtual servers that share the IP address, the appliance injects even if one virtual server is UP.\n            * If set to ACTIVE on some virtual servers and PASSIVE on the others, the appliance injects even if one virtual server set to ACTIVE is UP.",
 			},
 			"samesite": schema.StringAttribute{
@@ -283,6 +293,7 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"secureprivateaccess": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Configure secure private access",
 			},
 			// SDK v2: Required + ForceNew.

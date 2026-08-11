@@ -155,12 +155,14 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state RouteResourceModel
+	var data, config, state RouteResourceModel
 
 	// Read Terraform prior state (to preserve ID and detect changes)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config (to detect attributes removed from config -> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -173,6 +175,7 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	route := network.Route{}
 	hasChange := false
+	attributesToUnset := []string{}
 	// Only send fields that are genuinely changed in config. When an
 	// Optional+Computed attribute is absent from config, the framework marks it
 	// Unknown ("known after apply") on an update plan; treating that as a change
@@ -195,24 +198,36 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		hasChange = true
 	}
 	if !data.Cost1.IsUnknown() && !data.Cost1.Equal(state.Cost1) {
-		route.Cost1 = utils.IntPtr(int(data.Cost1.ValueInt64()))
-		hasChange = true
+		if config.Cost1.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cost1")
+		} else {
+			route.Cost1 = utils.IntPtr(int(data.Cost1.ValueInt64()))
+			hasChange = true
+		}
 	}
 	if !data.Detail.IsUnknown() && !data.Detail.Equal(state.Detail) {
 		route.Detail = data.Detail.ValueBool()
 		hasChange = true
 	}
 	if !data.Distance.IsUnknown() && !data.Distance.Equal(state.Distance) {
-		route.Distance = utils.IntPtr(int(data.Distance.ValueInt64()))
-		hasChange = true
+		if config.Distance.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "distance")
+		} else {
+			route.Distance = utils.IntPtr(int(data.Distance.ValueInt64()))
+			hasChange = true
+		}
 	}
 	if !data.Monitor.IsUnknown() && !data.Monitor.Equal(state.Monitor) {
 		route.Monitor = data.Monitor.ValueString()
 		hasChange = true
 	}
 	if !data.Msr.IsUnknown() && !data.Msr.Equal(state.Msr) {
-		route.Msr = data.Msr.ValueString()
-		hasChange = true
+		if config.Msr.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "msr")
+		} else {
+			route.Msr = data.Msr.ValueString()
+			hasChange = true
+		}
 	}
 	if !data.Ownergroup.IsUnknown() && !data.Ownergroup.Equal(state.Ownergroup) {
 		route.Ownergroup = data.Ownergroup.ValueString()
@@ -231,8 +246,12 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		hasChange = true
 	}
 	if !data.Weight.IsUnknown() && !data.Weight.Equal(state.Weight) {
-		route.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
-		hasChange = true
+		if config.Weight.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "weight")
+		} else {
+			route.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -248,6 +267,18 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		tflog.Trace(ctx, "Updated route resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for route resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. The route is identified by network/netmask/gateway.
+	unsetIdPayload := map[string]interface{}{
+		"network": data.Network.ValueString(),
+		"netmask": data.Netmask.ValueString(),
+		"gateway": data.Gateway.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Route.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset route attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

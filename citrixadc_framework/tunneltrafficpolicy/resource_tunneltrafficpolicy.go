@@ -109,12 +109,15 @@ func (r *TunneltrafficpolicyResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *TunneltrafficpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state TunneltrafficpolicyResourceModel
+	var data, config, state TunneltrafficpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to distinguish an attribute removed from config (-> unset) from
+	// one merely changed (-> update).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,17 +130,26 @@ func (r *TunneltrafficpolicyResource) Update(ctx context.Context, req resource.U
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for tunneltrafficpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for tunneltrafficpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for tunneltrafficpolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for tunneltrafficpolicy")
@@ -158,6 +170,16 @@ func (r *TunneltrafficpolicyResource) Update(ctx context.Context, req resource.U
 		tflog.Trace(ctx, "Updated tunneltrafficpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for tunneltrafficpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Tunneltrafficpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset tunneltrafficpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

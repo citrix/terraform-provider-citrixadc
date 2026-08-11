@@ -110,12 +110,14 @@ func (r *DnsprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *DnsprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state DnsprofileResourceModel
+	var data, config, state DnsprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,57 +130,110 @@ func (r *DnsprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Cacheecsresponses.Equal(state.Cacheecsresponses) {
 		tflog.Debug(ctx, "cacheecsresponses has changed for dnsprofile")
-		hasChange = true
+		if config.Cacheecsresponses.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cacheecsresponses")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cachenegativeresponses.Equal(state.Cachenegativeresponses) {
 		tflog.Debug(ctx, "cachenegativeresponses has changed for dnsprofile")
-		hasChange = true
+		if config.Cachenegativeresponses.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cachenegativeresponses")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Cacherecords.Equal(state.Cacherecords) {
 		tflog.Debug(ctx, "cacherecords has changed for dnsprofile")
-		hasChange = true
+		if config.Cacherecords.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cacherecords")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dnsanswerseclogging.Equal(state.Dnsanswerseclogging) {
 		tflog.Debug(ctx, "dnsanswerseclogging has changed for dnsprofile")
-		hasChange = true
+		if config.Dnsanswerseclogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnsanswerseclogging")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dnserrorlogging.Equal(state.Dnserrorlogging) {
 		tflog.Debug(ctx, "dnserrorlogging has changed for dnsprofile")
-		hasChange = true
+		if config.Dnserrorlogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnserrorlogging")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dnsextendedlogging.Equal(state.Dnsextendedlogging) {
 		tflog.Debug(ctx, "dnsextendedlogging has changed for dnsprofile")
-		hasChange = true
+		if config.Dnsextendedlogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnsextendedlogging")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dnsquerylogging.Equal(state.Dnsquerylogging) {
 		tflog.Debug(ctx, "dnsquerylogging has changed for dnsprofile")
-		hasChange = true
+		if config.Dnsquerylogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnsquerylogging")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Dropmultiqueryrequest.Equal(state.Dropmultiqueryrequest) {
 		tflog.Debug(ctx, "dropmultiqueryrequest has changed for dnsprofile")
-		hasChange = true
+		if config.Dropmultiqueryrequest.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dropmultiqueryrequest")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Insertecs.Equal(state.Insertecs) {
 		tflog.Debug(ctx, "insertecs has changed for dnsprofile")
-		hasChange = true
+		if config.Insertecs.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "insertecs")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxcacheableecsprefixlength.Equal(state.Maxcacheableecsprefixlength) {
 		tflog.Debug(ctx, "maxcacheableecsprefixlength has changed for dnsprofile")
-		hasChange = true
+		if config.Maxcacheableecsprefixlength.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxcacheableecsprefixlength")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxcacheableecsprefixlength6.Equal(state.Maxcacheableecsprefixlength6) {
 		tflog.Debug(ctx, "maxcacheableecsprefixlength6 has changed for dnsprofile")
-		hasChange = true
+		if config.Maxcacheableecsprefixlength6.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxcacheableecsprefixlength6")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Recursiveresolution.Equal(state.Recursiveresolution) {
 		tflog.Debug(ctx, "recursiveresolution has changed for dnsprofile")
-		hasChange = true
+		if config.Recursiveresolution.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "recursiveresolution")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Replaceecs.Equal(state.Replaceecs) {
 		tflog.Debug(ctx, "replaceecs has changed for dnsprofile")
-		hasChange = true
+		if config.Replaceecs.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "replaceecs")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -195,6 +250,17 @@ func (r *DnsprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated dnsprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for dnsprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"dnsprofilename": data.Dnsprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -605,6 +605,98 @@ func TestAccRewritepolicy_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// Unset test: undefaction and logaction are the type-independent unset-eligible
+// scalar attributes of rewritepolicy (per the NITRO spec unset operation).
+// comment is excluded: NITRO reverts it to absent (no server default returned by
+// GET), so it cannot carry a stable schema Default and is not safely unsettable.
+const testAccRewritepolicy_unset_step1 = `
+resource "citrixadc_auditmessageaction" "tf_msg" {
+	name              = "tf_rw_unset_msg"
+	loglevel          = "INFORMATIONAL"
+	stringbuilderexpr = "\"probe\""
+}
+
+resource "citrixadc_rewritepolicy" "tf_unset" {
+	name        = "tf_rewritepolicy_unset"
+	action      = "DROP"
+	rule        = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	undefaction = "RESET"
+	logaction   = citrixadc_auditmessageaction.tf_msg.name
+}
+`
+
+const testAccRewritepolicy_unset_step2 = `
+resource "citrixadc_auditmessageaction" "tf_msg" {
+	name              = "tf_rw_unset_msg"
+	loglevel          = "INFORMATIONAL"
+	stringbuilderexpr = "\"probe\""
+}
+
+resource "citrixadc_rewritepolicy" "tf_unset" {
+	name   = "tf_rewritepolicy_unset"
+	action = "DROP"
+	rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+	# undefaction and logaction removed from config -> provider must unset them
+	# (revert to NITRO defaults "Use Global" / "None").
+}
+`
+
+func TestAccRewritepolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccRewritepolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewritepolicy.tf_unset", "undefaction", "RESET"),
+					resource.TestCheckResourceAttr("citrixadc_rewritepolicy.tf_unset", "logaction", "tf_rw_unset_msg"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccRewritepolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewritepolicy.tf_unset", "undefaction", "Use Global"),
+					resource.TestCheckResourceAttr("citrixadc_rewritepolicy.tf_unset", "logaction", "None"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckRewritepolicyADCValue("tf_rewritepolicy_unset", "undefaction", "Use Global"),
+					testAccCheckRewritepolicyADCValue("tf_rewritepolicy_unset", "logaction", "None"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRewritepolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckRewritepolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Rewritepolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("rewritepolicy %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("rewritepolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccRewritepolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -235,6 +236,90 @@ func TestAccNsip6_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The nsip6 unset test covers the type-independent, unset-eligible attributes
+// whose static NITRO default (DISABLED) holds regardless of IP type. The
+// management-access "allow" attributes (ftp/gui/ssh/snmp/telnet) are excluded:
+// they default to ENABLED but the appliance forces them to DISABLED on a VIP,
+// so a static ENABLED default would be type-dependent and cannot be wired
+// safely. mgmtaccess and restrictaccess default to DISABLED (matching the
+// appliance on every IP type) and can be set on a SNIP6 and unset cleanly.
+const testAccNsip6_unset_step1 = `
+resource "citrixadc_nsip6" "tf_unset" {
+    ipv6address    = "2002:db8:200::ff/64"
+    type           = "SNIP"
+    mgmtaccess     = "ENABLED"
+    restrictaccess = "ENABLED"
+}
+`
+
+const testAccNsip6_unset_step2 = `
+resource "citrixadc_nsip6" "tf_unset" {
+    ipv6address = "2002:db8:200::ff/64"
+    type        = "SNIP"
+    # All unset-eligible attributes removed from config -> the provider must
+    # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccNsip6_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsip6Destroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNsip6_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsip6Exist("citrixadc_nsip6.tf_unset", nil, "2002:db8:200::ff/64"),
+					resource.TestCheckResourceAttr("citrixadc_nsip6.tf_unset", "mgmtaccess", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsip6.tf_unset", "restrictaccess", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNsip6_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsip6Exist("citrixadc_nsip6.tf_unset", nil, "2002:db8:200::ff/64"),
+					resource.TestCheckResourceAttr("citrixadc_nsip6.tf_unset", "mgmtaccess", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsip6.tf_unset", "restrictaccess", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsip6ADCValue("2002:db8:200::ff/64", "mgmtaccess", "DISABLED"),
+					testAccCheckNsip6ADCValue("2002:db8:200::ff/64", "restrictaccess", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsip6ADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. The nsip6 address cannot go in the URL path, so match by listing.
+func testAccCheckNsip6ADCValue(ipv6address, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		array, err := client.FindAllResources(service.Nsip6.Type())
+		if err != nil {
+			return err
+		}
+		for _, item := range array {
+			if item["ipv6address"] == ipv6address {
+				got := strings.TrimSpace(fmt.Sprintf("%v", item[attr]))
+				if got != want {
+					return fmt.Errorf("nsip6 %s: appliance attr %q = %q, want %q (unset did not revert it)", ipv6address, attr, got, want)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("nsip6 %s not found on appliance", ipv6address)
+	}
 }
 
 func TestAccNsip6DataSource_basic(t *testing.T) {

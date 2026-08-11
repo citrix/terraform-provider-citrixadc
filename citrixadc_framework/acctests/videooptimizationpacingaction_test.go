@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -211,6 +212,83 @@ func TestAccVideooptimizationpacingaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The only unset-eligible attribute on videooptimizationpacingaction is comment
+// (rate is Required, so always supplied; name/newname are the key/rename fields).
+// Removing comment from config must unset it -> the appliance reverts it to empty.
+const testAccVideooptimizationpacingaction_unset_step1 = `
+	resource "citrixadc_videooptimizationpacingaction" "tf_unset" {
+		name    = "tf_test_pacingaction_unset"
+		rate    = 20
+		comment = "Some Comment"
+	}
+`
+
+const testAccVideooptimizationpacingaction_unset_step2 = `
+	resource "citrixadc_videooptimizationpacingaction" "tf_unset" {
+		name = "tf_test_pacingaction_unset"
+		rate = 20
+		# comment removed from config -> the provider must unset it (revert to empty).
+	}
+`
+
+func TestAccVideooptimizationpacingaction_unset(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingaction.tf_unset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applied and persisted.
+				Config: testAccVideooptimizationpacingaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVideooptimizationpacingactionExist(resAddr, nil),
+					resource.TestCheckResourceAttr(resAddr, "comment", "Some Comment"),
+					testAccCheckVideooptimizationpacingactionADCValue("tf_test_pacingaction_unset", "comment", "Some Comment"),
+				),
+			},
+			{
+				// Removing comment must unset it: state (read back from the appliance)
+				// reverts to empty and the implicit post-apply plan must be empty.
+				Config: testAccVideooptimizationpacingaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVideooptimizationpacingactionExist(resAddr, nil),
+					resource.TestCheckResourceAttr(resAddr, "comment", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVideooptimizationpacingactionADCValue("tf_test_pacingaction_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVideooptimizationpacingactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it. A missing/nil attribute is treated as "".
+func testAccCheckVideooptimizationpacingactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Videooptimizationpacingaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("videooptimizationpacingaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("videooptimizationpacingaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccVideooptimizationpacingactionDataSource_basic(t *testing.T) {

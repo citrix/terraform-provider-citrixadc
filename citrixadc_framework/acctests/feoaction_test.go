@@ -227,6 +227,129 @@ func TestAccFeoaction_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+const testAccFeoaction_unset_step1 = `
+resource "citrixadc_feoaction" "tf_unset" {
+  name                = "tf_test_feoaction_unset"
+  pageextendcache     = "true"
+  imgshrinktoattrib   = "true"
+  imggiftopng         = "true"
+  imgtowebp           = "true"
+  imgtojpegxr         = "true"
+  imginline           = "true"
+  cssimginline        = "true"
+  jpgoptimize         = "true"
+  imglazyload         = "true"
+  cssminify           = "true"
+  cssinline           = "true"
+  csscombine          = "true"
+  convertimporttolink = "true"
+  jsminify            = "true"
+  jsinline            = "true"
+  htmlminify          = "true"
+  cssmovetohead       = "true"
+  jsmovetoend         = "true"
+}
+`
+
+const testAccFeoaction_unset_step2 = `
+resource "citrixadc_feoaction" "tf_unset" {
+  name = "tf_test_feoaction_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults, "false").
+}
+`
+
+func TestAccFeoaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFeoactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccFeoaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeoactionExist("citrixadc_feoaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "pageextendcache", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imgshrinktoattrib", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imggiftopng", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imgtowebp", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imgtojpegxr", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imginline", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "cssimginline", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "jpgoptimize", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imglazyload", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "cssminify", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "cssinline", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "csscombine", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "convertimporttolink", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "jsminify", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "jsinline", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "htmlminify", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "cssmovetohead", "true"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "jsmovetoend", "true"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccFeoaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeoactionExist("citrixadc_feoaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "pageextendcache", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imgshrinktoattrib", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imggiftopng", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imgtowebp", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imgtojpegxr", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imginline", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "cssimginline", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "jpgoptimize", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "imglazyload", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "cssminify", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "cssinline", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "csscombine", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "convertimporttolink", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "jsminify", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "jsinline", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "htmlminify", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "cssmovetohead", "false"),
+					resource.TestCheckResourceAttr("citrixadc_feoaction.tf_unset", "jsmovetoend", "false"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckFeoactionADCValue("tf_test_feoaction_unset", "imgshrinktoattrib", "false"),
+					testAccCheckFeoactionADCValue("tf_test_feoaction_unset", "cssminify", "false"),
+					testAccCheckFeoactionADCValue("tf_test_feoaction_unset", "jsminify", "false"),
+					testAccCheckFeoactionADCValue("tf_test_feoaction_unset", "htmlminify", "false"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckFeoactionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckFeoactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Feoaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("feoaction %s not found on appliance", name)
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("feoaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 const testAccFeoactionDataSource_basic = `
 
 resource "citrixadc_feoaction" "tf_feoaction_ds" {

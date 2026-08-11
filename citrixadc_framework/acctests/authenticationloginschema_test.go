@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -161,6 +162,74 @@ func TestAccAuthenticationloginschema_selfHealing(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The authenticationloginschema unset test covers ssocredentials, the only
+// mutable attribute with a documented NITRO default ("NO"). Step 1 sets it to a
+// non-default value ("YES"); step 2 removes it from config, so the provider must
+// unset it and the appliance reverts it to the default.
+const testAccAuthenticationloginschema_unset_step1 = `
+	resource "citrixadc_authenticationloginschema" "tf_unset" {
+		name                 = "tf_loginschema_unset"
+		authenticationschema = "LoginSchema/SingleAuth.xml"
+		ssocredentials       = "YES"
+	}
+`
+
+const testAccAuthenticationloginschema_unset_step2 = `
+	resource "citrixadc_authenticationloginschema" "tf_unset" {
+		name                 = "tf_loginschema_unset"
+		authenticationschema = "LoginSchema/SingleAuth.xml"
+		# ssocredentials removed from config -> provider must unset it (revert to "NO").
+	}
+`
+
+func TestAccAuthenticationloginschema_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationloginschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationloginschema_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationloginschemaExist("citrixadc_authenticationloginschema.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationloginschema.tf_unset", "ssocredentials", "YES"),
+				),
+			},
+			{
+				Config: testAccAuthenticationloginschema_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationloginschemaExist("citrixadc_authenticationloginschema.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationloginschema.tf_unset", "ssocredentials", "NO"),
+					testAccCheckAuthenticationloginschemaADCValue("tf_loginschema_unset", "ssocredentials", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationloginschemaADCValue asserts an attribute's value
+// directly on the appliance, proving the unset actually reverted it.
+func testAccCheckAuthenticationloginschemaADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationloginschema.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationloginschema %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationloginschema %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAuthenticationloginschema_import(t *testing.T) {

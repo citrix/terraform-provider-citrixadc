@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -203,6 +204,93 @@ func TestAccPcpprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The pcpprofile unset test covers every unset-eligible attribute. Step 1 sets
+// all six mutable attributes to valid non-default values; step 2 removes them so
+// the provider unsets them (reverting to the documented NITRO defaults).
+const testAccPcpprofile_unset_step1 = `
+resource "citrixadc_pcpprofile" "tf_unset" {
+  name               = "tf_test_pcpprofile_unset"
+  mapping            = "DISABLED"
+  peer               = "DISABLED"
+  thirdparty         = "ENABLED"
+  minmaplife         = 240
+  maxmaplife         = 43200
+  announcemulticount = "20"
+}
+`
+
+const testAccPcpprofile_unset_step2 = `
+resource "citrixadc_pcpprofile" "tf_unset" {
+  name = "tf_test_pcpprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccPcpprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPcpprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccPcpprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPcpprofileExist("citrixadc_pcpprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "mapping", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "peer", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "thirdparty", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "minmaplife", "240"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "maxmaplife", "43200"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "announcemulticount", "20"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccPcpprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPcpprofileExist("citrixadc_pcpprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "mapping", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "peer", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "thirdparty", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "minmaplife", "120"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "maxmaplife", "86400"),
+					resource.TestCheckResourceAttr("citrixadc_pcpprofile.tf_unset", "announcemulticount", "10"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckPcpprofileADCValue("tf_test_pcpprofile_unset", "mapping", "ENABLED"),
+					testAccCheckPcpprofileADCValue("tf_test_pcpprofile_unset", "thirdparty", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckPcpprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckPcpprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Pcpprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("pcpprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("pcpprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccPcpprofileDataSource_basic(t *testing.T) {

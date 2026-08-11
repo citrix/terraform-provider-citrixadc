@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -78,8 +79,12 @@ func (r *Rnat6Resource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			},
 			// SDK v2: Optional + Computed (updateable, no default, not ForceNew)
 			"srcippersistency": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default (spec: Default value: DISABLED). A Default is
+				// required so that removing the attribute from config produces a
+				// plan diff, which lets Update fire the unset operation.
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable source ip persistency, which enables the Citrix ADC to use the RNAT ips using source ip.",
 			},
 			// SDK v2: Optional + Computed + ForceNew
@@ -128,8 +133,9 @@ func rnat6GetThePayloadFromtheConfig(ctx context.Context, data *Rnat6ResourceMod
 
 // rnat6GetTheUpdatablePayloadFromThePlan builds a payload restricted to the
 // NITRO-updatable fields (ownergroup, redirectport, srcippersistency), matching
-// the SDK v2 update semantics. It returns the payload and whether any tracked
-// updatable attribute changed relative to prior state.
+// the SDK v2 update semantics. srcippersistency is handled by the caller so it
+// can be routed to an unset when removed from config. It returns the payload and
+// whether any tracked updatable attribute changed relative to prior state.
 func rnat6GetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Rnat6ResourceModel, state *Rnat6ResourceModel) (network.Rnat6, bool) {
 	tflog.Debug(ctx, "In rnat6GetTheUpdatablePayloadFromThePlan Function")
 
@@ -145,11 +151,6 @@ func rnat6GetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Rnat6Reso
 	if !data.Redirectport.Equal(state.Redirectport) && !data.Redirectport.IsUnknown() {
 		tflog.Debug(ctx, "redirectport has changed for rnat6")
 		rnat6.Redirectport = utils.IntPtr(int(data.Redirectport.ValueInt64()))
-		hasChange = true
-	}
-	if !data.Srcippersistency.Equal(state.Srcippersistency) && !data.Srcippersistency.IsUnknown() {
-		tflog.Debug(ctx, "srcippersistency has changed for rnat6")
-		rnat6.Srcippersistency = data.Srcippersistency.ValueString()
 		hasChange = true
 	}
 

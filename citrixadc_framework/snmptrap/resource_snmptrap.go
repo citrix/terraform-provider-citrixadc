@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -111,12 +113,14 @@ func (r *SnmptrapResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *SnmptrapResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SnmptrapResourceModel
+	var data, config, state SnmptrapResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -130,9 +134,14 @@ func (r *SnmptrapResource) Update(ctx context.Context, req resource.UpdateReques
 	// Only the non-ForceNew attributes can reach Update; trapclass/trapdestination/version
 	// are RequiresReplace and force recreation instead.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Allpartitions.Equal(state.Allpartitions) {
 		tflog.Debug(ctx, "allpartitions has changed for snmptrap")
-		hasChange = true
+		if config.Allpartitions.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "allpartitions")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Communityname.Equal(state.Communityname) {
 		tflog.Debug(ctx, "communityname has changed for snmptrap")
@@ -140,11 +149,19 @@ func (r *SnmptrapResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Destport.Equal(state.Destport) {
 		tflog.Debug(ctx, "destport has changed for snmptrap")
-		hasChange = true
+		if config.Destport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "destport")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Severity.Equal(state.Severity) {
 		tflog.Debug(ctx, "severity has changed for snmptrap")
-		hasChange = true
+		if config.Severity.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "severity")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Srcip.Equal(state.Srcip) {
 		tflog.Debug(ctx, "srcip has changed for snmptrap")
@@ -171,6 +188,22 @@ func (r *SnmptrapResource) Update(ctx context.Context, req resource.UpdateReques
 		tflog.Trace(ctx, "Updated snmptrap resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for snmptrap resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. The composite identity keys must be present so
+	// NITRO can locate the instance.
+	unsetIdPayload := map[string]interface{}{
+		"trapclass":       data.Trapclass.ValueString(),
+		"trapdestination": data.Trapdestination.ValueString(),
+		"version":         data.Version.ValueString(),
+	}
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
+		unsetIdPayload["td"] = data.Td.ValueInt64()
+	}
+	if err := utils.ExecuteUnset(r.client, service.Snmptrap.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset snmptrap attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

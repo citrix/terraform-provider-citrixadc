@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -52,11 +53,15 @@ func (r *LsnappsattributesResource) Schema(ctx context.Context, req resource.Sch
 				},
 				Description: "This is used for Displaying Port/Port range in CLI/Nitro.Lowport, Highport values are populated and used for displaying.Port numbers or range of port numbers to match against the destination port of the incoming packet from a subscriber. When the destination port is matched, the LSN application profile is applied for the LSN session. Separate a range of ports with a hyphen. For example, 40-90.",
 			},
-			// SDK v2: Optional + Computed, no Default (value read from ADC). The only
-			// in-place updateable attribute.
+			// SDK v2: Optional + Computed. The only in-place updateable attribute and
+			// the only unsettable one (spec unset operation lists only sessiontimeout).
+			// A schema Default matching the NITRO default (30) is required so that
+			// removing sessiontimeout from config produces a plan diff, allowing the
+			// Update method to fire the NITRO unset.
 			"sessiontimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(30),
 				Description: "Timeout, in seconds, for an idle LSN session. If an LSN session is idle for a time that exceeds this value, the Citrix ADC removes the session.This timeout does not apply for a TCP LSN session when a FIN or RST message is received from either of the endpoints.",
 			},
 			// SDK v2: Required + ForceNew -> Required + RequiresReplace.

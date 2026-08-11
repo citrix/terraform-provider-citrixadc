@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -44,41 +46,49 @@ func (r *LsnsipalgprofileResource) Schema(ctx context.Context, req resource.Sche
 			"datasessionidletimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(120),
 				Description: "Idle timeout for the data channel sessions in seconds.",
 			},
 			"opencontactpinhole": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "ENABLE/DISABLE ContactPinhole creation.",
 			},
 			"openrecordroutepinhole": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "ENABLE/DISABLE RecordRoutePinhole creation.",
 			},
 			"openregisterpinhole": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "ENABLE/DISABLE RegisterPinhole creation.",
 			},
 			"openroutepinhole": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "ENABLE/DISABLE RoutePinhole creation.",
 			},
 			"openviapinhole": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "ENABLE/DISABLE ViaPinhole creation.",
 			},
 			"registrationtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(60),
 				Description: "SIP registration timeout in seconds.",
 			},
 			"rport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "ENABLE/DISABLE rport.",
 			},
 			"sipalgprofilename": schema.StringAttribute{
@@ -96,6 +106,7 @@ func (r *LsnsipalgprofileResource) Schema(ctx context.Context, req resource.Sche
 			"sipsessiontimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(600),
 				Description: "SIP control channel session timeout in seconds.",
 			},
 			"sipsrcportrange": schema.StringAttribute{

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -344,6 +345,98 @@ func TestAccClusternode_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccClusternode_unset exercises the NITRO unset op for the mutable,
+// spec-unsettable attributes with a documented server default: state
+// (PASSIVE), priority (31), delay (0) and tunnelmode (NONE). backplane is in
+// the unset payload but has no documented server default, so it is excluded.
+// nodeid=2 with a phantom NSIP is used for the same isolation reasons as the
+// basic test (a config-only node that never joins the live cluster).
+const testAccClusternode_unset_step1 = `
+
+
+resource "citrixadc_clusternode" "tf_unset" {
+	nodeid     = 2
+	ipaddress  = "10.101.132.153"
+	state      = "ACTIVE"
+	priority   = 15
+	delay      = 5
+	tunnelmode = "GRE"
+}
+`
+
+const testAccClusternode_unset_step2 = `
+
+
+resource "citrixadc_clusternode" "tf_unset" {
+	nodeid    = 2
+	ipaddress = "10.101.132.153"
+	# state, priority, delay and tunnelmode removed from config -> the provider
+	# must unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccClusternode_unset(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccClusternode_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodeExist("citrixadc_clusternode.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "state", "ACTIVE"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "priority", "15"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "delay", "5"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "tunnelmode", "GRE"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccClusternode_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodeExist("citrixadc_clusternode.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "state", "PASSIVE"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "priority", "31"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "delay", "0"),
+					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "tunnelmode", "NONE"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckClusternodeADCValue("2", "priority", "31"),
+					testAccCheckClusternodeADCValue("2", "tunnelmode", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckClusternodeADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckClusternodeADCValue(nodeid, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Clusternode.Type(), nodeid)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("clusternode %s not found on appliance", nodeid)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("clusternode %s: appliance attr %q = %q, want %q (unset did not revert it)", nodeid, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccClusternodeDataSource_basic = `

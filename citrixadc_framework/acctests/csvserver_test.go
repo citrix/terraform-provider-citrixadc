@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
@@ -1021,3 +1022,95 @@ resource "citrixadc_csvserver" "tf_csvserver" {
 
 }
 `
+
+// The csvserver unset test covers the mutable, spec-unsettable attributes whose
+// NITRO ?action=unset cleanly reverts them to their documented server default
+// for an HTTP content switching virtual server: appflowlog (ENABLED),
+// clttimeout (180), icmpvsrresponse (PASSIVE) and l2conn (OFF). Other listed
+// unset attributes (e.g. cacheable, downstateflush, redirectportrewrite,
+// disableprimaryondown, rhistate, stateupdate) do NOT revert on unset for a
+// csvserver (the appliance keeps the configured value), so they are excluded.
+const testAccCsvserver_unset_step1 = `
+resource "citrixadc_csvserver" "tf_unset" {
+  name            = "tf_test_csvserver_unset"
+  ipv46           = "10.202.11.44"
+  port            = 8080
+  servicetype     = "HTTP"
+  appflowlog      = "DISABLED"
+  clttimeout      = 200
+  icmpvsrresponse = "ACTIVE"
+  l2conn          = "ON"
+}
+`
+
+const testAccCsvserver_unset_step2 = `
+resource "citrixadc_csvserver" "tf_unset" {
+  name        = "tf_test_csvserver_unset"
+  ipv46       = "10.202.11.44"
+  port        = 8080
+  servicetype = "HTTP"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccCsvserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccCsvserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "clttimeout", "200"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "icmpvsrresponse", "ACTIVE"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "l2conn", "ON"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccCsvserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "clttimeout", "180"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "icmpvsrresponse", "PASSIVE"),
+					resource.TestCheckResourceAttr("citrixadc_csvserver.tf_unset", "l2conn", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCsvserverADCValue("tf_test_csvserver_unset", "appflowlog", "ENABLED"),
+					testAccCheckCsvserverADCValue("tf_test_csvserver_unset", "l2conn", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCsvserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckCsvserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Csvserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("csvserver %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("csvserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}

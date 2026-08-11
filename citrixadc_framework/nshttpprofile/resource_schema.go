@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -92,16 +93,19 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"adpttimeout": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Adapts the configured request timeout based on flow conditions. The timeout is increased or decreased internally and applied on the flow.",
 			},
 			"allowonlywordcharactersandhyphen": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "When enabled allows only the word characters [A-Za-z0-9_] and hyphen [-] in the request/response header names and the connection will be reset for the other characters. When disabled allows any visible (printing) characters (%21-%7E) except delimiters (double quotes and \"(),/:;<=>?@[]{}\").",
 			},
 			"altsvc": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for Alternative Services.",
 			},
 			"altsvcvalue": schema.StringAttribute{
@@ -122,26 +126,31 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"cmponpush": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Start data compression on receiving a TCP packet with PUSH flag set.",
 			},
 			"conmultiplex": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Reuse server connections for requests from more than one client connections.",
 			},
 			"dropextracrlf": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Drop any extra 'CR' and 'LF' characters present after the header.",
 			},
 			"dropextradata": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Drop any extra data when server sends more data than the specified content-length.",
 			},
 			"dropinvalreqs": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Drop invalid HTTP requests or responses.",
 			},
 			"grpcholdlimit": schema.Int64Attribute{
@@ -157,31 +166,37 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"grpclengthdelimitation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Set to DISABLED for gRPC without a length delimitation.",
 			},
 			"hostheadervalidation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Validates the length of the Host header and its syntax. Also includes validation of the port number if specified",
 			},
 			"http2": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for HTTP/2.",
 			},
 			"http2altsvcframe": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for sending HTTP/2 ALTSVC frames. When enabled, the ADC sends HTTP/2 ALTSVC frames to HTTP/2 clients, instead of the Alt-Svc response header field. Not applicable to servers.",
 			},
 			"http2direct": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for Direct HTTP/2.",
 			},
 			"http2extendedconnect": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Choose whether to enable HTTP/2 Extended CONNECT mechanism.",
 			},
 			"http2headertablesize": schema.Int64Attribute{
@@ -252,11 +267,13 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"http2strictcipher": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Choose whether to enable strict HTTP/2 cipher selection",
 			},
 			"http3": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for HTTP/3.",
 			},
 			"http3maxheaderblockedstreams": schema.Int64Attribute{
@@ -282,6 +299,7 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"http3webtransport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Choose whether to enable support for WebTransport over HTTP/3.",
 			},
 			"httppipelinebuffsize": schema.Int64Attribute{
@@ -297,26 +315,31 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"markconnreqinval": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark CONNECT requests as invalid.",
 			},
 			"markhttp09inval": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark HTTP/0.9 requests as invalid.",
 			},
 			"markhttpheaderextrawserror": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark Http header with extra white space as invalid",
 			},
 			"markrfc7230noncompliantinval": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark RFC7230 non-compliant transaction as invalid",
 			},
 			"marktracereqinval": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Mark TRACE requests as invalid.",
 			},
 			"maxduplicateheaderfields": schema.Int64Attribute{
@@ -359,11 +382,13 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"passprotocolupgrade": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Pass protocol upgrade request to the server.",
 			},
 			"persistentetag": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Generate the persistent Citrix ADC specific ETag for the HTTP response with ETag header.",
 			},
 			"reqtimeout": schema.Int64Attribute{
@@ -384,16 +409,19 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"rtsptunnel": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Allow RTSP tunnel in HTTP. Once application/x-rtsp-tunnelled is seen in Accept or Content-Type header, Citrix ADC does not process Layer 7 traffic on this connection.",
 			},
 			"weblog": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable web logging.",
 			},
 			"websocket": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "HTTP connection to be upgraded to a web socket connection. Once upgraded, Citrix ADC does not process Layer 7 traffic on this connection.",
 			},
 		},

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -181,6 +182,95 @@ func TestAccLbsipparameters_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The lbsipparameters unset test sets every unset-eligible attribute to a
+// non-default value, then removes them all from config. The provider must
+// unset each one so the appliance reverts to the documented NITRO defaults.
+const testAccLbsipparameters_unset_step1 = `
+	resource "citrixadc_lbsipparameters" "tf_unset" {
+		addrportvip         = "DISABLED"
+		retrydur            = 100
+		rnatdstport         = 80
+		rnatsecuredstport   = 81
+		rnatsecuresrcport   = 82
+		rnatsrcport         = 83
+		sip503ratethreshold = 15
+	}
+`
+
+const testAccLbsipparameters_unset_step2 = `
+	resource "citrixadc_lbsipparameters" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccLbsipparameters_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLbsipparameters_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbsipparametersExist("citrixadc_lbsipparameters.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "addrportvip", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "retrydur", "100"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "rnatdstport", "80"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "rnatsecuredstport", "81"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "rnatsecuresrcport", "82"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "rnatsrcport", "83"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "sip503ratethreshold", "15"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccLbsipparameters_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbsipparametersExist("citrixadc_lbsipparameters.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "addrportvip", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "retrydur", "120"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "rnatdstport", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "rnatsecuredstport", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "rnatsecuresrcport", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "rnatsrcport", "0"),
+					resource.TestCheckResourceAttr("citrixadc_lbsipparameters.tf_unset", "sip503ratethreshold", "100"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLbsipparametersADCValue("addrportvip", "ENABLED"),
+					testAccCheckLbsipparametersADCValue("retrydur", "120"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLbsipparametersADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckLbsipparametersADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbsipparameters.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lbsipparameters not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lbsipparameters: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccLbsipparametersDataSource_basic(t *testing.T) {

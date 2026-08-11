@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -64,6 +66,7 @@ func (r *RouteResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"cost1": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "The cost of a route is used to compare routes of the same type. The route having the lowest cost is the most preferred route. Possible values: 0 through 65535. Default: 0.",
 			},
 			// SDK v2: Optional+Computed, updateable (no ForceNew).
@@ -76,6 +79,7 @@ func (r *RouteResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"distance": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Administrative distance of this route, which determines the preference of this route over other routes, with same destination, from different routing protocols. A lower value is preferred.",
 			},
 			// SDK v2: Required + ForceNew.
@@ -105,6 +109,7 @@ func (r *RouteResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"msr": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Monitor this route using a monitor of type ARP or PING.",
 			},
 			// SDK v2: Required + ForceNew.
@@ -158,6 +163,7 @@ func (r *RouteResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"weight": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Positive integer used by the routing algorithms to determine preference for this route over others of equal cost. The lower the weight, the higher the preference.",
 			},
 			// Convenience attribute preserved from SDK v2 (Optional, Default false, ForceNew).

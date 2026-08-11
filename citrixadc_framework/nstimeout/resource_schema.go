@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -45,6 +46,7 @@ func (r *NstimeoutResource) Schema(ctx context.Context, req resource.SchemaReque
 			"anyclient": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Global idle timeout, in seconds, for non-TCP client connections. This value is over ridden by the client timeout that is configured on individual entities.",
 			},
 			"anyserver": schema.Int64Attribute{
@@ -75,6 +77,7 @@ func (r *NstimeoutResource) Schema(ctx context.Context, req resource.SchemaReque
 			"httpclient": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Global idle timeout, in seconds, for client connections of HTTP service type. This value is over ridden by the client timeout that is configured on individual entities.",
 			},
 			"httpserver": schema.Int64Attribute{
@@ -100,11 +103,13 @@ func (r *NstimeoutResource) Schema(ctx context.Context, req resource.SchemaReque
 			"reducedrsttimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Timer interval, in seconds, for abruptly terminated TCP NATPCB connections.",
 			},
 			"server": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Server idle timeout (in seconds).  If zero, the service-type default value is taken when service is created.",
 			},
 			"tcpclient": schema.Int64Attribute{
@@ -120,6 +125,7 @@ func (r *NstimeoutResource) Schema(ctx context.Context, req resource.SchemaReque
 			"zombie": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(120),
 				Description: "Interval, in seconds, at which the Citrix ADC zombie cleanup process must run. This process cleans up inactive TCP connections.",
 			},
 		},

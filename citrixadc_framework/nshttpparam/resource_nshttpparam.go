@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -95,12 +96,14 @@ func (r *NshttpparamResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *NshttpparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NshttpparamResourceModel
+	var data, config, state NshttpparamResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -110,6 +113,37 @@ func (r *NshttpparamResource) Update(ctx context.Context, req resource.UpdateReq
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating nshttpparam resource")
+
+	// Determine attributes removed from config so they can be unset (reverted
+	// to their NITRO defaults) after the update.
+	attributesToUnset := []string{}
+	if !data.Conmultiplex.Equal(state.Conmultiplex) && config.Conmultiplex.IsNull() {
+		attributesToUnset = append(attributesToUnset, "conmultiplex")
+	}
+	if !data.Dropinvalreqs.Equal(state.Dropinvalreqs) && config.Dropinvalreqs.IsNull() {
+		attributesToUnset = append(attributesToUnset, "dropinvalreqs")
+	}
+	if !data.Http2serverside.Equal(state.Http2serverside) && config.Http2serverside.IsNull() {
+		attributesToUnset = append(attributesToUnset, "http2serverside")
+	}
+	if !data.Ignoreconnectcodingscheme.Equal(state.Ignoreconnectcodingscheme) && config.Ignoreconnectcodingscheme.IsNull() {
+		attributesToUnset = append(attributesToUnset, "ignoreconnectcodingscheme")
+	}
+	if !data.Insnssrvrhdr.Equal(state.Insnssrvrhdr) && config.Insnssrvrhdr.IsNull() {
+		attributesToUnset = append(attributesToUnset, "insnssrvrhdr")
+	}
+	if !data.Logerrresp.Equal(state.Logerrresp) && config.Logerrresp.IsNull() {
+		attributesToUnset = append(attributesToUnset, "logerrresp")
+	}
+	if !data.Markconnreqinval.Equal(state.Markconnreqinval) && config.Markconnreqinval.IsNull() {
+		attributesToUnset = append(attributesToUnset, "markconnreqinval")
+	}
+	if !data.Markhttp09inval.Equal(state.Markhttp09inval) && config.Markhttp09inval.IsNull() {
+		attributesToUnset = append(attributesToUnset, "markhttp09inval")
+	}
+	if !data.Maxreusepool.Equal(state.Maxreusepool) && config.Maxreusepool.IsNull() {
+		attributesToUnset = append(attributesToUnset, "maxreusepool")
+	}
 
 	// Create API request body from the model
 	nshttpparam := nshttpparamGetThePayloadFromtheConfig(ctx, &data)
@@ -122,6 +156,14 @@ func (r *NshttpparamResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	tflog.Trace(ctx, "Updated nshttpparam resource")
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nshttpparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nshttpparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNshttpparamFromApi(ctx, &data, &resp.Diagnostics)

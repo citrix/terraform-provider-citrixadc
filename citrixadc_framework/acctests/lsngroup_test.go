@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -164,6 +165,110 @@ func testAccCheckLsngroupDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+// testAccLsngroup_unset_step1 sets the unset-eligible (non-ForceNew) attributes
+// to valid NON-default values.
+const testAccLsngroup_unset_step1 = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient_unset" {
+		clientname = "tf_lsnclient_unset"
+	}
+
+	resource "citrixadc_lsngroup" "tf_unset" {
+		groupname      = "tf_lsngroup_unset"
+		clientname     = citrixadc_lsnclient.tf_lsnclient_unset.clientname
+		nattype        = "DYNAMIC"
+		ftp           = "DISABLED"
+		ftpcm         = "ENABLED"
+		pptp          = "ENABLED"
+		rtspalg       = "ENABLED"
+		sessionsync   = "DISABLED"
+		sipalg        = "ENABLED"
+		snmptraplimit = 50
+	}
+`
+
+// testAccLsngroup_unset_step2 removes those attributes (key + required only) so
+// the provider must unset them (revert to NITRO defaults).
+const testAccLsngroup_unset_step2 = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient_unset" {
+		clientname = "tf_lsnclient_unset"
+	}
+
+	resource "citrixadc_lsngroup" "tf_unset" {
+		groupname  = "tf_lsngroup_unset"
+		clientname = citrixadc_lsnclient.tf_lsnclient_unset.clientname
+		nattype    = "DYNAMIC"
+	}
+`
+
+func TestAccLsngroup_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLsngroup_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroupExist("citrixadc_lsngroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "ftp", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "ftpcm", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "pptp", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "rtspalg", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "sessionsync", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "sipalg", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "snmptraplimit", "50"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccLsngroup_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroupExist("citrixadc_lsngroup.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "ftp", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "ftpcm", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "pptp", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "rtspalg", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "sessionsync", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "sipalg", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup.tf_unset", "snmptraplimit", "100"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLsngroupADCValue("tf_lsngroup_unset", "ftp", "ENABLED"),
+					testAccCheckLsngroupADCValue("tf_lsngroup_unset", "sessionsync", "ENABLED"),
+					testAccCheckLsngroupADCValue("tf_lsngroup_unset", "snmptraplimit", "100"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLsngroupADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckLsngroupADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lsngroup.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lsngroup %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lsngroup %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccLsngroup_selfHealing(t *testing.T) {

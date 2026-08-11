@@ -109,12 +109,14 @@ func (r *TmsessionactionResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *TmsessionactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state TmsessionactionResourceModel
+	var data, config, state TmsessionactionResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,6 +129,7 @@ func (r *TmsessionactionResource) Update(ctx context.Context, req resource.Updat
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Defaultauthorizationaction.Equal(state.Defaultauthorizationaction) {
 		tflog.Debug(ctx, "defaultauthorizationaction has changed for tmsessionaction")
 		hasChange = true
@@ -137,7 +140,11 @@ func (r *TmsessionactionResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Httponlycookie.Equal(state.Httponlycookie) {
 		tflog.Debug(ctx, "httponlycookie has changed for tmsessionaction")
-		hasChange = true
+		if config.Httponlycookie.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httponlycookie")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Kcdaccount.Equal(state.Kcdaccount) {
 		tflog.Debug(ctx, "kcdaccount has changed for tmsessionaction")
@@ -157,7 +164,11 @@ func (r *TmsessionactionResource) Update(ctx context.Context, req resource.Updat
 	}
 	if !data.Sso.Equal(state.Sso) {
 		tflog.Debug(ctx, "sso has changed for tmsessionaction")
-		hasChange = true
+		if config.Sso.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sso")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssocredential.Equal(state.Ssocredential) {
 		tflog.Debug(ctx, "ssocredential has changed for tmsessionaction")
@@ -181,6 +192,16 @@ func (r *TmsessionactionResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated tmsessionaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for tmsessionaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Tmsessionaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset tmsessionaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

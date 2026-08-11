@@ -111,12 +111,14 @@ func (r *SnmpmanagerResource) Read(ctx context.Context, req resource.ReadRequest
 }
 
 func (r *SnmpmanagerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SnmpmanagerResourceModel
+	var data, config, state SnmpmanagerResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -132,12 +134,17 @@ func (r *SnmpmanagerResource) Update(ctx context.Context, req resource.UpdateReq
 		Ipaddress: data.Ipaddress.ValueString(),
 	}
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Domainresolveretry.Equal(state.Domainresolveretry) {
 		tflog.Debug(ctx, "domainresolveretry has changed for snmpmanager, starting update")
-		if !data.Domainresolveretry.IsNull() && !data.Domainresolveretry.IsUnknown() {
-			snmpmanager.Domainresolveretry = utils.IntPtr(int(data.Domainresolveretry.ValueInt64()))
+		if config.Domainresolveretry.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "domainresolveretry")
+		} else {
+			if !data.Domainresolveretry.IsNull() && !data.Domainresolveretry.IsUnknown() {
+				snmpmanager.Domainresolveretry = utils.IntPtr(int(data.Domainresolveretry.ValueInt64()))
+			}
+			hasChange = true
 		}
-		hasChange = true
 	}
 	if !data.Netmask.Equal(state.Netmask) {
 		tflog.Debug(ctx, "netmask has changed for snmpmanager, starting update")
@@ -157,6 +164,18 @@ func (r *SnmpmanagerResource) Update(ctx context.Context, req resource.UpdateReq
 		tflog.Trace(ctx, "Updated snmpmanager resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for snmpmanager resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. snmpmanager is keyed by ipaddress and disambiguated by
+	// netmask, so both are required in the unset payload.
+	unsetIdPayload := map[string]interface{}{
+		"ipaddress": data.Ipaddress.ValueString(),
+		"netmask":   data.Netmask.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Snmpmanager.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset snmpmanager attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

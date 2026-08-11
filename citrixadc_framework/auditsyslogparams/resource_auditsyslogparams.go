@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -100,12 +101,14 @@ func (r *AuditsyslogparamsResource) Read(ctx context.Context, req resource.ReadR
 }
 
 func (r *AuditsyslogparamsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuditsyslogparamsResourceModel
+	var data, config, state AuditsyslogparamsResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -115,6 +118,40 @@ func (r *AuditsyslogparamsResource) Update(ctx context.Context, req resource.Upd
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating auditsyslogparams resource")
+
+	// Detect attributes removed from config so they can be unset (reverted to
+	// the appliance default) rather than pushed via update.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Dateformat.Equal(state.Dateformat) {
+		if config.Dateformat.IsNull() {
+			attributesToUnset = append(attributesToUnset, "dateformat")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Tcp.Equal(state.Tcp) {
+		if config.Tcp.IsNull() {
+			attributesToUnset = append(attributesToUnset, "tcp")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Protocolviolations.Equal(state.Protocolviolations) {
+		if config.Protocolviolations.IsNull() {
+			attributesToUnset = append(attributesToUnset, "protocolviolations")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Streamanalytics.Equal(state.Streamanalytics) {
+		if config.Streamanalytics.IsNull() {
+			attributesToUnset = append(attributesToUnset, "streamanalytics")
+		} else {
+			hasChange = true
+		}
+	}
+	_ = hasChange
 
 	// Create API request body from the model
 	auditsyslogparams := auditsyslogparamsGetThePayloadFromtheConfig(ctx, &data)
@@ -128,6 +165,15 @@ func (r *AuditsyslogparamsResource) Update(ctx context.Context, req resource.Upd
 	}
 
 	tflog.Trace(ctx, "Updated auditsyslogparams resource")
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. Done after the update so any default the update payload
+	// carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Auditsyslogparams.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset auditsyslogparams attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readAuditsyslogparamsFromApi(ctx, &data, &resp.Diagnostics)

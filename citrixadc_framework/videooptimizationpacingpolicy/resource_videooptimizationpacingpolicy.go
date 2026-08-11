@@ -110,12 +110,14 @@ func (r *VideooptimizationpacingpolicyResource) Read(ctx context.Context, req re
 }
 
 func (r *VideooptimizationpacingpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VideooptimizationpacingpolicyResourceModel
+	var data, config, state VideooptimizationpacingpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (unset candidates)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -148,17 +150,26 @@ func (r *VideooptimizationpacingpolicyResource) Update(ctx context.Context, req 
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for videooptimizationpacingpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for videooptimizationpacingpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for videooptimizationpacingpolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for videooptimizationpacingpolicy")
@@ -181,6 +192,16 @@ func (r *VideooptimizationpacingpolicyResource) Update(ctx context.Context, req 
 		tflog.Trace(ctx, "Updated videooptimizationpacingpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for videooptimizationpacingpolicy resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts them
+	// to their defaults. Done against the current live name (ID) to survive renames.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Videooptimizationpacingpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset videooptimizationpacingpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Preserve the user-facing name/newname across the read-back so a rename does not

@@ -231,6 +231,95 @@ func TestAccVpnurlaction_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// The vpnurlaction unset test covers the spec-unsettable, mutable attributes:
+// applicationtype, clientlessaccess, comment, ssotype and vservername. Step 1
+// applies non-default values; step 2 removes them from config, so the provider
+// must unset them (revert to NITRO defaults -- "OFF" for clientlessaccess, empty
+// for the free-form/enum attributes with no documented default).
+const testAccVpnurlaction_unset_step1 = `
+resource "citrixadc_vpnurlaction" "tf_unset" {
+	name             = "tf_test_vpnurlaction_unset"
+	actualurl        = "https://www.citrix.com"
+	linkname         = "new_link"
+	applicationtype  = "CVPN"
+	clientlessaccess = "ON"
+	comment          = "Testing"
+	ssotype          = "unifiedgateway"
+	vservername      = "vserver1"
+}
+`
+
+const testAccVpnurlaction_unset_step2 = `
+resource "citrixadc_vpnurlaction" "tf_unset" {
+	name      = "tf_test_vpnurlaction_unset"
+	actualurl = "https://www.citrix.com"
+	linkname  = "new_link"
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccVpnurlaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnurlactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVpnurlaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnurlactionExist("citrixadc_vpnurlaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "applicationtype", "CVPN"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "clientlessaccess", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "ssotype", "unifiedgateway"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "vservername", "vserver1"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the NITRO defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccVpnurlaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnurlactionExist("citrixadc_vpnurlaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "applicationtype", ""),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "clientlessaccess", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "comment", ""),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "ssotype", ""),
+					resource.TestCheckResourceAttr("citrixadc_vpnurlaction.tf_unset", "vservername", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVpnurlactionADCValue("tf_test_vpnurlaction_unset", "clientlessaccess", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVpnurlactionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckVpnurlactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnurlaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vpnurlaction %s not found on appliance", name)
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("vpnurlaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccVpnurlactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

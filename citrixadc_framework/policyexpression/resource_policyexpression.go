@@ -109,12 +109,14 @@ func (r *PolicyexpressionResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *PolicyexpressionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state PolicyexpressionResourceModel
+	var data, config, state PolicyexpressionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,13 +129,22 @@ func (r *PolicyexpressionResource) Update(ctx context.Context, req resource.Upda
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Clientsecuritymessage.Equal(state.Clientsecuritymessage) {
 		tflog.Debug(ctx, "clientsecuritymessage has changed for policyexpression")
-		hasChange = true
+		if config.Clientsecuritymessage.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "clientsecuritymessage")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for policyexpression")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Value.Equal(state.Value) {
 		tflog.Debug(ctx, "value has changed for policyexpression")
@@ -152,6 +163,17 @@ func (r *PolicyexpressionResource) Update(ctx context.Context, req resource.Upda
 		tflog.Trace(ctx, "Updated policyexpression resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for policyexpression resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any value the update
+	// payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Policyexpression.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset policyexpression attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

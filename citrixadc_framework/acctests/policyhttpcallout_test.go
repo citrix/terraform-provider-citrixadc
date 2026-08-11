@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -223,6 +224,95 @@ func TestAccPolicyhttpcallout_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The policyhttpcallout unset test covers the independent (non-mutually-exclusive)
+// unset-eligible attributes: comment and resultexpr. Each is set to a non-default
+// value in step1 and removed from config in step2, which the provider must unset
+// (revert to the NITRO default, an empty value). The mutually-exclusive
+// request-shaping attributes (bodyexpr/hostexpr/httpmethod/urlstemexpr/headers/
+// parameters/fullreqexpr) are cleared by the provider's separate pre-update unset
+// path and are exercised by TestAccPolicyhttpcallout_basic.
+const testAccPolicyhttpcallout_unset_step1 = `
+resource "citrixadc_policyhttpcallout" "tf_unset" {
+	name       = "tf_policyhttpcallout_unset"
+	ipaddress  = "10.10.10.10"
+	port       = 80
+	returntype = "TEXT"
+	comment    = "unset test comment"
+	resultexpr = "http.res.body(10000).length"
+}
+`
+
+const testAccPolicyhttpcallout_unset_step2 = `
+resource "citrixadc_policyhttpcallout" "tf_unset" {
+	name       = "tf_policyhttpcallout_unset"
+	ipaddress  = "10.10.10.10"
+	port       = 80
+	returntype = "TEXT"
+	# comment and resultexpr removed from config -> the provider must unset them
+	# (revert to the NITRO default, an empty value).
+}
+`
+
+func TestAccPolicyhttpcallout_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyhttpcalloutDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccPolicyhttpcallout_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyhttpcalloutExist("citrixadc_policyhttpcallout.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_policyhttpcallout.tf_unset", "comment", "unset test comment"),
+					resource.TestCheckResourceAttr("citrixadc_policyhttpcallout.tf_unset", "resultexpr", "http.res.body(10000).length"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the NITRO defaults (empty), and the
+				// implicit post-apply plan must be empty.
+				Config: testAccPolicyhttpcallout_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyhttpcalloutExist("citrixadc_policyhttpcallout.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_policyhttpcallout.tf_unset", "comment", ""),
+					resource.TestCheckResourceAttr("citrixadc_policyhttpcallout.tf_unset", "resultexpr", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckPolicyhttpcalloutADCValue("tf_policyhttpcallout_unset", "comment", ""),
+					testAccCheckPolicyhttpcalloutADCValue("tf_policyhttpcallout_unset", "resultexpr", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckPolicyhttpcalloutADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckPolicyhttpcalloutADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Policyhttpcallout.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("policyhttpcallout %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("policyhttpcallout %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckPolicyhttpcalloutExist(n string, id *string) resource.TestCheckFunc {

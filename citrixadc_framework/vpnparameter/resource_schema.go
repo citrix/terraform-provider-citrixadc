@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -158,16 +160,19 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"backendcertvalidation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "enables backend server certificate validation",
 			},
 			"backenddtls12": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enables DTLS 1.2 for backend server handshakes",
 			},
 			"backendserversni": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "enables sni extension for backend server handshakes",
 			},
 			"citrixreceiverhome": schema.StringAttribute{
@@ -183,6 +188,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"clientcleanupprompt": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Prompt for client-side cache clean-up when a client-initiated session closes.",
 			},
 			"clientconfiguration": schema.ListAttribute{
@@ -255,6 +261,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"deviceposture": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable device posture",
 			},
 			"dnsvservername": schema.StringAttribute{
@@ -270,6 +277,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"encryptcsecexp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable encryption of client security expressions.",
 			},
 			"epaclienttype": schema.StringAttribute{
@@ -327,6 +335,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"httptrackconnproxy": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable or disable HTTP tracking for packets proxied via vpn vserver using GSLB connection proxy feature.",
 			},
 			"icaproxy": schema.StringAttribute{
@@ -362,6 +371,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"killconnections": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Specify whether the Citrix Gateway Plug-in should disconnect all preexisting connections, such as the connections existing before the user logged on to Citrix Gateway, and prevent new incoming connections on the Citrix Gateway Plug-in for Windows and MAC when the user is connected to Citrix Gateway and split tunneling is disabled.",
 			},
 			"linuxpluginupgrade": schema.StringAttribute{
@@ -372,6 +382,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"locallanaccess": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Set local LAN access. If split tunneling is OFF, and you set local LAN access to ON, the local client can route traffic to its local interface. When the local area network switch is specified, this combination of switches is useful. The client can allow local LAN access to devices that commonly have non-routable addresses, such as local printers or local file servers.",
 			},
 			"loginscript": schema.StringAttribute{
@@ -392,6 +403,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"maxiipperuser": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "Maximum number of Intranet IP that can be assigned to a user from AAA group, VPN vserver or VPN global pool. This setting is not applicable for AAA user level Intranet IP configuration",
 			},
 			"mdxtokentimeout": schema.Int64Attribute{
@@ -427,6 +439,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"proxylocalbypass": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Bypass proxy server for local addresses option in Internet Explorer and Firefox proxy server settings.",
 			},
 			"rdpclientprofilename": schema.StringAttribute{
@@ -437,6 +450,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"rfc1918": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "As defined in the local area network, allow only the following local area network addresses to bypass the VPN tunnel when the local LAN access feature is enabled:\n* 10.*.*.*,\n* 172.16.*.*,\n* 192.168.*.*",
 			},
 			"samesite": schema.StringAttribute{
@@ -447,6 +461,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"securebrowse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Allow users to connect through Citrix Gateway to network resources from iOS and Android mobile devices with Citrix Receiver. Users do not need to establish a full VPN tunnel to access resources in the secure network.",
 			},
 			"secureprivateaccess": schema.StringAttribute{
@@ -477,11 +492,13 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"splittunnel": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Send, through the tunnel, traffic only for intranet applications that are defined in Citrix Gateway. Route all other traffic directly to the Internet. The OFF setting routes all traffic through Citrix Gateway. With the REVERSE setting, intranet applications define the network traffic that is not intercepted. All network traffic directed to internal IP addresses bypasses the VPN tunnel, while other traffic goes through Citrix Gateway. Reverse split tunneling can be used to log all non-local LAN traffic. For example, if users have a home network and are logged on through the Citrix Gateway Plug-in, network traffic destined to a printer or another device within the home network is not intercepted.",
 			},
 			"spoofiip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Indicate whether or not the application requires IP spoofing, which routes the connection to the intranet application through the virtual adapter.",
 			},
 			"sslproxy": schema.StringAttribute{
@@ -492,11 +509,13 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"sso": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Set single sign-on (SSO) for the session. When the user accesses a server, the user's logon credentials are passed to the server for authentication.\n	    NOTE : This configuration does not honor the following authentication types for security reason. BASIC, DIGEST, and NTLM (without Negotiate NTLM2 Key or Negotiate Sign Flag). Use VPN TrafficAction to configure SSO for these authentication types.",
 			},
 			"ssocredential": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PRIMARY"),
 				Description: "Specify whether to use the primary or secondary authentication credentials for single sign-on to the server.",
 			},
 			"storefronturl": schema.StringAttribute{
@@ -507,6 +526,7 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"transparentinterception": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Allow access to network resources by using a single IP address and subnet mask or a range of IP addresses. The OFF setting sets the mode to proxy, in which you configure destination and source IP addresses and port numbers. If you are using the Citrix Gateway Plug-in for Windows, set this parameter to ON, in which the mode is set to transparent. If you are using the Citrix Gateway Plug-in for Java, set this parameter to OFF.",
 			},
 			"uitheme": schema.StringAttribute{
@@ -517,11 +537,13 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"useiip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NOSPILLOVER"),
 				Description: "Define IP address pool options. Available settings function as follows:\n* SPILLOVER - When an address pool is configured and the mapped IP is used as an intranet IP address, the mapped IP address is used when an intranet IP address cannot be assigned.\n* NOSPILLOVER - When intranet IP addresses are enabled and the mapped IP address is not used, the Transfer Login page appears for users who have used all available intranet IP addresses.\n* OFF - Address pool is not configured.",
 			},
 			"usemip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NS"),
 				Description: "Enable or disable the use of a unique IP address alias, or a mapped IP address, as the client IP address for each client session. Allow Citrix Gateway to use the mapped IP address as an intranet IP address when all other IP addresses are not available.\nWhen IP pooling is configured and the mapped IP is used as an intranet IP address, the mapped IP address is used when an intranet IP address cannot be assigned.",
 			},
 			"userdomains": schema.StringAttribute{
@@ -542,11 +564,13 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"windowsautologon": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable or disable the Windows Auto Logon for the session. If a VPN session is established after this setting is enabled, the user is automatically logged on by using Windows credentials after the system is restarted.",
 			},
 			"windowsclienttype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("AGENT"),
 				Description: "The Windows client type. Choose between two types of Windows Client\\\na) Application Agent - which always runs in the task bar as a standalone application and also has a supporting service which runs permanently when installed\\\nb) Activex Control - ActiveX control run by Microsoft Internet Explorer.",
 			},
 			"windowspluginupgrade": schema.StringAttribute{

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -205,6 +206,116 @@ func TestAccAuthenticationwebauthaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unset test: step1 sets the unset-eligible attributes to non-default values;
+// step2 removes them from config so the provider must unset them (revert to the
+// NITRO default, which for these expression attributes is empty/absent).
+// fullreqexpr is NOT unset-eligible: NITRO rejects unsetting it ("Please specify
+// full request expression") and rolls back atomically, so it is kept in config.
+const testAccAuthenticationwebauthaction_unset_step1 = `
+	resource "citrixadc_authenticationwebauthaction" "tf_unset" {
+		name                       = "tf_test_webauthaction_unset"
+		serverip                   = "1.2.3.4"
+		serverport                 = 8080
+		scheme                     = "http"
+		successrule                = "true"
+		fullreqexpr                = "TRUE"
+		defaultauthenticationgroup = "grp1"
+		attribute1                 = "HTTP.RES.BODY(100)"
+		attribute2                 = "HTTP.RES.BODY(100)"
+		attribute3                 = "HTTP.RES.BODY(100)"
+		attribute4                 = "HTTP.RES.BODY(100)"
+		attribute5                 = "HTTP.RES.BODY(100)"
+		attribute6                 = "HTTP.RES.BODY(100)"
+		attribute7                 = "HTTP.RES.BODY(100)"
+		attribute8                 = "HTTP.RES.BODY(100)"
+		attribute9                 = "HTTP.RES.BODY(100)"
+		attribute10                = "HTTP.RES.BODY(100)"
+		attribute11                = "HTTP.RES.BODY(100)"
+		attribute12                = "HTTP.RES.BODY(100)"
+		attribute13                = "HTTP.RES.BODY(100)"
+		attribute14                = "HTTP.RES.BODY(100)"
+		attribute15                = "HTTP.RES.BODY(100)"
+		attribute16                = "HTTP.RES.BODY(100)"
+	}
+`
+
+const testAccAuthenticationwebauthaction_unset_step2 = `
+	resource "citrixadc_authenticationwebauthaction" "tf_unset" {
+		name        = "tf_test_webauthaction_unset"
+		serverip    = "1.2.3.4"
+		serverport  = 8080
+		scheme      = "http"
+		successrule = "true"
+		fullreqexpr = "TRUE"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO default, empty/absent).
+	}
+`
+
+func TestAccAuthenticationwebauthaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationwebauthactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAuthenticationwebauthaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationwebauthactionExist("citrixadc_authenticationwebauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationwebauthaction.tf_unset", "defaultauthenticationgroup", "grp1"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationwebauthaction.tf_unset", "attribute1", "HTTP.RES.BODY(100)"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationwebauthaction.tf_unset", "attribute16", "HTTP.RES.BODY(100)"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the NITRO default (empty), and the implicit
+				// post-apply plan must be empty.
+				Config: testAccAuthenticationwebauthaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationwebauthactionExist("citrixadc_authenticationwebauthaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationwebauthaction.tf_unset", "defaultauthenticationgroup", ""),
+					resource.TestCheckResourceAttr("citrixadc_authenticationwebauthaction.tf_unset", "attribute1", ""),
+					resource.TestCheckResourceAttr("citrixadc_authenticationwebauthaction.tf_unset", "attribute16", ""),
+					// Independent appliance-level confirmation the unset took effect
+					// (the attributes are absent from the GET response).
+					testAccCheckAuthenticationwebauthactionADCValue("tf_test_webauthaction_unset", "defaultauthenticationgroup", ""),
+					testAccCheckAuthenticationwebauthactionADCValue("tf_test_webauthaction_unset", "attribute1", ""),
+					testAccCheckAuthenticationwebauthactionADCValue("tf_test_webauthaction_unset", "attribute16", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationwebauthactionADCValue asserts an attribute's value
+// directly on the appliance. Unset-eligible attributes revert to absent, which
+// is reported as the empty string.
+func testAccCheckAuthenticationwebauthactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationwebauthaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationwebauthaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("authenticationwebauthaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccAuthenticationwebauthactionDataSource_basic = `

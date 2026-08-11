@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -42,8 +43,12 @@ func (r *PolicypatsetResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			// SDK v2: Optional + Computed (updateable - not ForceNew)
 			"dynamic": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is "NO". An Optional+Computed attr without a Default
+				// is sticky on config-removal (no plan diff -> Update never runs ->
+				// unset never fires), so pin the documented default here.
+				Default:     stringdefault.StaticString("NO"),
 				Description: "This is used to populate internal patset information so that the patset can also be used dynamically in an expression. Here dynamically means the patset name can also be derived using an expression. For example for a given patset name \"allow_test\" it can be used dynamically as http.req.url.contains_any(\"allow_\" + http.req.url.path.get(1)). This cannot be used with default patsets.",
 			},
 			// SDK v2: Required + ForceNew

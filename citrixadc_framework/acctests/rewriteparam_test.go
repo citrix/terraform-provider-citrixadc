@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -168,6 +169,79 @@ const testAccRewriteparamDataSource_basic = `
 data "citrixadc_rewriteparam" "test" {
 }
 `
+
+// rewriteparam unset: step1 sets both mutable attrs to non-default values;
+// step2 removes them so the provider must unset them, reverting to the NITRO
+// documented defaults (timeout=3900, undefaction="NOREWRITE").
+const testAccRewriteparam_unset_step1 = `
+	resource "citrixadc_rewriteparam" "tf_unset" {
+		timeout     = 2000
+		undefaction = "RESET"
+	}
+`
+
+const testAccRewriteparam_unset_step2 = `
+	resource "citrixadc_rewriteparam" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccRewriteparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewriteparamDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccRewriteparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewriteparamExist("citrixadc_rewriteparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewriteparam.tf_unset", "timeout", "2000"),
+					resource.TestCheckResourceAttr("citrixadc_rewriteparam.tf_unset", "undefaction", "RESET"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccRewriteparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewriteparamExist("citrixadc_rewriteparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewriteparam.tf_unset", "timeout", "3900"),
+					resource.TestCheckResourceAttr("citrixadc_rewriteparam.tf_unset", "undefaction", "NOREWRITE"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckRewriteparamADCValue("timeout", "3900"),
+					testAccCheckRewriteparamADCValue("undefaction", "NOREWRITE"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRewriteparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckRewriteparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Rewriteparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("rewriteparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("rewriteparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccRewriteparam_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{

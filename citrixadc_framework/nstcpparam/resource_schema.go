@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -252,6 +253,7 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"mptcpmaxpendingsf": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
+				Default:       int64default.StaticInt64(4),
 				PlanModifiers: int64PM,
 				Description:   "Maximum number of subflow connections supported in pending join state per mptcp connection.",
 			},
@@ -264,6 +266,7 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"mptcppendingjointhreshold": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
+				Default:       int64default.StaticInt64(0),
 				PlanModifiers: int64PM,
 				Description:   "Maximum system level pending join connections allowed.",
 			},
@@ -288,12 +291,14 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"mptcpsfreplacetimeout": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
+				Default:       int64default.StaticInt64(10),
 				PlanModifiers: int64PM,
 				Description:   "The minimum idle time value in seconds for idle mptcp subflows after which the sublow is replaced by new incoming subflow if maximum subflow limit is reached. The priority for replacement is given to those subflow without any transaction",
 			},
 			"mptcpsftimeout": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
+				Default:       int64default.StaticInt64(0),
 				PlanModifiers: int64PM,
 				Description:   "The timeout value in seconds for idle mptcp subflows. If this timeout is not set, idle subflows are cleared after cltTimeout of vserver",
 			},
@@ -324,6 +329,7 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"oooqsize": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
+				Default:       int64default.StaticInt64(300),
 				PlanModifiers: int64PM,
 				Description:   "Maximum size of out-of-order packets queue. A value of 0 means no limit.",
 			},
@@ -342,6 +348,7 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"rfc5961chlgacklimit": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
+				Default:       int64default.StaticInt64(0),
 				PlanModifiers: int64PM,
 				Description:   "Limits number of Challenge ACK sent per second, as recommended in RFC 5961(Improving TCP's Robustness to Blind In-Window Attacks)",
 			},
@@ -372,6 +379,7 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"tcpfastopencookietimeout": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
+				Default:       int64default.StaticInt64(0),
 				PlanModifiers: int64PM,
 				Description:   "Timeout in seconds after which a new TFO Key is computed for generating TFO Cookie. If zero, the same key is used always. If timeout is less than 120seconds, NS defaults to 120seconds timeout.",
 			},
@@ -396,6 +404,7 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"wsval": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
+				Default:       int64default.StaticInt64(8),
 				PlanModifiers: int64PM,
 				Description:   "Factor used to calculate the new window size.\nThis argument is needed only when the window scaling is enabled.",
 			},

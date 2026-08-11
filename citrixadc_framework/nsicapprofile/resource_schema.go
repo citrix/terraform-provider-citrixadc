@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -46,11 +48,13 @@ func (r *NsicapprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"allow204": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or Disable sending Allow: 204 header in ICAP request.",
 			},
 			"connectionkeepalive": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "If enabled, Citrix ADC keeps the ICAP connection alive after a transaction to reuse it to send next ICAP request.",
 			},
 			"hostheader": schema.StringAttribute{
@@ -87,11 +91,13 @@ func (r *NsicapprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"preview": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or Disable preview header with ICAP request. This feature allows an ICAP server to see the beginning of a transaction, then decide if it wants to opt-out of the transaction early instead of receiving the remainder of the request message.",
 			},
 			"previewlength": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(4096),
 				Description: "Value of Preview Header field. Citrix ADC uses the minimum of this set value and the preview size received on OPTIONS response.",
 			},
 			"queryparams": schema.StringAttribute{
@@ -102,11 +108,13 @@ func (r *NsicapprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"reqtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Time, in seconds, within which the remote server should respond to the ICAP-request. If the Netscaler does not receive full response with this time, the specified request timeout action is performed. Zero value disables this timeout functionality.",
 			},
 			"reqtimeoutaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("RESET"),
 				Description: "Name of the action to perform if the Vserver/Server representing the remote service does not respond with any response within the timeout value configured. The Supported actions are\n* BYPASS - This Ignores the remote server response and sends the request/response to Client/Server.\n           * If the ICAP response with Encapsulated headers is not received within the request-timeout value configured, this Ignores the remote ICAP server response and sends the Full request/response to Server/Client.\n* RESET - Reset the client connection by closing it. The client program, such as a browser, will handle this and may inform the user. The client may then resend the request if desired.\n* DROP - Drop the request without sending a response to the user.",
 			},
 			"uri": schema.StringAttribute{

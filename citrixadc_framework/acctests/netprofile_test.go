@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -176,6 +177,97 @@ resource "citrixadc_netprofile" "tf_netprofile" {
 }
 
 `
+
+// The netprofile unset test covers the spec-unsettable, mutable attributes that
+// have a documented NITRO server default: overridelsn, proxyprotocol,
+// proxyprotocolaftertlshandshake, proxyprotocoltxversion, srcippersistency.
+// srcip and mbf are excluded (no documented server default); td is create-only.
+const testAccNetprofile_unset_step1 = `
+resource "citrixadc_netprofile" "tf_unset" {
+  name                           = "tf_test_netprofile_unset"
+  overridelsn                    = "ENABLED"
+  proxyprotocol                  = "ENABLED"
+  proxyprotocoltxversion         = "V2"
+  srcippersistency               = "ENABLED"
+}
+`
+
+const testAccNetprofile_unset_step2 = `
+resource "citrixadc_netprofile" "tf_unset" {
+  name = "tf_test_netprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to the documented NITRO defaults).
+}
+`
+
+func TestAccNetprofile_unset(t *testing.T) {
+	if isCpxRun {
+		t.Skip("CPX 12.0 is outdated for this resource")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNetprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofileExist("citrixadc_netprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_unset", "overridelsn", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_unset", "proxyprotocol", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_unset", "proxyprotocoltxversion", "V2"),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_unset", "srcippersistency", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNetprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofileExist("citrixadc_netprofile.tf_unset", nil),
+					// overridelsn is omit-on-default: after unset the appliance omits it from
+					// GET, so it reads back as null/absent (driven by the unsetOnRemove
+					// modifier, no schema Default — matches the import round-trip).
+					resource.TestCheckNoResourceAttr("citrixadc_netprofile.tf_unset", "overridelsn"),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_unset", "proxyprotocol", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_unset", "proxyprotocolaftertlshandshake", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_unset", "proxyprotocoltxversion", "V1"),
+					resource.TestCheckResourceAttr("citrixadc_netprofile.tf_unset", "srcippersistency", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					// (overridelsn is omit-on-default -> absent from GET, so it is asserted
+					// only at the state level above, not here.)
+					testAccCheckNetprofileADCValue("tf_test_netprofile_unset", "proxyprotocol", "DISABLED"),
+					testAccCheckNetprofileADCValue("tf_test_netprofile_unset", "srcippersistency", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNetprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNetprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Netprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("netprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("netprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccNetprofile_selfHealing(t *testing.T) {
 	if isCpxRun {

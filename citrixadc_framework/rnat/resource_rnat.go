@@ -114,12 +114,14 @@ func (r *RnatResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *RnatResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state RnatResourceModel
+	var data, config, state RnatResourceModel
 
 	// Read prior state to preserve the ID / live name.
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (-> unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -136,9 +138,14 @@ func (r *RnatResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// 1) Regular in-place update of the SDK v2 updateable fields.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Connfailover.Equal(state.Connfailover) {
 		tflog.Debug(ctx, "connfailover has changed for rnat")
-		hasChange = true
+		if config.Connfailover.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "connfailover")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ownergroup.Equal(state.Ownergroup) {
 		tflog.Debug(ctx, "ownergroup has changed for rnat")
@@ -150,7 +157,11 @@ func (r *RnatResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 	if !data.Srcippersistency.Equal(state.Srcippersistency) {
 		tflog.Debug(ctx, "srcippersistency has changed for rnat")
-		hasChange = true
+		if config.Srcippersistency.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "srcippersistency")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Td.Equal(state.Td) {
 		tflog.Debug(ctx, "td has changed for rnat")
@@ -158,7 +169,11 @@ func (r *RnatResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 	if !data.Useproxyport.Equal(state.Useproxyport) {
 		tflog.Debug(ctx, "useproxyport has changed for rnat")
-		hasChange = true
+		if config.Useproxyport.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "useproxyport")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -172,6 +187,16 @@ func (r *RnatResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		tflog.Trace(ctx, "Updated rnat resource fields")
 	} else {
 		tflog.Debug(ctx, "No updateable field changes detected for rnat resource")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. Keyed off the current live name.
+	unsetIdPayload := map[string]interface{}{
+		"name": liveName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Rnat.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset rnat attributes, got error: %s", err))
+		return
 	}
 
 	// 2) In-place rename via NITRO ?action=rename when newname is set/changed.

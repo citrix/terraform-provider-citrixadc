@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -98,6 +99,106 @@ func TestAccContentinspectioncallout_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// serverport is the only cleanly-unsettable attribute: Optional/mutable with a
+// documented NITRO default (1344). step1 sets a non-default port; step2 removes
+// it from config so the provider must NITRO-unset it back to 1344.
+const testAccContentinspectioncallout_unset_step1 = `
+
+resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+	name             = "new-profile"
+	uri              = "/example"
+	mode             = "REQMOD"
+	reqtimeout       = 4
+	reqtimeoutaction = "RESET"
+	preview          = "ENABLED"
+	previewlength    = 4096
+}
+resource "citrixadc_contentinspectioncallout" "tf_unset" {
+	name        = "tf_ci_callout_unset"
+	type        = "ICAP"
+	profilename = citrixadc_nsicapprofile.tf_nsicapprofile.name
+	serverip    = "2.2.2.2"
+	serverport  = 2048
+	returntype  = "TEXT"
+	resultexpr  = "true"
+}
+`
+
+const testAccContentinspectioncallout_unset_step2 = `
+
+resource "citrixadc_nsicapprofile" "tf_nsicapprofile" {
+	name             = "new-profile"
+	uri              = "/example"
+	mode             = "REQMOD"
+	reqtimeout       = 4
+	reqtimeoutaction = "RESET"
+	preview          = "ENABLED"
+	previewlength    = 4096
+}
+resource "citrixadc_contentinspectioncallout" "tf_unset" {
+	name        = "tf_ci_callout_unset"
+	type        = "ICAP"
+	profilename = citrixadc_nsicapprofile.tf_nsicapprofile.name
+	serverip    = "2.2.2.2"
+	returntype  = "TEXT"
+	resultexpr  = "true"
+	# serverport removed from config -> provider must unset it (revert to 1344).
+}
+`
+
+func TestAccContentinspectioncallout_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectioncalloutDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccContentinspectioncallout_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectioncalloutExist("citrixadc_contentinspectioncallout.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_unset", "serverport", "2048"),
+				),
+			},
+			{
+				// Removing serverport must unset it: state reverts to the NITRO
+				// default 1344, and the implicit post-apply plan must be empty.
+				Config: testAccContentinspectioncallout_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContentinspectioncalloutExist("citrixadc_contentinspectioncallout.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_contentinspectioncallout.tf_unset", "serverport", "1344"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckContentinspectioncalloutADCValue("tf_ci_callout_unset", "serverport", "1344"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckContentinspectioncalloutADCValue asserts an attribute's value
+// directly on the appliance (not just Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckContentinspectioncalloutADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Contentinspectioncallout.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("contentinspectioncallout %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("contentinspectioncallout %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccContentinspectioncallout_sdkv2StateUpgrade(t *testing.T) {

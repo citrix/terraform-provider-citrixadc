@@ -14,6 +14,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward and
+// removal is a silent no-op. Unlike a schema Default it injects no value into the
+// add/update payload (unknown values are skipped), which matters here because the
+// post-unset value NITRO reports is empty/absent (it cannot be sent in add/update).
+// defaultValue is the value the attribute reverts to after a NITRO unset. The
+// modifier skips the unknown-forcing when the prior state already equals this
+// value, otherwise removal from config would perpetually re-plan.
+type unsetOnRemoveStringModifier struct{ defaultValue string }
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-default value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	sv := req.StateValue.ValueString()
+	if req.ConfigValue.IsNull() && sv != "" && sv != m.defaultValue {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // VpnurlpolicyResourceModel describes the resource data model.
 type VpnurlpolicyResourceModel struct {
 	Id        types.String `tfsdk:"id"`
@@ -40,14 +71,28 @@ func (r *VpnurlpolicyResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"comment": schema.StringAttribute{
 				// SDK v2 parity: Optional+Computed, updateable, no default.
-				Optional:    true,
-				Computed:    true,
+				// Removal from config must trigger an unset (revert to the NITRO
+				// default: comment is dropped/absent on GET). The post-unset value is
+				// empty, so a schema Default cannot be used; this modifier forces the
+				// plan to unknown on removal so Update runs the ?action=unset.
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{defaultValue: ""},
+				},
 				Description: "Any comments to preserve information about this policy.",
 			},
 			"logaction": schema.StringAttribute{
 				// SDK v2 parity: Optional+Computed, updateable, no default.
-				Optional:    true,
-				Computed:    true,
+				// Removal from config must trigger an unset (revert to the NITRO
+				// default: logaction is dropped/absent on GET). The post-unset value is
+				// empty, so a schema Default cannot be used; this modifier forces the
+				// plan to unknown on removal so Update runs the ?action=unset.
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{defaultValue: ""},
+				},
 				Description: "Name of messagelog action to use when a request matches this policy.",
 			},
 			"name": schema.StringAttribute{

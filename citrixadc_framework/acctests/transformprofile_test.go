@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -214,6 +215,80 @@ func TestAccTransformprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccTransformprofile_unset_step1 = `
+resource "citrixadc_transformprofile" "tf_unset" {
+    name                      = "tf_test_transformprofile_unset"
+    type                      = "URL"
+    comment                   = "some non-default comment"
+    onlytransformabsurlinbody = "ON"
+}
+`
+
+const testAccTransformprofile_unset_step2 = `
+resource "citrixadc_transformprofile" "tf_unset" {
+    name = "tf_test_transformprofile_unset"
+    type = "URL"
+    # comment and onlytransformabsurlinbody removed -> provider must unset them
+    # (revert to NITRO defaults: "" and "OFF").
+}
+`
+
+func TestAccTransformprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccTransformprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformprofile.tf_unset", "comment", "some non-default comment"),
+					resource.TestCheckResourceAttr("citrixadc_transformprofile.tf_unset", "onlytransformabsurlinbody", "ON"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccTransformprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformprofileExist("citrixadc_transformprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformprofile.tf_unset", "comment", ""),
+					resource.TestCheckResourceAttr("citrixadc_transformprofile.tf_unset", "onlytransformabsurlinbody", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckTransformprofileADCValue("tf_test_transformprofile_unset", "onlytransformabsurlinbody", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckTransformprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckTransformprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Transformprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("transformprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("transformprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccTransformprofileDataSource_basic(t *testing.T) {

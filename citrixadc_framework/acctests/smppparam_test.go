@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -164,6 +166,92 @@ func TestAccSmppparam_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// smppparam is a singleton config resource. All read/write attributes have
+// documented NITRO defaults and support the unset operation.
+const testAccSmppparam_unset_step1 = `
+resource "citrixadc_smppparam" "tf_unset" {
+	clientmode   = "TRANSMITTERONLY"
+	msgqueue     = "ON"
+	msgqueuesize = 5000
+	addrnpi      = 50
+	addrton      = 50
+	addrrange    = "abc*"
+}
+`
+
+const testAccSmppparam_unset_step2 = `
+resource "citrixadc_smppparam" "tf_unset" {
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccSmppparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSmppparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppparamExist("citrixadc_smppparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "clientmode", "TRANSMITTERONLY"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "msgqueue", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "msgqueuesize", "5000"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "addrnpi", "50"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "addrton", "50"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "addrrange", "abc*"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSmppparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSmppparamExist("citrixadc_smppparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "clientmode", "TRANSCEIVER"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "msgqueue", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "msgqueuesize", "10000"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "addrnpi", "0"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "addrton", "0"),
+					resource.TestCheckResourceAttr("citrixadc_smppparam.tf_unset", "addrrange", `\d*`),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSmppparamADCValue("clientmode", "TRANSCEIVER"),
+					testAccCheckSmppparamADCValue("msgqueue", "OFF"),
+					testAccCheckSmppparamADCValue("msgqueuesize", "10000"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSmppparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. smppparam is a singleton, so it is fetched with an empty name.
+func testAccCheckSmppparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Smppparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("smppparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("smppparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSmppparamDataSource_basic(t *testing.T) {

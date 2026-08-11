@@ -114,12 +114,14 @@ func (r *VpnurlpolicyResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *VpnurlpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnurlpolicyResourceModel
+	var data, config, state VpnurlpolicyResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -155,17 +157,26 @@ func (r *VpnurlpolicyResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Regular in-place update of the mutable fields (action, comment, logaction, rule).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Action.Equal(state.Action) {
 		tflog.Debug(ctx, "action has changed for vpnurlpolicy")
 		hasChange = true
 	}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for vpnurlpolicy")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for vpnurlpolicy")
-		hasChange = true
+		if config.Logaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rule.Equal(state.Rule) {
 		tflog.Debug(ctx, "rule has changed for vpnurlpolicy")
@@ -184,6 +195,16 @@ func (r *VpnurlpolicyResource) Update(ctx context.Context, req resource.UpdateRe
 		tflog.Trace(ctx, "Updated vpnurlpolicy resource")
 	} else {
 		tflog.Debug(ctx, "No mutable changes detected for vpnurlpolicy resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Address the current live object (data.Id reflects any rename above).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnurlpolicy.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnurlpolicy attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back. SetAttrFromGet must not clobber the user-facing

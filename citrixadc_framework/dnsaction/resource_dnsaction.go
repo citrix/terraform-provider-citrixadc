@@ -109,12 +109,14 @@ func (r *DnsactionResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *DnsactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state DnsactionResourceModel
+	var data, config, state DnsactionResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset them)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,6 +129,7 @@ func (r *DnsactionResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Actiontype.Equal(state.Actiontype) {
 		tflog.Debug(ctx, "actiontype has changed for dnsaction")
 		hasChange = true
@@ -145,7 +148,11 @@ func (r *DnsactionResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Ttl.Equal(state.Ttl) {
 		tflog.Debug(ctx, "ttl has changed for dnsaction")
-		hasChange = true
+		if config.Ttl.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ttl")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Viewname.Equal(state.Viewname) {
 		tflog.Debug(ctx, "viewname has changed for dnsaction")
@@ -164,6 +171,16 @@ func (r *DnsactionResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated dnsaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for dnsaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"actionname": data.Actionname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

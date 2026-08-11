@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -243,6 +244,90 @@ const testAccNspbr6DataSource_basic = `
 		detail = false
 	}
 `
+
+// The nspbr6 unset test covers the spec-unsettable mutable attribute with a
+// documented NITRO server default that applies cleanly here: msr (default
+// "DISABLED"). Step 1 sets a non-default value; step 2 removes it from config so
+// the provider must unset it, reverting to the NITRO default.
+const testAccNspbr6_unset_step1 = `
+	resource "citrixadc_iptunnel" "tf_iptunnel" {
+		name             = "tf_iptunnel_unset"
+		remote           = "66.0.0.11"
+		remotesubnetmask = "255.255.255.255"
+		local            = "*"
+	}
+	resource "citrixadc_nspbr6" "tf_unset" {
+		name     = "tf_nspbr6_unset"
+		action   = "ALLOW"
+		iptunnel = citrixadc_iptunnel.tf_iptunnel.name
+		msr      = "ENABLED"
+	}
+`
+
+const testAccNspbr6_unset_step2 = `
+	resource "citrixadc_iptunnel" "tf_iptunnel" {
+		name             = "tf_iptunnel_unset"
+		remote           = "66.0.0.11"
+		remotesubnetmask = "255.255.255.255"
+		local            = "*"
+	}
+	resource "citrixadc_nspbr6" "tf_unset" {
+		name     = "tf_nspbr6_unset"
+		action   = "ALLOW"
+		iptunnel = citrixadc_iptunnel.tf_iptunnel.name
+		# msr removed from config -> provider must unset it (revert to NITRO
+		# default "DISABLED").
+	}
+`
+
+func TestAccNspbr6_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspbr6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspbr6_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspbr6Exist("citrixadc_nspbr6.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspbr6.tf_unset", "msr", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccNspbr6_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspbr6Exist("citrixadc_nspbr6.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspbr6.tf_unset", "msr", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNspbr6ADCValue("tf_nspbr6_unset", "msr", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNspbr6ADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckNspbr6ADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nspbr6.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nspbr6 %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nspbr6 %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccNspbr6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

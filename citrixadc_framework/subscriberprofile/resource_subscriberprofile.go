@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -110,12 +111,14 @@ func (r *SubscriberprofileResource) Read(ctx context.Context, req resource.ReadR
 }
 
 func (r *SubscriberprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SubscriberprofileResourceModel
+	var data, config, state SubscriberprofileResourceModel
 
 	// Read Terraform prior state to preserve ID and to detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to distinguish "changed" from "removed from config" (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,9 +131,14 @@ func (r *SubscriberprofileResource) Update(ctx context.Context, req resource.Upd
 
 	// Change detection on the updateable (non-ForceNew) attributes.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Servicepath.Equal(state.Servicepath) {
 		tflog.Debug(ctx, "servicepath has changed for subscriberprofile")
-		hasChange = true
+		if config.Servicepath.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "servicepath")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Subscriberrules.Equal(state.Subscriberrules) {
 		tflog.Debug(ctx, "subscriberrules has changed for subscriberprofile")
@@ -156,6 +164,16 @@ func (r *SubscriberprofileResource) Update(ctx context.Context, req resource.Upd
 		tflog.Trace(ctx, "Updated subscriberprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for subscriberprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Keyed by ip (the resource key).
+	unsetIdPayload := map[string]interface{}{
+		"ip": data.Ip.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Subscriberprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset subscriberprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

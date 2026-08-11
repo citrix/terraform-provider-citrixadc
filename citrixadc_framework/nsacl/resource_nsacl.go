@@ -120,15 +120,29 @@ func (r *NsaclResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *NsaclResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsaclResourceModel
+	var data, config, state NsaclResourceModel
 
 	// Read Terraform prior state to determine the live name and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Determine attributes removed from config so they can be unset (reverted to
+	// their NITRO defaults) after any update. The regular update below (driven by
+	// nsaclHasUpdatableChange) pushes the schema default for these on removal;
+	// the unset guarantees the appliance reverts to its documented default.
+	attributesToUnset := []string{}
+	if !data.Logstate.Equal(state.Logstate) && config.Logstate.IsNull() {
+		attributesToUnset = append(attributesToUnset, "logstate")
+	}
+	if !data.Stateful.Equal(state.Stateful) && config.Stateful.IsNull() {
+		attributesToUnset = append(attributesToUnset, "stateful")
 	}
 
 	// Preserve the live ID from prior state
@@ -177,6 +191,16 @@ func (r *NsaclResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to enable/disable nsacl %s, got error: %s", liveName, err))
 			return
 		}
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"aclname": liveName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsacl.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsacl attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

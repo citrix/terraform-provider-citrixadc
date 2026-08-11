@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -143,6 +144,76 @@ func testAccCheckCsparameterDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+// csparameter is a singleton with a single mutable attribute, stateupdate
+// (NITRO default DISABLED). Step 1 sets it to a non-default value; step 2
+// removes it from config, which must unset it back to the NITRO default.
+const testAccCsparameter_unset_step1 = `
+	resource "citrixadc_csparameter" "tf_unset" {
+		stateupdate = "ENABLED"
+	}
+`
+
+const testAccCsparameter_unset_step2 = `
+	resource "citrixadc_csparameter" "tf_unset" {
+		# stateupdate removed from config -> provider must unset it (revert to
+		# NITRO default, "DISABLED").
+	}
+`
+
+func TestAccCsparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsparameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccCsparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsparameterExist("citrixadc_csparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_csparameter.tf_unset", "stateupdate", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the documented NITRO default, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccCsparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsparameterExist("citrixadc_csparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_csparameter.tf_unset", "stateupdate", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCsparameterADCValue("stateupdate", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCsparameterADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckCsparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Csparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("csparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("csparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccCsparameter_import(t *testing.T) {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -45,16 +46,19 @@ func (r *AppflowactionResource) Schema(ctx context.Context, req resource.SchemaR
 			"botinsight": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will send the bot insight records to the configured collectors.",
 			},
 			"ciinsight": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will send the ContentInspection Insight records to the configured collectors.",
 			},
 			"clientsidemeasurements": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will collect the time required to load and render the mainpage on the client.",
 			},
 			"collectors": schema.ListAttribute{
@@ -71,6 +75,7 @@ func (r *AppflowactionResource) Schema(ctx context.Context, req resource.SchemaR
 			"distributionalgorithm": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will distribute records among the collectors. Else, all records will be sent to all the collectors.",
 			},
 			"metricslog": schema.BoolAttribute{
@@ -99,11 +104,13 @@ func (r *AppflowactionResource) Schema(ctx context.Context, req resource.SchemaR
 			"pagetracking": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will start tracking the page for waterfall chart by inserting a NS_ESNS cookie in the response.",
 			},
 			"securityinsight": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will send the security insight records to the configured collectors.",
 			},
 			"transactionlog": schema.StringAttribute{
@@ -117,11 +124,13 @@ func (r *AppflowactionResource) Schema(ctx context.Context, req resource.SchemaR
 			"videoanalytics": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "On enabling this option, the Citrix ADC will send the videoinsight records to the configured collectors.",
 			},
 			"webinsight": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "On enabling this option, the Citrix ADC will send the webinsight records to the configured collectors.",
 			},
 		},

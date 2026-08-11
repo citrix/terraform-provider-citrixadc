@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -96,12 +97,14 @@ func (r *TmsessionparameterResource) Read(ctx context.Context, req resource.Read
 }
 
 func (r *TmsessionparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state TmsessionparameterResourceModel
+	var data, config, state TmsessionparameterResourceModel
 
 	// Read prior state (to detect changes and preserve ID)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -114,14 +117,27 @@ func (r *TmsessionparameterResource) Update(ctx context.Context, req resource.Up
 
 	// Detect changes in the updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Defaultauthorizationaction.Equal(state.Defaultauthorizationaction) {
-		hasChange = true
+		if config.Defaultauthorizationaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "defaultauthorizationaction")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Homepage.Equal(state.Homepage) {
-		hasChange = true
+		if config.Homepage.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "homepage")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Httponlycookie.Equal(state.Httponlycookie) {
-		hasChange = true
+		if config.Httponlycookie.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "httponlycookie")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Kcdaccount.Equal(state.Kcdaccount) {
 		hasChange = true
@@ -133,13 +149,25 @@ func (r *TmsessionparameterResource) Update(ctx context.Context, req resource.Up
 		hasChange = true
 	}
 	if !data.Sesstimeout.Equal(state.Sesstimeout) {
-		hasChange = true
+		if config.Sesstimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sesstimeout")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sso.Equal(state.Sso) {
-		hasChange = true
+		if config.Sso.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sso")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssocredential.Equal(state.Ssocredential) {
-		hasChange = true
+		if config.Ssocredential.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ssocredential")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ssodomain.Equal(state.Ssodomain) {
 		hasChange = true
@@ -158,6 +186,14 @@ func (r *TmsessionparameterResource) Update(ctx context.Context, req resource.Up
 		tflog.Trace(ctx, "Updated tmsessionparameter resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for tmsessionparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Singleton resource -> empty id payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Tmsessionparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset tmsessionparameter attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

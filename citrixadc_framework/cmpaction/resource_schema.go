@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -33,8 +34,12 @@ func (r *CmpactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the cmpaction resource.",
 			},
 			"addvaryheader": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default value for addvaryheader is GLOBAL. A schema Default is
+				// required so removing the attribute from config produces a plan diff
+				// that drives Update -> unset (revert to the NITRO default).
+				Default:     stringdefault.StaticString("GLOBAL"),
 				Description: "Control insertion of the Vary header in HTTP responses compressed by Citrix ADC. Intermediate caches store different versions of the response for different values of the headers present in the Vary response header.",
 			},
 			"cmptype": schema.StringAttribute{

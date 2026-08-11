@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -59,31 +60,37 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"addcookieflags": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("httpOnly"),
 				Description: "Add the specified flags to bot session cookies. Available settings function as follows:\n* None - Do not add flags to cookies.\n* HTTP Only - Add the HTTP Only flag to cookies, which prevents scripts from accessing cookies.\n* Secure - Add Secure flag to cookies.\n* All - Add both HTTPOnly and Secure flags to cookies.",
 			},
 			"bot_enable_black_list": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable black-list bot detection.",
 			},
 			"bot_enable_ip_reputation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable IP-reputation bot detection.",
 			},
 			"bot_enable_rate_limit": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable rate-limit bot detection.",
 			},
 			"bot_enable_tps": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable TPS.",
 			},
 			"bot_enable_white_list": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable white-list bot detection.",
 			},
 			"clientipexpression": schema.StringAttribute{
@@ -99,6 +106,7 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"devicefingerprint": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable device-fingerprint bot detection",
 			},
 			"devicefingerprintaction": schema.ListAttribute{
@@ -126,6 +134,7 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"headlessbrowserdetection": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable Headless Browser detection.",
 			},
 			"kmdetection": schema.StringAttribute{
@@ -186,6 +195,7 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"trap": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enable trap bot detection.",
 			},
 			"trapaction": schema.ListAttribute{
@@ -202,6 +212,7 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"verboseloglevel": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NONE"),
 				Description: "Bot verbose Logging. Based on the log level, ADC will log additional information whenever client is detected as a bot.",
 			},
 		},

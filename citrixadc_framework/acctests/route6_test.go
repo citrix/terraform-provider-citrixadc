@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -127,6 +128,97 @@ func TestAccRoute6_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccRoute6_unset_step1 sets the unset-eligible mutable attributes to valid
+// NON-default values.
+const testAccRoute6_unset_step1 = `
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid = 3
+}
+resource "citrixadc_route6" "tf_unset" {
+	network  = "2001:db8:aaaa::/64"
+	vlan     = citrixadc_vlan.tf_vlan.vlanid
+	weight   = 5
+	distance = 3
+	cost     = 7
+	msr      = "ENABLED"
+}
+`
+
+// testAccRoute6_unset_step2 removes the unset-eligible attributes (keeping only
+// the key + route-identity attrs); the provider must NITRO-unset them so they
+// revert to the documented defaults.
+const testAccRoute6_unset_step2 = `
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid = 3
+}
+resource "citrixadc_route6" "tf_unset" {
+	network = "2001:db8:aaaa::/64"
+	vlan    = citrixadc_vlan.tf_vlan.vlanid
+}
+`
+
+func TestAccRoute6_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRoute6Destroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccRoute6_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute6Exist("citrixadc_route6.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_route6.tf_unset", "weight", "5"),
+					resource.TestCheckResourceAttr("citrixadc_route6.tf_unset", "distance", "3"),
+					resource.TestCheckResourceAttr("citrixadc_route6.tf_unset", "cost", "7"),
+					resource.TestCheckResourceAttr("citrixadc_route6.tf_unset", "msr", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccRoute6_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute6Exist("citrixadc_route6.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_route6.tf_unset", "weight", "1"),
+					resource.TestCheckResourceAttr("citrixadc_route6.tf_unset", "distance", "1"),
+					resource.TestCheckResourceAttr("citrixadc_route6.tf_unset", "cost", "1"),
+					resource.TestCheckResourceAttr("citrixadc_route6.tf_unset", "msr", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckRoute6ADCValue("2001:db8:aaaa::/64", "3", "weight", "1"),
+					testAccCheckRoute6ADCValue("2001:db8:aaaa::/64", "3", "msr", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRoute6ADCValue asserts an attribute's value directly on the
+// appliance (route6 is unnamed, so match on network + vlan), proving the unset
+// actually reverted it.
+func testAccCheckRoute6ADCValue(network, vlan, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Route6.Type())
+		if err != nil {
+			return err
+		}
+		for _, v := range dataArr {
+			if fmt.Sprintf("%v", v["network"]) == network && fmt.Sprintf("%v", v["vlan"]) == vlan {
+				got := strings.TrimSpace(fmt.Sprintf("%v", v[attr]))
+				if got != want {
+					return fmt.Errorf("route6 %s (vlan %s): appliance attr %q = %q, want %q (unset did not revert it)", network, vlan, attr, got, want)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("route6 %s (vlan %s) not found on appliance", network, vlan)
+	}
 }
 
 func testAccCheckRoute6Exist(n string, id *string) resource.TestCheckFunc {

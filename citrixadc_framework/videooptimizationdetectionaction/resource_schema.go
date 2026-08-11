@@ -13,6 +13,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // VideooptimizationdetectionactionResourceModel describes the resource data model.
 type VideooptimizationdetectionactionResourceModel struct {
 	Id      types.String `tfsdk:"id"`
@@ -31,13 +58,16 @@ func (r *VideooptimizationdetectionactionResource) Schema(ctx context.Context, r
 				Description: "The ID of the videooptimizationdetectionaction resource.",
 			},
 			"comment": schema.StringAttribute{
-				// SDK v2 parity: comment was Optional + Computed (no Default). The ADC
-				// echoes it back on GET when set and omits it when empty. UseStateForUnknown
-				// keeps the value stable when it is not in config so plans do not churn.
+				// Optional + Computed. NITRO omits comment from GET when empty; its
+				// server default is the empty string. Instead of a schema Default of ""
+				// (which breaks import round-trip: import reads back NULL != ""), the
+				// unsetOnRemoveStringModifier marks the value unknown when removed from
+				// config while a prior non-empty value exists, so removal still drives
+				// Update -> NITRO ?action=unset while import round-trips cleanly.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					unsetOnRemoveStringModifier{},
 				},
 				Description: "Comment. Any type of information about this video optimization detection action.",
 			},

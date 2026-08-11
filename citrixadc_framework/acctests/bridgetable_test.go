@@ -246,6 +246,85 @@ func TestAccBridgetable_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// The only unset-eligible attribute is bridgeage (Optional, mutable, documented
+// NITRO default 300). All other attributes are the key (mac/vxlan/vtep) or
+// RequiresReplace, so they are not unsettable. step1 sets bridgeage to a
+// non-default value; step2 removes it, and the provider must unset it back to
+// the appliance default (300).
+const testAccBridgetable_unset_step1 = `
+	resource "citrixadc_vlan" "tf_vlan_unset" {
+		vlanid    = 22
+		aliasname = "Management VLAN Unset"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan_unset" {
+		vxlanid            = 125
+		vlan               = citrixadc_vlan.tf_vlan_unset.vlanid
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_bridgetable" "tf_unset" {
+		mac       = "00:00:00:00:00:03"
+		vxlan     = citrixadc_vxlan.tf_vxlan_unset.vxlanid
+		vtep      = "2.34.5.8"
+		bridgeage = 250
+	}
+`
+
+const testAccBridgetable_unset_step2 = `
+	resource "citrixadc_vlan" "tf_vlan_unset" {
+		vlanid    = 22
+		aliasname = "Management VLAN Unset"
+	}
+	resource "citrixadc_vxlan" "tf_vxlan_unset" {
+		vxlanid            = 125
+		vlan               = citrixadc_vlan.tf_vlan_unset.vlanid
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_bridgetable" "tf_unset" {
+		mac   = "00:00:00:00:00:03"
+		vxlan = citrixadc_vxlan.tf_vxlan_unset.vxlanid
+		vtep  = "2.34.5.8"
+		# bridgeage removed from config -> provider must unset it (revert to 300).
+	}
+`
+
+func TestAccBridgetable_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBridgetableDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccBridgetable_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBridgetableExist("citrixadc_bridgetable.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_bridgetable.tf_unset", "bridgeage", "250"),
+				),
+			},
+			{
+				// Removing bridgeage must unset it: state reverts to the NITRO
+				// default (300) and the implicit post-apply plan must be empty.
+				Config: testAccBridgetable_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBridgetableExist("citrixadc_bridgetable.tf_unset", nil),
+					// bridgeage reverts to the NITRO default (300) after unset.
+					// NITRO does not echo bridgeage back per-entry via GET (it is a
+					// table-wide setting), so it cannot be asserted directly on the
+					// appliance; the state revert plus the implicit empty post-apply
+					// plan confirm the unset took effect.
+					resource.TestCheckResourceAttr("citrixadc_bridgetable.tf_unset", "bridgeage", "300"),
+				),
+			},
+		},
+	})
+}
+
 const testAccBridgetableDataSource_basic = `
 
 resource "citrixadc_vlan" "tf_vlan_ds" {

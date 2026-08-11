@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -219,6 +220,86 @@ func TestAccNetbridge_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The netbridge unset test covers vxlanvlanmap, the only unset-eligible
+// attribute. step1 sets it to a real vxlanvlanmap; step2 removes it from
+// config, requiring the provider to unset it (revert to the NITRO default,
+// which is empty).
+const testAccNetbridge_unset_step1 = `
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_netbridge_unset_map"
+	}
+	resource "citrixadc_netbridge" "tf_unset" {
+		name         = "tf_netbridge_unset"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+`
+
+const testAccNetbridge_unset_step2 = `
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_netbridge_unset_map"
+	}
+	resource "citrixadc_netbridge" "tf_unset" {
+		name = "tf_netbridge_unset"
+		# vxlanvlanmap removed from config -> the provider must unset it.
+	}
+`
+
+func TestAccNetbridge_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridgeDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccNetbridge_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridgeExist("citrixadc_netbridge.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge.tf_unset", "vxlanvlanmap", "tf_netbridge_unset_map"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state reverts to the NITRO
+				// default (empty) and the implicit post-apply plan must be empty.
+				Config: testAccNetbridge_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridgeExist("citrixadc_netbridge.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge.tf_unset", "vxlanvlanmap", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNetbridgeADCValue("tf_netbridge_unset", "vxlanvlanmap", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNetbridgeADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckNetbridgeADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Netbridge.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("netbridge %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("netbridge %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNetbridgeDataSource_basic(t *testing.T) {

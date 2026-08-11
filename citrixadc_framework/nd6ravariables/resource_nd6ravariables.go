@@ -111,12 +111,14 @@ func (r *Nd6ravariablesResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *Nd6ravariablesResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state Nd6ravariablesResourceModel
+	var data, config, state Nd6ravariablesResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,44 +131,97 @@ func (r *Nd6ravariablesResource) Update(ctx context.Context, req resource.Update
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Ceaserouteradv.Equal(state.Ceaserouteradv) {
-		hasChange = true
+		if config.Ceaserouteradv.IsNull() {
+			attributesToUnset = append(attributesToUnset, "ceaserouteradv")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Currhoplimit.Equal(state.Currhoplimit) {
-		hasChange = true
+		if config.Currhoplimit.IsNull() {
+			attributesToUnset = append(attributesToUnset, "currhoplimit")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Defaultlifetime.Equal(state.Defaultlifetime) {
-		hasChange = true
+		if config.Defaultlifetime.IsNull() {
+			attributesToUnset = append(attributesToUnset, "defaultlifetime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Linkmtu.Equal(state.Linkmtu) {
-		hasChange = true
+		if config.Linkmtu.IsNull() {
+			attributesToUnset = append(attributesToUnset, "linkmtu")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Managedaddrconfig.Equal(state.Managedaddrconfig) {
-		hasChange = true
+		if config.Managedaddrconfig.IsNull() {
+			attributesToUnset = append(attributesToUnset, "managedaddrconfig")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Maxrtadvinterval.Equal(state.Maxrtadvinterval) {
-		hasChange = true
+		if config.Maxrtadvinterval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxrtadvinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Minrtadvinterval.Equal(state.Minrtadvinterval) {
-		hasChange = true
+		if config.Minrtadvinterval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "minrtadvinterval")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Onlyunicastrtadvresponse.Equal(state.Onlyunicastrtadvresponse) {
-		hasChange = true
+		if config.Onlyunicastrtadvresponse.IsNull() {
+			attributesToUnset = append(attributesToUnset, "onlyunicastrtadvresponse")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Otheraddrconfig.Equal(state.Otheraddrconfig) {
-		hasChange = true
+		if config.Otheraddrconfig.IsNull() {
+			attributesToUnset = append(attributesToUnset, "otheraddrconfig")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Reachabletime.Equal(state.Reachabletime) {
-		hasChange = true
+		if config.Reachabletime.IsNull() {
+			attributesToUnset = append(attributesToUnset, "reachabletime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Retranstime.Equal(state.Retranstime) {
-		hasChange = true
+		if config.Retranstime.IsNull() {
+			attributesToUnset = append(attributesToUnset, "retranstime")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Sendrouteradv.Equal(state.Sendrouteradv) {
-		hasChange = true
+		if config.Sendrouteradv.IsNull() {
+			attributesToUnset = append(attributesToUnset, "sendrouteradv")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Srclinklayeraddroption.Equal(state.Srclinklayeraddroption) {
-		hasChange = true
+		if config.Srclinklayeraddroption.IsNull() {
+			attributesToUnset = append(attributesToUnset, "srclinklayeraddroption")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Vlan.Equal(state.Vlan) {
 		hasChange = true
@@ -185,6 +240,17 @@ func (r *Nd6ravariablesResource) Update(ctx context.Context, req resource.Update
 		tflog.Trace(ctx, "Updated nd6ravariables resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nd6ravariables resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. nd6ravariables is keyed by vlan (matches the
+	// spec's mandatory unset payload field).
+	unsetIdPayload := map[string]interface{}{
+		"vlan": int(data.Vlan.ValueInt64()),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nd6ravariables.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nd6ravariables attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

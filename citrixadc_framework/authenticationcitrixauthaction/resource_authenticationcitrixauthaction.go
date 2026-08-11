@@ -110,12 +110,14 @@ func (r *AuthenticationcitrixauthactionResource) Read(ctx context.Context, req r
 }
 
 func (r *AuthenticationcitrixauthactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationcitrixauthactionResourceModel
+	var data, config, state AuthenticationcitrixauthactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,13 +130,22 @@ func (r *AuthenticationcitrixauthactionResource) Update(ctx context.Context, req
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Authentication.Equal(state.Authentication) {
 		tflog.Debug(ctx, "authentication has changed for authenticationcitrixauthaction")
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authenticationtype.Equal(state.Authenticationtype) {
 		tflog.Debug(ctx, "authenticationtype has changed for authenticationcitrixauthaction")
-		hasChange = true
+		if config.Authenticationtype.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authenticationtype")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -152,6 +163,16 @@ func (r *AuthenticationcitrixauthactionResource) Update(ctx context.Context, req
 		tflog.Trace(ctx, "Updated authenticationcitrixauthaction resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for authenticationcitrixauthaction resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationcitrixauthaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationcitrixauthaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

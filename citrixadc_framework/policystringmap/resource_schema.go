@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -27,8 +28,12 @@ func (r *PolicystringmapResource) Schema(ctx context.Context, req resource.Schem
 				Description: "The ID of the policystringmap resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Optional+Computed with no Default is sticky on config-removal
+				// (no plan diff -> Update never runs -> unset never fires). The
+				// documented NITRO default for comment is an empty string.
+				Default:     stringdefault.StaticString(""),
 				Description: "Comments associated with the string map or key-value pair bound to this string map.",
 			},
 			"name": schema.StringAttribute{

@@ -947,6 +947,118 @@ func TestAccLbvserver_import(t *testing.T) {
 	})
 }
 
+// TestAccLbvserver_unset exercises the NITRO ?action=unset behaviour: the two
+// attributes that carry the unsetOnRemove plan modifier (backupvserver,
+// redirectfromport) are set to non-default values, then removed from config so
+// the provider must issue the unset and the appliance reverts them to their
+// NITRO defaults ("" / 0). The other Optional+Computed attributes in
+// lbvserverUnsettableAttrs have non-empty server defaults (e.g. appflowlog
+// defaults to ENABLED); attaching the unset-on-remove modifier to them would
+// produce a perpetual plan diff, so they are intentionally not covered here.
+const testAccLbvserver_unset_step1 = `
+resource "citrixadc_lbvserver" "tf_unset_backup" {
+  name        = "tf_unset_backup"
+  ipv46       = "10.202.11.40"
+  port        = 443
+  servicetype = "SSL"
+}
+
+resource "citrixadc_lbvserver" "tf_unset" {
+  name             = "tf_test_lbvserver_unset"
+  ipv46            = "10.202.11.41"
+  port             = 443
+  servicetype      = "SSL"
+  backupvserver    = citrixadc_lbvserver.tf_unset_backup.name
+  redirectfromport = 80
+}
+`
+
+const testAccLbvserver_unset_step2 = `
+resource "citrixadc_lbvserver" "tf_unset_backup" {
+  name        = "tf_unset_backup"
+  ipv46       = "10.202.11.40"
+  port        = 443
+  servicetype = "SSL"
+}
+
+resource "citrixadc_lbvserver" "tf_unset" {
+  name        = "tf_test_lbvserver_unset"
+  ipv46       = "10.202.11.41"
+  port        = 443
+  servicetype = "SSL"
+  # backupvserver and redirectfromport removed from config -> the provider must
+  # unset them (revert to NITRO defaults "" / 0).
+}
+`
+
+func TestAccLbvserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLbvserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_unset", "backupvserver", "tf_unset_backup"),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_unset", "redirectfromport", "80"),
+					testAccCheckLbvserverADCValue("tf_test_lbvserver_unset", "backupvserver", "tf_unset_backup"),
+					testAccCheckLbvserverADCValue("tf_test_lbvserver_unset", "redirectfromport", "80"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the NITRO defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccLbvserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_unset", "backupvserver", ""),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_unset", "redirectfromport", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLbvserverADCValue("tf_test_lbvserver_unset", "backupvserver", ""),
+					testAccCheckLbvserverADCValue("tf_test_lbvserver_unset", "redirectfromport", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLbvserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. NITRO omits attributes at their default, so an absent value is treated as
+// the empty string / zero for comparison purposes.
+func testAccCheckLbvserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbvserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lbvserver %s not found on appliance", name)
+		}
+		got := ""
+		if raw, ok := data[attr]; ok && raw != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", raw))
+		}
+		// A NITRO-omitted (absent) attribute reads as "" here; treat it as the
+		// numeric zero default too so redirectfromport compares cleanly.
+		if got == "" && want == "0" {
+			return nil
+		}
+		if got != want {
+			return fmt.Errorf("lbvserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccLbvserver_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

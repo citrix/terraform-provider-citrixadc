@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -40,24 +41,30 @@ func (r *SsllogprofileResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "The name of the ssllogprofile.",
 			},
 			"ssllogclauth": schema.StringAttribute{
-				// SDK v2: Optional + Computed, no Default (value read from ADC).
+				// SDK v2: Optional + Computed. Default added so that removing the
+				// attribute from config produces a plan diff, allowing Update to
+				// fire the NITRO unset (revert to documented default DISABLED).
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "log all SSL ClAuth events.",
 			},
 			"ssllogclauthfailures": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "log all SSL ClAuth error events.",
 			},
 			"sslloghs": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "log all SSL HS events.",
 			},
 			"sslloghsfailures": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "log all SSL HS error events.",
 			},
 		},

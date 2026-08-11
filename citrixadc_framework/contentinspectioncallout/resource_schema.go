@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -74,8 +75,12 @@ func (r *ContentinspectioncalloutResource) Schema(ctx context.Context, req resou
 				Description: "Name of the load balancing or content switching virtual server or service to which the Content Inspection request is issued. Mutually exclusive with server IP address and port parameters. The service type must be TCP or SSL_TCP. If there are vservers and services with the same name, then vserver is selected.",
 			},
 			"serverport": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default per spec. A schema Default is required so that
+				// removing serverport from config produces a plan diff, which lets
+				// Update fire the NITRO unset (revert to the default 1344).
+				Default:     int64default.StaticInt64(1344),
 				Description: "Port of the Content Inspection server.",
 			},
 			"type": schema.StringAttribute{

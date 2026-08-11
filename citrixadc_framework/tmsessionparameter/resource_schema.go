@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -42,16 +44,19 @@ func (r *TmsessionparameterResource) Schema(ctx context.Context, req resource.Sc
 			"defaultauthorizationaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DENY"),
 				Description: "Allow or deny access to content for which there is no specific authorization policy.",
 			},
 			"homepage": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("None"),
 				Description: "Web address of the home page that a user is displayed when authentication vserver is bookmarked and used to login.",
 			},
 			"httponlycookie": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Allow only an HTTP session cookie, in which case the cookie cannot be accessed by scripts.",
 			},
 			"kcdaccount": schema.StringAttribute{
@@ -72,16 +77,19 @@ func (r *TmsessionparameterResource) Schema(ctx context.Context, req resource.Sc
 			"sesstimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(30),
 				Description: "Session timeout, in minutes. If there is no traffic during the timeout period, the user is disconnected and must reauthenticate to access the intranet resources.",
 			},
 			"sso": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Log users on to all web applications automatically after they authenticate, or pass users to the web application logon page to authenticate for each application. Note that this configuration does not honor the following authentication types for security reason. BASIC, DIGEST, and NTLM (without Negotiate NTLM2 Key or Negotiate Sign Flag). Use TM TrafficAction to configure SSO for these authentication types.",
 			},
 			"ssocredential": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("PRIMARY"),
 				Description: "Use primary or secondary authentication credentials for single sign-on.",
 			},
 			"ssodomain": schema.StringAttribute{

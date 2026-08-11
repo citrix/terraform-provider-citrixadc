@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -239,6 +240,141 @@ func TestAccSslvserver_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccSslvserver_unset_step1 = `
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_vserver_unset"
+		servicetype = "SSL"
+	}
+
+	resource "citrixadc_sslvserver" "tf_unset" {
+		vservername                       = citrixadc_lbvserver.tf_lbvserver.name
+		cipherredirect                    = "ENABLED"
+		cleartextport                     = 80
+		clientauth                        = "ENABLED"
+		ersa                              = "DISABLED"
+		hsts                              = "ENABLED"
+		ocspstapling                      = "ENABLED"
+		redirectportrewrite               = "ENABLED"
+		sendclosenotify                   = "NO"
+		sessreuse                         = "ENABLED"
+		sesstimeout                       = 180
+		snienable                         = "ENABLED"
+		ssl3                              = "DISABLED"
+		sslclientlogs                     = "ENABLED"
+		sslredirect                       = "ENABLED"
+		strictsigdigestcheck              = "ENABLED"
+		tls1                              = "DISABLED"
+		tls11                             = "DISABLED"
+		tls12                             = "DISABLED"
+		tls13                             = "ENABLED"
+		tls13sessionticketsperauthcontext = 7
+	}
+`
+
+const testAccSslvserver_unset_step2 = `
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_vserver_unset"
+		servicetype = "SSL"
+	}
+
+	resource "citrixadc_sslvserver" "tf_unset" {
+		vservername = citrixadc_lbvserver.tf_lbvserver.name
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccSslvserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSslvserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserverExist("citrixadc_sslvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "cipherredirect", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "cleartextport", "80"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "clientauth", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "ersa", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "hsts", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "ocspstapling", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "redirectportrewrite", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "sendclosenotify", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "sesstimeout", "180"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "snienable", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "ssl3", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "sslclientlogs", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "sslredirect", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "strictsigdigestcheck", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls1", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls11", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls12", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls13", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls13sessionticketsperauthcontext", "7"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSslvserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslvserverExist("citrixadc_sslvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "cipherredirect", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "cleartextport", "0"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "clientauth", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "ersa", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "hsts", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "ocspstapling", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "redirectportrewrite", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "sendclosenotify", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "sesstimeout", "120"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "snienable", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "ssl3", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "sslclientlogs", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "sslredirect", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "strictsigdigestcheck", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls1", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls11", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls12", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls13", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslvserver.tf_unset", "tls13sessionticketsperauthcontext", "1"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSslvserverADCValue("tf_vserver_unset", "cipherredirect", "DISABLED"),
+					testAccCheckSslvserverADCValue("tf_vserver_unset", "hsts", "DISABLED"),
+					testAccCheckSslvserverADCValue("tf_vserver_unset", "tls13", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSslvserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckSslvserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Sslvserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("sslvserver %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("sslvserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccSslvserverDataSource_basic(t *testing.T) {

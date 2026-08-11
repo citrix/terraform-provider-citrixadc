@@ -110,12 +110,14 @@ func (r *AuthenticationvserverResource) Read(ctx context.Context, req resource.R
 }
 
 func (r *AuthenticationvserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationvserverResourceModel
+	var data, config, state AuthenticationvserverResourceModel
 
 	// Read Terraform prior state to preserve ID / detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,11 +160,20 @@ func (r *AuthenticationvserverResource) Update(ctx context.Context, req resource
 	// range/td are create-only (RequiresReplace) and never reach Update; state is handled
 	// above via enable/disable.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Appflowlog.Equal(state.Appflowlog) {
-		hasChange = true
+		if config.Appflowlog.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "appflowlog")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authentication.Equal(state.Authentication) {
-		hasChange = true
+		if config.Authentication.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Authenticationdomain.Equal(state.Authenticationdomain) {
 		hasChange = true
@@ -198,6 +209,17 @@ func (r *AuthenticationvserverResource) Update(ctx context.Context, req resource
 		tflog.Trace(ctx, "Updated authenticationvserver resource")
 	} else {
 		tflog.Debug(ctx, "No set-attribute changes detected for authenticationvserver resource")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": authenticationvserverName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationvserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationvserver attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

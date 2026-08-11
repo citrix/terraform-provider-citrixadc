@@ -109,12 +109,14 @@ func (r *NsxmlnamespaceResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *NsxmlnamespaceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state NsxmlnamespaceResourceModel
+	var data, config, state NsxmlnamespaceResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -127,13 +129,18 @@ func (r *NsxmlnamespaceResource) Update(ctx context.Context, req resource.Update
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Namespace.Equal(state.Namespace) {
 		tflog.Debug(ctx, "namespace has changed for nsxmlnamespace")
 		hasChange = true
 	}
 	if !data.Description.Equal(state.Description) {
 		tflog.Debug(ctx, "description has changed for nsxmlnamespace")
-		hasChange = true
+		if config.Description.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "description")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -148,6 +155,16 @@ func (r *NsxmlnamespaceResource) Update(ctx context.Context, req resource.Update
 		tflog.Trace(ctx, "Updated nsxmlnamespace resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for nsxmlnamespace resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"prefix": data.Prefix.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsxmlnamespace.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsxmlnamespace attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

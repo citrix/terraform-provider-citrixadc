@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -54,86 +55,103 @@ func (r *AuthenticationwebauthactionResource) Schema(ctx context.Context, req re
 			"attribute1": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute1 from the webauth response",
 			},
 			"attribute10": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute10 from the webauth response",
 			},
 			"attribute11": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute11 from the webauth response",
 			},
 			"attribute12": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute12 from the webauth response",
 			},
 			"attribute13": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute13 from the webauth response",
 			},
 			"attribute14": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute14 from the webauth response",
 			},
 			"attribute15": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute15 from the webauth response",
 			},
 			"attribute16": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute16 from the webauth response",
 			},
 			"attribute2": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute2 from the webauth response",
 			},
 			"attribute3": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute3 from the webauth response",
 			},
 			"attribute4": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute4 from the webauth response",
 			},
 			"attribute5": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute5 from the webauth response",
 			},
 			"attribute6": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute6 from the webauth response",
 			},
 			"attribute7": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute7 from the webauth response",
 			},
 			"attribute8": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute8 from the webauth response",
 			},
 			"attribute9": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Expression that would be evaluated to extract attribute9 from the webauth response",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "This is the default group that is chosen when the authentication succeeds in addition to extracted groups.",
 			},
 			"fullreqexpr": schema.StringAttribute{
@@ -253,87 +271,87 @@ func authenticationwebauthactionSetAttrFromGet(ctx context.Context, data *Authen
 	if val, ok := getResponseData["attribute1"]; ok && val != nil {
 		data.Attribute1 = types.StringValue(val.(string))
 	} else {
-		data.Attribute1 = types.StringNull()
+		data.Attribute1 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute10"]; ok && val != nil {
 		data.Attribute10 = types.StringValue(val.(string))
 	} else {
-		data.Attribute10 = types.StringNull()
+		data.Attribute10 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute11"]; ok && val != nil {
 		data.Attribute11 = types.StringValue(val.(string))
 	} else {
-		data.Attribute11 = types.StringNull()
+		data.Attribute11 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute12"]; ok && val != nil {
 		data.Attribute12 = types.StringValue(val.(string))
 	} else {
-		data.Attribute12 = types.StringNull()
+		data.Attribute12 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute13"]; ok && val != nil {
 		data.Attribute13 = types.StringValue(val.(string))
 	} else {
-		data.Attribute13 = types.StringNull()
+		data.Attribute13 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute14"]; ok && val != nil {
 		data.Attribute14 = types.StringValue(val.(string))
 	} else {
-		data.Attribute14 = types.StringNull()
+		data.Attribute14 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute15"]; ok && val != nil {
 		data.Attribute15 = types.StringValue(val.(string))
 	} else {
-		data.Attribute15 = types.StringNull()
+		data.Attribute15 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute16"]; ok && val != nil {
 		data.Attribute16 = types.StringValue(val.(string))
 	} else {
-		data.Attribute16 = types.StringNull()
+		data.Attribute16 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute2"]; ok && val != nil {
 		data.Attribute2 = types.StringValue(val.(string))
 	} else {
-		data.Attribute2 = types.StringNull()
+		data.Attribute2 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute3"]; ok && val != nil {
 		data.Attribute3 = types.StringValue(val.(string))
 	} else {
-		data.Attribute3 = types.StringNull()
+		data.Attribute3 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute4"]; ok && val != nil {
 		data.Attribute4 = types.StringValue(val.(string))
 	} else {
-		data.Attribute4 = types.StringNull()
+		data.Attribute4 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute5"]; ok && val != nil {
 		data.Attribute5 = types.StringValue(val.(string))
 	} else {
-		data.Attribute5 = types.StringNull()
+		data.Attribute5 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute6"]; ok && val != nil {
 		data.Attribute6 = types.StringValue(val.(string))
 	} else {
-		data.Attribute6 = types.StringNull()
+		data.Attribute6 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute7"]; ok && val != nil {
 		data.Attribute7 = types.StringValue(val.(string))
 	} else {
-		data.Attribute7 = types.StringNull()
+		data.Attribute7 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute8"]; ok && val != nil {
 		data.Attribute8 = types.StringValue(val.(string))
 	} else {
-		data.Attribute8 = types.StringNull()
+		data.Attribute8 = types.StringValue("")
 	}
 	if val, ok := getResponseData["attribute9"]; ok && val != nil {
 		data.Attribute9 = types.StringValue(val.(string))
 	} else {
-		data.Attribute9 = types.StringNull()
+		data.Attribute9 = types.StringValue("")
 	}
 	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
 		data.Defaultauthenticationgroup = types.StringValue(val.(string))
 	} else {
-		data.Defaultauthenticationgroup = types.StringNull()
+		data.Defaultauthenticationgroup = types.StringValue("")
 	}
 	if val, ok := getResponseData["fullreqexpr"]; ok && val != nil {
 		data.Fullreqexpr = types.StringValue(val.(string))

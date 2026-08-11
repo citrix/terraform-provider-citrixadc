@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -46,11 +47,13 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"connfailover": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Synchronize connection information with the secondary appliance in a high availability (HA) pair. That is, synchronize all connection-related information for the INAT session",
 			},
 			"ftp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable the FTP protocol on the server for transferring files between the client and the server.",
 			},
 			"mode": schema.StringAttribute{
@@ -86,6 +89,7 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"tcpproxy": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable TCP proxy, which enables the Citrix ADC to optimize the RNAT TCP traffic by using Layer 4 features.",
 			},
 			"td": schema.Int64Attribute{
@@ -99,11 +103,13 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"tftp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "To enable/disable TFTP (Default DISABLED).",
 			},
 			"useproxyport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable the Citrix ADC to proxy the source port of packets before sending the packets to the server.",
 			},
 			"usip": schema.StringAttribute{

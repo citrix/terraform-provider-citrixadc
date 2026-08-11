@@ -8,12 +8,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
 
 // NetprofileResourceModel describes the resource data model.
 type NetprofileResourceModel struct {
@@ -58,39 +86,56 @@ func (r *NetprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Name for the net profile. Must begin with a letter, number, or the underscore character (_), and can consist of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore characters. Cannot be changed after the profile is created. Choose a name that helps identify the net profile.",
 			},
 			"overridelsn": schema.StringAttribute{
-				// SDK v2: Optional+Computed, not ForceNew.
-				Optional:    true,
-				Computed:    true,
+				// SDK v2: Optional+Computed, not ForceNew. overridelsn is omit-on-default:
+				// the appliance omits it from GET once it is at the default (DISABLED), so a
+				// schema Default would break the import round-trip (apply-state=DISABLED but
+				// pure-read import=absent). Instead the unsetOnRemove modifier plans the
+				// value as Unknown when it is removed from config, so Update fires the NITRO
+				// unset while import still round-trips (both apply- and import-state null).
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "USNIP/USIP settings override LSN settings for configured\n              service/virtual server traffic..",
 			},
 			"proxyprotocol": schema.StringAttribute{
-				// SDK v2: Optional+Computed, not ForceNew.
+				// SDK v2: Optional+Computed, not ForceNew. Default added so removing it
+				// from config produces a plan diff, letting Update fire the NITRO unset.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Proxy Protocol Action (Enabled/Disabled)",
 			},
 			"proxyprotocolaftertlshandshake": schema.StringAttribute{
-				// SDK v2: Optional+Computed, not ForceNew.
+				// SDK v2: Optional+Computed, not ForceNew. Default added so removing it
+				// from config produces a plan diff, letting Update fire the NITRO unset.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "ADC doesnt look for proxy header before TLS handshake, if enabled. Proxy protocol parsed after TLS handshake",
 			},
 			"proxyprotocoltxversion": schema.StringAttribute{
-				// SDK v2: Optional+Computed, not ForceNew.
+				// SDK v2: Optional+Computed, not ForceNew. Default added so removing it
+				// from config produces a plan diff, letting Update fire the NITRO unset.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("V1"),
 				Description: "Proxy Protocol Version (V1/V2)",
 			},
 			"srcip": schema.StringAttribute{
-				// SDK v2: Optional+Computed, not ForceNew.
+				// SDK v2: Optional+Computed, not ForceNew. No documented NITRO server
+				// default, so not treated as unsettable.
 				Optional:    true,
 				Computed:    true,
 				Description: "IP address or the name of an IP set.",
 			},
 			"srcippersistency": schema.StringAttribute{
-				// SDK v2: Optional+Computed, not ForceNew.
+				// SDK v2: Optional+Computed, not ForceNew. Default added so removing it
+				// from config produces a plan diff, letting Update fire the NITRO unset.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "When the net profile is associated with a virtual server or its bound services, this option enables the Citrix ADC to use the same  address, specified in the net profile, to communicate to servers for all sessions initiated from a particular client to the virtual server.",
 			},
 			"td": schema.Int64Attribute{

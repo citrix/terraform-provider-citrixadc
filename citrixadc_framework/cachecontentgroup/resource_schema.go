@@ -7,7 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -86,6 +88,7 @@ func (r *CachecontentgroupResource) Schema(ctx context.Context, req resource.Sch
 			"alwaysevalpolicies": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Force policy evaluation for each response arriving from the origin server. Cannot be set to YES if the Prefetch parameter is also set to YES.",
 			},
 			"cachecontrol": schema.StringAttribute{
@@ -96,6 +99,7 @@ func (r *CachecontentgroupResource) Schema(ctx context.Context, req resource.Sch
 			"expireatlastbyte": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Force expiration of the content immediately after the response is downloaded (upon receipt of the last byte of the response body). Applicable only to positive responses.",
 			},
 			"flashcache": schema.StringAttribute{
@@ -132,26 +136,31 @@ func (r *CachecontentgroupResource) Schema(ctx context.Context, req resource.Sch
 			"ignorereloadreq": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Ignore any request to reload a cached object from the origin server.\nTo guard against Denial of Service attacks, set this parameter to YES. For RFC-compliant behavior, set it to NO.",
 			},
 			"ignorereqcachinghdrs": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Ignore Cache-Control and Pragma headers in the incoming request.",
 			},
 			"insertage": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Insert an Age header into the response. An Age header contains information about the age of the object, in seconds, as calculated by the integrated cache.",
 			},
 			"insertetag": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Insert an ETag header in the response. With ETag header insertion, the integrated cache does not serve full responses on repeat requests.",
 			},
 			"insertvia": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Insert a Via header into the response.",
 			},
 			"invalparams": schema.ListAttribute{
@@ -173,6 +182,7 @@ func (r *CachecontentgroupResource) Schema(ctx context.Context, req resource.Sch
 			"lazydnsresolve": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Perform DNS resolution for responses only if the destination IP address in the request does not match the destination IP address of the cached response.",
 			},
 			"matchcookies": schema.StringAttribute{
@@ -183,21 +193,25 @@ func (r *CachecontentgroupResource) Schema(ctx context.Context, req resource.Sch
 			"maxressize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(80),
 				Description: "Maximum size of a response that can be cached in this content group.",
 			},
 			"memlimit": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(65536),
 				Description: "Maximum amount of memory that the cache can use. The effective limit is based on the available memory of the Citrix ADC.",
 			},
 			"minhits": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Number of hits that qualifies a response for storage in this content group.",
 			},
 			"minressize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Minimum size of a response that can be cached in this content group.\n Default minimum response size is 0.",
 			},
 			"name": schema.StringAttribute{
@@ -210,21 +224,25 @@ func (r *CachecontentgroupResource) Schema(ctx context.Context, req resource.Sch
 			"persistha": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Setting persistHA to YES causes IC to save objects in contentgroup to Secondary node in HA deployment.",
 			},
 			"pinned": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Do not flush objects from this content group under memory pressure.",
 			},
 			"polleverytime": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Always poll for the objects in this content group. That is, retrieve the objects from the origin server whenever they are requested.",
 			},
 			"prefetch": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Attempt to refresh objects that are about to go stale.",
 			},
 			"prefetchmaxpending": schema.Int64Attribute{
@@ -250,6 +268,7 @@ func (r *CachecontentgroupResource) Schema(ctx context.Context, req resource.Sch
 			"quickabortsize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(4194303),
 				Description: "If the size of an object that is being downloaded is less than or equal to the quick abort value, and a client aborts during the download, the cache stops downloading the response. If the object is larger than the quick abort size, the cache continues to download the response.",
 			},
 			"relexpiry": schema.Int64Attribute{
@@ -265,6 +284,7 @@ func (r *CachecontentgroupResource) Schema(ctx context.Context, req resource.Sch
 			"removecookies": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Remove cookies from responses.",
 			},
 			"selectorvalue": schema.StringAttribute{

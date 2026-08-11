@@ -119,12 +119,14 @@ func (r *AdmparameterResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *AdmparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AdmparameterResourceModel
+	var data, config, state AdmparameterResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -137,9 +139,14 @@ func (r *AdmparameterResource) Update(ctx context.Context, req resource.UpdateRe
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Admserviceconnect.Equal(state.Admserviceconnect) {
 		tflog.Debug(ctx, "admserviceconnect has changed for admparameter")
-		hasChange = true
+		if config.Admserviceconnect.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "admserviceconnect")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -156,6 +163,15 @@ func (r *AdmparameterResource) Update(ctx context.Context, req resource.UpdateRe
 		tflog.Trace(ctx, "Updated admparameter resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for admparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. admparameter is an unnamed singleton, so the
+	// unset id payload carries no identifying fields.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, admparameterResourceType, unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset admparameter attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

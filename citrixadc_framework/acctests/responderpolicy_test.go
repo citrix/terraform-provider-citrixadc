@@ -635,6 +635,98 @@ func TestAccResponderpolicy_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// Unset test: undefaction and logaction are the only spec-unsettable mutable
+// attributes whose NITRO unset default is a real value echoed back by GET
+// (undefaction -> "Use Global", logaction -> "None"). comment and appflowaction
+// revert to absent/null on unset, so they have no non-null default and are not
+// exercised here.
+const testAccResponderpolicy_unset_step1 = `
+resource "citrixadc_auditmessageaction" "tf_unset_msg" {
+  name              = "tf_responderpolicy_unset_msg"
+  loglevel          = "INFORMATIONAL"
+  stringbuilderexpr = "\"hi\""
+}
+
+resource "citrixadc_responderpolicy" "tf_unset" {
+  name        = "tf_responderpolicy_unset"
+  action      = "NOOP"
+  rule        = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+  undefaction = "RESET"
+  logaction   = citrixadc_auditmessageaction.tf_unset_msg.name
+}
+`
+
+const testAccResponderpolicy_unset_step2 = `
+resource "citrixadc_auditmessageaction" "tf_unset_msg" {
+  name              = "tf_responderpolicy_unset_msg"
+  loglevel          = "INFORMATIONAL"
+  stringbuilderexpr = "\"hi\""
+}
+
+resource "citrixadc_responderpolicy" "tf_unset" {
+  name   = "tf_responderpolicy_unset"
+  action = "NOOP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+  # undefaction and logaction removed from config -> provider must unset them
+  # (revert to NITRO defaults "Use Global" and "None").
+}
+`
+
+func TestAccResponderpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccResponderpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicy.tf_unset", "undefaction", "RESET"),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicy.tf_unset", "logaction", "tf_responderpolicy_unset_msg"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccResponderpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicy.tf_unset", "undefaction", "Use Global"),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicy.tf_unset", "logaction", "None"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckResponderpolicyADCValue("tf_responderpolicy_unset", "undefaction", "Use Global"),
+					testAccCheckResponderpolicyADCValue("tf_responderpolicy_unset", "logaction", "None"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckResponderpolicyADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset reverted it.
+func testAccCheckResponderpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Responderpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("responderpolicy %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("responderpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccResponderpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

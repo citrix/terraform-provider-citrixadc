@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -43,6 +44,7 @@ func (r *SnmptrapResource) Schema(ctx context.Context, req resource.SchemaReques
 			"allpartitions": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Send traps of all partitions to this destination.",
 			},
 			// SDK v2: Optional + Computed (no Default).
@@ -55,12 +57,14 @@ func (r *SnmptrapResource) Schema(ctx context.Context, req resource.SchemaReques
 			"destport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(162),
 				Description: "UDP port at which the trap listener listens for trap messages. This setting must match the setting on the trap listener. Otherwise, the listener drops the trap messages.",
 			},
 			// SDK v2: Optional + Computed (no Default).
 			"severity": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("Unknown"),
 				Description: "Severity level at or above which the Citrix ADC sends trap messages to this trap listener. The severity levels, in increasing order of severity, are Informational, Warning, Minor, Major, Critical. This parameter can be set for trap listeners of type SPECIFIC only. The default is to send all levels of trap messages. \nImportant: Trap messages are not assigned severity levels unless you specify severity levels when configuring SNMP alarms.",
 			},
 			// SDK v2: Optional + Computed (no Default).

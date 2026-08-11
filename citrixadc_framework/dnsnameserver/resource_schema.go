@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -34,9 +35,14 @@ func (r *DnsnameserverResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "The ID of the dnsnameserver resource.",
 			},
 			"dnsprofilename": schema.StringAttribute{
-				// SDK v2: Optional + Computed, updateable (no ForceNew)
+				// SDK v2: Optional + Computed, updateable (no ForceNew).
+				// Default "" (no documented server default; unset removes the
+				// profile association). The static default makes the attribute
+				// non-sticky on config removal so Update fires and the unset
+				// operation can revert it.
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Name of the DNS profile to be associated with the name server",
 			},
 			"dnsvservername": schema.StringAttribute{
@@ -97,7 +103,7 @@ func dnsnameserverGetThePayloadFromthePlan(ctx context.Context, data *Dnsnameser
 	if !data.Dnsvservername.IsNull() && !data.Dnsvservername.IsUnknown() {
 		dnsnameserver.Dnsvservername = data.Dnsvservername.ValueString()
 	}
-	if !data.Dnsprofilename.IsNull() && !data.Dnsprofilename.IsUnknown() {
+	if !data.Dnsprofilename.IsNull() && !data.Dnsprofilename.IsUnknown() && data.Dnsprofilename.ValueString() != "" {
 		dnsnameserver.Dnsprofilename = data.Dnsprofilename.ValueString()
 	}
 	if !data.Local.IsNull() && !data.Local.IsUnknown() {
@@ -131,11 +137,13 @@ func interfaceToBool(val interface{}) bool {
 func dnsnameserverSetAttrFromGet(ctx context.Context, data *DnsnameserverResourceModel, getResponseData map[string]interface{}, name string, dnsType string) *DnsnameserverResourceModel {
 	tflog.Debug(ctx, "In dnsnameserverSetAttrFromGet Function")
 
-	// dnsprofilename
+	// dnsprofilename: reflect the empty default when NITRO omits it (e.g. after
+	// an unset) so state matches the schema Default "" and no inconsistent-result
+	// error is raised.
 	if val, ok := getResponseData["dnsprofilename"]; ok && val != nil {
 		data.Dnsprofilename = types.StringValue(val.(string))
 	} else {
-		data.Dnsprofilename = types.StringNull()
+		data.Dnsprofilename = types.StringValue("")
 	}
 
 	// Identity attributes: the matched entry has either ip == name or

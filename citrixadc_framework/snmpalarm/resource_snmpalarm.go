@@ -110,12 +110,14 @@ func (r *SnmpalarmResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *SnmpalarmResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state SnmpalarmResourceModel
+	var data, config, state SnmpalarmResourceModel
 
 	// Read Terraform prior state to preserve ID and for change detection
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,9 +130,14 @@ func (r *SnmpalarmResource) Update(ctx context.Context, req resource.UpdateReque
 
 	// Detect changes to the non-state updateable attributes (pushed via PUT).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Logging.Equal(state.Logging) {
 		tflog.Debug(ctx, "logging has changed for snmpalarm")
-		hasChange = true
+		if config.Logging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logging")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Normalvalue.Equal(state.Normalvalue) {
 		tflog.Debug(ctx, "normalvalue has changed for snmpalarm")
@@ -138,7 +145,11 @@ func (r *SnmpalarmResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	if !data.Severity.Equal(state.Severity) {
 		tflog.Debug(ctx, "severity has changed for snmpalarm")
-		hasChange = true
+		if config.Severity.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "severity")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Thresholdvalue.Equal(state.Thresholdvalue) {
 		tflog.Debug(ctx, "thresholdvalue has changed for snmpalarm")
@@ -169,6 +180,17 @@ func (r *SnmpalarmResource) Update(ctx context.Context, req resource.UpdateReque
 		tflog.Trace(ctx, "Updated snmpalarm resource")
 	} else {
 		tflog.Debug(ctx, "No PUT-updateable changes detected for snmpalarm resource")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. Done after the update so any default value the update
+	// payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"trapname": data.Trapname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Snmpalarm.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset snmpalarm attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -80,11 +81,18 @@ func (r *CachepolicyResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:    true,
 				Description: "Expression against which the traffic is evaluated.\nThe following requirements apply only to the Citrix ADC CLI:\n* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.\n* If the expression itself includes double quotation marks, escape the quotations by using the \\ character.\n* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.",
 			},
+			// Optional+Computed with an explicit NITRO default so removing it from
+			// config produces a plan diff (drives the unset in Update). "DEFAULT" is
+			// the value NITRO reports when storeingroup is unset.
 			"storeingroup": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DEFAULT"),
 				Description: "Name of the content group in which to store the object when the final result of policy evaluation is CACHE. The content group must exist before being mentioned here. Use the \"show cache contentgroup\" command to view the list of existing content groups.",
 			},
+			// undefaction is NOT unset-wired: its NITRO revert value ("Use Global") is
+			// not a valid input value (NITRO rejects it in the update payload), so it
+			// can be neither a stable Default nor round-tripped, unlike storeingroup.
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

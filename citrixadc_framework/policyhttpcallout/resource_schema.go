@@ -16,6 +16,34 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward
+// and removal is a silent no-op. Because these attributes revert to no value
+// (absent from GET) after unset, marking the plan unknown also avoids a
+// "provider produced inconsistent result" error, which a static Default would
+// trigger.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
 // PolicyhttpcalloutResourceModel describes the resource data model.
 type PolicyhttpcalloutResourceModel struct {
 	Id           types.String `tfsdk:"id"`
@@ -56,8 +84,11 @@ func (r *PolicyhttpcalloutResource) Schema(ctx context.Context, req resource.Sch
 				Description: "Duration, in seconds, for which the callout response is cached. The cached responses are stored in an integrated caching content group named \"calloutContentGroup\". If no duration is configured, the callout responses will not be cached unless normal caching configuration is used to cache them. This parameter takes precedence over any normal caching configuration that would otherwise apply to these responses.\n	   Note that the calloutContentGroup definition may not be modified or removed nor may it be used with other cache policies.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Any comments to preserve information about this HTTP callout.",
 			},
 			"fullreqexpr": schema.StringAttribute{
@@ -105,8 +136,11 @@ func (r *PolicyhttpcalloutResource) Schema(ctx context.Context, req resource.Sch
 				Description: "Server port to which the HTTP callout agent is mapped. Mutually exclusive with the Virtual Server parameter. Therefore, you cannot set the <IP Address, Port> and the Virtual Server in the same HTTP callout.",
 			},
 			"resultexpr": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Expression that extracts the callout results from the response sent by the HTTP callout agent. Must be a response based expression, that is, it must begin with HTTP.RES. The operations in this expression must match the return type. For example, if you configure a return type of TEXT, the result expression must be a text based expression. If the return type is NUM, the result expression (resultExpr) must return a numeric value, as in the following example: http.res.body(10000).length.",
 			},
 			"returntype": schema.StringAttribute{

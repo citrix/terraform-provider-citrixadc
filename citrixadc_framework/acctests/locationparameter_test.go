@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -154,6 +155,79 @@ func TestAccLocationparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The locationparameter unset test covers matchwildcardtoany, the only
+// mutable attribute with a documented NITRO server default (NO). Step 1 sets
+// it to a non-default value; step 2 removes it from config, and the provider
+// must unset it so the appliance reverts it to the default.
+const testAccLocationparameter_unset_step1 = `
+	resource "citrixadc_locationparameter" "tf_unset" {
+		context            = "geographic"
+		matchwildcardtoany = "YES"
+	}
+`
+
+const testAccLocationparameter_unset_step2 = `
+	resource "citrixadc_locationparameter" "tf_unset" {
+		context = "geographic"
+		# matchwildcardtoany removed from config -> provider must unset it
+		# (revert to NITRO default, "NO").
+	}
+`
+
+func TestAccLocationparameter_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccLocationparameter_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationparameterExist("citrixadc_locationparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_locationparameter.tf_unset", "matchwildcardtoany", "YES"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the documented NITRO default, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccLocationparameter_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationparameterExist("citrixadc_locationparameter.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_locationparameter.tf_unset", "matchwildcardtoany", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLocationparameterADCValue("matchwildcardtoany", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLocationparameterADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckLocationparameterADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Locationparameter.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("locationparameter not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("locationparameter: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccLocationparameterDataSource_basic(t *testing.T) {

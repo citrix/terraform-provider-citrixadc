@@ -7,11 +7,61 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
+// unsetOnRemoveInt64Modifier is the Int64 counterpart of unsetOnRemoveStringModifier.
+type unsetOnRemoveInt64Modifier struct{}
+
+func (m unsetOnRemoveInt64Modifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-zero value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveInt64Modifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveInt64Modifier) PlanModifyInt64(_ context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueInt64() != 0 {
+		resp.PlanValue = types.Int64Unknown()
+	}
+}
 
 // CmpparameterResourceModel describes the resource data model.
 type CmpparameterResourceModel struct {
@@ -50,42 +100,50 @@ func (r *CmpparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"addvaryheader": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Control insertion of the Vary header in HTTP responses compressed by Citrix ADC. Intermediate caches store different versions of the response for different values of the headers present in the Vary response header.",
 			},
 			"cmpbypasspct": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(100),
 				Description: "Citrix ADC CPU threshold after which compression is not performed. Range: 0 - 100",
 			},
 			"cmplevel": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("optimal"),
 				Description: "Specify a compression level. Available settings function as follows:\n * Optimal - Corresponds to a gzip GZIP level of 5-7.\n * Best speed - Corresponds to a gzip level of 1.\n * Best compression - Corresponds to a gzip level of 9.",
 			},
 			"cmponpush": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Citrix ADC does not wait for the quantum to be filled before starting to compress data. Upon receipt of a packet with a PUSH flag, the appliance immediately begins compression of the accumulated packets.",
 			},
 			"externalcache": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enable insertion of  Cache-Control: private response directive to indicate response message is intended for a single user and must not be cached by a shared or proxy cache.",
 			},
 			"heurexpiry": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Heuristic basefile expiry.",
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.String{unsetOnRemoveStringModifier{}},
+				Description:   "Heuristic basefile expiry.",
 			},
 			"heurexpiryhistwt": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "For heuristic basefile expiry, weightage to be given to historical delta compression ratio, specified as percentage.  For example, to give 25% weightage to historical ratio (and therefore 75% weightage to the ratio for current delta compression transaction), specify 25.",
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.Int64{unsetOnRemoveInt64Modifier{}},
+				Description:   "For heuristic basefile expiry, weightage to be given to historical delta compression ratio, specified as percentage.  For example, to give 25% weightage to historical ratio (and therefore 75% weightage to the ratio for current delta compression transaction), specify 25.",
 			},
 			"heurexpirythres": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Threshold compression ratio for heuristic basefile expiry, multiplied by 100. For example, to set the threshold ratio to 1.25, specify 125.",
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.Int64{unsetOnRemoveInt64Modifier{}},
+				Description:   "Threshold compression ratio for heuristic basefile expiry, multiplied by 100. For example, to set the threshold ratio to 1.25, specify 125.",
 			},
 			"minressize": schema.Int64Attribute{
 				Optional:    true,
@@ -100,26 +158,31 @@ func (r *CmpparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			"quantumsize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(57344),
 				Description: "Minimum quantum of data to be filled before compression begins.",
 			},
 			"randomgzipfilename": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Control the addition of a random filename of random length in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.",
 			},
 			"randomgzipfilenamemaxlength": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(63),
 				Description: "Maximum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.",
 			},
 			"randomgzipfilenameminlength": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(8),
 				Description: "Minimum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.",
 			},
 			"servercmp": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Allow the server to send compressed data to the Citrix ADC. With the default setting, the Citrix ADC appliance handles all compression.",
 			},
 			"varyheadervalue": schema.StringAttribute{

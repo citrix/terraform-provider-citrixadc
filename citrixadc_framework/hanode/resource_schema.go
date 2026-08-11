@@ -8,8 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -64,6 +66,7 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"deadinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Number of seconds after which a peer node is marked DOWN if heartbeat messages are not received from the peer node.",
 			},
 			"enaifaces": schema.StringAttribute{
@@ -73,11 +76,13 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"failsafe": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Keep one node primary if both nodes fail the health check, so that a partially available node can back up data and handle traffic. This mode is set independently on each node.",
 			},
 			"haprop": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Automatically propagate all commands from the primary to the secondary node, except the following:\n* All HA configuration related commands. For example, add ha node, set ha node, and bind ha node.\n* All Interface related commands. For example, set interface and unset interface.\n* All channels related commands. For example, add channel, set channel, and bind channel.\nThe propagated command is executed on the secondary node before it is executed on the primary. If command propagation fails, or if command execution fails on the secondary, the primary node executes the command and logs an error.  Command propagation uses port 3010.\nNote: After enabling propagation, run force synchronization on either node.",
 			},
 			"hastatus": schema.StringAttribute{
@@ -88,11 +93,13 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"hasync": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Automatically maintain synchronization by duplicating the configuration of the primary node on the secondary node. This setting is not propagated. Automatic synchronization requires that this setting be enabled (the default) on the current secondary node. Synchronization uses TCP port 3010.",
 			},
 			"hellointerval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(200),
 				Description: "Interval, in milliseconds, between heartbeat messages sent to the peer node. The heartbeat messages are UDP packets sent to port 3003 of the peer node.",
 			},
 			"hanode_id": schema.Int64Attribute{
@@ -121,11 +128,13 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"maxflips": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Max number of flips allowed before becoming sticky primary",
 			},
 			"maxfliptime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Interval after which flipping of node states can again start",
 			},
 			"netmask": schema.StringAttribute{
@@ -159,6 +168,7 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 			"syncstatusstrictmode": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "strict mode flag for sync status",
 			},
 			"syncvlan": schema.Int64Attribute{

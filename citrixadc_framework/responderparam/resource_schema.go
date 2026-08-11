@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -28,15 +30,18 @@ func (r *ResponderparamResource) Schema(ctx context.Context, req resource.Schema
 				Computed:    true,
 				Description: "The ID of the responderparam resource.",
 			},
-			// SDK v2 backward-compat: Optional+Computed, no Default (value is read from the ADC).
+			// Optional+Computed with a NITRO-default Default so config-removal
+			// produces a plan diff and the Update method can fire the unset.
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3900),
 				Description: "Maximum time in milliseconds to allow for processing all the policies and their selected actions without interruption. If the timeout is reached then the evaluation causes an UNDEF to be raised and no further processing is performed.",
 			},
 			"undefaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NOOP"),
 				Description: "Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:\n* NOOP - Send the request to the protected server.\n* RESET - Reset the request and notify the user's browser, so that the user can resend the request.\n* DROP - Drop the request without sending a response to the user.",
 			},
 		},

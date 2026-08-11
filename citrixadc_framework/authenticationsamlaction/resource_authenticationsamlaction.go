@@ -110,12 +110,14 @@ func (r *AuthenticationsamlactionResource) Read(ctx context.Context, req resourc
 }
 
 func (r *AuthenticationsamlactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state AuthenticationsamlactionResourceModel
+	var data, config, state AuthenticationsamlactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to be unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,6 +127,110 @@ func (r *AuthenticationsamlactionResource) Update(ctx context.Context, req resou
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating authenticationsamlaction resource")
+
+	// Determine attributes removed from config so they can be unset on the
+	// appliance (revert to NITRO defaults).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Attributeconsumingserviceindex.Equal(state.Attributeconsumingserviceindex) {
+		if config.Attributeconsumingserviceindex.IsNull() {
+			attributesToUnset = append(attributesToUnset, "attributeconsumingserviceindex")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Digestmethod.Equal(state.Digestmethod) {
+		if config.Digestmethod.IsNull() {
+			attributesToUnset = append(attributesToUnset, "digestmethod")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Enforceusername.Equal(state.Enforceusername) {
+		if config.Enforceusername.IsNull() {
+			attributesToUnset = append(attributesToUnset, "enforceusername")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Forceauthn.Equal(state.Forceauthn) {
+		if config.Forceauthn.IsNull() {
+			attributesToUnset = append(attributesToUnset, "forceauthn")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Logoutbinding.Equal(state.Logoutbinding) {
+		if config.Logoutbinding.IsNull() {
+			attributesToUnset = append(attributesToUnset, "logoutbinding")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Requestedauthncontext.Equal(state.Requestedauthncontext) {
+		if config.Requestedauthncontext.IsNull() {
+			attributesToUnset = append(attributesToUnset, "requestedauthncontext")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Samlacsindex.Equal(state.Samlacsindex) {
+		if config.Samlacsindex.IsNull() {
+			attributesToUnset = append(attributesToUnset, "samlacsindex")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Samlbinding.Equal(state.Samlbinding) {
+		if config.Samlbinding.IsNull() {
+			attributesToUnset = append(attributesToUnset, "samlbinding")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Samlrejectunsignedassertion.Equal(state.Samlrejectunsignedassertion) {
+		if config.Samlrejectunsignedassertion.IsNull() {
+			attributesToUnset = append(attributesToUnset, "samlrejectunsignedassertion")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Samltwofactor.Equal(state.Samltwofactor) {
+		if config.Samltwofactor.IsNull() {
+			attributesToUnset = append(attributesToUnset, "samltwofactor")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Sendthumbprint.Equal(state.Sendthumbprint) {
+		if config.Sendthumbprint.IsNull() {
+			attributesToUnset = append(attributesToUnset, "sendthumbprint")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Signaturealg.Equal(state.Signaturealg) {
+		if config.Signaturealg.IsNull() {
+			attributesToUnset = append(attributesToUnset, "signaturealg")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Skewtime.Equal(state.Skewtime) {
+		if config.Skewtime.IsNull() {
+			attributesToUnset = append(attributesToUnset, "skewtime")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Storesamlresponse.Equal(state.Storesamlresponse) {
+		if config.Storesamlresponse.IsNull() {
+			attributesToUnset = append(attributesToUnset, "storesamlresponse")
+		} else {
+			hasChange = true
+		}
+	}
+	_ = hasChange
 
 	// Create API request body from the model
 	authenticationsamlaction := authenticationsamlactionGetThePayloadFromthePlan(ctx, &data)
@@ -138,6 +244,16 @@ func (r *AuthenticationsamlactionResource) Update(ctx context.Context, req resou
 	}
 
 	tflog.Trace(ctx, "Updated authenticationsamlaction resource")
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Authenticationsamlaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset authenticationsamlaction attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readAuthenticationsamlactionFromApi(ctx, &data, &resp.Diagnostics) {

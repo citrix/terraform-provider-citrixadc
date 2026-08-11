@@ -110,12 +110,14 @@ func (r *LsnpoolResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *LsnpoolResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsnpoolResourceModel
+	var data, config, state LsnpoolResourceModel
 
 	// Read Terraform prior state to preserve ID and detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,13 +131,22 @@ func (r *LsnpoolResource) Update(ctx context.Context, req resource.UpdateRequest
 	// Only maxportrealloctmq and portrealloctimeout are updateable in NITRO
 	// (nattype, portblockallocation and poolname are ForceNew).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Maxportrealloctmq.Equal(state.Maxportrealloctmq) {
 		tflog.Debug(ctx, "maxportrealloctmq has changed for lsnpool")
-		hasChange = true
+		if config.Maxportrealloctmq.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxportrealloctmq")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Portrealloctimeout.Equal(state.Portrealloctimeout) {
 		tflog.Debug(ctx, "portrealloctimeout has changed for lsnpool")
-		hasChange = true
+		if config.Portrealloctimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "portrealloctimeout")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -149,6 +160,16 @@ func (r *LsnpoolResource) Update(ctx context.Context, req resource.UpdateRequest
 		tflog.Trace(ctx, "Updated lsnpool resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lsnpool resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their NITRO defaults.
+	unsetIdPayload := map[string]interface{}{
+		"poolname": data.Poolname.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsnpool.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsnpool attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

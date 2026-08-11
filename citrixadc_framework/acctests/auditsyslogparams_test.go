@@ -168,6 +168,89 @@ func TestAccAuditsyslogparams_sdkv2StateUpgrade(t *testing.T) {
 	})
 }
 
+// auditsyslogparams is a singleton (unnamed) resource. The unset test sets the
+// unset-eligible attributes to non-default values, then removes them from
+// config so the provider must unset them (revert to the documented NITRO
+// defaults). Only attributes that are also present in the basic config are
+// wired for unset, so their added schema Defaults never activate in the basic /
+// sdkv2StateUpgrade tests and cannot regress them.
+const testAccauditsyslogparams_unset_step1 = `
+	resource "citrixadc_auditsyslogparams" "tf_unset" {
+		dateformat         = "DDMMYYYY"
+		tcp                = "ALL"
+		protocolviolations = "ALL"
+		streamanalytics    = "ENABLED"
+	}
+`
+
+const testAccauditsyslogparams_unset_step2 = `
+	resource "citrixadc_auditsyslogparams" "tf_unset" {
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccAuditsyslogparams_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccauditsyslogparams_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckauditsyslogparamsExist("citrixadc_auditsyslogparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_unset", "dateformat", "DDMMYYYY"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_unset", "tcp", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_unset", "protocolviolations", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_unset", "streamanalytics", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccauditsyslogparams_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckauditsyslogparamsExist("citrixadc_auditsyslogparams.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_unset", "dateformat", "MMDDYYYY"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_unset", "tcp", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_unset", "protocolviolations", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogparams.tf_unset", "streamanalytics", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuditsyslogparamsADCValue("dateformat", "MMDDYYYY"),
+					testAccCheckAuditsyslogparamsADCValue("tcp", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuditsyslogparamsADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckAuditsyslogparamsADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Auditsyslogparams.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("auditsyslogparams not found on appliance")
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("auditsyslogparams: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccAuditsyslogparamsDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

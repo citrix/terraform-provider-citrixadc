@@ -176,6 +176,87 @@ func testAccCheckSnmptrapDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccSnmptrap_unset_step1 = `
+	resource "citrixadc_snmptrap" "tf_unset" {
+		trapclass       = "specific"
+		trapdestination = "192.168.5.5"
+		version         = "V2"
+		severity        = "Critical"
+		destport        = 1620
+		allpartitions   = "ENABLED"
+	}
+`
+
+// Unsettable attributes removed; only the identity keys remain.
+const testAccSnmptrap_unset_step2 = `
+	resource "citrixadc_snmptrap" "tf_unset" {
+		trapclass       = "specific"
+		trapdestination = "192.168.5.5"
+		version         = "V2"
+	}
+`
+
+func TestAccSnmptrap_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmptrapDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccSnmptrap_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmptrapExist("citrixadc_snmptrap.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_unset", "severity", "Critical"),
+					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_unset", "destport", "1620"),
+					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_unset", "allpartitions", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccSnmptrap_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmptrapExist("citrixadc_snmptrap.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_unset", "severity", "Unknown"),
+					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_unset", "destport", "162"),
+					resource.TestCheckResourceAttr("citrixadc_snmptrap.tf_unset", "allpartitions", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckSnmptrapADCValue("specific", "192.168.5.5", "V2", "destport", "162"),
+					testAccCheckSnmptrapADCValue("specific", "192.168.5.5", "V2", "allpartitions", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckSnmptrapADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. snmptrap is an array/filter resource so it is located by its composite key.
+func testAccCheckSnmptrapADCValue(trapclass, trapdestination, version, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		dataArr, err := client.FindAllResources(service.Snmptrap.Type())
+		if err != nil {
+			return err
+		}
+		for _, v := range dataArr {
+			if v["trapclass"] == trapclass && v["trapdestination"] == trapdestination && v["version"] == version {
+				got := strings.TrimSpace(fmt.Sprintf("%v", v[attr]))
+				if got != want {
+					return fmt.Errorf("snmptrap: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("snmptrap %s,%s,%s not found on appliance", trapclass, trapdestination, version)
+	}
+}
+
 func TestAccSnmptrap_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_snmptrap.tf_snmptrap"
 	resource.Test(t, resource.TestCase{

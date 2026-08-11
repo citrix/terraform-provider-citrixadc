@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -208,6 +209,97 @@ data "citrixadc_rewriteaction" "tf_rewrite_action_ds" {
   name = citrixadc_rewriteaction.tf_rewrite_action_ds.name
 }
 `
+
+// The rewriteaction unset test covers the unset-eligible attributes that can be
+// both set and cleanly unset: comment and refinesearch. It uses a REPLACE_ALL
+// action so refinesearch (valid only on the *_ALL body-expression action types)
+// is settable and optional; the mandatory REPLACE_ALL arguments (target, search,
+// stringbuilderexpr) are kept across both steps. stringbuilderexpr itself is in
+// the NITRO unset payload but is mandatory whenever it is settable, so it cannot
+// be exercised on a single-resource unset test and is excluded here.
+const testAccRewriteaction_unset_step1 = `
+resource "citrixadc_rewriteaction" "tf_unset" {
+  name              = "tf_test_rewriteaction_unset"
+  type              = "replace_all"
+  target            = "HTTP.RES.BODY(1000)"
+  search            = "text(\"hello\")"
+  stringbuilderexpr = "\"world\""
+  refinesearch      = "extend(10, 20)"
+  comment           = "tf unset test comment"
+}
+`
+
+const testAccRewriteaction_unset_step2 = `
+resource "citrixadc_rewriteaction" "tf_unset" {
+  name              = "tf_test_rewriteaction_unset"
+  type              = "replace_all"
+  target            = "HTTP.RES.BODY(1000)"
+  search            = "text(\"hello\")"
+  stringbuilderexpr = "\"world\""
+  # comment and refinesearch removed from config -> the provider must unset them
+  # (revert to NITRO defaults, empty).
+}
+`
+
+func TestAccRewriteaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewriteactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccRewriteaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewriteactionExist("citrixadc_rewriteaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_rewriteaction.tf_unset", "comment", "tf unset test comment"),
+					resource.TestCheckResourceAttr("citrixadc_rewriteaction.tf_unset", "refinesearch", "extend(10, 20)"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: NITRO omits the unset
+				// fields from GET so state reads back NULL (no Default to inject a
+				// value), and the implicit post-apply plan must be empty.
+				Config: testAccRewriteaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewriteactionExist("citrixadc_rewriteaction.tf_unset", nil),
+					resource.TestCheckNoResourceAttr("citrixadc_rewriteaction.tf_unset", "comment"),
+					resource.TestCheckNoResourceAttr("citrixadc_rewriteaction.tf_unset", "refinesearch"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckRewriteactionADCValue("tf_test_rewriteaction_unset", "comment", ""),
+					testAccCheckRewriteactionADCValue("tf_test_rewriteaction_unset", "refinesearch", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckRewriteactionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. A missing/nil value is treated as the empty-string default.
+func testAccCheckRewriteactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Rewriteaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("rewriteaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("rewriteaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccRewriteactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

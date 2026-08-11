@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -51,11 +52,15 @@ func (r *NsdiameterResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 				Description: "Diameter Realm to be used by NS.\nexample =>\nset ns diameter -realm com\nNow whenever Citrix ADC system needs to use realm in diameter messages. It will use 'com' as Origin-Realm AVP as defined in RFC3588",
 			},
-			// SDK v2 parity: serverclosepropagation is Optional+Computed, no ForceNew,
-			// no Default.
+			// serverclosepropagation is Optional+Computed. A NITRO server default
+			// ("NO") is set via Default so that removing it from config produces a
+			// plan diff, which allows the Update method to fire the unset op and
+			// revert the appliance to its default (an Optional+Computed attr with no
+			// Default is sticky on config-removal and would never trigger Update).
 			"serverclosepropagation": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "when a Server connection goes down, whether to close the corresponding client connection if there were requests pending on the server.",
 			},
 		},

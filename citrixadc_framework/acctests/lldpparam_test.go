@@ -17,8 +17,10 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -154,6 +156,75 @@ func TestAccLldpparam_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccLldpparam_unset_step1 = `
+	resource "citrixadc_lldpparam" "tf_unset" {
+		holdtimetxmult = 10
+		timer          = 60
+	}
+`
+
+const testAccLldpparam_unset_step2 = `
+	resource "citrixadc_lldpparam" "tf_unset" {
+		# Unset-eligible attributes removed from config -> provider must unset
+		# them (revert to NITRO defaults: holdtimetxmult=4, timer=30).
+	}
+`
+
+func TestAccLldpparam_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLldpparam_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLldpparamExist("citrixadc_lldpparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lldpparam.tf_unset", "holdtimetxmult", "10"),
+					resource.TestCheckResourceAttr("citrixadc_lldpparam.tf_unset", "timer", "60"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccLldpparam_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLldpparamExist("citrixadc_lldpparam.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lldpparam.tf_unset", "holdtimetxmult", "4"),
+					resource.TestCheckResourceAttr("citrixadc_lldpparam.tf_unset", "timer", "30"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLldpparamADCValue("holdtimetxmult", "4"),
+					testAccCheckLldpparamADCValue("timer", "30"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLldpparamADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckLldpparamADCValue(attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lldpparam.Type(), "")
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lldpparam not found on appliance")
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("lldpparam: appliance attr %q = %q, want %q (unset did not revert it)", attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccLldpparamDataSource_basic(t *testing.T) {

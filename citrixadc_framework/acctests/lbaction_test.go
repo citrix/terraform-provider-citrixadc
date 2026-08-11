@@ -18,6 +18,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -194,6 +195,84 @@ func TestAccLbaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// comment is the only spec-unsettable mutable attribute of lbaction (the NITRO
+// unset payload lists only "comment"; name/type are ForceNew keys, newname is
+// rename-only, and value is not unsettable per the spec). Step 1 sets a
+// non-default comment; step 2 removes it, and the provider must issue the NITRO
+// ?action=unset so the appliance reverts comment to its default (absent/empty).
+const testAccLbaction_unset_step1 = `
+	resource "citrixadc_lbaction" "tf_unset" {
+		name    = "tf_act_unset"
+		type    = "SELECTIONORDER"
+		value   = [1]
+		comment = "managed by terraform"
+	}
+`
+
+const testAccLbaction_unset_step2 = `
+	resource "citrixadc_lbaction" "tf_unset" {
+		name  = "tf_act_unset"
+		type  = "SELECTIONORDER"
+		value = [1]
+		# comment removed from config -> the provider must unset it (revert to default).
+	}
+`
+
+func TestAccLbaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccLbaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbactionExist("citrixadc_lbaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbaction.tf_unset", "comment", "managed by terraform"),
+				),
+			},
+			{
+				// Removing comment must unset it: state (read back from the appliance)
+				// reverts to the NITRO default, and the implicit post-apply plan is empty.
+				Config: testAccLbaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbactionExist("citrixadc_lbaction.tf_unset", nil),
+					// Appliance-level confirmation the unset reverted comment to its
+					// default (absent/empty); the implicit post-apply plan must be empty.
+					testAccCheckLbactionADCValue("tf_act_unset", "comment", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLbactionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckLbactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lbaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("lbaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccLbactionDataSource_basic(t *testing.T) {

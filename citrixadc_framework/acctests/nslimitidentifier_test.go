@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -222,6 +223,93 @@ func TestAccNslimitidentifier_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// step1 sets the unset-eligible attributes to valid non-default values.
+// mode is kept as REQUEST_RATE in both steps because threshold, timeslice and
+// limittype are only meaningful in that mode (prerequisite for the appliance).
+const testAccNslimitidentifier_unset_step1 = `
+	resource "citrixadc_nslimitidentifier" "tf_unset" {
+		limitidentifier  = "tf_nslimitidentifier_unset"
+		mode             = "REQUEST_RATE"
+		limittype        = "SMOOTH"
+		threshold        = 50
+		timeslice        = 2000
+		maxbandwidth     = 100
+		trapsintimeslice = 2
+	}
+`
+
+// step2 removes all unset-eligible attributes -> the provider must unset them
+// (revert to NITRO defaults).
+const testAccNslimitidentifier_unset_step2 = `
+	resource "citrixadc_nslimitidentifier" "tf_unset" {
+		limitidentifier = "tf_nslimitidentifier_unset"
+		mode            = "REQUEST_RATE"
+	}
+`
+
+func TestAccNslimitidentifier_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslimitidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNslimitidentifier_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNslimitidentifierExist("citrixadc_nslimitidentifier.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "limittype", "SMOOTH"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "threshold", "50"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "timeslice", "2000"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "maxbandwidth", "100"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "trapsintimeslice", "2"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from the
+				// appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNslimitidentifier_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNslimitidentifierExist("citrixadc_nslimitidentifier.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "limittype", "BURSTY"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "threshold", "1"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "timeslice", "1000"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "maxbandwidth", "0"),
+					resource.TestCheckResourceAttr("citrixadc_nslimitidentifier.tf_unset", "trapsintimeslice", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNslimitidentifierADCValue("tf_nslimitidentifier_unset", "limittype", "BURSTY"),
+					testAccCheckNslimitidentifierADCValue("tf_nslimitidentifier_unset", "threshold", "1"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNslimitidentifierADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckNslimitidentifierADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Nslimitidentifier.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("nslimitidentifier %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("nslimitidentifier %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccNslimitidentifierDataSource_basic(t *testing.T) {

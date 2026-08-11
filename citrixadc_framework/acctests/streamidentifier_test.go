@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -168,6 +169,106 @@ func TestAccStreamidentifier_selfHealing(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccStreamidentifier_unset_step1 = `
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+	resource "citrixadc_streamidentifier" "tf_unset" {
+		name                = "tf_test_streamidentifier_unset"
+		selectorname        = citrixadc_streamselector.tf_streamselector.name
+		appflowlog          = "ENABLED"
+		interval            = 10
+		log                 = "SYSLOG"
+		loginterval         = 60
+		loglimit            = 500
+		samplecount         = 20
+		snmptrap            = "ENABLED"
+		sort                = "CONNECTIONS"
+		trackackonlypackets = "ENABLED"
+	}
+`
+
+const testAccStreamidentifier_unset_step2 = `
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+	resource "citrixadc_streamidentifier" "tf_unset" {
+		name         = "tf_test_streamidentifier_unset"
+		selectorname = citrixadc_streamselector.tf_streamselector.name
+	}
+`
+
+func TestAccStreamidentifier_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckStreamidentifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccStreamidentifier_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamidentifierExist("citrixadc_streamidentifier.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "interval", "10"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "log", "SYSLOG"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "loginterval", "60"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "loglimit", "500"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "samplecount", "20"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "snmptrap", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "sort", "CONNECTIONS"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "trackackonlypackets", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccStreamidentifier_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamidentifierExist("citrixadc_streamidentifier.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "interval", "1"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "log", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "loginterval", "5"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "loglimit", "100"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "samplecount", "1"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "snmptrap", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "sort", "REQUESTS"),
+					resource.TestCheckResourceAttr("citrixadc_streamidentifier.tf_unset", "trackackonlypackets", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckStreamidentifierADCValue("tf_test_streamidentifier_unset", "appflowlog", "DISABLED"),
+					testAccCheckStreamidentifierADCValue("tf_test_streamidentifier_unset", "sort", "REQUESTS"),
+					testAccCheckStreamidentifierADCValue("tf_test_streamidentifier_unset", "log", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckStreamidentifierADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Streamidentifier.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("streamidentifier %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("streamidentifier %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckStreamidentifierExist(n string, id *string) resource.TestCheckFunc {

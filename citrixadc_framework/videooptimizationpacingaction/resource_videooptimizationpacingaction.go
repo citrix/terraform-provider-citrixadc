@@ -109,12 +109,14 @@ func (r *VideooptimizationpacingactionResource) Read(ctx context.Context, req re
 }
 
 func (r *VideooptimizationpacingactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VideooptimizationpacingactionResourceModel
+	var data, config, state VideooptimizationpacingactionResourceModel
 
 	// Read Terraform prior state to preserve ID / detect changes
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read Terraform config to distinguish "changed value" from "removed" (-> unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -152,9 +154,14 @@ func (r *VideooptimizationpacingactionResource) Update(ctx context.Context, req 
 	// In-place update of the updateable attributes (comment, rate). Mirrors the SDK v2
 	// HasChange gate so a no-op plan does not issue a NITRO write.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for videooptimizationpacingaction")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Rate.Equal(state.Rate) {
 		tflog.Debug(ctx, "rate has changed for videooptimizationpacingaction")
@@ -174,6 +181,16 @@ func (r *VideooptimizationpacingactionResource) Update(ctx context.Context, req 
 		tflog.Trace(ctx, "Updated videooptimizationpacingaction resource")
 	} else {
 		tflog.Debug(ctx, "No updateable changes detected for videooptimizationpacingaction resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Target the current live name (== newname after a rename this apply).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Videooptimizationpacingaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset videooptimizationpacingaction attributes, got error: %s", err))
+		return
 	}
 
 	// Read the current state back. Preserve the user-facing name / newname (the object

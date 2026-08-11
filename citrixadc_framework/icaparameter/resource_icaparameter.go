@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -100,12 +101,14 @@ func (r *IcaparameterResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *IcaparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state IcaparameterResourceModel
+	var data, config, state IcaparameterResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -116,18 +119,85 @@ func (r *IcaparameterResource) Update(ctx context.Context, req resource.UpdateRe
 
 	tflog.Debug(ctx, "Updating icaparameter resource")
 
-	// Create API request body from the plan
-	icaparameter := icaparameterGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// Singleton resource - use UpdateUnnamedResource
-	err := r.client.UpdateUnnamedResource(service.Icaparameter.Type(), &icaparameter)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update icaparameter, got error: %s", err))
-		return
+	// Detect changes and, for attributes removed from config, collect them to unset.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Dfpersistence.Equal(state.Dfpersistence) {
+		if config.Dfpersistence.IsNull() {
+			attributesToUnset = append(attributesToUnset, "dfpersistence")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Edtlosstolerant.Equal(state.Edtlosstolerant) {
+		hasChange = true
+	}
+	if !data.Edtpmtuddf.Equal(state.Edtpmtuddf) {
+		if config.Edtpmtuddf.IsNull() {
+			attributesToUnset = append(attributesToUnset, "edtpmtuddf")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Edtpmtuddftimeout.Equal(state.Edtpmtuddftimeout) {
+		if config.Edtpmtuddftimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "edtpmtuddftimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Edtpmtudrediscovery.Equal(state.Edtpmtudrediscovery) {
+		if config.Edtpmtudrediscovery.IsNull() {
+			attributesToUnset = append(attributesToUnset, "edtpmtudrediscovery")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Enablesronhafailover.Equal(state.Enablesronhafailover) {
+		if config.Enablesronhafailover.IsNull() {
+			attributesToUnset = append(attributesToUnset, "enablesronhafailover")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Hdxinsightnonnsap.Equal(state.Hdxinsightnonnsap) {
+		if config.Hdxinsightnonnsap.IsNull() {
+			attributesToUnset = append(attributesToUnset, "hdxinsightnonnsap")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.L7latencyfrequency.Equal(state.L7latencyfrequency) {
+		if config.L7latencyfrequency.IsNull() {
+			attributesToUnset = append(attributesToUnset, "l7latencyfrequency")
+		} else {
+			hasChange = true
+		}
 	}
 
-	tflog.Trace(ctx, "Updated icaparameter resource")
+	if hasChange {
+		// Create API request body from the plan
+		icaparameter := icaparameterGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Icaparameter.Type(), &icaparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update icaparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated icaparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for icaparameter resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Icaparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset icaparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readIcaparameterFromApi(ctx, &data, &resp.Diagnostics)

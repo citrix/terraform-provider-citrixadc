@@ -110,12 +110,14 @@ func (r *VlanResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 }
 
 func (r *VlanResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VlanResourceModel
+	var data, config, state VlanResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,17 +130,26 @@ func (r *VlanResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Aliasname.Equal(state.Aliasname) {
 		tflog.Debug(ctx, "aliasname has changed for vlan")
 		hasChange = true
 	}
 	if !data.Dynamicrouting.Equal(state.Dynamicrouting) {
 		tflog.Debug(ctx, "dynamicrouting has changed for vlan")
-		hasChange = true
+		if config.Dynamicrouting.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dynamicrouting")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Ipv6dynamicrouting.Equal(state.Ipv6dynamicrouting) {
 		tflog.Debug(ctx, "ipv6dynamicrouting has changed for vlan")
-		hasChange = true
+		if config.Ipv6dynamicrouting.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ipv6dynamicrouting")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Mtu.Equal(state.Mtu) {
 		tflog.Debug(ctx, "mtu has changed for vlan")
@@ -146,7 +157,11 @@ func (r *VlanResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 	if !data.Sharing.Equal(state.Sharing) {
 		tflog.Debug(ctx, "sharing has changed for vlan")
-		hasChange = true
+		if config.Sharing.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sharing")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -164,6 +179,16 @@ func (r *VlanResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		tflog.Trace(ctx, "Updated vlan resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for vlan resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"id": data.Vlanid.ValueInt64(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vlan.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vlan attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

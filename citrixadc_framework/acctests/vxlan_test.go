@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
@@ -228,6 +229,90 @@ func TestAccVxlan_sdkv2StateUpgrade(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccVxlan_unset_step1 sets the unset-eligible attributes to non-default
+// values; step2 removes them so the provider must unset them back to the
+// documented NITRO defaults (port=4789, dynamicrouting/ipv6dynamicrouting/
+// innervlantagging=DISABLED).
+const testAccVxlan_unset_step1 = `
+	resource "citrixadc_vxlan" "tf_unset" {
+		vxlanid            = 456
+		port               = 8080
+		dynamicrouting     = "ENABLED"
+		ipv6dynamicrouting = "ENABLED"
+		innervlantagging   = "ENABLED"
+	}
+`
+
+const testAccVxlan_unset_step2 = `
+	resource "citrixadc_vxlan" "tf_unset" {
+		vxlanid = 456
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccVxlan_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVxlan_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxlanExist("citrixadc_vxlan.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vxlan.tf_unset", "port", "8080"),
+					resource.TestCheckResourceAttr("citrixadc_vxlan.tf_unset", "dynamicrouting", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vxlan.tf_unset", "ipv6dynamicrouting", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vxlan.tf_unset", "innervlantagging", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccVxlan_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVxlanExist("citrixadc_vxlan.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vxlan.tf_unset", "port", "4789"),
+					resource.TestCheckResourceAttr("citrixadc_vxlan.tf_unset", "dynamicrouting", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vxlan.tf_unset", "ipv6dynamicrouting", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vxlan.tf_unset", "innervlantagging", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVxlanADCValue("456", "port", "4789"),
+					testAccCheckVxlanADCValue("456", "dynamicrouting", "DISABLED"),
+					testAccCheckVxlanADCValue("456", "innervlantagging", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVxlanADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckVxlanADCValue(id, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vxlan.Type(), id)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vxlan %s not found on appliance", id)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vxlan %s: appliance attr %q = %q, want %q (unset did not revert it)", id, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccVxlanDataSource_basic(t *testing.T) {

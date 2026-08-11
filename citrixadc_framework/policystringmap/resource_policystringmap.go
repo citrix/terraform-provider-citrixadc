@@ -110,12 +110,14 @@ func (r *PolicystringmapResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *PolicystringmapResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state PolicystringmapResourceModel
+	var data, config, state PolicystringmapResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates to unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -130,9 +132,14 @@ func (r *PolicystringmapResource) Update(ctx context.Context, req resource.Updat
 	// Mirrors SDK v2 updatePolicystringmapFunc which reacted to changes in
 	// both comment and name (name has no ForceNew in SDK v2).
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Comment.Equal(state.Comment) {
 		tflog.Debug(ctx, "comment has changed for policystringmap")
-		hasChange = true
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Name.Equal(state.Name) {
 		tflog.Debug(ctx, "name has changed for policystringmap")
@@ -153,6 +160,16 @@ func (r *PolicystringmapResource) Update(ctx context.Context, req resource.Updat
 		tflog.Trace(ctx, "Updated policystringmap resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for policystringmap resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Policystringmap.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset policystringmap attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -110,12 +110,14 @@ func (r *TmsamlssoprofileResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *TmsamlssoprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state TmsamlssoprofileResourceModel
+	var data, config, state TmsamlssoprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,6 +127,26 @@ func (r *TmsamlssoprofileResource) Update(ctx context.Context, req resource.Upda
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating tmsamlssoprofile resource")
+
+	// Determine attributes removed from config so they can be unset (reverted to
+	// their NITRO defaults) after the update. The update call below runs
+	// unconditionally (mirrors SDK v2), so only the unset list is tracked here.
+	attributesToUnset := []string{}
+	if !data.Digestmethod.Equal(state.Digestmethod) && config.Digestmethod.IsNull() {
+		attributesToUnset = append(attributesToUnset, "digestmethod")
+	}
+	if !data.Nameidformat.Equal(state.Nameidformat) && config.Nameidformat.IsNull() {
+		attributesToUnset = append(attributesToUnset, "nameidformat")
+	}
+	if !data.Signassertion.Equal(state.Signassertion) && config.Signassertion.IsNull() {
+		attributesToUnset = append(attributesToUnset, "signassertion")
+	}
+	if !data.Signaturealg.Equal(state.Signaturealg) && config.Signaturealg.IsNull() {
+		attributesToUnset = append(attributesToUnset, "signaturealg")
+	}
+	if !data.Skewtime.Equal(state.Skewtime) && config.Skewtime.IsNull() {
+		attributesToUnset = append(attributesToUnset, "skewtime")
+	}
 
 	// Create API request body from the model (Name is included in the payload)
 	tmsamlssoprofile := tmsamlssoprofileGetThePayloadFromtheConfig(ctx, &data)
@@ -137,6 +159,17 @@ func (r *TmsamlssoprofileResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	tflog.Trace(ctx, "Updated tmsamlssoprofile resource")
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Tmsamlssoprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset tmsamlssoprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readTmsamlssoprofileFromApi(ctx, &data, &resp.Diagnostics) {

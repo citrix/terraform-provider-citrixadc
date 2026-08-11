@@ -110,12 +110,14 @@ func (r *VpnsessionactionResource) Read(ctx context.Context, req resource.ReadRe
 }
 
 func (r *VpnsessionactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnsessionactionResourceModel
+	var data, config, state VpnsessionactionResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset them)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -125,6 +127,15 @@ func (r *VpnsessionactionResource) Update(ctx context.Context, req resource.Upda
 	data.Id = state.Id
 
 	tflog.Debug(ctx, "Updating vpnsessionaction resource")
+
+	// Determine attributes removed from config so they can be unset (reverted
+	// to their NITRO defaults) after the update.
+	attributesToUnset := []string{}
+	if !data.Advancedclientlessvpnmode.Equal(state.Advancedclientlessvpnmode) {
+		if config.Advancedclientlessvpnmode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "advancedclientlessvpnmode")
+		}
+	}
 
 	// Create API request body from the model
 	vpnsessionaction := vpnsessionactionGetThePayloadFromtheConfig(ctx, &data)
@@ -138,6 +149,16 @@ func (r *VpnsessionactionResource) Update(ctx context.Context, req resource.Upda
 	}
 
 	tflog.Trace(ctx, "Updated vpnsessionaction resource")
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnsessionaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnsessionaction attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	if !r.readVpnsessionactionFromApi(ctx, &data, &resp.Diagnostics) {

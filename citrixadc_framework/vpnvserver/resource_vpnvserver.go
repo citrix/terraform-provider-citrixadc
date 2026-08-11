@@ -111,12 +111,14 @@ func (r *VpnvserverResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *VpnvserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state VpnvserverResourceModel
+	var data, config, state VpnvserverResourceModel
 
 	// Read Terraform prior state to preserve the live name/ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (-> unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -146,6 +148,41 @@ func (r *VpnvserverResource) Update(ctx context.Context, req resource.UpdateRequ
 		data.Id = types.StringValue(newName)
 	}
 
+	// Detect attributes removed from config: when an unsettable attribute is
+	// dropped from config its planned value reverts to the schema Default, so it
+	// differs from prior state while config.X is null -> unset it on the appliance.
+	attributesToUnset := []string{}
+	if !data.Appflowlog.Equal(state.Appflowlog) && config.Appflowlog.IsNull() {
+		attributesToUnset = append(attributesToUnset, "appflowlog")
+	}
+	if !data.Cginfrahomepageredirect.Equal(state.Cginfrahomepageredirect) && config.Cginfrahomepageredirect.IsNull() {
+		attributesToUnset = append(attributesToUnset, "cginfrahomepageredirect")
+	}
+	if !data.Deviceposture.Equal(state.Deviceposture) && config.Deviceposture.IsNull() {
+		attributesToUnset = append(attributesToUnset, "deviceposture")
+	}
+	if !data.Downstateflush.Equal(state.Downstateflush) && config.Downstateflush.IsNull() {
+		attributesToUnset = append(attributesToUnset, "downstateflush")
+	}
+	if !data.Dtls.Equal(state.Dtls) && config.Dtls.IsNull() {
+		attributesToUnset = append(attributesToUnset, "dtls")
+	}
+	if !data.Icmpvsrresponse.Equal(state.Icmpvsrresponse) && config.Icmpvsrresponse.IsNull() {
+		attributesToUnset = append(attributesToUnset, "icmpvsrresponse")
+	}
+	if !data.Loginonce.Equal(state.Loginonce) && config.Loginonce.IsNull() {
+		attributesToUnset = append(attributesToUnset, "loginonce")
+	}
+	if !data.Logoutonsmartcardremoval.Equal(state.Logoutonsmartcardremoval) && config.Logoutonsmartcardremoval.IsNull() {
+		attributesToUnset = append(attributesToUnset, "logoutonsmartcardremoval")
+	}
+	if !data.Rhistate.Equal(state.Rhistate) && config.Rhistate.IsNull() {
+		attributesToUnset = append(attributesToUnset, "rhistate")
+	}
+	if !data.Secureprivateaccess.Equal(state.Secureprivateaccess) && config.Secureprivateaccess.IsNull() {
+		attributesToUnset = append(attributesToUnset, "secureprivateaccess")
+	}
+
 	// Build a set payload containing ONLY the changed updateable attributes,
 	// mirroring the SDK v2 update contract. name/servicetype are create-only
 	// (RequiresReplace) and never reach the set payload — NITRO rejects
@@ -163,6 +200,17 @@ func (r *VpnvserverResource) Update(ctx context.Context, req resource.UpdateRequ
 		tflog.Trace(ctx, "Updated vpnvserver resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for vpnvserver resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Done after the update so any default value the update payload
+	// carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnvserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnvserver attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

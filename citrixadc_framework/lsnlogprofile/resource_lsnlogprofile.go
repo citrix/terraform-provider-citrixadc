@@ -110,12 +110,14 @@ func (r *LsnlogprofileResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *LsnlogprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state LsnlogprofileResourceModel
+	var data, config, state LsnlogprofileResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,25 +130,42 @@ func (r *LsnlogprofileResource) Update(ctx context.Context, req resource.UpdateR
 
 	// Check if there are any changes in updateable attributes
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Analyticsprofile.Equal(state.Analyticsprofile) {
 		tflog.Debug(ctx, "analyticsprofile has changed for lsnlogprofile")
 		hasChange = true
 	}
 	if !data.Logcompact.Equal(state.Logcompact) {
 		tflog.Debug(ctx, "logcompact has changed for lsnlogprofile")
-		hasChange = true
+		if config.Logcompact.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logcompact")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logipfix.Equal(state.Logipfix) {
 		tflog.Debug(ctx, "logipfix has changed for lsnlogprofile")
-		hasChange = true
+		if config.Logipfix.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logipfix")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logsessdeletion.Equal(state.Logsessdeletion) {
 		tflog.Debug(ctx, "logsessdeletion has changed for lsnlogprofile")
-		hasChange = true
+		if config.Logsessdeletion.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logsessdeletion")
+		} else {
+			hasChange = true
+		}
 	}
 	if !data.Logsubscrinfo.Equal(state.Logsubscrinfo) {
 		tflog.Debug(ctx, "logsubscrinfo has changed for lsnlogprofile")
-		hasChange = true
+		if config.Logsubscrinfo.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logsubscrinfo")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -163,6 +182,16 @@ func (r *LsnlogprofileResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated lsnlogprofile resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for lsnlogprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"logprofilename": data.Logprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsnlogprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsnlogprofile attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back

@@ -109,12 +109,14 @@ func (r *PolicydatasetResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *PolicydatasetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state PolicydatasetResourceModel
+	var data, config, state PolicydatasetResourceModel
 
 	// Read Terraform prior state to preserve ID
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -128,9 +130,14 @@ func (r *PolicydatasetResource) Update(ctx context.Context, req resource.UpdateR
 	// Only "dynamic" is updateable in SDK v2; every other attribute is
 	// RequiresReplace and never reaches Update.
 	hasChange := false
+	attributesToUnset := []string{}
 	if !data.Dynamic.Equal(state.Dynamic) {
 		tflog.Debug(ctx, "dynamic has changed for policydataset, starting update")
-		hasChange = true
+		if config.Dynamic.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dynamic")
+		} else {
+			hasChange = true
+		}
 	}
 
 	if hasChange {
@@ -145,6 +152,16 @@ func (r *PolicydatasetResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Trace(ctx, "Updated policydataset resource")
 	} else {
 		tflog.Debug(ctx, "No changes detected for policydataset resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Policydataset.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset policydataset attributes, got error: %s", err))
+		return
 	}
 
 	// Read the updated state back
