@@ -21,13 +21,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+// NOTE: sslvserver_sslciphersuite_binding is rejected with ec3740 "Operation not
+// permitted. Use profile command" when the appliance has SSL default profiles
+// ENABLED. Run this against a box with sslparameter.defaultprofile=DISABLED
+// (the STANDALONE_NON_DEFAULT_SSL_PROFILE bed, e.g. .155).
 const testAccSslvserverBindings_basic_step1 = `
 resource "citrixadc_lbvserver" "tf_sslvserver" {
 	name = "tf_sslvserver"
 	servicetype = "SSL"
 	ipv46 = "5.5.5.5"
 	port = 443
-	}
+}
 
 resource "citrixadc_sslcipher" "tfsslcipher" {
   ciphergroupname = "tfsslcipher"
@@ -37,32 +41,31 @@ resource "citrixadc_sslcipher" "tfsslcipher" {
   ciphersuitebinding {
     ciphername     = "TLS1.2-ECDHE-RSA-AES128-GCM-SHA256"
     cipherpriority = 1
-	}
+  }
   ciphersuitebinding {
     ciphername     = "TLS1.2-ECDHE-RSA-AES256-GCM-SHA384"
     cipherpriority = 2
-	}
+  }
   ciphersuitebinding {
     ciphername     = "TLS1.2-ECDHE-RSA-AES-128-SHA256"
     cipherpriority = 3
-	}
-	}
+  }
+}
 
 resource "citrixadc_sslvserver_sslciphersuite_binding" "tf_sslvserver_sslciphersuite_binding" {
 	ciphername = citrixadc_sslcipher.tfsslcipher.ciphergroupname
 	vservername = citrixadc_lbvserver.tf_sslvserver.name
-	}
+}
 
 data "citrixadc_sslcipher_sslvserver_bindings" "sslbindings" {
     ciphername = citrixadc_sslvserver_sslciphersuite_binding.tf_sslvserver_sslciphersuite_binding.ciphername
-	}
+}
 `
 
 func TestAccSslcipherSslvserverBindings_basic(t *testing.T) {
-	t.Skip("TODO: Operation not permitted!")
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSslvserverBindings_basic_step1,

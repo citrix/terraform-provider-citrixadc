@@ -25,13 +25,13 @@ import (
 const testAccNsversion = `
 data "citrixadc_nsversion" "nsversion" {
 	installedversion = true
-	}
+}
 `
 
 func TestAccNsversion_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNsversion,

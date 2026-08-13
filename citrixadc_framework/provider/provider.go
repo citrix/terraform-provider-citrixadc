@@ -360,11 +360,14 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/filteraction"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/filterpolicy"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/installer"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/nitro_info"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/nitro_resource"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/nsversion"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/opoption"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/password_resetter"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/pinger"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/rebooter"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/sslcipher_sslvserver_bindings"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/custom_resources/systemcollectionparam"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dbdbprofile"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/dbsmonitors"
@@ -2196,6 +2199,9 @@ func (p *CitrixAdcFrameworkProvider) Resources(ctx context.Context) []func() res
 func (p *CitrixAdcFrameworkProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		sslcertkey.SslCertKeyDataSource,
+		nsversion.NsversionDataSource,
+		nitro_info.NitroInfoDataSource,
+		sslcipher_sslvserver_bindings.SslcipherSslvserverBindingsDataSource,
 		aaacertparams.AAacertparamsDataSource,
 		aaaglobal_aaapreauthenticationpolicy_binding.AAaglobalAaapreauthenticationpolicyBindingDataSource,
 		aaagroup.AAagroupDataSource,

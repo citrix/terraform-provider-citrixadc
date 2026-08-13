@@ -145,11 +145,11 @@ func providerSchema() map[string]*schema.Schema {
 }
 
 func providerDataSources() map[string]*schema.Resource {
-	return map[string]*schema.Resource{
-		"citrixadc_nsversion":                     dataSourceCitrixAdcNsversion(),
-		"citrixadc_nitro_info":                    dataSourceCitrixAdcNitroInfo(),
-		"citrixadc_sslcipher_sslvserver_bindings": dataSourceCitrixAdcSslcipherSslvserverBindings(),
-	}
+	// All SDK v2 data sources have been migrated to the Plugin Framework provider
+	// (citrixadc_framework/custom_resources/{nsversion,nitro_info,sslcipher_sslvserver_bindings})
+	// and are served there via the tf6mux. Kept empty here so the muxed servers do
+	// not both register the same data-source type names (which the mux rejects).
+	return map[string]*schema.Resource{}
 }
 
 func providerResources() map[string]*schema.Resource {
