@@ -33,7 +33,9 @@ func (r *AppfwmultipartformcontenttypeResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Default:     stringdefault.StaticString("NOTREGEX"),
 				Description: "Is multipart_form content type a regular expression?",

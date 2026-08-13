@@ -103,7 +103,8 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Idle time, in seconds, after which a client connection is terminated.",
 			},
@@ -111,7 +112,8 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Canonical name of the GSLB service. Used in CNAME-based GSLB.",
 			},
@@ -124,7 +126,8 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Timeout value, in minutes, for the cookie, when cookie based site persistence is enabled.",
 			},
@@ -153,7 +156,8 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IP address for the GSLB service.",
 			},
@@ -216,7 +220,8 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Port on which the load balancing entity represented by this GSLB service listens.",
 			},
@@ -234,7 +239,8 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the server hosting the GSLB service.",
 			},
@@ -249,7 +255,8 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of service to create.",
 			},
@@ -279,7 +286,8 @@ func (r *GslbserviceResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Idle time, in seconds, after which a server connection is terminated.",
 			},

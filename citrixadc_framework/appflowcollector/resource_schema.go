@@ -56,7 +56,9 @@ func (r *AppflowcollectorResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed attrs
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "New name for the collector. Must begin with an ASCII alphabetic or underscore (_) character, and must\ncontain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at(@), equals (=), and hyphen (-) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my appflow coll\" or 'my appflow coll').",
 			},
@@ -70,7 +72,9 @@ func (r *AppflowcollectorResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed attrs
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of collector: either logstream or ipfix or rest.",
 			},

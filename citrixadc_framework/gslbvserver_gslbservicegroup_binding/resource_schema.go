@@ -45,7 +45,8 @@ func (r *GslbvserverGslbservicegroupBindingResource) Schema(ctx context.Context,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Order number to be assigned to the service when it is bound to the lb vserver.",
 			},

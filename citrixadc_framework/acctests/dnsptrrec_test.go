@@ -163,6 +163,31 @@ func TestAccDnsptrrec_import(t *testing.T) {
 	})
 }
 
+func TestAccDnsptrrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsptrrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccDnsptrrec_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsptrrecExist("citrixadc_dnsptrrec.tf_dnsptrrec", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccDnsptrrec_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsptrrecExist("citrixadc_dnsptrrec.tf_dnsptrrec", nil),
+				),
+			},
+		},
+	})
+}
+
 const testAccDnsptrrecDataSource_basic = `
 
 resource "citrixadc_dnsptrrec" "tf_dnsptrrec" {

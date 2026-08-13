@@ -40,7 +40,9 @@ func (r *PolicydatasetValueBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op) -> preserve state on unknown, replace only when configured
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about this dataset or a data bound to this dataset.",
 			},
@@ -48,7 +50,9 @@ func (r *PolicydatasetValueBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op) -> preserve state on unknown, replace only when configured
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The dataset entry is a range from <value> through <end_range>, inclusive. endRange cannot be used if value is an ipv4 or ipv6 subnet and endRange cannot itself be a subnet.",
 			},
@@ -56,7 +60,9 @@ func (r *PolicydatasetValueBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op) -> preserve state on unknown, replace only when configured
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The index of the value (ipv4, ipv6, number) associated with the set.",
 			},

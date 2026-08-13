@@ -92,7 +92,10 @@ func (r *AuthenticationvserverAuthenticationwebauthpolicyBindingResource) Schema
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only binding; preserve state on unknown and
+					// only force replace when the user actually configured a change.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority, if any, of the vpn vserver policy.",
 			},
@@ -100,7 +103,10 @@ func (r *AuthenticationvserverAuthenticationwebauthpolicyBindingResource) Schema
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding; preserve state on unknown and
+					// only force replace when the user actually configured a change.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind the authentication policy to the secondary chain.\nProvides for multifactor authentication in which a user must authenticate via both a primary authentication method and, afterward, via a secondary authentication method.\nBecause user groups are aggregated across authentication systems, usernames must be the same on all authentication servers. Passwords can be different.",
 			},

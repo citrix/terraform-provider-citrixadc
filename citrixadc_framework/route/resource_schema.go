@@ -172,7 +172,9 @@ func (r *RouteResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "If true, delete the default static route (network 0.0.0.0, netmask 0.0.0.0) after adding this route",
 			},

@@ -42,7 +42,9 @@ func (r *AppfwprofileContenttypeBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Send SNMP alert?",
 			},
@@ -50,7 +52,9 @@ func (r *AppfwprofileContenttypeBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -65,7 +69,9 @@ func (r *AppfwprofileContenttypeBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
@@ -80,7 +86,9 @@ func (r *AppfwprofileContenttypeBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A \"id\" that identifies the rule.",
 			},
@@ -88,7 +96,9 @@ func (r *AppfwprofileContenttypeBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding",
 			},
@@ -96,7 +106,9 @@ func (r *AppfwprofileContenttypeBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled.",
 			},

@@ -42,7 +42,10 @@ func (r *FisResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (fis has no update op); avoid
+					// spurious destroy+recreate on upgrade for Optional+Computed.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "ID of the cluster node for which you are creating the FIS. Can be configured only through the cluster IP address.",
 			},

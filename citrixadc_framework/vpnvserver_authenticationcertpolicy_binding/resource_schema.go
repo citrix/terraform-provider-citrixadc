@@ -78,7 +78,9 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) Schema(ctx context.C
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
@@ -86,7 +88,9 @@ func (r *VpnvserverAuthenticationcertpolicyBindingResource) Schema(ctx context.C
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.",
 			},

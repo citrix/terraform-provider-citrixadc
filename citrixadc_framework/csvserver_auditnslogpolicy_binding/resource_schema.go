@@ -94,7 +94,9 @@ func (r *CsvserverAuditnslogpolicyBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: preserve prior state on upgrade; only force replace when user-configured
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Priority for the policy.",
 			},

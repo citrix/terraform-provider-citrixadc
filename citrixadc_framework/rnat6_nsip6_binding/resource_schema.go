@@ -51,7 +51,9 @@ func (r *Rnat6Nsip6BindingResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The owner node group in a Cluster for this rnat rule.",
 			},

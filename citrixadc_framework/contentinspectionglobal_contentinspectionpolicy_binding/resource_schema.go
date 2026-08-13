@@ -44,7 +44,9 @@ func (r *ContentinspectionglobalContentinspectionpolicyBindingResource) Schema(c
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "0",
 			},
@@ -52,7 +54,9 @@ func (r *ContentinspectionglobalContentinspectionpolicyBindingResource) Schema(c
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -60,7 +64,9 @@ func (r *ContentinspectionglobalContentinspectionpolicyBindingResource) Schema(c
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.",
 			},
@@ -100,7 +106,9 @@ func (r *ContentinspectionglobalContentinspectionpolicyBindingResource) Schema(c
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The bindpoint to which to policy is bound.",
 			},

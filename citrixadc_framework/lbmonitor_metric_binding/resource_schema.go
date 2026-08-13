@@ -46,7 +46,9 @@ func (r *LbmonitorMetricBindingResource) Schema(ctx context.Context, req resourc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Threshold to be used for that metric.",
 			},
@@ -54,7 +56,9 @@ func (r *LbmonitorMetricBindingResource) Schema(ctx context.Context, req resourc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The weight for the specified service metric with respect to others.",
 			},

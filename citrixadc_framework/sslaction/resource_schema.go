@@ -58,7 +58,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "This action will allow to pick CA(s) from the specific CA group, to verify the client certificate.",
 			},
@@ -66,7 +68,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Digest algorithm used to compute the fingerprint of the client certificate.",
 			},
@@ -74,7 +78,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate fingerprint.",
 			},
@@ -82,7 +88,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate signature (hash).",
 			},
@@ -90,7 +98,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate.",
 			},
@@ -98,7 +108,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate issuer details.",
 			},
@@ -106,7 +118,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the certificate's expiry date.",
 			},
@@ -114,7 +128,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the date and time from which the certificate is valid.",
 			},
@@ -122,7 +138,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client serial number.",
 			},
@@ -130,7 +148,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate subject.",
 			},
@@ -138,7 +158,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the cipher suite that the client and the Citrix ADC negotiated for the SSL session into the HTTP header of the request being sent to the web server. The appliance inserts the cipher-suite name, SSL protocol, export or non-export string, and cipher strength bit, depending on the type of browser connecting to the SSL virtual server or service (for example, Cipher-Suite: RC4- MD5 SSLv3 Non-Export 128-bit).",
 			},
@@ -146,7 +168,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the name of the cipher suite.",
 			},
@@ -154,7 +178,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Perform client certificate authentication.",
 			},
@@ -162,7 +188,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the entire client certificate into the HTTP header of the request being sent to the web server. The certificate is inserted in ASCII (PEM) format.",
 			},
@@ -170,7 +198,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the certificate's fingerprint into the HTTP header of the request being sent to the web server. The fingerprint is derived by computing the specified hash value (SHA256, for example) of the DER-encoding of the client certificate.",
 			},
@@ -178,7 +208,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the certificate's signature into the HTTP header of the request being sent to the web server. The signature is the value extracted directly from the X.509 certificate signature field. All X.509 certificates contain a signature field.",
 			},
@@ -186,7 +218,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the certificate issuer details into the HTTP header of the request being sent to the web server.",
 			},
@@ -194,7 +228,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the date of expiry of the certificate into the HTTP header of the request being sent to the web server. Every certificate is configured with the date and time at which the certificate expires.",
 			},
@@ -202,7 +238,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the date from which the certificate is valid into the HTTP header of the request being sent to the web server. Every certificate is configured with the date and time from which it is valid.",
 			},
@@ -210,7 +248,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the entire client serial number into the HTTP header of the request being sent to the web server.",
 			},
@@ -218,7 +258,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the client certificate subject, also known as the distinguished name (DN), into the HTTP header of the request being sent to the web server.",
 			},
@@ -226,7 +268,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Client certificate verification is mandatory or optional.",
 			},
@@ -234,7 +278,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "This action takes an argument a vserver name, to this vserver one will be able to forward all the packets.",
 			},
@@ -249,7 +295,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "If the appliance is in front of an Outlook Web Access (OWA) server, insert a special header field, FRONT-END-HTTPS: ON, into the HTTP requests going to the OWA server. This header communicates to the server that the transaction is HTTPS and not HTTP.",
 			},
@@ -257,7 +305,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the SSL session ID into the HTTP header of the request being sent to the web server. Every SSL connection that the client and the Citrix ADC share has a unique ID that identifies the specific connection.",
 			},
@@ -265,7 +315,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the Session ID.",
 			},
@@ -273,7 +325,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The name of the ssllogprofile.",
 			},

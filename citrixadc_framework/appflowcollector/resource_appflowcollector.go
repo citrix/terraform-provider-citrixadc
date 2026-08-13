@@ -141,11 +141,11 @@ func (r *AppflowcollectorResource) Update(ctx context.Context, req resource.Upda
 	}
 	if !data.Port.Equal(state.Port) {
 		tflog.Debug(ctx, "port has changed for appflowcollector")
-		if config.Port.IsNull() { // removed from config -> unset it
-			attributesToUnset = append(attributesToUnset, "port")
-		} else {
-			hasChange = true
-		}
+		// port carries a framework Default(4739) and is updatable, so a revert
+		// (removed from config) resolves to 4739 and is applied via a normal
+		// update. NITRO does NOT support unsetting appflowcollector port (it
+		// returns 273 "Resource already exists"), so never route it to unset.
+		hasChange = true
 	}
 
 	if hasChange {

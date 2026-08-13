@@ -54,7 +54,9 @@ func (r *VpnvserverIntranetip6BindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr; avoid spurious replace on upgrade
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The number of ipv6 addresses",
 			},

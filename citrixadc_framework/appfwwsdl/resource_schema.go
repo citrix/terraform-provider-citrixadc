@@ -41,7 +41,9 @@ func (r *AppfwwsdlResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed: true,
 				Default:  stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: keep planned value known on upgrade; only replace if user-configured (create-only attr, no NITRO update op)
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about the WSDL.",
 			},
@@ -60,7 +62,9 @@ func (r *AppfwwsdlResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: keep planned value known on upgrade; only replace if user-configured (create-only attr, no NITRO update op)
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Overwrite any existing WSDL of the same name.",
 			},

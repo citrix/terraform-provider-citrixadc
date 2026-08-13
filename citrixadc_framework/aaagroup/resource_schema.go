@@ -42,7 +42,9 @@ func (r *AaagroupResource) Schema(ctx context.Context, req resource.SchemaReques
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Weight of this group with respect to other configured aaa groups (lower the number higher the weight)",
 			},

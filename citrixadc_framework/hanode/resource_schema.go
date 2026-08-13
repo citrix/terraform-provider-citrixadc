@@ -153,7 +153,9 @@ func (r *HanodeResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Password to be used in authentication with the peer rpc node.",
 			},

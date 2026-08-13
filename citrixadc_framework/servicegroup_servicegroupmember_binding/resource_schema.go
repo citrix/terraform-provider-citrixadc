@@ -56,7 +56,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Skip reading the resource attributes from the NetScaler during refresh. Useful for bindings that cannot be reliably read back.",
 			},
@@ -64,7 +66,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The identifier for this IP:Port pair. Used when the persistency type is set to Custom Server ID.",
 			},
@@ -72,7 +76,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors",
 			},
@@ -80,7 +86,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
 			},
@@ -88,7 +96,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IP Address.",
 			},
@@ -96,7 +106,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver",
 			},
@@ -129,7 +141,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The  identifier for the service. This is used when the persistency type is set to Custom Server ID.",
 			},
@@ -137,7 +151,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the server to which to bind the service group.",
 			},
@@ -152,7 +168,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Initial state of the service group.",
 			},
@@ -160,7 +178,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
 			},

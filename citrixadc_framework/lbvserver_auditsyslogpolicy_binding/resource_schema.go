@@ -103,7 +103,9 @@ func (r *LbvserverAuditsyslogpolicyBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed attr.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Priority.",
 			},

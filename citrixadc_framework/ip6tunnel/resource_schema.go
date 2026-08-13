@@ -51,7 +51,10 @@ func (r *Ip6tunnelResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for
+					// Optional+Computed; ip6tunnel has no update op (create-only).
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The owner node group in a Cluster for the tunnel.",
 			},

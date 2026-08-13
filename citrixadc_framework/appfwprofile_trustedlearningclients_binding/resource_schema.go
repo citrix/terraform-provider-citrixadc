@@ -51,7 +51,10 @@ func (r *AppfwprofileTrustedlearningclientsBindingResource) Schema(ctx context.C
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr; keep prior state on unknown
+					// and only replace when the config changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -93,7 +96,10 @@ func (r *AppfwprofileTrustedlearningclientsBindingResource) Schema(ctx context.C
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr; keep prior state on unknown
+					// and only replace when the config changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled.",
 			},

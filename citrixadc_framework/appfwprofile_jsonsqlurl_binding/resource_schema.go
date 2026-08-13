@@ -54,7 +54,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The JSON SQL key value expression.",
 			},
@@ -62,7 +63,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of the relaxed JSON SQL key value",
 			},
@@ -70,7 +72,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -85,7 +88,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the key name a regular expression?",
 			},
@@ -93,7 +97,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the JSON SQL key value a regular expression?",
 			},
@@ -108,7 +113,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "An expression that designates a keyname on the JSON SQL URL for which SQL injection violations are relaxed.",
 			},
@@ -123,7 +129,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A \"id\" that identifies the rule.",
 			},
@@ -131,7 +138,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding",
 			},
@@ -139,7 +147,8 @@ func (r *AppfwprofileJsonsqlurlBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled.",
 			},

@@ -35,7 +35,9 @@ func (r *AppfwhtmlerrorpageResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op); avoid spurious destroy+recreate on upgrade
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about the HTML error object.",
 			},
@@ -50,7 +52,9 @@ func (r *AppfwhtmlerrorpageResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op); avoid spurious destroy+recreate on upgrade
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Overwrite any existing HTML error object of the same name.",
 			},

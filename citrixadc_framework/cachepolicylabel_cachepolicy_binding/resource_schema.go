@@ -43,7 +43,8 @@ func (r *CachepolicylabelCachepolicyBindingResource) Schema(ctx context.Context,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -51,7 +52,8 @@ func (r *CachepolicylabelCachepolicyBindingResource) Schema(ctx context.Context,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(), // GH #1436
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next-lower priority.",
 			},

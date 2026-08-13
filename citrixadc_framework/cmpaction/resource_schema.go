@@ -50,7 +50,12 @@ func (r *CmpactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: keep the prior-state value when the plan is Unknown so a
+					// v2->Framework upgrade/refresh does not force a spurious replace;
+					// deltatype is create-only (NITRO add, not update) so still ForceNew
+					// when the user actually changes a configured value.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The type of delta action (if delta type compression action is defined).",
 			},
@@ -65,7 +70,12 @@ func (r *CmpactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: keep the prior-state value when the plan is Unknown so a
+					// v2->Framework upgrade/refresh does not force a spurious replace;
+					// newname is a rename-only parameter (not in the add/update payload)
+					// so it stays ForceNew when a configured value actually changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "New name for the compression action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at\n(@), equals (=), and hyphen (-) characters.\nChoose a name that can be correlated with the function that the action performs.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my cmp action\" or 'my cmp action').",
 			},

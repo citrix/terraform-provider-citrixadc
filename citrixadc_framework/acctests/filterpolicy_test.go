@@ -67,6 +67,32 @@ func TestAccFilterpolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccFilterpolicy_sdkv2StateUpgrade(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFilterpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccFilterpolicy_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterpolicyExist("citrixadc_filterpolicy.tf_filterpolicy", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccFilterpolicy_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterpolicyExist("citrixadc_filterpolicy.tf_filterpolicy", nil),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFilterpolicyExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

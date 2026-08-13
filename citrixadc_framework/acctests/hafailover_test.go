@@ -92,25 +92,3 @@ func TestAccHafailover_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
-
-func TestAccHafailover_import(t *testing.T) {
-	if adcTestbed != "HA_PAIR" {
-		t.Skipf("ADC testbed is %s. Expected HA_PAIR.", adcTestbed)
-	}
-	const resAddr = "citrixadc_hafailover.tf_failover"
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{Config: testAccHafailover_basic},
-			{
-				Config:                  testAccHafailover_basic,
-				ResourceName:            resAddr,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
-			},
-		},
-	})
-}

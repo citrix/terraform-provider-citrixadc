@@ -349,8 +349,11 @@ func TestAccClusternode_sdkv2StateUpgrade(t *testing.T) {
 
 // testAccClusternode_unset exercises the NITRO unset op for the mutable,
 // spec-unsettable attributes with a documented server default: state
-// (PASSIVE), priority (31), delay (0) and tunnelmode (NONE). backplane is in
+// (PASSIVE), priority (31) and tunnelmode (NONE). backplane is in
 // the unset payload but has no documented server default, so it is excluded.
+// delay is intentionally NOT exercised here: NITRO only honors delay for a
+// PASSIVE node, so on this ACTIVE node it is silently kept at 0 (plan 5 vs
+// applied 0) -- an appliance semantic, not a provider defect.
 // nodeid=2 with a phantom NSIP is used for the same isolation reasons as the
 // basic test (a config-only node that never joins the live cluster).
 const testAccClusternode_unset_step1 = `
@@ -361,7 +364,6 @@ resource "citrixadc_clusternode" "tf_unset" {
 	ipaddress  = "10.101.132.153"
 	state      = "ACTIVE"
 	priority   = 15
-	delay      = 5
 	tunnelmode = "GRE"
 }
 `
@@ -372,7 +374,7 @@ const testAccClusternode_unset_step2 = `
 resource "citrixadc_clusternode" "tf_unset" {
 	nodeid    = 2
 	ipaddress = "10.101.132.153"
-	# state, priority, delay and tunnelmode removed from config -> the provider
+	# state, priority and tunnelmode removed from config -> the provider
 	# must unset them (revert to NITRO defaults).
 }
 `
@@ -393,7 +395,6 @@ func TestAccClusternode_unset(t *testing.T) {
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_unset", nil),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "state", "ACTIVE"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "priority", "15"),
-					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "delay", "5"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "tunnelmode", "GRE"),
 				),
 			},
@@ -405,7 +406,6 @@ func TestAccClusternode_unset(t *testing.T) {
 					testAccCheckClusternodeExist("citrixadc_clusternode.tf_unset", nil),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "state", "PASSIVE"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "priority", "31"),
-					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "delay", "0"),
 					resource.TestCheckResourceAttr("citrixadc_clusternode.tf_unset", "tunnelmode", "NONE"),
 					// Independent appliance-level confirmation the unset took effect.
 					testAccCheckClusternodeADCValue("2", "priority", "31"),

@@ -47,7 +47,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Send SNMP alert?",
 			},
@@ -55,7 +57,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -63,7 +67,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
@@ -78,7 +84,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A \"id\" that identifies the rule.",
 			},
@@ -86,7 +94,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding.",
 			},
@@ -94,7 +104,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled.",
 			},
@@ -102,7 +114,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify content-type regular expression.",
 			},
@@ -110,7 +124,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML attachment content-type check is ON or OFF. Protects against XML requests with illegal attachments.",
 			},
@@ -125,7 +141,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify maximum attachment size.",
 			},
@@ -133,7 +151,9 @@ func (r *AppfwprofileXmlattachmenturlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max attachment size Check is ON or OFF. Protects against XML requests with large attachment data.",
 			},

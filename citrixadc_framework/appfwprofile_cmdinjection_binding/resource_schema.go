@@ -48,7 +48,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Send SNMP alert?",
 			},
@@ -56,7 +58,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Location of command injection exception - form field, header or cookie.",
 			},
@@ -64,7 +68,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The web form/header/cookie value expression.",
 			},
@@ -72,7 +78,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of the relaxed web form value",
 			},
@@ -87,7 +95,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -102,7 +112,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
@@ -110,7 +122,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the relaxed web form field name/header/cookie a regular expression?",
 			},
@@ -118,7 +132,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the web form field/header/cookie value a regular expression?",
 			},
@@ -133,7 +149,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A \"id\" that identifies the rule.",
 			},
@@ -141,7 +159,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding",
 			},
@@ -149,7 +169,9 @@ func (r *AppfwprofileCmdinjectionBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled.",
 			},

@@ -36,7 +36,9 @@ func (r *ResponderhtmlpageResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "CA certificate file name which will be used to verify the peer's certificate. The certificate should be imported using \"import ssl certfile\" CLI command or equivalent in API or GUI. If certificate name is not configured, then default root CA certificates are used for peer's certificate verification.",
 			},
@@ -44,7 +46,9 @@ func (r *ResponderhtmlpageResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about the HTML page object.",
 			},
@@ -59,7 +63,9 @@ func (r *ResponderhtmlpageResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Overwrites the existing file",
 			},
@@ -67,7 +73,9 @@ func (r *ResponderhtmlpageResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Local path or URL (protocol, host, path, and file name) for the file from which to retrieve the imported HTML page.\nNOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.",
 			},

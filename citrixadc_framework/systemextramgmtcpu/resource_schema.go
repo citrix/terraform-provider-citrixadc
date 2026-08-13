@@ -60,7 +60,9 @@ func (r *SystemextramgmtcpuResource) Schema(ctx context.Context, req resource.Sc
 				Default:     stringdefault.StaticString("10m"),
 				Description: "Maximum duration to wait for the ADC to become reachable after reboot.",
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			// SDK v2: Optional, Default "60s", ForceNew.
@@ -70,7 +72,9 @@ func (r *SystemextramgmtcpuResource) Schema(ctx context.Context, req resource.Sc
 				Default:     stringdefault.StaticString("60s"),
 				Description: "Initial delay before polling the ADC for reachability after reboot.",
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			// SDK v2: Optional, Default "60s", ForceNew.
@@ -80,7 +84,9 @@ func (r *SystemextramgmtcpuResource) Schema(ctx context.Context, req resource.Sc
 				Default:     stringdefault.StaticString("60s"),
 				Description: "Interval between reachability polls of the ADC after reboot.",
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 			// SDK v2: Optional, Default "20s", ForceNew.
@@ -90,7 +96,9 @@ func (r *SystemextramgmtcpuResource) Schema(ctx context.Context, req resource.Sc
 				Default:     stringdefault.StaticString("20s"),
 				Description: "Per-request timeout for each reachability poll of the ADC after reboot.",
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
 		},

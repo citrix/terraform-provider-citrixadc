@@ -37,7 +37,9 @@ func (r *PolicydatasetResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; avoid spurious destroy+recreate on upgrade.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about this dataset or a data bound to this dataset.",
 			},
@@ -64,7 +66,9 @@ func (r *PolicydatasetResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; avoid spurious destroy+recreate on upgrade.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "File which contains list of patterns that needs to be bound to the dataset. A patsetfile cannot be associated with multiple datasets.",
 			},

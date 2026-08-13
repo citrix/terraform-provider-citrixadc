@@ -49,7 +49,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Send SNMP alert?",
 			},
@@ -57,7 +59,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -65,7 +69,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
@@ -80,7 +86,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A \"id\" that identifies the rule.",
 			},
@@ -88,7 +96,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding.",
 			},
@@ -96,7 +106,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled.",
 			},
@@ -104,7 +116,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Allow addtional soap headers.",
 			},
@@ -112,7 +126,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Modifies the behaviour of the Request URL validation w.r.t. the Service URL.\n	If set to ABSOLUTE, the entire request URL is validated with the entire URL mentioned in Service of the associated WSDL.\n		eg: Service URL: http://example.org/ExampleService, Request URL: http//example.com/ExampleService would FAIL the validation.\n	If set to RELAIVE, only the non-hostname part of the request URL is validated against the non-hostname part of the Service URL.\n		eg: Service URL: http://example.org/ExampleService, Request URL: http//example.com/ExampleService would PASS the validation.",
 			},
@@ -120,7 +136,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "XML Schema object for request validation .",
 			},
@@ -128,7 +146,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "XML Schema object for response validation.",
 			},
@@ -136,7 +156,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Validate response message.",
 			},
@@ -144,7 +166,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Validate SOAP Evelope only.",
 			},
@@ -159,7 +183,9 @@ func (r *AppfwprofileXmlvalidationurlBindingResource) Schema(ctx context.Context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "WSDL object for soap request validation.",
 			},

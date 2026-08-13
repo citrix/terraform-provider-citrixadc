@@ -43,7 +43,9 @@ func (r *SslpolicylabelSslpolicyBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -51,7 +53,9 @@ func (r *SslpolicylabelSslpolicyBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke policies bound to a policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.",
 			},
@@ -59,7 +63,9 @@ func (r *SslpolicylabelSslpolicyBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label to invoke if the current policy rule evaluates to TRUE.",
 			},
@@ -74,7 +80,9 @@ func (r *SslpolicylabelSslpolicyBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of policy label invocation.",
 			},

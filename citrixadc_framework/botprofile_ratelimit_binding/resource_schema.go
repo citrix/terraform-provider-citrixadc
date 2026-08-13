@@ -51,7 +51,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about this binding.",
 			},
@@ -60,7 +61,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.UseStateForUnknown(), // GH #1436
+					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "One or more actions to be taken when the current rate becomes more than the configured rate. Only LOG action can be combined with DROP, REDIRECT, RESPOND_STATUS_TOO_MANY_REQUESTS or RESET action.",
 			},
@@ -68,7 +70,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enable or disable rate-limit binding.",
 			},
@@ -83,7 +86,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "URL for the resource based rate-limiting.",
 			},
@@ -91,7 +95,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(), // GH #1436
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Rate-limit binding. Maximum 30 bindings can be configured per profile for rate-limit detection. For SOURCE_IP type, only one binding can be configured, and for URL type, only one binding is allowed per URL, and for SESSION type, only one binding is allowed for a cookie name. To update the values of an existing binding, user has to first unbind that binding, and then needs to bind again with new values.",
 			},
@@ -99,7 +104,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression to be used in a rate-limiting condition. This expression result must be a boolean value.",
 			},
@@ -107,7 +113,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Cookie name which is used to identify the session for session rate-limiting.",
 			},
@@ -115,7 +122,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Country name which is used for geolocation rate-limiting.",
 			},
@@ -123,7 +131,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Rate-Limiting traffic Type",
 			},
@@ -131,7 +140,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Message to be logged for this binding.",
 			},
@@ -146,7 +156,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Maximum number of requests that are allowed in this session in the given period time.",
 			},
@@ -154,7 +165,8 @@ func (r *BotprofileRatelimitBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Time interval during which requests are tracked to check if they cross the given rate.",
 			},

@@ -35,7 +35,9 @@ func (r *AppfwxmlerrorpageResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about the XML error object.",
 			},
@@ -50,7 +52,9 @@ func (r *AppfwxmlerrorpageResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Overwrite any existing XML error object of the same name.",
 			},

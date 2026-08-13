@@ -65,6 +65,31 @@ func TestAccSnmpcommunity_basic(t *testing.T) {
 	})
 }
 
+func TestAccSnmpcommunity_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmpcommunityDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSnmpcommunity_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpcommunityExist("citrixadc_snmpcommunity.tf_snmpcommunity", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSnmpcommunity_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnmpcommunityExist("citrixadc_snmpcommunity.tf_snmpcommunity", nil),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSnmpcommunity_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_snmpcommunity.tf_snmpcommunity"
 	resource.Test(t, resource.TestCase{

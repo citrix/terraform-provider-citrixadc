@@ -42,7 +42,9 @@ func (r *BotprofileLogexpressionBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about this binding.",
 			},
@@ -50,7 +52,9 @@ func (r *BotprofileLogexpressionBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enable or disable the log expression binding.",
 			},
@@ -65,7 +69,9 @@ func (r *BotprofileLogexpressionBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression whose result to be logged when violation happened on the bot profile.",
 			},
@@ -73,7 +79,9 @@ func (r *BotprofileLogexpressionBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Log expression binding.",
 			},
@@ -81,7 +89,9 @@ func (r *BotprofileLogexpressionBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Message to be logged for this binding.",
 			},

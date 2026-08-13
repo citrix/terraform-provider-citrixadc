@@ -46,7 +46,8 @@ func (r *BotprofileTpsBindingResource) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about this binding.",
 			},
@@ -54,7 +55,8 @@ func (r *BotprofileTpsBindingResource) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(), // GH #1436
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "TPS binding. For each type only binding can be configured. To  update the values of an existing binding, user has to first unbind that binding, and then needs to bind again with new values.",
 			},
@@ -63,7 +65,8 @@ func (r *BotprofileTpsBindingResource) Schema(ctx context.Context, req resource.
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.UseStateForUnknown(), // GH #1436
+					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "One to more actions to be taken if bot is detected based on this TPS binding. Only LOG action can be combined with DROP, RESET, REDIRECT, or MITIGIATION action.",
 			},
@@ -71,7 +74,8 @@ func (r *BotprofileTpsBindingResource) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled or disabled TPS binding.",
 			},
@@ -86,7 +90,8 @@ func (r *BotprofileTpsBindingResource) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Message to be logged for this binding.",
 			},
@@ -101,7 +106,8 @@ func (r *BotprofileTpsBindingResource) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Maximum percentage increase in the requests from (or to) a IP, Geolocation, URL or Host in 30 minutes interval.",
 			},
@@ -109,7 +115,8 @@ func (r *BotprofileTpsBindingResource) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Maximum number of requests that are allowed from (or to) a IP, Geolocation, URL or Host in 1 second time interval.",
 			},

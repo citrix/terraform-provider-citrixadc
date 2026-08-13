@@ -38,7 +38,11 @@ func (r *BotpolicylabelResource) Schema(ctx context.Context, req resource.Schema
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only (has_update_op False) - keep prior state
+					// on unknown to avoid spurious replace on upgrade; only replace
+					// when the user actually configures a changed value.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about this bot policy label.",
 			},

@@ -35,7 +35,9 @@ func (r *BotsignatureResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about the signature file object.",
 			},
@@ -50,7 +52,9 @@ func (r *BotsignatureResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Overwrites the existing file",
 			},
@@ -58,7 +62,9 @@ func (r *BotsignatureResource) Schema(ctx context.Context, req resource.SchemaRe
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Local path to and name of, or URL (protocol, host, path, and file name) for, the file in which to store the imported signature file.\nNOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.",
 			},

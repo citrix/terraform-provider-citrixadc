@@ -49,7 +49,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about this binding.",
 			},
@@ -58,7 +59,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.UseStateForUnknown(), // GH #1436
+					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "One or more actions to be taken when client fails captcha challenge. Only, log action can be configured with DROP, REDIRECT or RESET action.",
 			},
@@ -66,7 +68,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enable or disable the captcha binding.",
 			},
@@ -81,7 +84,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(), // GH #1436
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Captcha action binding. For each URL, only one binding is allowed. To update the values of an existing URL binding, user has to first unbind that binding, and then needs to bind the URL again with new values. Maximum 30 bindings can be configured per profile.",
 			},
@@ -89,7 +93,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Time (in seconds) duration for which no new captcha challenge is sent after current captcha challenge has been answered successfully.",
 			},
@@ -97,7 +102,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Message to be logged for this binding.",
 			},
@@ -105,7 +111,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Time (in seconds) duration for which client which failed captcha need to wait until allowed to try again. The requests from this client are silently dropped during the mute period.",
 			},
@@ -120,7 +127,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Length of body request (in Bytes) up to (equal or less than) which captcha challenge will be provided to client. Above this length threshold the request will be dropped. This is to avoid DOS and DDOS attacks.",
 			},
@@ -128,7 +136,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Number of times client can retry solving the captcha.",
 			},
@@ -136,7 +145,8 @@ func (r *BotprofileCaptchaBindingResource) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Wait time in seconds for which ADC needs to wait for the Captcha response. This is to avoid DOS attacks.",
 			},

@@ -50,7 +50,9 @@ func (r *SystemglobalAuthenticationldappolicyBindingResource) Schema(ctx context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The feature to be checked while applying this config",
 			},
@@ -58,7 +60,9 @@ func (r *SystemglobalAuthenticationldappolicyBindingResource) Schema(ctx context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "0",
 			},
@@ -87,7 +91,9 @@ func (r *SystemglobalAuthenticationldappolicyBindingResource) Schema(ctx context
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority of the command policy.",
 			},

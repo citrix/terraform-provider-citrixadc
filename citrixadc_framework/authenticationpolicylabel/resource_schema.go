@@ -37,7 +37,9 @@ func (r *AuthenticationpolicylabelResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; preserve state on unknown, replace only when user-configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about this authentication policy label.",
 			},
@@ -54,7 +56,8 @@ func (r *AuthenticationpolicylabelResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: updatable attr; preserve state on unknown, no replace needed.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Login schema associated with authentication policy label. Login schema defines the UI rendering by providing customization option of the fields. If user intervention is not needed for a given factor such as group extraction, a loginSchema whose authentication schema is \"noschema\" should be used.",
 			},
@@ -73,7 +76,9 @@ func (r *AuthenticationpolicylabelResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; preserve state on unknown, replace only when user-configured value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of feature (aaatm or rba) against which to match the policies bound to this policy label.",
 			},

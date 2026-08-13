@@ -55,7 +55,9 @@ func (r *SslcipherSslciphersuiteBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The operation that is performed when adding the cipher-suite.\n\nPossible cipher operations are:\n	ADD - Appends the given cipher-suite to the existing one configured for the virtual server.\n	REM - Removes the given cipher-suite from the existing one configured for the virtual server.\n	ORD - Overrides the current configured cipher-suite for the virtual server with the given cipher-suite.",
 			},
@@ -63,7 +65,9 @@ func (r *SslcipherSslciphersuiteBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "This indicates priority assigned to the particular cipher",
 			},
@@ -71,7 +75,9 @@ func (r *SslcipherSslciphersuiteBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A cipher-suite can consist of an individual cipher name, the system predefined cipher-alias name, or user defined cipher-group name.",
 			},
@@ -79,7 +85,9 @@ func (r *SslcipherSslciphersuiteBindingResource) Schema(ctx context.Context, req
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Cipher suite description.",
 			},

@@ -45,7 +45,9 @@ func (r *HanodeRoutemonitor6BindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The netmask.",
 			},

@@ -109,7 +109,9 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: preserve state on unknown; only replace when user explicitly configures (create-only attr).
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Initial state of the GSLB service group.",
 			},
@@ -117,7 +119,9 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: preserve weight on unknown; only replace when user explicitly configures (create-only attr).
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
 			},

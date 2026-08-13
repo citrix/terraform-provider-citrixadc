@@ -47,7 +47,9 @@ func (r *ArpResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Interface through which the network device is accessible. Specify the interface in (slot/port) notation. For example, 1/3.",
 			},
@@ -69,7 +71,9 @@ func (r *ArpResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Unique number that identifies the cluster node.",
 			},
@@ -77,7 +81,9 @@ func (r *ArpResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The owner node for the Arp entry.",
 			},
@@ -85,7 +91,9 @@ func (r *ArpResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
@@ -93,7 +101,9 @@ func (r *ArpResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The VLAN ID through which packets are to be sent after matching the ARP entry. This is a numeric value.",
 			},
@@ -101,7 +111,9 @@ func (r *ArpResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IP address of the VXLAN tunnel endpoint (VTEP) through which the IP address of this ARP entry is reachable.",
 			},
@@ -109,7 +121,9 @@ func (r *ArpResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "ID of the VXLAN on which the IP address of this ARP entry is reachable.",
 			},

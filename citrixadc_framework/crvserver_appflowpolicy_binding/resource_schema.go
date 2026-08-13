@@ -45,7 +45,9 @@ func (r *CrvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "For a rewrite policy, the bind point to which to bind the policy.",
 			},
@@ -53,7 +55,9 @@ func (r *CrvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -61,7 +65,9 @@ func (r *CrvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke flag.",
 			},
@@ -69,7 +75,9 @@ func (r *CrvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label invoked.",
 			},
@@ -77,7 +85,9 @@ func (r *CrvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The invocation type.",
 			},
@@ -85,7 +95,9 @@ func (r *CrvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the cache redirection virtual server to which to bind the cache redirection policy.",
 			},
@@ -100,7 +112,9 @@ func (r *CrvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority for the policy.",
 			},
@@ -108,7 +122,9 @@ func (r *CrvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.",
 			},

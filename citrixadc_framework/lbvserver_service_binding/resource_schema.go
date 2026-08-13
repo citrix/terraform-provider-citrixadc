@@ -69,7 +69,10 @@ func (r *LbvserverServiceBindingResource) Schema(ctx context.Context, req resour
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only (*_binding, no update op); avoid spurious
+					// destroy+recreate on upgrade for Optional+Computed attrs.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Service to bind to the virtual server.",
 			},
@@ -79,7 +82,10 @@ func (r *LbvserverServiceBindingResource) Schema(ctx context.Context, req resour
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only (*_binding, no update op); avoid spurious
+					// destroy+recreate on upgrade for Optional+Computed attrs.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Weight to assign to the specified service.",
 			},

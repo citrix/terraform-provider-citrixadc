@@ -64,7 +64,10 @@ func (r *SslcertkeySslocspresponderBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: preserve prior state for the computed value and only force
+					// replace when the user actually configures it (binding has no update op).
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "ocsp priority",
 			},

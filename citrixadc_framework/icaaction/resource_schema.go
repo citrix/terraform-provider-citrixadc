@@ -79,7 +79,13 @@ func (r *IcaactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: USFU first resolves a planned-unknown value from
+					// prior state (prevents null->value drift forcing a spurious
+					// destroy+recreate on v2->Framework upgrade). newname is a
+					// rename-only param (not in the NITRO update payload), so keep
+					// ForceNew semantics but only when explicitly configured.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "New name for the ICA action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#),period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks ( for example, \"my ica action\" or 'my ica action').",
 			},

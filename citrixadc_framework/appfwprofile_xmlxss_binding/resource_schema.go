@@ -53,7 +53,9 @@ func (r *AppfwprofileXmlxssBindingResource) Schema(ctx context.Context, req reso
 				Computed: true,
 				Default:  stringdefault.StaticString("ELEMENT"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Location of XSS injection exception - XML Element or Attribute.",
 			},
@@ -61,7 +63,9 @@ func (r *AppfwprofileXmlxssBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -76,7 +80,9 @@ func (r *AppfwprofileXmlxssBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the XML XSS exempted field name a regular expression?",
 			},
@@ -91,7 +97,9 @@ func (r *AppfwprofileXmlxssBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A \"id\" that identifies the rule.",
 			},
@@ -99,7 +107,9 @@ func (r *AppfwprofileXmlxssBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding.",
 			},
@@ -107,7 +117,9 @@ func (r *AppfwprofileXmlxssBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled.",
 			},

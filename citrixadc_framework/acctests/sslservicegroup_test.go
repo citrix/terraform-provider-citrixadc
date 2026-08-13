@@ -102,7 +102,9 @@ const testAccSslservicegroup_unset_step1 = `
 
 	resource "citrixadc_sslservicegroup" "tf_unset" {
 		servicegroupname     = citrixadc_servicegroup.tf_servicegroup.servicegroupname
-		sessreuse            = "DISABLED"
+		# sesstimeout has a NITRO co-requisite (sessReuse==ENABLED); sessreuse and
+		# sesstimeout cannot both be non-default at once, so keep sessreuse ENABLED.
+		sessreuse            = "ENABLED"
 		sesstimeout          = 100
 		ssl3                 = "DISABLED"
 		tls1                 = "DISABLED"
@@ -110,7 +112,8 @@ const testAccSslservicegroup_unset_step1 = `
 		tls12                = "DISABLED"
 		tls13                = "ENABLED"
 		snienable            = "ENABLED"
-		ocspstapling         = "ENABLED"
+		# ocspstapling omitted: NITRO 3761 "Ocsp stapling option is not supported
+		# for SSL Service" -- not settable on a bare SSL servicegroup.
 		serverauth           = "ENABLED"
 		sendclosenotify      = "NO"
 		strictsigdigestcheck = "ENABLED"
@@ -145,7 +148,7 @@ func TestAccSslservicegroup_unset(t *testing.T) {
 				Config: testAccSslservicegroup_unset_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslservicegroupExist("citrixadc_sslservicegroup.tf_unset", nil),
-					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "sessreuse", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "sessreuse", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "sesstimeout", "100"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "ssl3", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "tls1", "DISABLED"),
@@ -153,7 +156,6 @@ func TestAccSslservicegroup_unset(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "tls12", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "tls13", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "snienable", "ENABLED"),
-					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "ocspstapling", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "serverauth", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "sendclosenotify", "NO"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "strictsigdigestcheck", "ENABLED"),
@@ -175,7 +177,6 @@ func TestAccSslservicegroup_unset(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "tls12", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "tls13", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "snienable", "DISABLED"),
-					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "ocspstapling", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "serverauth", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "sendclosenotify", "YES"),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup.tf_unset", "strictsigdigestcheck", "DISABLED"),

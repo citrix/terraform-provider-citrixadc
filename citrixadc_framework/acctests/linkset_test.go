@@ -33,9 +33,12 @@ const testAccLinkset_update_with_binding = `
 	resource "citrixadc_linkset" "foo" {
 		linkset_id = "LS/1"
 	
+		# Interfaces must exist on the cluster under test. This lab cluster (.133)
+		# has 2 nodes (nodeid 0 and 1) -> interfaces 0/1/1 and 1/1/1. (A 3rd-node
+		# interface like 2/1/1 yields NITRO 1208 "No such bind resource".)
 		interfacebinding = [
+			"0/1/1",
 			"1/1/1",
-			"2/1/1",
 		]
 	}
 `

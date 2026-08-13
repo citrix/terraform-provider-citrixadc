@@ -47,7 +47,10 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				// time (the NITRO GET does not always echo ca:false back).
 				Default: booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr; keep prior state on
+					// unknown, only force replace when the value is configured.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "CA certificate.",
 			},
@@ -84,7 +87,10 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				// value at plan time (NITRO GET does not echo skipcaname:false).
 				Default: booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr; keep prior state on
+					// unknown, only force replace when the value is configured.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting for client certificate in a SSL handshake",
 			},
@@ -95,7 +101,10 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				// configs that omit snicert get a deterministic, known value.
 				Default: booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr; keep prior state on
+					// unknown, only force replace when the value is configured.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing.",
 			},

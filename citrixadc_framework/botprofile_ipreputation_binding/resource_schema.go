@@ -43,7 +43,9 @@ func (r *BotprofileIpreputationBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about this binding.",
 			},
@@ -52,7 +54,9 @@ func (r *BotprofileIpreputationBindingResource) Schema(ctx context.Context, req 
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					// GH #1436
+					listplanmodifier.UseStateForUnknown(),
+					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "One or more actions to be taken if bot is detected based on this IP Reputation binding. Only LOG action can be combinded with DROP, RESET, REDIRECT or MITIGATION action.",
 			},
@@ -60,7 +64,9 @@ func (r *BotprofileIpreputationBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled or disabled IP-repuation binding.",
 			},
@@ -82,7 +88,9 @@ func (r *BotprofileIpreputationBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Message to be logged for this binding.",
 			},

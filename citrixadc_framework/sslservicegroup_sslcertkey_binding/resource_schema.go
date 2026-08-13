@@ -41,7 +41,9 @@ func (r *SslservicegroupSslcertkeyBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "CA certificate.",
 			},
@@ -56,7 +58,9 @@ func (r *SslservicegroupSslcertkeyBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
@@ -64,7 +68,9 @@ func (r *SslservicegroupSslcertkeyBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},
@@ -79,7 +85,9 @@ func (r *SslservicegroupSslcertkeyBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The name of the CertKey. Use this option to bind Certkey(s) which will be used in SNI processing.",
 			},

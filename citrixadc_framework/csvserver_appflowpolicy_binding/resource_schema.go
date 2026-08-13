@@ -45,7 +45,9 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op (ForceNew); avoid spurious replace on upgrade when unset.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point at which policy needs to be bound. Note: Content switching policies are evaluated only at request time.",
 			},
@@ -53,7 +55,9 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op (ForceNew); avoid spurious replace on upgrade when unset.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -61,7 +65,9 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op (ForceNew); avoid spurious replace on upgrade when unset.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke flag.",
 			},
@@ -69,7 +75,9 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op (ForceNew); avoid spurious replace on upgrade when unset.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label invoked.",
 			},
@@ -77,7 +85,9 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op (ForceNew); avoid spurious replace on upgrade when unset.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The invocation type.",
 			},
@@ -99,7 +109,9 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op (ForceNew); avoid spurious replace on upgrade when unset.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Priority for the policy.",
 			},
@@ -107,7 +119,9 @@ func (r *CsvserverAppflowpolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op (ForceNew); avoid spurious replace on upgrade when unset.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE.\nExample: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1\nNote: Use this parameter only in case of Content Switching policy bind operations to a CS vserver",
 			},

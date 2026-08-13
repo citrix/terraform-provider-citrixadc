@@ -52,7 +52,9 @@ func (r *VpnvserverAuthenticationloginschemapolicyBindingResource) Schema(ctx co
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr; preserve state instead of spurious destroy+recreate.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Next priority expression.",
 			},
@@ -82,7 +84,9 @@ func (r *VpnvserverAuthenticationloginschemapolicyBindingResource) Schema(ctx co
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr; preserve state instead of spurious destroy+recreate.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},

@@ -42,7 +42,9 @@ func (r *BotprofileTrapinsertionurlBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about this binding.",
 			},
@@ -57,7 +59,9 @@ func (r *BotprofileTrapinsertionurlBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enable or disable the request URL pattern.",
 			},
@@ -65,7 +69,9 @@ func (r *BotprofileTrapinsertionurlBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Message to be logged for this binding.",
 			},
@@ -85,7 +91,9 @@ func (r *BotprofileTrapinsertionurlBindingResource) Schema(ctx context.Context, 
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind the trap URL for the configured request URLs. Maximum 30 bindings can be configured per profile.",
 			},

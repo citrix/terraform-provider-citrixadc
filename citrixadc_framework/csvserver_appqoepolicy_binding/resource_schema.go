@@ -45,7 +45,10 @@ func (r *CsvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr -> keep prior state on unknown,
+					// only replace when the config value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The bindpoint to which the policy is bound.",
 			},
@@ -53,7 +56,10 @@ func (r *CsvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr -> keep prior state on unknown,
+					// only replace when the config value changes.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -61,7 +67,10 @@ func (r *CsvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only binding attr -> keep prior state on unknown,
+					// only replace when the config value changes.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke flag.",
 			},

@@ -40,7 +40,9 @@ func (r *AppfwpolicylabelResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The new name of the application firewall policylabel.",
 			},
@@ -48,7 +50,9 @@ func (r *AppfwpolicylabelResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of transformations allowed by the policies bound to the label. Always http_req for application firewall policy labels.",
 			},

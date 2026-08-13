@@ -45,7 +45,9 @@ func (r *LbvserverContentinspectionpolicyBindingResource) Schema(ctx context.Con
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The bindpoint to which the policy is bound",
 			},
@@ -53,7 +55,9 @@ func (r *LbvserverContentinspectionpolicyBindingResource) Schema(ctx context.Con
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -61,7 +65,9 @@ func (r *LbvserverContentinspectionpolicyBindingResource) Schema(ctx context.Con
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
@@ -104,7 +110,9 @@ func (r *LbvserverContentinspectionpolicyBindingResource) Schema(ctx context.Con
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Priority.",
 			},

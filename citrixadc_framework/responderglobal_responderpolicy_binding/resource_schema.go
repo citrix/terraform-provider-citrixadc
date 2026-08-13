@@ -42,7 +42,9 @@ func (r *ResponderglobalResponderpolicyBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "0",
 			},
@@ -50,7 +52,9 @@ func (r *ResponderglobalResponderpolicyBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -58,7 +62,9 @@ func (r *ResponderglobalResponderpolicyBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.",
 			},
@@ -66,7 +72,9 @@ func (r *ResponderglobalResponderpolicyBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the policy label to invoke. If the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is policylabel.",
 			},
@@ -74,7 +82,9 @@ func (r *ResponderglobalResponderpolicyBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of invocation, Available settings function as follows:\n* vserver - Forward the request to the specified virtual server.\n* policylabel - Invoke the specified policy label.",
 			},
@@ -96,7 +106,9 @@ func (r *ResponderglobalResponderpolicyBindingResource) Schema(ctx context.Conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies the bind point whose policies you want to display. Available settings function as follows:\n* REQ_OVERRIDE - Request override. Binds the policy to the priority request queue.\n* REQ_DEFAULT - Binds the policy to the default request queue.\n* OTHERTCP_REQ_OVERRIDE - Binds the policy to the non-HTTP TCP priority request queue.\n* OTHERTCP_REQ_DEFAULT - Binds the policy to the non-HTTP TCP default request queue..\n* SIPUDP_REQ_OVERRIDE - Binds the policy to the SIP UDP priority response queue..\n* SIPUDP_REQ_DEFAULT - Binds the policy to the SIP UDP default response queue.\n* RADIUS_REQ_OVERRIDE - Binds the policy to the RADIUS priority response queue..\n* RADIUS_REQ_DEFAULT - Binds the policy to the RADIUS default response queue.\n* MSSQL_REQ_OVERRIDE - Binds the policy to the Microsoft SQL priority response queue..\n* MSSQL_REQ_DEFAULT - Binds the policy to the Microsoft SQL default response queue.\n* MYSQL_REQ_OVERRIDE - Binds the policy to the MySQL priority response queue.\n* MYSQL_REQ_DEFAULT - Binds the policy to the MySQL default response queue.\n* HTTPQUIC_REQ_OVERRIDE - Binds the policy to the HTTP_QUIC override response queue.\n* HTTPQUIC_REQ_DEFAULT - Binds the policy to the HTTP_QUIC default response queue.",
 			},

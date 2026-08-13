@@ -54,7 +54,10 @@ func (r *BridgetableResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; keep prior state on upgrade and
+					// only force replace when explicitly configured.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The vlan on which to send multicast packets when the VXLAN tunnel endpoint is a muticast group address.",
 			},
@@ -62,7 +65,10 @@ func (r *BridgetableResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; keep prior state on upgrade and
+					// only force replace when explicitly configured.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "INTERFACE  whose entries are to be removed.",
 			},
@@ -77,7 +83,10 @@ func (r *BridgetableResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; keep prior state on upgrade and
+					// only force replace when explicitly configured.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Unique number that identifies the cluster node.",
 			},
@@ -85,7 +94,10 @@ func (r *BridgetableResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; keep prior state on upgrade and
+					// only force replace when explicitly configured.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "VLAN  whose entries are to be removed.",
 			},
@@ -93,7 +105,10 @@ func (r *BridgetableResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; keep prior state on upgrade and
+					// only force replace when explicitly configured.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The VXLAN VNI Network Identifier (or VXLAN Segment ID) to use to connect to the remote VXLAN tunnel endpoint.  If omitted the value specified as vxlan will be used.",
 			},

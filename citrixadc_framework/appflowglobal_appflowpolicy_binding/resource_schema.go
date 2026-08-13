@@ -51,7 +51,9 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op; keep state on unknown, replace only if user changes it.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -59,7 +61,9 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op; keep state on unknown, replace only if user changes it.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.",
 			},
@@ -91,7 +95,9 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op; keep state on unknown, replace only if user changes it.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies the priority of the policy.",
 			},
@@ -99,7 +105,9 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Schema(ctx context.Context, 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding has no update op; keep state on unknown, replace only if user changes it.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Global bind point for which to show detailed information about the policies bound to the bind point.",
 			},

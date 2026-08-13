@@ -86,7 +86,10 @@ func (r *AuthenticationvserverAuditsyslogpolicyBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for
+					// Optional+Computed attrs (create-only binding attr).
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority, if any, of the vpn vserver policy.",
 			},

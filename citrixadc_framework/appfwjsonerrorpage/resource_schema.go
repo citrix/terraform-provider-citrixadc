@@ -36,7 +36,9 @@ func (r *AppfwjsonerrorpageResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only (no NITRO update op)
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about the JSON error object.",
 			},
@@ -53,7 +55,9 @@ func (r *AppfwjsonerrorpageResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only (no NITRO update op)
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Overwrite any existing JSON error object of the same name.",
 			},

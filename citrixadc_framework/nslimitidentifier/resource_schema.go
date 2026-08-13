@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -47,9 +46,13 @@ func (r *NslimitidentifierResource) Schema(ctx context.Context, req resource.Sch
 				Description: "Name for a rate limit identifier. Must begin with an ASCII letter or underscore (_) character, and must consist only of ASCII alphanumeric or underscore characters. Reserved words must not be used.",
 			},
 			"limittype": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("BURSTY"),
+				Optional: true,
+				Computed: true,
+				// NOTE: SDK v2 had no default here. A spurious Default("BURSTY")
+				// made the provider send limitType on every create; on a cluster,
+				// limitType without `mode` is rejected (ec1093 "Argument
+				// pre-requisite missing [limitType, mode]"). Leaving it
+				// Optional+Computed lets the appliance supply the value.
 				Description: "Smooth or bursty request type.\n* SMOOTH - When you want the permitted number of requests in a given interval of time to be spread evenly across the timeslice\n* BURSTY - When you want the permitted number of requests to exhaust the quota anytime within the timeslice.\nThis argument is needed only when the mode is set to REQUEST_RATE.",
 			},
 			"maxbandwidth": schema.Int64Attribute{

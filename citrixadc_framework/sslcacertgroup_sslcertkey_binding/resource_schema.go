@@ -52,7 +52,9 @@ func (r *SslcacertgroupSslcertkeyBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
@@ -60,7 +62,9 @@ func (r *SslcacertgroupSslcertkeyBindingResource) Schema(ctx context.Context, re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},

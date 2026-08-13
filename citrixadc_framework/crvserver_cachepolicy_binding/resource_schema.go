@@ -55,7 +55,9 @@ func (r *CrvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: preserve prior state on unknown, then only force replace when configured
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -63,7 +65,9 @@ func (r *CrvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: preserve prior state on unknown, then only force replace when configured
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke flag.",
 			},
@@ -103,7 +107,9 @@ func (r *CrvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: preserve prior state on unknown, then only force replace when configured
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority for the policy.",
 			},

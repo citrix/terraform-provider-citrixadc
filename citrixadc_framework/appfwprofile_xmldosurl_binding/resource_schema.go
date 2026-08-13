@@ -79,7 +79,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Send SNMP alert?",
 			},
@@ -87,7 +88,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -95,7 +97,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
@@ -110,7 +113,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A \"id\" that identifies the rule.",
 			},
@@ -118,7 +122,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding.",
 			},
@@ -126,7 +131,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enabled.",
 			},
@@ -134,7 +140,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML DTD is ON or OFF. Protects against recursive Document Type Declaration (DTD) entity expansion attacks. Also, SOAP messages cannot have DTDs in messages.",
 			},
@@ -142,7 +149,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Block External Entities Check is ON or OFF. Protects against XML External Entity (XXE) attacks that force applications to parse untrusted external entities (sources) in XML documents.",
 			},
@@ -150,7 +158,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Block PI is ON or OFF. Protects resources from denial of service attacks as SOAP messages cannot have processing instructions (PI) in messages.",
 			},
@@ -165,7 +174,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the longest name of any XML attribute. Protects against overflow attacks.",
 			},
@@ -173,7 +183,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max attribute name length check is ON or OFF.",
 			},
@@ -181,7 +192,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify maximum number of attributes per XML element. Protects against overflow attacks.",
 			},
@@ -189,7 +201,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max attributes check is ON or OFF.",
 			},
@@ -197,7 +210,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the longest value of any XML attribute. Protects against overflow attacks.",
 			},
@@ -205,7 +219,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max atribute value length is ON or OFF.",
 			},
@@ -213,7 +228,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the maximum size of CDATA. Protects against overflow attacks and large quantities of unparsed data within XML messages.",
 			},
@@ -221,7 +237,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max CDATA length check is ON or OFF.",
 			},
@@ -229,7 +246,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the maximum number of children allowed per XML element. Protects against overflow attacks.",
 			},
@@ -237,7 +255,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max element children check is ON or OFF.",
 			},
@@ -245,7 +264,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Maximum nesting (depth) of XML elements. This check protects against documents that have excessive hierarchy depths.",
 			},
@@ -253,7 +273,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max element depth check is ON or OFF.",
 			},
@@ -261,7 +282,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the longest name of any element (including the expanded namespace) to protect against overflow attacks.",
 			},
@@ -269,7 +291,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max element name length check is ON or OFF.",
 			},
@@ -277,7 +300,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the maximum number of XML elements allowed. Protects against overflow attacks.",
 			},
@@ -285,7 +309,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max elements check is ON or OFF.",
 			},
@@ -293,7 +318,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify maximum entity expansion depth. Protects aganist Entity Expansion Attack.",
 			},
@@ -301,7 +327,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max Entity Expansions Depth Check is ON or OFF.",
 			},
@@ -309,7 +336,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify maximum allowed number of entity expansions. Protects aganist Entity Expansion Attack.",
 			},
@@ -317,7 +345,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max Entity Expansions Check is ON or OFF.",
 			},
@@ -325,7 +354,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the maximum size of XML messages. Protects against overflow attacks.",
 			},
@@ -333,7 +363,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max file size check is ON or OFF.",
 			},
@@ -341,7 +372,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify maximum number of active namespaces. Protects against overflow attacks.",
 			},
@@ -349,7 +381,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max namespaces check is ON or OFF.",
 			},
@@ -357,7 +390,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the longest URI of any XML namespace. Protects against overflow attacks.",
 			},
@@ -365,7 +399,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max namespace URI length check is ON or OFF.",
 			},
@@ -373,7 +408,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specify the maximum number of XML nodes. Protects against overflow attacks.",
 			},
@@ -381,7 +417,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Max nodes check is ON or OFF.",
 			},
@@ -389,7 +426,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "XML Max Individual SOAP Array Rank. This is the dimension of the SOAP array.",
 			},
@@ -397,7 +435,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "XML Max Total SOAP Array Size. Protects against SOAP Array Abuse attack.",
 			},
@@ -405,7 +444,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Enforces minimum message size.",
 			},
@@ -413,7 +453,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML Min file size check is ON or OFF.",
 			},
@@ -421,7 +462,8 @@ func (r *AppfwprofileXmldosurlBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "State if XML SOAP Array check is ON or OFF.",
 			},

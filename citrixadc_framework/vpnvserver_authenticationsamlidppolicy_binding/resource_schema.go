@@ -53,7 +53,10 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Schema(ctx contex
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only (_binding has no update op); keep prior
+					// state for unknowns then only replace when explicitly configured.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Next priority expression.",
 			},
@@ -83,7 +86,10 @@ func (r *VpnvserverAuthenticationsamlidppolicyBindingResource) Schema(ctx contex
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only (_binding has no update op); keep prior
+					// state for unknowns then only replace when explicitly configured.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},

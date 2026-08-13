@@ -57,7 +57,9 @@ func (r *BridgegroupNsipBindingResource) Schema(ctx context.Context, req resourc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The network mask for the subnet defined for the bridge group.",
 			},

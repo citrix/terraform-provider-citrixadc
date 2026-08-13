@@ -40,7 +40,9 @@ func (r *SystemglobalAuthenticationtacacspolicyBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The feature to be checked while applying this config",
 			},
@@ -48,7 +50,9 @@ func (r *SystemglobalAuthenticationtacacspolicyBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "0",
 			},
@@ -56,7 +60,9 @@ func (r *SystemglobalAuthenticationtacacspolicyBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only to advance authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.",
 			},
@@ -64,7 +70,9 @@ func (r *SystemglobalAuthenticationtacacspolicyBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "On success invoke label. Applicable for advanced authentication policy binding",
 			},
@@ -79,7 +87,9 @@ func (r *SystemglobalAuthenticationtacacspolicyBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority of the command policy.",
 			},

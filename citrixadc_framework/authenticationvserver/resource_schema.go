@@ -110,20 +110,24 @@ func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource
 				Description: "New name of the authentication virtual server.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, 'my authentication policy' or \"my authentication policy\").",
 			},
 			"port": schema.Int64Attribute{
-				// Create-only per NITRO (absent from the "set" payload): RequiresReplace.
+				// Create-only per NITRO (absent from the "set" payload).
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "TCP port on which the virtual server accepts connections.",
 			},
 			"range": schema.Int64Attribute{
-				// Create-only per NITRO (absent from the "set" payload): RequiresReplace.
+				// Create-only per NITRO (absent from the "set" payload).
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "If you are creating a series of virtual servers with a range of IP addresses assigned to them, the length of the range.\nThe new range of authentication virtual servers will have IP addresses consecutively numbered, starting with the primary address specified with the IP Address parameter.",
 			},
@@ -133,12 +137,14 @@ func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource
 				Description: "SameSite attribute value for Cookies generated in AAATM context. This attribute value will be appended only for the cookies which are specified in the builtin patset ns_cookies_samesite",
 			},
 			"servicetype": schema.StringAttribute{
-				// Create-only per NITRO (absent from the "set" payload): RequiresReplace.
+				// Create-only per NITRO (absent from the "set" payload).
 				// Optional+Computed to match the SDK v2 contract (not Required); no Default.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Protocol type of the authentication virtual server. Always SSL.",
 			},
@@ -150,11 +156,13 @@ func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource
 				Description: "Initial state of the new virtual server.",
 			},
 			"td": schema.Int64Attribute{
-				// Create-only per NITRO (absent from the "set" payload): RequiresReplace.
+				// Create-only per NITRO (absent from the "set" payload).
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},

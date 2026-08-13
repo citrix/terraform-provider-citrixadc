@@ -52,7 +52,9 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Schema(ctx context.C
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The feature to be checked while applying this config",
 			},
@@ -60,7 +62,9 @@ func (r *AuditsyslogglobalAuditsyslogpolicyBindingResource) Schema(ctx context.C
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "0",
 			},

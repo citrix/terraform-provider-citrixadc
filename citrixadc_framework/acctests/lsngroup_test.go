@@ -299,6 +299,31 @@ func TestAccLsngroup_selfHealing(t *testing.T) {
 	})
 }
 
+func TestAccLsngroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsngroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccLsngroup_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroupExist("citrixadc_lsngroup.tf_lsngroup", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccLsngroup_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroupExist("citrixadc_lsngroup.tf_lsngroup", nil),
+				),
+			},
+		},
+	})
+}
+
 const testAccLsngroupDataSource_basic = `
 
 	resource "citrixadc_lsnclient" "tf_lsnclient" {

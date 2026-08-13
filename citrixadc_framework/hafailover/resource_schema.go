@@ -41,7 +41,9 @@ func (r *HafailoverResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Force a failover without prompting for confirmation.",
 			},

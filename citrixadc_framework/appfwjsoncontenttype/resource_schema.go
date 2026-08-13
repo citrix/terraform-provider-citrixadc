@@ -33,7 +33,9 @@ func (r *AppfwjsoncontenttypeResource) Schema(ctx context.Context, req resource.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Default:     stringdefault.StaticString("NOTREGEX"),
 				Description: "Is json content type a regular expression?",

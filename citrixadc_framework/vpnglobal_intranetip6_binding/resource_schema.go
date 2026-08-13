@@ -50,7 +50,9 @@ func (r *VpnglobalIntranetip6BindingResource) Schema(ctx context.Context, req re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade for Optional+Computed
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The intranet ip address or range's netmask.",
 			},

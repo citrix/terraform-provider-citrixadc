@@ -101,7 +101,10 @@ func (r *LbvserverRewritepolicyBindingResource) Schema(ctx context.Context, req 
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: Optional+Computed planned Unknown must reuse prior state on upgrade/refresh
+					// to avoid spurious destroy+recreate; binding has no update op so keep ForceNew when configured.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Priority.",
 			},

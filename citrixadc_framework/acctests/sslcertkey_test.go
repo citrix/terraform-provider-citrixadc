@@ -641,3 +641,28 @@ func TestAccSslcertkey_selfHealing(t *testing.T) {
 		},
 	})
 }
+
+func TestAccSslcertkey_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
+		CheckDestroy: testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+				},
+				Config: testAccSslcertkey_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Config:                   testAccSslcertkey_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcertkeyExist("citrixadc_sslcertkey.foo", nil),
+				),
+			},
+		},
+	})
+}

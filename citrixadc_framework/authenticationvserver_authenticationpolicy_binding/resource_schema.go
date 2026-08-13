@@ -44,7 +44,9 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) Schema(ctx co
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
@@ -52,7 +54,9 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) Schema(ctx co
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -60,7 +64,9 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) Schema(ctx co
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
@@ -75,7 +81,9 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) Schema(ctx co
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "On success invoke label.",
 			},
@@ -90,7 +98,9 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) Schema(ctx co
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority, if any, of the vpn vserver policy.",
 			},
@@ -98,7 +108,9 @@ func (r *AuthenticationvserverAuthenticationpolicyBindingResource) Schema(ctx co
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},

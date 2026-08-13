@@ -66,7 +66,10 @@ func (r *DnsnameserverResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; keep prior state for unknown, only
+					// force replace when the user explicitly configures a new value.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Mark the IP address as one that belongs to a local recursive DNS server on the Citrix ADC. The appliance recursively resolves queries received on an IP address that is marked as being local. For recursive resolution to work, the global DNS parameter, Recursion, must also be set.\n\nIf no name server is marked as being local, the appliance functions as a stub resolver and load balances the name servers.",
 			},
@@ -75,7 +78,10 @@ func (r *DnsnameserverResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only attr; keep prior state for unknown, only
+					// force replace when the user explicitly configures a new value.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Administrative state of the name server.",
 			},
@@ -84,7 +90,9 @@ func (r *DnsnameserverResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: updatable attr (in NITRO update payload); no replace,
+					// keep prior state when planned value is unknown.
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Protocol used by the name server. UDP_TCP is not valid if the name server is a DNS virtual server configured on the appliance.",
 			},

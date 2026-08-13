@@ -45,7 +45,10 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding is create-only (no NITRO update op); avoid
+					// spurious destroy+recreate on upgrade for Optional+Computed attr.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The bindpoint to which the policy is bound.",
 			},
@@ -53,7 +56,10 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: binding is create-only (no NITRO update op); avoid
+					// spurious destroy+recreate on upgrade for Optional+Computed attr.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -61,7 +67,10 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					// GH #1436: binding is create-only (no NITRO update op); avoid
+					// spurious destroy+recreate on upgrade for Optional+Computed attr.
+					boolplanmodifier.UseStateForUnknown(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke flag.",
 			},
@@ -101,7 +110,10 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: binding is create-only (no NITRO update op); avoid
+					// spurious destroy+recreate on upgrade for Optional+Computed attr.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The priority for the policy.",
 			},

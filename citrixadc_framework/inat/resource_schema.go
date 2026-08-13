@@ -82,7 +82,9 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Public IP address of packets received on the Citrix ADC. Can be aNetScaler-owned VIP or VIP6 address.",
 			},
@@ -96,7 +98,9 @@ func (r *InatResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},

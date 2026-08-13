@@ -48,7 +48,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Unique numerical identifier used by hash based load balancing methods to identify a service.",
 			},
@@ -63,7 +64,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Monitor state.",
 			},
@@ -71,7 +73,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Order number to be assigned to the gslb servicegroup member",
 			},
@@ -79,7 +82,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(), // GH #1436
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Indicates if load monitor is passive. A passive load monitor does not remove service from LB decision when threshold is breached.",
 			},
@@ -87,7 +91,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Port number of the GSLB service. Each service must have a unique port number.",
 			},
@@ -95,7 +100,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.",
 			},
@@ -103,7 +109,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.",
 			},
@@ -118,7 +125,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.",
 			},
@@ -126,7 +134,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(), // GH #1436
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Initial state of the service after binding.",
 			},
@@ -134,7 +143,8 @@ func (r *GslbservicegroupLbmonitorBindingResource) Schema(ctx context.Context, r
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(), // GH #1436
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
 			},

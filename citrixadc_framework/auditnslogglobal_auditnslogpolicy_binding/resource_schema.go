@@ -53,7 +53,9 @@ func (r *AuditnslogglobalAuditnslogpolicyBindingResource) Schema(ctx context.Con
 				Computed: true,
 				Default:  stringdefault.StaticString("SYSTEM_GLOBAL"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "0",
 			},

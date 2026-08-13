@@ -57,7 +57,9 @@ func (r *VlanNsipBindingResource) Schema(ctx context.Context, req resource.Schem
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: avoid spurious destroy+recreate on upgrade
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Subnet mask for the network address defined for this VLAN.",
 			},

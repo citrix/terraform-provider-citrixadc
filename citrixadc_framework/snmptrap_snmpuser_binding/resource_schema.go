@@ -43,7 +43,9 @@ func (r *SnmptrapSnmpuserBindingResource) Schema(ctx context.Context, req resour
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Security level of the SNMPv3 trap.",
 			},
@@ -52,7 +54,9 @@ func (r *SnmptrapSnmpuserBindingResource) Schema(ctx context.Context, req resour
 				Computed: true,
 				Default:  int64default.StaticInt64(0),
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
@@ -82,7 +86,9 @@ func (r *SnmptrapSnmpuserBindingResource) Schema(ctx context.Context, req resour
 				Computed: true,
 				Default:  stringdefault.StaticString("V3"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "SNMP version, which determines the format of trap messages sent to the trap listener. \nThis setting must match the setting on the trap listener. Otherwise, the listener drops the trap messages.",
 			},

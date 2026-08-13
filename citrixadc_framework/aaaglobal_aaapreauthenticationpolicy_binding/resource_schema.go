@@ -43,7 +43,9 @@ func (r *AaaglobalAaapreauthenticationpolicyBindingResource) Schema(ctx context.
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Priority of the bound policy",
 			},

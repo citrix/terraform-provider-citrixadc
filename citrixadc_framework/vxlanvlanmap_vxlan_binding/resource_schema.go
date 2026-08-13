@@ -47,7 +47,9 @@ func (r *VxlanvlanmapVxlanBindingResource) Schema(ctx context.Context, req resou
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					// GH #1436
+					listplanmodifier.UseStateForUnknown(),
+					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The vlan id or the range of vlan ids in the on-premise network.",
 			},

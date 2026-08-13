@@ -64,7 +64,9 @@ func (r *ForwardingsessionResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only Optional+Computed; keep state on unknown, replace only if user reconfigures.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Subnet mask associated with the network.",
 			},
@@ -72,7 +74,9 @@ func (r *ForwardingsessionResource) Schema(ctx context.Context, req resource.Sch
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: create-only Optional+Computed; keep state on unknown, replace only if user reconfigures.
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "An IPv4 network address or IPv6 prefix of a network from which the forwarded traffic originates or to which it is destined.",
 			},
