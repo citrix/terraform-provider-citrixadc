@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccResponderpolicylabel_responderpolicy_binding_basic = `
@@ -327,7 +328,10 @@ func TestAccResponderpolicylabel_responderpolicy_binding_sdkv2StateUpgrade(t *te
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccResponderpolicylabel_responderpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderpolicylabel_responderpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderpolicylabel_responderpolicy_bindingExist("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_responderpolicylabel_responderpolicy_binding.tf_responderpolicylabel_responderpolicy_binding", "id", "labelname:tf_responderpolicylabel,policyname:tf_responderpolicy"),

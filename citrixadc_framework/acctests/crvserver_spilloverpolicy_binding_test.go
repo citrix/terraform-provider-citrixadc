@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCrvserver_spilloverpolicy_binding_basic = `
@@ -347,7 +348,10 @@ func TestAccCrvserver_spilloverpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// recomputed to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCrvserver_spilloverpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCrvserver_spilloverpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrvserver_spilloverpolicy_bindingExist(resourceAddr, nil),
 					resource.TestCheckResourceAttr(resourceAddr, "id", "name:my_vserver,policyname:tf_spilloverpolicy"),

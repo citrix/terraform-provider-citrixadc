@@ -58,7 +58,7 @@ func (r *LbmonitorSslcertkeyBindingResource) Schema(ctx context.Context, req res
 				// value unknown after apply ("inconsistent result"). Optional-only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
@@ -74,7 +74,7 @@ func (r *LbmonitorSslcertkeyBindingResource) Schema(ctx context.Context, req res
 				// leave it unknown after apply for non-CA bindings. Optional-only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},

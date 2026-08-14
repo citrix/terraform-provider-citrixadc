@@ -43,7 +43,7 @@ func (r *AuthenticationvserverAuthenticationsamlidppolicyBindingResource) Schema
 			"bindpoint": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point to which to bind the policy.",
 			},
@@ -60,7 +60,7 @@ func (r *AuthenticationvserverAuthenticationsamlidppolicyBindingResource) Schema
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
@@ -74,7 +74,7 @@ func (r *AuthenticationvserverAuthenticationsamlidppolicyBindingResource) Schema
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "On success invoke label.",
 			},
@@ -98,7 +98,7 @@ func (r *AuthenticationvserverAuthenticationsamlidppolicyBindingResource) Schema
 			"secondary": schema.BoolAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},

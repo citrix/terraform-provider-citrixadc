@@ -43,7 +43,7 @@ func (r *VpnglobalVpnurlpolicyBindingResource) Schema(ctx context.Context, req r
 				Optional:    true,
 				// Not echoed by NITRO GET; Computed dropped to avoid unknown-after-apply (Pattern 13).
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
@@ -61,7 +61,7 @@ func (r *VpnglobalVpnurlpolicyBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				// Not echoed by NITRO GET; Computed dropped to avoid unknown-after-apply (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind the Authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called it primary and/or secondary authentication has succeeded.",
 			},
@@ -86,7 +86,7 @@ func (r *VpnglobalVpnurlpolicyBindingResource) Schema(ctx context.Context, req r
 				Optional: true,
 				// Not echoed by NITRO GET; Computed dropped to avoid unknown-after-apply (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only to a primary authentication server but also to a secondary authentication server. User groups are aggregated across both authentication servers. The user name must be exactly the same on both authentication servers, but the authentication servers can require different passwords.",
 			},

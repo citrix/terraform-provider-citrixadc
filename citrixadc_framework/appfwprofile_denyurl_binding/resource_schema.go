@@ -98,7 +98,7 @@ func (r *AppfwprofileDenyurlBindingResource) Schema(ctx context.Context, req res
 				// (Pattern 13 schema-flag implication).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding.",
 			},

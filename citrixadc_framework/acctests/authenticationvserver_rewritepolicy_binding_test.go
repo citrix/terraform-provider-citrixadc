@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationvserver_rewritepolicy_binding_basic = `
@@ -332,7 +333,10 @@ func TestAccAuthenticationvserver_rewritepolicy_binding_sdkv2StateUpgrade(t *tes
 			// recomputed to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAuthenticationvserver_rewritepolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationvserver_rewritepolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationvserver_rewritepolicy_bindingExist(resourceAddr, nil),
 					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_authenticationvserver,policy:tf_rewrite_policy"),

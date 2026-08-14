@@ -16,7 +16,7 @@ import (
 	// Aliased to avoid a name collision with the Plugin Framework `resource`
 	// package. Used only for PrefixedUniqueId so the synthetic ID scheme is
 	// byte-for-byte identical to the SDK v2 resource (backward compatibility).
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -124,7 +124,7 @@ func (r *LocationfileImportResource) Create(ctx context.Context, req resource.Cr
 	// Synthetic, per-apply unique ID. Identical scheme to SDK v2
 	// (resource.PrefixedUniqueId("tf-locationfile-")); the imported file is not
 	// a queryable managed object, so this ID is purely a Terraform state handle.
-	data.Id = types.StringValue(sdkresource.PrefixedUniqueId("tf-locationfile-"))
+	data.Id = types.StringValue(sdkid.PrefixedUniqueId("tf-locationfile-"))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

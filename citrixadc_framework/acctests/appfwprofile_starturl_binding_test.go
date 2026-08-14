@@ -24,8 +24,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_starturl_binding_basic = `
@@ -305,7 +306,10 @@ func TestAccAppfwprofile_starturl_binding_sdkv2StateUpgrade(t *testing.T) {
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppfwprofile_starturl_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_starturl_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_starturl_bindingExist("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_starturl_binding.appfwprofile_starturl1", "id", "name:tfAcc_appfwprofile,starturl:%5E%5B%5E%3F%5D%2B%5B.%5D%28html%3F%7Cshtml%7Cjs%7Cgif%7Cjpg%7Cjpeg%7Cpng%7Cswf%7Cpif%7Cpdf%7Ccss%7Ccsv%29%24"),

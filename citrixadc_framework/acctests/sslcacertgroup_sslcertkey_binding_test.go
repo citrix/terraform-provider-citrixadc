@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func doSslcacertgroup_sslcertkey_bindingPreChecks(t *testing.T) {
@@ -316,7 +317,10 @@ func TestAccSslcacertgroup_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
 				// and SetAttrFromGet recomputes the id to the canonical new format
 				// (comma-joined key:UrlEncode(value) pairs in idParts order).
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccsslcacertgroup_sslcertkey_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccsslcacertgroup_sslcertkey_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslcacertgroup_sslcertkey_bindingExist("citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslcacertgroup_sslcertkey_binding.sslcacertgroup_sslcertkey_binding_demo", "id", "cacertgroupname:ns_callout_certs1,certkeyname:tf_cacertkey"),

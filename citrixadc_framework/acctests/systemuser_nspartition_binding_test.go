@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSystemuser_nspartition_binding_basic = `
@@ -294,7 +295,10 @@ func TestAccSystemuser_nspartition_binding_sdkv2StateUpgrade(t *testing.T) {
 			{
 				// Step 2: Refresh/plan/apply the legacy-id state through the current framework provider
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSystemuser_nspartition_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemuser_nspartition_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemuser_nspartition_bindingExist("citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_systemuser_nspartition_binding.tf_systemuser_nspartition_binding", "id", "partitionname:tf_nspartition,username:george"),

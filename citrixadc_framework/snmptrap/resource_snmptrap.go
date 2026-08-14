@@ -157,7 +157,12 @@ func (r *SnmptrapResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 	if !data.Severity.Equal(state.Severity) {
 		tflog.Debug(ctx, "severity has changed for snmptrap")
-		if config.Severity.IsNull() { // removed from config -> unset it
+		// severity is a SPECIFIC-trapclass-only argument; sending or unsetting it
+		// on any other trapclass is rejected by NITRO with ec1093. Skip it for
+		// non-specific traps (the read-back normalizes it to the default anyway).
+		if data.Trapclass.ValueString() != "specific" {
+			tflog.Debug(ctx, "ignoring severity change for non-specific snmptrap")
+		} else if config.Severity.IsNull() { // removed from config -> unset it
 			attributesToUnset = append(attributesToUnset, "severity")
 		} else {
 			hasChange = true

@@ -45,7 +45,7 @@ func (r *SystemglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context
 				// Not Computed: NITRO GET never echoes builtin, so a Computed value
 				// would stay unknown after apply (Pattern 13 / Pattern 7).
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
 			},
@@ -73,7 +73,7 @@ func (r *SystemglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context
 				Optional: true,
 				// Not Computed: NITRO GET never echoes gotopriorityexpression.
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only to advance authentication policy. Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.  Specify one of the following values:\n* NEXT - Evaluate the policy with the next higher priority number.\n* END - End policy evaluation.",
 			},
@@ -81,7 +81,7 @@ func (r *SystemglobalAuditnslogpolicyBindingResource) Schema(ctx context.Context
 				Optional: true,
 				// Not Computed: NITRO GET never echoes nextfactor.
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "On success invoke label. Applicable for advanced authentication policy binding",
 			},

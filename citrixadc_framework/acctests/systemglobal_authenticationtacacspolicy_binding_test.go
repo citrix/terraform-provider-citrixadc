@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSystemglobal_authenticationtacacspolicy_binding_basic = `
@@ -142,7 +143,10 @@ func TestAccSystemglobal_authenticationtacacspolicy_binding_sdkv2StateUpgrade(t 
 			// Step 2: refresh/plan/apply the legacy-id state through the current framework provider
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSystemglobal_authenticationtacacspolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemglobal_authenticationtacacspolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemglobal_authenticationtacacspolicy_bindingExist("citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_systemglobal_authenticationtacacspolicy_binding.tf_systemglobal_authenticationtacacspolicy_binding", "id", "tf_tacacspolicy"),

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -64,7 +64,7 @@ func (r *CsvserverResource) Create(ctx context.Context, req resource.CreateReque
 	// user does not supply a name, generate a unique one.
 	csvserverName := data.Name.ValueString()
 	if data.Name.IsNull() || csvserverName == "" {
-		csvserverName = sdkv2resource.PrefixedUniqueId("tf-csvserver-")
+		csvserverName = sdkid.PrefixedUniqueId("tf-csvserver-")
 		data.Name = types.StringValue(csvserverName)
 	}
 

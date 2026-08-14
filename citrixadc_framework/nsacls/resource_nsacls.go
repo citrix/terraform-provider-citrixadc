@@ -118,6 +118,19 @@ func (r *NsaclsResource) Read(ctx context.Context, req resource.ReadRequest, res
 	// "inconsistent result" errors). We preserve prior state instead.
 	tflog.Debug(ctx, "Read is a state-preserving no-op for nsacls")
 
+	// The effective ADC default for `type` is CLASSIC. The released SDK v2 provider
+	// stored `type` as null in state when it was left unset. Carrying that null
+	// forward (UseStateForUnknown copies the refreshed state into the plan) makes
+	// the planned `type` null, while Create/Update resolve it to "CLASSIC" -> the
+	// post-apply value differs from the plan ("inconsistent result after apply").
+	// Normalize the refreshed state to the effective default so the refreshed
+	// state (and therefore the plan) already holds "CLASSIC", matching apply.
+	// `type` is not configured in this case, so RequiresReplaceIfConfigured does
+	// not fire and no spurious replace is produced.
+	if data.Type.IsNull() || data.Type.IsUnknown() || data.Type.ValueString() == "" {
+		data.Type = types.StringValue("CLASSIC")
+	}
+
 	// Reproduce the SDK v2 toggle: acls_apply_trigger is reset to "No" after every
 	// read, so a config value of "Yes" always produces a diff and re-applies.
 	data.AclsApplyTrigger = types.StringValue("No")

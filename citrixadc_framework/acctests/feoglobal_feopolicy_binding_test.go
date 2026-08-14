@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccFeoglobal_feopolicy_binding_basic = `
@@ -271,7 +272,10 @@ func TestAccFeoglobal_feopolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 				// This is a single-key (policyname) binding, so the new format is the
 				// plain value and the id stays "tf_feopolicy".
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccFeoglobal_feopolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccFeoglobal_feopolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeoglobal_feopolicy_bindingExist("citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "id", "tf_feopolicy"),

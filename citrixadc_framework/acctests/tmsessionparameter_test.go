@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTmsessionparameter_basic = `
@@ -164,7 +165,10 @@ func TestAccTmsessionparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccTmsessionparameter_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTmsessionparameter_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTmsessionparameterExist("citrixadc_tmsessionparameter.tf_tmsessionparameter", nil),
 				),

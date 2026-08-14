@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationdfapolicy_add = `
@@ -221,8 +222,11 @@ func TestAccAuthenticationdfapolicy_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAuthenticationdfapolicy_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist("citrixadc_authenticationdfapolicy.td_dfapolicy", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationdfapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist("citrixadc_authenticationdfapolicy.td_dfapolicy", nil)),
 			},
 		},
 	})

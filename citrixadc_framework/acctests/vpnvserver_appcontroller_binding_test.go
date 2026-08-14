@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_appcontroller_binding_basic = `
@@ -245,7 +246,10 @@ func TestAccVpnvserver_appcontroller_binding_sdkv2StateUpgrade(t *testing.T) {
 			// The framework Read recomputes the id into the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnvserver_appcontroller_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_appcontroller_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserver_appcontroller_bindingExist("citrixadc_vpnvserver_appcontroller_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appcontroller_binding.tf_bind", "id", "appcontroller:http%3A%2F%2Fwww.example.com,name:tf.citrix.example.com"),

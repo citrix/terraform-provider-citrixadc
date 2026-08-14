@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIcaparameter_basic = `
@@ -107,8 +108,11 @@ func TestAccIcaparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccIcaparameter_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckIcaparameterExist("citrixadc_icaparameter.tf_icaparameter", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIcaparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIcaparameterExist("citrixadc_icaparameter.tf_icaparameter", nil)),
 			},
 		},
 	})

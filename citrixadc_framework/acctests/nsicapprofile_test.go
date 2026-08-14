@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsicapprofile_add = `
@@ -178,8 +179,11 @@ func TestAccNsicapprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNsicapprofile_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsicapprofileExist("citrixadc_nsicapprofile.tf_nsicapprofile", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsicapprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsicapprofileExist("citrixadc_nsicapprofile.tf_nsicapprofile", nil)),
 			},
 		},
 	})

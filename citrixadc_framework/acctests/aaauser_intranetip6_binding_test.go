@@ -23,8 +23,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaauser_intranetip6_binding_basic = `
@@ -274,7 +275,10 @@ func TestAccAaauser_intranetip6_binding_sdkv2StateUpgrade(t *testing.T) {
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAaauser_intranetip6_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaauser_intranetip6_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaauser_intranetip6_bindingExist("citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_aaauser_intranetip6_binding.tf_aaauser_intranetip6_binding", "id", "intranetip6:2003%3Adb8%3A100%3A%3Afb%2F128,username:user1"),

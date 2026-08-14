@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_appcontroller_binding_basic = `
@@ -191,7 +192,10 @@ func TestAccVpnglobal_appcontroller_binding_sdkv2StateUpgrade(t *testing.T) {
 			// provider. The single-value id is recomputed to the same canonical value.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnglobal_appcontroller_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_appcontroller_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_appcontroller_bindingExist(resourceAddr, nil),
 					resource.TestCheckResourceAttr(resourceAddr, "id", "http://www.citrix.com"),

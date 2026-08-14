@@ -41,7 +41,7 @@ func (r *DnsaddrecResource) Schema(ctx context.Context, req resource.SchemaReque
 			"ecssubnet": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Subnet for which the cached address records need to be removed.",
 			},

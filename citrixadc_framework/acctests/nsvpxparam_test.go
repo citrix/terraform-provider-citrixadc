@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsvpxparam_basic_step1 = `
@@ -154,8 +155,11 @@ func TestAccNsvpxparam_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNsvpxparam_basic_step1,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsvpxparam_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsvpxparamExist("citrixadc_nsvpxparam.tf_vpxparam", nil)),
 			},
 		},
 	})

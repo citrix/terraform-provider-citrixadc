@@ -58,7 +58,7 @@ func (r *VlanInterfaceBindingResource) Schema(ctx context.Context, req resource.
 				// only sent when the user configured it).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The owner node group in a Cluster for this vlan.",
 			},

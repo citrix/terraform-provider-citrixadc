@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_vpnintranetapplication_binding_basic = `
@@ -254,7 +255,10 @@ func TestAccVpnglobal_vpnintranetapplication_binding_sdkv2StateUpgrade(t *testin
 			// For this single-key binding both the legacy and new id are the plain intranetapplication value.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnglobal_vpnintranetapplication_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_vpnintranetapplication_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_vpnintranetapplication_bindingExist("citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnintranetapplication_binding.tf_bind", "id", "tf_vpnintranetapplication"),

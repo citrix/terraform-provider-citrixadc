@@ -65,7 +65,7 @@ func (r *ContentinspectionpolicylabelContentinspectionpolicyBindingResource) Sch
 				// unknown-after-apply value that GET can never resolve -> Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "* If labelType is policylabel, name of the policy label to invoke.\n* If labelType is reqvserver or resvserver, name of the virtual server to which to forward the request or response.",
 			},
@@ -81,7 +81,7 @@ func (r *ContentinspectionpolicylabelContentinspectionpolicyBindingResource) Sch
 				// this field back, so it is NOT Computed (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of invocation. Available settings function as follows:\n* reqvserver - Forward the request to the specified request virtual server.\n* resvserver - Forward the response to the specified response virtual server.\n* policylabel - Invoke the specified policy label.",
 			},

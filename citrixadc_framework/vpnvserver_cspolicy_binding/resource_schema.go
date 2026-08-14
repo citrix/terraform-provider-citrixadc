@@ -45,7 +45,7 @@ func (r *VpnvserverCspolicyBindingResource) Schema(ctx context.Context, req reso
 				// result after apply"). Optional + RequiresReplace matches SDK v2.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
@@ -53,7 +53,7 @@ func (r *VpnvserverCspolicyBindingResource) Schema(ctx context.Context, req reso
 				// Not echoed back by the NITRO GET response; not Computed.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Next priority expression.",
 			},
@@ -61,7 +61,7 @@ func (r *VpnvserverCspolicyBindingResource) Schema(ctx context.Context, req reso
 				// Not echoed back by the NITRO GET response; not Computed.
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Binds the authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.",
 			},
@@ -95,7 +95,7 @@ func (r *VpnvserverCspolicyBindingResource) Schema(ctx context.Context, req reso
 				// Not echoed back by the NITRO GET response; not Computed.
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.",
 			},

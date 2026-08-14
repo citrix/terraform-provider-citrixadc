@@ -18,7 +18,7 @@ package citrixadc
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // The nitro_info data source is a generic NITRO query escape-hatch. This exercises

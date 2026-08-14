@@ -24,8 +24,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_denyurl_binding_basic = `
@@ -298,7 +299,10 @@ func TestAccAppfwprofile_denyurl_binding_sdkv2StateUpgrade(t *testing.T) {
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppfwprofile_denyurl_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_denyurl_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_denyurl_bindingExist("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_denyurl_binding.appfwprofile_denyurl1", "id", `denyurl:debug%5B.%5D%5B%5E%2F%3F%5D%2A%28%7C%5B%3F%5D.%2A%29%24,name:tfAcc_appfwprofile`),

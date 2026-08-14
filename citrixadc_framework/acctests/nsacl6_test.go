@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsacl6_add = `
@@ -245,8 +246,11 @@ func TestAccNsacl6_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNsacl6_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsacl6Exist("citrixadc_nsacl6.tf_nsacl6", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsacl6_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsacl6Exist("citrixadc_nsacl6.tf_nsacl6", nil)),
 			},
 		},
 	})

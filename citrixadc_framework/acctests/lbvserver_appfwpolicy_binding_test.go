@@ -22,8 +22,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbvserver_appfwpolicy_binding_basic = `
@@ -192,7 +193,10 @@ func TestAccLbvserver_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLbvserver_appfwpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbvserver_appfwpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserver_appfwpolicy_bindingExist("citrixadc_lbvserver_appfwpolicy_binding.demo_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_lbvserver_appfwpolicy_binding.demo_binding", "id", "name:demo_lb,policyname:demo_appfwpolicy"),

@@ -18,8 +18,9 @@ package citrixadc
 import (
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
@@ -371,7 +372,10 @@ func TestAccCsvserver_cspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// recomputed to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCsvserver_cspolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCsvserver_cspolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserver_cspolicy_bindingExist(resourceAddr, nil),
 					resource.TestCheckResourceAttr(resourceAddr, "id", "name:tf_csvserver,policyname:tf_cspolicy"),

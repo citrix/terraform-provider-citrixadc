@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccBridgegroup_nsip_binding_basic = `
@@ -307,7 +308,10 @@ func TestAccBridgegroup_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
 			{
 				// Refresh/plan/apply the legacy-id state through the current provider.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccBridgegroup_nsip_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBridgegroup_nsip_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBridgegroup_nsip_bindingExist("citrixadc_bridgegroup_nsip_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_bridgegroup_nsip_binding.tf_binding", "id", "bridgegroup_id:2,ipaddress:2.2.2.3"),

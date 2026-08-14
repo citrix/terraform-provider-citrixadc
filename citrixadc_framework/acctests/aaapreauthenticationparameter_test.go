@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaapreauthenticationparameter_basic = `
@@ -80,8 +81,11 @@ func TestAccAaapreauthenticationparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAaapreauthenticationparameter_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationparameterExist("citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaapreauthenticationparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationparameterExist("citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter", nil)),
 			},
 		},
 	})

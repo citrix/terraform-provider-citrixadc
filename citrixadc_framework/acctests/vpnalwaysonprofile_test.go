@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnalwaysonprofile_basic = `
@@ -290,8 +291,11 @@ func TestAccVpnalwaysonprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnalwaysonprofile_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnalwaysonprofileExist("citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnalwaysonprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnalwaysonprofileExist("citrixadc_vpnalwaysonprofile.tf_vpnalwaysonprofile", nil)),
 			},
 		},
 	})

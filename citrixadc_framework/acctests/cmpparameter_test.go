@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCmpparameter_basic = `
@@ -98,8 +99,11 @@ func TestAccCmpparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCmpparameter_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckCmpparameterExist("citrixadc_cmpparameter.tf_cmpparameter", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCmpparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpparameterExist("citrixadc_cmpparameter.tf_cmpparameter", nil)),
 			},
 		},
 	})

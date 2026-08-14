@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVrid6_add = `
@@ -201,8 +202,11 @@ func TestAccVrid6_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVrid6_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckVrid6Exist("citrixadc_vrid6.tf_vrid6", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVrid6_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVrid6Exist("citrixadc_vrid6.tf_vrid6", nil)),
 			},
 		},
 	})

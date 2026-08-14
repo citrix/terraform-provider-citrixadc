@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_intranetip6_binding_basic = `
@@ -86,7 +87,10 @@ func TestAccVpnglobal_intranetip6_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Step 2: refresh/apply through the current framework provider (exercises ParseIdString on the legacy id)
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnglobal_intranetip6_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_intranetip6_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_intranetip6_bindingExist("citrixadc_vpnglobal_intranetip6_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnglobal_intranetip6_binding.tf_bind", "id", "2.3.4.5"),

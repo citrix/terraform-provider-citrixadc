@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsnpool_basic = `
@@ -143,8 +144,11 @@ func TestAccLsnpool_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLsnpool_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnpoolExist("citrixadc_lsnpool.tf_lsnpool", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsnpool_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnpoolExist("citrixadc_lsnpool.tf_lsnpool", nil)),
 			},
 		},
 	})

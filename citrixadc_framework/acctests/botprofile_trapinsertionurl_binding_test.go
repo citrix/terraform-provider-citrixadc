@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccBotprofile_trapinsertionurl_binding_basic = `
@@ -349,7 +350,10 @@ func TestAccBotprofile_trapinsertionurl_binding_sdkv2StateUpgrade(t *testing.T) 
 			// the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccBotprofile_trapinsertionurl_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBotprofile_trapinsertionurl_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofile_trapinsertionurl_bindingExist("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_botprofile_trapinsertionurl_binding.tf_binding", "id", "bot_trap_url:www.example.com,name:tf_botprofile,trapinsertionurl:true"),

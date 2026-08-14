@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaaglobal_aaapreauthenticationpolicy_binding_basic = `
@@ -282,7 +283,10 @@ func TestAccAaaglobal_aaapreauthenticationpolicy_binding_sdkv2StateUpgrade(t *te
 				// and SetAttrFromGet recomputes the id. This is a single-key binding,
 				// so the canonical new id is the plain policy value (unchanged).
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAaaglobal_aaapreauthenticationpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaaglobal_aaapreauthenticationpolicy_bindingExist("citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "id", "my_policy"),

@@ -22,8 +22,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_sqlinjection_binding_basic = `
@@ -357,7 +358,10 @@ func TestAccAppfwprofile_sqlinjection_binding_sdkv2StateUpgrade(t *testing.T) {
 			// provider. Read parses the legacy ID and re-derives the new-format ID.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppfwprofile_sqlinjection_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_sqlinjection_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "id", "as_scan_location_sql:FORMFIELD,as_value_expr_sql:.%2A,as_value_type_sql:Keyword,formactionurl_sql:%5Ehttps%3A%2F%2Fcitrix.csg.com%2Fanalytics%2Fsaw.dll%24,name:demo_appfwprofile,sqlinjection:data"),

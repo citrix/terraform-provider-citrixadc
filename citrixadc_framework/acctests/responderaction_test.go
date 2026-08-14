@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccResponderaction_basic(t *testing.T) {
@@ -391,8 +392,11 @@ func TestAccResponderaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccResponderaction_target_step1,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderaction_target_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil)),
 			},
 		},
 	})

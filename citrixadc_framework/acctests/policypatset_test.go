@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccPolicypatset_basic_step1 = `
@@ -190,8 +191,11 @@ func TestAccPolicypatset_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccPolicypatset_basic_step1,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist("citrixadc_policypatset.tf_patset", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccPolicypatset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicypatsetExist("citrixadc_policypatset.tf_patset", nil)),
 			},
 		},
 	})

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccInterface_basic(t *testing.T) {
@@ -124,8 +125,11 @@ func TestAccInterface_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccInterface_basic_step1,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckInterfaceExist("citrixadc_interface.tf_interface", nil, "1/1")),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccInterface_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfaceExist("citrixadc_interface.tf_interface", nil, "1/1")),
 			},
 		},
 	})

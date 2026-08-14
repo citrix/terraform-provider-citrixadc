@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslpolicylabel_sslpolicy_binding_basic_step1 = `
@@ -337,7 +338,10 @@ func TestAccSslpolicylabel_sslpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// The framework recomputes the id on read to the new key:value form.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSslpolicylabel_sslpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslpolicylabel_sslpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslpolicylabel_sslpolicy_bindingExist("citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslpolicylabel_sslpolicy_binding.demo_sslpolicylabel_sslpolicy_binding", "id", "labelname:ssl_pol_label,policyname:certinsert_pol,priority:56"),

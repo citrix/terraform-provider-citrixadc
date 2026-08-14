@@ -45,7 +45,7 @@ func (r *AuthenticationvserverAuthenticationoauthidppolicyBindingResource) Schem
 				// configured value resolves cleanly and an unset value is null after apply.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point to which to bind the policy.",
 			},
@@ -63,7 +63,7 @@ func (r *AuthenticationvserverAuthenticationoauthidppolicyBindingResource) Schem
 				// Not echoed back by NITRO GET; Optional-only (no Computed).
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
@@ -78,7 +78,7 @@ func (r *AuthenticationvserverAuthenticationoauthidppolicyBindingResource) Schem
 				// Not echoed back by NITRO GET; Optional-only (no Computed).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "On success invoke label.",
 			},
@@ -103,7 +103,7 @@ func (r *AuthenticationvserverAuthenticationoauthidppolicyBindingResource) Schem
 				// Not echoed back by NITRO GET; Optional-only (no Computed).
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},

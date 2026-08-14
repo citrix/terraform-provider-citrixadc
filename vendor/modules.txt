@@ -30,7 +30,6 @@ github.com/agext/levenshtein
 github.com/apparentlymart/go-textseg/v15/textseg
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 ## explicit
-github.com/bgentry/go-netrc/netrc
 # github.com/citrix/adc-nitro-go v0.0.0-20260724204033-b9c3ca1ade34
 ## explicit; go 1.14
 github.com/citrix/adc-nitro-go/resource/config/aaa
@@ -112,7 +111,6 @@ github.com/cloudflare/circl/sign/ed25519
 github.com/cloudflare/circl/sign/ed448
 # github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 ## explicit
-github.com/davecgh/go-spew/spew
 # github.com/fatih/color v1.16.0
 ## explicit; go 1.17
 github.com/fatih/color
@@ -130,15 +128,6 @@ github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/gruntwork-io/terratest v0.51.0
 ## explicit; go 1.24.0
-github.com/gruntwork-io/terratest/modules/collections
-github.com/gruntwork-io/terratest/modules/files
-github.com/gruntwork-io/terratest/modules/logger
-github.com/gruntwork-io/terratest/modules/opa
-github.com/gruntwork-io/terratest/modules/retry
-github.com/gruntwork-io/terratest/modules/shell
-github.com/gruntwork-io/terratest/modules/ssh
-github.com/gruntwork-io/terratest/modules/terraform
-github.com/gruntwork-io/terratest/modules/testing
 # github.com/hashicorp/errwrap v1.0.0
 ## explicit
 github.com/hashicorp/errwrap
@@ -158,8 +147,6 @@ github.com/hashicorp/go-cty/cty/msgpack
 github.com/hashicorp/go-cty/cty/set
 # github.com/hashicorp/go-getter/v2 v2.2.3
 ## explicit; go 1.19
-github.com/hashicorp/go-getter/v2
-github.com/hashicorp/go-getter/v2/helper/url
 # github.com/hashicorp/go-hclog v1.6.3
 ## explicit; go 1.13
 github.com/hashicorp/go-hclog
@@ -178,7 +165,6 @@ github.com/hashicorp/go-plugin/runner
 github.com/hashicorp/go-retryablehttp
 # github.com/hashicorp/go-safetemp v1.0.0
 ## explicit
-github.com/hashicorp/go-safetemp
 # github.com/hashicorp/go-uuid v1.0.3
 ## explicit
 github.com/hashicorp/go-uuid
@@ -205,9 +191,7 @@ github.com/hashicorp/hc-install/version
 ## explicit; go 1.23.0
 github.com/hashicorp/hcl/v2
 github.com/hashicorp/hcl/v2/ext/customdecode
-github.com/hashicorp/hcl/v2/hclparse
 github.com/hashicorp/hcl/v2/hclsyntax
-github.com/hashicorp/hcl/v2/json
 # github.com/hashicorp/logutils v1.0.0
 ## explicit
 github.com/hashicorp/logutils
@@ -263,7 +247,6 @@ github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults
 github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default
 github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default
 github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier
-github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault
 github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier
 github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier
 github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier
@@ -327,6 +310,24 @@ github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfdiags
 github.com/hashicorp/terraform-plugin-sdk/v2/meta
 github.com/hashicorp/terraform-plugin-sdk/v2/plugin
 github.com/hashicorp/terraform-plugin-sdk/v2/terraform
+# github.com/hashicorp/terraform-plugin-testing v1.13.2
+## explicit; go 1.23.0
+github.com/hashicorp/terraform-plugin-testing/compare
+github.com/hashicorp/terraform-plugin-testing/config
+github.com/hashicorp/terraform-plugin-testing/helper/resource
+github.com/hashicorp/terraform-plugin-testing/internal/addrs
+github.com/hashicorp/terraform-plugin-testing/internal/configs/configschema
+github.com/hashicorp/terraform-plugin-testing/internal/configs/hcl2shim
+github.com/hashicorp/terraform-plugin-testing/internal/logging
+github.com/hashicorp/terraform-plugin-testing/internal/plugintest
+github.com/hashicorp/terraform-plugin-testing/internal/teststep
+github.com/hashicorp/terraform-plugin-testing/internal/tfdiags
+github.com/hashicorp/terraform-plugin-testing/knownvalue
+github.com/hashicorp/terraform-plugin-testing/plancheck
+github.com/hashicorp/terraform-plugin-testing/statecheck
+github.com/hashicorp/terraform-plugin-testing/terraform
+github.com/hashicorp/terraform-plugin-testing/tfjsonpath
+github.com/hashicorp/terraform-plugin-testing/tfversion
 # github.com/hashicorp/terraform-registry-address v0.4.0
 ## explicit; go 1.23.0
 github.com/hashicorp/terraform-registry-address
@@ -338,16 +339,8 @@ github.com/hashicorp/terraform-svchost
 github.com/hashicorp/yamux
 # github.com/jinzhu/copier v0.0.0-20190924061706-b57f9002281a
 ## explicit
-github.com/jinzhu/copier
 # github.com/klauspost/compress v1.16.5
 ## explicit; go 1.18
-github.com/klauspost/compress
-github.com/klauspost/compress/fse
-github.com/klauspost/compress/huff0
-github.com/klauspost/compress/internal/cpuinfo
-github.com/klauspost/compress/internal/snapref
-github.com/klauspost/compress/zstd
-github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kr/fs v0.1.0
 ## explicit
 github.com/kr/fs
@@ -359,14 +352,11 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326
 ## explicit
-github.com/mattn/go-zglob
-github.com/mattn/go-zglob/fastwalk
 # github.com/mitchellh/copystructure v1.2.0
 ## explicit; go 1.15
 github.com/mitchellh/copystructure
 # github.com/mitchellh/go-homedir v1.1.0
 ## explicit
-github.com/mitchellh/go-homedir
 # github.com/mitchellh/go-testing-interface v1.14.1
 ## explicit; go 1.14
 github.com/mitchellh/go-testing-interface
@@ -389,21 +379,12 @@ github.com/pkg/sftp/internal/encoding/ssh/filexfer
 github.com/pkg/sftp/internal/encoding/ssh/filexfer/openssh
 # github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 ## explicit
-github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.10.0
 ## explicit; go 1.17
-github.com/stretchr/testify/assert
-github.com/stretchr/testify/assert/yaml
-github.com/stretchr/testify/require
 # github.com/tmccombs/hcl2json v0.6.4
 ## explicit; go 1.19
-github.com/tmccombs/hcl2json/convert
 # github.com/ulikunitz/xz v0.5.14
 ## explicit; go 1.12
-github.com/ulikunitz/xz
-github.com/ulikunitz/xz/internal/hash
-github.com/ulikunitz/xz/internal/xlog
-github.com/ulikunitz/xz/lzma
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
 ## explicit
 github.com/vmihailenco/msgpack
@@ -443,7 +424,6 @@ golang.org/x/crypto/internal/alias
 golang.org/x/crypto/internal/poly1305
 golang.org/x/crypto/sha3
 golang.org/x/crypto/ssh
-golang.org/x/crypto/ssh/agent
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 # golang.org/x/mod v0.35.0
 ## explicit; go 1.25.0
@@ -453,7 +433,6 @@ golang.org/x/mod/module
 golang.org/x/mod/semver
 # golang.org/x/net v0.55.0
 ## explicit; go 1.25.0
-golang.org/x/net/context
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack
@@ -631,4 +610,3 @@ google.golang.org/protobuf/types/known/timestamppb
 gopkg.in/yaml.v2
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
-gopkg.in/yaml.v3

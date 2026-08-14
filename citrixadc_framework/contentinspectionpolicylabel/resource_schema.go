@@ -41,7 +41,7 @@ func (r *ContentinspectionpolicylabelResource) Schema(ctx context.Context, req r
 				// by GET and read into state by SetAttrFromGet. Matches SDK v2 (Optional,
 				// ForceNew).
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments to preserve information about this contentInspection policy label.",
 			},

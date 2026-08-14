@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsservicepath_nsservicefunction_binding_basic = `
@@ -308,7 +309,10 @@ func TestAccNsservicepath_nsservicefunction_binding_sdkv2StateUpgrade(t *testing
 				// Step 2: refresh/apply the same config through the current Framework provider.
 				// Read recomputes the id to the new key:value format.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNsservicepath_nsservicefunction_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsservicepath_nsservicefunction_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNsservicepath_nsservicefunction_bindingExist("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsservicepath_nsservicefunction_binding.tf_binding", "id", "servicefunction:tf_servicefunc,servicepathname:tf_servicepath"),

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsappflowcollector_basic = `
@@ -189,8 +190,11 @@ func TestAccNsappflowcollector_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNsappflowcollector_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsappflowcollectorExist("citrixadc_nsappflowcollector.tf_appflowcollector", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsappflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsappflowcollectorExist("citrixadc_nsappflowcollector.tf_appflowcollector", nil)),
 			},
 		},
 	})

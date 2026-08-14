@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbvserver_transformpolicy_binding_basic_step1 = `
@@ -311,7 +312,10 @@ func TestAccLbvserver_transformpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// parses the legacy id and recomputes it to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLbvserver_transformpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbvserver_transformpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserver_transformpolicy_bindingExist("citrixadc_lbvserver_transformpolicy_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_lbvserver_transformpolicy_binding.tf_binding", "id", "name:tf_lbvserver,policyname:tf_trans_policy"),

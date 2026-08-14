@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNetbridge_nsip_binding_basic = `
@@ -289,7 +290,10 @@ func TestAccNetbridge_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read re-derives the id into the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNetbridge_nsip_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNetbridge_nsip_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetbridge_nsip_bindingExist("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "id", "ipaddress:10.222.74.128,name:my_netbridge,netmask:255.255.255.255"),

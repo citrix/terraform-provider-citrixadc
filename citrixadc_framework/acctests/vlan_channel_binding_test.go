@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVlan_channel_binding_basic = `
@@ -119,7 +120,10 @@ func TestAccVlan_channel_binding_sdkv2StateUpgrade(t *testing.T) {
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVlan_channel_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVlan_channel_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVlan_channel_bindingExist("citrixadc_vlan_channel_binding.tf_vlan_channel_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vlan_channel_binding.tf_vlan_channel_binding", "id", "vlanid:2,ifnum:LA%2F3"),

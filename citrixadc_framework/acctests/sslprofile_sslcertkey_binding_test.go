@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslprofile_sslcertkey_binding_basic_step1 = `
@@ -323,7 +324,10 @@ func TestAccSslprofile_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read recomputes the id into the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccsslprofile_sslcertkey_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccsslprofile_sslcertkey_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofile_sslcertkey_bindingExist("citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile_sslcertkey_binding.demo_sslprofile_sslcertkey_binding", "id", "name:tfUnit_sslprofile-hello,sslicacertkey:tf_sslcertkey"),

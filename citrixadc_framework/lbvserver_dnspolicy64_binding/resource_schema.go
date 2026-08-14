@@ -46,7 +46,7 @@ func (r *LbvserverDnspolicy64BindingResource) Schema(ctx context.Context, req re
 				// (not unknown) after apply when unset. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point to which to bind the policy.",
 			},
@@ -54,7 +54,8 @@ func (r *LbvserverDnspolicy64BindingResource) Schema(ctx context.Context, req re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
@@ -63,7 +64,7 @@ func (r *LbvserverDnspolicy64BindingResource) Schema(ctx context.Context, req re
 				// NITRO GET does not echo invoke; Optional-only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
@@ -71,7 +72,7 @@ func (r *LbvserverDnspolicy64BindingResource) Schema(ctx context.Context, req re
 				// NITRO GET does not echo labelname; Optional-only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.",
 			},
@@ -79,7 +80,7 @@ func (r *LbvserverDnspolicy64BindingResource) Schema(ctx context.Context, req re
 				// NITRO GET does not echo labeltype; Optional-only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of policy label to invoke. Applicable only to rewrite, videooptimization and cache policies. Available settings function as follows:\n* reqvserver - Evaluate the request against the request-based policies bound to the specified virtual server.\n* resvserver - Evaluate the response against the response-based policies bound to the specified virtual server.\n* policylabel - invoke the request or response against the specified user-defined policy label.",
 			},
@@ -94,7 +95,7 @@ func (r *LbvserverDnspolicy64BindingResource) Schema(ctx context.Context, req re
 				// NITRO GET does not echo order; Optional-only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.",
 			},
@@ -109,7 +110,8 @@ func (r *LbvserverDnspolicy64BindingResource) Schema(ctx context.Context, req re
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 					int64planmodifier.UseStateForUnknown(),
 				},
 				Description: "Priority.",

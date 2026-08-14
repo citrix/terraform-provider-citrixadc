@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationvserver_cspolicy_binding_basic = `
@@ -375,7 +376,10 @@ func TestAccAuthenticationvserver_cspolicy_binding_sdkv2StateUpgrade(t *testing.
 			// The framework recomputes the id on read to the new key:value form.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccauthenticationvserver_cspolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccauthenticationvserver_cspolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationvserver_cspolicy_bindingExist("citrixadc_authenticationvserver_cspolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_cspolicy_binding.tf_bind", "id", "name:tf_authenticationvserver,policy:test_policy"),

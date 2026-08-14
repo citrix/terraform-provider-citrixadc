@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSystembackup_basic = `
@@ -64,8 +65,11 @@ func TestAccSystembackup_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSystembackup_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystembackup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil)),
 			},
 		},
 	})

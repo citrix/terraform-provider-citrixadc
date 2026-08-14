@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_vpnsessionpolicy_binding_basic = `
@@ -240,7 +241,10 @@ func TestAccVpnglobal_vpnsessionpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read recomputes the id (single key -> plain policyname value), which stays "tf_vpnsessionpolicy".
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnglobal_vpnsessionpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_vpnsessionpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_vpnsessionpolicy_bindingExist("citrixadc_vpnglobal_vpnsessionpolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnsessionpolicy_binding.tf_bind", "id", "tf_vpnsessionpolicy"),

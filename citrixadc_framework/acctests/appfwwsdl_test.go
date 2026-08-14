@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwwsdl_basic = `
@@ -68,8 +69,11 @@ func TestAccAppfwwsdl_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppfwwsdl_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwwsdlExist("citrixadc_appfwwsdl.tf_appfwwsdl", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwwsdl_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwwsdlExist("citrixadc_appfwwsdl.tf_appfwwsdl", nil)),
 			},
 		},
 	})

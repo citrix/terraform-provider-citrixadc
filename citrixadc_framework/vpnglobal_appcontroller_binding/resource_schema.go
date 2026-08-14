@@ -42,7 +42,7 @@ func (r *VpnglobalAppcontrollerBindingResource) Schema(ctx context.Context, req 
 				// resolved at apply time ("still indicated an unknown value").
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},

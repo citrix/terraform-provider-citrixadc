@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -83,7 +83,7 @@ func (r *LbvserverResource) Create(ctx context.Context, req resource.CreateReque
 	// does not supply a name, generate a unique one.
 	lbvserverName := data.Name.ValueString()
 	if data.Name.IsNull() || data.Name.IsUnknown() || lbvserverName == "" {
-		lbvserverName = sdkv2resource.PrefixedUniqueId("tf-lbvserver-")
+		lbvserverName = sdkid.PrefixedUniqueId("tf-lbvserver-")
 		data.Name = types.StringValue(lbvserverName)
 	}
 

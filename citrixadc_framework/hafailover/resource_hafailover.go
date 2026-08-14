@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -75,7 +75,7 @@ func (r *HafailoverResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	// Generate a unique ID for this resource (matches SDK v2 id format)
-	data.Id = types.StringValue(sdkv2resource.PrefixedUniqueId("tf-hafailover-"))
+	data.Id = types.StringValue(sdkid.PrefixedUniqueId("tf-hafailover-"))
 
 	// force is Optional+Computed and never returned by any GET; give it a concrete value
 	if data.Force.IsNull() || data.Force.IsUnknown() {

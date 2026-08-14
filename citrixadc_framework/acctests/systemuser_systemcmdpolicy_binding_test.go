@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSystemuser_systemcmdpolicy_binding_basic = `
@@ -288,7 +289,10 @@ func TestAccSystemuser_systemcmdpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Framework Read recomputes the id to the new canonical format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSystemuser_systemcmdpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemuser_systemcmdpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemuser_systemcmdpolicy_bindingExist("citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", "id", "policyname:tf_policy,username:tf_user"),

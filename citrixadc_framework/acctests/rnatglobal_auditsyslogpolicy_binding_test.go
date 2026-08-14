@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccRnatglobal_auditsyslogpolicy_binding_basic = `
@@ -315,7 +316,10 @@ func TestAccRnatglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T)
 				// recomputes the id. This binding is single-key (policy), so the
 				// canonical new id is the plain policy value (== the legacy id).
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRnatglobal_auditsyslogpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRnatglobal_auditsyslogpolicy_bindingExist("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_rnatglobal_auditsyslogpolicy_binding.tf_binding", "id", "tf_auditsyslogpolicy"),

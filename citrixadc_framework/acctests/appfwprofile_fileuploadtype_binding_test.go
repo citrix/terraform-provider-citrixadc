@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_fileuploadtype_binding_basic = `
@@ -339,7 +340,10 @@ func TestAccAppfwprofile_fileuploadtype_binding_sdkv2StateUpgrade(t *testing.T) 
 			// ParseIdString on the legacy ID and Read recomputes the ID to the new format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppfwprofile_fileuploadtype_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_fileuploadtype_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_fileuploadtype_bindingExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "id", `as_fileuploadtypes_url:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fv1%2Fresource%2Ftemp%24,filetype:text,fileuploadtype:tf_uploadtype,name:tf_appfwprofile`),

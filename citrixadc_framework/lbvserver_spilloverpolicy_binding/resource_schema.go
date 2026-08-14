@@ -65,7 +65,7 @@ func (r *LbvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				// "unknown value after apply" (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
@@ -73,7 +73,7 @@ func (r *LbvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				// NITRO GET does not echo labelname back; drop Computed (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.",
 			},
@@ -81,7 +81,7 @@ func (r *LbvserverSpilloverpolicyBindingResource) Schema(ctx context.Context, re
 				// NITRO GET does not echo labeltype back; drop Computed (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of policy label to invoke. Applicable only to rewrite, videooptimization and cache policies. Available settings function as follows:\n* reqvserver - Evaluate the request against the request-based policies bound to the specified virtual server.\n* resvserver - Evaluate the response against the response-based policies bound to the specified virtual server.\n* policylabel - invoke the request or response against the specified user-defined policy label.",
 			},

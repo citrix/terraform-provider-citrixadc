@@ -76,7 +76,7 @@ func (r *LbvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				// cannot be Computed (would be unknown-after-apply) - Optional only (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label invoked.",
 			},
@@ -85,7 +85,7 @@ func (r *LbvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				// cannot be Computed (would be unknown-after-apply) - Optional only (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The invocation type.",
 			},
@@ -101,7 +101,7 @@ func (r *LbvserverCachepolicyBindingResource) Schema(ctx context.Context, req re
 				// (would be unknown-after-apply) - Optional only (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.",
 			},

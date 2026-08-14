@@ -64,7 +64,7 @@ func (r *CmppolicylabelCmppolicyBindingResource) Schema(ctx context.Context, req
 				// (would stay unknown after apply). Pure user input -> Optional only.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label to invoke if the current policy evaluates to TRUE.",
 			},
@@ -80,7 +80,7 @@ func (r *CmppolicylabelCmppolicyBindingResource) Schema(ctx context.Context, req
 				// (would stay unknown after apply). Pure user input -> Optional only.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of policy label invocation.",
 			},

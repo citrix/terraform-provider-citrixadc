@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnsamlssoprofile_add = `
@@ -223,8 +224,11 @@ func TestAccVpnsamlssoprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnsamlssoprofile_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnsamlssoprofileExist("citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnsamlssoprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsamlssoprofileExist("citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile", nil)),
 			},
 		},
 	})

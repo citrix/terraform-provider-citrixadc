@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_basic = `
@@ -314,7 +315,10 @@ func TestAccContentinspectionpolicylabel_contentinspectionpolicy_binding_sdkv2St
 			// The framework recomputes the id on read to the new key:value form.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContentinspectionpolicylabel_contentinspectionpolicy_bindingExist("citrixadc_contentinspectionpolicylabel_contentinspectionpolicy_binding.tf_ci_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionpolicylabel_contentinspectionpolicy_binding.tf_ci_binding", "id", "labelname:my_ci_label,policyname:my_ci_policy"),

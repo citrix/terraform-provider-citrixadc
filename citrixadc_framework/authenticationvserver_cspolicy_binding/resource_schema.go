@@ -43,21 +43,21 @@ func (r *AuthenticationvserverCspolicyBindingResource) Schema(ctx context.Contex
 			"bindpoint": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.",
 			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
 			"groupextraction": schema.BoolAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
@@ -71,7 +71,7 @@ func (r *AuthenticationvserverCspolicyBindingResource) Schema(ctx context.Contex
 			"nextfactor": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor",
 			},
@@ -95,7 +95,7 @@ func (r *AuthenticationvserverCspolicyBindingResource) Schema(ctx context.Contex
 			"secondary": schema.BoolAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},

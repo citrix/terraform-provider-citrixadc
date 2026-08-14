@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_cachepolicy_binding_basic = `
@@ -130,7 +131,10 @@ func TestAccVpnvserver_cachepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			{
 				// Step 2: refresh/apply the legacy-id state through the current framework provider.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnvserver_cachepolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_cachepolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserver_cachepolicy_bindingExist("citrixadc_vpnvserver_cachepolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver_cachepolicy_binding.tf_bind", "id", newId),

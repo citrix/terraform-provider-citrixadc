@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnpcoipprofile_add = `
@@ -206,8 +207,11 @@ func TestAccVpnpcoipprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnpcoipprofile_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnpcoipprofileExist("citrixadc_vpnpcoipprofile.tf_vpnpcoipprofile", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnpcoipprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnpcoipprofileExist("citrixadc_vpnpcoipprofile.tf_vpnpcoipprofile", nil)),
 			},
 		},
 	})

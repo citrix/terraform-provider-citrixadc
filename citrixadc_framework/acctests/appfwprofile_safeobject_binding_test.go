@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_safeobject_binding_basic = `
@@ -150,7 +151,10 @@ func TestAccAppfwprofile_safeobject_binding_sdkv2StateUpgrade(t *testing.T) {
 				// Step 2: same config through the current Framework provider. Read parses
 				// the legacy ID (ParseIdString) and recomputes it to the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppfwprofile_safeobject_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_safeobject_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppfwprofile_safeobject_bindingExist("citrixadc_appfwprofile_safeobject_binding.tf_binding1", nil),
 					resource.TestCheckResourceAttr("citrixadc_appfwprofile_safeobject_binding.tf_binding1", "id", "name:tf_appfwprofile,safeobject:tf_safeobject"),

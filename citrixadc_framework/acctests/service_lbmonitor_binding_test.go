@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccService_lbmonitor_binding_basic = `
@@ -324,7 +325,10 @@ func TestAccService_lbmonitor_binding_sdkv2StateUpgrade(t *testing.T) {
 			// recomputes the id to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccService_lbmonitor_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccService_lbmonitor_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckService_lbmonitor_bindingExist("citrixadc_service_lbmonitor_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_service_lbmonitor_binding.tf_binding", "id", "monitor_name:tf_monitor,name:tf_service"),

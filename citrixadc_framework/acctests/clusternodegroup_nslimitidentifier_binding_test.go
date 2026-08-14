@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternodegroup_nslimitidentifier_binding_basic = `
@@ -349,7 +350,10 @@ func TestAccClusternodegroup_nslimitidentifier_binding_sdkv2StateUpgrade(t *test
 			// recomputed to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccClusternodegroup_nslimitidentifier_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternodegroup_nslimitidentifier_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodegroup_nslimitidentifier_bindingExist(resourceAddr, nil),
 					resource.TestCheckResourceAttr(resourceAddr, "id", "identifiername:my_ns_limit_identifier_ds,name:my_tf_group"),

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsservicepath_basic = `
@@ -61,8 +62,11 @@ func TestAccNsservicepath_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNsservicepath_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckNsservicepathExist("citrixadc_nsservicepath.tf_servicepath", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsservicepath_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicepathExist("citrixadc_nsservicepath.tf_servicepath", nil)),
 			},
 		},
 	})

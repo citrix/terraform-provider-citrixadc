@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationvserver_authenticationcertpolicy_binding_basic = `
@@ -363,7 +364,10 @@ func TestAccAuthenticationvserver_authenticationcertpolicy_binding_sdkv2StateUpg
 				// Step 2: same config through the current framework provider; the
 				// legacy-id state is refreshed and the id is upgraded to the new format.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAuthenticationvserver_authenticationcertpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationvserver_authenticationcertpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationvserver_authenticationcertpolicy_bindingExist("citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", "id", "name:tf_authenticationvserver,policy:tf_certpolicy"),

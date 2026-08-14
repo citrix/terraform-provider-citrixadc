@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccFeoparameter_basic = `
@@ -160,8 +161,11 @@ func TestAccFeoparameter_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccFeoparameter_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckFeoparameterExist("citrixadc_feoparameter.tf_feoparameter", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccFeoparameter_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFeoparameterExist("citrixadc_feoparameter.tf_feoparameter", nil)),
 			},
 		},
 	})

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -64,7 +64,7 @@ func (r *ResponderactionResource) Create(ctx context.Context, req resource.Creat
 	// does not supply a name, generate a unique one.
 	responderactionName := data.Name.ValueString()
 	if data.Name.IsNull() || data.Name.IsUnknown() || responderactionName == "" {
-		responderactionName = sdkv2resource.PrefixedUniqueId("tf-responderaction-")
+		responderactionName = sdkid.PrefixedUniqueId("tf-responderaction-")
 		data.Name = types.StringValue(responderactionName)
 	}
 

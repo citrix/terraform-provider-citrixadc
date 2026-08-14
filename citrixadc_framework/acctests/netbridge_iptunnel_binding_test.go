@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNetbridge_iptunnel_binding_basic = `
@@ -352,7 +353,10 @@ func TestAccNetbridge_iptunnel_binding_sdkv2StateUpgrade(t *testing.T) {
 				// provider. Read exercises ParseIdString on the legacy id, then
 				// recomputes the id to the new key:value canonical format.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNetbridge_iptunnel_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNetbridge_iptunnel_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetbridge_iptunnel_bindingExist("citrixadc_netbridge_iptunnel_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_netbridge_iptunnel_binding.tf_binding", "id", "name:tf_netbridge,tunnel:tf_iptunnel"),

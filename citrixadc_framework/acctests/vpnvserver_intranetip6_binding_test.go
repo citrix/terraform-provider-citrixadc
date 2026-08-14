@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_intranetip6_binding_basic = `
@@ -89,7 +90,10 @@ func TestAccVpnvserver_intranetip6_binding_sdkv2StateUpgrade(t *testing.T) {
 				// framework provider. Read recomputes the id into the new
 				// key:value format.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnvserver_intranetip6_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_intranetip6_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserver_intranetip6_bindingExist("citrixadc_vpnvserver_intranetip6_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver_intranetip6_binding.tf_bind", "id", "intranetip6:2.3.4.5,name:tf_vserverexample,numaddr:45"),

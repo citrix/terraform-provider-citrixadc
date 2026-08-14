@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // admparameter is an unnamed singleton resource. The vendored adc-nitro-go
@@ -79,7 +79,7 @@ func (r *AdmparameterResource) Create(ctx context.Context, req resource.CreateRe
 
 	// Set ID for the resource before reading state.
 	// Mirror SDK v2: d.SetId(resource.PrefixedUniqueId("tf-admparameter-")).
-	data.Id = types.StringValue(sdkresource.PrefixedUniqueId("tf-admparameter-"))
+	data.Id = types.StringValue(sdkid.PrefixedUniqueId("tf-admparameter-"))
 
 	// Read the updated state back
 	if !r.readAdmparameterFromApi(ctx, &data, &resp.Diagnostics) {

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsnip6profile_basic = `
@@ -97,8 +98,11 @@ func TestAccLsnip6profile_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLsnip6profile_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckLsnip6profileExist("citrixadc_lsnip6profile.tf_lsnaip6profile", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsnip6profile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnip6profileExist("citrixadc_lsnip6profile.tf_lsnaip6profile", nil)),
 			},
 		},
 	})

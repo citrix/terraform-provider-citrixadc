@@ -54,7 +54,7 @@ func (r *VpnvserverFeopolicyBindingResource) Schema(ctx context.Context, req res
 				// Not Computed: the server returns a normalized default ("END") that
 				// differs from user input and is not adopted into state (Pattern 13).
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Next priority expression.",
 			},
@@ -62,7 +62,7 @@ func (r *VpnvserverFeopolicyBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				// Not Computed: NITRO GET does not echo this field back (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Binds the authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.",
 			},
@@ -85,7 +85,7 @@ func (r *VpnvserverFeopolicyBindingResource) Schema(ctx context.Context, req res
 				// Not Computed: priority is a user-driven input that is not adopted from
 				// the GET response into resource state (Pattern 13).
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer specifying the policy's priority. The lower the number, the higher the priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.",
 			},
@@ -93,7 +93,7 @@ func (r *VpnvserverFeopolicyBindingResource) Schema(ctx context.Context, req res
 				Optional: true,
 				// Not Computed: NITRO GET does not echo this field back (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.",
 			},

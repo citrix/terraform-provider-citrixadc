@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -64,7 +64,7 @@ func (r *RewriteactionResource) Create(ctx context.Context, req resource.CreateR
 	// does not supply a name, generate a unique one.
 	rewriteactionName := data.Name.ValueString()
 	if data.Name.IsNull() || data.Name.IsUnknown() || rewriteactionName == "" {
-		rewriteactionName = sdkv2resource.PrefixedUniqueId("tf-rewriteaction-")
+		rewriteactionName = sdkid.PrefixedUniqueId("tf-rewriteaction-")
 		data.Name = types.StringValue(rewriteactionName)
 	}
 

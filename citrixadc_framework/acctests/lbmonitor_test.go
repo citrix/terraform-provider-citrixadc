@@ -23,8 +23,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccLbmonitor_basic(t *testing.T) {
@@ -890,7 +891,10 @@ func TestAccLbmonitor_sdkv2StateUpgrade(t *testing.T) {
 			// parse error. We also assert the id is upgraded to the new format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLbmonitor_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbmonitor_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbmonitorExist("citrixadc_lbmonitor.upgrade", nil),
 					resource.TestCheckResourceAttr(

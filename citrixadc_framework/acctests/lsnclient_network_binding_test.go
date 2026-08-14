@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsnclient_network_binding_basic = `
@@ -275,7 +276,10 @@ func TestAccLsnclient_network_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLsnclient_network_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsnclient_network_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsnclient_network_bindingExist("citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_lsnclient_network_binding.tf_lsnclient_network_binding", "id", "clientname:my_lsnclient,network:10.222.74.160"),

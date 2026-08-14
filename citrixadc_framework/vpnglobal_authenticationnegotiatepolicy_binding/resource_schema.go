@@ -41,7 +41,7 @@ func (r *VpnglobalAuthenticationnegotiatepolicyBindingResource) Schema(ctx conte
 				// resolves to null instead of staying unknown after apply (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -50,7 +50,7 @@ func (r *VpnglobalAuthenticationnegotiatepolicyBindingResource) Schema(ctx conte
 				// resolves to null instead of staying unknown after apply (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind the Authentication policy to a tertiary chain which will be used only for group extraction.  The user will not authenticate against this server, and this will only be called it primary and/or secondary authentication has succeeded.",
 			},

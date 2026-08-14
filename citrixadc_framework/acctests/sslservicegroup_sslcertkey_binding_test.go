@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslservicegroup_sslcertkey_binding_basic = `
@@ -128,7 +129,10 @@ func TestAccSslservicegroup_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
 			// the canonical new-format id.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSslservicegroup_sslcertkey_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslservicegroup_sslcertkey_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslservicegroup_sslcertkey_bindingExist("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_sslcertkey_binding.tf_sslservicegroup_sslcertkey_binding", "id", "ca:false,certkeyname:tf_sslcertkey,crlcheck:,servicegroupname:tf_servicegroup,snicert:false"),

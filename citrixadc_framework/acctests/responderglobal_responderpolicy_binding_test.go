@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccResponderglobal_responderpolicy_binding_basic = `
@@ -275,7 +276,10 @@ func TestAccResponderglobal_responderpolicy_binding_sdkv2StateUpgrade(t *testing
 				// recomputes the id. This binding is single-key (policyname), so the
 				// canonical new id is the plain policyname value (== the legacy id).
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccResponderglobal_responderpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderglobal_responderpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponderglobal_responderpolicy_bindingExist("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "id", "tf_responderpolicy"),

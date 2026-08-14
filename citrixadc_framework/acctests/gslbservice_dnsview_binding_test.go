@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccGslbservice_dnsview_binding_basic = `
@@ -335,7 +336,10 @@ func TestAccGslbservice_dnsview_binding_sdkv2StateUpgrade(t *testing.T) {
 			// the legacy id and recomputes the canonical new-format id.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccGslbservice_dnsview_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccGslbservice_dnsview_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbservice_dnsview_bindingExist("citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_gslbservice_dnsview_binding.tf_gslbservice_dnsview_binding", "id", "servicename:gslb1vservice,viewname:view4"),

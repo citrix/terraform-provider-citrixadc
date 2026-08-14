@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVlan_nsip6_binding_basic = `
@@ -298,7 +299,10 @@ func TestAccVlan_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
 				// provider. Read exercises ParseIdString on the legacy id, then
 				// recomputes the id to the new key:value canonical format.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVlan_nsip6_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVlan_nsip6_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVlan_nsip6_bindingExist("citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vlan_nsip6_binding.tf_vlan_nsip6_binding", "id", "vlanid:2,ipaddress:2001%3A%3Aa%2F96"),

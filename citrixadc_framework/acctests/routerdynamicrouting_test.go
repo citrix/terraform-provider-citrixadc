@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccRouterdynamicrouting_basic(t *testing.T) {
@@ -83,8 +84,11 @@ func TestAccRouterdynamicrouting_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccRouterdynamicrouting_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckRouterdynamicroutingExist("citrixadc_routerdynamicrouting.tf_dynamicrouting", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRouterdynamicrouting_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRouterdynamicroutingExist("citrixadc_routerdynamicrouting.tf_dynamicrouting", nil)),
 			},
 		},
 	})

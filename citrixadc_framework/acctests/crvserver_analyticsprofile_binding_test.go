@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCrvserver_analyticsprofile_binding_basic = `
@@ -130,7 +131,10 @@ func TestAccCrvserver_analyticsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read exercises ParseIdString on the legacy ID and recomputes the new-format ID.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCrvserver_analyticsprofile_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCrvserver_analyticsprofile_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrvserver_analyticsprofile_bindingExist(addr, nil),
 					resource.TestCheckResourceAttr(addr, "id", "analyticsprofile:new_profile,name:my_vserver"),

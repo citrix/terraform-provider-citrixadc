@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVxlanvlanmap_vxlan_binding_basic = `
@@ -344,7 +345,10 @@ func TestAccVxlanvlanmap_vxlan_binding_sdkv2StateUpgrade(t *testing.T) {
 			{
 				// Step 2: refresh/apply the legacy-id state through the current framework provider
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVxlanvlanmap_vxlan_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVxlanvlanmap_vxlan_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVxlanvlanmap_vxlan_bindingExist("citrixadc_vxlanvlanmap_vxlan_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vxlanvlanmap_vxlan_binding.tf_binding", "id", "name:tf_vxlanvlanmp,vxlan:123"),

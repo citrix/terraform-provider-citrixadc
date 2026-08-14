@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSystemgroup_basic(t *testing.T) {
@@ -319,8 +320,11 @@ func TestAccSystemgroup_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSystemgroup_basic_step1,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemgroup_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemgroupExist("citrixadc_systemgroup.tf_systemgroup", nil)),
 			},
 		},
 	})

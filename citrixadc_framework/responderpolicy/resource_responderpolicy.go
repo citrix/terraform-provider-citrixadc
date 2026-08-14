@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -62,7 +62,7 @@ func (r *ResponderpolicyResource) Create(ctx context.Context, req resource.Creat
 	// does not supply a name, generate a unique one.
 	responderpolicyName := data.Name.ValueString()
 	if data.Name.IsNull() || data.Name.IsUnknown() || responderpolicyName == "" {
-		responderpolicyName = sdkv2resource.PrefixedUniqueId("tf-responderpolicy-")
+		responderpolicyName = sdkid.PrefixedUniqueId("tf-responderpolicy-")
 		data.Name = types.StringValue(responderpolicyName)
 	}
 

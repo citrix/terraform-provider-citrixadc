@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbvserver_appqoepolicy_binding_basic_step1 = `
@@ -355,7 +356,10 @@ func TestAccLbvserver_appqoepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// The framework recomputes the id on read to the new key:value form.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLbvserver_appqoepolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbvserver_appqoepolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbvserver_appqoepolicy_bindingExist("citrixadc_lbvserver_appqoepolicy_binding.foo", nil),
 					resource.TestCheckResourceAttr("citrixadc_lbvserver_appqoepolicy_binding.foo", "id", "name:tf_lbvserver,policyname:appqoe-pol-primd"),

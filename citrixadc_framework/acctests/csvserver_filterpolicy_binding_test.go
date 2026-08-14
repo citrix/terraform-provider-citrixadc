@@ -23,8 +23,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCsvserver_filterpolicy_binding_basic_step1 = `
@@ -224,7 +225,10 @@ func TestAccCsvserver_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read parses the legacy id and recomputes it to the new canonical format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCsvserver_filterpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCsvserver_filterpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserver_filterpolicy_bindingExist("citrixadc_csvserver_filterpolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_csvserver_filterpolicy_binding.tf_bind", "id", "bindpoint:REQUEST,name:tf_csvserver,policyname:tf_filterpolicy"),

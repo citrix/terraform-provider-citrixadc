@@ -6,7 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/system"
 	"github.com/citrix/adc-nitro-go/service"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -122,7 +122,7 @@ func (r *SystembackupCreateResource) Create(ctx context.Context, req resource.Cr
 	tflog.Debug(ctx, "Creating systembackup_create resource")
 
 	// Mirror SDK v2 id: resource.PrefixedUniqueId(filename + "-").
-	systembackupName := sdkresource.PrefixedUniqueId(data.Filename.ValueString() + "-")
+	systembackupName := sdkid.PrefixedUniqueId(data.Filename.ValueString() + "-")
 
 	systembackup := systembackup_createGetThePayloadFromthePlan(ctx, &data)
 

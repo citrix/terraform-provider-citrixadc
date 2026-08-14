@@ -18,8 +18,9 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"strings"
 	"testing"
 )
@@ -212,7 +213,10 @@ func TestAccCrvserver_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 				// (Framework) provider. Read parses the legacy ID via ParseIdString
 				// and recomputes the canonical new-format ID.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCrvserver_filterpolicy_binding_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCrvserver_filterpolicy_binding_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrvserver_filterpolicy_bindingExist("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_crvserver_filterpolicy_binding.crvserver_filterpolicy_binding", "id", "bindpoint:REQUEST,name:my_vserver,policyname:tf_filterpolicy"),

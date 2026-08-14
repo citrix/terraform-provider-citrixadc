@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsngroup_lsnpool_binding_basic = `
@@ -311,7 +312,10 @@ func TestAccLsngroup_lsnpool_binding_sdkv2StateUpgrade(t *testing.T) {
 			// and the framework Read recomputes the canonical new-format id.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLsngroup_lsnpool_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsngroup_lsnpool_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLsngroup_lsnpool_bindingExist("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "id", "groupname:my_lsngroup,poolname:my_lsn_pool"),

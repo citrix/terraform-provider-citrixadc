@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnportaltheme_add = `
@@ -202,8 +203,11 @@ func TestAccVpnportaltheme_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnportaltheme_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckVpnportalthemeExist("citrixadc_vpnportaltheme.tf_vpnportaltheme", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnportaltheme_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnportalthemeExist("citrixadc_vpnportaltheme.tf_vpnportaltheme", nil)),
 			},
 		},
 	})

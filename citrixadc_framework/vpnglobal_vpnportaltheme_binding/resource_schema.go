@@ -36,7 +36,7 @@ func (r *VpnglobalVpnportalthemeBindingResource) Schema(ctx context.Context, req
 				// from plan/state in SetAttrFromGet (Pattern 7) instead of being nulled.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},

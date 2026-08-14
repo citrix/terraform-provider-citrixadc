@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccRewritepolicylabel_basic(t *testing.T) {
@@ -174,8 +175,11 @@ func TestAccRewritepolicylabel_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccRewritepolicylabel_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabelExist("citrixadc_rewritepolicylabel.tf_rewritepolicylabel", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRewritepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewritepolicylabelExist("citrixadc_rewritepolicylabel.tf_rewritepolicylabel", nil)),
 			},
 		},
 	})

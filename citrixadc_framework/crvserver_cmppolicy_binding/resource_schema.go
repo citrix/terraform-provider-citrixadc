@@ -79,7 +79,7 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				// unknown-after-apply. Optional only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label invoked.",
 			},
@@ -88,7 +88,7 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				// unknown-after-apply. Optional only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The invocation type.",
 			},
@@ -122,7 +122,7 @@ func (r *CrvserverCmppolicyBindingResource) Schema(ctx context.Context, req reso
 				// unknown-after-apply. Optional only. (Pattern 13)
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.",
 			},

@@ -114,7 +114,7 @@ func (r *AppfwprofileFieldconsistencyBindingResource) Schema(ctx context.Context
 			"ruletype": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding.",
 			},

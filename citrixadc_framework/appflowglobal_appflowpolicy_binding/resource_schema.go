@@ -72,7 +72,7 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Schema(ctx context.Context, 
 				// so a Computed flag would leave it unknown after apply (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label to invoke if the current policy evaluates to TRUE.",
 			},
@@ -80,7 +80,7 @@ func (r *AppflowglobalAppflowpolicyBindingResource) Schema(ctx context.Context, 
 				// Optional only (not Computed): the binding GET never echoes labeltype (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of policy label to invoke. Specify vserver for a policy label associated with a virtual server, or policylabel for a user-defined policy label.",
 			},

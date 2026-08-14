@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNtpparam_basic = `
@@ -144,8 +145,11 @@ func TestAccNtpparam_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNtpparam_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckNtpparamExist("citrixadc_ntpparam.tf_ntpparam", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNtpparam_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNtpparamExist("citrixadc_ntpparam.tf_ntpparam", nil)),
 			},
 		},
 	})

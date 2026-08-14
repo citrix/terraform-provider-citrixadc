@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLinkset_channel_binding_basic = `
@@ -325,7 +326,10 @@ func TestAccLinkset_channel_binding_sdkv2StateUpgrade(t *testing.T) {
 			// recomputes the id into the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLinkset_channel_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLinkset_channel_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkset_channel_bindingExist("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_linkset_channel_binding.tf_linkset_channel_binding", "id", "linkset_id:LS%2F3,ifnum:LA%2F3"),

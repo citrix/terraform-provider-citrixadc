@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppqoecustomresp_basic = `
@@ -223,8 +224,11 @@ func TestAccAppqoecustomresp_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppqoecustomresp_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist("citrixadc_appqoecustomresp.tf_appqoecustomresp", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppqoecustomresp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist("citrixadc_appqoecustomresp.tf_appqoecustomresp", nil)),
 			},
 		},
 	})

@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -63,7 +63,7 @@ func (r *NetprofileResource) Create(ctx context.Context, req resource.CreateRequ
 	// resource.PrefixedUniqueId("tf-netprofile-")).
 	netprofileName := data.Name.ValueString()
 	if data.Name.IsNull() || data.Name.IsUnknown() || netprofileName == "" {
-		netprofileName = sdkv2resource.PrefixedUniqueId("tf-netprofile-")
+		netprofileName = sdkid.PrefixedUniqueId("tf-netprofile-")
 		data.Name = types.StringValue(netprofileName)
 	}
 

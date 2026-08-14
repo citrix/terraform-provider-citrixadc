@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccBotprofile_blacklist_binding_basic = `
@@ -361,7 +362,10 @@ func TestAccBotprofile_blacklist_binding_sdkv2StateUpgrade(t *testing.T) {
 			{
 				// Refresh/plan/apply the legacy-id state through the current framework provider.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccBotprofile_blacklist_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBotprofile_blacklist_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotprofile_blacklist_bindingExist("citrixadc_botprofile_blacklist_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_botprofile_blacklist_binding.tf_binding", "id", "name:tf_botprofile,bot_blacklist_value:1.3.5.7"),

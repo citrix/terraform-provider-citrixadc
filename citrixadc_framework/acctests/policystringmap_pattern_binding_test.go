@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccPolicystringmap_pattern_binding_basic_step1 = `
@@ -271,7 +272,10 @@ func TestAccPolicystringmap_pattern_binding_sdkv2StateUpgrade(t *testing.T) {
 			// recomputes the id to the new "key:value" format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccPolicystringmap_pattern_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccPolicystringmap_pattern_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicystringmap_pattern_bindingExist("citrixadc_policystringmap_pattern_binding.tf_bind1", nil),
 					resource.TestCheckResourceAttr("citrixadc_policystringmap_pattern_binding.tf_bind1", "id", "key:key1,name:tf_policystringmap"),

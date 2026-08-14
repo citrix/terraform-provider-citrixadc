@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternode_routemonitor_binding_basic = `
@@ -293,7 +294,10 @@ func TestAccClusternode_routemonitor_binding_sdkv2StateUpgrade(t *testing.T) {
 				// Step 2: refresh/apply the same config through the current Framework provider.
 				// Read recomputes the id to the new key:value format.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccClusternode_routemonitor_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternode_routemonitor_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternode_routemonitor_bindingExist("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "id", "netmask:255.255.255.192,nodeid:0,routemonitor:10.222.74.128"),

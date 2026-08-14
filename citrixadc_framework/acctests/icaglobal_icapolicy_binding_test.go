@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIcaglobal_icapolicy_binding_basic = `
@@ -305,7 +306,10 @@ func TestAccIcaglobal_icapolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read exercises ParseIdString on the legacy id and recomputes the id to the new format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccIcaglobal_icapolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIcaglobal_icapolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIcaglobal_icapolicy_bindingExist("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "id", "policyname:tf_icapolicy,type:ICA_REQ_DEFAULT"),

@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccPolicyhttpcallout_basic = `
@@ -219,8 +220,11 @@ func TestAccPolicyhttpcallout_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccPolicyhttpcallout_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckPolicyhttpcalloutExist("citrixadc_policyhttpcallout.tf_policyhttpcallout", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccPolicyhttpcallout_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyhttpcalloutExist("citrixadc_policyhttpcallout.tf_policyhttpcallout", nil)),
 			},
 		},
 	})

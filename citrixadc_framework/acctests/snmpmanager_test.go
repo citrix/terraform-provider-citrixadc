@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSnmpmanager_basic = `
@@ -170,8 +171,11 @@ func TestAccSnmpmanager_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSnmpmanager_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckSnmpmanagerExist("citrixadc_snmpmanager.tf_snmpmanager", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSnmpmanager_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpmanagerExist("citrixadc_snmpmanager.tf_snmpmanager", nil)),
 			},
 		},
 	})

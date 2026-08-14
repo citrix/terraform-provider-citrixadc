@@ -18,7 +18,8 @@ package citrixadc
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 const testAccHafailover_basic = `
@@ -84,7 +85,10 @@ func TestAccHafailover_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccHafailover_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccHafailover_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("citrixadc_hafailover.tf_failover", "state", "Secondary"),
 				),

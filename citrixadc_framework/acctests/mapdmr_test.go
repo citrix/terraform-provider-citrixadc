@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccMapdmr_basic = `
@@ -175,8 +176,11 @@ func TestAccMapdmr_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccMapdmr_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckMapdmrExist("citrixadc_mapdmr.tf_mapdmr", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccMapdmr_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMapdmrExist("citrixadc_mapdmr.tf_mapdmr", nil)),
 			},
 		},
 	})

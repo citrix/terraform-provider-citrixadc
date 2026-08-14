@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwxmlschema_basic = `
@@ -185,8 +186,11 @@ func TestAccAppfwxmlschema_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppfwxmlschema_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwxmlschemaExist("citrixadc_appfwxmlschema.tf_appfwxmlschema", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwxmlschema_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlschemaExist("citrixadc_appfwxmlschema.tf_appfwxmlschema", nil)),
 			},
 		},
 	})

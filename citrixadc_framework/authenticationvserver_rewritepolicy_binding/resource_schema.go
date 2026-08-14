@@ -64,7 +64,7 @@ func (r *AuthenticationvserverRewritepolicyBindingResource) Schema(ctx context.C
 				Optional: true,
 				// Not echoed by GET — drop Computed to avoid known-after-apply churn (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
@@ -79,7 +79,7 @@ func (r *AuthenticationvserverRewritepolicyBindingResource) Schema(ctx context.C
 				Optional: true,
 				// Not echoed by GET — drop Computed to avoid known-after-apply churn (Pattern 13).
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor",
 			},
@@ -104,7 +104,7 @@ func (r *AuthenticationvserverRewritepolicyBindingResource) Schema(ctx context.C
 				Optional: true,
 				// Not echoed by GET — drop Computed to avoid known-after-apply churn (Pattern 13).
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},

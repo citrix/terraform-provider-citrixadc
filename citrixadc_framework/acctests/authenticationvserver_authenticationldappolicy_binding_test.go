@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationvserver_authenticationldappolicy_binding_basic = `
@@ -342,7 +343,10 @@ func TestAccAuthenticationvserver_authenticationldappolicy_binding_sdkv2StateUpg
 			// canonical new-format id "name:<v>,policy:<v>".
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAuthenticationvserver_authenticationldappolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationvserver_authenticationldappolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationvserver_authenticationldappolicy_bindingExist("citrixadc_authenticationvserver_authenticationldappolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationvserver_authenticationldappolicy_binding.tf_bind", "id", "name:tf_authenticationvserver,policy:tf_authenticationldappolicy"),

@@ -43,7 +43,7 @@ func (r *AppfwprofileTrustedlearningclientsBindingResource) Schema(ctx context.C
 				// configured value in state, so Computed is dropped (Pattern 7).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Send SNMP alert?",
 			},
@@ -63,7 +63,7 @@ func (r *AppfwprofileTrustedlearningclientsBindingResource) Schema(ctx context.C
 				// NOTAUTODEPLOYED); preserve the configured value (Pattern 7).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
@@ -79,7 +79,7 @@ func (r *AppfwprofileTrustedlearningclientsBindingResource) Schema(ctx context.C
 				// Computed to avoid known-after-apply churn (Pattern 7).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "A \"id\" that identifies the rule.",
 			},
@@ -88,7 +88,7 @@ func (r *AppfwprofileTrustedlearningclientsBindingResource) Schema(ctx context.C
 				// only (re-added per migration family pattern a).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding",
 			},

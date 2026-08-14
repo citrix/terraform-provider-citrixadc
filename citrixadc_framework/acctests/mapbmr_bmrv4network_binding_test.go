@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccMapbmr_bmrv4network_binding_basic = `
@@ -302,7 +303,10 @@ func TestAccMapbmr_bmrv4network_binding_sdkv2StateUpgrade(t *testing.T) {
 			// via ParseIdString and recomputes it to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccMapbmr_bmrv4network_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccMapbmr_bmrv4network_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapbmr_bmrv4network_bindingExist("citrixadc_mapbmr_bmrv4network_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_mapbmr_bmrv4network_binding.tf_binding", "id", "name:tf_mapbmr,network:1.2.3.0"),

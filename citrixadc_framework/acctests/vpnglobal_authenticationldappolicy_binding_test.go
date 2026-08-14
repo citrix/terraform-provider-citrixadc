@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_authenticationldappolicy_binding_basic = `
@@ -308,7 +309,10 @@ func TestAccVpnglobal_authenticationldappolicy_binding_sdkv2StateUpgrade(t *test
 				// provider. Read exercises ParseIdString on the id, then recomputes it
 				// via SetAttrFromGet. Single-key id => value is unchanged.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnglobal_authenticationldappolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_authenticationldappolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_authenticationldappolicy_bindingExist("citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationldappolicy_binding.tf_bind", "id", "tf_ldappolicy"),

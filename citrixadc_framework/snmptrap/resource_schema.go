@@ -126,7 +126,10 @@ func snmptrapGetThePayloadFromthePlan(ctx context.Context, data *SnmptrapResourc
 	if !data.Destport.IsNull() && !data.Destport.IsUnknown() {
 		snmptrap.Destport = utils.IntPtr(int(data.Destport.ValueInt64()))
 	}
-	if !data.Severity.IsNull() && !data.Severity.IsUnknown() {
+	// severity is a SPECIFIC-trapclass-only argument. NITRO rejects it with
+	// errorcode 1093 ("Argument pre-requisite missing [severity, trapClass==specific]")
+	// for any other trapclass, so only include it in the payload for specific traps.
+	if !data.Severity.IsNull() && !data.Severity.IsUnknown() && data.Trapclass.ValueString() == "specific" {
 		snmptrap.Severity = data.Severity.ValueString()
 	}
 	if !data.Srcip.IsNull() && !data.Srcip.IsUnknown() {
@@ -171,7 +174,15 @@ func snmptrapSetAttrFromGet(ctx context.Context, data *SnmptrapResourceModel, ge
 	} else if data.Destport.IsUnknown() {
 		data.Destport = types.Int64Null()
 	}
-	if val, ok := getResponseData["severity"]; ok && val != nil {
+	// severity only applies to SPECIFIC trap classes. For any other trapclass the
+	// appliance returns no meaningful severity, which would perpetually conflict
+	// with the schema Default ("Unknown") -- the Framework re-applies the Default
+	// on every plan when the attribute is absent from config -- and drive a
+	// spurious update/unset that NITRO rejects with ec1093. Normalize it to the
+	// schema Default so an unchanged non-specific trap is a no-op.
+	if trapclass, _ := getResponseData["trapclass"].(string); trapclass != "specific" {
+		data.Severity = types.StringValue("Unknown")
+	} else if val, ok := getResponseData["severity"]; ok && val != nil {
 		data.Severity = types.StringValue(val.(string))
 	} else if data.Severity.IsUnknown() {
 		data.Severity = types.StringNull()

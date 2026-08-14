@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -64,7 +64,7 @@ func (r *ServerResource) Create(ctx context.Context, req resource.CreateRequest,
 	if !data.Name.IsNull() && !data.Name.IsUnknown() && data.Name.ValueString() != "" {
 		serverName = data.Name.ValueString()
 	} else {
-		serverName = sdkv2resource.PrefixedUniqueId("tf-server-")
+		serverName = sdkid.PrefixedUniqueId("tf-server-")
 	}
 	data.Name = types.StringValue(serverName)
 

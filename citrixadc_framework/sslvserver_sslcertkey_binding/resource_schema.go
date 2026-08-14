@@ -68,7 +68,7 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				// crlcheck is simply null.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the CRL check parameter. (Mandatory/Optional)",
 			},
@@ -76,7 +76,7 @@ func (r *SslvserverSslcertkeyBindingResource) Schema(ctx context.Context, req re
 				// Optional-only (see crlcheck rationale).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The state of the OCSP check parameter. (Mandatory/Optional)",
 			},

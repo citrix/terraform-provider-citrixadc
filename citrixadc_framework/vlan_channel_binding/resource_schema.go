@@ -59,7 +59,7 @@ func (r *VlanChannelBindingResource) Schema(ctx context.Context, req resource.Sc
 				// perpetually unknown after apply.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The owner node group in a Cluster for this vlan.",
 			},

@@ -18,7 +18,7 @@ package citrixadc
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 // NOTE: sslvserver_sslciphersuite_binding is rejected with ec3740 "Operation not

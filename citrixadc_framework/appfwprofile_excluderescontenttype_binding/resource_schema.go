@@ -41,7 +41,7 @@ func (r *AppfwprofileExcluderescontenttypeBindingResource) Schema(ctx context.Co
 			"alertonly": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Send SNMP alert?",
 			},
@@ -65,7 +65,7 @@ func (r *AppfwprofileExcluderescontenttypeBindingResource) Schema(ctx context.Co
 			"isautodeployed": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Is the rule auto deployed by dynamic profile ?",
 			},
@@ -89,7 +89,7 @@ func (r *AppfwprofileExcluderescontenttypeBindingResource) Schema(ctx context.Co
 			"ruletype": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding.",
 			},

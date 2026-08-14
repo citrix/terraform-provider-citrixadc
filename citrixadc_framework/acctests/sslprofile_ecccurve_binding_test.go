@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslprofile_ecccurve_binding_basic = `
@@ -289,7 +290,10 @@ func TestAccSslprofile_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
 			// form (the plain SSL profile name), so the id upgrades from legacy to "tf_sslprofile".
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSslprofile_ecccurve_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslprofile_ecccurve_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofile_ecccurve_bindingExist("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "id", "tf_sslprofile"),

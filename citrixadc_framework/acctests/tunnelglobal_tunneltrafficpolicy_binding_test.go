@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTunnelglobal_tunneltrafficpolicy_binding_basic = `
@@ -235,7 +236,10 @@ func TestAccTunnelglobal_tunneltrafficpolicy_binding_sdkv2StateUpgrade(t *testin
 				// framework provider. Read recomputes the canonical id, which for
 				// this single-key binding stays the plain policyname value.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccTunnelglobal_tunneltrafficpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTunnelglobal_tunneltrafficpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTunnelglobal_tunneltrafficpolicy_bindingExist("citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "id", "my_tunneltrafficpolicy"),

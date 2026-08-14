@@ -23,8 +23,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNd6ravariables_onlinkipv6prefix_binding_basic = `
@@ -263,7 +264,10 @@ func TestAccNd6ravariables_onlinkipv6prefix_binding_sdkv2StateUpgrade(t *testing
 			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNd6ravariables_onlinkipv6prefix_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNd6ravariables_onlinkipv6prefix_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNd6ravariables_onlinkipv6prefix_bindingExist("citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_nd6ravariables_onlinkipv6prefix_binding.tf_nd6ravariables_onlinkipv6prefix_binding", "id", "ipv6prefix:2003%3A%3A%2F64,vlan:1"),

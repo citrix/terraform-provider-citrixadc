@@ -22,8 +22,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Need the following cli commands since no resource yet exists
@@ -266,7 +267,10 @@ func TestAccLbmonitor_metric_binding_sdkv2StateUpgrade(t *testing.T) {
 				// provider. Read exercises ParseIdString on the legacy id and
 				// SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLbmonitor_metric_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbmonitor_metric_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbmonitor_metric_bindingExist("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "id", "metric:metric1,monitorname:tf-monitor1"),

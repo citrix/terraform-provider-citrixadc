@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccRewriteaction_basic(t *testing.T) {
@@ -190,8 +191,11 @@ func TestAccRewriteaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccRewriteaction_step1,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckRewriteactionExist("citrixadc_rewriteaction.tf_rewrite_action", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRewriteaction_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRewriteactionExist("citrixadc_rewriteaction.tf_rewrite_action", nil)),
 			},
 		},
 	})

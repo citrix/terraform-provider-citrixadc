@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -189,7 +189,7 @@ func (r *PingerResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Synthetic ID for the action-only resource; identical to the SDK v2
 	// resource.PrefixedUniqueId("tf-pinger-").
-	data.Id = types.StringValue(sdkresource.PrefixedUniqueId("tf-pinger-"))
+	data.Id = types.StringValue(sdkid.PrefixedUniqueId("tf-pinger-"))
 
 	// Resolve any omitted (unknown) Computed attributes to null so the applied
 	// state is fully known (Read is a no-op and never populates them).

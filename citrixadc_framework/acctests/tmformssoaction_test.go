@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTmformssoaction_basic = `
@@ -218,8 +219,11 @@ func TestAccTmformssoaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccTmformssoaction_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckTmformssoactionExist("citrixadc_tmformssoaction.tf_tmformssoaction", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTmformssoaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmformssoactionExist("citrixadc_tmformssoaction.tf_tmformssoaction", nil)),
 			},
 		},
 	})

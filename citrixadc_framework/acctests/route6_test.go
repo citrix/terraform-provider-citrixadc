@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	//"strconv"
 )
 
@@ -123,8 +124,11 @@ func TestAccRoute6_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccRoute6_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckRoute6Exist("citrixadc_route6.tf_route6", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRoute6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute6Exist("citrixadc_route6.tf_route6", nil)),
 			},
 		},
 	})

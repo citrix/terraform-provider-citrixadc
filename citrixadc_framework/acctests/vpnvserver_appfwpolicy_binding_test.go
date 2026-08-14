@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserverAppfwpolicyBinding_basic = `
@@ -306,7 +307,10 @@ func TestAccVpnvserver_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 			// so the canonical id remains identical to the legacy value after the upgrade.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnvserver_appfwpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_appfwpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserverAppfwpolicyBindingExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_appfwpolicy"),

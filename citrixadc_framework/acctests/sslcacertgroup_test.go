@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslcacertgroup_basic = `
@@ -132,8 +133,11 @@ func TestAccSslcacertgroup_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSslcacertgroup_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslcacertgroupExist("citrixadc_sslcacertgroup.foo", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslcacertgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertgroupExist("citrixadc_sslcacertgroup.foo", nil)),
 			},
 		},
 	})

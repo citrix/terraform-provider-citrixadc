@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_sslcertkey_binding_basic = `
@@ -174,7 +175,10 @@ func TestAccVpnglobal_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
 			// this single-key binding is the same plain certkeyname value.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnglobal_sslcertkey_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_sslcertkey_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_sslcertkey_bindingExist("citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnglobal_sslcertkey_binding.tf_vpnglobal_sslcertkey_binding", "id", "sample_ssl_cert"),

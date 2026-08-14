@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSubscriberprofile_basic = `
@@ -216,8 +217,11 @@ func TestAccSubscriberprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSubscriberprofile_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckSubscriberprofileExist("citrixadc_subscriberprofile.tf_subscriberprofile", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSubscriberprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSubscriberprofileExist("citrixadc_subscriberprofile.tf_subscriberprofile", nil)),
 			},
 		},
 	})

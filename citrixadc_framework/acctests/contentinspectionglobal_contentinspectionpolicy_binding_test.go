@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccContentinspectionglobal_contentinspectionpolicy_binding_basic = `
@@ -296,7 +297,10 @@ func TestAccContentinspectionglobal_contentinspectionpolicy_binding_sdkv2StateUp
 				// The binding lands on the REQ_DEFAULT bindpoint, so the canonical
 				// new id is "policyname:my_ci_policy,type:REQ_DEFAULT".
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccContentinspectionglobal_contentinspectionpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccContentinspectionglobal_contentinspectionpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContentinspectionglobal_contentinspectionpolicy_bindingExist("citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_ci_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_ci_binding", "id", "policyname:my_ci_policy,type:REQ_DEFAULT"),

@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNspartition_vlan_binding_basic = `
@@ -309,7 +310,10 @@ func TestAccNspartition_vlan_binding_sdkv2StateUpgrade(t *testing.T) {
 			// The framework Read recomputes the id into the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNspartition_vlan_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNspartition_vlan_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNspartition_vlan_bindingExist("citrixadc_nspartition_vlan_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_nspartition_vlan_binding.tf_binding", "id", "partitionname:tf_nspartition,vlan:20"),

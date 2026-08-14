@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationsamlidpprofile_add = `
@@ -258,8 +259,11 @@ func TestAccAuthenticationsamlidpprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAuthenticationsamlidpprofile_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidpprofileExist("citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationsamlidpprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlidpprofileExist("citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", nil)),
 			},
 		},
 	})

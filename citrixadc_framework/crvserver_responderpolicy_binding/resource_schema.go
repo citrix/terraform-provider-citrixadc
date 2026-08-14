@@ -46,7 +46,7 @@ func (r *CrvserverResponderpolicyBindingResource) Schema(ctx context.Context, re
 				// apply (Pattern 13). Optional-only.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "For a rewrite policy, the bind point to which to bind the policy.",
 			},
@@ -74,7 +74,7 @@ func (r *CrvserverResponderpolicyBindingResource) Schema(ctx context.Context, re
 				// Not echoed by the binding GET; Optional-only (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label invoked.",
 			},
@@ -82,7 +82,7 @@ func (r *CrvserverResponderpolicyBindingResource) Schema(ctx context.Context, re
 				// Not echoed by the binding GET; Optional-only (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The invocation type.",
 			},
@@ -114,7 +114,7 @@ func (r *CrvserverResponderpolicyBindingResource) Schema(ctx context.Context, re
 				// Not echoed by the binding GET; Optional-only (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.",
 			},

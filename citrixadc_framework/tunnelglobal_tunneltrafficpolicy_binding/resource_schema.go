@@ -49,7 +49,7 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) Schema(ctx context.Cont
 				// Not echoed by NITRO GET - Optional only (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
 			},
@@ -85,7 +85,7 @@ func (r *TunnelglobalTunneltrafficpolicyBindingResource) Schema(ctx context.Cont
 				// (no Computed) so it resolves to null after apply (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point to which the policy is bound.",
 			},

@@ -53,7 +53,7 @@ func (r *AppfwprofileStarturlBindingResource) Schema(ctx context.Context, req re
 				// configured value is not clobbered to null on Read.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Any comments about the purpose of profile, or other useful information about the profile.",
 			},
@@ -89,7 +89,7 @@ func (r *AppfwprofileStarturlBindingResource) Schema(ctx context.Context, req re
 				// configured value is not clobbered to null on Read.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Specifies rule type of binding.",
 			},

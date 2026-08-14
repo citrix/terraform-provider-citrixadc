@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwpolicylabel_basic = `
@@ -185,8 +186,11 @@ func TestAccAppfwpolicylabel_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAppfwpolicylabel_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabelExist("citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabelExist("citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", nil)),
 			},
 		},
 	})

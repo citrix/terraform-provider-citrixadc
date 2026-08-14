@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbmetrictable_metric_binding_basic = `
@@ -287,7 +288,10 @@ func TestAccLbmetrictable_metric_binding_sdkv2StateUpgrade(t *testing.T) {
 			// the legacy ID and recomputes the ID to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccLbmetrictable_metric_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbmetrictable_metric_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbmetrictable_metric_bindingExist("citrixadc_lbmetrictable_metric_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_lbmetrictable_metric_binding.tf_bind", "id", "metric:2.3.6.4.5,metrictable:Table-Custom"),

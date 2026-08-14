@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCsvserver_auditsyslogpolicy_binding_basic = `
@@ -352,7 +353,10 @@ func TestAccCsvserver_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) 
 			// Step 2: same config through the current Framework provider -> id upgraded to new format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCsvserver_auditsyslogpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCsvserver_auditsyslogpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCsvserver_auditsyslogpolicy_bindingExist("citrixadc_csvserver_auditsyslogpolicy_binding.tf_csvserver_auditsyslogpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_csvserver_auditsyslogpolicy_binding.tf_csvserver_auditsyslogpolicy_binding", "id", "name:tf_csvserver,policyname:tf_auditsyslogpolicy"),

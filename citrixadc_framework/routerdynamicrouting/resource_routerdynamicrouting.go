@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkv2resource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -70,7 +70,7 @@ func (r *RouterdynamicroutingResource) Create(ctx context.Context, req resource.
 
 	// Generate a unique ID for this configuration resource (matches SDK v2 id format:
 	// resource.PrefixedUniqueId("tf-routerdynamicrouting-")).
-	data.Id = types.StringValue(sdkv2resource.PrefixedUniqueId("tf-routerdynamicrouting-"))
+	data.Id = types.StringValue(sdkid.PrefixedUniqueId("tf-routerdynamicrouting-"))
 
 	// commandlines is Optional+Computed; if it was not configured, give it a
 	// concrete (empty) value so the saved state is never unknown.

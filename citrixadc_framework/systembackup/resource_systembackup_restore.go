@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -99,7 +99,7 @@ func (r *SystembackupRestoreResource) Create(ctx context.Context, req resource.C
 	tflog.Debug(ctx, "Restoring systembackup (action-only resource)")
 
 	// Mirror SDK v2 id scheme: PrefixedUniqueId(filename + "-").
-	systembackupName := sdkresource.PrefixedUniqueId(data.Filename.ValueString() + "-")
+	systembackupName := sdkid.PrefixedUniqueId(data.Filename.ValueString() + "-")
 
 	payload := systembackup_restoreGetThePayloadFromthePlan(ctx, &data)
 

@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaagroup_vpntrafficpolicy_binding_basic = `
@@ -340,7 +341,10 @@ func TestAccAaagroup_vpntrafficpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAaagroup_vpntrafficpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaagroup_vpntrafficpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAaagroup_vpntrafficpolicy_bindingExist("citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", "id", "groupname:my_group,policy:tf_vpntrafficpolicy"),

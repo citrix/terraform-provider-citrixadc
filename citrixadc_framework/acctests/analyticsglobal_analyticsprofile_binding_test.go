@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAnalyticsglobal_analyticsprofile_binding_basic = `
@@ -271,7 +272,10 @@ func TestAccAnalyticsglobal_analyticsprofile_binding_sdkv2StateUpgrade(t *testin
 			// recomputed to the new format (plain value for a single-key binding).
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAnalyticsglobal_analyticsprofile_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAnalyticsglobal_analyticsprofile_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(resourceAddr, nil),
 					resource.TestCheckResourceAttr(resourceAddr, "id", "new"),

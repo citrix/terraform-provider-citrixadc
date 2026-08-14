@@ -24,8 +24,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccGslbservicegroup_gslbservicegroupmember_binding_basic = `
@@ -430,7 +431,10 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade(t 
 				// Read parses the legacy id, locates the member, and rewrites the id to
 				// the new key:value form. Plan must be empty (no replace / 273).
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_servername,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_servername,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGslbservicegroup_gslbservicegroupmember_bindingExist(resAddr, nil),
 					resource.TestCheckResourceAttr(resAddr, "id", "ip:,port:60,servername:tf_server,servicegroupname:test_gslbvservicegroup"),

@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternodegroup_streamidentifier_binding_basic = `
@@ -381,7 +382,10 @@ func TestAccClusternodegroup_streamidentifier_binding_sdkv2StateUpgrade(t *testi
 			// Step 2: refresh/apply the legacy-id state through the current provider.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccClusternodegroup_streamidentifier_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternodegroup_streamidentifier_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodegroup_streamidentifier_bindingExist("citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", nil),
 				),

@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccNslicense_basic(t *testing.T) {
@@ -114,8 +115,11 @@ func TestAccNslicense_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNslicense_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckNslicenseExist("citrixadc_nslicense.tf_license", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNslicense_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseExist("citrixadc_nslicense.tf_license", nil)),
 			},
 		},
 	})

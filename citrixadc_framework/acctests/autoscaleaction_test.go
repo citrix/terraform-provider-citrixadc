@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAutoscaleaction_basic = `
@@ -239,8 +240,11 @@ func TestAccAutoscaleaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAutoscaleaction_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckAutoscaleactionExist("citrixadc_autoscaleaction.tf_autoscaleaction", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAutoscaleaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAutoscaleactionExist("citrixadc_autoscaleaction.tf_autoscaleaction", nil)),
 			},
 		},
 	})

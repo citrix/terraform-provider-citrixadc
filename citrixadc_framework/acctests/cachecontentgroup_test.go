@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCachecontentgroup_basic = `
@@ -92,8 +93,11 @@ func TestAccCachecontentgroup_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCachecontentgroup_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckCachecontentgroupExist("citrixadc_cachecontentgroup.tf_cachecontentgroup", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCachecontentgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachecontentgroupExist("citrixadc_cachecontentgroup.tf_cachecontentgroup", nil)),
 			},
 		},
 	})

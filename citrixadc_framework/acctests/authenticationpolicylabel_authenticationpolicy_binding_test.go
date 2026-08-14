@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationpolicylabel_authenticationpolicy_binding_basic = `
@@ -330,7 +331,10 @@ func TestAccAuthenticationpolicylabel_authenticationpolicy_binding_sdkv2StateUpg
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccAuthenticationpolicylabel_authenticationpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationpolicylabel_authenticationpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationpolicylabel_authenticationpolicy_bindingExist("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_authenticationpolicylabel_authenticationpolicy_binding.tf_bind", "id", "labelname:tf_authenticationpolicylabel,policyname:tf_authenticationpolicy"),

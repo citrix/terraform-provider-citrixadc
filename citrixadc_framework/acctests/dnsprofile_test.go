@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnsprofile_add = `
@@ -269,8 +270,11 @@ func TestAccDnsprofile_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccDnsprofile_add,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckDnsprofileExist("citrixadc_dnsprofile.tf_add", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnsprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsprofileExist("citrixadc_dnsprofile.tf_add", nil)),
 			},
 		},
 	})

@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternodegroup_crvserver_binding_basic = `
@@ -350,7 +351,10 @@ func TestAccClusternodegroup_crvserver_binding_sdkv2StateUpgrade(t *testing.T) {
 				// so the id is NOT recomputed into the new key:value form. Per the
 				// sanctioned fallback, assert existence only (never a guessed id).
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccClusternodegroup_crvserver_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternodegroup_crvserver_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodegroup_crvserver_bindingExist("citrixadc_clusternodegroup_crvserver_binding.tf_clusternodegroup_crvserver_binding", nil),
 				),

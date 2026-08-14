@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_aaapreauthenticationpolicy_binding_basic = `
@@ -292,7 +293,10 @@ func TestAccVpnvserver_aaapreauthenticationpolicy_binding_sdkv2StateUpgrade(t *t
 			// The framework recomputes the id to the new key:value format on Read.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnvserver_aaapreauthenticationpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_aaapreauthenticationpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserver_aaapreauthenticationpolicy_bindingExist("citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "id", "name:tf_vpnvserverexample,policy:tf_aaapolicy"),

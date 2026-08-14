@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccRnat6_nsip6_binding_basic = `
@@ -306,7 +307,10 @@ func TestAccRnat6_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read recomputes the id, upgrading it to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccRnat6_nsip6_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRnat6_nsip6_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRnat6_nsip6_bindingExist("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "id", "name:my_rnat6,natip6:2001%3Adb8%3A85a3%3A%3A8a2e%3A370%3A7334"),

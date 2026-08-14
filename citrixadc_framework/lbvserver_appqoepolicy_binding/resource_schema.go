@@ -71,7 +71,7 @@ func (r *LbvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				// Required) to match the SDK v2 contract.
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Invoke policies bound to a virtual server or policy label.",
 			},
@@ -81,7 +81,7 @@ func (r *LbvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				// GET, so drop Computed (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the virtual server or user-defined policy label to invoke if the policy evaluates to TRUE.",
 			},
@@ -91,7 +91,7 @@ func (r *LbvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				// GET, so drop Computed (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of policy label to invoke. Applicable only to rewrite, videooptimization and cache policies. Available settings function as follows:\n* reqvserver - Evaluate the request against the request-based policies bound to the specified virtual server.\n* resvserver - Evaluate the response against the response-based policies bound to the specified virtual server.\n* policylabel - invoke the request or response against the specified user-defined policy label.",
 			},
@@ -107,7 +107,7 @@ func (r *LbvserverAppqoepolicyBindingResource) Schema(ctx context.Context, req r
 				// Computed without perpetual unknown-after-apply errors (Pattern 13).
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.",
 			},

@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_authenticationldappolicy_binding_basic = `
@@ -319,7 +320,10 @@ func TestAccVpnvserver_authenticationldappolicy_binding_sdkv2StateUpgrade(t *tes
 				// provider. Read exercises ParseIdString on the legacy id, then
 				// recomputes the id to the new key:value canonical format.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccVpnvserver_authenticationldappolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_authenticationldappolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnvserver_authenticationldappolicy_bindingExist("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", nil),
 					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationldappolicy_binding.tf_bind", "id", "name:vpn_vserver,policy:tf_ldappolicy"),

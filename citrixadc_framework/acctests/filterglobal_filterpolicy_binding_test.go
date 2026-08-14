@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccFilterglobal_filterpolicy_binding_basic_step1 = `
@@ -118,7 +119,10 @@ func TestAccFilterglobal_filterpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 				// (Framework) provider. Read parses the legacy ID via ParseIdString
 				// and recomputes the canonical new-format ID.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccFilterglobal_filterpolicy_binding_basic_step1,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccFilterglobal_filterpolicy_binding_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterglobal_filterpolicy_bindingExist("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", nil),
 					resource.TestCheckResourceAttr("citrixadc_filterglobal_filterpolicy_binding.tf_filterglobal", "id", "policyname:tf_filterpolicy"),

@@ -46,7 +46,7 @@ func (r *CsvserverBotpolicyBindingResource) Schema(ctx context.Context, req reso
 				// user input (no Computed) to avoid "unknown after apply".
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Bind point at which policy needs to be bound. Note: Content switching policies are evaluated only at request time.",
 			},
@@ -74,7 +74,7 @@ func (r *CsvserverBotpolicyBindingResource) Schema(ctx context.Context, req reso
 				// Not echoed back by the NITRO GET response; pure user input.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label invoked.",
 			},
@@ -82,7 +82,7 @@ func (r *CsvserverBotpolicyBindingResource) Schema(ctx context.Context, req reso
 				// Not echoed back by the NITRO GET response; pure user input.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The invocation type.",
 			},
@@ -114,7 +114,7 @@ func (r *CsvserverBotpolicyBindingResource) Schema(ctx context.Context, req reso
 				// Not echoed back by the NITRO GET response; pure user input.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE.\nExample: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1\nNote: Use this parameter only in case of Content Switching policy bind operations to a CS vserver",
 			},

@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCmpglobal_cmppolicy_binding_basic = `
@@ -293,7 +294,10 @@ func TestAccCmpglobal_cmppolicy_binding_sdkv2StateUpgrade(t *testing.T) {
 				// The binding lands on the RES_DEFAULT bindpoint, so the canonical
 				// new id is "policyname:tf_cmppolicy,type:RES_DEFAULT".
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCmpglobal_cmppolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCmpglobal_cmppolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCmpglobal_cmppolicy_bindingExist("citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "id", "policyname:tf_cmppolicy,type:RES_DEFAULT"),

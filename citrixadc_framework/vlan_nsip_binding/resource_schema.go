@@ -68,7 +68,7 @@ func (r *VlanNsipBindingResource) Schema(ctx context.Context, req resource.Schem
 				// never resolve to a known value after apply. Optional-only (no Computed).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The owner node group in a Cluster for this vlan.",
 			},
@@ -77,7 +77,7 @@ func (r *VlanNsipBindingResource) Schema(ctx context.Context, req resource.Schem
 				// resolve to a known value after apply. Optional-only (no Computed).
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},

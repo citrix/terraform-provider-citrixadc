@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslservicegroup_ecccurve_binding_basic = `
@@ -291,7 +292,10 @@ func TestAccSslservicegroup_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
 				// framework provider. Read exercises ParseIdString on the legacy id
 				// and SetAttrFromGet recomputes the id into the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSslservicegroup_ecccurve_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslservicegroup_ecccurve_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslservicegroup_ecccurve_bindingExist("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslservicegroup_ecccurve_binding.tf_sslservicegroup_ecccurve_binding", "id", "ecccurvename:P_256,servicegroupname:tf_servicegroup"),

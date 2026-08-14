@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNstrafficdomain_bridgegroup_binding_basic = `
@@ -288,7 +289,10 @@ func TestAccNstrafficdomain_bridgegroup_binding_sdkv2StateUpgrade(t *testing.T) 
 				// Step 2: same config, now served by the current Framework provider.
 				// Read parses the legacy id and recomputes it to the new key:value form.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccNstrafficdomain_bridgegroup_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNstrafficdomain_bridgegroup_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNstrafficdomain_bridgegroup_bindingExist("citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", "id", "bridgegroup:2,td:2"),

@@ -23,8 +23,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternodegroup_service_binding_basic = `
@@ -155,7 +156,10 @@ func TestAccClusternodegroup_service_binding_sdkv2StateUpgrade(t *testing.T) {
 				// recompute is absent at runtime and the id stays the legacy value.
 				// Assert Exist only.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccClusternodegroup_service_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternodegroup_service_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusternodegroup_service_bindingExist("citrixadc_clusternodegroup_service_binding.tf_clusternodegroup_service_binding", nil),
 				),

@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccHanode_routemonitor6_binding_basic = `
@@ -261,7 +262,10 @@ func TestAccHanode_routemonitor6_binding_sdkv2StateUpgrade(t *testing.T) {
 			// Read recomputes the id, upgrading it to the new key:value format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccHanode_routemonitor6_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccHanode_routemonitor6_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHanode_routemonitor6_bindingExist("citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_hanode_routemonitor6_binding.tf_hanode_routemonitor6_binding", "id", "hanode_id:0,routemonitor:fd7f%3A6bd8%3Acea9%3Af32d%3A%3A%2F64"),

@@ -62,7 +62,7 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Schema(ctx context
 				// Not echoed by NITRO GET — Optional only (no Computed) to avoid unknown-after-apply.
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},
@@ -77,7 +77,7 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Schema(ctx context
 				// Not echoed by NITRO GET — Optional only (no Computed) to avoid unknown-after-apply.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor",
 			},
@@ -102,7 +102,7 @@ func (r *AuthenticationvserverResponderpolicyBindingResource) Schema(ctx context
 				// Not echoed by NITRO GET — Optional only (no Computed) to avoid unknown-after-apply.
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Applicable only while bindind classic authentication policy as advance authentication policy use nFactor",
 			},

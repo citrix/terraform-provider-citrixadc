@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslvserver_basic = `
@@ -235,8 +236,11 @@ func TestAccSslvserver_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccSslvserver_basic,
-				Check:                    resource.ComposeTestCheckFunc(testAccCheckSslvserverExist("citrixadc_sslvserver.tf_sslvserver", nil)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserverExist("citrixadc_sslvserver.tf_sslvserver", nil)),
 			},
 		},
 	})

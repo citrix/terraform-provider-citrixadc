@@ -76,7 +76,7 @@ func (r *LbvserverResponderpolicyBindingResource) Schema(ctx context.Context, re
 				// Not Computed: the NITRO GET response does not echo labelname back,
 				// so a Computed flag would leave it "unknown after apply" (Pattern 13).
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label invoked.",
 			},
@@ -85,7 +85,7 @@ func (r *LbvserverResponderpolicyBindingResource) Schema(ctx context.Context, re
 				// Not Computed: the NITRO GET response does not echo labeltype back,
 				// so a Computed flag would leave it "unknown after apply" (Pattern 13).
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The invocation type.",
 			},
@@ -101,7 +101,7 @@ func (r *LbvserverResponderpolicyBindingResource) Schema(ctx context.Context, re
 				// Not Computed: the NITRO GET response does not echo order back,
 				// so a Computed flag would leave it "unknown after apply" (Pattern 13).
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer specifying the order of the service. A larger number specifies a lower order. Defines the order of the service relative to the other services in the load balancing vserver's bindings. Determines the priority given to the service among all the services bound.",
 			},

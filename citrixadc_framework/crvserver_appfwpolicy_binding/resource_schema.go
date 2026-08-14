@@ -76,7 +76,7 @@ func (r *CrvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 				// so an unconfigured value resolves to null instead of staying unknown.
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the label invoked.",
 			},
@@ -84,7 +84,7 @@ func (r *CrvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 				// Not echoed back by NITRO GET for this binding; Optional-only (no Computed).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The invocation type.",
 			},
@@ -116,7 +116,7 @@ func (r *CrvserverAppfwpolicyBindingResource) Schema(ctx context.Context, req re
 				// Not echoed back by NITRO GET for this binding; Optional-only (no Computed).
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.",
 			},

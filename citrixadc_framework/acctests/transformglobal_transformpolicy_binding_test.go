@@ -21,8 +21,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTransformglobal_transformpolicy_binding_basic = `
@@ -277,7 +278,10 @@ func TestAccTransformglobal_transformpolicy_binding_sdkv2StateUpgrade(t *testing
 			{
 				// Step 2: Refresh the legacy-id state through the current (framework) provider.
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccTransformglobal_transformpolicy_binding_upgrade_basic,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTransformglobal_transformpolicy_binding_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransformglobal_transformpolicy_bindingExist("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "id", "policyname:tf_trans_policy,type:REQ_DEFAULT"),
