@@ -44,9 +44,13 @@ func (r *NstimeoutResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: "The ID of the nstimeout resource.",
 			},
 			"anyclient": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(0),
+				Optional: true,
+				Computed: true,
+				// No static Default: nstimeout is a global singleton whose anyclient value the ADC
+				// retains and Read reflects back. A StaticInt64(0) default plans 0 for an omitted
+				// attribute that Create never writes, so when the appliance holds a non-zero value
+				// the read-back conflicts with the planned 0 ("inconsistent result after apply").
+				// Leaving it Optional+Computed with no Default makes an omitted value known-after-apply.
 				Description: "Global idle timeout, in seconds, for non-TCP client connections. This value is over ridden by the client timeout that is configured on individual entities.",
 			},
 			"anyserver": schema.Int64Attribute{

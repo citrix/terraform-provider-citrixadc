@@ -339,6 +339,13 @@ func TestAccSslprofile_sessionticketkeydata_backward_compat(t *testing.T) {
 }
 
 func TestAccSslprofile_sdkv2StateUpgrade(t *testing.T) {
+	// The base config sets ecccurvebindings=[], which is unsatisfiable on a DEFAULT-SSL bed
+	// (defaultProfile=ENABLED): the ADC force-binds 6 default ECC curves to every sslprofile and
+	// won't let them be unbound, so Read returns 6 vs the planned 0 -> "inconsistent result".
+	// This upgrade test is meant to run on a non-default box; skip it on the DEFAULT-SSL bed.
+	if adcTestbed == "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s; skipping (ecccurvebindings=[] is unsatisfiable when defaultProfile=ENABLED).", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		CheckDestroy: testAccCheckSslprofileDestroy,

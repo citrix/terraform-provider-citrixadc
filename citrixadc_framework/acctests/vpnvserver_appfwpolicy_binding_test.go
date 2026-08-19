@@ -2,6 +2,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -108,6 +109,35 @@ func TestAccVpnvserverAppfwpolicyBinding_basic(t *testing.T) {
 
 func TestAccVpnvserverAppfwpolicyBinding_import(t *testing.T) {
 	const resAddr = "citrixadc_vpnvserver_appfwpolicy_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -123,6 +153,7 @@ func TestAccVpnvserverAppfwpolicyBinding_import(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{},
 			},
+			{Config: testAccVpnvserverAppfwpolicyBinding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

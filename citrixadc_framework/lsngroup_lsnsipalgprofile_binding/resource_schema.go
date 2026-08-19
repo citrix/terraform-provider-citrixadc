@@ -77,6 +77,11 @@ func lsngroup_lsnsipalgprofile_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Sipalgprofilename = types.StringValue(val.(string))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("sipalgprofilename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Sipalgprofilename.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return data
 }
 

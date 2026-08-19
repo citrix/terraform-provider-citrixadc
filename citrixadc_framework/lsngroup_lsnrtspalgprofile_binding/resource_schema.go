@@ -77,6 +77,11 @@ func lsngroup_lsnrtspalgprofile_bindingSetAttrFromGet(ctx context.Context, data 
 		data.Rtspalgprofilename = types.StringValue(val.(string))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("rtspalgprofilename:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Rtspalgprofilename.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return data
 }
 

@@ -231,6 +231,16 @@ func (r *NstimerAutoscalepolicyBindingResource) readNstimerAutoscalepolicyBindin
 		data.Policyname = types.StringValue(policyname_Name)
 	}
 
+	// Re-derive the canonical id (now that name + policyname identity attrs are known)
+	// so a legacy SDK v2 id is upgraded to the new key:value format on Read. This must
+	// run BEFORE the empty-body early return below: on this firmware the typed GET is
+	// empty, so SetAttrFromGet (which would otherwise re-derive) is never reached, and
+	// a legacy comma-joined import id would survive un-normalized without this.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	// Primary read: by-name typed binding endpoint, narrowed by policyname via the
 	// documented ?filter= query parameter. On firmwares that echo the bound row this
 	// returns it; on this firmware it returns an empty body (see the note in Read).

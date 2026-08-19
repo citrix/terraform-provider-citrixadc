@@ -274,6 +274,11 @@ func gslbservicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data 
 
 	// ID is set once in Create / datasource Read, not here.
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("monitor_name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.MonitorName.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return data
 }
 

@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -103,6 +104,39 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_basic(t *testing.T) 
 
 func TestAccGslbservicegroup_gslbservicegroupmember_binding_import(t *testing.T) {
 	const resAddr = "citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: servicegroupname,servername,ip,port) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"servicegroupname", "servername", "ip", "port"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			// Skip empty values: servername and ip are mutually exclusive, so the
+			// canonical id always carries an empty slot for the unused one. SDK v2
+			// wrote a 3-token positional id ("servicegroupname,<servername-or-ip>,port"),
+			// never a 4-token id with an empty middle slot, so exclude empties here.
+			if v, ok := kv[k]; ok && v != "" {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -121,6 +155,7 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_import(t *testing.T)
 				// RequiresReplace identity attributes cannot round-trip on a bare import.
 				ImportStateVerifyIgnore: []string{"port", "servername", "servicegroupname"},
 			},
+			{Config: testAccGslbservicegroup_gslbservicegroupmember_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"port", "servername", "servicegroupname"}},
 		},
 	})
 }
