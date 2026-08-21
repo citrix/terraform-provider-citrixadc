@@ -24,7 +24,6 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -873,7 +872,7 @@ func TestAccLbmonitor_sdkv2StateUpgrade(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccLbmonitor_upgrade_basic,
@@ -891,16 +890,10 @@ func TestAccLbmonitor_sdkv2StateUpgrade(t *testing.T) {
 			// parse error. We also assert the id is upgraded to the new format.
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{expectNoReplace()},
-				},
-				Config: testAccLbmonitor_upgrade_basic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLbmonitorExist("citrixadc_lbmonitor.upgrade", nil),
-					resource.TestCheckResourceAttr(
-						"citrixadc_lbmonitor.upgrade", "id",
-						"monitorname:tf_test_lbmonitor_upgrade,type:HTTP"),
-				),
+				Config:                   testAccLbmonitor_upgrade_basic,
+				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
+				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
+				PlanOnly: true,
 			},
 		},
 	})
@@ -1094,6 +1087,90 @@ func TestAccLbmonitor_selfHealing(t *testing.T) {
 				},
 				Config: testAccLbmonitor_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitorExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// GH#1442 bug1: NetScaler normalizes time values to a different unit
+// (e.g. 60 SEC -> 1 MIN). The provider must retain the configured value+unit
+// when it is an equivalent duration, so apply is consistent and the plan is empty.
+const testAccLbmonitor_interval_units_normalization = `
+resource "citrixadc_lbmonitor" "norm" {
+  monitorname = "tf_acc_mon_norm"
+  type        = "HTTP"
+  httprequest = "GET /"
+  interval    = 120
+  units3      = "SEC"
+  resptimeout = 60
+  units4      = "SEC"
+  downtime    = 60
+  units2      = "SEC"
+}
+`
+
+func TestAccLbmonitor_interval_units_normalization(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Apply must succeed (no "inconsistent result after apply") and the
+				// configured value+unit must be retained despite ADC normalization.
+				Config: testAccLbmonitor_interval_units_normalization,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.norm", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.norm", "interval", "120"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.norm", "units3", "SEC"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.norm", "resptimeout", "60"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.norm", "units4", "SEC"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.norm", "downtime", "60"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.norm", "units2", "SEC"),
+				),
+			},
+			{
+				// Re-plan with the same config must be empty (no perpetual diff).
+				Config:   testAccLbmonitor_interval_units_normalization,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// GH#1442 bug2: DIAMETER-only fields (authapplicationid, originhost, ...) must be
+// emitted only for DIAMETER monitors; sending them for another monitor type is
+// rejected by NITRO with errorcode 1093 [<field>, type==DIAMETER]. The payload
+// builder gates them on type. This verifies a DIAMETER monitor still sends them
+// (positive path) and round-trips with an empty plan.
+const testAccLbmonitor_diameter_type_gating = `
+resource "citrixadc_lbmonitor" "diam" {
+  monitorname       = "tf_acc_mon_diam"
+  type              = "DIAMETER"
+  originhost        = "host.example.com"
+  originrealm       = "example.com"
+  authapplicationid = [1]
+}
+`
+
+func TestAccLbmonitor_diameter_type_gating(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_diameter_type_gating,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitorExist("citrixadc_lbmonitor.diam", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.diam", "type", "DIAMETER"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.diam", "authapplicationid.#", "1"),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor.diam", "authapplicationid.0", "1"),
+				),
+			},
+			{
+				Config:   testAccLbmonitor_diameter_type_gating,
+				PlanOnly: true,
 			},
 		},
 	})

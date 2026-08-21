@@ -15,6 +15,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &AnalyticsprofileResource{}
+var _ resource.ResourceWithUpgradeState = &AnalyticsprofileResource{}
 var _ resource.ResourceWithConfigure = (*AnalyticsprofileResource)(nil)
 var _ resource.ResourceWithImportState = (*AnalyticsprofileResource)(nil)
 
@@ -470,4 +471,25 @@ func (r *AnalyticsprofileResource) readAnalyticsprofileFromApi(ctx context.Conte
 	analyticsprofileSetAttrFromGet(ctx, data, getResponseData)
 
 	return true
+}
+
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// "*_wo_version" tracker attribute(s) to 1 when the stored state has no value
+// for them, so the schema Default does not plan a spurious "null -> 1" update
+// after upgrading the provider. Paired with the schema Version bump so the
+// upgrade path actually runs. See utils.WoVersionUpgradeState.
+func (r *AnalyticsprofileResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data AnalyticsprofileResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.AnalyticsauthtokenWoVersion.IsNull() {
+			data.AnalyticsauthtokenWoVersion = types.Int64Value(1)
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
 }

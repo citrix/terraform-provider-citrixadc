@@ -20,7 +20,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -222,7 +221,7 @@ func TestAccSslcertreq_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccSslcertreq_basic,
 				Check: resource.ComposeTestCheckFunc(
@@ -231,13 +230,10 @@ func TestAccSslcertreq_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{expectNoReplace()},
-				},
-				Config: testAccSslcertreq_basic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslcertreqExist("citrixadc_sslcertreq.tf_sslcertreq", nil),
-				),
+				Config:                   testAccSslcertreq_basic,
+				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
+				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
+				PlanOnly: true,
 			},
 		},
 	})

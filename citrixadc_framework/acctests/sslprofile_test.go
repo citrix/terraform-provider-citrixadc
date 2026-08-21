@@ -22,7 +22,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -338,6 +337,16 @@ func TestAccSslprofile_sessionticketkeydata_backward_compat(t *testing.T) {
 	})
 }
 
+// Dedicated upgrade config: unlike the shared testAccSslprofile_add it does NOT set
+// "ecccurvebindings = []". SDKv2 stored that empty set as null, so an explicit [] in the
+// config would plan a null -> [] change on upgrade that is unrelated to #1441 and specific
+// to configuring an empty set. A realistic upgrade config omits it.
+const testAccSslprofile_upgrade_basic = `
+	resource "citrixadc_sslprofile" "foo" {
+		name = "tfAcc_sslprofile"
+	}
+`
+
 func TestAccSslprofile_sdkv2StateUpgrade(t *testing.T) {
 	// The base config sets ecccurvebindings=[], which is unsatisfiable on a DEFAULT-SSL bed
 	// (defaultProfile=ENABLED): the ADC force-binds 6 default ECC curves to every sslprofile and
@@ -352,22 +361,19 @@ func TestAccSslprofile_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
-				Config: testAccSslprofile_add,
+				Config: testAccSslprofile_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
 				),
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{expectNoReplace()},
-				},
-				Config: testAccSslprofile_add,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSslprofileExist("citrixadc_sslprofile.foo", nil),
-				),
+				Config:                   testAccSslprofile_upgrade_basic,
+				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
+				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
+				PlanOnly: true,
 			},
 		},
 	})

@@ -21,7 +21,6 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -304,7 +303,7 @@ func TestAccAuthenticationnegotiateaction_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccAuthenticationnegotiateaction_add,
 				Check: resource.ComposeTestCheckFunc(
@@ -313,13 +312,10 @@ func TestAccAuthenticationnegotiateaction_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{expectNoReplace()},
-				},
-				Config: testAccAuthenticationnegotiateaction_add,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthenticationnegotiateactionExist("citrixadc_authenticationnegotiateaction.tf_negotiateaction", nil),
-				),
+				Config:                   testAccAuthenticationnegotiateaction_add,
+				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
+				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
+				PlanOnly: true,
 			},
 		},
 	})

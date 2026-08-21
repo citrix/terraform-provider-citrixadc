@@ -15,6 +15,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &AaakcdaccountResource{}
+var _ resource.ResourceWithUpgradeState = &AaakcdaccountResource{}
 var _ resource.ResourceWithConfigure = (*AaakcdaccountResource)(nil)
 var _ resource.ResourceWithImportState = (*AaakcdaccountResource)(nil)
 
@@ -250,4 +251,25 @@ func (r *AaakcdaccountResource) readAaakcdaccountFromApi(ctx context.Context, da
 	aaakcdaccountSetAttrFromGet(ctx, data, getResponseData)
 
 	return true
+}
+
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// "*_wo_version" tracker attribute(s) to 1 when the stored state has no value
+// for them, so the schema Default does not plan a spurious "null -> 1" update
+// after upgrading the provider. Paired with the schema Version bump so the
+// upgrade path actually runs. See utils.WoVersionUpgradeState.
+func (r *AaakcdaccountResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data AaakcdaccountResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.KcdpasswordWoVersion.IsNull() {
+			data.KcdpasswordWoVersion = types.Int64Value(1)
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
 }

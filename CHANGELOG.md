@@ -1,3 +1,14 @@
+## 2.3.1 (August 11, 2026)
+
+BUG FIXES
+* **provider**: Fixed spurious destroy+recreate of unchanged resources on the first plan/apply after upgrading the provider. [#1436] [#1437]
+* **provider**: Rectified the update payload across all Framework resources to send only the update-settable attributes and exclude create-only attributes that the NITRO update call rejects. [#1438]
+
+[#1436]: https://github.com/citrix/terraform-provider-citrixadc/issues/1436
+[#1437]: https://github.com/citrix/terraform-provider-citrixadc/issues/1437
+[#1438]: https://github.com/citrix/terraform-provider-citrixadc/issues/1438
+
+
 ## 2.3.0 (July 27, 2026)
 
 FEATURES
