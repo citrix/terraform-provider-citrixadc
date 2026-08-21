@@ -294,7 +294,7 @@ func TestAccAuthenticationldapaction_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccAuthenticationldapaction_add,
 				Check: resource.ComposeTestCheckFunc(
@@ -304,9 +304,9 @@ func TestAccAuthenticationldapaction_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccAuthenticationldapaction_add,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthenticationldapactionExist("citrixadc_authenticationldapaction.foo", nil),
-				),
+				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
+				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
+				PlanOnly: true,
 			},
 		},
 	})

@@ -24,7 +24,7 @@ type CloudcredentialResourceModel struct {
 
 func (r *CloudcredentialResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Version: 1,
+		Version: 2,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
