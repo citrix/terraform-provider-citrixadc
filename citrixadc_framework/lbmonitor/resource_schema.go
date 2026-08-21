@@ -808,10 +808,18 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 
 	// Create API request body from the model
 	lbmonitor := lb.Lbmonitor{}
+
+	// GH#1442 bug2: the DIAMETER-only fields (authapplicationid, acctapplicationid,
+	// originhost, etc.) must be sent only for DIAMETER monitors. Emitting any of
+	// them for another monitor type is rejected by NITRO with
+	// errorcode 1093 "Argument pre-requisite missing [<field>, type==DIAMETER]".
+	// Gate their emission on the monitor type (applies to both create and update).
+	isDiameter := strings.EqualFold(data.Type.ValueString(), "DIAMETER")
+
 	if !data.Snmpoid.IsNull() && !data.Snmpoid.IsUnknown() {
 		lbmonitor.Snmpoid = data.Snmpoid.ValueString()
 	}
-	if !data.Acctapplicationid.IsNull() && !data.Acctapplicationid.IsUnknown() {
+	if isDiameter && !data.Acctapplicationid.IsNull() && !data.Acctapplicationid.IsUnknown() {
 		var acctapplicationidList []int
 		data.Acctapplicationid.ElementsAs(ctx, &acctapplicationidList, false)
 		lbmonitor.Acctapplicationid = acctapplicationidList
@@ -828,7 +836,7 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 	if !data.Attribute.IsNull() && !data.Attribute.IsUnknown() {
 		lbmonitor.Attribute = data.Attribute.ValueString()
 	}
-	if !data.Authapplicationid.IsNull() && !data.Authapplicationid.IsUnknown() {
+	if isDiameter && !data.Authapplicationid.IsNull() && !data.Authapplicationid.IsUnknown() {
 		var authapplicationidList []int
 		data.Authapplicationid.ElementsAs(ctx, &authapplicationidList, false)
 		lbmonitor.Authapplicationid = authapplicationidList
@@ -878,7 +886,7 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 	if !data.Filter.IsNull() && !data.Filter.IsUnknown() {
 		lbmonitor.Filter = data.Filter.ValueString()
 	}
-	if !data.Firmwarerevision.IsNull() && !data.Firmwarerevision.IsUnknown() {
+	if isDiameter && !data.Firmwarerevision.IsNull() && !data.Firmwarerevision.IsUnknown() {
 		lbmonitor.Firmwarerevision = utils.IntPtr(int(data.Firmwarerevision.ValueInt64()))
 	}
 	if !data.Group.IsNull() && !data.Group.IsUnknown() {
@@ -895,7 +903,7 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 		data.Grpcstatuscode.ElementsAs(ctx, &grpcstatuscodeList, false)
 		lbmonitor.Grpcstatuscode = grpcstatuscodeList
 	}
-	if !data.Hostipaddress.IsNull() && !data.Hostipaddress.IsUnknown() {
+	if isDiameter && !data.Hostipaddress.IsNull() && !data.Hostipaddress.IsUnknown() {
 		lbmonitor.Hostipaddress = data.Hostipaddress.ValueString()
 	}
 	if !data.Hostname.IsNull() && !data.Hostname.IsUnknown() {
@@ -904,7 +912,7 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 	if !data.Httprequest.IsNull() && !data.Httprequest.IsUnknown() {
 		lbmonitor.Httprequest = data.Httprequest.ValueString()
 	}
-	if !data.Inbandsecurityid.IsNull() && !data.Inbandsecurityid.IsUnknown() {
+	if isDiameter && !data.Inbandsecurityid.IsNull() && !data.Inbandsecurityid.IsUnknown() {
 		lbmonitor.Inbandsecurityid = data.Inbandsecurityid.ValueString()
 	}
 	if !data.Interval.IsNull() && !data.Interval.IsUnknown() {
@@ -963,10 +971,10 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 	if !data.Oraclesid.IsNull() && !data.Oraclesid.IsUnknown() {
 		lbmonitor.Oraclesid = data.Oraclesid.ValueString()
 	}
-	if !data.Originhost.IsNull() && !data.Originhost.IsUnknown() {
+	if isDiameter && !data.Originhost.IsNull() && !data.Originhost.IsUnknown() {
 		lbmonitor.Originhost = data.Originhost.ValueString()
 	}
-	if !data.Originrealm.IsNull() && !data.Originrealm.IsUnknown() {
+	if isDiameter && !data.Originrealm.IsNull() && !data.Originrealm.IsUnknown() {
 		lbmonitor.Originrealm = data.Originrealm.ValueString()
 	}
 	if !data.Password.IsNull() && !data.Password.IsUnknown() {
@@ -974,7 +982,7 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 	}
 	// Skip write-only attribute: password_wo
 	// Skip version tracker attribute: password_wo_version
-	if !data.Productname.IsNull() && !data.Productname.IsUnknown() {
+	if isDiameter && !data.Productname.IsNull() && !data.Productname.IsUnknown() {
 		lbmonitor.Productname = data.Productname.ValueString()
 	}
 	if !data.Query.IsNull() && !data.Query.IsUnknown() {
@@ -1105,7 +1113,7 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 	if !data.Successretries.IsNull() && !data.Successretries.IsUnknown() {
 		lbmonitor.Successretries = utils.IntPtr(int(data.Successretries.ValueInt64()))
 	}
-	if !data.Supportedvendorids.IsNull() && !data.Supportedvendorids.IsUnknown() {
+	if isDiameter && !data.Supportedvendorids.IsNull() && !data.Supportedvendorids.IsUnknown() {
 		var supportedvendoridsList []int
 		data.Supportedvendorids.ElementsAs(ctx, &supportedvendoridsList, false)
 		lbmonitor.Supportedvendorids = supportedvendoridsList
@@ -1146,20 +1154,20 @@ func lbmonitorGetThePayloadFromthePlan(ctx context.Context, data *LbmonitorResou
 	if !data.Validatecred.IsNull() && !data.Validatecred.IsUnknown() {
 		lbmonitor.Validatecred = data.Validatecred.ValueString()
 	}
-	if !data.Vendorid.IsNull() && !data.Vendorid.IsUnknown() {
+	if isDiameter && !data.Vendorid.IsNull() && !data.Vendorid.IsUnknown() {
 		lbmonitor.Vendorid = utils.IntPtr(int(data.Vendorid.ValueInt64()))
 	}
-	if !data.Vendorspecificacctapplicationids.IsNull() && !data.Vendorspecificacctapplicationids.IsUnknown() {
+	if isDiameter && !data.Vendorspecificacctapplicationids.IsNull() && !data.Vendorspecificacctapplicationids.IsUnknown() {
 		var vendorspecificacctapplicationidsList []int
 		data.Vendorspecificacctapplicationids.ElementsAs(ctx, &vendorspecificacctapplicationidsList, false)
 		lbmonitor.Vendorspecificacctapplicationids = vendorspecificacctapplicationidsList
 	}
-	if !data.Vendorspecificauthapplicationids.IsNull() && !data.Vendorspecificauthapplicationids.IsUnknown() {
+	if isDiameter && !data.Vendorspecificauthapplicationids.IsNull() && !data.Vendorspecificauthapplicationids.IsUnknown() {
 		var vendorspecificauthapplicationidsList []int
 		data.Vendorspecificauthapplicationids.ElementsAs(ctx, &vendorspecificauthapplicationidsList, false)
 		lbmonitor.Vendorspecificauthapplicationids = vendorspecificauthapplicationidsList
 	}
-	if !data.Vendorspecificvendorid.IsNull() && !data.Vendorspecificvendorid.IsUnknown() {
+	if isDiameter && !data.Vendorspecificvendorid.IsNull() && !data.Vendorspecificvendorid.IsUnknown() {
 		lbmonitor.Vendorspecificvendorid = utils.IntPtr(int(data.Vendorspecificvendorid.ValueInt64()))
 	}
 
@@ -1200,8 +1208,48 @@ func lbmonitorGetThePayloadFromtheConfig(ctx context.Context, data *LbmonitorRes
 	}
 }
 
+// lbmonitorDurationMillis converts a NITRO time value + unit (MSEC/SEC/MIN) to
+// milliseconds so two representations of the same duration can be compared.
+func lbmonitorDurationMillis(v int64, unit string) int64 {
+	switch strings.ToUpper(unit) {
+	case "MSEC":
+		return v
+	case "MIN":
+		return v * 60000
+	default: // SEC is the NITRO default when unit is unset/other
+		return v * 1000
+	}
+}
+
+// lbmonitorRetainEquivalentDuration suppresses spurious diffs when NetScaler
+// normalizes a time value to a different unit (e.g. 60 SEC -> 1 MIN). GH#1442.
+// If the prior (configured/state) value+unit represents the same duration as the
+// value read back from the API, the prior representation is kept so that (a) the
+// applied state matches the plan (no "inconsistent result after apply") and (b)
+// no perpetual diff appears on refresh. A genuine change (different duration) is
+// still adopted from the API, preserving drift detection.
+func lbmonitorRetainEquivalentDuration(curVal *types.Int64, curUnit *types.String, priorVal types.Int64, priorUnit types.String) {
+	if priorVal.IsNull() || priorVal.IsUnknown() || priorUnit.IsNull() || priorUnit.IsUnknown() {
+		return
+	}
+	if curVal.IsNull() || curVal.IsUnknown() || curUnit.IsNull() || curUnit.IsUnknown() {
+		return
+	}
+	if lbmonitorDurationMillis(priorVal.ValueInt64(), priorUnit.ValueString()) ==
+		lbmonitorDurationMillis(curVal.ValueInt64(), curUnit.ValueString()) {
+		*curVal = priorVal
+		*curUnit = priorUnit
+	}
+}
+
 func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, getResponseData map[string]interface{}) *LbmonitorResourceModel {
 	tflog.Debug(ctx, "In lbmonitorSetAttrFromGet Function")
+
+	// GH#1442 bug1: capture prior (config/state) time+unit values before the
+	// read-back overwrites them, so equivalent unit normalizations can be retained.
+	priorInterval, priorUnits3 := data.Interval, data.Units3
+	priorResptimeout, priorUnits4 := data.Resptimeout, data.Units4
+	priorDowntime, priorUnits2 := data.Downtime, data.Units2
 
 	// Convert API response to model
 	if val, ok := getResponseData["snmpoid"]; ok && val != nil {
@@ -1843,6 +1891,12 @@ func lbmonitorSetAttrFromGet(ctx context.Context, data *LbmonitorResourceModel, 
 	idParts = append(idParts, fmt.Sprintf("monitorname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Monitorname.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
+
+	// GH#1442 bug1: keep the configured value+unit when NetScaler normalized it to
+	// an equivalent duration (e.g. 60 SEC -> 1 MIN), avoiding a spurious diff.
+	lbmonitorRetainEquivalentDuration(&data.Interval, &data.Units3, priorInterval, priorUnits3)
+	lbmonitorRetainEquivalentDuration(&data.Resptimeout, &data.Units4, priorResptimeout, priorUnits4)
+	lbmonitorRetainEquivalentDuration(&data.Downtime, &data.Units2, priorDowntime, priorUnits2)
 
 	return data
 }
