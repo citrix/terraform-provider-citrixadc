@@ -15,6 +15,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NsencryptionparamsResource{}
+var _ resource.ResourceWithUpgradeState = &NsencryptionparamsResource{}
 var _ resource.ResourceWithConfigure = (*NsencryptionparamsResource)(nil)
 var _ resource.ResourceWithImportState = (*NsencryptionparamsResource)(nil)
 
@@ -211,4 +212,30 @@ func (r *NsencryptionparamsResource) readNsencryptionparamsFromApi(ctx context.C
 	nsencryptionparamsSetAttrFromGet(ctx, data, getResponseData)
 
 	return true
+}
+
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// "*_wo_version" tracker attribute(s) to 1 when the stored state has no value
+// for them, so the schema Default does not plan a spurious "null -> 1" update
+// after upgrading the provider. Paired with the schema Version bump so the
+// upgrade path actually runs. See utils.WoVersionUpgradeState.
+func (r *NsencryptionparamsResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data NsencryptionparamsResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.KeyvalueWoVersion.IsNull() {
+			data.KeyvalueWoVersion = types.Int64Value(1)
+		}
+		// SDKv2 echoed the secret into state (here as an empty string); the Framework
+		// provider does not. Drop the stale echo so the upgrade plans no spurious
+		// (hidden, sensitive) secret diff. Safe: the create/update payload only sends
+		// it when non-null, so nulling never re-applies or clears it on the appliance.
+		data.Keyvalue = types.StringNull()
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
 }

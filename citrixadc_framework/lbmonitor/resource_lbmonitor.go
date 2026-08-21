@@ -16,6 +16,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &LbmonitorResource{}
+var _ resource.ResourceWithUpgradeState = &LbmonitorResource{}
 var _ resource.ResourceWithConfigure = (*LbmonitorResource)(nil)
 var _ resource.ResourceWithImportState = (*LbmonitorResource)(nil)
 
@@ -734,4 +735,44 @@ func (r *LbmonitorResource) readLbmonitorFromApi(ctx context.Context, data *Lbmo
 
 	lbmonitorSetAttrFromGet(ctx, data, dataArr[foundIndex])
 	return true
+}
+
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// "*_wo_version" tracker attribute(s) to 1 when the stored state has no value
+// for them, so the schema Default does not plan a spurious "null -> 1" update
+// after upgrading the provider. Paired with the schema Version bump so the
+// upgrade path actually runs. See utils.WoVersionUpgradeState.
+func (r *LbmonitorResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data LbmonitorResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.PasswordWoVersion.IsNull() {
+			data.PasswordWoVersion = types.Int64Value(1)
+		}
+		if data.RadkeyWoVersion.IsNull() {
+			data.RadkeyWoVersion = types.Int64Value(1)
+		}
+		if data.SecondarypasswordWoVersion.IsNull() {
+			data.SecondarypasswordWoVersion = types.Int64Value(1)
+		}
+		if data.SecureargsWoVersion.IsNull() {
+			data.SecureargsWoVersion = types.Int64Value(1)
+		}
+		// SDKv2 echoed these secrets into state (as a value or an empty string); the
+		// Framework provider does not. Drop the stale echoes so the upgrade plans no
+		// spurious (hidden, sensitive) secret diff (which otherwise cascades every
+		// Computed attribute to "known after apply"). Safe: the create/update payload
+		// only sends each when non-null, so nulling never re-applies or clears it on
+		// the appliance.
+		data.Password = types.StringNull()
+		data.Radkey = types.StringNull()
+		data.Secondarypassword = types.StringNull()
+		data.Secureargs = types.StringNull()
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
 }

@@ -401,7 +401,7 @@ func TestAccNsencryptionkey_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNsencryptionkey_add,
 				Check: resource.ComposeTestCheckFunc(
@@ -411,9 +411,9 @@ func TestAccNsencryptionkey_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccNsencryptionkey_add,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNsencryptionkeyExist("citrixadc_nsencryptionkey.tf_encryptionkey", nil),
-				),
+				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
+				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
+				PlanOnly: true,
 			},
 		},
 	})
