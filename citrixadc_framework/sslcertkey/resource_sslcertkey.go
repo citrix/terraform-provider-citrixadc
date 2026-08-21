@@ -17,6 +17,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SslCertKeyResource{}
+var _ resource.ResourceWithUpgradeState = &SslCertKeyResource{}
 var _ resource.ResourceWithConfigure = (*SslCertKeyResource)(nil)
 var _ resource.ResourceWithImportState = (*SslCertKeyResource)(nil)
 
@@ -496,4 +497,34 @@ func (r *SslCertKeyResource) unlinkCertificate(ctx context.Context, data *SslCer
 	}
 
 	return nil
+}
+
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// "*_wo_version" tracker attribute(s) to 1 when the stored state has no value
+// for them, so the schema Default does not plan a spurious "null -> 1" update
+// after upgrading the provider. Paired with the schema Version bump so the
+// upgrade path actually runs. See utils.WoVersionUpgradeState.
+func (r *SslCertKeyResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data SslCertKeyResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.PassplainWoVersion.IsNull() {
+			data.PassplainWoVersion = types.Int64Value(1)
+		}
+		// SDKv2 echoed several Optional fields into state as zero-values (empty string / false)
+		// that the Framework provider represents as null: passplain (secret), bundle, and
+		// nodomaincheck. Drop these stale echoes so the upgrade plans no spurious diff (which
+		// otherwise cascades every Computed attribute to "known after apply"). Safe: each is a
+		// create/update-only field sent only when non-null and not read back, so nulling never
+		// re-applies or clears it on the appliance.
+		data.Passplain = types.StringNull()
+		data.Bundle = types.StringNull()
+		data.NoDomainCheck = types.BoolNull()
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
 }

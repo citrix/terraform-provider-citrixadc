@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -13,6 +14,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &SslcertResource{}
+var _ resource.ResourceWithUpgradeState = &SslcertResource{}
 var _ resource.ResourceWithConfigure = (*SslcertResource)(nil)
 var _ resource.ResourceWithImportState = (*SslcertResource)(nil)
 
@@ -160,4 +162,25 @@ func (r *SslcertResource) Delete(ctx context.Context, req resource.DeleteRequest
 	tflog.Debug(ctx, "Deleting sslcert resource")
 	// Singleton resource - no delete operation on ADC, just remove from state
 	tflog.Trace(ctx, "Removed sslcert from Terraform state")
+}
+
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// "*_wo_version" tracker attribute(s) to 1 when the stored state has no value
+// for them, so the schema Default does not plan a spurious "null -> 1" update
+// after upgrading the provider. Paired with the schema Version bump so the
+// upgrade path actually runs. See utils.WoVersionUpgradeState.
+func (r *SslcertResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data SslcertResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.PempassphraseWoVersion.IsNull() {
+			data.PempassphraseWoVersion = types.Int64Value(1)
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
 }
