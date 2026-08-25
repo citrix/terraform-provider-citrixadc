@@ -1,3 +1,15 @@
+## 2.3.2 (August 24, 2026)
+
+BUG FIXES
+* **provider**: Fixed a spurious in-place update on the first plan/apply after upgrading the provider, where resources with write-only (`*_wo`) secret attributes reported a `*_wo_version` change (null → 1) even though nothing had changed. Note that a few of these resources, which echoed the stale/hashed secret value into state in the SDKv2 provider, will still go through a one-time in-place update during the provider upgrade to reconcile that stale value. [#1441]
+* **citrixadc_lbmonitor**: Fixed "inconsistent result after apply" caused by NetScaler normalizing time values across their unit attributes (for example `interval`/`units3`, `resptimeout`/`units4` and `downtime`/`units2`, such as `60 SEC` becoming `1 MIN`); [#1442]
+* **citrixadc_lbmonitor**: Fixed in-place updates of non-DIAMETER monitors (for example HTTP) failing with a DIAMETER validation error (NITRO errorcode 1093) by including DIAMETER-only attributes (such as `authapplicationid`) in the payload only when the monitor `type` is `DIAMETER`. [#1442]
+* **citrixadc_analyticsprofile**: Fixed create/update of non-`webinsight` profiles failing with a NITRO type-validation error (errorcode 1093).
+
+[#1441]: https://github.com/citrix/terraform-provider-citrixadc/issues/1441
+[#1442]: https://github.com/citrix/terraform-provider-citrixadc/issues/1442
+
+
 ## 2.3.1 (August 11, 2026)
 
 BUG FIXES
