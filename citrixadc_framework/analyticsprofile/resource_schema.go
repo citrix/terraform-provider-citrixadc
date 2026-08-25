@@ -324,7 +324,12 @@ func analyticsprofileGetThePayloadFromthePlan(ctx context.Context, data *Analyti
 
 	// Create API request body from the model
 	analyticsprofile := analytics.Analyticsprofile{}
-	if !data.Allhttpheaders.IsNull() && !data.Allhttpheaders.IsUnknown() {
+	// Type-aware payload: the http*/web log-field toggles below are accepted by
+	// NITRO only when type==webinsight (errorcode 1093 otherwise). They carry a
+	// static Default("DISABLED") for unset support, so gate them on the discriminator
+	// to avoid injecting them into non-webinsight (e.g. streaminsight) create/update payloads.
+	isWebinsight := data.Type.ValueString() == "webinsight"
+	if isWebinsight && !data.Allhttpheaders.IsNull() && !data.Allhttpheaders.IsUnknown() {
 		analyticsprofile.Allhttpheaders = data.Allhttpheaders.ValueString()
 	}
 	if !data.Analyticsauthtoken.IsNull() && !data.Analyticsauthtoken.IsUnknown() {
@@ -356,19 +361,19 @@ func analyticsprofileGetThePayloadFromthePlan(ctx context.Context, data *Analyti
 	if !data.Events.IsNull() && !data.Events.IsUnknown() {
 		analyticsprofile.Events = data.Events.ValueString()
 	}
-	if !data.Grpcstatus.IsNull() && !data.Grpcstatus.IsUnknown() {
+	if isWebinsight && !data.Grpcstatus.IsNull() && !data.Grpcstatus.IsUnknown() {
 		analyticsprofile.Grpcstatus = data.Grpcstatus.ValueString()
 	}
-	if !data.Httpauthentication.IsNull() && !data.Httpauthentication.IsUnknown() {
+	if isWebinsight && !data.Httpauthentication.IsNull() && !data.Httpauthentication.IsUnknown() {
 		analyticsprofile.Httpauthentication = data.Httpauthentication.ValueString()
 	}
-	if !data.Httpclientsidemeasurements.IsNull() && !data.Httpclientsidemeasurements.IsUnknown() {
+	if isWebinsight && !data.Httpclientsidemeasurements.IsNull() && !data.Httpclientsidemeasurements.IsUnknown() {
 		analyticsprofile.Httpclientsidemeasurements = data.Httpclientsidemeasurements.ValueString()
 	}
-	if !data.Httpcontenttype.IsNull() && !data.Httpcontenttype.IsUnknown() {
+	if isWebinsight && !data.Httpcontenttype.IsNull() && !data.Httpcontenttype.IsUnknown() {
 		analyticsprofile.Httpcontenttype = data.Httpcontenttype.ValueString()
 	}
-	if !data.Httpcookie.IsNull() && !data.Httpcookie.IsUnknown() {
+	if isWebinsight && !data.Httpcookie.IsNull() && !data.Httpcookie.IsUnknown() {
 		analyticsprofile.Httpcookie = data.Httpcookie.ValueString()
 	}
 	if !data.Httpcustomheaders.IsNull() && !data.Httpcustomheaders.IsUnknown() {
@@ -376,46 +381,46 @@ func analyticsprofileGetThePayloadFromthePlan(ctx context.Context, data *Analyti
 		data.Httpcustomheaders.ElementsAs(ctx, &httpcustomheadersList, false)
 		analyticsprofile.Httpcustomheaders = httpcustomheadersList
 	}
-	if !data.Httpdomainname.IsNull() && !data.Httpdomainname.IsUnknown() {
+	if isWebinsight && !data.Httpdomainname.IsNull() && !data.Httpdomainname.IsUnknown() {
 		analyticsprofile.Httpdomainname = data.Httpdomainname.ValueString()
 	}
-	if !data.Httphost.IsNull() && !data.Httphost.IsUnknown() {
+	if isWebinsight && !data.Httphost.IsNull() && !data.Httphost.IsUnknown() {
 		analyticsprofile.Httphost = data.Httphost.ValueString()
 	}
-	if !data.Httplocation.IsNull() && !data.Httplocation.IsUnknown() {
+	if isWebinsight && !data.Httplocation.IsNull() && !data.Httplocation.IsUnknown() {
 		analyticsprofile.Httplocation = data.Httplocation.ValueString()
 	}
-	if !data.Httpmethod.IsNull() && !data.Httpmethod.IsUnknown() {
+	if isWebinsight && !data.Httpmethod.IsNull() && !data.Httpmethod.IsUnknown() {
 		analyticsprofile.Httpmethod = data.Httpmethod.ValueString()
 	}
-	if !data.Httppagetracking.IsNull() && !data.Httppagetracking.IsUnknown() {
+	if isWebinsight && !data.Httppagetracking.IsNull() && !data.Httppagetracking.IsUnknown() {
 		analyticsprofile.Httppagetracking = data.Httppagetracking.ValueString()
 	}
-	if !data.Httpreferer.IsNull() && !data.Httpreferer.IsUnknown() {
+	if isWebinsight && !data.Httpreferer.IsNull() && !data.Httpreferer.IsUnknown() {
 		analyticsprofile.Httpreferer = data.Httpreferer.ValueString()
 	}
-	if !data.Httpsetcookie.IsNull() && !data.Httpsetcookie.IsUnknown() {
+	if isWebinsight && !data.Httpsetcookie.IsNull() && !data.Httpsetcookie.IsUnknown() {
 		analyticsprofile.Httpsetcookie = data.Httpsetcookie.ValueString()
 	}
-	if !data.Httpsetcookie2.IsNull() && !data.Httpsetcookie2.IsUnknown() {
+	if isWebinsight && !data.Httpsetcookie2.IsNull() && !data.Httpsetcookie2.IsUnknown() {
 		analyticsprofile.Httpsetcookie2 = data.Httpsetcookie2.ValueString()
 	}
-	if !data.Httpurl.IsNull() && !data.Httpurl.IsUnknown() {
+	if isWebinsight && !data.Httpurl.IsNull() && !data.Httpurl.IsUnknown() {
 		analyticsprofile.Httpurl = data.Httpurl.ValueString()
 	}
-	if !data.Httpurlquery.IsNull() && !data.Httpurlquery.IsUnknown() {
+	if isWebinsight && !data.Httpurlquery.IsNull() && !data.Httpurlquery.IsUnknown() {
 		analyticsprofile.Httpurlquery = data.Httpurlquery.ValueString()
 	}
-	if !data.Httpuseragent.IsNull() && !data.Httpuseragent.IsUnknown() {
+	if isWebinsight && !data.Httpuseragent.IsNull() && !data.Httpuseragent.IsUnknown() {
 		analyticsprofile.Httpuseragent = data.Httpuseragent.ValueString()
 	}
-	if !data.Httpvia.IsNull() && !data.Httpvia.IsUnknown() {
+	if isWebinsight && !data.Httpvia.IsNull() && !data.Httpvia.IsUnknown() {
 		analyticsprofile.Httpvia = data.Httpvia.ValueString()
 	}
-	if !data.Httpxforwardedforheader.IsNull() && !data.Httpxforwardedforheader.IsUnknown() {
+	if isWebinsight && !data.Httpxforwardedforheader.IsNull() && !data.Httpxforwardedforheader.IsUnknown() {
 		analyticsprofile.Httpxforwardedforheader = data.Httpxforwardedforheader.ValueString()
 	}
-	if !data.Integratedcache.IsNull() && !data.Integratedcache.IsUnknown() {
+	if isWebinsight && !data.Integratedcache.IsNull() && !data.Integratedcache.IsUnknown() {
 		analyticsprofile.Integratedcache = data.Integratedcache.ValueString()
 	}
 	if !data.Managementlog.IsNull() && !data.Managementlog.IsUnknown() {
@@ -450,7 +455,7 @@ func analyticsprofileGetThePayloadFromthePlan(ctx context.Context, data *Analyti
 	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		analyticsprofile.Type = data.Type.ValueString()
 	}
-	if !data.Urlcategory.IsNull() && !data.Urlcategory.IsUnknown() {
+	if isWebinsight && !data.Urlcategory.IsNull() && !data.Urlcategory.IsUnknown() {
 		analyticsprofile.Urlcategory = data.Urlcategory.ValueString()
 	}
 
