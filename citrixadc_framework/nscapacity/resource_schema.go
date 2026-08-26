@@ -85,15 +85,16 @@ func (m unsetOnRemoveBoolModifier) PlanModifyBool(_ context.Context, req planmod
 
 // NscapacityResourceModel describes the resource data model.
 type NscapacityResourceModel struct {
-	Id        types.String `tfsdk:"id"`
-	Bandwidth types.Int64  `tfsdk:"bandwidth"`
-	Edition   types.String `tfsdk:"edition"`
-	Nodeid    types.Int64  `tfsdk:"nodeid"`
-	Password  types.String `tfsdk:"password"`
-	Platform  types.String `tfsdk:"platform"`
-	Unit      types.String `tfsdk:"unit"`
-	Username  types.String `tfsdk:"username"`
-	Vcpu      types.Bool   `tfsdk:"vcpu"`
+	Id           types.String `tfsdk:"id"`
+	Bandwidth    types.Int64  `tfsdk:"bandwidth"`
+	Edition      types.String `tfsdk:"edition"`
+	Ignoreexpiry types.Bool   `tfsdk:"ignoreexpiry"`
+	Nodeid       types.Int64  `tfsdk:"nodeid"`
+	Password     types.String `tfsdk:"password"`
+	Platform     types.String `tfsdk:"platform"`
+	Unit         types.String `tfsdk:"unit"`
+	Username     types.String `tfsdk:"username"`
+	Vcpu         types.Bool   `tfsdk:"vcpu"`
 }
 
 func (r *NscapacityResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -116,6 +117,11 @@ func (r *NscapacityResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:    true,
 				Computed:    true,
 				Description: "Product edition.",
+			},
+			"ignoreexpiry": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Value to mention if days to expire data needs to be fetched or not.",
 			},
 			"nodeid": schema.Int64Attribute{
 				Optional:    true,
@@ -171,6 +177,9 @@ func nscapacityGetThePayloadFromtheConfig(ctx context.Context, data *NscapacityR
 	}
 	if !data.Edition.IsNull() && !data.Edition.IsUnknown() {
 		nscapacity.Edition = data.Edition.ValueString()
+	}
+	if !data.Ignoreexpiry.IsNull() && !data.Ignoreexpiry.IsUnknown() {
+		nscapacity.Ignoreexpiry = data.Ignoreexpiry.ValueBool()
 	}
 	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
 		nscapacity.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
@@ -243,6 +252,13 @@ func nscapacitySetAttrFromGet(ctx context.Context, data *NscapacityResourceModel
 		data.Vcpu = types.BoolValue(true)
 	} else if data.Vcpu.IsUnknown() {
 		data.Vcpu = types.BoolValue(false)
+	}
+
+	// ignoreexpiry (input flag; not echoed back by GET)
+	if val, ok := getResponseData["ignoreexpiry"]; ok && val != nil {
+		data.Ignoreexpiry = types.BoolValue(val.(bool))
+	} else if data.Ignoreexpiry.IsUnknown() {
+		data.Ignoreexpiry = types.BoolValue(false)
 	}
 
 	// nodeid (cluster node id)

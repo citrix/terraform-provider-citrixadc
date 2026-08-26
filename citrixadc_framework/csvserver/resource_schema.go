@@ -50,6 +50,7 @@ type CsvserverResourceModel struct {
 	Ciphersuites             types.List   `tfsdk:"ciphersuites"`
 	Lbvserverbinding         types.String `tfsdk:"lbvserverbinding"`
 	Sslpolicybinding         types.Set    `tfsdk:"sslpolicybinding"`
+	Aigwprofilename          types.String `tfsdk:"aigwprofilename"`
 	Apiprofile               types.String `tfsdk:"apiprofile"`
 	Appflowlog               types.String `tfsdk:"appflowlog"`
 	Authentication           types.String `tfsdk:"authentication"`
@@ -86,6 +87,7 @@ type CsvserverResourceModel struct {
 	L2conn                   types.String `tfsdk:"l2conn"`
 	Listenpolicy             types.String `tfsdk:"listenpolicy"`
 	Listenpriority           types.Int64  `tfsdk:"listenpriority"`
+	Mcpprofilename           types.String `tfsdk:"mcpprofilename"`
 	Mssqlserverversion       types.String `tfsdk:"mssqlserverversion"`
 	Mysqlcharacterset        types.Int64  `tfsdk:"mysqlcharacterset"`
 	Mysqlprotocolversion     types.Int64  `tfsdk:"mysqlprotocolversion"`
@@ -132,6 +134,7 @@ type CsvserverResourceModel struct {
 	Ttl                      types.Int64  `tfsdk:"ttl"`
 	V6persistmasklen         types.Int64  `tfsdk:"v6persistmasklen"`
 	Vipheader                types.String `tfsdk:"vipheader"`
+	Wasmmodule               types.String `tfsdk:"wasmmodule"`
 }
 
 func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -141,6 +144,11 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the csvserver resource.",
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the AIGW frontend profile. For the content switching vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add cs vserver, it cannot be unset. Minimum length =  1 Maximum length =  255",
 			},
 			"apiprofile": schema.StringAttribute{
 				Optional:    true,
@@ -325,6 +333,11 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional:    true,
 				Computed:    true,
 				Description: "Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.",
+			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the MCP profile to attach to this cs vserver. Enables MCP protocol processing.",
 			},
 			"mssqlserverversion": schema.StringAttribute{
 				Optional:    true,
@@ -580,6 +593,11 @@ func (r *CsvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:    true,
 				Description: "Name of virtual server IP and port header, for use with the VServer IP Port Insertion parameter.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
+			},
 			"sslcertkey": schema.StringAttribute{
 				Optional:    true,
 				Description: "Name of the SSL certificate-key pair to bind to the (SSL) content switching virtual server.",
@@ -632,6 +650,9 @@ func csvserverGetThePayloadFromtheConfig(ctx context.Context, data *CsvserverRes
 
 	// Create API request body from the model
 	csvserver := cs.Csvserver{}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		csvserver.Aigwprofilename = data.Aigwprofilename.ValueString()
+	}
 	if !data.Apiprofile.IsNull() && !data.Apiprofile.IsUnknown() {
 		csvserver.Apiprofile = data.Apiprofile.ValueString()
 	}
@@ -739,6 +760,9 @@ func csvserverGetThePayloadFromtheConfig(ctx context.Context, data *CsvserverRes
 	}
 	if !data.Listenpriority.IsNull() && !data.Listenpriority.IsUnknown() {
 		csvserver.Listenpriority = utils.IntPtr(int(data.Listenpriority.ValueInt64()))
+	}
+	if !data.Mcpprofilename.IsNull() && !data.Mcpprofilename.IsUnknown() {
+		csvserver.Mcpprofilename = data.Mcpprofilename.ValueString()
 	}
 	if !data.Mssqlserverversion.IsNull() && !data.Mssqlserverversion.IsUnknown() {
 		csvserver.Mssqlserverversion = data.Mssqlserverversion.ValueString()
@@ -877,6 +901,9 @@ func csvserverGetThePayloadFromtheConfig(ctx context.Context, data *CsvserverRes
 	if !data.Vipheader.IsNull() && !data.Vipheader.IsUnknown() {
 		csvserver.Vipheader = data.Vipheader.ValueString()
 	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		csvserver.Wasmmodule = data.Wasmmodule.ValueString()
+	}
 
 	return csvserver
 }
@@ -885,6 +912,11 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 	tflog.Debug(ctx, "In csvserverSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["aigwprofilename"]; ok && val != nil {
+		data.Aigwprofilename = types.StringValue(val.(string))
+	} else {
+		data.Aigwprofilename = types.StringNull()
+	}
 	if val, ok := getResponseData["apiprofile"]; ok && val != nil {
 		data.Apiprofile = types.StringValue(val.(string))
 	} else {
@@ -1072,6 +1104,11 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 		}
 	} else {
 		data.Listenpriority = types.Int64Null()
+	}
+	if val, ok := getResponseData["mcpprofilename"]; ok && val != nil {
+		data.Mcpprofilename = types.StringValue(val.(string))
+	} else {
+		data.Mcpprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["mssqlserverversion"]; ok && val != nil {
 		data.Mssqlserverversion = types.StringValue(val.(string))
@@ -1340,6 +1377,11 @@ func csvserverSetAttrFromGet(ctx context.Context, data *CsvserverResourceModel, 
 		data.Vipheader = types.StringValue(val.(string))
 	} else {
 		data.Vipheader = types.StringNull()
+	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else {
+		data.Wasmmodule = types.StringNull()
 	}
 
 	// Set ID for the resource to the live object name returned by GET. This keeps

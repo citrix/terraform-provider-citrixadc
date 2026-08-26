@@ -94,6 +94,11 @@ func LbparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Use the ADC location instead of client IP for static proximity LB or GSLB decision.",
 			},
+			"radiusmessageauthenticator": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "If enabled, NetScaler will verify the message authenticator and also generate message authenticator if not present.",
+			},
 			"retainservicestate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -20,6 +20,7 @@ type AaaotpparameterResourceModel struct {
 	Id            types.String `tfsdk:"id"`
 	Encryption    types.String `tfsdk:"encryption"`
 	Maxotpdevices types.Int64  `tfsdk:"maxotpdevices"`
+	Otptype       types.String `tfsdk:"otptype"`
 }
 
 func (r *AaaotpparameterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -42,6 +43,11 @@ func (r *AaaotpparameterResource) Schema(ctx context.Context, req resource.Schem
 				Default:     int64default.StaticInt64(4),
 				Description: "Maximum number of otp devices user can register. Default value is 4. Max value is 255",
 			},
+			"otptype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Input flag to generate OTP for the given type. Possible values = gwtest",
+			},
 		},
 	}
 }
@@ -56,6 +62,9 @@ func aaaotpparameterGetThePayloadFromtheConfig(ctx context.Context, data *Aaaotp
 	}
 	if !data.Maxotpdevices.IsNull() && !data.Maxotpdevices.IsUnknown() {
 		aaaotpparameter.Maxotpdevices = utils.IntPtr(int(data.Maxotpdevices.ValueInt64()))
+	}
+	if !data.Otptype.IsNull() && !data.Otptype.IsUnknown() {
+		aaaotpparameter.Otptype = data.Otptype.ValueString()
 	}
 
 	return aaaotpparameter
@@ -76,6 +85,11 @@ func aaaotpparameterSetAttrFromGet(ctx context.Context, data *AaaotpparameterRes
 		}
 	} else {
 		data.Maxotpdevices = types.Int64Null()
+	}
+	if val, ok := getResponseData["otptype"]; ok && val != nil {
+		data.Otptype = types.StringValue(val.(string))
+	} else {
+		data.Otptype = types.StringNull()
 	}
 
 	// Set ID for the resource

@@ -14,9 +14,10 @@ import (
 
 // NsdhcpparamsResourceModel describes the resource data model.
 type NsdhcpparamsResourceModel struct {
-	Id         types.String `tfsdk:"id"`
-	Dhcpclient types.String `tfsdk:"dhcpclient"`
-	Saveroute  types.String `tfsdk:"saveroute"`
+	Id              types.String `tfsdk:"id"`
+	Dhcpclient      types.String `tfsdk:"dhcpclient"`
+	Saveroute       types.String `tfsdk:"saveroute"`
+	Subnetselection types.String `tfsdk:"subnetselection"`
 }
 
 func (r *NsdhcpparamsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -39,6 +40,11 @@ func (r *NsdhcpparamsResource) Schema(ctx context.Context, req resource.SchemaRe
 				Default:     stringdefault.StaticString("OFF"),
 				Description: "DHCP acquired routes are saved on the Citrix ADC.",
 			},
+			"subnetselection": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Subnet Selection option (RFC 3011) to request IP from a specific subnet.",
+			},
 		},
 	}
 }
@@ -53,6 +59,9 @@ func nsdhcpparamsGetThePayloadFromtheConfig(ctx context.Context, data *Nsdhcppar
 	}
 	if !data.Saveroute.IsNull() && !data.Saveroute.IsUnknown() {
 		nsdhcpparams.Saveroute = data.Saveroute.ValueString()
+	}
+	if !data.Subnetselection.IsNull() && !data.Subnetselection.IsUnknown() {
+		nsdhcpparams.Subnetselection = data.Subnetselection.ValueString()
 	}
 
 	return nsdhcpparams
@@ -73,6 +82,11 @@ func nsdhcpparamsSetAttrFromGet(ctx context.Context, data *NsdhcpparamsResourceM
 		data.Saveroute = types.StringValue(val.(string))
 	} else if data.Saveroute.IsUnknown() {
 		data.Saveroute = types.StringNull()
+	}
+	if val, ok := getResponseData["subnetselection"]; ok && val != nil {
+		data.Subnetselection = types.StringValue(val.(string))
+	} else if data.Subnetselection.IsUnknown() {
+		data.Subnetselection = types.StringNull()
 	}
 
 	// Set ID for the resource

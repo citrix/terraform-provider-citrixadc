@@ -164,6 +164,9 @@ func (r *NstcpparamResource) Update(ctx context.Context, req resource.UpdateRequ
 			hasChange = true
 		}
 	}
+	if !data.Sendresetreasoncode.Equal(state.Sendresetreasoncode) {
+		hasChange = true
+	}
 	if !data.Tcpfastopencookietimeout.Equal(state.Tcpfastopencookietimeout) {
 		if config.Tcpfastopencookietimeout.IsNull() {
 			attributesToUnset = append(attributesToUnset, "tcpfastopencookietimeout")

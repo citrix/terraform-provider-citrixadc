@@ -482,6 +482,11 @@ func (r *VpnparameterResource) Update(ctx context.Context, req resource.UpdateRe
 			hasChange = true
 		}
 	}
+	if !data.Secureprivateaccessprofile.Equal(state.Secureprivateaccessprofile) {
+		if !config.Secureprivateaccessprofile.IsNull() { // only a real configured change triggers an update
+			hasChange = true
+		}
+	}
 	if !data.Sesstimeout.Equal(state.Sesstimeout) {
 		if !config.Sesstimeout.IsNull() { // only a real configured change triggers an update
 			hasChange = true

@@ -1,0 +1,14 @@
+# Acceptance test results: vpnicaconnection
+# Sweep: NSNETAUTO-1162 50-resource A+B run
+# Categories: PASS(first ADC) / PASS(alternative ADC) / FAILED / SKIPPED
+
+## PASS on first ADC (0)
+
+## PASS on alternative ADC (0)
+
+## FAILED (0)
+
+## SKIPPED (1)
+  SKIP  TestAccVpnicaconnectionKill_basic
+        reason: TODO: Requires review - the kill action terminates live ICA connections; disruptive on a shared testbed
+

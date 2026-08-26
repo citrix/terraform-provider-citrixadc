@@ -216,6 +216,12 @@ func (r *GslbparameterResource) Update(ctx context.Context, req resource.UpdateR
 	if !data.Ldnsprobeorder.Equal(state.Ldnsprobeorder) {
 		hasChange = true
 	}
+	if !data.Sourceipwhitelisting.Equal(state.Sourceipwhitelisting) {
+		hasChange = true
+	}
+	if !data.Usekrpcchannelforsync.Equal(state.Usekrpcchannelforsync) {
+		hasChange = true
+	}
 
 	if hasChange {
 		// Create API request body from the plan

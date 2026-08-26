@@ -30,6 +30,11 @@ func CloudngsparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enables Decoupling CSVSERVER state from Ticketing Service state in the CGS deployment",
 			},
+			"wafprotection": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Configure WAF protection for CGS deployment. The available options are:",
+			},
 		},
 	}
 }

@@ -1,0 +1,20 @@
+# Acceptance test results: cloudngsparameter
+# Sweep: NSNETAUTO-1162 50-resource A+B run
+# Categories: PASS(first ADC) / PASS(alternative ADC) / FAILED / SKIPPED
+
+## PASS on first ADC (0)
+
+## PASS on alternative ADC (1)
+  PASS  TestAccCloudngsparameter_unset   (@.151/.153)
+        investigation: .152 was a READ-ONLY cluster node during the run (errorcode 1203/477); writes rejected. Passed on .151, .153 (healthy). Environmental, not code.
+
+## FAILED (0)
+
+## SKIPPED (3)
+  SKIP  TestAccCloudngsparameterDataSource_basic
+        reason: TODO: Requires review
+  SKIP  TestAccCloudngsparameter_basic
+        reason: TODO: Requires review
+  SKIP  TestAccCloudngsparameter_import
+        reason: TODO: Requires review
+

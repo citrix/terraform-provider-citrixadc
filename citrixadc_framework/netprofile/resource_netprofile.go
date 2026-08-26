@@ -143,6 +143,10 @@ func (r *NetprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 	// SDK v2, so it is intentionally not part of change detection.
 	hasChange := false
 	attributesToUnset := []string{}
+	if !data.Badipactionthreshold.Equal(state.Badipactionthreshold) {
+		tflog.Debug(ctx, "badipactionthreshold has changed for netprofile")
+		hasChange = true
+	}
 	if !data.Mbf.Equal(state.Mbf) {
 		tflog.Debug(ctx, "mbf has changed for netprofile")
 		hasChange = true

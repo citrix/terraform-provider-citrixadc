@@ -77,6 +77,11 @@ func GslbparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Tolerance, in milliseconds, for newly learned round-trip time (RTT) values. If the difference between the old RTT value and the newly computed RTT value is less than or equal to the specified tolerance value, the LDNS entry in the network metric table is not updated with the new RTT value. Prevents the exchange of metrics when variations in RTT values are negligible.",
 			},
+			"sourceipwhitelisting": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "If enabled, local gslb site private IP would be used as the source IP while initiating MEP/GSLB sync connection if srcIP is not configured for GSLB site.",
+			},
 			"svcstatelearningtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -86,6 +91,11 @@ func GslbparameterDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:\n* NOLBACTION - Does not consider LB action in making LB decision.\n* RESET - Reset the request and notify the user, so that the user can resend the request.\n* DROP - Drop the request without sending a response to the user.",
+			},
+			"usekrpcchannelforsync": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is to use Krpc channel for GSLB sync.",
 			},
 			"v6ldnsmasklen": schema.Int64Attribute{
 				Optional:    true,

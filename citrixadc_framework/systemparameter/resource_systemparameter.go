@@ -198,6 +198,8 @@ func (r *SystemparameterResource) Update(ctx context.Context, req resource.Updat
 	// a normal update.
 	if !data.Basicauth.Equal(state.Basicauth) ||
 		!data.Daystoexpire.Equal(state.Daystoexpire) ||
+		!data.Denylist.Equal(state.Denylist) ||
+		!data.Denylistlogging.Equal(state.Denylistlogging) ||
 		!data.Fipsusermode.Equal(state.Fipsusermode) ||
 		!data.Forcepasswordchange.Equal(state.Forcepasswordchange) ||
 		!data.Localauth.Equal(state.Localauth) ||

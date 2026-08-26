@@ -180,6 +180,11 @@ func SslvserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "URL of the page to which to redirect the client in case of a protocol version mismatch. Typically, this page has a clear explanation of the error or an alternative location that the transaction can continue from.",
 			},
+			"strictclientekucheck": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable strict EKU extension check during client authentication.",
+			},
 			"strictsigdigestcheck": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -98,6 +98,7 @@ type LbvserverResourceModel struct {
 	Ciphersuites                       types.List   `tfsdk:"ciphersuites"`
 	Sslpolicybinding                   types.Set    `tfsdk:"sslpolicybinding"`
 	Adfsproxyprofile                   types.String `tfsdk:"adfsproxyprofile"`
+	Aigwprofilename                    types.String `tfsdk:"aigwprofilename"`
 	Apiprofile                         types.String `tfsdk:"apiprofile"`
 	Appflowlog                         types.String `tfsdk:"appflowlog"`
 	Authentication                     types.String `tfsdk:"authentication"`
@@ -141,6 +142,7 @@ type LbvserverResourceModel struct {
 	M                                  types.String `tfsdk:"m"`
 	Macmoderetainvlan                  types.String `tfsdk:"macmoderetainvlan"`
 	Maxautoscalemembers                types.Int64  `tfsdk:"maxautoscalemembers"`
+	Mcpprofilename                     types.String `tfsdk:"mcpprofilename"`
 	Minautoscalemembers                types.Int64  `tfsdk:"minautoscalemembers"`
 	Mssqlserverversion                 types.String `tfsdk:"mssqlserverversion"`
 	Mysqlcharacterset                  types.Int64  `tfsdk:"mysqlcharacterset"`
@@ -203,6 +205,7 @@ type LbvserverResourceModel struct {
 	V6netmasklen                       types.Int64  `tfsdk:"v6netmasklen"`
 	V6persistmasklen                   types.Int64  `tfsdk:"v6persistmasklen"`
 	Vipheader                          types.String `tfsdk:"vipheader"`
+	Wasmmodule                         types.String `tfsdk:"wasmmodule"`
 	Weight                             types.Int64  `tfsdk:"weight"`
 }
 
@@ -218,6 +221,11 @@ func (r *LbvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the adfsProxy profile to be used to support ADFSPIP protocol for ADFS servers.",
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the AIGW frontend profile. For the LB vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add lb vserver, it cannot be unset.",
 			},
 			"apiprofile": schema.StringAttribute{
 				Optional:    true,
@@ -436,6 +444,11 @@ func (r *LbvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional:    true,
 				Computed:    true,
 				Description: "Maximum number of members expected to be present when vserver is used in Autoscale.",
+			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the MCP profile to attach to this lb vserver. Enables MCP protocol processing.",
 			},
 			"minautoscalemembers": schema.Int64Attribute{
 				Optional:    true,
@@ -779,6 +792,11 @@ func (r *LbvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:    true,
 				Description: "Name for the inserted header. The default name is vip-header.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
+			},
 			"weight": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -835,6 +853,9 @@ func lbvserverGetThePayloadFromtheConfig(ctx context.Context, data *LbvserverRes
 	lbvserver := lb.Lbvserver{}
 	if !data.Adfsproxyprofile.IsNull() && !data.Adfsproxyprofile.IsUnknown() {
 		lbvserver.Adfsproxyprofile = data.Adfsproxyprofile.ValueString()
+	}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		lbvserver.Aigwprofilename = data.Aigwprofilename.ValueString()
 	}
 	if !data.Apiprofile.IsNull() && !data.Apiprofile.IsUnknown() {
 		lbvserver.Apiprofile = data.Apiprofile.ValueString()
@@ -964,6 +985,9 @@ func lbvserverGetThePayloadFromtheConfig(ctx context.Context, data *LbvserverRes
 	}
 	if !data.Maxautoscalemembers.IsNull() && !data.Maxautoscalemembers.IsUnknown() {
 		lbvserver.Maxautoscalemembers = utils.IntPtr(int(data.Maxautoscalemembers.ValueInt64()))
+	}
+	if !data.Mcpprofilename.IsNull() && !data.Mcpprofilename.IsUnknown() {
+		lbvserver.Mcpprofilename = data.Mcpprofilename.ValueString()
 	}
 	if !data.Minautoscalemembers.IsNull() && !data.Minautoscalemembers.IsUnknown() {
 		lbvserver.Minautoscalemembers = utils.IntPtr(int(data.Minautoscalemembers.ValueInt64()))
@@ -1154,6 +1178,9 @@ func lbvserverGetThePayloadFromtheConfig(ctx context.Context, data *LbvserverRes
 	if !data.Vipheader.IsNull() && !data.Vipheader.IsUnknown() {
 		lbvserver.Vipheader = data.Vipheader.ValueString()
 	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		lbvserver.Wasmmodule = data.Wasmmodule.ValueString()
+	}
 	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		lbvserver.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
@@ -1170,6 +1197,11 @@ func lbvserverSetAttrFromGet(ctx context.Context, data *LbvserverResourceModel, 
 		data.Adfsproxyprofile = types.StringValue(val.(string))
 	} else if data.Adfsproxyprofile.IsUnknown() {
 		data.Adfsproxyprofile = types.StringNull()
+	}
+	if val, ok := getResponseData["aigwprofilename"]; ok && val != nil {
+		data.Aigwprofilename = types.StringValue(val.(string))
+	} else if data.Aigwprofilename.IsUnknown() {
+		data.Aigwprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["apiprofile"]; ok && val != nil {
 		data.Apiprofile = types.StringValue(val.(string))
@@ -1405,6 +1437,11 @@ func lbvserverSetAttrFromGet(ctx context.Context, data *LbvserverResourceModel, 
 		}
 	} else if data.Maxautoscalemembers.IsUnknown() {
 		data.Maxautoscalemembers = types.Int64Null()
+	}
+	if val, ok := getResponseData["mcpprofilename"]; ok && val != nil {
+		data.Mcpprofilename = types.StringValue(val.(string))
+	} else if data.Mcpprofilename.IsUnknown() {
+		data.Mcpprofilename = types.StringNull()
 	}
 	if val, ok := getResponseData["minautoscalemembers"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -1770,6 +1807,11 @@ func lbvserverSetAttrFromGet(ctx context.Context, data *LbvserverResourceModel, 
 		data.Vipheader = types.StringValue(val.(string))
 	} else if data.Vipheader.IsUnknown() {
 		data.Vipheader = types.StringNull()
+	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else if data.Wasmmodule.IsUnknown() {
+		data.Wasmmodule = types.StringNull()
 	}
 	if val, ok := getResponseData["weight"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

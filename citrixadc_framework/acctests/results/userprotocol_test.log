@@ -1,0 +1,24 @@
+# Acceptance test results: userprotocol
+# Sweep: NSNETAUTO-1162 50-resource A+B run
+# Categories: PASS(first ADC) / PASS(alternative ADC) / FAILED / SKIPPED
+
+## PASS on first ADC (0)
+
+## PASS on alternative ADC (0)
+
+## FAILED (0)
+
+## SKIPPED (6)
+  SKIP  TestAccUserprotocolDataSource_basic
+        reason: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!
+  SKIP  TestAccUserprotocol_basic
+        reason: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!
+  SKIP  TestAccUserprotocol_import
+        reason: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!
+  SKIP  TestAccUserprotocol_sdkv2StateUpgrade
+        reason: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!
+  SKIP  TestAccUserprotocol_selfHealing
+        reason: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!
+  SKIP  TestAccUserprotocol_unset
+        reason: TODO: Requires adding new ns extension. Refer https://docs.netscaler.com/en-us/citrix-adc/current-release/citrix-adc-extensions/citrix-adc-protocol-extensions/tutorial-examples!
+

@@ -131,6 +131,10 @@ func (r *NsdhcpparamsResource) Update(ctx context.Context, req resource.UpdateRe
 			hasChange = true
 		}
 	}
+	if !data.Subnetselection.Equal(state.Subnetselection) {
+		tflog.Debug(ctx, "subnetselection has changed for nsdhcpparams")
+		hasChange = true
+	}
 
 	if hasChange {
 		// Create API request body from the model

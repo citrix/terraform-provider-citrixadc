@@ -174,6 +174,11 @@ func AppflowparamDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Include the stream identifier session name to be exported.",
 			},
+			"logalljsonfields": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Overrides the field filtering for all analytics profiles, and sends all the fields for the configured insights.",
+			},
 			"logstreamovernsip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

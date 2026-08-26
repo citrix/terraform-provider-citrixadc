@@ -10,6 +10,11 @@ func NetprofileDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"badipactionthreshold": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Number of protocol violation from an IP address before taking action. Default value: 0 Minimum value =  0 Maximum value =  100000",
+			},
 			"mbf": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

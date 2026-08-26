@@ -329,6 +329,9 @@ func (r *ServicegroupServicegroupmemberBindingResource) readServicegroupServiceg
 // Computed attribute to null. Used on the disable_read path where we skip the API
 // read but Terraform still requires every value to be known after apply.
 func servicegroup_servicegroupmember_bindingResolveUnknownComputed(data *ServicegroupServicegroupmemberBindingResourceModel) {
+	if data.Aigwprofilename.IsUnknown() {
+		data.Aigwprofilename = types.StringNull()
+	}
 	if data.Customserverid.IsUnknown() {
 		data.Customserverid = types.StringNull()
 	}

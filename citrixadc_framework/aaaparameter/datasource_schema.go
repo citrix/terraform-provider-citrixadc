@@ -31,6 +31,11 @@ func AaaparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Option to enable/disable API cache feature.",
 			},
+			"classicendpoints": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Parameter to enable/disable classic endpoints.",
+			},
 			"defaultauthtype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -136,6 +141,11 @@ func AaaparameterDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Entities for which WAF Protection need to be applied.\nAvailable settings function as follows:\n* DEFAULT - No Endpoint WAF protection.\n* AUTH - Endpoints used for Authentication applicable for both AAATM, IDP, GATEWAY use cases.\n* VPN - Endpoints used for Gateway use cases.\n* PORTAL - Endpoints related to web portal.\n* DISABLED - No Endpoint WAF protection.\nCurrently supported only in default partition",
+			},
+			"webviewendpoints": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Parameter to enable/disable webview endpoints.",
 			},
 		},
 	}

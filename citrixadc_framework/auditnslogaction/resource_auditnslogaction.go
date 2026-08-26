@@ -166,6 +166,13 @@ func (r *AuditnslogactionResource) Update(ctx context.Context, req resource.Upda
 			hasChange = true
 		}
 	}
+	if !data.Denylistviolations.Equal(state.Denylistviolations) {
+		if config.Denylistviolations.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "denylistviolations")
+		} else {
+			hasChange = true
+		}
+	}
 	if !data.Domainresolvenow.Equal(state.Domainresolvenow) {
 		hasChange = true
 	}

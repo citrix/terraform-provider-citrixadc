@@ -192,6 +192,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 			hasChange = true
 		}
 	}
+	if !data.Allowlegacykdf.IsUnknown() && !data.Allowlegacykdf.IsNull() && !data.Allowlegacykdf.Equal(state.Allowlegacykdf) {
+		tflog.Debug(ctx, fmt.Sprintf("allowlegacykdf has changed for sslprofile"))
+		sslprofile.Allowlegacykdf = full.Allowlegacykdf
+		hasChange = true
+	}
 	if !data.Allowunknownsni.IsUnknown() && !data.Allowunknownsni.IsNull() && !data.Allowunknownsni.Equal(state.Allowunknownsni) {
 		tflog.Debug(ctx, fmt.Sprintf("allowunknownsni has changed for sslprofile"))
 		sslprofile.Allowunknownsni = full.Allowunknownsni
@@ -318,6 +323,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 			sslprofile.Dropreqwithnohostheader = full.Dropreqwithnohostheader
 			hasChange = true
 		}
+	}
+	if !data.Dynamicclientcert.IsUnknown() && !data.Dynamicclientcert.IsNull() && !data.Dynamicclientcert.Equal(state.Dynamicclientcert) {
+		tflog.Debug(ctx, fmt.Sprintf("dynamicclientcert has changed for sslprofile"))
+		sslprofile.Dynamicclientcert = full.Dynamicclientcert
+		hasChange = true
 	}
 	if !data.Encryptedclienthello.Equal(state.Encryptedclienthello) {
 		tflog.Debug(ctx, fmt.Sprintf("encryptedclienthello has changed for sslprofile"))
@@ -631,6 +641,11 @@ func (r *SslprofileResource) Update(ctx context.Context, req resource.UpdateRequ
 			sslprofile.Strictcachecks = full.Strictcachecks
 			hasChange = true
 		}
+	}
+	if !data.Strictclientekucheck.IsUnknown() && !data.Strictclientekucheck.IsNull() && !data.Strictclientekucheck.Equal(state.Strictclientekucheck) {
+		tflog.Debug(ctx, fmt.Sprintf("strictclientekucheck has changed for sslprofile"))
+		sslprofile.Strictclientekucheck = full.Strictclientekucheck
+		hasChange = true
 	}
 	if !data.Strictsigdigestcheck.IsUnknown() && !data.Strictsigdigestcheck.IsNull() && !data.Strictsigdigestcheck.Equal(state.Strictsigdigestcheck) {
 		tflog.Debug(ctx, fmt.Sprintf("strictsigdigestcheck has changed for sslprofile"))

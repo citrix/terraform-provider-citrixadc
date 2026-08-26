@@ -35,6 +35,7 @@ type LbparameterResourceModel struct {
 	Monitorskipmaxclient          types.String `tfsdk:"monitorskipmaxclient"`
 	Preferdirectroute             types.String `tfsdk:"preferdirectroute"`
 	Proximityfromself             types.String `tfsdk:"proximityfromself"`
+	Radiusmessageauthenticator    types.String `tfsdk:"radiusmessageauthenticator"`
 	Retainservicestate            types.String `tfsdk:"retainservicestate"`
 	Startuprrfactor               types.Int64  `tfsdk:"startuprrfactor"`
 	Storemqttclientidandusername  types.String `tfsdk:"storemqttclientidandusername"`
@@ -151,6 +152,11 @@ func (r *LbparameterResource) Schema(ctx context.Context, req resource.SchemaReq
 				Default:     stringdefault.StaticString("NO"),
 				Description: "Use the ADC location instead of client IP for static proximity LB or GSLB decision.",
 			},
+			"radiusmessageauthenticator": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "If enabled, NetScaler will verify the message authenticator and also generate message authenticator if not present.",
+			},
 			"retainservicestate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -251,6 +257,9 @@ func lbparameterGetThePayloadFromthePlan(ctx context.Context, data *LbparameterR
 	}
 	if !data.Proximityfromself.IsNull() {
 		lbparameter.Proximityfromself = data.Proximityfromself.ValueString()
+	}
+	if !data.Radiusmessageauthenticator.IsNull() {
+		lbparameter.Radiusmessageauthenticator = data.Radiusmessageauthenticator.ValueString()
 	}
 	if !data.Retainservicestate.IsNull() {
 		lbparameter.Retainservicestate = data.Retainservicestate.ValueString()
@@ -375,6 +384,11 @@ func lbparameterSetAttrFromGet(ctx context.Context, data *LbparameterResourceMod
 		data.Proximityfromself = types.StringValue(val.(string))
 	} else {
 		data.Proximityfromself = types.StringNull()
+	}
+	if val, ok := getResponseData["radiusmessageauthenticator"]; ok && val != nil {
+		data.Radiusmessageauthenticator = types.StringValue(val.(string))
+	} else {
+		data.Radiusmessageauthenticator = types.StringNull()
 	}
 	if val, ok := getResponseData["retainservicestate"]; ok && val != nil {
 		data.Retainservicestate = types.StringValue(val.(string))

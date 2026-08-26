@@ -25,6 +25,7 @@ type NsicapprofileResourceModel struct {
 	Hostheader          types.String `tfsdk:"hostheader"`
 	Inserthttprequest   types.String `tfsdk:"inserthttprequest"`
 	Inserticapheaders   types.String `tfsdk:"inserticapheaders"`
+	Inspecthttp2        types.String `tfsdk:"inspecthttp2"`
 	Logaction           types.String `tfsdk:"logaction"`
 	Mode                types.String `tfsdk:"mode"`
 	Name                types.String `tfsdk:"name"`
@@ -71,6 +72,11 @@ func (r *NsicapprofileResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional:    true,
 				Computed:    true,
 				Description: "Insert custom ICAP headers in the ICAP request to send to ICAP server. The headers can be static or can be dynamically constructed using PI Policy Expression. For example, to send static user agent and Client's IP address, the expression can be specified as \"User-Agent: NS-ICAP-Client/V1.0\\r\\nX-Client-IP: \"+CLIENT.IP.SRC+\"\\r\\n\".\nThe Citrix ADC does not check the validity of the specified header name-value. You must manually validate the specified header syntax.",
+			},
+			"inspecthttp2": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or Disable ICAP inspection for HTTP/2 traffic.",
 			},
 			"logaction": schema.StringAttribute{
 				Optional:    true,
@@ -150,6 +156,9 @@ func nsicapprofileGetThePayloadFromtheConfig(ctx context.Context, data *Nsicappr
 	if !data.Inserticapheaders.IsNull() && !data.Inserticapheaders.IsUnknown() {
 		nsicapprofile.Inserticapheaders = data.Inserticapheaders.ValueString()
 	}
+	if !data.Inspecthttp2.IsNull() && !data.Inspecthttp2.IsUnknown() {
+		nsicapprofile.Inspecthttp2 = data.Inspecthttp2.ValueString()
+	}
 	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
 		nsicapprofile.Logaction = data.Logaction.ValueString()
 	}
@@ -214,6 +223,11 @@ func nsicapprofileSetAttrFromGet(ctx context.Context, data *NsicapprofileResourc
 		data.Inserticapheaders = types.StringValue(val.(string))
 	} else if data.Inserticapheaders.IsUnknown() {
 		data.Inserticapheaders = types.StringNull()
+	}
+	if val, ok := getResponseData["inspecthttp2"]; ok && val != nil {
+		data.Inspecthttp2 = types.StringValue(val.(string))
+	} else if data.Inspecthttp2.IsUnknown() {
+		data.Inspecthttp2 = types.StringNull()
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))

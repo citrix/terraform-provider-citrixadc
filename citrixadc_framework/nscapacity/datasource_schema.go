@@ -20,6 +20,11 @@ func NscapacityDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Product edition.",
 			},
+			"ignoreexpiry": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Value to mention if days to expire data needs to be fetched or not.",
+			},
 			"nodeid": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

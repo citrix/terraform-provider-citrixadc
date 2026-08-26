@@ -42,6 +42,11 @@ func SslserviceSslpolicyBindingDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name of the SSL service for which to set advanced configuration.",
 			},
+			"type": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The phase of the SSL connection in which the policy rule is evaluated.",
+			},
 		},
 	}
 }

@@ -16,6 +16,11 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "When set to YES, attempt to use the TLS Extended Master Secret (EMS, as\ndescribed in RFC 7627) when negotiating TLS 1.0, TLS 1.1 and TLS 1.2\nconnection parameters. EMS must be supported by both the TLS client and server\nin order to be enabled during a handshake. This setting applies to both\nfrontend and backend SSL profiles.",
 			},
+			"allowlegacykdf": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "FIPS 140-3 certification requires all handshakes without EMS be blocked. Such KDFs are allowed by default. This setting is to allow/disallow such legacy KDFs when needed. This setting applies to both frontend and backend SSL profiles.",
+			},
 			"allowunknownsni": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -110,6 +115,11 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Host header check for SNI enabled sessions. If this check is enabled and the HTTP request does not contain the host header for SNI enabled sessions(i.e vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension), the request is dropped.",
+			},
+			"dynamicclientcert": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable Dynamic Client Certificate Generation for SSL sessions.",
 			},
 			"encryptedclienthello": schema.StringAttribute{
 				Optional:    true,
@@ -340,6 +350,11 @@ func SslprofileDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Enable strict CA certificate checks on the appliance.",
+			},
+			"strictclientekucheck": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable strict EKU extension check during client authentication.",
 			},
 			"strictsigdigestcheck": schema.StringAttribute{
 				Optional:    true,

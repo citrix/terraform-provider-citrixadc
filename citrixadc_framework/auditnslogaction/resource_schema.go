@@ -25,6 +25,7 @@ type AuditnslogactionResourceModel struct {
 	Appflowexport        types.String `tfsdk:"appflowexport"`
 	Contentinspectionlog types.String `tfsdk:"contentinspectionlog"`
 	Dateformat           types.String `tfsdk:"dateformat"`
+	Denylistviolations   types.String `tfsdk:"denylistviolations"`
 	Domainresolvenow     types.Bool   `tfsdk:"domainresolvenow"`
 	Domainresolveretry   types.Int64  `tfsdk:"domainresolveretry"`
 	Logfacility          types.String `tfsdk:"logfacility"`
@@ -80,6 +81,11 @@ func (r *AuditnslogactionResource) Schema(ctx context.Context, req resource.Sche
 				Computed:    true,
 				Default:     stringdefault.StaticString("MMDDYYYY"),
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY - U.S. style month/date/year format.\n* DDMMYYYY - European style date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
+			},
+			"denylistviolations": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Log denylist violations.",
 			},
 			"domainresolvenow": schema.BoolAttribute{
 				Optional:    true,
@@ -197,6 +203,9 @@ func auditnslogactionGetThePayloadFromtheConfig(ctx context.Context, data *Audit
 	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditnslogaction.Dateformat = data.Dateformat.ValueString()
 	}
+	if !data.Denylistviolations.IsNull() && !data.Denylistviolations.IsUnknown() {
+		auditnslogaction.Denylistviolations = data.Denylistviolations.ValueString()
+	}
 	if !data.Domainresolvenow.IsNull() && !data.Domainresolvenow.IsUnknown() {
 		auditnslogaction.Domainresolvenow = data.Domainresolvenow.ValueBool()
 	}
@@ -279,6 +288,11 @@ func auditnslogactionSetAttrFromGet(ctx context.Context, data *AuditnslogactionR
 		data.Dateformat = types.StringValue(val.(string))
 	} else {
 		data.Dateformat = types.StringNull()
+	}
+	if val, ok := getResponseData["denylistviolations"]; ok && val != nil {
+		data.Denylistviolations = types.StringValue(val.(string))
+	} else {
+		data.Denylistviolations = types.StringNull()
 	}
 	if val, ok := getResponseData["domainresolvenow"]; ok && val != nil {
 		data.Domainresolvenow = types.BoolValue(val.(bool))

@@ -49,6 +49,7 @@ type SslserviceResourceModel struct {
 	Sslredirect          types.String `tfsdk:"sslredirect"`
 	Sslv2redirect        types.String `tfsdk:"sslv2redirect"`
 	Sslv2url             types.String `tfsdk:"sslv2url"`
+	Strictclientekucheck types.String `tfsdk:"strictclientekucheck"`
 	Strictsigdigestcheck types.String `tfsdk:"strictsigdigestcheck"`
 	Tls1                 types.String `tfsdk:"tls1"`
 	Tls11                types.String `tfsdk:"tls11"`
@@ -229,6 +230,11 @@ func (r *SslserviceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 				Description: "URL of the page to which to redirect the client in case of a protocol version mismatch. Typically, this page has a clear explanation of the error or an alternative location that the transaction can continue from.\nThis parameter is not applicable when configuring a backend service.",
 			},
+			"strictclientekucheck": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable strict EKU extension check during client authentication. This can be set to DISABLED only for SSL service types Internal and Transparent.",
+			},
 			"strictsigdigestcheck": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -360,6 +366,9 @@ func sslserviceGetThePayloadFromtheConfig(ctx context.Context, data *SslserviceR
 	}
 	if !data.Sslv2url.IsNull() && !data.Sslv2url.IsUnknown() {
 		sslservice.Sslv2url = data.Sslv2url.ValueString()
+	}
+	if !data.Strictclientekucheck.IsNull() && !data.Strictclientekucheck.IsUnknown() {
+		sslservice.Strictclientekucheck = data.Strictclientekucheck.ValueString()
 	}
 	if !data.Strictsigdigestcheck.IsNull() && !data.Strictsigdigestcheck.IsUnknown() {
 		sslservice.Strictsigdigestcheck = data.Strictsigdigestcheck.ValueString()
@@ -528,6 +537,10 @@ func sslserviceGetThePayloadForUpdate(ctx context.Context, data *SslserviceResou
 	}
 	if v, ok := changedString(data.Sslv2url, state.Sslv2url); ok {
 		sslservice.Sslv2url = v
+		hasChange = true
+	}
+	if v, ok := changedString(data.Strictclientekucheck, state.Strictclientekucheck); ok {
+		sslservice.Strictclientekucheck = v
 		hasChange = true
 	}
 	if v, ok := changedString(data.Strictsigdigestcheck, state.Strictsigdigestcheck); ok {
@@ -727,6 +740,11 @@ func sslserviceSetAttrFromGet(ctx context.Context, data *SslserviceResourceModel
 		data.Sslv2url = types.StringValue(val.(string))
 	} else if data.Sslv2url.IsUnknown() {
 		data.Sslv2url = types.StringNull()
+	}
+	if val, ok := getResponseData["strictclientekucheck"]; ok && val != nil {
+		data.Strictclientekucheck = types.StringValue(val.(string))
+	} else if data.Strictclientekucheck.IsUnknown() {
+		data.Strictclientekucheck = types.StringNull()
 	}
 	if val, ok := getResponseData["strictsigdigestcheck"]; ok && val != nil {
 		data.Strictsigdigestcheck = types.StringValue(val.(string))

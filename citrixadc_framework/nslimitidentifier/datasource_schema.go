@@ -14,6 +14,11 @@ func NslimitidentifierDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name for a rate limit identifier. Must begin with an ASCII letter or underscore (_) character, and must consist only of ASCII alphanumeric or underscore characters. Reserved words must not be used.",
 			},
+			"alertsintimeslice": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Number of appflow alerts to be sent in the timeslice configured. A value of 0 indicates that alerts are disabled. A value of 65535 indicates no limit on number of appflow alerts.",
+			},
 			"limittype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -38,6 +43,11 @@ func NslimitidentifierDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Maximum number of requests that are allowed in the given timeslice when requests (mode is set as REQUEST_RATE) are tracked per timeslice.\nWhen connections (mode is set as CONNECTION) are tracked, it is the total number of connections that would be let through.",
+			},
+			"timealign": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Value MINUTE will align the time windows for a configured timeslice to Minute boundary. TimeSlice values should be integrals of 60000ms when value MINUTE is choosen. Default : NONE, timeslice alignments will happen with next 10ms.",
 			},
 			"timeslice": schema.Int64Attribute{
 				Optional:    true,

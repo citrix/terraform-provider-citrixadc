@@ -213,6 +213,14 @@ func (r *RdpclientprofileResource) Update(ctx context.Context, req resource.Upda
 		tflog.Debug(ctx, fmt.Sprintf("rdplistener has changed for rdpclientprofile"))
 		hasChange = true
 	}
+	if !data.Rdpurlmaxlen.Equal(state.Rdpurlmaxlen) {
+		tflog.Debug(ctx, fmt.Sprintf("rdpurlmaxlen has changed for rdpclientprofile"))
+		hasChange = true
+	}
+	if !data.Rdpurlmaxlencheck.Equal(state.Rdpurlmaxlencheck) {
+		tflog.Debug(ctx, fmt.Sprintf("rdpurlmaxlencheck has changed for rdpclientprofile"))
+		hasChange = true
+	}
 	if !data.Rdpurloverride.Equal(state.Rdpurloverride) {
 		tflog.Debug(ctx, fmt.Sprintf("rdpurloverride has changed for rdpclientprofile"))
 		if config.Rdpurloverride.IsNull() { // removed from config -> unset it

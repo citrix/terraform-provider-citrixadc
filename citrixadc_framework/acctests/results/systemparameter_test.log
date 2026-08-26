@@ -1,0 +1,17 @@
+# Acceptance test results: systemparameter
+# Sweep: NSNETAUTO-1162 50-resource A+B run
+# Categories: PASS(first ADC) / PASS(alternative ADC) / FAILED / SKIPPED
+
+## PASS on first ADC (5)
+  PASS  TestAccSystemparameterDataSource_basic   (@.151)
+  PASS  TestAccSystemparameter_basic   (@.151)
+  PASS  TestAccSystemparameter_import   (@.151)
+  PASS  TestAccSystemparameter_sdkv2StateUpgrade   (@.151)
+  PASS  TestAccSystemparameter_unset   (@.151)
+
+## PASS on alternative ADC (0)
+
+## FAILED (0)
+
+## SKIPPED (0)
+

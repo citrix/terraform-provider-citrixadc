@@ -18,6 +18,7 @@ import (
 // so the two need separate models even though they share most fields.
 type ServicegroupLbmonitorBindingDataSourceModel struct {
 	Id               types.String `tfsdk:"id"`
+	Aigwprofilename  types.String `tfsdk:"aigwprofilename"`
 	Customserverid   types.String `tfsdk:"customserverid"`
 	Dbsttl           types.Int64  `tfsdk:"dbsttl"`
 	Hashid           types.Int64  `tfsdk:"hashid"`
@@ -38,6 +39,11 @@ func ServicegroupLbmonitorBindingDataSourceSchema() schema.Schema {
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.",
 			},
 			"customserverid": schema.StringAttribute{
 				Optional:    true,
@@ -111,6 +117,11 @@ func ServicegroupLbmonitorBindingDataSourceSchema() schema.Schema {
 func servicegroup_lbmonitor_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ServicegroupLbmonitorBindingDataSourceModel, getResponseData map[string]interface{}) *ServicegroupLbmonitorBindingDataSourceModel {
 	tflog.Debug(ctx, "In servicegroup_lbmonitor_bindingSetAttrFromGetForDatasource Function")
 
+	if val, ok := getResponseData["aigwprofilename"]; ok && val != nil {
+		data.Aigwprofilename = types.StringValue(val.(string))
+	} else {
+		data.Aigwprofilename = types.StringNull()
+	}
 	if val, ok := getResponseData["customserverid"]; ok && val != nil {
 		data.Customserverid = types.StringValue(val.(string))
 	} else {

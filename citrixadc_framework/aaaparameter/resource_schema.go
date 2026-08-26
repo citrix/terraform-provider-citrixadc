@@ -22,6 +22,7 @@ type AaaparameterResourceModel struct {
 	Aaadnatip                  types.String `tfsdk:"aaadnatip"`
 	Aaasessionloglevel         types.String `tfsdk:"aaasessionloglevel"`
 	Apitokencache              types.String `tfsdk:"apitokencache"`
+	Classicendpoints           types.String `tfsdk:"classicendpoints"`
 	Defaultauthtype            types.String `tfsdk:"defaultauthtype"`
 	Defaultcspheader           types.String `tfsdk:"defaultcspheader"`
 	Dynaddr                    types.String `tfsdk:"dynaddr"`
@@ -43,6 +44,7 @@ type AaaparameterResourceModel struct {
 	Securityinsights           types.String `tfsdk:"securityinsights"`
 	Tokenintrospectioninterval types.Int64  `tfsdk:"tokenintrospectioninterval"`
 	Wafprotection              types.List   `tfsdk:"wafprotection"`
+	Webviewendpoints           types.String `tfsdk:"webviewendpoints"`
 }
 
 func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -74,6 +76,11 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Option to enable/disable API cache feature.",
+			},
+			"classicendpoints": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Parameter to enable/disable classic endpoints.",
 			},
 			"defaultauthtype": schema.StringAttribute{
 				Optional:    true,
@@ -189,6 +196,11 @@ func (r *AaaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "Entities for which WAF Protection need to be applied.\nAvailable settings function as follows:\n* DEFAULT - No Endpoint WAF protection.\n* AUTH - Endpoints used for Authentication applicable for both AAATM, IDP, GATEWAY use cases.\n* VPN - Endpoints used for Gateway use cases.\n* PORTAL - Endpoints related to web portal.\n* DISABLED - No Endpoint WAF protection.\nCurrently supported only in default partition",
 			},
+			"webviewendpoints": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Parameter to enable/disable webview endpoints.",
+			},
 		},
 	}
 }
@@ -209,6 +221,9 @@ func aaaparameterGetThePayloadFromtheConfig(ctx context.Context, data *Aaaparame
 	}
 	if !data.Apitokencache.IsNull() && !data.Apitokencache.IsUnknown() {
 		aaaparameter.Apitokencache = data.Apitokencache.ValueString()
+	}
+	if !data.Classicendpoints.IsNull() && !data.Classicendpoints.IsUnknown() {
+		aaaparameter.Classicendpoints = data.Classicendpoints.ValueString()
 	}
 	if !data.Defaultauthtype.IsNull() && !data.Defaultauthtype.IsUnknown() {
 		aaaparameter.Defaultauthtype = data.Defaultauthtype.ValueString()
@@ -275,6 +290,9 @@ func aaaparameterGetThePayloadFromtheConfig(ctx context.Context, data *Aaaparame
 		data.Wafprotection.ElementsAs(ctx, &wafprotectionList, false)
 		aaaparameter.Wafprotection = wafprotectionList
 	}
+	if !data.Webviewendpoints.IsNull() && !data.Webviewendpoints.IsUnknown() {
+		aaaparameter.Webviewendpoints = data.Webviewendpoints.ValueString()
+	}
 
 	return aaaparameter
 }
@@ -302,6 +320,11 @@ func aaaparameterSetAttrFromGet(ctx context.Context, data *AaaparameterResourceM
 		data.Apitokencache = types.StringValue(val.(string))
 	} else {
 		data.Apitokencache = types.StringNull()
+	}
+	if val, ok := getResponseData["classicendpoints"]; ok && val != nil {
+		data.Classicendpoints = types.StringValue(val.(string))
+	} else {
+		data.Classicendpoints = types.StringNull()
 	}
 	if val, ok := getResponseData["defaultauthtype"]; ok && val != nil {
 		data.Defaultauthtype = types.StringValue(val.(string))
@@ -427,6 +450,11 @@ func aaaparameterSetAttrFromGet(ctx context.Context, data *AaaparameterResourceM
 		}
 	} else {
 		data.Wafprotection = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["webviewendpoints"]; ok && val != nil {
+		data.Webviewendpoints = types.StringValue(val.(string))
+	} else {
+		data.Webviewendpoints = types.StringNull()
 	}
 
 	// Set ID for the resource

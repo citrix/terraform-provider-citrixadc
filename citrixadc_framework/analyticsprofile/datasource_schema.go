@@ -177,6 +177,11 @@ func AnalyticsprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "This option indicates the whether managementlog should be sent to the REST collector.",
 			},
+			"mcpsummary": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable/disable appflow logging for MCP (Model Context Protocol) traffic.",
+			},
 			"metrics": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

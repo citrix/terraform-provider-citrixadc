@@ -17,15 +17,16 @@ import (
 
 // IcaparameterResourceModel describes the resource data model.
 type IcaparameterResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	Dfpersistence        types.String `tfsdk:"dfpersistence"`
-	Edtlosstolerant      types.String `tfsdk:"edtlosstolerant"`
-	Edtpmtuddf           types.String `tfsdk:"edtpmtuddf"`
-	Edtpmtuddftimeout    types.Int64  `tfsdk:"edtpmtuddftimeout"`
-	Edtpmtudrediscovery  types.String `tfsdk:"edtpmtudrediscovery"`
-	Enablesronhafailover types.String `tfsdk:"enablesronhafailover"`
-	Hdxinsightnonnsap    types.String `tfsdk:"hdxinsightnonnsap"`
-	L7latencyfrequency   types.Int64  `tfsdk:"l7latencyfrequency"`
+	Id                    types.String `tfsdk:"id"`
+	Dfpersistence         types.String `tfsdk:"dfpersistence"`
+	Edtlosstolerant       types.String `tfsdk:"edtlosstolerant"`
+	Edtpmtuddf            types.String `tfsdk:"edtpmtuddf"`
+	Edtpmtuddftimeout     types.Int64  `tfsdk:"edtpmtuddftimeout"`
+	Edtpmtudrediscovery   types.String `tfsdk:"edtpmtudrediscovery"`
+	Enablesronhafailover  types.String `tfsdk:"enablesronhafailover"`
+	Hdxinsightnonnsap     types.String `tfsdk:"hdxinsightnonnsap"`
+	Insightonlytodirector types.String `tfsdk:"insightonlytodirector"`
+	L7latencyfrequency    types.Int64  `tfsdk:"l7latencyfrequency"`
 }
 
 func (r *IcaparameterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -81,6 +82,11 @@ func (r *IcaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Default:     stringdefault.StaticString("YES"),
 				Description: "Enable/Disable HDXInsight for Non NSAP ICA Sessions. The default value is Yes",
 			},
+			"insightonlytodirector": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable/Disable HDX Insight data to Director even if HDX Insight policy is not configured on Gateway and Network Telemtry policy is enabled on VDA. Default value: ENABLED Possible values = ENABLED, DISABLED",
+			},
 			"l7latencyfrequency": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -116,6 +122,9 @@ func icaparameterGetThePayloadFromtheConfig(ctx context.Context, data *Icaparame
 	}
 	if !data.Hdxinsightnonnsap.IsNull() && !data.Hdxinsightnonnsap.IsUnknown() {
 		icaparameter.Hdxinsightnonnsap = data.Hdxinsightnonnsap.ValueString()
+	}
+	if !data.Insightonlytodirector.IsNull() && !data.Insightonlytodirector.IsUnknown() {
+		icaparameter.Insightonlytodirector = data.Insightonlytodirector.ValueString()
 	}
 	if !data.L7latencyfrequency.IsNull() && !data.L7latencyfrequency.IsUnknown() {
 		icaparameter.L7latencyfrequency = utils.IntPtr(int(data.L7latencyfrequency.ValueInt64()))
@@ -168,6 +177,11 @@ func icaparameterSetAttrFromGet(ctx context.Context, data *IcaparameterResourceM
 		data.Hdxinsightnonnsap = types.StringValue(val.(string))
 	} else if data.Hdxinsightnonnsap.IsUnknown() {
 		data.Hdxinsightnonnsap = types.StringNull()
+	}
+	if val, ok := getResponseData["insightonlytodirector"]; ok && val != nil {
+		data.Insightonlytodirector = types.StringValue(val.(string))
+	} else if data.Insightonlytodirector.IsUnknown() {
+		data.Insightonlytodirector = types.StringNull()
 	}
 	if val, ok := getResponseData["l7latencyfrequency"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

@@ -19,6 +19,7 @@ import (
 // SnmpalarmResourceModel describes the resource data model.
 type SnmpalarmResourceModel struct {
 	Id             types.String `tfsdk:"id"`
+	Holdtime       types.Int64  `tfsdk:"holdtime"`
 	Logging        types.String `tfsdk:"logging"`
 	Normalvalue    types.Int64  `tfsdk:"normalvalue"`
 	Severity       types.String `tfsdk:"severity"`
@@ -35,6 +36,11 @@ func (r *SnmpalarmResource) Schema(ctx context.Context, req resource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the snmpalarm resource.",
+			},
+			"holdtime": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Hold time Interval, in seconds, at which the Citrix ADC generates SNMP trap messages when the conditions specified in the SNMP alarm are met recursively for a given period of time. It is recommended to have the hold time interval period in multiple of 7 seconds as the ADC tries to validate the alarms every 7 seconds. Can only be specified for the MGMT-CPU-USAGE alarm.",
 			},
 			"logging": schema.StringAttribute{
 				Optional: true,
@@ -92,6 +98,9 @@ func snmpalarmGetThePayloadFromthePlan(ctx context.Context, data *SnmpalarmResou
 	tflog.Debug(ctx, "In snmpalarmGetThePayloadFromthePlan Function")
 
 	snmpalarm := snmp.Snmpalarm{}
+	if !data.Holdtime.IsNull() && !data.Holdtime.IsUnknown() {
+		snmpalarm.Holdtime = utils.IntPtr(int(data.Holdtime.ValueInt64()))
+	}
 	if !data.Logging.IsNull() && !data.Logging.IsUnknown() {
 		snmpalarm.Logging = data.Logging.ValueString()
 	}
@@ -128,6 +137,9 @@ func snmpalarmGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Snmpa
 	if !data.Trapname.IsNull() && !data.Trapname.IsUnknown() {
 		snmpalarm.Trapname = data.Trapname.ValueString()
 	}
+	if !data.Holdtime.IsNull() && !data.Holdtime.IsUnknown() {
+		snmpalarm.Holdtime = utils.IntPtr(int(data.Holdtime.ValueInt64()))
+	}
 	if !data.Logging.IsNull() && !data.Logging.IsUnknown() {
 		snmpalarm.Logging = data.Logging.ValueString()
 	}
@@ -156,6 +168,13 @@ func snmpalarmSetAttrFromGet(ctx context.Context, data *SnmpalarmResourceModel, 
 	// the omit-on-default trap where NITRO omits an attribute (e.g. normalvalue,
 	// which the ADC does not echo back on GET) and we would otherwise clobber a
 	// value the user actually configured.
+	if val, ok := getResponseData["holdtime"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Holdtime = types.Int64Value(intVal)
+		}
+	} else if data.Holdtime.IsUnknown() {
+		data.Holdtime = types.Int64Null()
+	}
 	if val, ok := getResponseData["logging"]; ok && val != nil {
 		data.Logging = types.StringValue(val.(string))
 	} else if data.Logging.IsUnknown() {

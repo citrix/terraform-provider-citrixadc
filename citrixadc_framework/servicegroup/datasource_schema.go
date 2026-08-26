@@ -11,6 +11,10 @@ func ServicegroupDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			"appflowlog": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -119,6 +123,10 @@ func ServicegroupDataSourceSchema() schema.Schema {
 				Optional: true,
 				Computed: true,
 			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
 			"memberport": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -215,6 +223,10 @@ func ServicegroupDataSourceSchema() schema.Schema {
 				Computed: true,
 			},
 			"usip": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"wasmmodule": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

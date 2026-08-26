@@ -485,6 +485,7 @@ func servicePayloadHasMutableFields(payload *basic.Service) bool {
 func serviceHasUpdatableChange(data, state *ServiceResourceModel) bool {
 	return !data.Internal.Equal(state.Internal) ||
 		!data.Accessdown.Equal(state.Accessdown) ||
+		!data.Aigwprofilename.Equal(state.Aigwprofilename) ||
 		!data.All.Equal(state.All) ||
 		!data.Appflowlog.Equal(state.Appflowlog) ||
 		!data.Cacheable.Equal(state.Cacheable) ||
@@ -505,6 +506,7 @@ func serviceHasUpdatableChange(data, state *ServiceResourceModel) bool {
 		!data.Maxbandwidth.Equal(state.Maxbandwidth) ||
 		!data.Maxclient.Equal(state.Maxclient) ||
 		!data.Maxreq.Equal(state.Maxreq) ||
+		!data.Mcpprofilename.Equal(state.Mcpprofilename) ||
 		!data.Monconnectionclose.Equal(state.Monconnectionclose) ||
 		!data.Monitornamesvc.Equal(state.Monitornamesvc) ||
 		!data.Monthreshold.Equal(state.Monthreshold) ||
@@ -521,6 +523,7 @@ func serviceHasUpdatableChange(data, state *ServiceResourceModel) bool {
 		!data.Tcpprofilename.Equal(state.Tcpprofilename) ||
 		!data.Useproxyport.Equal(state.Useproxyport) ||
 		!data.Usip.Equal(state.Usip) ||
+		!data.Wasmmodule.Equal(state.Wasmmodule) ||
 		!data.Weight.Equal(state.Weight)
 }
 

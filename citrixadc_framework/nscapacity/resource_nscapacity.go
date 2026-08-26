@@ -156,9 +156,9 @@ func (r *NscapacityResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 	// The remaining mutable attributes are not spec-unsettable; any change is a
 	// normal config push.
-	if !data.Edition.Equal(state.Edition) || !data.Nodeid.Equal(state.Nodeid) ||
-		!data.Password.Equal(state.Password) || !data.Unit.Equal(state.Unit) ||
-		!data.Username.Equal(state.Username) {
+	if !data.Edition.Equal(state.Edition) || !data.Ignoreexpiry.Equal(state.Ignoreexpiry) ||
+		!data.Nodeid.Equal(state.Nodeid) || !data.Password.Equal(state.Password) ||
+		!data.Unit.Equal(state.Unit) || !data.Username.Equal(state.Username) {
 		hasChange = true
 	}
 

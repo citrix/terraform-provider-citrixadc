@@ -11,6 +11,11 @@ func CsvserverDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the AIGW frontend profile. For the content switching vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add cs vserver, it cannot be unset. Minimum length =  1 Maximum length =  255",
+			},
 			"apiprofile": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -190,6 +195,11 @@ func CsvserverDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.",
+			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the MCP profile to attach to this cs vserver. Enables MCP protocol processing.",
 			},
 			"mssqlserverversion": schema.StringAttribute{
 				Optional:    true,
@@ -419,6 +429,11 @@ func CsvserverDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of virtual server IP and port header, for use with the VServer IP Port Insertion parameter.",
+			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
 			},
 			"sslcertkey": schema.StringAttribute{
 				Optional:    true,

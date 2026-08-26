@@ -130,6 +130,10 @@ func (r *NslimitidentifierResource) Update(ctx context.Context, req resource.Upd
 	// Check if there are any changes in updateable attributes
 	hasChange := false
 	attributesToUnset := []string{}
+	if !data.Alertsintimeslice.Equal(state.Alertsintimeslice) {
+		tflog.Debug(ctx, "alertsintimeslice has changed for nslimitidentifier")
+		hasChange = true
+	}
 	if !data.Limittype.Equal(state.Limittype) {
 		tflog.Debug(ctx, "limittype has changed for nslimitidentifier")
 		if config.Limittype.IsNull() { // removed from config -> unset it
@@ -161,6 +165,10 @@ func (r *NslimitidentifierResource) Update(ctx context.Context, req resource.Upd
 		} else {
 			hasChange = true
 		}
+	}
+	if !data.Timealign.Equal(state.Timealign) {
+		tflog.Debug(ctx, "timealign has changed for nslimitidentifier")
+		hasChange = true
 	}
 	if !data.Timeslice.Equal(state.Timeslice) {
 		tflog.Debug(ctx, "timeslice has changed for nslimitidentifier")

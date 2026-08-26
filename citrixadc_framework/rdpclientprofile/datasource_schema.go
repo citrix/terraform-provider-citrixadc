@@ -83,6 +83,16 @@ func RdpclientprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "IP address (or) Fully-qualified domain name(FQDN) of the RDP Listener with the port in the format IP:Port (or) FQDN:Port",
 			},
+			"rdpurlmaxlen": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Indicates the permissible max length of the RDP URL. Set to 256 by default.",
+			},
+			"rdpurlmaxlencheck": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This setting determines whether the RDP URL max length check is enforced during RDP file generation.",
+			},
 			"rdpurloverride": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

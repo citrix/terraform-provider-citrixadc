@@ -116,6 +116,14 @@ func (r *PolicyparamResource) Update(ctx context.Context, req resource.UpdateReq
 	// Determine changes vs. removed-from-config attributes to unset.
 	hasChange := false
 	attributesToUnset := []string{}
+	if !data.Maxeventsize.Equal(state.Maxeventsize) {
+		tflog.Debug(ctx, "maxeventsize has changed for policyparam")
+		hasChange = true
+	}
+	if !data.Maxeventsizeexceedaction.Equal(state.Maxeventsizeexceedaction) {
+		tflog.Debug(ctx, "maxeventsizeexceedaction has changed for policyparam")
+		hasChange = true
+	}
 	if !data.Timeout.Equal(state.Timeout) {
 		tflog.Debug(ctx, "timeout has changed for policyparam")
 		if config.Timeout.IsNull() { // removed from config -> unset it

@@ -36,6 +36,11 @@ func AuditsyslogparamsDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY - U.S. style month/date/year format.\n* DDMMYYYY. European style  -date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
 			},
+			"denylistviolations": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Log denylist violations.",
+			},
 			"dns": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

@@ -52,17 +52,29 @@ type InstallerResource struct {
 // attribute has a matching tfsdk field, with the same names/types as the legacy
 // SDKv2 schema.
 type InstallerResourceModel struct {
-	Id                    types.String `tfsdk:"id"`
-	Enhancedupgrade       types.Bool   `tfsdk:"enhancedupgrade"`
-	L                     types.Bool   `tfsdk:"l"`
-	Resizeswapvar         types.Bool   `tfsdk:"resizeswapvar"`
-	Url                   types.String `tfsdk:"url"`
-	Y                     types.Bool   `tfsdk:"y"`
-	WaitUntilReachable    types.Bool   `tfsdk:"wait_until_reachable"`
-	ReachableTimeout      types.String `tfsdk:"reachable_timeout"`
-	ReachablePollDelay    types.String `tfsdk:"reachable_poll_delay"`
-	ReachablePollInterval types.String `tfsdk:"reachable_poll_interval"`
-	ReachablePollTimeout  types.String `tfsdk:"reachable_poll_timeout"`
+	Id                       types.String `tfsdk:"id"`
+	Advancedoptions          types.String `tfsdk:"advancedoptions"`
+	Answeryestoall           types.Bool   `tfsdk:"answeryestoall"`
+	Deletesigfiles           types.Bool   `tfsdk:"deletesigfiles"`
+	Dontchecknsconf          types.Bool   `tfsdk:"dontchecknsconf"`
+	Dontreboot               types.Bool   `tfsdk:"dontreboot"`
+	Enhancedupgrade          types.Bool   `tfsdk:"enhancedupgrade"`
+	Exitonlicserverconnerror types.Bool   `tfsdk:"exitonlicserverconnerror"`
+	Fipsinstall              types.Bool   `tfsdk:"fipsinstall"`
+	Ignorecertcheckerrors    types.Bool   `tfsdk:"ignorecertcheckerrors"`
+	Ignorensapimgrerrors     types.Bool   `tfsdk:"ignorensapimgrerrors"`
+	Ignoreunsavedconfig      types.Bool   `tfsdk:"ignoreunsavedconfig"`
+	Ignoreunsyncedconfig     types.Bool   `tfsdk:"ignoreunsyncedconfig"`
+	L                        types.Bool   `tfsdk:"l"`
+	Precheck                 types.Bool   `tfsdk:"precheck"`
+	Resizeswapvar            types.Bool   `tfsdk:"resizeswapvar"`
+	Url                      types.String `tfsdk:"url"`
+	Y                        types.Bool   `tfsdk:"y"`
+	WaitUntilReachable       types.Bool   `tfsdk:"wait_until_reachable"`
+	ReachableTimeout         types.String `tfsdk:"reachable_timeout"`
+	ReachablePollDelay       types.String `tfsdk:"reachable_poll_delay"`
+	ReachablePollInterval    types.String `tfsdk:"reachable_poll_interval"`
+	ReachablePollTimeout     types.String `tfsdk:"reachable_poll_timeout"`
 }
 
 func (r *InstallerResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -85,6 +97,114 @@ func (r *InstallerResource) Schema(ctx context.Context, req resource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the installer resource.",
+			},
+			"advancedoptions": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this string to pass extra flags which are not yet supported. Example: -flag1 -flag2 -flag3.",
+			},
+			"answeryestoall": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to answer yes to all prompts.",
+			},
+			"deletesigfiles": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to delete all signature files and associated kernel images during installation.",
+			},
+			"dontchecknsconf": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to skip ns.conf version equivalence check during downgrade.",
+			},
+			"dontreboot": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to prevent reboot after installation when answerYesToAll is true.",
+			},
+			"exitonlicserverconnerror": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to exit on license server connectivity errors.",
+			},
+			"fipsinstall": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to perform FIPS installation.",
+			},
+			"ignorecertcheckerrors": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to ignore certificate digest verification errors during build update.",
+			},
+			"ignorensapimgrerrors": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to ignore nsapimgr symbols not found error(s) during installation.",
+			},
+			"ignoreunsavedconfig": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to ignore unsaved config check during build update.",
+			},
+			"ignoreunsyncedconfig": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to ignore unsynced HA config check during build update.",
+			},
+			"precheck": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
+				Description: "Use this flag to run all installation pre-checks in a single step.",
 			},
 			"enhancedupgrade": schema.BoolAttribute{
 				Optional: true,
@@ -352,11 +472,23 @@ func installerGetThePayloadFromthePlan(ctx context.Context, data *InstallerResou
 	tflog.Debug(ctx, "In installerGetThePayloadFromthePlan Function")
 
 	install := utility.Install{
-		Enhancedupgrade: data.Enhancedupgrade.ValueBool(),
-		L:               data.L.ValueBool(),
-		Resizeswapvar:   data.Resizeswapvar.ValueBool(),
-		Url:             data.Url.ValueString(),
-		Y:               data.Y.ValueBool(),
+		Advancedoptions:          data.Advancedoptions.ValueString(),
+		Answeryestoall:           data.Answeryestoall.ValueBool(),
+		Deletesigfiles:           data.Deletesigfiles.ValueBool(),
+		Dontchecknsconf:          data.Dontchecknsconf.ValueBool(),
+		Dontreboot:               data.Dontreboot.ValueBool(),
+		Enhancedupgrade:          data.Enhancedupgrade.ValueBool(),
+		Exitonlicserverconnerror: data.Exitonlicserverconnerror.ValueBool(),
+		Fipsinstall:              data.Fipsinstall.ValueBool(),
+		Ignorecertcheckerrors:    data.Ignorecertcheckerrors.ValueBool(),
+		Ignorensapimgrerrors:     data.Ignorensapimgrerrors.ValueBool(),
+		Ignoreunsavedconfig:      data.Ignoreunsavedconfig.ValueBool(),
+		Ignoreunsyncedconfig:     data.Ignoreunsyncedconfig.ValueBool(),
+		L:                        data.L.ValueBool(),
+		Precheck:                 data.Precheck.ValueBool(),
+		Resizeswapvar:            data.Resizeswapvar.ValueBool(),
+		Url:                      data.Url.ValueString(),
+		Y:                        data.Y.ValueBool(),
 	}
 	return install
 }

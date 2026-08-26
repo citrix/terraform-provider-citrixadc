@@ -36,6 +36,11 @@ func AuditsyslogactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY. -U.S. style month/date/year format.\n* DDMMYYYY - European style date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
 			},
+			"denylistviolations": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Log denylist violations.",
+			},
 			"dns": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -69,6 +74,11 @@ func AuditsyslogactionDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "The URL at which to upload the logs messages on the endpoint",
+			},
+			"httpschemafile": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "HTTP Schema file to input tokens to be sent in log message to log server.",
 			},
 			"lbvservername": schema.StringAttribute{
 				Optional:    true,

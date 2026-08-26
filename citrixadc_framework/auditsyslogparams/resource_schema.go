@@ -22,6 +22,7 @@ type AuditsyslogparamsResourceModel struct {
 	Appflowexport        types.String `tfsdk:"appflowexport"`
 	Contentinspectionlog types.String `tfsdk:"contentinspectionlog"`
 	Dateformat           types.String `tfsdk:"dateformat"`
+	Denylistviolations   types.String `tfsdk:"denylistviolations"`
 	Dns                  types.String `tfsdk:"dns"`
 	Logfacility          types.String `tfsdk:"logfacility"`
 	Loglevel             types.List   `tfsdk:"loglevel"`
@@ -71,6 +72,11 @@ func (r *AuditsyslogparamsResource) Schema(ctx context.Context, req resource.Sch
 				Computed:    true,
 				Default:     stringdefault.StaticString("MMDDYYYY"),
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY - U.S. style month/date/year format.\n* DDMMYYYY. European style  -date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
+			},
+			"denylistviolations": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Log denylist violations.",
 			},
 			"dns": schema.StringAttribute{
 				Optional:    true,
@@ -170,6 +176,9 @@ func auditsyslogparamsGetThePayloadFromtheConfig(ctx context.Context, data *Audi
 	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditsyslogparams.Dateformat = data.Dateformat.ValueString()
 	}
+	if !data.Denylistviolations.IsNull() && !data.Denylistviolations.IsUnknown() {
+		auditsyslogparams.Denylistviolations = data.Denylistviolations.ValueString()
+	}
 	if !data.Dns.IsNull() && !data.Dns.IsUnknown() {
 		auditsyslogparams.Dns = data.Dns.ValueString()
 	}
@@ -246,6 +255,11 @@ func auditsyslogparamsSetAttrFromGet(ctx context.Context, data *Auditsyslogparam
 		data.Dateformat = types.StringValue(val.(string))
 	} else {
 		data.Dateformat = types.StringNull()
+	}
+	if val, ok := getResponseData["denylistviolations"]; ok && val != nil {
+		data.Denylistviolations = types.StringValue(val.(string))
+	} else {
+		data.Denylistviolations = types.StringNull()
 	}
 	if val, ok := getResponseData["dns"]; ok && val != nil {
 		data.Dns = types.StringValue(val.(string))

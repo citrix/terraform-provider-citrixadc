@@ -10,6 +10,11 @@ func SnmpalarmDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"holdtime": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Hold time Interval, in seconds, at which the Citrix ADC generates SNMP trap messages when the conditions specified in the SNMP alarm are met recursively for a given period of time. It is recommended to have the hold time interval period in multiple of 7 seconds as the ADC tries to validate the alarms every 7 seconds. Can only be specified for the MGMT-CPU-USAGE alarm.",
+			},
 			"logging": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

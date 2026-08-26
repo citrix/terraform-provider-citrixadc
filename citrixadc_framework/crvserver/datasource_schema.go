@@ -259,6 +259,11 @@ func CrvserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Insert a via header in each HTTP request. In the case of a cache miss, the request is redirected from the cache server to the origin server. This header indicates whether the request is being sent from a cache server.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
+			},
 		},
 	}
 }

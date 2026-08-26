@@ -31,8 +31,10 @@ type GslbparameterResourceModel struct {
 	Ldnsprobeorder            types.List   `tfsdk:"ldnsprobeorder"`
 	Mepkeepalivetimeout       types.Int64  `tfsdk:"mepkeepalivetimeout"`
 	Rtttolerance              types.Int64  `tfsdk:"rtttolerance"`
+	Sourceipwhitelisting      types.String `tfsdk:"sourceipwhitelisting"`
 	Svcstatelearningtime      types.Int64  `tfsdk:"svcstatelearningtime"`
 	Undefaction               types.String `tfsdk:"undefaction"`
+	Usekrpcchannelforsync     types.String `tfsdk:"usekrpcchannelforsync"`
 	V6ldnsmasklen             types.Int64  `tfsdk:"v6ldnsmasklen"`
 }
 
@@ -120,6 +122,11 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 				Default:     int64default.StaticInt64(5),
 				Description: "Tolerance, in milliseconds, for newly learned round-trip time (RTT) values. If the difference between the old RTT value and the newly computed RTT value is less than or equal to the specified tolerance value, the LDNS entry in the network metric table is not updated with the new RTT value. Prevents the exchange of metrics when variations in RTT values are negligible.",
 			},
+			"sourceipwhitelisting": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "If enabled, local gslb site private IP would be used as the source IP while initiating MEP/GSLB sync connection if srcIP is not configured for GSLB site.",
+			},
 			"svcstatelearningtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -130,6 +137,11 @@ func (r *GslbparameterResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:    true,
 				Default:     stringdefault.StaticString("NOLBACTION"),
 				Description: "Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows:\n* NOLBACTION - Does not consider LB action in making LB decision.\n* RESET - Reset the request and notify the user, so that the user can resend the request.\n* DROP - Drop the request without sending a response to the user.",
+			},
+			"usekrpcchannelforsync": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is to use Krpc channel for GSLB sync.",
 			},
 			"v6ldnsmasklen": schema.Int64Attribute{
 				Optional:    true,
@@ -187,11 +199,17 @@ func gslbparameterGetThePayloadFromthePlan(ctx context.Context, data *Gslbparame
 	if !data.Rtttolerance.IsNull() && !data.Rtttolerance.IsUnknown() {
 		gslbparameter.Rtttolerance = utils.IntPtr(int(data.Rtttolerance.ValueInt64()))
 	}
+	if !data.Sourceipwhitelisting.IsNull() && !data.Sourceipwhitelisting.IsUnknown() {
+		gslbparameter.Sourceipwhitelisting = data.Sourceipwhitelisting.ValueString()
+	}
 	if !data.Svcstatelearningtime.IsNull() && !data.Svcstatelearningtime.IsUnknown() {
 		gslbparameter.Svcstatelearningtime = utils.IntPtr(int(data.Svcstatelearningtime.ValueInt64()))
 	}
 	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		gslbparameter.Undefaction = data.Undefaction.ValueString()
+	}
+	if !data.Usekrpcchannelforsync.IsNull() && !data.Usekrpcchannelforsync.IsUnknown() {
+		gslbparameter.Usekrpcchannelforsync = data.Usekrpcchannelforsync.ValueString()
 	}
 	if !data.V6ldnsmasklen.IsNull() && !data.V6ldnsmasklen.IsUnknown() {
 		gslbparameter.V6ldnsmasklen = utils.IntPtr(int(data.V6ldnsmasklen.ValueInt64()))
@@ -287,6 +305,11 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 	} else {
 		data.Rtttolerance = types.Int64Null()
 	}
+	if val, ok := getResponseData["sourceipwhitelisting"]; ok && val != nil {
+		data.Sourceipwhitelisting = types.StringValue(val.(string))
+	} else {
+		data.Sourceipwhitelisting = types.StringNull()
+	}
 	if val, ok := getResponseData["svcstatelearningtime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Svcstatelearningtime = types.Int64Value(intVal)
@@ -300,6 +323,11 @@ func gslbparameterSetAttrFromGet(ctx context.Context, data *GslbparameterResourc
 		data.Undefaction = types.StringValue(val.(string))
 	} else {
 		data.Undefaction = types.StringNull()
+	}
+	if val, ok := getResponseData["usekrpcchannelforsync"]; ok && val != nil {
+		data.Usekrpcchannelforsync = types.StringValue(val.(string))
+	} else {
+		data.Usekrpcchannelforsync = types.StringNull()
 	}
 	if val, ok := getResponseData["v6ldnsmasklen"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

@@ -135,6 +135,13 @@ func (r *SslprofileSslcertkeyBindingResource) Update(ctx context.Context, req re
 	// Check if there are any changes in updateable attributes
 	hasChange := false
 
+	if !data.Certkeyname.Equal(state.Certkeyname) {
+		hasChange = true
+	}
+	if !data.Forgingcacertkey.Equal(state.Forgingcacertkey) {
+		hasChange = true
+	}
+
 	if hasChange {
 		// Create API request body from the model
 		sslprofile_sslcertkey_binding := sslprofile_sslcertkey_bindingGetThePayloadFromthePlan(ctx, &data)

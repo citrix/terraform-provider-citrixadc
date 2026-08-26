@@ -158,6 +158,13 @@ func (r *AuditnslogparamsResource) Update(ctx context.Context, req resource.Upda
 			hasChange = true
 		}
 	}
+	if !data.Denylistviolations.Equal(state.Denylistviolations) {
+		if config.Denylistviolations.IsNull() {
+			attributesToUnset = append(attributesToUnset, "denylistviolations")
+		} else {
+			hasChange = true
+		}
+	}
 	if !data.Logfacility.Equal(state.Logfacility) {
 		if config.Logfacility.IsNull() {
 			attributesToUnset = append(attributesToUnset, "logfacility")

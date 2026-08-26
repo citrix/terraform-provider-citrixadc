@@ -85,6 +85,7 @@ type VpnparameterResourceModel struct {
 	Samesite                     types.String `tfsdk:"samesite"`
 	Securebrowse                 types.String `tfsdk:"securebrowse"`
 	Secureprivateaccess          types.String `tfsdk:"secureprivateaccess"`
+	Secureprivateaccessprofile   types.String `tfsdk:"secureprivateaccessprofile"`
 	Sesstimeout                  types.Int64  `tfsdk:"sesstimeout"`
 	Smartgroup                   types.String `tfsdk:"smartgroup"`
 	Socksproxy                   types.String `tfsdk:"socksproxy"`
@@ -469,6 +470,11 @@ func (r *VpnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "Enables or disables the secure private access configuration.",
 			},
+			"secureprivateaccessprofile": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Clears Secure Private Access profile that may be set.",
+			},
 			"sesstimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -785,6 +791,9 @@ func vpnparameterGetThePayloadFromtheConfig(ctx context.Context, data *Vpnparame
 	}
 	if !data.Secureprivateaccess.IsNull() && !data.Secureprivateaccess.IsUnknown() {
 		vpnparameter.Secureprivateaccess = data.Secureprivateaccess.ValueString()
+	}
+	if !data.Secureprivateaccessprofile.IsNull() && !data.Secureprivateaccessprofile.IsUnknown() {
+		vpnparameter.Secureprivateaccessprofile = data.Secureprivateaccessprofile.ValueString()
 	}
 	if !data.Sesstimeout.IsNull() && !data.Sesstimeout.IsUnknown() {
 		vpnparameter.Sesstimeout = utils.IntPtr(int(data.Sesstimeout.ValueInt64()))
@@ -1206,6 +1215,11 @@ func vpnparameterSetAttrFromGet(ctx context.Context, data *VpnparameterResourceM
 		data.Secureprivateaccess = types.StringValue(val.(string))
 	} else if data.Secureprivateaccess.IsUnknown() {
 		data.Secureprivateaccess = types.StringNull()
+	}
+	if val, ok := getResponseData["secureprivateaccessprofile"]; ok && val != nil {
+		data.Secureprivateaccessprofile = types.StringValue(val.(string))
+	} else if data.Secureprivateaccessprofile.IsUnknown() {
+		data.Secureprivateaccessprofile = types.StringNull()
 	}
 	if val, ok := getResponseData["sesstimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

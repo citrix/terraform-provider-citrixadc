@@ -159,6 +159,14 @@ func (r *NsicapprofileResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Debug(ctx, "inserticapheaders has changed for nsicapprofile")
 		hasChange = true
 	}
+	if !data.Inspecthttp2.Equal(state.Inspecthttp2) {
+		tflog.Debug(ctx, "inspecthttp2 has changed for nsicapprofile")
+		if config.Inspecthttp2.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "inspecthttp2")
+		} else {
+			hasChange = true
+		}
+	}
 	if !data.Logaction.Equal(state.Logaction) {
 		tflog.Debug(ctx, "logaction has changed for nsicapprofile")
 		hasChange = true

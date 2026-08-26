@@ -34,6 +34,7 @@ type VpnvserverResourceModel struct {
 	Downstateflush               types.String `tfsdk:"downstateflush"`
 	Dtls                         types.String `tfsdk:"dtls"`
 	Failedlogintimeout           types.Int64  `tfsdk:"failedlogintimeout"`
+	Gslbsitefqdn                 types.String `tfsdk:"gslbsitefqdn"`
 	Httpprofilename              types.String `tfsdk:"httpprofilename"`
 	Icaonly                      types.String `tfsdk:"icaonly"`
 	Icaproxysessionmigration     types.String `tfsdk:"icaproxysessionmigration"`
@@ -65,6 +66,7 @@ type VpnvserverResourceModel struct {
 	Tcpprofilename               types.String `tfsdk:"tcpprofilename"`
 	Userdomains                  types.String `tfsdk:"userdomains"`
 	Vserverfqdn                  types.String `tfsdk:"vserverfqdn"`
+	Wasmmodule                   types.String `tfsdk:"wasmmodule"`
 	Windowsepapluginupgrade      types.String `tfsdk:"windowsepapluginupgrade"`
 }
 
@@ -156,6 +158,11 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:    true,
 				Computed:    true,
 				Description: "Number of minutes an account will be locked if user exceeds maximum permissible attempts",
+			},
+			"gslbsitefqdn": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Fully qualified domain name of the SPA site. This is used for Secure Private Access configuration.",
 			},
 			"httpprofilename": schema.StringAttribute{
 				Optional:    true,
@@ -324,6 +331,11 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 				Description: "Fully qualified domain name for a VPN virtual server. This is used during StoreFront configuration generation.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
+			},
 			"windowsepapluginupgrade": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -383,6 +395,9 @@ func vpnvserverGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverRes
 	}
 	if !data.Failedlogintimeout.IsNull() && !data.Failedlogintimeout.IsUnknown() {
 		vpnvserver.Failedlogintimeout = utils.IntPtr(int(data.Failedlogintimeout.ValueInt64()))
+	}
+	if !data.Gslbsitefqdn.IsNull() && !data.Gslbsitefqdn.IsUnknown() {
+		vpnvserver.Gslbsitefqdn = data.Gslbsitefqdn.ValueString()
 	}
 	if !data.Httpprofilename.IsNull() && !data.Httpprofilename.IsUnknown() {
 		vpnvserver.Httpprofilename = data.Httpprofilename.ValueString()
@@ -475,6 +490,9 @@ func vpnvserverGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverRes
 	if !data.Vserverfqdn.IsNull() && !data.Vserverfqdn.IsUnknown() {
 		vpnvserver.Vserverfqdn = data.Vserverfqdn.ValueString()
 	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		vpnvserver.Wasmmodule = data.Wasmmodule.ValueString()
+	}
 	if !data.Windowsepapluginupgrade.IsNull() && !data.Windowsepapluginupgrade.IsUnknown() {
 		vpnvserver.Windowsepapluginupgrade = data.Windowsepapluginupgrade.ValueString()
 	}
@@ -552,6 +570,10 @@ func vpnvserverGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Vpnv
 	}
 	if !data.Failedlogintimeout.Equal(state.Failedlogintimeout) && !data.Failedlogintimeout.IsUnknown() && !data.Failedlogintimeout.IsNull() {
 		vpnvserver.Failedlogintimeout = utils.IntPtr(int(data.Failedlogintimeout.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Gslbsitefqdn.Equal(state.Gslbsitefqdn) && !data.Gslbsitefqdn.IsUnknown() && !data.Gslbsitefqdn.IsNull() {
+		vpnvserver.Gslbsitefqdn = data.Gslbsitefqdn.ValueString()
 		hasChange = true
 	}
 	if !data.Httpprofilename.Equal(state.Httpprofilename) && !data.Httpprofilename.IsUnknown() && !data.Httpprofilename.IsNull() {
@@ -660,6 +682,10 @@ func vpnvserverGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Vpnv
 		vpnvserver.Vserverfqdn = data.Vserverfqdn.ValueString()
 		hasChange = true
 	}
+	if !data.Wasmmodule.Equal(state.Wasmmodule) && !data.Wasmmodule.IsUnknown() && !data.Wasmmodule.IsNull() {
+		vpnvserver.Wasmmodule = data.Wasmmodule.ValueString()
+		hasChange = true
+	}
 	if !data.Windowsepapluginupgrade.Equal(state.Windowsepapluginupgrade) && !data.Windowsepapluginupgrade.IsUnknown() && !data.Windowsepapluginupgrade.IsNull() {
 		vpnvserver.Windowsepapluginupgrade = data.Windowsepapluginupgrade.ValueString()
 		hasChange = true
@@ -751,6 +777,11 @@ func vpnvserverSetAttrFromGet(ctx context.Context, data *VpnvserverResourceModel
 		}
 	} else if data.Failedlogintimeout.IsUnknown() {
 		data.Failedlogintimeout = types.Int64Null()
+	}
+	if val, ok := getResponseData["gslbsitefqdn"]; ok && val != nil {
+		data.Gslbsitefqdn = types.StringValue(val.(string))
+	} else if data.Gslbsitefqdn.IsUnknown() {
+		data.Gslbsitefqdn = types.StringNull()
 	}
 	if val, ok := getResponseData["httpprofilename"]; ok && val != nil {
 		data.Httpprofilename = types.StringValue(val.(string))
@@ -915,6 +946,11 @@ func vpnvserverSetAttrFromGet(ctx context.Context, data *VpnvserverResourceModel
 	} else if data.Vserverfqdn.IsUnknown() {
 		data.Vserverfqdn = types.StringNull()
 	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else if data.Wasmmodule.IsUnknown() {
+		data.Wasmmodule = types.StringNull()
+	}
 	if val, ok := getResponseData["windowsepapluginupgrade"]; ok && val != nil {
 		data.Windowsepapluginupgrade = types.StringValue(val.(string))
 	} else if data.Windowsepapluginupgrade.IsUnknown() {
@@ -1013,6 +1049,11 @@ func vpnvserverSetAttrFromGetForDatasource(ctx context.Context, data *Vpnvserver
 		}
 	} else {
 		data.Failedlogintimeout = types.Int64Null()
+	}
+	if val, ok := getResponseData["gslbsitefqdn"]; ok && val != nil {
+		data.Gslbsitefqdn = types.StringValue(val.(string))
+	} else {
+		data.Gslbsitefqdn = types.StringNull()
 	}
 	if val, ok := getResponseData["httpprofilename"]; ok && val != nil {
 		data.Httpprofilename = types.StringValue(val.(string))
@@ -1175,6 +1216,11 @@ func vpnvserverSetAttrFromGetForDatasource(ctx context.Context, data *Vpnvserver
 		data.Vserverfqdn = types.StringValue(val.(string))
 	} else {
 		data.Vserverfqdn = types.StringNull()
+	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else {
+		data.Wasmmodule = types.StringNull()
 	}
 	if val, ok := getResponseData["windowsepapluginupgrade"]; ok && val != nil {
 		data.Windowsepapluginupgrade = types.StringValue(val.(string))

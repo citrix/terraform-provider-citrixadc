@@ -54,6 +54,7 @@ type SslvserverResourceModel struct {
 	Sslredirect                       types.String `tfsdk:"sslredirect"`
 	Sslv2redirect                     types.String `tfsdk:"sslv2redirect"`
 	Sslv2url                          types.String `tfsdk:"sslv2url"`
+	Strictclientekucheck              types.String `tfsdk:"strictclientekucheck"`
 	Strictsigdigestcheck              types.String `tfsdk:"strictsigdigestcheck"`
 	Tls1                              types.String `tfsdk:"tls1"`
 	Tls11                             types.String `tfsdk:"tls11"`
@@ -259,6 +260,11 @@ func (r *SslvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 				Description: "URL of the page to which to redirect the client in case of a protocol version mismatch. Typically, this page has a clear explanation of the error or an alternative location that the transaction can continue from.",
 			},
+			"strictclientekucheck": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable strict EKU extension check during client authentication.",
+			},
 			"strictsigdigestcheck": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -417,6 +423,9 @@ func sslvserverGetThePayloadFromtheConfig(ctx context.Context, data *SslvserverR
 	}
 	if !data.Sslv2url.IsNull() && !data.Sslv2url.IsUnknown() {
 		sslvserver.Sslv2url = data.Sslv2url.ValueString()
+	}
+	if !data.Strictclientekucheck.IsNull() && !data.Strictclientekucheck.IsUnknown() {
+		sslvserver.Strictclientekucheck = data.Strictclientekucheck.ValueString()
 	}
 	if !data.Strictsigdigestcheck.IsNull() && !data.Strictsigdigestcheck.IsUnknown() {
 		sslvserver.Strictsigdigestcheck = data.Strictsigdigestcheck.ValueString()
@@ -629,6 +638,11 @@ func sslvserverSetAttrFromGet(ctx context.Context, data *SslvserverResourceModel
 		data.Sslv2url = types.StringValue(val.(string))
 	} else if data.Sslv2url.IsUnknown() {
 		data.Sslv2url = types.StringNull()
+	}
+	if val, ok := getResponseData["strictclientekucheck"]; ok && val != nil {
+		data.Strictclientekucheck = types.StringValue(val.(string))
+	} else if data.Strictclientekucheck.IsUnknown() {
+		data.Strictclientekucheck = types.StringNull()
 	}
 	if val, ok := getResponseData["strictsigdigestcheck"]; ok && val != nil {
 		data.Strictsigdigestcheck = types.StringValue(val.(string))

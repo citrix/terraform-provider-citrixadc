@@ -47,6 +47,7 @@ type OpoptionResource struct {
 // existing state and configuration remain valid.
 type OpoptionResourceModel struct {
 	Id                   types.String `tfsdk:"id"`
+	Customtrap           types.String `tfsdk:"customtrap"`
 	Severityinfointrap   types.String `tfsdk:"severityinfointrap"`
 	Partitionnameintrap  types.String `tfsdk:"partitionnameintrap"`
 	Snmpset              types.String `tfsdk:"snmpset"`
@@ -91,6 +92,11 @@ func (r *OpoptionResource) Schema(ctx context.Context, req resource.SchemaReques
 			// TypeString, Optional + Computed, no default. Computed lets NITRO
 			// supply/echo values the user omits, matching the legacy behavior and
 			// avoiding perpetual diffs.
+			"customtrap": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "By default, Customtrap will be disabled, set to enabled when using the feature.",
+			},
 			"severityinfointrap": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -246,6 +252,9 @@ func opoptionGetThePayloadFromthePlan(ctx context.Context, data *OpoptionResourc
 	tflog.Debug(ctx, "In opoptionGetThePayloadFromthePlan Function")
 
 	opoption := snmp.Snmpoption{}
+	if !data.Customtrap.IsNull() && !data.Customtrap.IsUnknown() {
+		opoption.Customtrap = data.Customtrap.ValueString()
+	}
 	if !data.Severityinfointrap.IsNull() && !data.Severityinfointrap.IsUnknown() {
 		opoption.Severityinfointrap = data.Severityinfointrap.ValueString()
 	}
@@ -270,6 +279,11 @@ func opoptionGetThePayloadFromthePlan(ctx context.Context, data *OpoptionResourc
 func opoptionSetAttrFromGet(ctx context.Context, data *OpoptionResourceModel, getResponseData map[string]interface{}) *OpoptionResourceModel {
 	tflog.Debug(ctx, "In opoptionSetAttrFromGet Function")
 
+	if val, ok := getResponseData["customtrap"]; ok && val != nil {
+		data.Customtrap = types.StringValue(val.(string))
+	} else {
+		data.Customtrap = types.StringNull()
+	}
 	if val, ok := getResponseData["severityinfointrap"]; ok && val != nil {
 		data.Severityinfointrap = types.StringValue(val.(string))
 	} else {

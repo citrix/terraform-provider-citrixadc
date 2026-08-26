@@ -44,6 +44,11 @@ func ContentinspectionactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Type of operation this action is going to perform. following actions are available to configure:\n* ICAP - forward the incoming request or response to an ICAP server for modification.\n* INLINEINSPECTION - forward the incoming or outgoing packets to IPS server for Intrusion Prevention.\n* MIRROR - Forwards cloned packets for Intrusion Detection.\n* NOINSPECTION - This does not forward incoming and outgoing packets to the Inspection device.\n* NSTRACE - capture current and further incoming packets on this transaction.",
 			},
+			"wasmprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the CI WASM profile to be attached to the contentInspection action.",
+			},
 		},
 	}
 }

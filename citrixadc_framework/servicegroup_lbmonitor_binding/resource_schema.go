@@ -22,6 +22,7 @@ import (
 // ServicegroupLbmonitorBindingResourceModel describes the resource data model.
 type ServicegroupLbmonitorBindingResourceModel struct {
 	Id               types.String `tfsdk:"id"`
+	Aigwprofilename  types.String `tfsdk:"aigwprofilename"`
 	Customserverid   types.String `tfsdk:"customserverid"`
 	Dbsttl           types.Int64  `tfsdk:"dbsttl"`
 	Hashid           types.Int64  `tfsdk:"hashid"`
@@ -44,6 +45,11 @@ func (r *ServicegroupLbmonitorBindingResource) Schema(ctx context.Context, req r
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the servicegroup_lbmonitor_binding resource.",
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.",
 			},
 			"customserverid": schema.StringAttribute{
 				Optional: true,
@@ -178,6 +184,9 @@ func servicegroup_lbmonitor_bindingGetThePayloadFromthePlan(ctx context.Context,
 
 	// Create API request body from the model
 	servicegroup_lbmonitor_binding := basic.Servicegrouplbmonitorbinding{}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		servicegroup_lbmonitor_binding.Aigwprofilename = data.Aigwprofilename.ValueString()
+	}
 	if !data.Customserverid.IsNull() && !data.Customserverid.IsUnknown() {
 		servicegroup_lbmonitor_binding.Customserverid = data.Customserverid.ValueString()
 	}
@@ -225,6 +234,11 @@ func servicegroup_lbmonitor_bindingSetAttrFromGet(ctx context.Context, data *Ser
 	tflog.Debug(ctx, "In servicegroup_lbmonitor_bindingSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["aigwprofilename"]; ok && val != nil {
+		data.Aigwprofilename = types.StringValue(val.(string))
+	} else {
+		data.Aigwprofilename = types.StringNull()
+	}
 	if val, ok := getResponseData["customserverid"]; ok && val != nil {
 		data.Customserverid = types.StringValue(val.(string))
 	} else {

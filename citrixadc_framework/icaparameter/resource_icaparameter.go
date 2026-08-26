@@ -167,6 +167,13 @@ func (r *IcaparameterResource) Update(ctx context.Context, req resource.UpdateRe
 			hasChange = true
 		}
 	}
+	if !data.Insightonlytodirector.Equal(state.Insightonlytodirector) {
+		if config.Insightonlytodirector.IsNull() {
+			attributesToUnset = append(attributesToUnset, "insightonlytodirector")
+		} else {
+			hasChange = true
+		}
+	}
 	if !data.L7latencyfrequency.Equal(state.L7latencyfrequency) {
 		if config.L7latencyfrequency.IsNull() {
 			attributesToUnset = append(attributesToUnset, "l7latencyfrequency")

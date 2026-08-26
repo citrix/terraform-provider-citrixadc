@@ -18,15 +18,17 @@ import (
 
 // NslimitidentifierResourceModel describes the resource data model.
 type NslimitidentifierResourceModel struct {
-	Id               types.String `tfsdk:"id"`
-	Limitidentifier  types.String `tfsdk:"limitidentifier"`
-	Limittype        types.String `tfsdk:"limittype"`
-	Maxbandwidth     types.Int64  `tfsdk:"maxbandwidth"`
-	Mode             types.String `tfsdk:"mode"`
-	Selectorname     types.String `tfsdk:"selectorname"`
-	Threshold        types.Int64  `tfsdk:"threshold"`
-	Timeslice        types.Int64  `tfsdk:"timeslice"`
-	Trapsintimeslice types.Int64  `tfsdk:"trapsintimeslice"`
+	Id                types.String `tfsdk:"id"`
+	Limitidentifier   types.String `tfsdk:"limitidentifier"`
+	Alertsintimeslice types.Int64  `tfsdk:"alertsintimeslice"`
+	Limittype         types.String `tfsdk:"limittype"`
+	Maxbandwidth      types.Int64  `tfsdk:"maxbandwidth"`
+	Mode              types.String `tfsdk:"mode"`
+	Selectorname      types.String `tfsdk:"selectorname"`
+	Threshold         types.Int64  `tfsdk:"threshold"`
+	Timealign         types.String `tfsdk:"timealign"`
+	Timeslice         types.Int64  `tfsdk:"timeslice"`
+	Trapsintimeslice  types.Int64  `tfsdk:"trapsintimeslice"`
 }
 
 func (r *NslimitidentifierResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -44,6 +46,11 @@ func (r *NslimitidentifierResource) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for a rate limit identifier. Must begin with an ASCII letter or underscore (_) character, and must consist only of ASCII alphanumeric or underscore characters. Reserved words must not be used.",
+			},
+			"alertsintimeslice": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Number of appflow alerts to be sent in the timeslice configured. A value of 0 indicates that alerts are disabled. A value of 65535 indicates no limit on number of appflow alerts.",
 			},
 			"limittype": schema.StringAttribute{
 				Optional: true,
@@ -77,6 +84,11 @@ func (r *NslimitidentifierResource) Schema(ctx context.Context, req resource.Sch
 				Default:     int64default.StaticInt64(1),
 				Description: "Maximum number of requests that are allowed in the given timeslice when requests (mode is set as REQUEST_RATE) are tracked per timeslice.\nWhen connections (mode is set as CONNECTION) are tracked, it is the total number of connections that would be let through.",
 			},
+			"timealign": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Value MINUTE will align the time windows for a configured timeslice to Minute boundary. TimeSlice values should be integrals of 60000ms when value MINUTE is choosen. Default : NONE, timeslice alignments will happen with next 10ms.",
+			},
 			"timeslice": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -101,6 +113,9 @@ func nslimitidentifierGetThePayloadFromthePlan(ctx context.Context, data *Nslimi
 	if !data.Limitidentifier.IsNull() && !data.Limitidentifier.IsUnknown() {
 		nslimitidentifier.Limitidentifier = data.Limitidentifier.ValueString()
 	}
+	if !data.Alertsintimeslice.IsNull() && !data.Alertsintimeslice.IsUnknown() {
+		nslimitidentifier.Alertsintimeslice = utils.IntPtr(int(data.Alertsintimeslice.ValueInt64()))
+	}
 	if !data.Limittype.IsNull() && !data.Limittype.IsUnknown() {
 		nslimitidentifier.Limittype = data.Limittype.ValueString()
 	}
@@ -115,6 +130,9 @@ func nslimitidentifierGetThePayloadFromthePlan(ctx context.Context, data *Nslimi
 	}
 	if !data.Threshold.IsNull() && !data.Threshold.IsUnknown() {
 		nslimitidentifier.Threshold = utils.IntPtr(int(data.Threshold.ValueInt64()))
+	}
+	if !data.Timealign.IsNull() && !data.Timealign.IsUnknown() {
+		nslimitidentifier.Timealign = data.Timealign.ValueString()
 	}
 	if !data.Timeslice.IsNull() && !data.Timeslice.IsUnknown() {
 		nslimitidentifier.Timeslice = utils.IntPtr(int(data.Timeslice.ValueInt64()))
@@ -138,6 +156,13 @@ func nslimitidentifierSetAttrFromGet(ctx context.Context, data *Nslimitidentifie
 		data.Limitidentifier = types.StringValue(val.(string))
 	} else if data.Limitidentifier.IsUnknown() {
 		data.Limitidentifier = types.StringNull()
+	}
+	if val, ok := getResponseData["alertsintimeslice"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Alertsintimeslice = types.Int64Value(intVal)
+		}
+	} else if data.Alertsintimeslice.IsUnknown() {
+		data.Alertsintimeslice = types.Int64Null()
 	}
 	if val, ok := getResponseData["limittype"]; ok && val != nil {
 		data.Limittype = types.StringValue(val.(string))
@@ -167,6 +192,11 @@ func nslimitidentifierSetAttrFromGet(ctx context.Context, data *Nslimitidentifie
 		}
 	} else if data.Threshold.IsUnknown() {
 		data.Threshold = types.Int64Null()
+	}
+	if val, ok := getResponseData["timealign"]; ok && val != nil {
+		data.Timealign = types.StringValue(val.(string))
+	} else if data.Timealign.IsUnknown() {
+		data.Timealign = types.StringNull()
 	}
 	if val, ok := getResponseData["timeslice"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
@@ -201,6 +231,15 @@ func nslimitidentifierSetAttrFromGetForDatasource(ctx context.Context, data *Nsl
 	} else {
 		data.Limitidentifier = types.StringNull()
 	}
+	if val, ok := getResponseData["alertsintimeslice"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Alertsintimeslice = types.Int64Value(intVal)
+		} else {
+			data.Alertsintimeslice = types.Int64Null()
+		}
+	} else {
+		data.Alertsintimeslice = types.Int64Null()
+	}
 	if val, ok := getResponseData["limittype"]; ok && val != nil {
 		data.Limittype = types.StringValue(val.(string))
 	} else {
@@ -233,6 +272,11 @@ func nslimitidentifierSetAttrFromGetForDatasource(ctx context.Context, data *Nsl
 		}
 	} else {
 		data.Threshold = types.Int64Null()
+	}
+	if val, ok := getResponseData["timealign"]; ok && val != nil {
+		data.Timealign = types.StringValue(val.(string))
+	} else {
+		data.Timealign = types.StringNull()
 	}
 	if val, ok := getResponseData["timeslice"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

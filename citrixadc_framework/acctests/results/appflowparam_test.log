@@ -1,0 +1,20 @@
+# Acceptance test results: appflowparam
+# Sweep: NSNETAUTO-1162 50-resource A+B run
+# Categories: PASS(first ADC) / PASS(alternative ADC) / FAILED / SKIPPED
+
+## PASS on first ADC (6)
+  PASS  TestAccAppflowparamDataSource_basic   (@.155)
+  PASS  TestAccAppflowparam_analyticsauthtoken_backward_compat   (@.155)
+  PASS  TestAccAppflowparam_analyticsauthtoken_wo_ephemeral   (@.155)
+  PASS  TestAccAppflowparam_basic   (@.155)
+  PASS  TestAccAppflowparam_import   (@.155)
+  PASS  TestAccAppflowparam_unset   (@.155)
+
+## PASS on alternative ADC (0)
+
+## FAILED (1)
+  FAIL  TestAccAppflowparam_sdkv2StateUpgrade
+        reason: Step 2/2 error: The non-refresh plan was not empty. Plan: 0 to add, 1 to change, 0 to destroy (+ appnamerefresh = 600).  [tried .155:FAIL, .151:FAIL, .153:FAIL]
+
+## SKIPPED (0)
+

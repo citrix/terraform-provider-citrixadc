@@ -138,6 +138,10 @@ func (r *UserprotocolResource) Update(ctx context.Context, req resource.UpdateRe
 			hasChange = true
 		}
 	}
+	if !data.Wasmmodule.Equal(state.Wasmmodule) {
+		tflog.Debug(ctx, "wasmmodule has changed for userprotocol")
+		hasChange = true
+	}
 
 	if hasChange {
 		userprotocol := userprotocolGetTheUpdatablePayloadFromThePlan(ctx, &data)

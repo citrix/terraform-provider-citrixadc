@@ -77,6 +77,7 @@ type ContentinspectionactionResourceModel struct {
 	Servername      types.String `tfsdk:"servername"`
 	Serverport      types.Int64  `tfsdk:"serverport"`
 	Type            types.String `tfsdk:"type"`
+	Wasmprofilename types.String `tfsdk:"wasmprofilename"`
 }
 
 func (r *ContentinspectionactionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -132,6 +133,11 @@ func (r *ContentinspectionactionResource) Schema(ctx context.Context, req resour
 				},
 				Description: "Type of operation this action is going to perform. following actions are available to configure:\n* ICAP - forward the incoming request or response to an ICAP server for modification.\n* INLINEINSPECTION - forward the incoming or outgoing packets to IPS server for Intrusion Prevention.\n* MIRROR - Forwards cloned packets for Intrusion Detection.\n* NOINSPECTION - This does not forward incoming and outgoing packets to the Inspection device.\n* NSTRACE - capture current and further incoming packets on this transaction.",
 			},
+			"wasmprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the CI WASM profile to be attached to the contentInspection action.",
+			},
 		},
 	}
 }
@@ -162,6 +168,9 @@ func contentinspectionactionGetThePayloadFromthePlan(ctx context.Context, data *
 	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		contentinspectionaction.Type = data.Type.ValueString()
 	}
+	if !data.Wasmprofilename.IsNull() && !data.Wasmprofilename.IsUnknown() {
+		contentinspectionaction.Wasmprofilename = data.Wasmprofilename.ValueString()
+	}
 
 	return contentinspectionaction
 }
@@ -189,6 +198,9 @@ func contentinspectionactionGetTheUpdatablePayloadFromThePlan(ctx context.Contex
 	}
 	if !data.Serverport.IsNull() && !data.Serverport.IsUnknown() {
 		contentinspectionaction.Serverport = utils.IntPtr(int(data.Serverport.ValueInt64()))
+	}
+	if !data.Wasmprofilename.IsNull() && !data.Wasmprofilename.IsUnknown() {
+		contentinspectionaction.Wasmprofilename = data.Wasmprofilename.ValueString()
 	}
 
 	return contentinspectionaction
@@ -235,6 +247,11 @@ func contentinspectionactionSetAttrFromGet(ctx context.Context, data *Contentins
 		data.Type = types.StringValue(val.(string))
 	} else {
 		data.Type = types.StringNull()
+	}
+	if val, ok := getResponseData["wasmprofilename"]; ok && val != nil {
+		data.Wasmprofilename = types.StringValue(val.(string))
+	} else {
+		data.Wasmprofilename = types.StringNull()
 	}
 
 	// Set ID for the resource

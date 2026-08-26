@@ -85,6 +85,11 @@ func VpnvserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Number of minutes an account will be locked if user exceeds maximum permissible attempts",
 			},
+			"gslbsitefqdn": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Fully qualified domain name of the SPA site. This is used for Secure Private Access configuration.",
+			},
 			"httpprofilename": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -238,6 +243,11 @@ func VpnvserverDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Fully qualified domain name for a VPN virtual server. This is used during StoreFront configuration generation.",
+			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
 			},
 			"windowsepapluginupgrade": schema.StringAttribute{
 				Optional:    true,

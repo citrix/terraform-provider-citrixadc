@@ -151,6 +151,9 @@ func (r *AuditsyslogparamsResource) Update(ctx context.Context, req resource.Upd
 			hasChange = true
 		}
 	}
+	if !data.Denylistviolations.Equal(state.Denylistviolations) {
+		hasChange = true
+	}
 	_ = hasChange
 
 	// Create API request body from the model

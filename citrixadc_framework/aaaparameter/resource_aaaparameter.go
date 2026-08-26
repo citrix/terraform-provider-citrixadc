@@ -123,6 +123,9 @@ func (r *AaaparameterResource) Update(ctx context.Context, req resource.UpdateRe
 	if !data.Apitokencache.Equal(state.Apitokencache) && config.Apitokencache.IsNull() {
 		attributesToUnset = append(attributesToUnset, "apitokencache")
 	}
+	if !data.Classicendpoints.Equal(state.Classicendpoints) && config.Classicendpoints.IsNull() {
+		attributesToUnset = append(attributesToUnset, "classicendpoints")
+	}
 	if !data.Defaultcspheader.Equal(state.Defaultcspheader) && config.Defaultcspheader.IsNull() {
 		attributesToUnset = append(attributesToUnset, "defaultcspheader")
 	}
@@ -146,6 +149,9 @@ func (r *AaaparameterResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 	if !data.Securityinsights.Equal(state.Securityinsights) && config.Securityinsights.IsNull() {
 		attributesToUnset = append(attributesToUnset, "securityinsights")
+	}
+	if !data.Webviewendpoints.Equal(state.Webviewendpoints) && config.Webviewendpoints.IsNull() {
+		attributesToUnset = append(attributesToUnset, "webviewendpoints")
 	}
 
 	// Create API request body from the model

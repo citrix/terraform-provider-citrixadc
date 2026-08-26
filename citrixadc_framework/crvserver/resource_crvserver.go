@@ -312,6 +312,10 @@ func (r *CrvserverResource) Update(ctx context.Context, req resource.UpdateReque
 		crvserver.Via = data.Via.ValueString()
 		hasChange = true
 	}
+	if !data.Wasmmodule.IsUnknown() && !data.Wasmmodule.Equal(state.Wasmmodule) {
+		crvserver.Wasmmodule = data.Wasmmodule.ValueString()
+		hasChange = true
+	}
 
 	// The state attribute is applied via the enable/disable actions, matching SDK v2.
 	stateChange := !data.State.Equal(state.State) && !data.State.IsNull() && !data.State.IsUnknown()

@@ -29,6 +29,11 @@ func UserprotocolDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Transport layer's protocol.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Wasm module needs to attach with the user protocol.",
+			},
 		},
 	}
 }

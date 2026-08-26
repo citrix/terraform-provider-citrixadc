@@ -16,6 +16,11 @@ func LbvserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Name of the adfsProxy profile to be used to support ADFSPIP protocol for ADFS servers.",
 			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the AIGW frontend profile. For the LB vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add lb vserver, it cannot be unset.",
+			},
 			"apiprofile": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -230,6 +235,11 @@ func LbvserverDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Maximum number of members expected to be present when vserver is used in Autoscale.",
+			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the MCP profile to attach to this lb vserver. Enables MCP protocol processing.",
 			},
 			"minautoscalemembers": schema.Int64Attribute{
 				Optional:    true,
@@ -540,6 +550,11 @@ func LbvserverDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Name for the inserted header. The default name is vip-header.",
+			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
 			},
 			"weight": schema.Int64Attribute{
 				Optional:    true,

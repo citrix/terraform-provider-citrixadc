@@ -350,6 +350,11 @@ func VpnparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enables or disables the secure private access configuration.",
 			},
+			"secureprivateaccessprofile": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Clears Secure Private Access profile that may be set.",
+			},
 			"sesstimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

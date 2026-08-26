@@ -63,6 +63,7 @@ type NstcpparamResourceModel struct {
 	Recvbuffsize                        types.Int64  `tfsdk:"recvbuffsize"`
 	Rfc5961chlgacklimit                 types.Int64  `tfsdk:"rfc5961chlgacklimit"`
 	Sack                                types.String `tfsdk:"sack"`
+	Sendresetreasoncode                 types.String `tfsdk:"sendresetreasoncode"`
 	Slowstartincr                       types.Int64  `tfsdk:"slowstartincr"`
 	Synattackdetection                  types.String `tfsdk:"synattackdetection"`
 	Synholdfastgiveup                   types.Int64  `tfsdk:"synholdfastgiveup"`
@@ -358,6 +359,11 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 				PlanModifiers: stringPM,
 				Description:   "Enable or disable Selective ACKnowledgement (SACK).",
 			},
+			"sendresetreasoncode": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "If enabled, NetScaler includes a debug code indicating the reason for the reset in the TCP Window header field of outgoing TCP RST segments.",
+			},
 			"slowstartincr": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
@@ -548,6 +554,9 @@ func nstcpparamGetThePayloadFromtheConfig(ctx context.Context, data *NstcpparamR
 	}
 	if !data.Sack.IsNull() && !data.Sack.IsUnknown() {
 		nstcpparam.Sack = data.Sack.ValueString()
+	}
+	if !data.Sendresetreasoncode.IsNull() && !data.Sendresetreasoncode.IsUnknown() {
+		nstcpparam.Sendresetreasoncode = data.Sendresetreasoncode.ValueString()
 	}
 	if !data.Slowstartincr.IsNull() && !data.Slowstartincr.IsUnknown() {
 		nstcpparam.Slowstartincr = utils.IntPtr(int(data.Slowstartincr.ValueInt64()))
@@ -845,6 +854,11 @@ func nstcpparamSetAttrFromGet(ctx context.Context, data *NstcpparamResourceModel
 		data.Sack = types.StringValue(val.(string))
 	} else if data.Sack.IsUnknown() {
 		data.Sack = types.StringNull()
+	}
+	if val, ok := getResponseData["sendresetreasoncode"]; ok && val != nil {
+		data.Sendresetreasoncode = types.StringValue(val.(string))
+	} else if data.Sendresetreasoncode.IsUnknown() {
+		data.Sendresetreasoncode = types.StringNull()
 	}
 	if val, ok := getResponseData["slowstartincr"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

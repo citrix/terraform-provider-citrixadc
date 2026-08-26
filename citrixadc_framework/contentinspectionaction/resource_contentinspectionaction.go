@@ -159,6 +159,10 @@ func (r *ContentinspectionactionResource) Update(ctx context.Context, req resour
 			hasChange = true
 		}
 	}
+	if !data.Wasmprofilename.Equal(state.Wasmprofilename) {
+		tflog.Debug(ctx, "wasmprofilename has changed for contentinspectionaction")
+		hasChange = true
+	}
 
 	if hasChange {
 		// Create API request body from the model (updatable fields only)

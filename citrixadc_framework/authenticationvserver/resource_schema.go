@@ -36,6 +36,7 @@ type AuthenticationvserverResourceModel struct {
 	Servicetype          types.String `tfsdk:"servicetype"`
 	State                types.String `tfsdk:"state"`
 	Td                   types.Int64  `tfsdk:"td"`
+	Wasmmodule           types.String `tfsdk:"wasmmodule"`
 }
 
 func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -166,6 +167,11 @@ func (r *AuthenticationvserverResource) Schema(ctx context.Context, req resource
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
+			},
 		},
 	}
 }
@@ -221,6 +227,9 @@ func authenticationvserverGetThePayloadFromthePlan(ctx context.Context, data *Au
 	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		authenticationvserver.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		authenticationvserver.Wasmmodule = data.Wasmmodule.ValueString()
+	}
 
 	return authenticationvserver
 }
@@ -262,6 +271,9 @@ func authenticationvserverGetTheUpdatablePayloadFromThePlan(ctx context.Context,
 	}
 	if !data.Samesite.IsNull() && !data.Samesite.IsUnknown() {
 		authenticationvserver.Samesite = data.Samesite.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		authenticationvserver.Wasmmodule = data.Wasmmodule.ValueString()
 	}
 
 	return authenticationvserver
@@ -369,6 +381,11 @@ func authenticationvserverSetAttrFromGet(ctx context.Context, data *Authenticati
 		}
 	} else if data.Td.IsUnknown() {
 		data.Td = types.Int64Null()
+	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else {
+		data.Wasmmodule = types.StringNull()
 	}
 
 	return data

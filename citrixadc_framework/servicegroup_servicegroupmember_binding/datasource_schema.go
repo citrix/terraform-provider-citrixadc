@@ -14,6 +14,11 @@ func ServicegroupServicegroupmemberBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Skip reading the resource attributes from the NetScaler during refresh (resource-only flag; always reported false for the data source).",
 			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.",
+			},
 			"customserverid": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

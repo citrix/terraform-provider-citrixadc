@@ -22,6 +22,11 @@ func GslbsiteDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Cluster IP address. Specify this parameter to connect to the remote cluster site for GSLB auto-sync. Note: The cluster IP address is defined when creating the cluster.",
 			},
+			"krpcnodesrcip": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Source IP address to be used to communicate with this GSLB site. Minimum length =  1",
+			},
 			"metricexchange": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

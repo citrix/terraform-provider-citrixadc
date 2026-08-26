@@ -10,6 +10,11 @@ func SslactionDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"alpnhttp2": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to enable or disable the HTTP/2 application protocol based on policy evaluation performed during ClientHello handshake message processing.",
+			},
 			"cacertgrpname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -125,9 +130,34 @@ func SslactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "This action takes an argument a vserver name, to this vserver one will be able to forward all the packets.",
 			},
+			"inhandshakeclientauth": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option dynamically enables client authentication for the specific SSL connection based on policy evaluation performed during ClientHello handshake message processing. It overrides the clientAuth setting configured on the SSL virtual server or the SSL frontend profile.",
+			},
+			"inhandshakeclientcertverification": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies the type of client authentication and is applicable only when inHandshakeClientAuth is ENABLED. If set to MANDATORY, the appliance terminates the SSL handshake when the client fails to present a valid certificate. If set to OPTIONAL, the appliance requests a client certificate but continues the SSL transaction even if the certificate is missing or invalid. Default value is MANDATORY.",
+			},
 			"name": schema.StringAttribute{
 				Required:    true,
 				Description: "Name for the SSL action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
+			},
+			"ocspcache": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable cache of OCSP response. Caching of response received from the OCSP responder enables faster response to the client and reduces the load on the OCSP responder.",
+			},
+			"ocspcertvalidation": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to check the revocation status of client/server certificate in SSL handshake using OCSP.",
+			},
+			"ocspstapling": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to enable ocspStapling parameter for the SSL connection.",
 			},
 			"owasupport": schema.StringAttribute{
 				Optional:    true,

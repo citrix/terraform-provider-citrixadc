@@ -54,6 +54,7 @@ type AnalyticsprofileResourceModel struct {
 	Httpxforwardedforheader      types.String `tfsdk:"httpxforwardedforheader"`
 	Integratedcache              types.String `tfsdk:"integratedcache"`
 	Managementlog                types.List   `tfsdk:"managementlog"`
+	Mcpsummary                   types.String `tfsdk:"mcpsummary"`
 	Metrics                      types.String `tfsdk:"metrics"`
 	Metricsexportfrequency       types.Int64  `tfsdk:"metricsexportfrequency"`
 	Name                         types.String `tfsdk:"name"`
@@ -263,6 +264,11 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 				Computed:    true,
 				Description: "This option indicates the whether managementlog should be sent to the REST collector.",
 			},
+			"mcpsummary": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable/disable appflow logging for MCP (Model Context Protocol) traffic.",
+			},
 			"metrics": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -422,6 +428,9 @@ func analyticsprofileGetThePayloadFromthePlan(ctx context.Context, data *Analyti
 		var managementlogList []string
 		data.Managementlog.ElementsAs(ctx, &managementlogList, false)
 		analyticsprofile.Managementlog = managementlogList
+	}
+	if !data.Mcpsummary.IsNull() && !data.Mcpsummary.IsUnknown() {
+		analyticsprofile.Mcpsummary = data.Mcpsummary.ValueString()
 	}
 	if !data.Metrics.IsNull() && !data.Metrics.IsUnknown() {
 		analyticsprofile.Metrics = data.Metrics.ValueString()
@@ -717,6 +726,11 @@ func analyticsprofileSetAttrFromGet(ctx context.Context, data *AnalyticsprofileR
 		}
 	} else {
 		data.Managementlog = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["mcpsummary"]; ok && val != nil {
+		data.Mcpsummary = types.StringValue(val.(string))
+	} else {
+		data.Mcpsummary = types.StringNull()
 	}
 	if val, ok := getResponseData["metrics"]; ok && val != nil {
 		data.Metrics = types.StringValue(val.(string))

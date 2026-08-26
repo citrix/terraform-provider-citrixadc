@@ -20,6 +20,11 @@ func NsdhcpparamsDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "DHCP acquired routes are saved on the Citrix ADC.",
 			},
+			"subnetselection": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Subnet Selection option (RFC 3011) to request IP from a specific subnet.",
+			},
 		},
 	}
 }

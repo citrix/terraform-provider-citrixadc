@@ -20,6 +20,11 @@ func AaaotpparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Maximum number of otp devices user can register. Default value is 4. Max value is 255",
 			},
+			"otptype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Input flag to generate OTP for the given type. Possible values = gwtest",
+			},
 		},
 	}
 }

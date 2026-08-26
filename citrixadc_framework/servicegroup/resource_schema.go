@@ -26,6 +26,7 @@ import (
 // servicegroupmembers_by_servername that manage the associated bindings.
 type ServicegroupResourceModel struct {
 	Id                   types.String `tfsdk:"id"`
+	Aigwprofilename      types.String `tfsdk:"aigwprofilename"`
 	Appflowlog           types.String `tfsdk:"appflowlog"`
 	Autodelayedtrofs     types.String `tfsdk:"autodelayedtrofs"`
 	Autodisabledelay     types.Int64  `tfsdk:"autodisabledelay"`
@@ -53,6 +54,7 @@ type ServicegroupResourceModel struct {
 	Maxbandwidth         types.Int64  `tfsdk:"maxbandwidth"`
 	Maxclient            types.Int64  `tfsdk:"maxclient"`
 	Maxreq               types.Int64  `tfsdk:"maxreq"`
+	Mcpprofilename       types.String `tfsdk:"mcpprofilename"`
 	Memberport           types.Int64  `tfsdk:"memberport"`
 	Monconnectionclose   types.String `tfsdk:"monconnectionclose"`
 	Monitornamesvc       types.String `tfsdk:"monitornamesvc"`
@@ -78,6 +80,7 @@ type ServicegroupResourceModel struct {
 	Topicname            types.String `tfsdk:"topicname"`
 	Useproxyport         types.String `tfsdk:"useproxyport"`
 	Usip                 types.String `tfsdk:"usip"`
+	Wasmmodule           types.String `tfsdk:"wasmmodule"`
 	Weight               types.Int64  `tfsdk:"weight"`
 
 	// Convenience blocks (SDK v2 backward compatibility). These are not NITRO
@@ -95,6 +98,11 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the servicegroup resource (the servicegroupname).",
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.",
 			},
 			"appflowlog": schema.StringAttribute{
 				Optional:    true,
@@ -259,6 +267,11 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "Maximum number of requests that can be sent on a persistent connection to the service group.",
 			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of MCP profile which will be attached to the servicegroup.",
+			},
 			"memberport": schema.Int64Attribute{
 				// SDK v2: Optional+Computed+ForceNew.
 				Optional: true,
@@ -416,6 +429,11 @@ func (r *ServicegroupResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "Use client's IP address as the source IP address when initiating connection to the server.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to bind to this service.",
+			},
 			"weight": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -455,6 +473,9 @@ func servicegroupGetThePayloadFromthePlan(ctx context.Context, data *Servicegrou
 	tflog.Debug(ctx, "In servicegroupGetThePayloadFromthePlan Function")
 
 	servicegroup := basic.Servicegroup{}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		servicegroup.Aigwprofilename = data.Aigwprofilename.ValueString()
+	}
 	if !data.Appflowlog.IsNull() && !data.Appflowlog.IsUnknown() {
 		servicegroup.Appflowlog = data.Appflowlog.ValueString()
 	}
@@ -532,6 +553,9 @@ func servicegroupGetThePayloadFromthePlan(ctx context.Context, data *Servicegrou
 	if !data.Maxreq.IsNull() && !data.Maxreq.IsUnknown() {
 		servicegroup.Maxreq = utils.IntPtr(int(data.Maxreq.ValueInt64()))
 	}
+	if !data.Mcpprofilename.IsNull() && !data.Mcpprofilename.IsUnknown() {
+		servicegroup.Mcpprofilename = data.Mcpprofilename.ValueString()
+	}
 	if !data.Memberport.IsNull() && !data.Memberport.IsUnknown() {
 		servicegroup.Memberport = utils.IntPtr(int(data.Memberport.ValueInt64()))
 	}
@@ -605,6 +629,9 @@ func servicegroupGetThePayloadFromthePlan(ctx context.Context, data *Servicegrou
 	if !data.Usip.IsNull() && !data.Usip.IsUnknown() {
 		servicegroup.Usip = data.Usip.ValueString()
 	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		servicegroup.Wasmmodule = data.Wasmmodule.ValueString()
+	}
 	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		servicegroup.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
@@ -625,6 +652,9 @@ func servicegroupGetTheUpdatePayloadFromthePlan(ctx context.Context, data *Servi
 	// servicegroupname is the name key.
 	if !data.Servicegroupname.IsNull() && !data.Servicegroupname.IsUnknown() {
 		servicegroup.Servicegroupname = data.Servicegroupname.ValueString()
+	}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		servicegroup.Aigwprofilename = data.Aigwprofilename.ValueString()
 	}
 	if !data.Appflowlog.IsNull() && !data.Appflowlog.IsUnknown() {
 		servicegroup.Appflowlog = data.Appflowlog.ValueString()
@@ -689,6 +719,9 @@ func servicegroupGetTheUpdatePayloadFromthePlan(ctx context.Context, data *Servi
 	if !data.Maxreq.IsNull() && !data.Maxreq.IsUnknown() {
 		servicegroup.Maxreq = utils.IntPtr(int(data.Maxreq.ValueInt64()))
 	}
+	if !data.Mcpprofilename.IsNull() && !data.Mcpprofilename.IsUnknown() {
+		servicegroup.Mcpprofilename = data.Mcpprofilename.ValueString()
+	}
 	if !data.Monconnectionclose.IsNull() && !data.Monconnectionclose.IsUnknown() {
 		servicegroup.Monconnectionclose = data.Monconnectionclose.ValueString()
 	}
@@ -743,6 +776,9 @@ func servicegroupGetTheUpdatePayloadFromthePlan(ctx context.Context, data *Servi
 	if !data.Usip.IsNull() && !data.Usip.IsUnknown() {
 		servicegroup.Usip = data.Usip.ValueString()
 	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		servicegroup.Wasmmodule = data.Wasmmodule.ValueString()
+	}
 	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		servicegroup.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
@@ -779,6 +815,7 @@ func servicegroupSetAttrFromGet(ctx context.Context, data *ServicegroupResourceM
 		}
 	}
 
+	setStr("aigwprofilename", &data.Aigwprofilename)
 	setStr("appflowlog", &data.Appflowlog)
 	setStr("autodelayedtrofs", &data.Autodelayedtrofs)
 	setInt("autodisabledelay", &data.Autodisabledelay)
@@ -822,6 +859,7 @@ func servicegroupSetAttrFromGet(ctx context.Context, data *ServicegroupResourceM
 	setInt("maxbandwidth", &data.Maxbandwidth)
 	setInt("maxclient", &data.Maxclient)
 	setInt("maxreq", &data.Maxreq)
+	setStr("mcpprofilename", &data.Mcpprofilename)
 	setInt("memberport", &data.Memberport)
 	setStr("monconnectionclose", &data.Monconnectionclose)
 	setStr("monitor_name_svc", &data.Monitornamesvc)
@@ -856,6 +894,7 @@ func servicegroupSetAttrFromGet(ctx context.Context, data *ServicegroupResourceM
 	setStr("topicname", &data.Topicname)
 	setStr("useproxyport", &data.Useproxyport)
 	setStr("usip", &data.Usip)
+	setStr("wasmmodule", &data.Wasmmodule)
 	setInt("weight", &data.Weight)
 
 	return data
@@ -886,6 +925,7 @@ func servicegroupSetAttrFromGetForDatasource(ctx context.Context, data *Serviceg
 		}
 	}
 
+	setStr("aigwprofilename", &data.Aigwprofilename)
 	setStr("appflowlog", &data.Appflowlog)
 	setStr("autodelayedtrofs", &data.Autodelayedtrofs)
 	setInt("autodisabledelay", &data.Autodisabledelay)
@@ -921,6 +961,7 @@ func servicegroupSetAttrFromGetForDatasource(ctx context.Context, data *Serviceg
 	setInt("maxbandwidth", &data.Maxbandwidth)
 	setInt("maxclient", &data.Maxclient)
 	setInt("maxreq", &data.Maxreq)
+	setStr("mcpprofilename", &data.Mcpprofilename)
 	setInt("memberport", &data.Memberport)
 	setStr("monconnectionclose", &data.Monconnectionclose)
 	setStr("monitor_name_svc", &data.Monitornamesvc)
@@ -954,6 +995,7 @@ func servicegroupSetAttrFromGetForDatasource(ctx context.Context, data *Serviceg
 	setStr("topicname", &data.Topicname)
 	setStr("useproxyport", &data.Useproxyport)
 	setStr("usip", &data.Usip)
+	setStr("wasmmodule", &data.Wasmmodule)
 	setInt("weight", &data.Weight)
 
 	// Convenience blocks are not populated for the datasource.

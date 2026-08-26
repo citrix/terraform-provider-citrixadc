@@ -15,35 +15,41 @@ import (
 
 // SslactionResourceModel describes the resource data model.
 type SslactionResourceModel struct {
-	Id                     types.String `tfsdk:"id"`
-	Cacertgrpname          types.String `tfsdk:"cacertgrpname"`
-	Certfingerprintdigest  types.String `tfsdk:"certfingerprintdigest"`
-	Certfingerprintheader  types.String `tfsdk:"certfingerprintheader"`
-	Certhashheader         types.String `tfsdk:"certhashheader"`
-	Certheader             types.String `tfsdk:"certheader"`
-	Certissuerheader       types.String `tfsdk:"certissuerheader"`
-	Certnotafterheader     types.String `tfsdk:"certnotafterheader"`
-	Certnotbeforeheader    types.String `tfsdk:"certnotbeforeheader"`
-	Certserialheader       types.String `tfsdk:"certserialheader"`
-	Certsubjectheader      types.String `tfsdk:"certsubjectheader"`
-	Cipher                 types.String `tfsdk:"cipher"`
-	Cipherheader           types.String `tfsdk:"cipherheader"`
-	Clientauth             types.String `tfsdk:"clientauth"`
-	Clientcert             types.String `tfsdk:"clientcert"`
-	Clientcertfingerprint  types.String `tfsdk:"clientcertfingerprint"`
-	Clientcerthash         types.String `tfsdk:"clientcerthash"`
-	Clientcertissuer       types.String `tfsdk:"clientcertissuer"`
-	Clientcertnotafter     types.String `tfsdk:"clientcertnotafter"`
-	Clientcertnotbefore    types.String `tfsdk:"clientcertnotbefore"`
-	Clientcertserialnumber types.String `tfsdk:"clientcertserialnumber"`
-	Clientcertsubject      types.String `tfsdk:"clientcertsubject"`
-	Clientcertverification types.String `tfsdk:"clientcertverification"`
-	Forward                types.String `tfsdk:"forward"`
-	Name                   types.String `tfsdk:"name"`
-	Owasupport             types.String `tfsdk:"owasupport"`
-	Sessionid              types.String `tfsdk:"sessionid"`
-	Sessionidheader        types.String `tfsdk:"sessionidheader"`
-	Ssllogprofile          types.String `tfsdk:"ssllogprofile"`
+	Id                                types.String `tfsdk:"id"`
+	Alpnhttp2                         types.String `tfsdk:"alpnhttp2"`
+	Cacertgrpname                     types.String `tfsdk:"cacertgrpname"`
+	Certfingerprintdigest             types.String `tfsdk:"certfingerprintdigest"`
+	Certfingerprintheader             types.String `tfsdk:"certfingerprintheader"`
+	Certhashheader                    types.String `tfsdk:"certhashheader"`
+	Certheader                        types.String `tfsdk:"certheader"`
+	Certissuerheader                  types.String `tfsdk:"certissuerheader"`
+	Certnotafterheader                types.String `tfsdk:"certnotafterheader"`
+	Certnotbeforeheader               types.String `tfsdk:"certnotbeforeheader"`
+	Certserialheader                  types.String `tfsdk:"certserialheader"`
+	Certsubjectheader                 types.String `tfsdk:"certsubjectheader"`
+	Cipher                            types.String `tfsdk:"cipher"`
+	Cipherheader                      types.String `tfsdk:"cipherheader"`
+	Clientauth                        types.String `tfsdk:"clientauth"`
+	Clientcert                        types.String `tfsdk:"clientcert"`
+	Clientcertfingerprint             types.String `tfsdk:"clientcertfingerprint"`
+	Clientcerthash                    types.String `tfsdk:"clientcerthash"`
+	Clientcertissuer                  types.String `tfsdk:"clientcertissuer"`
+	Clientcertnotafter                types.String `tfsdk:"clientcertnotafter"`
+	Clientcertnotbefore               types.String `tfsdk:"clientcertnotbefore"`
+	Clientcertserialnumber            types.String `tfsdk:"clientcertserialnumber"`
+	Clientcertsubject                 types.String `tfsdk:"clientcertsubject"`
+	Clientcertverification            types.String `tfsdk:"clientcertverification"`
+	Forward                           types.String `tfsdk:"forward"`
+	Inhandshakeclientauth             types.String `tfsdk:"inhandshakeclientauth"`
+	Inhandshakeclientcertverification types.String `tfsdk:"inhandshakeclientcertverification"`
+	Name                              types.String `tfsdk:"name"`
+	Ocspcache                         types.String `tfsdk:"ocspcache"`
+	Ocspcertvalidation                types.String `tfsdk:"ocspcertvalidation"`
+	Ocspstapling                      types.String `tfsdk:"ocspstapling"`
+	Owasupport                        types.String `tfsdk:"owasupport"`
+	Sessionid                         types.String `tfsdk:"sessionid"`
+	Sessionidheader                   types.String `tfsdk:"sessionidheader"`
+	Ssllogprofile                     types.String `tfsdk:"ssllogprofile"`
 }
 
 func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -53,6 +59,11 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the sslaction resource.",
+			},
+			"alpnhttp2": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to enable or disable the HTTP/2 application protocol based on policy evaluation performed during ClientHello handshake message processing.",
 			},
 			"cacertgrpname": schema.StringAttribute{
 				Optional: true,
@@ -284,12 +295,37 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Description: "This action takes an argument a vserver name, to this vserver one will be able to forward all the packets.",
 			},
+			"inhandshakeclientauth": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option dynamically enables client authentication for the specific SSL connection based on policy evaluation performed during ClientHello handshake message processing. It overrides the clientAuth setting configured on the SSL virtual server or the SSL frontend profile.",
+			},
+			"inhandshakeclientcertverification": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies the type of client authentication and is applicable only when inHandshakeClientAuth is ENABLED. If set to MANDATORY, the appliance terminates the SSL handshake when the client fails to present a valid certificate. If set to OPTIONAL, the appliance requests a client certificate but continues the SSL transaction even if the certificate is missing or invalid. Default value is MANDATORY.",
+			},
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Name for the SSL action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
+			},
+			"ocspcache": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable cache of OCSP response. Caching of response received from the OCSP responder enables faster response to the client and reduces the load on the OCSP responder.",
+			},
+			"ocspcertvalidation": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to check the revocation status of client/server certificate in SSL handshake using OCSP.",
+			},
+			"ocspstapling": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to enable ocspStapling parameter for the SSL connection.",
 			},
 			"owasupport": schema.StringAttribute{
 				Optional: true,
@@ -340,6 +376,9 @@ func sslactionGetThePayloadFromtheConfig(ctx context.Context, data *SslactionRes
 
 	// Create API request body from the model
 	sslaction := ssl.Sslaction{}
+	if !data.Alpnhttp2.IsNull() {
+		sslaction.Alpnhttp2 = data.Alpnhttp2.ValueString()
+	}
 	if !data.Cacertgrpname.IsNull() {
 		sslaction.Cacertgrpname = data.Cacertgrpname.ValueString()
 	}
@@ -409,8 +448,23 @@ func sslactionGetThePayloadFromtheConfig(ctx context.Context, data *SslactionRes
 	if !data.Forward.IsNull() {
 		sslaction.Forward = data.Forward.ValueString()
 	}
+	if !data.Inhandshakeclientauth.IsNull() {
+		sslaction.Inhandshakeclientauth = data.Inhandshakeclientauth.ValueString()
+	}
+	if !data.Inhandshakeclientcertverification.IsNull() {
+		sslaction.Inhandshakeclientcertverification = data.Inhandshakeclientcertverification.ValueString()
+	}
 	if !data.Name.IsNull() {
 		sslaction.Name = data.Name.ValueString()
+	}
+	if !data.Ocspcache.IsNull() {
+		sslaction.Ocspcache = data.Ocspcache.ValueString()
+	}
+	if !data.Ocspcertvalidation.IsNull() {
+		sslaction.Ocspcertvalidation = data.Ocspcertvalidation.ValueString()
+	}
+	if !data.Ocspstapling.IsNull() {
+		sslaction.Ocspstapling = data.Ocspstapling.ValueString()
 	}
 	if !data.Owasupport.IsNull() {
 		sslaction.Owasupport = data.Owasupport.ValueString()
@@ -432,6 +486,11 @@ func sslactionSetAttrFromGet(ctx context.Context, data *SslactionResourceModel, 
 	tflog.Debug(ctx, "In sslactionSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["alpnhttp2"]; ok && val != nil {
+		data.Alpnhttp2 = types.StringValue(val.(string))
+	} else {
+		data.Alpnhttp2 = types.StringNull()
+	}
 	if val, ok := getResponseData["cacertgrpname"]; ok && val != nil {
 		data.Cacertgrpname = types.StringValue(val.(string))
 	} else {
@@ -547,10 +606,35 @@ func sslactionSetAttrFromGet(ctx context.Context, data *SslactionResourceModel, 
 	} else {
 		data.Forward = types.StringNull()
 	}
+	if val, ok := getResponseData["inhandshakeclientauth"]; ok && val != nil {
+		data.Inhandshakeclientauth = types.StringValue(val.(string))
+	} else {
+		data.Inhandshakeclientauth = types.StringNull()
+	}
+	if val, ok := getResponseData["inhandshakeclientcertverification"]; ok && val != nil {
+		data.Inhandshakeclientcertverification = types.StringValue(val.(string))
+	} else {
+		data.Inhandshakeclientcertverification = types.StringNull()
+	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
 	} else {
 		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["ocspcache"]; ok && val != nil {
+		data.Ocspcache = types.StringValue(val.(string))
+	} else {
+		data.Ocspcache = types.StringNull()
+	}
+	if val, ok := getResponseData["ocspcertvalidation"]; ok && val != nil {
+		data.Ocspcertvalidation = types.StringValue(val.(string))
+	} else {
+		data.Ocspcertvalidation = types.StringNull()
+	}
+	if val, ok := getResponseData["ocspstapling"]; ok && val != nil {
+		data.Ocspstapling = types.StringValue(val.(string))
+	} else {
+		data.Ocspstapling = types.StringNull()
 	}
 	if val, ok := getResponseData["owasupport"]; ok && val != nil {
 		data.Owasupport = types.StringValue(val.(string))

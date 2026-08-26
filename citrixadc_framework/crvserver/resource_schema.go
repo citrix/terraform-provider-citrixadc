@@ -69,6 +69,7 @@ type CrvserverResourceModel struct {
 	Useoriginipportforcache  types.String `tfsdk:"useoriginipportforcache"`
 	Useportrange             types.String `tfsdk:"useportrange"`
 	Via                      types.String `tfsdk:"via"`
+	Wasmmodule               types.String `tfsdk:"wasmmodule"`
 }
 
 func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -332,6 +333,11 @@ func (r *CrvserverResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:    true,
 				Description: "Insert a via header in each HTTP request. In the case of a cache miss, the request is redirected from the cache server to the origin server. This header indicates whether the request is being sent from a cache server.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
+			},
 		},
 	}
 }
@@ -488,6 +494,9 @@ func crvserverGetThePayloadFromthePlan(ctx context.Context, data *CrvserverResou
 	}
 	if !data.Via.IsNull() && !data.Via.IsUnknown() {
 		crvserver.Via = data.Via.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		crvserver.Wasmmodule = data.Wasmmodule.ValueString()
 	}
 
 	return crvserver
@@ -774,6 +783,11 @@ func crvserverSetAttrFromGet(ctx context.Context, data *CrvserverResourceModel, 
 		data.Via = types.StringValue(val.(string))
 	} else if data.Via.IsUnknown() {
 		data.Via = types.StringNull()
+	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else if data.Wasmmodule.IsUnknown() {
+		data.Wasmmodule = types.StringNull()
 	}
 
 	// NOTE: data.Id is intentionally NOT set here. The resource sets it in Create

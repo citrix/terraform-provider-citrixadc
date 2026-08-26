@@ -221,6 +221,11 @@ func AuthenticationoauthactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Resource URL for Oauth configuration.",
 			},
+			"scopes": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "OAuth Scopes expected. Please specify scopes in space separated format as per RFC 6749 (OAuth 2.0). Each scope value can contain any printable ASCII character except double-quote (\") and backslash (\\). Maximum length is 1024.",
+			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

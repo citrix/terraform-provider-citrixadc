@@ -45,6 +45,11 @@ func IcaparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enable/Disable HDXInsight for Non NSAP ICA Sessions. The default value is Yes",
 			},
+			"insightonlytodirector": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable/Disable HDX Insight data to Director even if HDX Insight policy is not configured on Gateway and Network Telemtry policy is enabled on VDA. Default value: ENABLED Possible values = ENABLED, DISABLED",
+			},
 			"l7latencyfrequency": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

@@ -143,6 +143,10 @@ func (r *AaaotpparameterResource) Update(ctx context.Context, req resource.Updat
 			hasChange = true
 		}
 	}
+	if !data.Otptype.Equal(state.Otptype) {
+		tflog.Debug(ctx, "otptype has changed for aaaotpparameter")
+		hasChange = true
+	}
 
 	if hasChange {
 		// Create API request body from the model

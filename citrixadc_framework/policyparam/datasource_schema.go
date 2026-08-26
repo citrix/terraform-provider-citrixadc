@@ -10,6 +10,16 @@ func PolicyparamDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"maxeventsize": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Maximum event size in kilobytes that the policy engine will process. When event data exceeds this limit, the action specified by maxEventSizeExceedAction is taken. This parameter helps prevent resource exhaustion from processing extremely large events.",
+			},
+			"maxeventsizeexceedaction": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Action to take when event data exceeds maxEventSize:",
+			},
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

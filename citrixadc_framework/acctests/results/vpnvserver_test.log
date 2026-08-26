@@ -1,0 +1,18 @@
+# Acceptance test results: vpnvserver
+# Sweep: NSNETAUTO-1162 50-resource A+B run
+# Categories: PASS(first ADC) / PASS(alternative ADC) / FAILED / SKIPPED
+
+## PASS on first ADC (6)
+  PASS  TestAccVpnvserverDataSource_basic   (@.153)
+  PASS  TestAccVpnvserver_basic   (@.153)
+  PASS  TestAccVpnvserver_import   (@.153)
+  PASS  TestAccVpnvserver_sdkv2StateUpgrade   (@.153)
+  PASS  TestAccVpnvserver_selfHealing   (@.153)
+  PASS  TestAccVpnvserver_unset   (@.153)
+
+## PASS on alternative ADC (0)
+
+## FAILED (0)
+
+## SKIPPED (0)
+

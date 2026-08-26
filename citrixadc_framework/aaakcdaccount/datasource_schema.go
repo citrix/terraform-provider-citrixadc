@@ -53,6 +53,11 @@ func AaakcdaccountDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Kerberos Realm.",
 			},
+			"saltexpression": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Salt expression used by Kerberos impersonation. When configured, this expression will be used for key derivation with AES-128 or AES-256 encryption types. For RC4 encryption, the salt is not used. If the salt expression is not set, the default behavior is to derive the salt value from the Kerberos principal.",
+			},
 			"servicespn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

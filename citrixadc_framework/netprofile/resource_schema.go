@@ -46,6 +46,7 @@ func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req pla
 // NetprofileResourceModel describes the resource data model.
 type NetprofileResourceModel struct {
 	Id                             types.String `tfsdk:"id"`
+	Badipactionthreshold           types.Int64  `tfsdk:"badipactionthreshold"`
 	Mbf                            types.String `tfsdk:"mbf"`
 	Name                           types.String `tfsdk:"name"`
 	Overridelsn                    types.String `tfsdk:"overridelsn"`
@@ -64,6 +65,11 @@ func (r *NetprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the netprofile resource.",
+			},
+			"badipactionthreshold": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Number of protocol violation from an IP address before taking action. Default value: 0 Minimum value =  0 Maximum value =  100000",
 			},
 			"mbf": schema.StringAttribute{
 				// SDK v2: Optional+Computed, not ForceNew.
@@ -158,6 +164,9 @@ func netprofileGetThePayloadFromthePlan(ctx context.Context, data *NetprofileRes
 	// unknown/null values so that Optional+Computed attributes the user omitted
 	// fall through to the appliance defaults.
 	netprofile := network.Netprofile{}
+	if !data.Badipactionthreshold.IsNull() && !data.Badipactionthreshold.IsUnknown() {
+		netprofile.Badipactionthreshold = utils.IntPtr(int(data.Badipactionthreshold.ValueInt64()))
+	}
 	if !data.Mbf.IsNull() && !data.Mbf.IsUnknown() {
 		netprofile.Mbf = data.Mbf.ValueString()
 	}
@@ -199,6 +208,9 @@ func netprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Netp
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		netprofile.Name = data.Name.ValueString()
 	}
+	if !data.Badipactionthreshold.IsNull() && !data.Badipactionthreshold.IsUnknown() {
+		netprofile.Badipactionthreshold = utils.IntPtr(int(data.Badipactionthreshold.ValueInt64()))
+	}
 	if !data.Mbf.IsNull() && !data.Mbf.IsUnknown() {
 		netprofile.Mbf = data.Mbf.ValueString()
 	}
@@ -231,6 +243,13 @@ func netprofileSetAttrFromGet(ctx context.Context, data *NetprofileResourceModel
 	// current model value is unknown; a known configured value that NITRO happens
 	// to omit from GET (omit-on-default) is preserved to avoid a spurious diff /
 	// "inconsistent result after apply".
+	if val, ok := getResponseData["badipactionthreshold"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Badipactionthreshold = types.Int64Value(intVal)
+		}
+	} else if data.Badipactionthreshold.IsUnknown() {
+		data.Badipactionthreshold = types.Int64Null()
+	}
 	if val, ok := getResponseData["mbf"]; ok && val != nil {
 		data.Mbf = types.StringValue(val.(string))
 	} else if data.Mbf.IsUnknown() {

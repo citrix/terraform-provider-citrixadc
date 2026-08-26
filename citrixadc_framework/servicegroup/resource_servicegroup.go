@@ -486,7 +486,8 @@ func (r *ServicegroupResource) doServicegroupStateChange(data *ServicegroupResou
 // servicegroupAttrsChanged reports whether any updateable (non-ForceNew, non-state,
 // non-convenience) servicegroup attribute changed between prior state and plan.
 func servicegroupAttrsChanged(data, state *ServicegroupResourceModel) bool {
-	return !data.Appflowlog.Equal(state.Appflowlog) ||
+	return !data.Aigwprofilename.Equal(state.Aigwprofilename) ||
+		!data.Appflowlog.Equal(state.Appflowlog) ||
 		!data.Autodelayedtrofs.Equal(state.Autodelayedtrofs) ||
 		!data.Autodisabledelay.Equal(state.Autodisabledelay) ||
 		!data.Autodisablegraceful.Equal(state.Autodisablegraceful) ||
@@ -507,6 +508,7 @@ func servicegroupAttrsChanged(data, state *ServicegroupResourceModel) bool {
 		!data.Maxbandwidth.Equal(state.Maxbandwidth) ||
 		!data.Maxclient.Equal(state.Maxclient) ||
 		!data.Maxreq.Equal(state.Maxreq) ||
+		!data.Mcpprofilename.Equal(state.Mcpprofilename) ||
 		!data.Monconnectionclose.Equal(state.Monconnectionclose) ||
 		!data.Monitornamesvc.Equal(state.Monitornamesvc) ||
 		!data.Monthreshold.Equal(state.Monthreshold) ||
@@ -525,6 +527,7 @@ func servicegroupAttrsChanged(data, state *ServicegroupResourceModel) bool {
 		!data.Tcpprofilename.Equal(state.Tcpprofilename) ||
 		!data.Useproxyport.Equal(state.Useproxyport) ||
 		!data.Usip.Equal(state.Usip) ||
+		!data.Wasmmodule.Equal(state.Wasmmodule) ||
 		!data.Weight.Equal(state.Weight)
 }
 

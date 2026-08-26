@@ -72,6 +72,8 @@ type NshttpprofileResourceModel struct {
 	Maxreusepool                     types.Int64  `tfsdk:"maxreusepool"`
 	Minreusepool                     types.Int64  `tfsdk:"minreusepool"`
 	Name                             types.String `tfsdk:"name"`
+	Normalizeurl                     types.String `tfsdk:"normalizeurl"`
+	Normalizeurltoorigin             types.String `tfsdk:"normalizeurltoorigin"`
 	Passprotocolupgrade              types.String `tfsdk:"passprotocolupgrade"`
 	Persistentetag                   types.String `tfsdk:"persistentetag"`
 	Reqtimeout                       types.Int64  `tfsdk:"reqtimeout"`
@@ -379,6 +381,16 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 				Description: "Name for an HTTP profile. Must begin with a letter, number, or the underscore \\(_\\) character. Other characters allowed, after the first character, are the hyphen \\(-\\), period \\(.\\), hash \\(\\#\\), space \\( \\), at \\(@\\), colon \\(:\\), and equal \\(=\\) characters. The name of a HTTP profile cannot be changed after it is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks \\(for example, \"my http profile\" or 'my http profile'\\).",
 			},
+			"normalizeurl": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable RFC 3986 normalization of incoming URL before validation or consumption.",
+			},
+			"normalizeurltoorigin": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable RFC 3986 URL normalization for request sent to the origin server.",
+			},
 			"passprotocolupgrade": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -593,6 +605,12 @@ func nshttpprofileGetThePayloadFromtheConfig(ctx context.Context, data *Nshttppr
 	}
 	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		nshttpprofile.Name = data.Name.ValueString()
+	}
+	if !data.Normalizeurl.IsNull() && !data.Normalizeurl.IsUnknown() {
+		nshttpprofile.Normalizeurl = data.Normalizeurl.ValueString()
+	}
+	if !data.Normalizeurltoorigin.IsNull() && !data.Normalizeurltoorigin.IsUnknown() {
+		nshttpprofile.Normalizeurltoorigin = data.Normalizeurltoorigin.ValueString()
 	}
 	if !data.Passprotocolupgrade.IsNull() && !data.Passprotocolupgrade.IsUnknown() {
 		nshttpprofile.Passprotocolupgrade = data.Passprotocolupgrade.ValueString()
@@ -948,6 +966,16 @@ func nshttpprofileSetAttrFromGet(ctx context.Context, data *NshttpprofileResourc
 		data.Name = types.StringValue(val.(string))
 	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["normalizeurl"]; ok && val != nil {
+		data.Normalizeurl = types.StringValue(val.(string))
+	} else if data.Normalizeurl.IsUnknown() {
+		data.Normalizeurl = types.StringNull()
+	}
+	if val, ok := getResponseData["normalizeurltoorigin"]; ok && val != nil {
+		data.Normalizeurltoorigin = types.StringValue(val.(string))
+	} else if data.Normalizeurltoorigin.IsUnknown() {
+		data.Normalizeurltoorigin = types.StringNull()
 	}
 	if val, ok := getResponseData["passprotocolupgrade"]; ok && val != nil {
 		data.Passprotocolupgrade = types.StringValue(val.(string))

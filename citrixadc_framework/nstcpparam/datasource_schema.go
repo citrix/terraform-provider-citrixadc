@@ -225,6 +225,11 @@ func NstcpparamDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enable or disable Selective ACKnowledgement (SACK).",
 			},
+			"sendresetreasoncode": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "If enabled, NetScaler includes a debug code indicating the reason for the reset in the TCP Window header field of outgoing TCP RST segments.",
+			},
 			"slowstartincr": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,

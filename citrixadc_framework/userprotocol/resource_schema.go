@@ -16,11 +16,12 @@ import (
 
 // UserprotocolResourceModel describes the resource data model.
 type UserprotocolResourceModel struct {
-	Id        types.String `tfsdk:"id"`
-	Comment   types.String `tfsdk:"comment"`
-	Extension types.String `tfsdk:"extension"`
-	Name      types.String `tfsdk:"name"`
-	Transport types.String `tfsdk:"transport"`
+	Id         types.String `tfsdk:"id"`
+	Comment    types.String `tfsdk:"comment"`
+	Extension  types.String `tfsdk:"extension"`
+	Name       types.String `tfsdk:"name"`
+	Transport  types.String `tfsdk:"transport"`
+	Wasmmodule types.String `tfsdk:"wasmmodule"`
 }
 
 func (r *UserprotocolResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -61,6 +62,11 @@ func (r *UserprotocolResource) Schema(ctx context.Context, req resource.SchemaRe
 				},
 				Description: "Transport layer's protocol.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Wasm module needs to attach with the user protocol.",
+			},
 		},
 	}
 }
@@ -82,6 +88,9 @@ func userprotocolGetThePayloadFromtheConfig(ctx context.Context, data *Userproto
 	if !data.Transport.IsNull() && !data.Transport.IsUnknown() {
 		userprotocol.Transport = data.Transport.ValueString()
 	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		userprotocol.Wasmmodule = data.Wasmmodule.ValueString()
+	}
 
 	return userprotocol
 }
@@ -98,6 +107,9 @@ func userprotocolGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Us
 	}
 	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		userprotocol.Comment = data.Comment.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		userprotocol.Wasmmodule = data.Wasmmodule.ValueString()
 	}
 
 	return userprotocol
@@ -128,6 +140,13 @@ func userprotocolSetAttrFromGet(ctx context.Context, data *UserprotocolResourceM
 		data.Transport = types.StringValue(val.(string))
 	} else {
 		data.Transport = types.StringNull()
+	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else if data.Wasmmodule.IsUnknown() {
+		// omit-on-default guard: only null when unknown; never clobber a
+		// known configured/state value NITRO may omit from GET.
+		data.Wasmmodule = types.StringNull()
 	}
 
 	// Set ID for the resource

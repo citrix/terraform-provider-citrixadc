@@ -24,6 +24,7 @@ import (
 type ServicegroupServicegroupmemberBindingResourceModel struct {
 	Id               types.String `tfsdk:"id"`
 	DisableRead      types.Bool   `tfsdk:"disable_read"`
+	Aigwprofilename  types.String `tfsdk:"aigwprofilename"`
 	Customserverid   types.String `tfsdk:"customserverid"`
 	Dbsttl           types.Int64  `tfsdk:"dbsttl"`
 	Hashid           types.Int64  `tfsdk:"hashid"`
@@ -61,6 +62,11 @@ func (r *ServicegroupServicegroupmemberBindingResource) Schema(ctx context.Conte
 					boolplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Skip reading the resource attributes from the NetScaler during refresh. Useful for bindings that cannot be reliably read back.",
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.",
 			},
 			"customserverid": schema.StringAttribute{
 				Optional: true,
@@ -193,6 +199,9 @@ func servicegroup_servicegroupmember_bindingGetThePayloadFromthePlan(ctx context
 
 	// Create API request body from the model
 	servicegroup_servicegroupmember_binding := basic.Servicegroupservicegroupmemberbinding{}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		servicegroup_servicegroupmember_binding.Aigwprofilename = data.Aigwprofilename.ValueString()
+	}
 	if !data.Customserverid.IsNull() && !data.Customserverid.IsUnknown() {
 		servicegroup_servicegroupmember_binding.Customserverid = data.Customserverid.ValueString()
 	}
@@ -244,6 +253,11 @@ func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, 
 
 	// Convert API response to model. Only overwrite a field when the GET response
 	// actually echoes it; otherwise preserve the existing plan/state value.
+	if val, ok := getResponseData["aigwprofilename"]; ok && val != nil {
+		data.Aigwprofilename = types.StringValue(val.(string))
+	} else if data.Aigwprofilename.IsUnknown() {
+		data.Aigwprofilename = types.StringNull()
+	}
 	if val, ok := getResponseData["customserverid"]; ok && val != nil {
 		data.Customserverid = types.StringValue(val.(string))
 	}
@@ -318,6 +332,11 @@ func servicegroup_servicegroupmember_bindingSetAttrFromGet(ctx context.Context, 
 func servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource(ctx context.Context, data *ServicegroupServicegroupmemberBindingResourceModel, getResponseData map[string]interface{}) *ServicegroupServicegroupmemberBindingResourceModel {
 	tflog.Debug(ctx, "In servicegroup_servicegroupmember_bindingSetAttrFromGetForDatasource Function")
 
+	if val, ok := getResponseData["aigwprofilename"]; ok && val != nil {
+		data.Aigwprofilename = types.StringValue(val.(string))
+	} else {
+		data.Aigwprofilename = types.StringNull()
+	}
 	if val, ok := getResponseData["customserverid"]; ok && val != nil {
 		data.Customserverid = types.StringValue(val.(string))
 	} else {

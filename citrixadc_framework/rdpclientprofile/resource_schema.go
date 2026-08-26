@@ -36,6 +36,8 @@ type RdpclientprofileResourceModel struct {
 	Rdphost              types.String `tfsdk:"rdphost"`
 	Rdplinkattribute     types.String `tfsdk:"rdplinkattribute"`
 	Rdplistener          types.String `tfsdk:"rdplistener"`
+	Rdpurlmaxlen         types.Int64  `tfsdk:"rdpurlmaxlen"`
+	Rdpurlmaxlencheck    types.String `tfsdk:"rdpurlmaxlencheck"`
 	Rdpurloverride       types.String `tfsdk:"rdpurloverride"`
 	Rdpvalidateclientip  types.String `tfsdk:"rdpvalidateclientip"`
 	Redirectclipboard    types.String `tfsdk:"redirectclipboard"`
@@ -139,6 +141,16 @@ func (r *RdpclientprofileResource) Schema(ctx context.Context, req resource.Sche
 				Computed:    true,
 				Description: "IP address (or) Fully-qualified domain name(FQDN) of the RDP Listener with the port in the format IP:Port (or) FQDN:Port",
 			},
+			"rdpurlmaxlen": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Indicates the permissible max length of the RDP URL. Set to 256 by default.",
+			},
+			"rdpurlmaxlencheck": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This setting determines whether the RDP URL max length check is enforced during RDP file generation.",
+			},
 			"rdpurloverride": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -236,6 +248,12 @@ func rdpclientprofileGetThePayloadFromthePlan(ctx context.Context, data *Rdpclie
 	}
 	if !data.Rdplistener.IsNull() && !data.Rdplistener.IsUnknown() {
 		rdpclientprofile.Rdplistener = data.Rdplistener.ValueString()
+	}
+	if !data.Rdpurlmaxlen.IsNull() && !data.Rdpurlmaxlen.IsUnknown() {
+		rdpclientprofile.Rdpurlmaxlen = utils.IntPtr(int(data.Rdpurlmaxlen.ValueInt64()))
+	}
+	if !data.Rdpurlmaxlencheck.IsNull() && !data.Rdpurlmaxlencheck.IsUnknown() {
+		rdpclientprofile.Rdpurlmaxlencheck = data.Rdpurlmaxlencheck.ValueString()
 	}
 	if !data.Rdpurloverride.IsNull() && !data.Rdpurloverride.IsUnknown() {
 		rdpclientprofile.Rdpurloverride = data.Rdpurloverride.ValueString()
@@ -346,6 +364,18 @@ func rdpclientprofileSetAttrFromGet(ctx context.Context, data *RdpclientprofileR
 		data.Rdplistener = types.StringValue(val.(string))
 	} else {
 		data.Rdplistener = types.StringNull()
+	}
+	if val, ok := getResponseData["rdpurlmaxlen"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Rdpurlmaxlen = types.Int64Value(intVal)
+		}
+	} else {
+		data.Rdpurlmaxlen = types.Int64Null()
+	}
+	if val, ok := getResponseData["rdpurlmaxlencheck"]; ok && val != nil {
+		data.Rdpurlmaxlencheck = types.StringValue(val.(string))
+	} else {
+		data.Rdpurlmaxlencheck = types.StringNull()
 	}
 	if val, ok := getResponseData["rdpurloverride"]; ok && val != nil {
 		data.Rdpurloverride = types.StringValue(val.(string))

@@ -25,6 +25,11 @@ func NspbrDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "IP address or range of IP addresses to match against the destination IP address of an outgoing IPv4 packet.  In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.",
 			},
+			"destipdataset": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Policy dataset which can have multiple IP ranges bound to it.",
+			},
 			"destipop": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -39,6 +44,11 @@ func NspbrDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Port number or range of port numbers to match against the destination port number of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.\n\nNote: The destination port can be specified only for TCP and UDP protocols.",
+			},
+			"destportdataset": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Policy dataset which can have multiple port ranges bound to it.",
 			},
 			"destportop": schema.StringAttribute{
 				Optional:    true,
@@ -114,6 +124,11 @@ func NspbrDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "IP address or range of IP addresses to match against the source IP address of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.",
 			},
+			"srcipdataset": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Policy dataset which can have multiple IP ranges bound to it.",
+			},
 			"srcipop": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -138,6 +153,11 @@ func NspbrDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Port number or range of port numbers to match against the source port number of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.\n\nNote: The destination port can be specified only for TCP and UDP protocols.",
+			},
+			"srcportdataset": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Policy dataset which can have multiple port ranges bound to it.",
 			},
 			"srcportop": schema.StringAttribute{
 				Optional:    true,

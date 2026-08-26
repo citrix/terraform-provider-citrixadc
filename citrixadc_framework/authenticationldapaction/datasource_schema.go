@@ -228,6 +228,11 @@ func AuthenticationldapactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Allow password change requests.",
 			},
+			"passwordlessmgmtaccess": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This feature configures NetScaler management access to use LDAP exclusively for retrieving user group information. It ensures that LDAP is not used for authenticating user logins (i.e., verifying passwords) for NetScaler management access.",
+			},
 			"pushservice": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

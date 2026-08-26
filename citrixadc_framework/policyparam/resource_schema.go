@@ -16,8 +16,10 @@ import (
 
 // PolicyparamResourceModel describes the resource data model.
 type PolicyparamResourceModel struct {
-	Id      types.String `tfsdk:"id"`
-	Timeout types.Int64  `tfsdk:"timeout"`
+	Id                       types.String `tfsdk:"id"`
+	Maxeventsize             types.Int64  `tfsdk:"maxeventsize"`
+	Maxeventsizeexceedaction types.String `tfsdk:"maxeventsizeexceedaction"`
+	Timeout                  types.Int64  `tfsdk:"timeout"`
 }
 
 func (r *PolicyparamResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -27,6 +29,16 @@ func (r *PolicyparamResource) Schema(ctx context.Context, req resource.SchemaReq
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the policyparam resource.",
+			},
+			"maxeventsize": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Maximum event size in kilobytes that the policy engine will process. When event data exceeds this limit, the action specified by maxEventSizeExceedAction is taken. This parameter helps prevent resource exhaustion from processing extremely large events.",
+			},
+			"maxeventsizeexceedaction": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Action to take when event data exceeds maxEventSize:",
 			},
 			// SDK v2 parity: timeout was Optional+Computed with NO Default and NO
 			// ForceNew (is_updateable=true). Value is read from the ADC when unset.
@@ -48,6 +60,12 @@ func policyparamGetThePayloadFromtheConfig(ctx context.Context, data *Policypara
 
 	// Create API request body from the model
 	policyparam := policy.Policyparam{}
+	if !data.Maxeventsize.IsNull() && !data.Maxeventsize.IsUnknown() {
+		policyparam.Maxeventsize = utils.IntPtr(int(data.Maxeventsize.ValueInt64()))
+	}
+	if !data.Maxeventsizeexceedaction.IsNull() && !data.Maxeventsizeexceedaction.IsUnknown() {
+		policyparam.Maxeventsizeexceedaction = data.Maxeventsizeexceedaction.ValueString()
+	}
 	if !data.Timeout.IsNull() && !data.Timeout.IsUnknown() {
 		policyparam.Timeout = utils.IntPtr(int(data.Timeout.ValueInt64()))
 	}
@@ -59,6 +77,22 @@ func policyparamSetAttrFromGet(ctx context.Context, data *PolicyparamResourceMod
 	tflog.Debug(ctx, "In policyparamSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["maxeventsize"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Maxeventsize = types.Int64Value(intVal)
+		}
+	} else if data.Maxeventsize.IsUnknown() {
+		// Omit-on-default guard: only null when the value is unknown; never
+		// clobber a known configured value that NITRO may omit from GET.
+		data.Maxeventsize = types.Int64Null()
+	}
+	if val, ok := getResponseData["maxeventsizeexceedaction"]; ok && val != nil {
+		data.Maxeventsizeexceedaction = types.StringValue(val.(string))
+	} else if data.Maxeventsizeexceedaction.IsUnknown() {
+		// Omit-on-default guard: only null when the value is unknown; never
+		// clobber a known configured value that NITRO may omit from GET.
+		data.Maxeventsizeexceedaction = types.StringNull()
+	}
 	if val, ok := getResponseData["timeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Timeout = types.Int64Value(intVal)

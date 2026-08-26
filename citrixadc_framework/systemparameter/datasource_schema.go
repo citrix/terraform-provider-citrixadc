@@ -26,6 +26,16 @@ func SystemparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Password expiry days for all the system users. The daystoexpire value ranges from 30 to 255.",
 			},
+			"denylist": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable denylist protection.",
+			},
+			"denylistlogging": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable denylist protection logging.",
+			},
 			"doppler": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

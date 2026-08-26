@@ -196,6 +196,9 @@ func (r *AuthenticationvserverResource) Update(ctx context.Context, req resource
 	if !data.Samesite.Equal(state.Samesite) {
 		hasChange = true
 	}
+	if !data.Wasmmodule.Equal(state.Wasmmodule) {
+		hasChange = true
+	}
 
 	if hasChange {
 		authenticationvserver := authenticationvserverGetTheUpdatablePayloadFromThePlan(ctx, &data)

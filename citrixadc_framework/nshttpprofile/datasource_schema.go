@@ -274,6 +274,16 @@ func NshttpprofileDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name for an HTTP profile. Must begin with a letter, number, or the underscore \\(_\\) character. Other characters allowed, after the first character, are the hyphen \\(-\\), period \\(.\\), hash \\(\\#\\), space \\( \\), at \\(@\\), colon \\(:\\), and equal \\(=\\) characters. The name of a HTTP profile cannot be changed after it is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks \\(for example, \"my http profile\" or 'my http profile'\\).",
 			},
+			"normalizeurl": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable RFC 3986 normalization of incoming URL before validation or consumption.",
+			},
+			"normalizeurltoorigin": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable RFC 3986 URL normalization for request sent to the origin server.",
+			},
 			"passprotocolupgrade": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

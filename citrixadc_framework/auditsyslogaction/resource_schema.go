@@ -25,6 +25,7 @@ type AuditsyslogactionResourceModel struct {
 	Appflowexport          types.String `tfsdk:"appflowexport"`
 	Contentinspectionlog   types.String `tfsdk:"contentinspectionlog"`
 	Dateformat             types.String `tfsdk:"dateformat"`
+	Denylistviolations     types.String `tfsdk:"denylistviolations"`
 	Dns                    types.String `tfsdk:"dns"`
 	Domainresolvenow       types.Bool   `tfsdk:"domainresolvenow"`
 	Domainresolveretry     types.Int64  `tfsdk:"domainresolveretry"`
@@ -32,6 +33,7 @@ type AuditsyslogactionResourceModel struct {
 	HttpauthtokenWo        types.String `tfsdk:"httpauthtoken_wo"`
 	HttpauthtokenWoVersion types.Int64  `tfsdk:"httpauthtoken_wo_version"`
 	Httpendpointurl        types.String `tfsdk:"httpendpointurl"`
+	Httpschemafile         types.String `tfsdk:"httpschemafile"`
 	Lbvservername          types.String `tfsdk:"lbvservername"`
 	Logfacility            types.String `tfsdk:"logfacility"`
 	Loglevel               types.Set    `tfsdk:"loglevel"`
@@ -90,6 +92,11 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 				Computed:    true,
 				Description: "Format of dates in the logs.\nSupported formats are:\n* MMDDYYYY. -U.S. style month/date/year format.\n* DDMMYYYY - European style date/month/year format.\n* YYYYMMDD - ISO style year/month/date format.",
 			},
+			"denylistviolations": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Log denylist violations.",
+			},
 			"dns": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -126,6 +133,11 @@ func (r *AuditsyslogactionResource) Schema(ctx context.Context, req resource.Sch
 				Optional:    true,
 				Computed:    true,
 				Description: "The URL at which to upload the logs messages on the endpoint",
+			},
+			"httpschemafile": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "HTTP Schema file to input tokens to be sent in log message to log server.",
 			},
 			"lbvservername": schema.StringAttribute{
 				Optional:    true,
@@ -275,6 +287,9 @@ func auditsyslogactionGetThePayloadFromthePlan(ctx context.Context, data *Audits
 	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditsyslogaction.Dateformat = data.Dateformat.ValueString()
 	}
+	if !data.Denylistviolations.IsNull() && !data.Denylistviolations.IsUnknown() {
+		auditsyslogaction.Denylistviolations = data.Denylistviolations.ValueString()
+	}
 	if !data.Dns.IsNull() && !data.Dns.IsUnknown() {
 		auditsyslogaction.Dns = data.Dns.ValueString()
 	}
@@ -291,6 +306,9 @@ func auditsyslogactionGetThePayloadFromthePlan(ctx context.Context, data *Audits
 	// Skip version tracker attribute: httpauthtoken_wo_version
 	if !data.Httpendpointurl.IsNull() && !data.Httpendpointurl.IsUnknown() {
 		auditsyslogaction.Httpendpointurl = data.Httpendpointurl.ValueString()
+	}
+	if !data.Httpschemafile.IsNull() && !data.Httpschemafile.IsUnknown() {
+		auditsyslogaction.Httpschemafile = data.Httpschemafile.ValueString()
 	}
 	if !data.Lbvservername.IsNull() && !data.Lbvservername.IsUnknown() {
 		auditsyslogaction.Lbvservername = data.Lbvservername.ValueString()
@@ -396,6 +414,9 @@ func auditsyslogactionGetTheUpdatePayloadFromthePlan(ctx context.Context, data *
 	if !data.Dateformat.IsNull() && !data.Dateformat.IsUnknown() {
 		auditsyslogaction.Dateformat = data.Dateformat.ValueString()
 	}
+	if !data.Denylistviolations.IsNull() && !data.Denylistviolations.IsUnknown() {
+		auditsyslogaction.Denylistviolations = data.Denylistviolations.ValueString()
+	}
 	if !data.Dns.IsNull() && !data.Dns.IsUnknown() {
 		auditsyslogaction.Dns = data.Dns.ValueString()
 	}
@@ -412,6 +433,9 @@ func auditsyslogactionGetTheUpdatePayloadFromthePlan(ctx context.Context, data *
 	// Skip version tracker attribute: httpauthtoken_wo_version
 	if !data.Httpendpointurl.IsNull() && !data.Httpendpointurl.IsUnknown() {
 		auditsyslogaction.Httpendpointurl = data.Httpendpointurl.ValueString()
+	}
+	if !data.Httpschemafile.IsNull() && !data.Httpschemafile.IsUnknown() {
+		auditsyslogaction.Httpschemafile = data.Httpschemafile.ValueString()
 	}
 	if !data.Lbvservername.IsNull() && !data.Lbvservername.IsUnknown() {
 		auditsyslogaction.Lbvservername = data.Lbvservername.ValueString()
@@ -534,6 +558,11 @@ func auditsyslogactionSetAttrFromGet(ctx context.Context, data *Auditsyslogactio
 	} else {
 		data.Dateformat = types.StringNull()
 	}
+	if val, ok := getResponseData["denylistviolations"]; ok && val != nil {
+		data.Denylistviolations = types.StringValue(val.(string))
+	} else {
+		data.Denylistviolations = types.StringNull()
+	}
 	if val, ok := getResponseData["dns"]; ok && val != nil {
 		data.Dns = types.StringValue(val.(string))
 	} else {
@@ -558,6 +587,11 @@ func auditsyslogactionSetAttrFromGet(ctx context.Context, data *Auditsyslogactio
 		data.Httpendpointurl = types.StringValue(val.(string))
 	} else {
 		data.Httpendpointurl = types.StringNull()
+	}
+	if val, ok := getResponseData["httpschemafile"]; ok && val != nil {
+		data.Httpschemafile = types.StringValue(val.(string))
+	} else {
+		data.Httpschemafile = types.StringNull()
 	}
 	if val, ok := getResponseData["lbvservername"]; ok && val != nil {
 		data.Lbvservername = types.StringValue(val.(string))

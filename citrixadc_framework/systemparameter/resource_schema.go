@@ -21,6 +21,8 @@ type SystemparameterResourceModel struct {
 	Basicauth               types.String `tfsdk:"basicauth"`
 	Cliloglevel             types.String `tfsdk:"cliloglevel"`
 	Daystoexpire            types.Int64  `tfsdk:"daystoexpire"`
+	Denylist                types.String `tfsdk:"denylist"`
+	Denylistlogging         types.String `tfsdk:"denylistlogging"`
 	Doppler                 types.String `tfsdk:"doppler"`
 	Fipsusermode            types.String `tfsdk:"fipsusermode"`
 	Forcepasswordchange     types.String `tfsdk:"forcepasswordchange"`
@@ -68,6 +70,16 @@ func (r *SystemparameterResource) Schema(ctx context.Context, req resource.Schem
 				Optional:    true,
 				Computed:    true,
 				Description: "Password expiry days for all the system users. The daystoexpire value ranges from 30 to 255.",
+			},
+			"denylist": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable denylist protection.",
+			},
+			"denylistlogging": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable denylist protection logging.",
 			},
 			"doppler": schema.StringAttribute{
 				Optional:    true,
@@ -208,6 +220,12 @@ func systemparameterGetThePayloadFromtheConfig(ctx context.Context, data *System
 	if !data.Daystoexpire.IsNull() && !data.Daystoexpire.IsUnknown() {
 		systemparameter.Daystoexpire = utils.IntPtr(int(data.Daystoexpire.ValueInt64()))
 	}
+	if !data.Denylist.IsNull() && !data.Denylist.IsUnknown() {
+		systemparameter.Denylist = data.Denylist.ValueString()
+	}
+	if !data.Denylistlogging.IsNull() && !data.Denylistlogging.IsUnknown() {
+		systemparameter.Denylistlogging = data.Denylistlogging.ValueString()
+	}
 	if !data.Doppler.IsNull() && !data.Doppler.IsUnknown() {
 		systemparameter.Doppler = data.Doppler.ValueString()
 	}
@@ -303,6 +321,16 @@ func systemparameterSetAttrFromGet(ctx context.Context, data *SystemparameterRes
 		}
 	} else if data.Daystoexpire.IsUnknown() {
 		data.Daystoexpire = types.Int64Null()
+	}
+	if val, ok := getResponseData["denylist"]; ok && val != nil {
+		data.Denylist = types.StringValue(val.(string))
+	} else if data.Denylist.IsUnknown() {
+		data.Denylist = types.StringNull()
+	}
+	if val, ok := getResponseData["denylistlogging"]; ok && val != nil {
+		data.Denylistlogging = types.StringValue(val.(string))
+	} else if data.Denylistlogging.IsUnknown() {
+		data.Denylistlogging = types.StringNull()
 	}
 	if val, ok := getResponseData["doppler"]; ok && val != nil {
 		data.Doppler = types.StringValue(val.(string))

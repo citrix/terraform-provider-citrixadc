@@ -44,41 +44,45 @@ func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req pla
 
 // NspbrResourceModel describes the resource data model.
 type NspbrResourceModel struct {
-	Id             types.String `tfsdk:"id"`
-	Interface      types.String `tfsdk:"interface"`
-	Action         types.String `tfsdk:"action"`
-	Destip         types.Bool   `tfsdk:"destip"`
-	Destipop       types.String `tfsdk:"destipop"`
-	Destipval      types.String `tfsdk:"destipval"`
-	Destport       types.Bool   `tfsdk:"destport"`
-	Destportop     types.String `tfsdk:"destportop"`
-	Destportval    types.String `tfsdk:"destportval"`
-	Detail         types.Bool   `tfsdk:"detail"`
-	Iptunnel       types.Bool   `tfsdk:"iptunnel"`
-	Iptunnelname   types.String `tfsdk:"iptunnelname"`
-	Monitor        types.String `tfsdk:"monitor"`
-	Msr            types.String `tfsdk:"msr"`
-	Name           types.String `tfsdk:"name"`
-	Nexthop        types.Bool   `tfsdk:"nexthop"`
-	Nexthopval     types.String `tfsdk:"nexthopval"`
-	Ownergroup     types.String `tfsdk:"ownergroup"`
-	Priority       types.Int64  `tfsdk:"priority"`
-	Protocol       types.String `tfsdk:"protocol"`
-	Protocolnumber types.Int64  `tfsdk:"protocolnumber"`
-	Srcip          types.Bool   `tfsdk:"srcip"`
-	Srcipop        types.String `tfsdk:"srcipop"`
-	Srcipval       types.String `tfsdk:"srcipval"`
-	Srcmac         types.String `tfsdk:"srcmac"`
-	Srcmacmask     types.String `tfsdk:"srcmacmask"`
-	Srcport        types.Bool   `tfsdk:"srcport"`
-	Srcportop      types.String `tfsdk:"srcportop"`
-	Srcportval     types.String `tfsdk:"srcportval"`
-	State          types.String `tfsdk:"state"`
-	Targettd       types.Int64  `tfsdk:"targettd"`
-	Td             types.Int64  `tfsdk:"td"`
-	Vlan           types.Int64  `tfsdk:"vlan"`
-	Vxlan          types.Int64  `tfsdk:"vxlan"`
-	Vxlanvlanmap   types.String `tfsdk:"vxlanvlanmap"`
+	Id              types.String `tfsdk:"id"`
+	Interface       types.String `tfsdk:"interface"`
+	Action          types.String `tfsdk:"action"`
+	Destip          types.Bool   `tfsdk:"destip"`
+	Destipdataset   types.String `tfsdk:"destipdataset"`
+	Destipop        types.String `tfsdk:"destipop"`
+	Destipval       types.String `tfsdk:"destipval"`
+	Destport        types.Bool   `tfsdk:"destport"`
+	Destportdataset types.String `tfsdk:"destportdataset"`
+	Destportop      types.String `tfsdk:"destportop"`
+	Destportval     types.String `tfsdk:"destportval"`
+	Detail          types.Bool   `tfsdk:"detail"`
+	Iptunnel        types.Bool   `tfsdk:"iptunnel"`
+	Iptunnelname    types.String `tfsdk:"iptunnelname"`
+	Monitor         types.String `tfsdk:"monitor"`
+	Msr             types.String `tfsdk:"msr"`
+	Name            types.String `tfsdk:"name"`
+	Nexthop         types.Bool   `tfsdk:"nexthop"`
+	Nexthopval      types.String `tfsdk:"nexthopval"`
+	Ownergroup      types.String `tfsdk:"ownergroup"`
+	Priority        types.Int64  `tfsdk:"priority"`
+	Protocol        types.String `tfsdk:"protocol"`
+	Protocolnumber  types.Int64  `tfsdk:"protocolnumber"`
+	Srcip           types.Bool   `tfsdk:"srcip"`
+	Srcipdataset    types.String `tfsdk:"srcipdataset"`
+	Srcipop         types.String `tfsdk:"srcipop"`
+	Srcipval        types.String `tfsdk:"srcipval"`
+	Srcmac          types.String `tfsdk:"srcmac"`
+	Srcmacmask      types.String `tfsdk:"srcmacmask"`
+	Srcport         types.Bool   `tfsdk:"srcport"`
+	Srcportdataset  types.String `tfsdk:"srcportdataset"`
+	Srcportop       types.String `tfsdk:"srcportop"`
+	Srcportval      types.String `tfsdk:"srcportval"`
+	State           types.String `tfsdk:"state"`
+	Targettd        types.Int64  `tfsdk:"targettd"`
+	Td              types.Int64  `tfsdk:"td"`
+	Vlan            types.Int64  `tfsdk:"vlan"`
+	Vxlan           types.Int64  `tfsdk:"vxlan"`
+	Vxlanvlanmap    types.String `tfsdk:"vxlanvlanmap"`
 }
 
 func (r *NspbrResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -103,6 +107,11 @@ func (r *NspbrResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed:    true,
 				Description: "IP address or range of IP addresses to match against the destination IP address of an outgoing IPv4 packet.  In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.",
 			},
+			"destipdataset": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Policy dataset which can have multiple IP ranges bound to it.",
+			},
 			"destipop": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -117,6 +126,11 @@ func (r *NspbrResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Optional:    true,
 				Computed:    true,
 				Description: "Port number or range of port numbers to match against the destination port number of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.\n\nNote: The destination port can be specified only for TCP and UDP protocols.",
+			},
+			"destportdataset": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Policy dataset which can have multiple port ranges bound to it.",
 			},
 			"destportop": schema.StringAttribute{
 				Optional:    true,
@@ -199,6 +213,11 @@ func (r *NspbrResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed:    true,
 				Description: "IP address or range of IP addresses to match against the source IP address of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.",
 			},
+			"srcipdataset": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Policy dataset which can have multiple IP ranges bound to it.",
+			},
 			"srcipop": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -226,6 +245,11 @@ func (r *NspbrResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Optional:    true,
 				Computed:    true,
 				Description: "Port number or range of port numbers to match against the source port number of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.\n\nNote: The destination port can be specified only for TCP and UDP protocols.",
+			},
+			"srcportdataset": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Policy dataset which can have multiple port ranges bound to it.",
 			},
 			"srcportop": schema.StringAttribute{
 				Optional:    true,
@@ -286,6 +310,9 @@ func nspbrGetThePayloadFromthePlan(ctx context.Context, data *NspbrResourceModel
 	if !data.Destip.IsNull() && !data.Destip.IsUnknown() {
 		nspbr.Destip = data.Destip.ValueBool()
 	}
+	if !data.Destipdataset.IsNull() && !data.Destipdataset.IsUnknown() {
+		nspbr.Destipdataset = data.Destipdataset.ValueString()
+	}
 	if !data.Destipop.IsNull() && !data.Destipop.IsUnknown() {
 		nspbr.Destipop = data.Destipop.ValueString()
 	}
@@ -294,6 +321,9 @@ func nspbrGetThePayloadFromthePlan(ctx context.Context, data *NspbrResourceModel
 	}
 	if !data.Destport.IsNull() && !data.Destport.IsUnknown() {
 		nspbr.Destport = data.Destport.ValueBool()
+	}
+	if !data.Destportdataset.IsNull() && !data.Destportdataset.IsUnknown() {
+		nspbr.Destportdataset = data.Destportdataset.ValueString()
 	}
 	if !data.Destportop.IsNull() && !data.Destportop.IsUnknown() {
 		nspbr.Destportop = data.Destportop.ValueString()
@@ -340,6 +370,9 @@ func nspbrGetThePayloadFromthePlan(ctx context.Context, data *NspbrResourceModel
 	if !data.Srcip.IsNull() && !data.Srcip.IsUnknown() {
 		nspbr.Srcip = data.Srcip.ValueBool()
 	}
+	if !data.Srcipdataset.IsNull() && !data.Srcipdataset.IsUnknown() {
+		nspbr.Srcipdataset = data.Srcipdataset.ValueString()
+	}
 	if !data.Srcipop.IsNull() && !data.Srcipop.IsUnknown() {
 		nspbr.Srcipop = data.Srcipop.ValueString()
 	}
@@ -354,6 +387,9 @@ func nspbrGetThePayloadFromthePlan(ctx context.Context, data *NspbrResourceModel
 	}
 	if !data.Srcport.IsNull() && !data.Srcport.IsUnknown() {
 		nspbr.Srcport = data.Srcport.ValueBool()
+	}
+	if !data.Srcportdataset.IsNull() && !data.Srcportdataset.IsUnknown() {
+		nspbr.Srcportdataset = data.Srcportdataset.ValueString()
 	}
 	if !data.Srcportop.IsNull() && !data.Srcportop.IsUnknown() {
 		nspbr.Srcportop = data.Srcportop.ValueString()
@@ -404,6 +440,9 @@ func nspbrGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *NspbrReso
 	if !data.Destip.IsNull() && !data.Destip.IsUnknown() {
 		nspbr.Destip = data.Destip.ValueBool()
 	}
+	if !data.Destipdataset.IsNull() && !data.Destipdataset.IsUnknown() {
+		nspbr.Destipdataset = data.Destipdataset.ValueString()
+	}
 	if !data.Destipop.IsNull() && !data.Destipop.IsUnknown() {
 		nspbr.Destipop = data.Destipop.ValueString()
 	}
@@ -412,6 +451,9 @@ func nspbrGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *NspbrReso
 	}
 	if !data.Destport.IsNull() && !data.Destport.IsUnknown() {
 		nspbr.Destport = data.Destport.ValueBool()
+	}
+	if !data.Destportdataset.IsNull() && !data.Destportdataset.IsUnknown() {
+		nspbr.Destportdataset = data.Destportdataset.ValueString()
 	}
 	if !data.Destportop.IsNull() && !data.Destportop.IsUnknown() {
 		nspbr.Destportop = data.Destportop.ValueString()
@@ -449,6 +491,9 @@ func nspbrGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *NspbrReso
 	if !data.Srcip.IsNull() && !data.Srcip.IsUnknown() {
 		nspbr.Srcip = data.Srcip.ValueBool()
 	}
+	if !data.Srcipdataset.IsNull() && !data.Srcipdataset.IsUnknown() {
+		nspbr.Srcipdataset = data.Srcipdataset.ValueString()
+	}
 	if !data.Srcipop.IsNull() && !data.Srcipop.IsUnknown() {
 		nspbr.Srcipop = data.Srcipop.ValueString()
 	}
@@ -463,6 +508,9 @@ func nspbrGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *NspbrReso
 	}
 	if !data.Srcport.IsNull() && !data.Srcport.IsUnknown() {
 		nspbr.Srcport = data.Srcport.ValueBool()
+	}
+	if !data.Srcportdataset.IsNull() && !data.Srcportdataset.IsUnknown() {
+		nspbr.Srcportdataset = data.Srcportdataset.ValueString()
 	}
 	if !data.Srcportop.IsNull() && !data.Srcportop.IsUnknown() {
 		nspbr.Srcportop = data.Srcportop.ValueString()
@@ -516,6 +564,11 @@ func nspbrSetAttrFromGet(ctx context.Context, data *NspbrResourceModel, getRespo
 	} else if data.Destip.IsUnknown() {
 		data.Destip = types.BoolNull()
 	}
+	if val, ok := getResponseData["destipdataset"]; ok && val != nil {
+		data.Destipdataset = types.StringValue(val.(string))
+	} else if data.Destipdataset.IsUnknown() {
+		data.Destipdataset = types.StringNull()
+	}
 	if val, ok := getResponseData["destipop"]; ok && val != nil {
 		data.Destipop = types.StringValue(val.(string))
 	} else if data.Destipop.IsUnknown() {
@@ -530,6 +583,11 @@ func nspbrSetAttrFromGet(ctx context.Context, data *NspbrResourceModel, getRespo
 		data.Destport = types.BoolValue(val.(bool))
 	} else if data.Destport.IsUnknown() {
 		data.Destport = types.BoolNull()
+	}
+	if val, ok := getResponseData["destportdataset"]; ok && val != nil {
+		data.Destportdataset = types.StringValue(val.(string))
+	} else if data.Destportdataset.IsUnknown() {
+		data.Destportdataset = types.StringNull()
 	}
 	if val, ok := getResponseData["destportop"]; ok && val != nil {
 		data.Destportop = types.StringValue(val.(string))
@@ -610,6 +668,11 @@ func nspbrSetAttrFromGet(ctx context.Context, data *NspbrResourceModel, getRespo
 	} else if data.Srcip.IsUnknown() {
 		data.Srcip = types.BoolNull()
 	}
+	if val, ok := getResponseData["srcipdataset"]; ok && val != nil {
+		data.Srcipdataset = types.StringValue(val.(string))
+	} else if data.Srcipdataset.IsUnknown() {
+		data.Srcipdataset = types.StringNull()
+	}
 	if val, ok := getResponseData["srcipop"]; ok && val != nil {
 		data.Srcipop = types.StringValue(val.(string))
 	} else if data.Srcipop.IsUnknown() {
@@ -634,6 +697,11 @@ func nspbrSetAttrFromGet(ctx context.Context, data *NspbrResourceModel, getRespo
 		data.Srcport = types.BoolValue(val.(bool))
 	} else if data.Srcport.IsUnknown() {
 		data.Srcport = types.BoolNull()
+	}
+	if val, ok := getResponseData["srcportdataset"]; ok && val != nil {
+		data.Srcportdataset = types.StringValue(val.(string))
+	} else if data.Srcportdataset.IsUnknown() {
+		data.Srcportdataset = types.StringNull()
 	}
 	if val, ok := getResponseData["srcportop"]; ok && val != nil {
 		data.Srcportop = types.StringValue(val.(string))
@@ -707,6 +775,11 @@ func nspbrSetAttrFromGetForDatasource(ctx context.Context, data *NspbrResourceMo
 	} else {
 		data.Destip = types.BoolNull()
 	}
+	if val, ok := getResponseData["destipdataset"]; ok && val != nil {
+		data.Destipdataset = types.StringValue(val.(string))
+	} else {
+		data.Destipdataset = types.StringNull()
+	}
 	if val, ok := getResponseData["destipop"]; ok && val != nil {
 		data.Destipop = types.StringValue(val.(string))
 	} else {
@@ -721,6 +794,11 @@ func nspbrSetAttrFromGetForDatasource(ctx context.Context, data *NspbrResourceMo
 		data.Destport = types.BoolValue(val.(bool))
 	} else {
 		data.Destport = types.BoolNull()
+	}
+	if val, ok := getResponseData["destportdataset"]; ok && val != nil {
+		data.Destportdataset = types.StringValue(val.(string))
+	} else {
+		data.Destportdataset = types.StringNull()
 	}
 	if val, ok := getResponseData["destportop"]; ok && val != nil {
 		data.Destportop = types.StringValue(val.(string))
@@ -805,6 +883,11 @@ func nspbrSetAttrFromGetForDatasource(ctx context.Context, data *NspbrResourceMo
 	} else {
 		data.Srcip = types.BoolNull()
 	}
+	if val, ok := getResponseData["srcipdataset"]; ok && val != nil {
+		data.Srcipdataset = types.StringValue(val.(string))
+	} else {
+		data.Srcipdataset = types.StringNull()
+	}
 	if val, ok := getResponseData["srcipop"]; ok && val != nil {
 		data.Srcipop = types.StringValue(val.(string))
 	} else {
@@ -829,6 +912,11 @@ func nspbrSetAttrFromGetForDatasource(ctx context.Context, data *NspbrResourceMo
 		data.Srcport = types.BoolValue(val.(bool))
 	} else {
 		data.Srcport = types.BoolNull()
+	}
+	if val, ok := getResponseData["srcportdataset"]; ok && val != nil {
+		data.Srcportdataset = types.StringValue(val.(string))
+	} else {
+		data.Srcportdataset = types.StringNull()
 	}
 	if val, ok := getResponseData["srcportop"]; ok && val != nil {
 		data.Srcportop = types.StringValue(val.(string))

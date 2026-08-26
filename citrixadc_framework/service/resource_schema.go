@@ -22,6 +22,7 @@ type ServiceResourceModel struct {
 	Id                           types.String `tfsdk:"id"`
 	Internal                     types.Bool   `tfsdk:"internal"`
 	Accessdown                   types.String `tfsdk:"accessdown"`
+	Aigwprofilename              types.String `tfsdk:"aigwprofilename"`
 	All                          types.Bool   `tfsdk:"all"`
 	Appflowlog                   types.String `tfsdk:"appflowlog"`
 	Cacheable                    types.String `tfsdk:"cacheable"`
@@ -47,6 +48,7 @@ type ServiceResourceModel struct {
 	Maxbandwidth                 types.Int64  `tfsdk:"maxbandwidth"`
 	Maxclient                    types.Int64  `tfsdk:"maxclient"`
 	Maxreq                       types.Int64  `tfsdk:"maxreq"`
+	Mcpprofilename               types.String `tfsdk:"mcpprofilename"`
 	Monconnectionclose           types.String `tfsdk:"monconnectionclose"`
 	Monitornamesvc               types.String `tfsdk:"monitornamesvc"`
 	Monthreshold                 types.Int64  `tfsdk:"monthreshold"`
@@ -70,6 +72,7 @@ type ServiceResourceModel struct {
 	Td                           types.Int64  `tfsdk:"td"`
 	Useproxyport                 types.String `tfsdk:"useproxyport"`
 	Usip                         types.String `tfsdk:"usip"`
+	Wasmmodule                   types.String `tfsdk:"wasmmodule"`
 	Weight                       types.Int64  `tfsdk:"weight"`
 
 	// Convenience blocks preserved from the SDK v2 resource.
@@ -104,6 +107,11 @@ func (r *ServiceResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:    true,
 				Default:     stringdefault.StaticString("NO"),
 				Description: "Use Layer 2 mode to bridge the packets sent to this service if it is marked as DOWN. If the service is DOWN, and this parameter is disabled, the packets are dropped.",
+			},
+			"aigwprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the AIGW Profile that contains AIGW Endpoint setting for the service.",
 			},
 			"all": schema.BoolAttribute{
 				Optional:    true,
@@ -248,6 +256,11 @@ func (r *ServiceResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional:    true,
 				Computed:    true,
 				Description: "Maximum number of requests that can be sent on a persistent connection to the service.",
+			},
+			"mcpprofilename": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of MCP profile which will be attached to the service.",
 			},
 			"monconnectionclose": schema.StringAttribute{
 				Optional:    true,
@@ -396,6 +409,11 @@ func (r *ServiceResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:    true,
 				Description: "Use the client's IP address as the source IP address when initiating a connection to the server.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to bind to this service.",
+			},
 			"weight": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -462,6 +480,9 @@ func serviceGetThePayloadFromthePlan(ctx context.Context, data *ServiceResourceM
 	}
 	if !data.Accessdown.IsNull() && !data.Accessdown.IsUnknown() {
 		svc.Accessdown = data.Accessdown.ValueString()
+	}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		svc.Aigwprofilename = data.Aigwprofilename.ValueString()
 	}
 	if !data.All.IsNull() && !data.All.IsUnknown() {
 		svc.All = data.All.ValueBool()
@@ -532,6 +553,9 @@ func serviceGetThePayloadFromthePlan(ctx context.Context, data *ServiceResourceM
 	if !data.Maxreq.IsNull() && !data.Maxreq.IsUnknown() {
 		svc.Maxreq = utils.IntPtr(int(data.Maxreq.ValueInt64()))
 	}
+	if !data.Mcpprofilename.IsNull() && !data.Mcpprofilename.IsUnknown() {
+		svc.Mcpprofilename = data.Mcpprofilename.ValueString()
+	}
 	if !data.Monconnectionclose.IsNull() && !data.Monconnectionclose.IsUnknown() {
 		svc.Monconnectionclose = data.Monconnectionclose.ValueString()
 	}
@@ -595,6 +619,9 @@ func serviceGetThePayloadFromthePlan(ctx context.Context, data *ServiceResourceM
 	if !data.Usip.IsNull() && !data.Usip.IsUnknown() {
 		svc.Usip = data.Usip.ValueString()
 	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		svc.Wasmmodule = data.Wasmmodule.ValueString()
+	}
 	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		svc.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
 	}
@@ -619,6 +646,9 @@ func serviceGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Service
 	}
 	if !data.Accessdown.IsNull() && !data.Accessdown.IsUnknown() {
 		svc.Accessdown = data.Accessdown.ValueString()
+	}
+	if !data.Aigwprofilename.IsNull() && !data.Aigwprofilename.IsUnknown() {
+		svc.Aigwprofilename = data.Aigwprofilename.ValueString()
 	}
 	if !data.All.IsNull() && !data.All.IsUnknown() {
 		svc.All = data.All.ValueBool()
@@ -680,6 +710,9 @@ func serviceGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Service
 	if !data.Maxreq.IsNull() && !data.Maxreq.IsUnknown() {
 		svc.Maxreq = utils.IntPtr(int(data.Maxreq.ValueInt64()))
 	}
+	if !data.Mcpprofilename.IsNull() && !data.Mcpprofilename.IsUnknown() {
+		svc.Mcpprofilename = data.Mcpprofilename.ValueString()
+	}
 	if !data.Monconnectionclose.IsNull() && !data.Monconnectionclose.IsUnknown() {
 		svc.Monconnectionclose = data.Monconnectionclose.ValueString()
 	}
@@ -727,6 +760,9 @@ func serviceGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *Service
 	}
 	if !data.Usip.IsNull() && !data.Usip.IsUnknown() {
 		svc.Usip = data.Usip.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		svc.Wasmmodule = data.Wasmmodule.ValueString()
 	}
 	if !data.Weight.IsNull() && !data.Weight.IsUnknown() {
 		svc.Weight = utils.IntPtr(int(data.Weight.ValueInt64()))
@@ -789,6 +825,7 @@ func serviceApplyGetToModel(ctx context.Context, data *ServiceResourceModel, get
 	data.Internal = serviceSetBoolFromGet(getResponseData, "Internal", data.Internal)
 	data.All = serviceSetBoolFromGet(getResponseData, "all", data.All)
 	data.Accessdown = serviceSetStringFromGet(getResponseData, "accessdown", data.Accessdown)
+	data.Aigwprofilename = serviceSetStringFromGet(getResponseData, "aigwprofilename", data.Aigwprofilename)
 	data.Appflowlog = serviceSetStringFromGet(getResponseData, "appflowlog", data.Appflowlog)
 	data.Cacheable = serviceSetStringFromGet(getResponseData, "cacheable", data.Cacheable)
 	data.Cachetype = serviceSetStringFromGet(getResponseData, "cachetype", data.Cachetype)
@@ -811,6 +848,7 @@ func serviceApplyGetToModel(ctx context.Context, data *ServiceResourceModel, get
 	data.Maxbandwidth = serviceSetInt64FromGet(getResponseData, "maxbandwidth", data.Maxbandwidth)
 	data.Maxclient = serviceSetInt64FromGet(getResponseData, "maxclient", data.Maxclient)
 	data.Maxreq = serviceSetInt64FromGet(getResponseData, "maxreq", data.Maxreq)
+	data.Mcpprofilename = serviceSetStringFromGet(getResponseData, "mcpprofilename", data.Mcpprofilename)
 	data.Monconnectionclose = serviceSetStringFromGet(getResponseData, "monconnectionclose", data.Monconnectionclose)
 	data.Monitornamesvc = serviceSetStringFromGet(getResponseData, "monitor_name_svc", data.Monitornamesvc)
 	data.Monthreshold = serviceSetInt64FromGet(getResponseData, "monthreshold", data.Monthreshold)
@@ -832,6 +870,7 @@ func serviceApplyGetToModel(ctx context.Context, data *ServiceResourceModel, get
 	data.Td = serviceSetInt64FromGet(getResponseData, "td", data.Td)
 	data.Useproxyport = serviceSetStringFromGet(getResponseData, "useproxyport", data.Useproxyport)
 	data.Usip = serviceSetStringFromGet(getResponseData, "usip", data.Usip)
+	data.Wasmmodule = serviceSetStringFromGet(getResponseData, "wasmmodule", data.Wasmmodule)
 	data.Weight = serviceSetInt64FromGet(getResponseData, "weight", data.Weight)
 
 	// sp: the ADC reports "ON (but effectively OFF)"; normalise to "ON" (SDK v2 parity).

@@ -131,6 +131,10 @@ func (r *SnmpalarmResource) Update(ctx context.Context, req resource.UpdateReque
 	// Detect changes to the non-state updateable attributes (pushed via PUT).
 	hasChange := false
 	attributesToUnset := []string{}
+	if !data.Holdtime.Equal(state.Holdtime) {
+		tflog.Debug(ctx, "holdtime has changed for snmpalarm")
+		hasChange = true
+	}
 	if !data.Logging.Equal(state.Logging) {
 		tflog.Debug(ctx, "logging has changed for snmpalarm")
 		if config.Logging.IsNull() { // removed from config -> unset it
