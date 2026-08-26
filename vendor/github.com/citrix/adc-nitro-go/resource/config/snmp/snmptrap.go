@@ -42,7 +42,7 @@ type Snmptrap struct {
 	*/
 	Destport *int `json:"destport,omitempty"`
 	/**
-	* Password (string) sent with the trap messages, so that the trap listener can authenticate them. Can include 1 to 31 uppercase or lowercase letters, numbers, and hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters.  
+	* Password (string) sent with the trap messages, so that the trap listener can authenticate them. Can include 1 to 32 uppercase or lowercase letters, numbers, and hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore (_) characters.  
 		You must specify the same community string on the trap listener device. Otherwise, the trap listener drops the trap messages.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the string includes one or more spaces, enclose the name in double or single quotation marks (for example, "my string" or 'my string').

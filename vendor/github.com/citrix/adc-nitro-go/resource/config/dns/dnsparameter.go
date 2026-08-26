@@ -27,7 +27,7 @@ type Dnsparameter struct {
 	/**
 	* Minimum permissible time to live (TTL) for all records cached in the DNS cache by DNS proxy, end resolver, and forwarder configurations. If the TTL of a record that is to be cached is lower than the value configured for minTTL, the TTL of the record is set to the value of minTTL before caching. When you modify this setting, the new value is applied only to those records that are cached after the modification. The TTL values of existing records are not changed.
 	*/
-	Minttl *int `json:"minttl"` // Zero is a valid value
+	Minttl *int `json:"minttl,omitempty"`
 	/**
 	* Maximum time to live (TTL) for all records cached in the DNS cache by DNS proxy, end resolver, and forwarder configurations. If the TTL of a record that is to be cached is higher than the value configured for maxTTL, the TTL of the record is set to the value of maxTTL before caching. When you modify this setting, the new value is applied only to those records that are cached after the modification. The TTL values of existing records are not changed.
 	*/
@@ -41,7 +41,7 @@ type Dnsparameter struct {
 	*/
 	Namelookuppriority string `json:"namelookuppriority,omitempty"`
 	/**
-	* Function as an end resolver and recursively resolve queries for domains that are not hosted on the Citrix ADC. Also resolve queries recursively when the external name servers configured on the appliance (for a forwarder configuration) are unavailable. When external name servers are unavailable, the appliance queries a root server and resolves the request recursively, as it does for an end resolver configuration.
+	* Function as an end resolver and recursively resolve queries for domains that are not hosted on the Citrix ADC. Also resolve queries recursively when the external name servers configured on the appliance (for a forwarder configuration) are unavailable. When external name servers are unavailable, the appliance queries a root server and resolves the request recursively, as it does for an end resolver configuration. This parameter will be effective only for queries recieved on nameserver with local flag. To enable recursion for queries recieved through ADNS service , CS vserver and LB vserver it is recommended to use recursiveResolution parameter on DNS profile.
 	*/
 	Recursion string `json:"recursion,omitempty"`
 	/**
@@ -67,11 +67,11 @@ type Dnsparameter struct {
 	/**
 	* While doing DNS64 resolution, this parameter specifies the time to wait before sending an A query if no response is received from backend DNS server for AAAA query.
 	*/
-	Dns64timeout *int `json:"dns64timeout"` // Zero is a valid value
+	Dns64timeout *int `json:"dns64timeout,omitempty"`
 	/**
 	* Maximum number of subnets that can be cached corresponding to a single domain. Subnet caching will occur for responses with EDNS Client Subnet (ECS) option. Caching of such responses can be disabled using DNS profile settings. A value of zero indicates that the number of subnets cached is limited only by existing memory constraints. The default value is zero.
 	*/
-	Ecsmaxsubnets *int `json:"ecsmaxsubnets"` // Zero is a valid value
+	Ecsmaxsubnets *int `json:"ecsmaxsubnets,omitempty"`
 	/**
 	* Maximum time to live (TTL) for all negative records ( NXDONAIN and NODATA ) cached in the DNS cache by DNS proxy, end resolver, and forwarder configurations. If the TTL of a record that is to be cached is higher than the value configured for maxnegcacheTTL, the TTL of the record is set to the value of maxnegcacheTTL before caching. When you modify this setting, the new value is applied only to those records that are cached after the modification. The TTL values of existing records are not changed.
 	*/
@@ -83,7 +83,7 @@ type Dnsparameter struct {
 	/**
 	* Maximum memory, in megabytes, that can be used for dns caching per Packet Engine.
 	*/
-	Maxcachesize *int `json:"maxcachesize"` // Zero is a valid value
+	Maxcachesize *int `json:"maxcachesize,omitempty"`
 	/**
 	* Maximum number of active concurrent DNS resolutions per Packet Engine
 	*/
@@ -99,7 +99,7 @@ type Dnsparameter struct {
 	/**
 	* Maximum memory, in megabytes, that can be used for caching of negative DNS responses per packet engine.
 	*/
-	Maxnegativecachesize *int `json:"maxnegativecachesize"` // Zero is a valid value
+	Maxnegativecachesize *int `json:"maxnegativecachesize,omitempty"`
 	/**
 	* If this flag is set to YES, the existing entries in cache do not age out. On reaching the max limit the cache records are frozen
 	*/
@@ -128,7 +128,7 @@ type Dnsparameter struct {
 	/**
 	* Rate limit threshold for Non-Existant domain (NXDOMAIN) responses generated from Citrix ADC. Once the threshold is breached , DNS queries leading to NXDOMAIN response will be dropped. This threshold will not be applied for NXDOMAIN responses got from the backend. The threshold will be applied per packet engine and per second.
 	*/
-	Nxdomainratelimitthreshold *int `json:"nxdomainratelimitthreshold"` // Zero is a valid value
+	Nxdomainratelimitthreshold *int `json:"nxdomainratelimitthreshold,omitempty"`
 
 	//------- Read only Parameter ---------;
 

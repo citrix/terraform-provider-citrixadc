@@ -53,7 +53,8 @@ type Streamidentifier struct {
 	*/
 	Trackackonlypackets string `json:"trackackonlypackets,omitempty"`
 	/**
-	* Track transactions exceeding configured threshold. Transaction tracking can be enabled for following metric: ResponseTime.
+	* Track transactions exceeding configured threshold. Transaction tracking can be enabled for following metrics: ResponseTime (RESPTIME) or LLM token consumption (TOKENS).
+		When set to TOKENS, minTransactionThreshold, maxTransactionThreshold, acceptanceThreshold and breachThreshold are not applicable.
 		By default transaction tracking is disabled
 	*/
 	Tracktransactions string `json:"tracktransactions,omitempty"`

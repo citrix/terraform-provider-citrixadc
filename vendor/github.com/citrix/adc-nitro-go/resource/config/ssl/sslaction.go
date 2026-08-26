@@ -134,6 +134,30 @@ type Sslaction struct {
 	* This action will allow to pick CA(s) from the specific CA group, to verify the client certificate.
 	*/
 	Cacertgrpname string `json:"cacertgrpname,omitempty"`
+	/**
+	* This option is used to enable ocspStapling parameter for the SSL connection.
+	*/
+	Ocspstapling string `json:"ocspstapling,omitempty"`
+	/**
+	* This option is used to check the revocation status of client/server certificate in SSL handshake using OCSP.
+	*/
+	Ocspcertvalidation string `json:"ocspcertvalidation,omitempty"`
+	/**
+	* Enable cache of OCSP response. Caching of response received from the OCSP responder enables faster response to the client and reduces the load on the OCSP responder.
+	*/
+	Ocspcache string `json:"ocspcache,omitempty"`
+	/**
+	* This option dynamically enables client authentication for the specific SSL connection based on policy evaluation performed during ClientHello handshake message processing. It overrides the clientAuth setting configured on the SSL virtual server or the SSL frontend profile.
+	*/
+	Inhandshakeclientauth string `json:"inhandshakeclientauth,omitempty"`
+	/**
+	* Specifies the type of client authentication and is applicable only when inHandshakeClientAuth is ENABLED. If set to MANDATORY, the appliance terminates the SSL handshake when the client fails to present a valid certificate. If set to OPTIONAL, the appliance requests a client certificate but continues the SSL transaction even if the certificate is missing or invalid. Default value is MANDATORY.
+	*/
+	Inhandshakeclientcertverification string `json:"inhandshakeclientcertverification,omitempty"`
+	/**
+	* This option is used to enable or disable the HTTP/2 application protocol based on policy evaluation performed during ClientHello handshake message processing.
+	*/
+	Alpnhttp2 string `json:"alpnhttp2,omitempty"`
 
 	//------- Read only Parameter ---------;
 

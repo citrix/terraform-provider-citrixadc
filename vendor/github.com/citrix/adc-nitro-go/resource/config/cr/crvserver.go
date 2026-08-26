@@ -242,6 +242,10 @@ type Crvserver struct {
 	*/
 	Disallowserviceaccess string `json:"disallowserviceaccess,omitempty"`
 	/**
+	* Name of the WASM module to assign to this virtual server.
+	*/
+	Wasmmodule string `json:"wasmmodule,omitempty"`
+	/**
 	* New name for the cache redirection virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my name" or 'my name').
 	*/
 	Newname string `json:"newname,omitempty"`

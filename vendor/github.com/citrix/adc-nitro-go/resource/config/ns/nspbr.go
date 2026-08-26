@@ -48,6 +48,10 @@ type Nspbr struct {
 	*/
 	Srcipval string `json:"srcipval,omitempty"`
 	/**
+	* Policy dataset which can have multiple IP ranges bound to it.
+	*/
+	Srcipdataset string `json:"srcipdataset,omitempty"`
+	/**
 	* Port number or range of port numbers to match against the source port number of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.
 		Note: The destination port can be specified only for TCP and UDP protocols.
 	*/
@@ -62,6 +66,10 @@ type Nspbr struct {
 	*/
 	Srcportval string `json:"srcportval,omitempty"`
 	/**
+	* Policy dataset which can have multiple port ranges bound to it.
+	*/
+	Srcportdataset string `json:"srcportdataset,omitempty"`
+	/**
 	* IP address or range of IP addresses to match against the destination IP address of an outgoing IPv4 packet.  In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.
 	*/
 	Destip bool `json:"destip,omitempty"`
@@ -73,6 +81,10 @@ type Nspbr struct {
 	* IP address or range of IP addresses to match against the destination IP address of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 10.102.29.30-10.102.29.189.
 	*/
 	Destipval string `json:"destipval,omitempty"`
+	/**
+	* Policy dataset which can have multiple IP ranges bound to it.
+	*/
+	Destipdataset string `json:"destipdataset,omitempty"`
 	/**
 	* Port number or range of port numbers to match against the destination port number of an outgoing IPv4 packet. In the command line interface, separate the range with a hyphen. For example: 40-90.
 		Note: The destination port can be specified only for TCP and UDP protocols.
@@ -87,6 +99,10 @@ type Nspbr struct {
 		Note: The destination port can be specified only for TCP and UDP protocols.
 	*/
 	Destportval string `json:"destportval,omitempty"`
+	/**
+	* Policy dataset which can have multiple port ranges bound to it.
+	*/
+	Destportdataset string `json:"destportdataset,omitempty"`
 	/**
 	* IP address of the next hop router or the name of the link load balancing virtual server to which to send matching packets if action is set to ALLOW.
 		If you specify a link load balancing (LLB) virtual server, which can provide a backup if a next hop link fails, first make sure that the next hops bound to the LLB virtual server are actually next hops that are directly connected to the Citrix ADC. Otherwise, the Citrix ADC throws an error when you attempt to create the PBR. The next hop can be null to represent null routes
@@ -178,6 +194,7 @@ type Nspbr struct {
 	Monstatparam2 string `json:"monstatparam2,omitempty"`
 	Monstatparam3 string `json:"monstatparam3,omitempty"`
 	Data string `json:"data,omitempty"`
+	Pbrchildcount string `json:"pbrchildcount,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

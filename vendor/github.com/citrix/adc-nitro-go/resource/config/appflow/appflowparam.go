@@ -224,6 +224,10 @@ type Appflowparam struct {
 	* To use the Citrix ADC IP to send Time series data such as metrics and events, instead of the SNIP
 	*/
 	Timeseriesovernsip string `json:"timeseriesovernsip,omitempty"`
+	/**
+	* Overrides the field filtering for all analytics profiles, and sends all the fields for the configured insights.
+	*/
+	Logalljsonfields string `json:"logalljsonfields,omitempty"`
 
 	//------- Read only Parameter ---------;
 

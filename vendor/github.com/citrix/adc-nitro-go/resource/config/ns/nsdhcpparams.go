@@ -28,6 +28,10 @@ type Nsdhcpparams struct {
 	* DHCP acquired routes are saved on the Citrix ADC.
 	*/
 	Saveroute string `json:"saveroute,omitempty"`
+	/**
+	* Subnet Selection option (RFC 3011) to request IP from a specific subnet.
+	*/
+	Subnetselection string `json:"subnetselection,omitempty"`
 
 	//------- Read only Parameter ---------;
 

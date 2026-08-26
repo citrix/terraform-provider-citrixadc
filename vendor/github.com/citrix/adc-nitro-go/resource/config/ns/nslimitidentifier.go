@@ -27,16 +27,18 @@ type Nslimitidentifier struct {
 	/**
 	* Maximum number of requests that are allowed in the given timeslice when requests (mode is set as REQUEST_RATE) are tracked per timeslice.
 		When connections (mode is set as CONNECTION) are tracked, it is the total number of connections that would be let through.
+		Maximum number of tokens that are allowed in the given timeslice when Tokens (mode is set to TOKEN_RATE) are tracked per timeslice.
 	*/
 	Threshold *int `json:"threshold,omitempty"`
 	/**
-	* Time interval, in milliseconds, specified in multiples of 10, during which requests are tracked to check if they cross the threshold. This argument is needed only when the mode is set to REQUEST_RATE.
+	* Time interval, in milliseconds, specified in multiples of 10, during which requests/tokens are tracked to check if they cross the threshold. This argument is needed only when the mode is set to REQUEST_RATE or TOKEN_RATE.
 	*/
 	Timeslice *int `json:"timeslice,omitempty"`
 	/**
 	* Defines the type of traffic to be tracked.
 		* REQUEST_RATE - Tracks requests/timeslice.
 		* CONNECTION - Tracks active transactions.
+		* TOKEN_RATE - Tracks total input+output tokens/minute for LLM chat completions, Timeslice is fixed at 60000 ms, Useful on applications serving LLM services.
 		Examples
 		1. To permit 20 requests in 10 ms and 2 traps in 10 ms:
 		add limitidentifier limit_req -mode request_rate -limitType smooth -timeslice 1000 -Threshold 2000 -trapsInTimeSlice 200
@@ -46,8 +48,10 @@ type Nslimitidentifier struct {
 		set limitidentifier limit_req -mode request_rate -timeslice 2000 -Threshold 50 -limitType smooth
 		4. To permit 1 request in 200 ms and 1 trap in 130 ms:
 		set limitidentifier limit_req -mode request_rate -timeslice 1000 -Threshold 5 -limitType smooth -trapsInTimeSlice 8
-		5. To permit 5000 requests in 1000 ms and 200 traps in 1000 ms:
-		set limitidentifier limit_req  -mode request_rate -timeslice 1000 -Threshold 5000 -limitType BURSTY
+		5. To permit 5000 requests in 1000 ms and 200 traps in 1000 ms and 20 appflow alerts in 1000ms:
+		set limitidentifier limit_req  -mode request_rate -timeslice 1000 -Threshold 5000 -limitType BURSTY -trapsInTimeSlice 200 -alertsInTimeSlice 20
+		6. To permit 100000 tokens in 60000 ms and 100 appflow alerts in 60000ms:
+		set limitidentifier limit_tokens -mode token_rate -timeSlice 60000 -Threshold 100000 -limittype BURSTY -alertsInTimeSlice 100
 	*/
 	Mode string `json:"mode,omitempty"`
 	/**
@@ -55,6 +59,7 @@ type Nslimitidentifier struct {
 		* SMOOTH - When you want the permitted number of requests in a given interval of time to be spread evenly across the timeslice
 		* BURSTY - When you want the permitted number of requests to exhaust the quota anytime within the timeslice.
 		This argument is needed only when the mode is set to REQUEST_RATE.
+		Mode TOKEN_RATE only supports BURSTY type
 	*/
 	Limittype string `json:"limittype,omitempty"`
 	/**
@@ -69,6 +74,14 @@ type Nslimitidentifier struct {
 	* Number of traps to be sent in the timeslice configured. A value of 0 indicates that traps are disabled.
 	*/
 	Trapsintimeslice *int `json:"trapsintimeslice,omitempty"`
+	/**
+	* Number of appflow alerts to be sent in the timeslice configured. A value of 0 indicates that alerts are disabled. A value of 65535 indicates no limit on number of appflow alerts.
+	*/
+	Alertsintimeslice *int `json:"alertsintimeslice,omitempty"`
+	/**
+	* Value MINUTE will align the time windows for a configured timeslice to Minute boundary. TimeSlice values should be integrals of 60000ms when value MINUTE is choosen. Default : NONE, timeslice alignments will happen with next 10ms
+	*/
+	Timealign string `json:"timealign,omitempty"`
 
 	//------- Read only Parameter ---------;
 
@@ -80,6 +93,8 @@ type Nslimitidentifier struct {
 	Total string `json:"total,omitempty"`
 	Trapscomputedintimeslice string `json:"trapscomputedintimeslice,omitempty"`
 	Computedtraptimeslice string `json:"computedtraptimeslice,omitempty"`
+	Alertscomputedintimeslice string `json:"alertscomputedintimeslice,omitempty"`
+	Computedalerttimeslice string `json:"computedalerttimeslice,omitempty"`
 	Referencecount string `json:"referencecount,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 

@@ -21,7 +21,7 @@ package snmp
 */
 type Snmpcommunity struct {
 	/**
-	* The SNMP community string. Can consist of 1 to 31 characters that include uppercase and lowercase letters,numbers and special characters.
+	* The SNMP community string. Can consist of 1 to 32 characters that include uppercase and lowercase letters,numbers and special characters.
 		The following requirement applies only to the Citrix ADC CLI:
 		If the string includes one or more spaces, enclose the name in double or single quotation marks (for example, "my string" or 'my string').
 	*/

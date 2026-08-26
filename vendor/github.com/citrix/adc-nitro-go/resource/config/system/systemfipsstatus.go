@@ -28,6 +28,7 @@ type Systemfipsstatus struct {
 	Netscalerdataplanecryptographiclibraryversion string `json:"netscalerdataplanecryptographiclibraryversion,omitempty"`
 	Netscalercrytographicmoduleversion string `json:"netscalercrytographicmoduleversion,omitempty"`
 	Intelhwcryptographicacceleratorversion string `json:"intelhwcryptographicacceleratorversion,omitempty"`
+	Netscalerjitterentropysourceversion string `json:"netscalerjitterentropysourceversion,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

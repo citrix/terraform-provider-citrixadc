@@ -23,7 +23,7 @@ type Hanode struct {
 	/**
 	* Number that uniquely identifies the node. For self node, it will always be 0. Peer node values can range from 1-64.
 	*/
-	Id *int `json:"id"` // Zero is a valid value
+	Id *int `json:"id,omitempty"`
 	/**
 	* The NSIP or NSIP6 address of the node to be added for an HA configuration. This setting is neither propagated nor synchronized.
 	*/
@@ -102,6 +102,7 @@ type Hanode struct {
 	Completedfliptime string `json:"completedfliptime,omitempty"`
 	Routemonitorstate string `json:"routemonitorstate,omitempty"`
 	Hasyncfailurereason string `json:"hasyncfailurereason,omitempty"`
+	Secureheartbeatstate string `json:"secureheartbeatstate,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

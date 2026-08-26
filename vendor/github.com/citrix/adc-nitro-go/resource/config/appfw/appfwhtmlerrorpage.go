@@ -25,7 +25,7 @@ type Appfwhtmlerrorpage struct {
 	*/
 	Name string `json:"name,omitempty"`
 	/**
-	* URL (protocol, host, path, and name) for the location at which to store the imported HTML error object.
+	* URL (protocol, host, path, and name) for the location from which to fetch the imported HTML error object.
 		NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
 	*/
 	Src string `json:"src,omitempty"`

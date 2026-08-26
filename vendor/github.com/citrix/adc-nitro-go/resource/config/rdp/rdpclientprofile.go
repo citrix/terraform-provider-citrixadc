@@ -105,6 +105,14 @@ type Rdpclientprofile struct {
 	* This setting determines whether RDC launch is initiated by the valid client IP
 	*/
 	Rdpvalidateclientip string `json:"rdpvalidateclientip,omitempty"`
+	/**
+	* This setting determines whether the RDP URL max length check is enforced during RDP file generation
+	*/
+	Rdpurlmaxlencheck string `json:"rdpurlmaxlencheck,omitempty"`
+	/**
+	* Indicates the permissible max length of the RDP URL. Set to 256 by default.
+	*/
+	Rdpurlmaxlen *int `json:"rdpurlmaxlen,omitempty"`
 
 	//------- Read only Parameter ---------;
 
