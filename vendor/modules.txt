@@ -28,7 +28,7 @@ github.com/agext/levenshtein
 # github.com/apparentlymart/go-textseg/v15 v15.0.0
 ## explicit; go 1.16
 github.com/apparentlymart/go-textseg/v15/textseg
-# github.com/citrix/adc-nitro-go v0.0.0-20260824205412-bf8ad4fc6b33
+# github.com/citrix/adc-nitro-go v0.0.0-20260828165900-376b1d93c9e7
 ## explicit; go 1.14
 github.com/citrix/adc-nitro-go/resource/config/aaa
 github.com/citrix/adc-nitro-go/resource/config/adm

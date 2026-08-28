@@ -364,6 +364,51 @@ func doSslcertkeybundlePreChecks(t *testing.T) {
 	}
 }
 
+// doWasmfilePreChecks uploads the WASM module fixture (testdata/tfwasmfile.wasm)
+// to /var/tmp on the ADC so the wasmfile Import test (src="local:tfwasmfile.wasm")
+// resolves to a real file. The fixture is a genuine, validly-signed WASM module
+// (a copy of the firmware-shipped sample /var/netscaler/wasm/ns_sigsci.wasm);
+// wasmfile's Module import does not verify the signature, so the module alone
+// suffices here.
+func doWasmfilePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	if err := uploadTestdataFile(c, t, "tfwasmfile.wasm", "/var/tmp"); err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+// doWasmmodulePreChecks stages the WASM module fixture AND its cryptographic
+// signature into /var/netscaler/wasm on the ADC, which is where `add wasmmodule`
+// reads modulefile/signaturefile from. `add wasmmodule` cryptographically
+// validates the signature against the module (NITRO errorcode 1074 on mismatch),
+// so both files must be a genuine signed pair — here testdata/tfwasmfile.wasm and
+// testdata/tfwasmfile.sig, copied verbatim from a firmware-shipped sample
+// (/var/netscaler/wasm/ns_sigsci.wasm + ns_sigsci_wasm.sig). ns_sigsci is a
+// content-inspection WASM module, so this same fixture also drives the
+// contentinspectionwasmprofile test (whose wasmModule must be CI-compatible — the
+// ns_extrahop_* samples are rejected there with errorcode 278). The signature
+// validates by file *content*, so the rename to tfwasmfile.* is fine.
+func doWasmmodulePreChecks(t *testing.T) {
+	testAccPreCheck(t)
+
+	c, err := testHelperInstantiateClient("", "", "", false)
+	if err != nil {
+		t.Fatalf("Failed to instantiate client. %v\n", err)
+	}
+
+	for _, filename := range []string{"tfwasmfile.wasm", "tfwasmfile.sig"} {
+		if err := uploadTestdataFile(c, t, filename, "/var/netscaler/wasm"); err != nil {
+			t.Errorf("%v", err)
+		}
+	}
+}
+
 func uploadTestdataFile(c *NetScalerNitroClient, t *testing.T, filename, targetDir string) error {
 	client := c.client
 
