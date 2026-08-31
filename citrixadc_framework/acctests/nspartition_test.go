@@ -191,7 +191,7 @@ func TestAccNspartition_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNspartition_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartitionExist("citrixadc_nspartition.tf_nspartition", nil)),

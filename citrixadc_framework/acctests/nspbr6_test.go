@@ -209,7 +209,7 @@ func TestAccNspbr6_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNspbr6_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNspbr6Exist("citrixadc_nspbr6.tf_nspbr6", nil)),

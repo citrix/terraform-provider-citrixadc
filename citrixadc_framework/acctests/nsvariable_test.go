@@ -133,7 +133,7 @@ func TestAccNsvariable_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNsvariable_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNsvariableExist("citrixadc_nsvariable.tf_nsvariable", nil)),

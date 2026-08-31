@@ -181,7 +181,7 @@ func TestAccLocationfile6_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccLocationfile6_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckLocationfile6Exist("citrixadc_locationfile6.tf_locationfile6", nil)),

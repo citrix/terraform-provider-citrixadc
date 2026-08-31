@@ -301,7 +301,7 @@ func TestAccContentinspectionpolicylabel_contentinspectionpolicy_binding_sdkv2St
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccContentinspectionpolicylabel_contentinspectionpolicy_binding_upgrade_basic,

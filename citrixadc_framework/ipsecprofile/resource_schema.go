@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -165,6 +166,14 @@ func (r *IpsecprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"psk_wo_version": schema.Int64Attribute{
 				Optional: true,
+				// Optional+Computed+Default(1) is the canonical _wo_version shape (used by
+				// ~62 sibling write-only resources). The Default supplies 1 when config omits
+				// the attribute, matching the value UpgradeState seeds on migration — so an
+				// upgraded profile plans 1 -> 1 (no diff) instead of 1 -> null (spurious
+				// destroy+recreate). Without Computed+Default the seeded value collapses to
+				// null and the RequiresReplace below forces replacement on upgrade.
+				Computed: true,
+				Default:  int64default.StaticInt64(1),
 				PlanModifiers: []planmodifier.Int64{
 					// GH #1436: ipsecprofile is add+delete-only (no NITRO 'set' command), so the
 					// _wo_version bump must force replace; RequiresReplaceIfConfigured would turn the

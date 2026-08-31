@@ -232,7 +232,7 @@ func TestAccTransformaction_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccTransformaction_basic_step1,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformactionExist("citrixadc_transformaction.tf_trans_action", nil)),

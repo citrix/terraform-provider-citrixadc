@@ -195,7 +195,7 @@ func TestAccVrid6_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccVrid6_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckVrid6Exist("citrixadc_vrid6.tf_vrid6", nil)),

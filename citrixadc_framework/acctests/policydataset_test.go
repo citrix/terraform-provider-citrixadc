@@ -180,7 +180,7 @@ func TestAccPolicydataset_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccPolicydataset_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicydatasetExist("citrixadc_policydataset.tf_dataset", nil)),

@@ -454,7 +454,7 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade(t 
 			{
 				// Step 1: create with the last SDK v2 release -> legacy 3-part id.
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_servername,
 				Check: resource.ComposeTestCheckFunc(
@@ -512,7 +512,7 @@ func TestAccGslbservicegroup_gslbservicegroupmember_binding_sdkv2StateUpgrade_ip
 				// Step 1: create by IP with the last SDK v2 release. ADC auto-names the
 				// server == ip; the legacy id is "servicegroupname,<ip>,port".
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccGslbservicegroup_gslbservicegroupmember_binding_upgrade_ip,
 				Check: resource.ComposeTestCheckFunc(

@@ -138,7 +138,7 @@ func TestAccAuthenticationsamlpolicy_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccAuthenticationsamlpolicy_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlpolicyExist("citrixadc_authenticationsamlpolicy.tf_samlpolicy", nil)),

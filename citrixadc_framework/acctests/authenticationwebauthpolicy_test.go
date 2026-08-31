@@ -223,7 +223,7 @@ func TestAccAuthenticationwebauthpolicy_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccAuthenticationwebauthpolicy_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthpolicyExist("citrixadc_authenticationwebauthpolicy.tf_webauthpolicy", nil)),

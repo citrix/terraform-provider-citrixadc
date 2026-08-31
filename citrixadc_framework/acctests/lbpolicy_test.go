@@ -294,7 +294,7 @@ func TestAccLbpolicy_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccLbpolicy_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckLbpolicyExist("citrixadc_lbpolicy.tf_pol", nil)),

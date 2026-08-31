@@ -118,7 +118,7 @@ func TestAccInterface_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccInterface_basic_step1,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfaceExist("citrixadc_interface.tf_interface", nil, "1/1")),

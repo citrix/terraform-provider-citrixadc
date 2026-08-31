@@ -81,7 +81,7 @@ func TestAccL2param_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccL2param_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckL2paramExist("citrixadc_l2param.tf_l2param", nil)),

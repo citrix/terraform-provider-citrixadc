@@ -137,7 +137,7 @@ func TestAccNat64param_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNat64param_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNat64paramExist("citrixadc_nat64param.tf_nat64param", nil)),

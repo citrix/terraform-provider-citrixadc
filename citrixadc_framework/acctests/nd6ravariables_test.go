@@ -82,7 +82,7 @@ func TestAccNd6ravariables_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNd6ravariables_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNd6ravariablesExist("citrixadc_nd6ravariables.tf_nd6ravariables", nil)),

@@ -218,7 +218,7 @@ func TestAccVpnvserver_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccVpnvserver_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserverExist("citrixadc_vpnvserver.foo", nil)),

@@ -55,7 +55,7 @@ const testAccSslzerotouchparam_update = `
 
 func TestAccSslzerotouchparam_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfZerotouchDisabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -87,6 +87,26 @@ func TestAccSslzerotouchparam_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// skipIfZerotouchDisabled skips the test unless SSL ZeroTouch is ENABLED on the
+// appliance. PREREQUISITE: sslzerotouchparam can only be modified when ZeroTouch
+// is enabled (register the ADC with ADM / enable ZeroTouch); otherwise NITRO
+// rejects the 'set' with errorcode 257 "Operation not permitted". The enablement
+// state is read from the sslzerotouchparam GET's "zerotouch" field.
+func skipIfZerotouchDisabled(t *testing.T) {
+	client, err := testAccGetFrameworkClient()
+	if err != nil {
+		t.Fatalf("Failed to get test client: %v", err)
+	}
+	data, err := client.FindResource(service.Sslzerotouchparam.Type(), "")
+	if err != nil {
+		t.Fatalf("Failed to read sslzerotouchparam to check the ZeroTouch prerequisite: %v", err)
+	}
+	if got := strings.TrimSpace(fmt.Sprintf("%v", data["zerotouch"])); got != "ENABLED" {
+		t.Skipf("Prerequisite not met: sslzerotouchparam requires ZeroTouch to be ENABLED on the "+
+			"appliance (register the ADC with ADM / enable ZeroTouch); appliance reports zerotouch=%q. Skipping.", got)
+	}
 }
 
 func testAccCheckSslzerotouchparamExist(n string, id *string) resource.TestCheckFunc {
@@ -143,7 +163,7 @@ const testAccSslzerotouchparamDataSource_basic = `
 
 func TestAccSslzerotouchparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfZerotouchDisabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -163,7 +183,7 @@ func TestAccSslzerotouchparamDataSource_basic(t *testing.T) {
 func TestAccSslzerotouchparam_import(t *testing.T) {
 	const resAddr = "citrixadc_sslzerotouchparam.tf_sslzerotouchparam"
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfZerotouchDisabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -201,7 +221,7 @@ const testAccSslzerotouchparam_unset_step2 = `
 
 func TestAccSslzerotouchparam_unset(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfZerotouchDisabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -262,7 +282,7 @@ func testAccCheckSslzerotouchparamADCValue(attr, want string) resource.TestCheck
 // back to the configured value.
 func TestAccSslzerotouchparam_selfHealing(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfZerotouchDisabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

@@ -90,7 +90,7 @@ func TestAccCsvserver_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccCsvserver_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserverExist("citrixadc_csvserver.foo", nil)),
@@ -207,12 +207,35 @@ func TestAccCsvserverDataSource_basic(t *testing.T) {
 	})
 }
 
+// skipIfDefaultSSLProfileEnabled skips the test unless the ADC's default SSL
+// profile is DISABLED. PREREQUISITE: these tests bind ciphers/SNI certs directly
+// on the vserver, which NITRO only permits when the default SSL profile is
+// DISABLED (a STANDALONE_NON_DEFAULT_SSL_PROFILE box). With it ENABLED, cipher/SNI
+// binding must go through an SSL profile and NITRO rejects the direct binding with
+// errorcode 3740 "Operation not permitted. Use profile command to do this
+// operation". State is read from sslparameter.defaultprofile.
+func skipIfDefaultSSLProfileEnabled(t *testing.T) {
+	client, err := testAccGetFrameworkClient()
+	if err != nil {
+		t.Fatalf("Failed to get test client: %v", err)
+	}
+	data, err := client.FindResource(service.Sslparameter.Type(), "")
+	if err != nil {
+		t.Fatalf("Failed to read sslparameter to check the default-SSL-profile prerequisite: %v", err)
+	}
+	if got := strings.TrimSpace(fmt.Sprintf("%v", data["defaultprofile"])); got == "ENABLED" {
+		t.Skipf("Prerequisite not met: this test binds ciphers/SNI directly on the vserver, which requires the "+
+			"default SSL profile to be DISABLED (STANDALONE_NON_DEFAULT_SSL_PROFILE); appliance reports "+
+			"sslparameter.defaultprofile=%q, so NITRO rejects direct binding with errorcode 3740. Skipping.", got)
+	}
+}
+
 func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	// if isCluster {
 	// 	t.Skip("cluster ADC deployment")
 	// }
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfDefaultSSLProfileEnabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Initial
@@ -245,7 +268,7 @@ func TestAccCsvserver_standalone_ciphersuites_mixed(t *testing.T) {
 
 func TestAccCsvserver_cluster_ciphersuites(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); skipIfDefaultSSLProfileEnabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{
@@ -574,7 +597,7 @@ func TestAccCsvserver_lbvserverbinding(t *testing.T) {
 
 func TestAccCsvserver_snicerts(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { doPreChecks(t) },
+		PreCheck:                 func() { doPreChecks(t); skipIfDefaultSSLProfileEnabled(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckLbvserverDestroy,
 		Steps: []resource.TestStep{

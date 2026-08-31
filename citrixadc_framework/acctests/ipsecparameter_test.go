@@ -151,7 +151,7 @@ func TestAccIpsecparameter_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccIpsecparameter_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsecparameterExist("citrixadc_ipsecparameter.tf_ipsecparameter", nil)),

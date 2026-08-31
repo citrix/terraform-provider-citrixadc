@@ -337,7 +337,7 @@ func TestAccClusternodegroup_nslimitidentifier_binding_sdkv2StateUpgrade(t *test
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccClusternodegroup_nslimitidentifier_binding_upgrade_basic,

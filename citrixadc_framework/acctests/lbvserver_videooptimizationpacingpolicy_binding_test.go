@@ -326,7 +326,7 @@ func TestAccLbvserver_videooptimizationpacingpolicy_binding_sdkv2StateUpgrade(t 
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccLbvserver_videooptimizationpacingpolicy_binding_upgrade_basic,

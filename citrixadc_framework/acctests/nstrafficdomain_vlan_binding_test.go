@@ -331,7 +331,7 @@ func TestAccNstrafficdomain_vlan_binding_sdkv2StateUpgrade(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccNstrafficdomain_vlan_binding_upgrade_basic,

@@ -199,7 +199,7 @@ func TestAccIp6tunnel_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccIp6tunnel_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckIp6tunnelExist("citrixadc_ip6tunnel.tf_ip6tunnel", nil)),

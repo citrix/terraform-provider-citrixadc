@@ -588,7 +588,7 @@ func TestAccAppfwprofile_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccAppfwprofile_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileExist("citrixadc_appfwprofile.test_appfw", nil)),

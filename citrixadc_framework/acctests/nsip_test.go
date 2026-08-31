@@ -349,7 +349,7 @@ func TestAccNsip_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNsip_basic_step1,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNsipExist("citrixadc_nsip.tf_test_nsip", nil)),

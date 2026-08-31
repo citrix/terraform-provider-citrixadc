@@ -151,7 +151,7 @@ func TestAccSystemextramgmtcpu_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccSystemextramgmtcpu_basic_step1,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemextramgmtcpuExist("citrixadc_systemextramgmtcpu.tf_extramgmtcpu", nil)),

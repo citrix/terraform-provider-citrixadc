@@ -127,7 +127,7 @@ func TestAccBotpolicy_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccBotpolicy_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicyExist("citrixadc_botpolicy.tfAcc_botpolicy1", nil)),

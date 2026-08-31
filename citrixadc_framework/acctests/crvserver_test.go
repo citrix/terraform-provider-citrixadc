@@ -190,7 +190,7 @@ func TestAccCrvserver_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccCrvserver_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserverExist("citrixadc_crvserver.crvserver", nil)),

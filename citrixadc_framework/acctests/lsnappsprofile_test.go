@@ -204,7 +204,7 @@ func TestAccLsnappsprofile_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccLsnappsprofile_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnappsprofileExist("citrixadc_lsnappsprofile.tf_lsnappsprofile", nil)),

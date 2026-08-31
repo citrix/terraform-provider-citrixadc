@@ -208,7 +208,7 @@ func TestAccLinkset_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccLinkset_add_with_no_binding,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckLinksetExist("citrixadc_linkset.foo", nil)),

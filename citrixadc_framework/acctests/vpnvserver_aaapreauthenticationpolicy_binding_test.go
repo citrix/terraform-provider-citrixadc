@@ -281,7 +281,7 @@ func TestAccVpnvserver_aaapreauthenticationpolicy_binding_sdkv2StateUpgrade(t *t
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccVpnvserver_aaapreauthenticationpolicy_binding_upgrade_basic,

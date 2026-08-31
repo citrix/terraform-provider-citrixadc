@@ -202,7 +202,7 @@ func TestAccDnssrvrec_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccDnssrvrec_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssrvrecExist("citrixadc_dnssrvrec.dnssrvrec", nil)),

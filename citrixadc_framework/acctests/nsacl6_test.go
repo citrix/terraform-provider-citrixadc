@@ -239,7 +239,7 @@ func TestAccNsacl6_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNsacl6_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNsacl6Exist("citrixadc_nsacl6.tf_nsacl6", nil)),

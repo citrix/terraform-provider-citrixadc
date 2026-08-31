@@ -117,7 +117,7 @@ func TestAccRoute6_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccRoute6_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckRoute6Exist("citrixadc_route6.tf_route6", nil)),

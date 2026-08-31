@@ -92,7 +92,7 @@ func TestAccCmpparameter_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccCmpparameter_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpparameterExist("citrixadc_cmpparameter.tf_cmpparameter", nil)),

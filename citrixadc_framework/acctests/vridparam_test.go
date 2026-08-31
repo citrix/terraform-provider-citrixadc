@@ -135,7 +135,7 @@ func TestAccVridparam_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccVridparam_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckVridparamExist("citrixadc_vridparam.tf_vridparam", nil)),

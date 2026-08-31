@@ -222,7 +222,7 @@ func TestAccTunnelglobal_tunneltrafficpolicy_binding_sdkv2StateUpgrade(t *testin
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccTunnelglobal_tunneltrafficpolicy_binding_upgrade_basic,

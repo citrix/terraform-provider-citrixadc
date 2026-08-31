@@ -288,7 +288,7 @@ func TestAccVpnglobal_authenticationradiuspolicy_binding_sdkv2StateUpgrade(t *te
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccVpnglobal_authenticationradiuspolicy_binding_upgrade_basic,

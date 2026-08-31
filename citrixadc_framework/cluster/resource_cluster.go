@@ -155,39 +155,51 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	// --- Update cluster instance attributes ---
 	clusterinstance := adccluster.Clusterinstance{Clid: utils.IntPtr(clid)}
 	hasChange := false
-	if !data.Backplanebasedview.Equal(state.Backplanebasedview) {
+	// Change detection: only treat an attribute as changed when the planned value
+	// is KNOWN, NON-NULL and differs from state. Two cases would otherwise make the
+	// clusterinstance payload collapse to a clid-only set, which NITRO rejects with
+	// errorcode 1094 "Too few arguments":
+	//   1) An Optional+Computed attribute not in config is unknown in the plan
+	//      (guarded by !IsUnknown).
+	//   2) On an SDK v2 -> Framework upgrade, an Optional-only attribute (e.g.
+	//      nodegroup, which cannot carry UseStateForUnknown) is null in the Framework
+	//      config but was stored as "" by SDK v2, so null != "" spuriously reports a
+	//      change and writes strOrEmpty(null)="" (guarded by !IsNull).
+	// This matches SDK v2's d.HasChange semantics and the payload-builder convention
+	// (guard !IsNull() && !IsUnknown()).
+	if !data.Backplanebasedview.IsNull() && !data.Backplanebasedview.IsUnknown() && !data.Backplanebasedview.Equal(state.Backplanebasedview) {
 		clusterinstance.Backplanebasedview = strOrEmpty(data.Backplanebasedview)
 		hasChange = true
 	}
-	if !data.Deadinterval.Equal(state.Deadinterval) {
+	if !data.Deadinterval.IsNull() && !data.Deadinterval.IsUnknown() && !data.Deadinterval.Equal(state.Deadinterval) {
 		clusterinstance.Deadinterval = utils.IntPtr(intOrZero(data.Deadinterval))
 		hasChange = true
 	}
-	if !data.Hellointerval.Equal(state.Hellointerval) {
+	if !data.Hellointerval.IsNull() && !data.Hellointerval.IsUnknown() && !data.Hellointerval.Equal(state.Hellointerval) {
 		clusterinstance.Hellointerval = utils.IntPtr(intOrZero(data.Hellointerval))
 		hasChange = true
 	}
-	if !data.Inc.Equal(state.Inc) {
+	if !data.Inc.IsNull() && !data.Inc.IsUnknown() && !data.Inc.Equal(state.Inc) {
 		clusterinstance.Inc = strOrEmpty(data.Inc)
 		hasChange = true
 	}
-	if !data.Nodegroup.Equal(state.Nodegroup) {
+	if !data.Nodegroup.IsNull() && !data.Nodegroup.IsUnknown() && !data.Nodegroup.Equal(state.Nodegroup) {
 		clusterinstance.Nodegroup = strOrEmpty(data.Nodegroup)
 		hasChange = true
 	}
-	if !data.Preemption.Equal(state.Preemption) {
+	if !data.Preemption.IsNull() && !data.Preemption.IsUnknown() && !data.Preemption.Equal(state.Preemption) {
 		clusterinstance.Preemption = strOrEmpty(data.Preemption)
 		hasChange = true
 	}
-	if !data.Processlocal.Equal(state.Processlocal) {
+	if !data.Processlocal.IsNull() && !data.Processlocal.IsUnknown() && !data.Processlocal.Equal(state.Processlocal) {
 		clusterinstance.Processlocal = strOrEmpty(data.Processlocal)
 		hasChange = true
 	}
-	if !data.Quorumtype.Equal(state.Quorumtype) {
+	if !data.Quorumtype.IsNull() && !data.Quorumtype.IsUnknown() && !data.Quorumtype.Equal(state.Quorumtype) {
 		clusterinstance.Quorumtype = strOrEmpty(data.Quorumtype)
 		hasChange = true
 	}
-	if !data.Retainconnectionsoncluster.Equal(state.Retainconnectionsoncluster) {
+	if !data.Retainconnectionsoncluster.IsNull() && !data.Retainconnectionsoncluster.IsUnknown() && !data.Retainconnectionsoncluster.Equal(state.Retainconnectionsoncluster) {
 		clusterinstance.Retainconnectionsoncluster = strOrEmpty(data.Retainconnectionsoncluster)
 		hasChange = true
 	}

@@ -192,7 +192,7 @@ func TestAccSslservice_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccSslservice_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckSslserviceExist("citrixadc_sslservice.demo_sslservice", nil)),
@@ -367,8 +367,11 @@ const testAccSslservice_unset_step1 = testAccSslservice_unset_prereq + `
 		# sslredirect, sslv2redirect) are omitted: NITRO reports each as "not
 		# applicable when configuring a backend service" (ec1095/ec3745), so they
 		# are not settable/unset-testable on this service-based sslservice.
+		# redirectportrewrite is likewise omitted: enabling it requires sslredirect
+		# to be enabled (NITRO ec1585 "SSL port rewrite can be enabled only when SSL
+		# redirect is enabled"), but sslredirect is frontend-only and cannot be set on
+		# this backend service, so redirectportrewrite=ENABLED is unreachable here.
 		dhkeyexpsizelimit   = "ENABLED"
-		redirectportrewrite = "ENABLED"
 		serverauth          = "ENABLED"
 		sessreuse           = "DISABLED"
 		snienable           = "ENABLED"
@@ -403,7 +406,6 @@ func TestAccSslservice_unset(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslserviceExist("citrixadc_sslservice.tf_unset", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "dhkeyexpsizelimit", "ENABLED"),
-					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "redirectportrewrite", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "serverauth", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "sessreuse", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "snienable", "ENABLED"),
@@ -422,7 +424,6 @@ func TestAccSslservice_unset(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSslserviceExist("citrixadc_sslservice.tf_unset", nil),
 					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "dhkeyexpsizelimit", "DISABLED"),
-					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "redirectportrewrite", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "serverauth", "DISABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "sessreuse", "ENABLED"),
 					resource.TestCheckResourceAttr("citrixadc_sslservice.tf_unset", "snienable", "DISABLED"),

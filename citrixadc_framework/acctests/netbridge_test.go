@@ -209,7 +209,7 @@ func TestAccNetbridge_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNetbridge_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridgeExist("citrixadc_netbridge.tf_netbridge", nil)),

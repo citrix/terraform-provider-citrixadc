@@ -133,7 +133,7 @@ func TestAccSpilloveraction_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccSpilloveraction_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloveractionExist("citrixadc_spilloveraction.tf_spilloveraction", nil)),

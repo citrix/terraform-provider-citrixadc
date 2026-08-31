@@ -298,7 +298,7 @@ func TestAccAuthenticationvserver_vpnportaltheme_binding_sdkv2StateUpgrade(t *te
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccAuthenticationvserver_vpnportaltheme_binding_upgrade_basic,

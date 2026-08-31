@@ -229,7 +229,7 @@ func TestAccSslvserver_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccSslvserver_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckSslvserverExist("citrixadc_sslvserver.tf_sslvserver", nil)),

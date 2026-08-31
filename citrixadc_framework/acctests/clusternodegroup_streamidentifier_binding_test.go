@@ -372,7 +372,7 @@ func TestAccClusternodegroup_streamidentifier_binding_sdkv2StateUpgrade(t *testi
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccClusternodegroup_streamidentifier_binding_upgrade_basic,

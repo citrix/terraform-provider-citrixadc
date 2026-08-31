@@ -209,7 +209,7 @@ func TestAccVpnurlpolicy_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccVpnurlpolicy_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlpolicyExist("citrixadc_vpnurlpolicy.tf_vpnurlpolicy", nil)),

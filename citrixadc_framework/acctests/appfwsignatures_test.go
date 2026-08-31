@@ -180,7 +180,7 @@ func TestAccAppfwsignatures_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccAppfwsignatures_basic,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwsignaturesExist("citrixadc_appfwsignatures.tf_appfwsignatures", nil)),

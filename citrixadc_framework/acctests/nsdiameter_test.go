@@ -159,7 +159,7 @@ func TestAccNsdiameter_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccNsdiameter_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckNsdiameterExist("citrixadc_nsdiameter.tf_nsdiameter", nil)),

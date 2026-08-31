@@ -622,7 +622,7 @@ func TestAccResponderpolicy_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccResponderpolicy_globalbinding_not_exists,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil)),

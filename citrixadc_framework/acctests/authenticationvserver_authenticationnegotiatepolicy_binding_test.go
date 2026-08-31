@@ -348,7 +348,7 @@ func TestAccAuthenticationvserver_authenticationnegotiatepolicy_binding_sdkv2Sta
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccAuthenticationvserver_authenticationnegotiatepolicy_binding_upgrade_basic,

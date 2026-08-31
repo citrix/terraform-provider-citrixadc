@@ -329,7 +329,7 @@ func TestAccAuthenticationvserver_tmsessionpolicy_binding_sdkv2StateUpgrade(t *t
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {
 						Source:            "citrix/citrixadc",
-						VersionConstraint: "2.2.0",
+						VersionConstraint: "2.0.0",
 					},
 				},
 				Config: testAccAuthenticationvserver_tmsessionpolicy_binding_upgrade_basic,

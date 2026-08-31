@@ -134,7 +134,7 @@ func TestAccPtp_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccPtp_add,
 				Check:  resource.ComposeTestCheckFunc(testAccCheckPtpExist("citrixadc_ptp.tf_ptp", nil)),
