@@ -385,6 +385,7 @@ func TestAccInatDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "tcpproxy", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "usnip", "ON"),
 					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "connfailover", "DISABLED"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_inat.foo", "id"),
 				),
 			},
 		},

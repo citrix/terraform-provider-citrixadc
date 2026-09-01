@@ -229,6 +229,11 @@ func TestAccAuthenticationpolicylabelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds", "labelname", "tf_authenticationpolicylabel_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds", "type", "AAATM_REQ"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds", "comment", "Testing DataSource"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds", "id"),
+					// Read-only metadata exposed only by the data source. numpol is a
+					// counter-style label field always populated for a fresh label.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationpolicylabel.tf_authenticationpolicylabel_ds", "numpol"),
 				),
 			},
 		},

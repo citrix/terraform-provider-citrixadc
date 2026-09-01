@@ -57,6 +57,19 @@ In addition to the arguments, the following attributes are available:
 * `time` - Time, in hours (1-24) and minutes (1-60), at which to refresh the CRL.
 * `url` - URL of the CRL distribution point.
 
+### Read-only sslcrl metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslcrl` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `flags` - CRL status flag.
+* `lastupdatetime` - Last CRL refresh time.
+* `version` - CRL version.
+* `signaturealgo` - Signature algorithm.
+* `issuer` - Issuer name.
+* `lastupdate` - Last update time.
+* `nextupdate` - Next update time.
+* `daystoexpiration` - Number of days remaining for the CRL to expire.
+
 ## Import
 
 A sslcrl can be imported using its crlname, e.g.

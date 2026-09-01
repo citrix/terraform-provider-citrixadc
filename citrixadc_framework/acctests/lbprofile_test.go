@@ -216,6 +216,10 @@ func TestAccLbprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "lbhashalgorithm", "PRAC"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "storemqttclientidandusername", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "proximityfromself", "NO"),
+					// Runtime-binding proof plus a read-only counter-style field the
+					// appliance always returns for a freshly-created profile.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbprofile.tf_lbprofile_ds", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbprofile.tf_lbprofile_ds", "vsvrcount"),
 				),
 			},
 		},

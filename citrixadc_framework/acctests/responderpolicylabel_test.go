@@ -208,6 +208,7 @@ func TestAccResponderpolicylabelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "labelname", "tf_responder_policylabel_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "policylabeltype", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "comment", "datasource test comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "id"),
 				),
 			},
 		},

@@ -35,7 +35,7 @@ func (d *FeoglobalFeopolicyBindingDataSource) Schema(ctx context.Context, req da
 }
 
 func (d *FeoglobalFeopolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data FeoglobalFeopolicyBindingResourceModel
+	var data FeoglobalFeopolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -106,7 +106,7 @@ func (d *FeoglobalFeopolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	feoglobal_feopolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	feoglobal_feopolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

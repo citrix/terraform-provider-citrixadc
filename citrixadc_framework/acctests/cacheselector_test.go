@@ -206,6 +206,8 @@ func TestAccCacheselectorDataSource_basic(t *testing.T) {
 				Config: testAccCacheselectorDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cacheselector.tf_cacheselector_ds", "selectorname", "tf_cacheselector_ds"),
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cacheselector.tf_cacheselector_ds", "id"),
 				),
 			},
 		},

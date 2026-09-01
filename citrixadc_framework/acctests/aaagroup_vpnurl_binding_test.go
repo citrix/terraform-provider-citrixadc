@@ -268,6 +268,8 @@ func TestAccAaagroup_vpnurl_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnurl_binding.tf_aaagroup_vpnurl_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpnurl_binding.tf_aaagroup_vpnurl_binding", "urlname", "Firsturl"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaagroup_vpnurl_binding.tf_aaagroup_vpnurl_binding", "id"),
 				),
 			},
 		},

@@ -207,6 +207,8 @@ func TestAccAppfwpolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", "labelname", "tfAcc_appfwpolicylabel"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", "policylabeltype", "http_req"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", "id"),
 				),
 			},
 		},

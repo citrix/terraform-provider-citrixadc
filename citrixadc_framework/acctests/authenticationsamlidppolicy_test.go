@@ -388,6 +388,8 @@ func TestAccAuthenticationsamlidppolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "rule", "false"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "comment", "DataSource Test"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlidppolicy.tf_samlidppolicy_ds", "hits"),
 				),
 			},
 		},

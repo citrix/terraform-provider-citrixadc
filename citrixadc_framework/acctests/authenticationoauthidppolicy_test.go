@@ -353,10 +353,14 @@ func TestAccAuthenticationoauthidppolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthenticationoauthidppolicyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "name", "tf_idppolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "comment", "datasource_test"),
 					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "action", "citrixadc_authenticationoauthidppolicy.tf_idppolicy", "action"),
+					// hits is a GET-only counter surfaced by the data source; it is
+					// always populated (starts at 0) for a freshly-created policy.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationoauthidppolicy.tf_idppolicy_ds", "hits"),
 				),
 			},
 		},

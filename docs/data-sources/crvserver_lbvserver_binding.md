@@ -33,3 +33,9 @@ output "lb_vserver" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the crvserver_lbvserver_binding. It is the concatenation of the `name` and `lbvserver` attributes separated by a comma.
+
+### Read-only crvserver_lbvserver_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_crvserver_lbvserver_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.

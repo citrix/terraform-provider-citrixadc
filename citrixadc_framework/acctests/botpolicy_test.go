@@ -301,6 +301,7 @@ func TestAccBotpolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBotpolicyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_botpolicy.tf_botpolicy_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicy.tf_botpolicy_ds", "name", "tf_botpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicy.tf_botpolicy_ds", "profilename", "BOT_BYPASS"),
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicy.tf_botpolicy_ds", "rule", "true"),

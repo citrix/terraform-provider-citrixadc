@@ -36,7 +36,7 @@ func (d *RewriteglobalRewritepolicyBindingDataSource) Schema(ctx context.Context
 }
 
 func (d *RewriteglobalRewritepolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RewriteglobalRewritepolicyBindingResourceModel
+	var data RewriteglobalRewritepolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -122,7 +122,7 @@ func (d *RewriteglobalRewritepolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	rewriteglobal_rewritepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	rewriteglobal_rewritepolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

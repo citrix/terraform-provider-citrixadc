@@ -332,6 +332,7 @@ func TestAccVpnvserver_intranetip_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVpnvserver_intranetip_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_intranetip_binding.tf_bind", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_intranetip_binding.tf_bind", "name", "tf_vserverexample"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_intranetip_binding.tf_bind", "intranetip", "2.3.4.5"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_intranetip_binding.tf_bind", "netmask", "255.255.255.0"),

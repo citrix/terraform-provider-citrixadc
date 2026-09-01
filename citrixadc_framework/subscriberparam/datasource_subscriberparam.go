@@ -35,7 +35,7 @@ func (d *SubscriberparamDataSource) Schema(ctx context.Context, req datasource.S
 }
 
 func (d *SubscriberparamDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SubscriberparamResourceModel
+	var data SubscriberparamDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *SubscriberparamDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	subscriberparamSetAttrFromGet(ctx, &data, getResponseData)
+	subscriberparamDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

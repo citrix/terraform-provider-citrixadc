@@ -211,6 +211,8 @@ func TestAccAppfwmultipartformcontenttypeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwmultipartformcontenttype.tf_multipartform", "multipartformcontenttypevalue", "date/tf_multipartform"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwmultipartformcontenttype.tf_multipartform", "isregex", "REGEX"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwmultipartformcontenttype.tf_multipartform", "id"),
 				),
 			},
 		},

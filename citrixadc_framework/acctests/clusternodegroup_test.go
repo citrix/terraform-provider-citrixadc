@@ -311,6 +311,10 @@ func TestAccClusternodegroupDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup.tf_clusternodegroup_ds", "name", "my_clusternode_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup.tf_clusternodegroup_ds", "strict", "YES"),
+					// id is the universal runtime-binding proof. The read-only
+					// mask/count/list fields may be omitted for a nodegroup with
+					// no bound nodes, so they are intentionally not asserted.
+					resource.TestCheckResourceAttrSet("data.citrixadc_clusternodegroup.tf_clusternodegroup_ds", "id"),
 				),
 			},
 		},

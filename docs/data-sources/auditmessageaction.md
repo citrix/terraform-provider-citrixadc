@@ -61,3 +61,12 @@ In addition to the argument above, the following attributes are exported:
 * `logtonewnslog` - Send the message to the new nslog. Possible values: `YES`, `NO`.
 
 * `bypasssafetycheck` - Bypass the safety check and allow unsafe expressions. This should be used with caution as it allows expressions that might have security implications. Possible values: `YES`, `NO`.
+
+### Read-only auditmessageaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_auditmessageaction` resource). They are Computed/GET-only and are `null` when the appliance does not return them.
+
+* `loglevel1` - Resolved audit log level as returned by the appliance. Possible values: `ALL`, `EMERGENCY`, `ALERT`, `CRITICAL`, `ERROR`, `WARNING`, `NOTICE`, `INFORMATIONAL`, `DEBUG`, `NONE`.
+* `hits` - The number of times the action has been taken.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `referencecount` - The number of references to the action.

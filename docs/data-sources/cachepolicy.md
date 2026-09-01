@@ -41,6 +41,16 @@ In addition to the arguments, the following attributes are available:
 * `undefaction` - Action to be performed when the result of rule evaluation is undefined.
 * `id` - The id of the cachepolicy. It has the same value as the `policyname` attribute.
 
+### Read-only cachepolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cachepolicy` resource) and are Computed-only. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of Undef hits.
+* `flags` - Flag.
+* `builtin` - Whether the cache policy is built-in. A list of strings. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.
+* `feature` - The feature to be checked while applying this config.
+
 ## Import
 
 A cachepolicy can be imported using its name, e.g.

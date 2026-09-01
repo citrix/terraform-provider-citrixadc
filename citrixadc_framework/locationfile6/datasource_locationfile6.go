@@ -35,7 +35,7 @@ func (d *Locationfile6DataSource) Schema(ctx context.Context, req datasource.Sch
 }
 
 func (d *Locationfile6DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Locationfile6ResourceModel
+	var data Locationfile6DataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *Locationfile6DataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	locationfile6SetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	locationfile6DataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

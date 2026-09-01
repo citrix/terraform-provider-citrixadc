@@ -167,6 +167,7 @@ func TestAccLacpDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_lacp.tf_lacp_ds", "ownernode", "255"),
 					resource.TestCheckResourceAttr("data.citrixadc_lacp.tf_lacp_ds", "syspriority", "40"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lacp.tf_lacp_ds", "id"),
 				),
 			},
 		},

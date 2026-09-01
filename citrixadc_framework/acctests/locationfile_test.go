@@ -210,6 +210,11 @@ func TestAccLocationfileDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_locationfile.tf_locationfile", "locationfile", "/var/netscaler/inbuilt_db/Citrix_Netscaler_InBuilt_GeoIP_DB_IPv4"),
 					resource.TestCheckResourceAttr("data.citrixadc_locationfile.tf_locationfile", "format", "netscaler"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_locationfile.tf_locationfile", "id"),
+					// curlocfilestatus is a status field the appliance always reports
+					// for a loaded location file.
+					resource.TestCheckResourceAttrSet("data.citrixadc_locationfile.tf_locationfile", "curlocfilestatus"),
 				),
 			},
 		},

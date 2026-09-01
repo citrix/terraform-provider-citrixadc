@@ -209,6 +209,8 @@ func TestAccCachepolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel.tf_cachepolicylabel_ds", "labelname", "tf_cachepolicylabel_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel.tf_cachepolicylabel_ds", "evaluates", "REQ"),
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cachepolicylabel.tf_cachepolicylabel_ds", "id"),
 				),
 			},
 		},

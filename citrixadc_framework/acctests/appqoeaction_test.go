@@ -324,6 +324,8 @@ func TestAccAppqoeactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "priority", "LOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "respondwith", "NS"),
 					resource.TestCheckResourceAttr("data.citrixadc_appqoeaction.tf_appqoeaction", "delay", "30"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appqoeaction.tf_appqoeaction", "id"),
 				),
 			},
 		},

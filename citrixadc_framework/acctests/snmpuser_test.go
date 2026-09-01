@@ -336,6 +336,10 @@ func TestAccSnmpuserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "name", "test_user_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "group", "test_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "authtype", "SHA"),
+					// Read-only metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpuser.tf_snmpuser_ds", "storagetype"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpuser.tf_snmpuser_ds", "status"),
 				),
 			},
 		},

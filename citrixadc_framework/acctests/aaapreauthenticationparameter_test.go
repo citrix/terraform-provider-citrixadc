@@ -247,6 +247,8 @@ func TestAccAaapreauthenticationparameterDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter", "preauthenticationaction", "ALLOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter", "deletefiles", "/var/tmp/*.files"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaapreauthenticationparameter.tf_aaapreauthenticationparameter", "id"),
 				),
 			},
 		},

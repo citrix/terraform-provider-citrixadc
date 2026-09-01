@@ -148,6 +148,10 @@ func TestAccLbvserver_service_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_service_binding.tf_binding", "name", "tf_lbvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_service_binding.tf_binding", "servicename", "tf_service"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_service_binding.tf_binding", "weight", "10"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver_service_binding.tf_binding", "id"),
+					// Read-only (GET-only) metadata: curstate is a state field always populated for a bound service.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver_service_binding.tf_binding", "curstate"),
 				),
 			},
 		},

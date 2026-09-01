@@ -35,7 +35,7 @@ func (d *VpnvserverVpnclientlessaccesspolicyBindingDataSource) Schema(ctx contex
 }
 
 func (d *VpnvserverVpnclientlessaccesspolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnvserverVpnclientlessaccesspolicyBindingResourceModel
+	var data VpnvserverVpnclientlessaccesspolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -109,7 +109,7 @@ func (d *VpnvserverVpnclientlessaccesspolicyBindingDataSource) Read(ctx context.
 		return
 	}
 
-	vpnvserver_vpnclientlessaccesspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_vpnclientlessaccesspolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

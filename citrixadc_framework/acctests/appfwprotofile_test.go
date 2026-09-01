@@ -227,6 +227,8 @@ func TestAccAppfwprotofileDataSource_basic(t *testing.T) {
 				Config: testAccAppfwprotofileDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprotofile.tf_appfwprotofile", "name", "tf_appfwprotofile"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwprotofile.tf_appfwprotofile", "id"),
 				),
 			},
 		},

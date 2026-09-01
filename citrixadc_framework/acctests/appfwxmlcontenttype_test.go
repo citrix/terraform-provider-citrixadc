@@ -208,6 +208,7 @@ func TestAccAppfwxmlcontenttypeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype", "xmlcontenttypevalue", "tf_Acc.*test"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype", "isregex", "REGEX"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwxmlcontenttype.tf_Acc_appfwxmlcontenttype", "id"),
 				),
 			},
 		},

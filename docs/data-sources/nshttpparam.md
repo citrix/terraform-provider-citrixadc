@@ -38,3 +38,10 @@ The following attributes are available:
 * `markhttp09inval` - Mark HTTP/0.9 requests as invalid. Possible values: `ON`, `OFF`.
 * `maxreusepool` - Maximum limit on the number of connections, from the Citrix ADC to a particular server that are kept in the reuse pool. This setting is helpful for optimal memory utilization and for reducing the idle connections to the server just after the peak time. Minimum value: `0`, Maximum value: `360000`.
 * `nssrvrhdr` - The server header value to be inserted. If no explicit header is specified then NSBUILD.RELEASE is used as default server header.
+
+### Read-only nshttpparam metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nshttpparam` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if the http param is built-in or not. A list of strings (possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.

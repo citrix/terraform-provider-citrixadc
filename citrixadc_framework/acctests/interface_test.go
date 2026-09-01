@@ -150,6 +150,12 @@ func TestAccInterfaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "interface_id", "1/1"),
 					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "hamonitor", "OFF"),
 					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "mtu", "2000"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_interface.tf_interface", "id"),
+					// Read-only interface metadata exposed only by the data source; these
+					// are always populated for a real interface.
+					resource.TestCheckResourceAttrSet("data.citrixadc_interface.tf_interface", "devicename"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_interface.tf_interface", "mac"),
 				),
 			},
 		},

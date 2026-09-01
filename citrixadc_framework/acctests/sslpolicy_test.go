@@ -342,6 +342,8 @@ func TestAccSslpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicy.foo", "name", "tf_sslpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicy.foo", "rule", "false"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicy.foo", "action", "tf_sslaction"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslpolicy.foo", "id"),
 				),
 			},
 		},

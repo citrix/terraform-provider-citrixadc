@@ -35,3 +35,13 @@ In addition to the arguments, the following attributes are available:
 * `action` - Name of the DNS64 action to perform when the rule evaluates to TRUE. The built in actions function as follows: A default dns64 action with prefix <default prefix> and mapped and exclude are any. You can create custom actions by using the add dns action command in the CLI or the DNS64 > Actions > Create DNS64 Action dialog box in the Citrix ADC configuration utility.
 * `rule` - Expression against which DNS traffic is evaluated. Note: On the command line interface, if the expression includes blank spaces, the entire expression must be enclosed in double quotation marks. If the expression itself includes double quotation marks, you must escape the quotations by using the character. Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks. Example: CLIENT.IP.SRC.IN_SUBENT(23.34.0.0/16)
 * `id` - The id of the dnspolicy64. It has the same value as the `name` attribute.
+
+### Read-only dnspolicy64 metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnspolicy64` resource). Any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the policy has been hit.
+* `labeltype` - Type of policy label invocation. Possible values: [ reqvserver, resvserver, policylabel ].
+* `labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
+* `undefhits` - Number of Undef hits.
+* `description` - Description of the policy.

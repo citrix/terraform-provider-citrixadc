@@ -163,6 +163,8 @@ func TestAccVideooptimizationdetectionpolicylabelDataSource_basic(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel", "labelname", "tf_videoopt_detection_pl"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel", "comment", "test_comment"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel", "id"),
 				),
 			},
 		},

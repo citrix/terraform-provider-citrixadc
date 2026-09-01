@@ -324,6 +324,7 @@ func TestAccNslimitidentifierDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNslimitidentifierDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "limitidentifier", "tf_nslimitidentifier_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "threshold", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "timeslice", "3000"),
@@ -331,6 +332,8 @@ func TestAccNslimitidentifierDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "mode", "REQUEST_RATE"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "maxbandwidth", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "trapsintimeslice", "2"),
+					// Read-only rate-limit metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslimitidentifier.tf_nslimitidentifier_ds_data", "referencecount"),
 				),
 			},
 		},

@@ -310,6 +310,7 @@ func TestAccAuditmessageactionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuditmessageactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditmessageaction.tf_msgaction", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "name", "tf_msgaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "loglevel", "NOTICE"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "stringbuilderexpr", "\"hello from datasource\""),

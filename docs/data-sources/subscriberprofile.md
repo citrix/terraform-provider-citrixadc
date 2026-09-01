@@ -41,3 +41,11 @@ In addition to the arguments, the following attributes are available:
 * `subscriberrules` - Rules configured for this subscriber. This is similar to rules received from PCRF for dynamic subscriber sessions.
 * `subscriptionidtype` - Subscription-Id type
 * `subscriptionidvalue` - Subscription-Id value
+
+### Read-only subscriberprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_subscriberprofile` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `flags` - Subscriber Session flags.
+* `ttl` - Subscriber Session TTL.
+* `avpdisplaybuffer` - Subscriber Attributes Display.

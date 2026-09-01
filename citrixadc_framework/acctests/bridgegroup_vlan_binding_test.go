@@ -353,6 +353,7 @@ func TestAccbridgegroup_vlan_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_vlan_binding.tf_binding", "bridgegroup_id", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_vlan_binding.tf_binding", "vlan", "20"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_bridgegroup_vlan_binding.tf_binding", "id"),
 				),
 			},
 		},

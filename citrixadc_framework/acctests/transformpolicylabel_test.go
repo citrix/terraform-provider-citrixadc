@@ -198,6 +198,7 @@ func TestAccTransformpolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel.transformpolicylabel", "labelname", "label_1"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformpolicylabel.transformpolicylabel", "policylabeltype", "httpquic_req"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformpolicylabel.transformpolicylabel", "id"),
 				),
 			},
 		},

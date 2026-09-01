@@ -187,6 +187,8 @@ func TestAccContentinspectionactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionaction.tf_contentinspectionaction_ds", "icapprofilename", "new-profile-ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionaction.tf_contentinspectionaction_ds", "serverip", "3.3.3.3"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionaction.tf_contentinspectionaction_ds", "ifserverdown", "CONTINUE"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_contentinspectionaction.tf_contentinspectionaction_ds", "id"),
 				),
 			},
 		},

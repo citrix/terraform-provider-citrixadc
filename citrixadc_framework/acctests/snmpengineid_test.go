@@ -153,6 +153,8 @@ func TestAccSnmpengineidDataSource_basic(t *testing.T) {
 				Config: testAccSnmpengineidDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_snmpengineid.tf_snmpengineid_ds", "engineid", "1234567890abcdef"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpengineid.tf_snmpengineid_ds", "id"),
 				),
 			},
 		},

@@ -309,10 +309,13 @@ func TestAccNsvariableDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNsvariableDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsvariable.test", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsvariable.test", "name", "tf_nsvariable_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsvariable.test", "type", "text(20)"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsvariable.test", "scope", "global"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsvariable.test", "comment", "Testing datasource"),
+					// Read-only attribute exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsvariable.test", "referencecount"),
 				),
 			},
 		},

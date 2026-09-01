@@ -220,6 +220,8 @@ func TestAccAuditnslogpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds", "name", "tf_auditnslogpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds", "action", "SETASLEARNNSLOG_ACT"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditnslogpolicy.tf_auditnslogpolicy_ds", "id"),
 				),
 			},
 		},

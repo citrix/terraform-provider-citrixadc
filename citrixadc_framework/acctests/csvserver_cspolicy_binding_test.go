@@ -333,6 +333,7 @@ func TestAccCsvserver_cspolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "policyname", "tf_cspolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "targetlbvserver", "tf_lbvserver"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver_cspolicy_binding.tf_csvscspolbind", "id"),
 				),
 			},
 		},

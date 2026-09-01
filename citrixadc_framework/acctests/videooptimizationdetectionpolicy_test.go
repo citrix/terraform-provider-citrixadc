@@ -350,6 +350,8 @@ func TestAccVideooptimizationdetectionpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "name", "tf_videooptimizationdetectionpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "action", "tf_videooptimizationdetectionaction"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "id"),
 				),
 			},
 		},

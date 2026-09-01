@@ -375,6 +375,7 @@ func TestAccVpnvserverAuthenticationpolicyBindingDataSource_basic(t *testing.T) 
 			{
 				Config: testAccVpnvserverAuthenticationpolicyBindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "name", "tf_vpnvserver_authpol"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "policy", "tf_vpnvserver_authpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "bindpoint", "REQUEST"),

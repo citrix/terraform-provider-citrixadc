@@ -35,7 +35,7 @@ func (d *SslactionDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *SslactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslactionResourceModel
+	var data SslactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *SslactionDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	sslactionSetAttrFromGet(ctx, &data, getResponseData)
+	sslactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

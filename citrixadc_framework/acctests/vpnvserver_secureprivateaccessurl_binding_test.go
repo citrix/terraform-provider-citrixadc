@@ -271,6 +271,7 @@ func TestAccVpnvserver_secureprivateaccessurl_binding_DataSource_basic(t *testin
 			{
 				Config: testAccVpnvserver_secureprivateaccessurl_binding_DataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding", "name", "tf.citrix.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding", "secureprivateaccessurl", "https://app.example.com/"),
 				),

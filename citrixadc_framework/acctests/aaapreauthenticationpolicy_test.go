@@ -245,6 +245,8 @@ func TestAccAaapreauthenticationpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "name", "my_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "rule", "REQ.VLANID == 5"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "reqaction", "my_action"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "id"),
 				),
 			},
 		},

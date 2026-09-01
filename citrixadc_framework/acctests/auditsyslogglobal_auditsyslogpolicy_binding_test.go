@@ -298,6 +298,11 @@ func TestAccAuditsyslogglobalAuditsyslogpolicyBindingDataSource_basic(t *testing
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "policyname", "tf_auditsyslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// numpol is a counter (policies bound to the label) always populated when a binding exists.
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "numpol"),
 				),
 			},
 		},

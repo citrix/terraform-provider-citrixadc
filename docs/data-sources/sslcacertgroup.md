@@ -30,3 +30,11 @@ The following attributes are available:
 
 * `cacertgroupname` - Name given to the CA certificate group.
 * `id` - The id of the sslcacertgroup. It is a system-generated identifier.
+
+### Read-only sslcacertgroup metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslcacertgroup` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `cacertgroupreferences` - Count for ssl actions referring to this CA certificate group.
+* `ocspcheck` - The state of the OCSP check parameter (`Mandatory` or `Optional`).
+* `crlcheck` - The state of the CRL check parameter (`Mandatory` or `Optional`).

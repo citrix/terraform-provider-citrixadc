@@ -345,6 +345,8 @@ func TestAccNspbr6DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nspbr6.tf_nspbr6", "action", "ALLOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_nspbr6.tf_nspbr6", "protocol", "ICMPV6"),
 					resource.TestCheckResourceAttr("data.citrixadc_nspbr6.tf_nspbr6", "priority", "25"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nspbr6.tf_nspbr6", "id"),
 				),
 			},
 		},

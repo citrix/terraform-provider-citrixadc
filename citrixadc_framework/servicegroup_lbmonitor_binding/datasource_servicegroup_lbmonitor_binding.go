@@ -107,7 +107,7 @@ func (d *ServicegroupLbmonitorBindingDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	servicegroup_lbmonitor_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	servicegroup_lbmonitor_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

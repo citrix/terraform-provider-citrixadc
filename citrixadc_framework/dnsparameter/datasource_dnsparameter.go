@@ -35,7 +35,7 @@ func (d *DnsparameterDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *DnsparameterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DnsparameterResourceModel
+	var data DnsparameterDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *DnsparameterDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	dnsparameterSetAttrFromGet(ctx, &data, getResponseData)
+	dnsparameterDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

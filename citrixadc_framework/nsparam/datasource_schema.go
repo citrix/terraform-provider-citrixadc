@@ -1,9 +1,111 @@
 package nsparam
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// NsparamDataSourceModel describes the DATASOURCE data model. It mirrors the
+// global parameters the NITRO `nsparam` GET returns, including the read-only
+// fields the resource intentionally omits. It is decoupled from the resource
+// model so the data source can expose the full GET projection.
+type NsparamDataSourceModel struct {
+	Id                        types.String `tfsdk:"id"`
+	Advancedanalyticsstats    types.String `tfsdk:"advancedanalyticsstats"`
+	Aftpallowrandomsourceport types.String `tfsdk:"aftpallowrandomsourceport"`
+	Cip                       types.String `tfsdk:"cip"`
+	Cipheader                 types.String `tfsdk:"cipheader"`
+	Cookieversion             types.String `tfsdk:"cookieversion"`
+	Crportrange               types.String `tfsdk:"crportrange"`
+	Exclusivequotamaxclient   types.Int64  `tfsdk:"exclusivequotamaxclient"`
+	Exclusivequotaspillover   types.Int64  `tfsdk:"exclusivequotaspillover"`
+	Ftpportrange              types.String `tfsdk:"ftpportrange"`
+	Grantquotamaxclient       types.Int64  `tfsdk:"grantquotamaxclient"`
+	Grantquotaspillover       types.Int64  `tfsdk:"grantquotaspillover"`
+	Httpport                  types.List   `tfsdk:"httpport"`
+	Icaports                  types.List   `tfsdk:"icaports"`
+	Internaluserlogin         types.String `tfsdk:"internaluserlogin"`
+	Ipttl                     types.Int64  `tfsdk:"ipttl"`
+	Maxconn                   types.Int64  `tfsdk:"maxconn"`
+	Maxreq                    types.Int64  `tfsdk:"maxreq"`
+	Mgmthttpport              types.Int64  `tfsdk:"mgmthttpport"`
+	Mgmthttpsport             types.Int64  `tfsdk:"mgmthttpsport"`
+	Pmtumin                   types.Int64  `tfsdk:"pmtumin"`
+	Pmtutimeout               types.Int64  `tfsdk:"pmtutimeout"`
+	Proxyprotocol             types.String `tfsdk:"proxyprotocol"`
+	Securecookie              types.String `tfsdk:"securecookie"`
+	Secureicaports            types.List   `tfsdk:"secureicaports"`
+	Servicepathingressvlan    types.Int64  `tfsdk:"servicepathingressvlan"`
+	Tcpcip                    types.String `tfsdk:"tcpcip"`
+	Timezone                  types.String `tfsdk:"timezone"`
+	Useproxyport              types.String `tfsdk:"useproxyport"`
+
+	// Read-only (GET-only) parameter from the NITRO doc read-only set
+	// (zion73x_readonly/nsparam.json). Never settable; from GET.
+	Autoscaleoption types.Int64 `tfsdk:"autoscaleoption"`
+}
+
+// nsparamDataSourceInt64List projects a NITRO array value onto a types.List of
+// Int64 (matching the existing Int64-typed list attributes), returning a typed
+// Null when the GET omits the key.
+func nsparamDataSourceInt64List(ctx context.Context, g map[string]interface{}, key string) types.List {
+	if val, ok := g[key]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := utils.StringListToIntList(sliceVal)
+			if listValue, d := types.ListValueFrom(ctx, types.Int64Type, intList); !d.HasError() {
+				return listValue
+			}
+		}
+	}
+	return types.ListNull(types.Int64Type)
+}
+
+// nsparamDataSourceSetAttrFromGet projects a NITRO nsparam GET response onto the
+// data-source model using the shared utils.MapGet* helpers. Attributes the GET
+// omits are left Null.
+func nsparamDataSourceSetAttrFromGet(ctx context.Context, data *NsparamDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nsparamDataSourceSetAttrFromGet Function")
+
+	data.Advancedanalyticsstats = utils.MapGetString(g, "advancedanalyticsstats")
+	data.Aftpallowrandomsourceport = utils.MapGetString(g, "aftpallowrandomsourceport")
+	data.Cip = utils.MapGetString(g, "cip")
+	data.Cipheader = utils.MapGetString(g, "cipheader")
+	data.Cookieversion = utils.MapGetString(g, "cookieversion")
+	data.Crportrange = utils.MapGetString(g, "crportrange")
+	data.Exclusivequotamaxclient = utils.MapGetInt64(g, "exclusivequotamaxclient")
+	data.Exclusivequotaspillover = utils.MapGetInt64(g, "exclusivequotaspillover")
+	data.Ftpportrange = utils.MapGetString(g, "ftpportrange")
+	data.Grantquotamaxclient = utils.MapGetInt64(g, "grantquotamaxclient")
+	data.Grantquotaspillover = utils.MapGetInt64(g, "grantquotaspillover")
+	data.Httpport = nsparamDataSourceInt64List(ctx, g, "httpport")
+	data.Icaports = nsparamDataSourceInt64List(ctx, g, "icaports")
+	data.Internaluserlogin = utils.MapGetString(g, "internaluserlogin")
+	data.Ipttl = utils.MapGetInt64(g, "ipttl")
+	data.Maxconn = utils.MapGetInt64(g, "maxconn")
+	data.Maxreq = utils.MapGetInt64(g, "maxreq")
+	data.Mgmthttpport = utils.MapGetInt64(g, "mgmthttpport")
+	data.Mgmthttpsport = utils.MapGetInt64(g, "mgmthttpsport")
+	data.Pmtumin = utils.MapGetInt64(g, "pmtumin")
+	data.Pmtutimeout = utils.MapGetInt64(g, "pmtutimeout")
+	data.Proxyprotocol = utils.MapGetString(g, "proxyprotocol")
+	data.Securecookie = utils.MapGetString(g, "securecookie")
+	data.Secureicaports = nsparamDataSourceInt64List(ctx, g, "secureicaports")
+	data.Servicepathingressvlan = utils.MapGetInt64(g, "servicepathingressvlan")
+	data.Tcpcip = utils.MapGetString(g, "tcpcip")
+	data.Timezone = utils.MapGetString(g, "timezone")
+	data.Useproxyport = utils.MapGetString(g, "useproxyport")
+
+	// Read-only parameter.
+	data.Autoscaleoption = utils.MapGetInt64(g, "autoscaleoption")
+
+	// nsparam is a singleton - static ID.
+	data.Id = types.StringValue("nsparam-config")
+}
 
 func NsparamDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -153,6 +255,12 @@ func NsparamDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Enable/Disable use_proxy_port setting",
+			},
+
+			// Read-only (GET-only) parameter surfaced by the data source.
+			"autoscaleoption": schema.Int64Attribute{
+				Computed:    true,
+				Description: "64 bits are provided for communication between ADM and ADC in cloud deployments. Currently LSB 3 bits are used (0x01=AWS, 0x02=Azure, 0x04=GCP). Null when the appliance omits it.",
 			},
 		},
 	}

@@ -286,6 +286,8 @@ func TestAccTmglobalTmsessionpolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding", "policyname", "tf_tmsessionpolicy_glb"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding", "gotopriorityexpression", "END"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmglobal_tmsessionpolicy_binding.tf_tmglobal_tmsessionpolicy_binding", "id"),
 				),
 			},
 		},

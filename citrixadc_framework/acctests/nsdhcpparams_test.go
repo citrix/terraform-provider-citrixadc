@@ -133,6 +133,10 @@ func TestAccNsdhcpparamsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_nsdhcpparams.tf_nsdhcpparams", "dhcpclient", "ON"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsdhcpparams.tf_nsdhcpparams", "saveroute", "ON"),
+					// id is the universal runtime-binding proof. Read-only DHCP-acquired
+					// metadata (ipaddress/netmask/hostrtgw/running) is lease-dependent and
+					// may be null, so it is not asserted here.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsdhcpparams.tf_nsdhcpparams", "id"),
 				),
 			},
 		},

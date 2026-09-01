@@ -245,6 +245,8 @@ func TestAccTmsessionpolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTmsessionpolicyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// "id" is the universal runtime-binding proof (equals name).
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "name", "my_tmsession_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "action", "tf_tmsessaction"),

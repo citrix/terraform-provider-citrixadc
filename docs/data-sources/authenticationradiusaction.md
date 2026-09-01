@@ -59,6 +59,14 @@ In addition to the arguments, the following attributes are available:
 * `tunnelendpointclientip` - Send Tunnel Endpoint Client IP address to the RADIUS server.
 * `id` - The id of the authenticationradiusaction. It has the same value as the `name` attribute.
 
+### Read-only authenticationradiusaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationradiusaction` resource) and are `Computed`. Any attribute the appliance does not return is `null`.
+
+* `ipaddress` - IP address (resolved) of the RADIUS server.
+* `success` - Number of successful authentication requests.
+* `failure` - Number of failed authentication requests.
+
 ## Import
 
 A authenticationradiusaction can be imported using its name, e.g.

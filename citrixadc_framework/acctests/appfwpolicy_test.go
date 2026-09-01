@@ -349,6 +349,13 @@ func TestAccAppfwpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "name", "tfAcc_appfwpolicy1"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "profilename", "tfAcc_appfwprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "rule", "true"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "id"),
+					// Read-only metadata exposed only by the data source. hits/undefhits
+					// are counter-style and policytype is a state field, all always
+					// populated for a freshly-created policy.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwpolicy.tfAcc_appfwpolicy1", "undefhits"),
 				),
 			},
 		},

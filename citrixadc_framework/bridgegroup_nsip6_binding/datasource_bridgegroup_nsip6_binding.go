@@ -36,7 +36,7 @@ func (d *BridgegroupNsip6BindingDataSource) Schema(ctx context.Context, req data
 }
 
 func (d *BridgegroupNsip6BindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data BridgegroupNsip6BindingResourceModel
+	var data BridgegroupNsip6BindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -82,7 +82,7 @@ func (d *BridgegroupNsip6BindingDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	bridgegroup_nsip6_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	bridgegroup_nsip6_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

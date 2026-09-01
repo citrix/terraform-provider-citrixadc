@@ -216,6 +216,10 @@ func TestAccQuicprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_quicprofile.tf_quicprofile", "activeconnectionidlimit", "3"),
 					resource.TestCheckResourceAttr("data.citrixadc_quicprofile.tf_quicprofile", "maxackdelay", "20"),
 					resource.TestCheckResourceAttr("data.citrixadc_quicprofile.tf_quicprofile", "maxudppayloadsize", "1472"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicprofile.tf_quicprofile", "id"),
+					// Read-only metadata exposed only by the data source (counter-style,
+					// always populated for a freshly-created object).
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicprofile.tf_quicprofile", "refcnt"),
 				),
 			},
 		},

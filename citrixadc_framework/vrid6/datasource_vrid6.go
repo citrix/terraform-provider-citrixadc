@@ -35,7 +35,7 @@ func (d *Vrid6DataSource) Schema(ctx context.Context, req datasource.SchemaReque
 }
 
 func (d *Vrid6DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Vrid6ResourceModel
+	var data Vrid6DataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *Vrid6DataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	vrid6SetAttrFromGet(ctx, &data, getResponseData)
+	vrid6DataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

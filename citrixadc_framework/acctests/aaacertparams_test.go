@@ -259,6 +259,8 @@ func TestAccAaacertparamsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaacertparams.tf_aaacertparams", "usernamefield", "Subject:CN"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaacertparams.tf_aaacertparams", "groupnamefield", "Subject:OU"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaacertparams.tf_aaacertparams", "defaultauthenticationgroup", "50"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaacertparams.tf_aaacertparams", "id"),
 				),
 			},
 		},

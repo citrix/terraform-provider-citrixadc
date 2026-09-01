@@ -31,3 +31,12 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the kafkacluster. It has the same value as the `name` attribute.
 * `name` - Name of the Kafka cluster.
+
+### Read-only kafkacluster metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_kafkacluster` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `activesvc` - Total active services bound to servicegroup.
+* `totalsvc` - Total services bound to servicegroup.
+* `topicname` - Topic of the servicegroup.
+* `numtopics` - Total number of topic servicegroups bound.

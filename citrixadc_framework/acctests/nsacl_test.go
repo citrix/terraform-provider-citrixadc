@@ -464,6 +464,10 @@ func TestAccNsaclDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "srcportval", "45-1024"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsacl.foo", "type", "CLASSIC"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsacl.foo", "id"),
+					// kernelstate (commit status) is always populated for a created ACL.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsacl.foo", "kernelstate"),
 				),
 			},
 		},

@@ -216,6 +216,8 @@ func TestAccCmppolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel.tf_cmppolicylabel_ds", "labelname", "my_cmppolicy_label_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel.tf_cmppolicylabel_ds", "type", "REQ"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cmppolicylabel.tf_cmppolicylabel_ds", "id"),
 				),
 			},
 		},

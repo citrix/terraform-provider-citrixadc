@@ -232,6 +232,8 @@ func TestAccVpnintranetapplicationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnintranetapplication.tf_vpnintranetapplication", "protocol", "TCP"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnintranetapplication.tf_vpnintranetapplication", "destip", "2.3.6.5"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnintranetapplication.tf_vpnintranetapplication", "interception", "TRANSPARENT"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnintranetapplication.tf_vpnintranetapplication", "id"),
 				),
 			},
 		},

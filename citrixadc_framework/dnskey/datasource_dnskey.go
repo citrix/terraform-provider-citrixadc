@@ -35,7 +35,7 @@ func (d *DnskeyDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 }
 
 func (d *DnskeyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DnskeyResourceModel
+	var data DnskeyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *DnskeyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	dnskeySetAttrFromGet(ctx, &data, getResponseData)
+	dnskeyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

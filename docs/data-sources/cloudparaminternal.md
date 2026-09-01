@@ -41,3 +41,9 @@ In addition to the above arguments, the following attributes are exported:
 
 * `id` - The id of the cloudparaminternal data source. It is set to `cloudparaminternal-config`.
 * `nonftumode` - Indicates whether the management GUI is in first-time-user (FTU) mode or not. Possible values: `YES`, `NO`. May be empty on platforms where the GET operation is not supported.
+
+### Read-only cloudparaminternal metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cloudparaminternal` resource). Any attribute the appliance does not return is `null`.
+
+* `iamperm` - Indicates if user has sufficient IAM privileges. Possible values: `YES`, `NO`.

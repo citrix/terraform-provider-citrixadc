@@ -35,7 +35,7 @@ func (d *Dnsaction64DataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *Dnsaction64DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Dnsaction64ResourceModel
+	var data Dnsaction64DataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *Dnsaction64DataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	dnsaction64SetAttrFromGet(ctx, &data, getResponseData)
+	dnsaction64DataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

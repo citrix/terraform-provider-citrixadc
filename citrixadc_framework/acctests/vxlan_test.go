@@ -328,6 +328,9 @@ func TestAccVxlanDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVxlanDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source read
+					// resolved against the appliance.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vxlan.tf_vxlan", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "vxlanid", "123"),
 					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "vlan", "40"),
 					resource.TestCheckResourceAttr("data.citrixadc_vxlan.tf_vxlan", "port", "33"),

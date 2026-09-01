@@ -427,6 +427,10 @@ func TestAccResponderactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "type", "respondwith"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "target", "\"test_response\""),
 					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "comment", "datasource test comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderaction.tfaction_ds", "id"),
+					// Read-only metadata exposed only by the data source (counter-style,
+					// always populated for a freshly-created object).
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderaction.tfaction_ds", "hits"),
 				),
 			},
 		},

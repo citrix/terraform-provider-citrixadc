@@ -42,3 +42,15 @@ In addition to the arguments, the following attributes are available:
 * `requirepersistentcookie` - Specify whether a persistent session cookie is set and accepted for clientless access. If this parameter is set to ON, COM objects, such as MSOffice, which are invoked by the browser can access the files using clientless access. Use caution because the persistent cookie is stored on the disk.
 * `reshdrrewritepolicylabel` - Name of the configured Response rewrite policy label.
 * `urlrewritepolicylabel` - Name of the configured URL rewrite policy label. If you do not specify a policy label name, then URLs are not rewritten.
+
+### Read-only vpnclientlessaccessprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnclientlessaccessprofile` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `cssrewritepolicylabel` - The configured CSS rewrite policylabel.
+* `xmlrewritepolicylabel` - The configured XML rewrite policylabel.
+* `xcomponentrewritepolicylabel` - The configured X-Component rewrite policylabel.
+* `isdefault` - A value of true is returned if it is a default vpnclientlessrwprofile.
+* `description` - Description of the clientless access profile.
+* `builtin` - Flag to determine if vpn clientless rewrite profile is built-in or not. A list of strings. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.
+* `feature` - The feature to be checked while applying this config.

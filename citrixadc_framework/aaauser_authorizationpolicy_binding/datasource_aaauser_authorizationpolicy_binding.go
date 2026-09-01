@@ -35,7 +35,7 @@ func (d *AaauserAuthorizationpolicyBindingDataSource) Schema(ctx context.Context
 }
 
 func (d *AaauserAuthorizationpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AaauserAuthorizationpolicyBindingResourceModel
+	var data AaauserAuthorizationpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *AaauserAuthorizationpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	aaauser_authorizationpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	aaauser_authorizationpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -228,6 +228,9 @@ func TestAccContentinspectionpolicylabelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "labelname", "citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel", "labelname"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "type", "REQ"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "comment", "Test datasource comment"),
+					// Runtime-binding proof; read-only metadata (numpol/hits/priority/
+					// labeltype/isdefault/...) is exposed but may be omitted for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "id"),
 				),
 			},
 		},

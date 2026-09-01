@@ -353,6 +353,7 @@ func TestAccAuthenticationvserverAuthenticationloginschemapolicyBindingDataSourc
 			{
 				Config: testAccAuthenticationvserverAuthenticationloginschemapolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "policy", "tf_loginschemapolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationloginschemapolicy_binding.tf_binding", "priority", "77"),

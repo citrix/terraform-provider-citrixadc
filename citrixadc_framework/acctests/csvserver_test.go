@@ -201,6 +201,11 @@ func TestAccCsvserverDataSource_basic(t *testing.T) {
 						"data.citrixadc_csvserver.foo", "port", "8080"),
 					resource.TestCheckResourceAttr(
 						"data.citrixadc_csvserver.foo", "servicetype", "HTTP"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver.foo", "id"),
+					// Read-only operational metadata exposed only by the data source;
+					// curstate is always populated for a csvserver.
+					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver.foo", "curstate"),
 				),
 			},
 		},

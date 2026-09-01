@@ -328,6 +328,9 @@ func TestAccTransformpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_transformpolicy.tf_trans_policy", "name", "tf_trans_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformpolicy.tf_trans_policy", "profilename", "tf_trans_profile1"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformpolicy.tf_trans_policy", "rule", "http.REQ.URL.CONTAINS(\"test_url\")"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformpolicy.tf_trans_policy", "id"),
+					// Read-only metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformpolicy.tf_trans_policy", "hits"),
 				),
 			},
 		},

@@ -49,6 +49,43 @@ In addition to the arguments, the following attributes are available:
 * `state` - Initial state of the new virtual server.
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 
+### Read-only authenticationvserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationvserver` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `ip` - The Virtual IP address of the authentication vserver.
+* `value` - Indicates whether or not the certificate is bound or if SSL offload is disabled.
+* `type` - The type of Virtual Server, e.g. CONTENT based or ADDRESS based.
+* `curstate` - The current state of the Virtual server, e.g. UP, DOWN, BUSY, etc.
+* `status` - Whether or not this vserver responds to ARPs and whether or not round-robin selection is temporarily in effect.
+* `cachetype` - Virtual server's cache type. The options are: TRANSPARENT, REVERSE and FORWARD.
+* `redirect` - The cache redirect policy.
+* `precedence` - The type of policy (URL or RULE) that takes precedence on the content switching virtual server.
+* `redirecturl` - The URL where traffic is redirected if the virtual server becomes unavailable.
+* `curaaausers` - The number of current users logged in to this vserver.
+* `policy` - The name of the policy, if any, bound to the authentication vserver.
+* `servicename` - The name of the service, if any, to which the vserver policy is bound.
+* `weight` - Weight for this service, if any, used when the system performs load balancing.
+* `cachevserver` - The name of the default target cache virtual server, if any, to which requests are redirected.
+* `backupvserver` - The name of the backup vpn virtual server for this vpn virtual server.
+* `clttimeout` - The idle time, if any, in seconds after which the client connection is terminated.
+* `somethod` - The method used to determine whether or not a new connection will spillover the allocated block of Intranet IP addresses.
+* `sothreshold` - The number of client connections after which the Mapped IP address is used as the client source IP address.
+* `sopersistence` - Whether or not cookie-based site persistance is enabled for this VPN vserver.
+* `sopersistencetimeout` - The timeout, if any, for cookie-based site persistance of this VPN vserver.
+* `priority` - The priority, if any, of the vpn vserver policy.
+* `downstateflush` - Perform delayed clean up of connections on this vserver.
+* `bindpoint` - Bindpoint to which the policy is bound.
+* `disableprimaryondown` - Tells whether traffic will continue reaching backup vservers even after primary comes UP from DOWN state.
+* `listenpolicy` - Listenpolicy configured for authentication vserver.
+* `listenpriority` - Priority of listen policy for authentication vserver.
+* `tcpprofilename` - The name of the TCP profile.
+* `httpprofilename` - Name of the HTTP profile.
+* `vstype` - Virtual Server Type, e.g. Load Balancing, Content Switch, Cache Redirection.
+* `ngname` - Nodegroup devno to which this authentication vserver belongs to.
+* `secondary` - Bind the authentication policy to the secondary chain.
+* `groupextraction` - Bind the Authentication policy to a tertiary chain which will be used only for group extraction.
+
 
 ## Import
 

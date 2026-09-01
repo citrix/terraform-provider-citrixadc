@@ -206,6 +206,10 @@ func TestAccAuthorizationpolicylabelDataSource_basic(t *testing.T) {
 				Config: testAccAuthorizationpolicylabelDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel_ds", "labelname", "tf_authorizationpolicylabel_ds"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel_ds", "id"),
+					// Read-only counter-style attribute always populated by the appliance.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel_ds", "hits"),
 				),
 			},
 		},

@@ -33,3 +33,10 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the vpntrafficpolicy. It is the same as the `name` attribute.
 * `action` - Action to apply to traffic that matches the policy.
 * `rule` - Expression, or name of a named expression, against which traffic is evaluated.
+
+### Read-only vpntrafficpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpntrafficpolicy` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `expressiontype` - Type of policy (Classic/Advanced).
+* `hits` - Number of hits.

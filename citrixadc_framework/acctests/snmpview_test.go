@@ -96,6 +96,11 @@ func TestAccSnmpviewDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "name", "test_name_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "subtree", "1.2.4.7"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "type", "excluded"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpview.tf_snmpview", "id"),
+					// Read-only metadata exposed only by the data source; status is
+					// always populated for a freshly-created view.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpview.tf_snmpview", "status"),
 				),
 			},
 		},

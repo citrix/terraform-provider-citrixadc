@@ -270,6 +270,7 @@ func TestAccCsvserver_vpnvserver_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_vpnvserver_binding.tf_csvserver_vpnvserver_binding", "name", "tf_csvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_vpnvserver_binding.tf_csvserver_vpnvserver_binding", "vserver", "tf_vpnvserver"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver_vpnvserver_binding.tf_csvserver_vpnvserver_binding", "id"),
 				),
 			},
 		},

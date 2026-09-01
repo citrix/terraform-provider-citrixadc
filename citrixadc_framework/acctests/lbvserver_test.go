@@ -921,6 +921,12 @@ func TestAccLbvserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "persistencetype", "COOKIEINSERT"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "port", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "servicetype", "HTTP"),
+					// Runtime-binding proof plus read-only state/type/status fields the
+					// appliance always returns for a freshly-created lb vserver.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver.tf_lbvserver", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver.tf_lbvserver", "type"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver.tf_lbvserver", "curstate"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver.tf_lbvserver", "status"),
 				),
 			},
 		},

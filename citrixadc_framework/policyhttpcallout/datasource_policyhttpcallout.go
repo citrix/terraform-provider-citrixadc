@@ -35,7 +35,7 @@ func (d *PolicyhttpcalloutDataSource) Schema(ctx context.Context, req datasource
 }
 
 func (d *PolicyhttpcalloutDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data PolicyhttpcalloutResourceModel
+	var data PolicyhttpcalloutDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *PolicyhttpcalloutDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	policyhttpcalloutSetAttrFromGet(ctx, &data, getResponseData)
+	policyhttpcalloutDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

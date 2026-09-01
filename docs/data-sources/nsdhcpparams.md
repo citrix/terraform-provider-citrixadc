@@ -34,3 +34,12 @@ The following attributes are available:
 * `dhcpclient` - Enables DHCP client to acquire IP address from the DHCP server in the next boot. When set to OFF, disables the DHCP client in the next boot. Possible values: [ ON, OFF ]
 * `saveroute` - DHCP acquired routes are saved on the Citrix ADC. Possible values: [ ON, OFF ]
 * `id` - The id of the nsdhcpparams. It is a system-generated identifier.
+
+### Read-only nsdhcpparams metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsdhcpparams` resource). They are Computed / GET-only, and any attribute the appliance does not return (for example, when the DHCP client has not acquired a lease) is `null`.
+
+* `ipaddress` - DHCP acquired IP.
+* `netmask` - DHCP acquired Netmask.
+* `hostrtgw` - DHCP acquired Gateway.
+* `running` - DHCP mode.

@@ -83,6 +83,9 @@ func TestAccDnsaaaarecDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "hostname", "www.adfihrwpi.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "ipv6address", "2001:db8:85a3::8a2e:370:7334"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "ttl", "3600"),
+					// Universal runtime-binding proof (read-only vservername/authtype
+					// are config-dependent and may be omitted by the appliance).
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsaaaarec.dnsaaaarec", "id"),
 				),
 			},
 		},

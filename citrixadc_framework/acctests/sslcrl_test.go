@@ -283,6 +283,10 @@ func TestAccSslcrl_DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslcrl.tf_sslcrl", "crlname", "tf_sslcrl"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcrl.tf_sslcrl", "crlpath", "/var/netscaler/ssl/crl_config_clnt_rsa1_1cert.pem"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcrl.tf_sslcrl", "cacert", "rootrsa_cert1"),
+					// id is the universal runtime-binding proof; read-only CRL
+					// metadata attrs are instance/config-dependent and Null when
+					// the appliance omits them.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcrl.tf_sslcrl", "id"),
 				),
 			},
 		},

@@ -182,6 +182,8 @@ func TestAccAuthenticationadfsproxyprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "certkeyname", "TODO_PLACEHOLDER"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "serverurl", "https://adfs.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "username", "adfsuser"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "id"),
 				),
 			},
 		},

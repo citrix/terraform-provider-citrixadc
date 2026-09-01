@@ -226,6 +226,7 @@ func TestAccFeopolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFeopolicyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_feopolicy.tf_feopolicy", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_feopolicy.tf_feopolicy", "name", "my_feopolicy_datasource"),
 					resource.TestCheckResourceAttr("data.citrixadc_feopolicy.tf_feopolicy", "action", "BASIC"),
 					resource.TestCheckResourceAttr("data.citrixadc_feopolicy.tf_feopolicy", "rule", "true"),

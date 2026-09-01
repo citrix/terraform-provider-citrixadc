@@ -351,6 +351,7 @@ func TestAccAuditnslogactionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuditnslogactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "name", "tf_auditnslogaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "serverip", "10.222.74.180"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogaction.tf_auditnslogaction_ds", "tcp", "ALL"),

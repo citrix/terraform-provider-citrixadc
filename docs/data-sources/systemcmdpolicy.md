@@ -34,6 +34,13 @@ In addition to the arguments, the following attributes are available:
 * `cmdspec` - Regular expression specifying the data that matches the policy.
 * `id` - The id of the systemcmdpolicy. It has the same value as the `policyname` attribute.
 
+### Read-only systemcmdpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_systemcmdpolicy` resource) and are `null` when the appliance omits them.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.
+
 ## Import
 
 A systemcmdpolicy can be imported using its policyname, e.g.

@@ -168,6 +168,11 @@ func TestAccVideooptimizationpacingpolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicylabel.tf_videooptimizationpacingpolicylabel", "labelname", "tf_videoopt_pacing_pl"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicylabel.tf_videooptimizationpacingpolicylabel", "comment", "test_comment"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingpolicylabel.tf_videooptimizationpacingpolicylabel", "id"),
+					// Counter-style read-only attributes are always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingpolicylabel.tf_videooptimizationpacingpolicylabel", "numpol"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingpolicylabel.tf_videooptimizationpacingpolicylabel", "hits"),
 				),
 			},
 		},

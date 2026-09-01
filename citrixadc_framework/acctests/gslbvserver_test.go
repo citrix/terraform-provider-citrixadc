@@ -422,6 +422,8 @@ func TestAccGslbvserverDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGslbvserverDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbvserver.tf_gslbvserver", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "name", "tf_test_gslbvserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "dnsrecordtype", "A"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver.tf_gslbvserver", "servicetype", "HTTP"),

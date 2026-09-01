@@ -194,6 +194,8 @@ func TestAccCspolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cspolicylabel.tf_policylabel_ds", "labelname", "tf_policylabel_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cspolicylabel.tf_policylabel_ds", "cspolicylabeltype", "HTTP"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cspolicylabel.tf_policylabel_ds", "id"),
 				),
 			},
 		},

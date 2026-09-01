@@ -98,3 +98,11 @@ In addition to the arguments above, the following attributes are exported:
 * `cqa` - CQA feature is licensed.
 * `bot` - Bot Management feature is licensed.
 * `apigateway` - API Gateway feature is licensed.
+
+### Read-only nslicense metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nslicense` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `cloudsubscriptionimage` - Cloud Subscription Image (`YES`/`NO`).
+* `daystoexpiration` - Days to license expiration.
+* `daystolasenforcement` - Days to expiration for LAS enforcement.

@@ -1,8 +1,71 @@
 package sslservice
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SslserviceDataSourceModel is the data-source-specific model, decoupled from
+// SslserviceResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the resource attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits.
+// Every non-key attribute is Computed; the Framework's per-attribute model <->
+// schema reflection requires this model to have exactly the attributes the
+// data-source schema declares, which is why it cannot reuse the resource model.
+type SslserviceDataSourceModel struct {
+	Id                   types.String `tfsdk:"id"`
+	Cipherredirect       types.String `tfsdk:"cipherredirect"`
+	Cipherurl            types.String `tfsdk:"cipherurl"`
+	Clientauth           types.String `tfsdk:"clientauth"`
+	Clientcert           types.String `tfsdk:"clientcert"`
+	Commonname           types.String `tfsdk:"commonname"`
+	Dh                   types.String `tfsdk:"dh"`
+	Dhcount              types.Int64  `tfsdk:"dhcount"`
+	Dhfile               types.String `tfsdk:"dhfile"`
+	Dhkeyexpsizelimit    types.String `tfsdk:"dhkeyexpsizelimit"`
+	Dtls1                types.String `tfsdk:"dtls1"`
+	Dtls12               types.String `tfsdk:"dtls12"`
+	Dtlsprofilename      types.String `tfsdk:"dtlsprofilename"`
+	Ersa                 types.String `tfsdk:"ersa"`
+	Ersacount            types.Int64  `tfsdk:"ersacount"`
+	Ocspstapling         types.String `tfsdk:"ocspstapling"`
+	Pushenctrigger       types.String `tfsdk:"pushenctrigger"`
+	Redirectportrewrite  types.String `tfsdk:"redirectportrewrite"`
+	Sendclosenotify      types.String `tfsdk:"sendclosenotify"`
+	Serverauth           types.String `tfsdk:"serverauth"`
+	Servicename          types.String `tfsdk:"servicename"` // Required lookup key
+	Sessreuse            types.String `tfsdk:"sessreuse"`
+	Sesstimeout          types.Int64  `tfsdk:"sesstimeout"`
+	Snienable            types.String `tfsdk:"snienable"`
+	Ssl2                 types.String `tfsdk:"ssl2"`
+	Ssl3                 types.String `tfsdk:"ssl3"`
+	Sslclientlogs        types.String `tfsdk:"sslclientlogs"`
+	Sslprofile           types.String `tfsdk:"sslprofile"`
+	Sslredirect          types.String `tfsdk:"sslredirect"`
+	Sslv2redirect        types.String `tfsdk:"sslv2redirect"`
+	Sslv2url             types.String `tfsdk:"sslv2url"`
+	Strictclientekucheck types.String `tfsdk:"strictclientekucheck"`
+	Strictsigdigestcheck types.String `tfsdk:"strictsigdigestcheck"`
+	Tls1                 types.String `tfsdk:"tls1"`
+	Tls11                types.String `tfsdk:"tls11"`
+	Tls12                types.String `tfsdk:"tls12"`
+	Tls13                types.String `tfsdk:"tls13"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/sslservice.json). Never settable; populated from GET.
+	Nonfipsciphers   types.String `tfsdk:"nonfipsciphers"`
+	Service          types.Int64  `tfsdk:"service"`
+	Skipcaname       types.Bool   `tfsdk:"skipcaname"`
+	Dtlsflag         types.Bool   `tfsdk:"dtlsflag"`
+	Quicflag         types.Bool   `tfsdk:"quicflag"`
+	Skipcacertbundle types.Bool   `tfsdk:"skipcacertbundle"`
+}
 
 func SslserviceDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -189,6 +252,91 @@ func SslserviceDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "State of TLSv1.3 protocol support for the SSL service.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"nonfipsciphers": schema.StringAttribute{
+				Computed:    true,
+				Description: "The state of usage of non FIPS approved ciphers.",
+			},
+			"service": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Service.",
+			},
+			"skipcaname": schema.BoolAttribute{
+				Computed:    true,
+				Description: "The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting for client certificate in a SSL handshake.",
+			},
+			"dtlsflag": schema.BoolAttribute{
+				Computed:    true,
+				Description: "The flag is used to indicate whether DTLS is set or not.",
+			},
+			"quicflag": schema.BoolAttribute{
+				Computed:    true,
+				Description: "This flag is used to indicate the use of the QUIC transport protocol by a virtual server or service.",
+			},
+			"skipcacertbundle": schema.BoolAttribute{
+				Computed:    true,
+				Description: "The flag is used to indicate whether all CA_names in this particular CA certificate bundle needs to be sent to the SSL client while requesting for client certificate in a SSL handshake.",
+			},
 		},
 	}
+}
+
+// sslserviceDataSourceSetAttrFromGet projects a NITRO sslservice GET response
+// onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func sslserviceDataSourceSetAttrFromGet(ctx context.Context, data *SslserviceDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In sslserviceDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["servicename"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Servicename = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Cipherredirect = utils.MapGetString(g, "cipherredirect")
+	data.Cipherurl = utils.MapGetString(g, "cipherurl")
+	data.Clientauth = utils.MapGetString(g, "clientauth")
+	data.Clientcert = utils.MapGetString(g, "clientcert")
+	data.Commonname = utils.MapGetString(g, "commonname")
+	data.Dh = utils.MapGetString(g, "dh")
+	data.Dhcount = utils.MapGetInt64(g, "dhcount")
+	data.Dhfile = utils.MapGetString(g, "dhfile")
+	data.Dhkeyexpsizelimit = utils.MapGetString(g, "dhkeyexpsizelimit")
+	data.Dtls1 = utils.MapGetString(g, "dtls1")
+	data.Dtls12 = utils.MapGetString(g, "dtls12")
+	data.Dtlsprofilename = utils.MapGetString(g, "dtlsprofilename")
+	data.Ersa = utils.MapGetString(g, "ersa")
+	data.Ersacount = utils.MapGetInt64(g, "ersacount")
+	data.Ocspstapling = utils.MapGetString(g, "ocspstapling")
+	data.Pushenctrigger = utils.MapGetString(g, "pushenctrigger")
+	data.Redirectportrewrite = utils.MapGetString(g, "redirectportrewrite")
+	data.Sendclosenotify = utils.MapGetString(g, "sendclosenotify")
+	data.Serverauth = utils.MapGetString(g, "serverauth")
+	data.Sessreuse = utils.MapGetString(g, "sessreuse")
+	data.Sesstimeout = utils.MapGetInt64(g, "sesstimeout")
+	data.Snienable = utils.MapGetString(g, "snienable")
+	data.Ssl2 = utils.MapGetString(g, "ssl2")
+	data.Ssl3 = utils.MapGetString(g, "ssl3")
+	data.Sslclientlogs = utils.MapGetString(g, "sslclientlogs")
+	data.Sslprofile = utils.MapGetString(g, "sslprofile")
+	data.Sslredirect = utils.MapGetString(g, "sslredirect")
+	data.Sslv2redirect = utils.MapGetString(g, "sslv2redirect")
+	data.Sslv2url = utils.MapGetString(g, "sslv2url")
+	data.Strictclientekucheck = utils.MapGetString(g, "strictclientekucheck")
+	data.Strictsigdigestcheck = utils.MapGetString(g, "strictsigdigestcheck")
+	data.Tls1 = utils.MapGetString(g, "tls1")
+	data.Tls11 = utils.MapGetString(g, "tls11")
+	data.Tls12 = utils.MapGetString(g, "tls12")
+	data.Tls13 = utils.MapGetString(g, "tls13")
+
+	// Read-only attributes.
+	data.Nonfipsciphers = utils.MapGetString(g, "nonfipsciphers")
+	data.Service = utils.MapGetInt64(g, "service")
+	data.Skipcaname = utils.MapGetBool(g, "skipcaname")
+	data.Dtlsflag = utils.MapGetBool(g, "dtlsflag")
+	data.Quicflag = utils.MapGetBool(g, "quicflag")
+	data.Skipcacertbundle = utils.MapGetBool(g, "skipcacertbundle")
 }

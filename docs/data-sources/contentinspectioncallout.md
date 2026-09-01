@@ -51,6 +51,14 @@ In addition to the arguments, the following attributes are available:
   * ICAP - Sends ICAP request to the configured ICAP server.
 * `id` - The id of the contentinspectioncallout. It has the same value as the `name` attribute.
 
+### Read-only contentinspectioncallout metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_contentinspectioncallout` resource) and are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `hits` - Total hits.
+* `undefhits` - Total undefs.
+* `undefreason` - Reason for last undef.
+
 ## Import
 
 A contentinspectioncallout can be imported using its name, e.g.

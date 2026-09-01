@@ -1,11 +1,43 @@
 package lsnstatic
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// LsnstaticDataSourceModel is the data-source-specific model, decoupled from
+// LsnstaticResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the configurable attributes (as
+// Computed outputs) AND the read-only attributes the resource deliberately
+// omits. Every non-key attribute is Computed.
+type LsnstaticDataSourceModel struct {
+	Id                types.String `tfsdk:"id"`
+	Destip            types.String `tfsdk:"destip"`
+	Dsttd             types.Int64  `tfsdk:"dsttd"`
+	Name              types.String `tfsdk:"name"` // Required lookup key
+	Natip             types.String `tfsdk:"natip"`
+	Natport           types.Int64  `tfsdk:"natport"`
+	Nattype           types.String `tfsdk:"nattype"`
+	Network6          types.String `tfsdk:"network6"`
+	Subscrip          types.String `tfsdk:"subscrip"`
+	Subscrport        types.Int64  `tfsdk:"subscrport"`
+	Td                types.Int64  `tfsdk:"td"`
+	Transportprotocol types.String `tfsdk:"transportprotocol"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/lsnstatic.json). Never settable; populated from GET.
+	Status types.String `tfsdk:"status"`
+}
 
 func LsnstaticDataSourceSchema() schema.Schema {
 	return schema.Schema{
+		Description: "Data source to read a Large Scale NAT (LSN) static mapping entry.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -64,6 +96,46 @@ func LsnstaticDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Protocol for the LSN mapping entry.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"status": schema.StringAttribute{
+				Computed:    true,
+				Description: "The status of the mapping. Status could be Inactive, if mapping addition failed due to already existing dynamic/static mapping, or port allocation failure. Possible values: ACTIVE, INACTIVE.",
+			},
 		},
 	}
+}
+
+// lsnstaticDataSourceSetAttrFromGet projects a NITRO lsnstatic GET response onto
+// the data-source model. Because a data source has no plan/apply reconciliation,
+// attributes are simply filled from the GET (or left Null when the GET omits
+// them). The shared utils.MapGet* helpers implement that projection.
+func lsnstaticDataSourceSetAttrFromGet(ctx context.Context, data *LsnstaticDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In lsnstaticDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Destip = utils.MapGetString(g, "destip")
+	data.Dsttd = utils.MapGetInt64(g, "dsttd")
+	data.Natip = utils.MapGetString(g, "natip")
+	data.Natport = utils.MapGetInt64(g, "natport")
+	data.Nattype = utils.MapGetString(g, "nattype")
+	data.Network6 = utils.MapGetString(g, "network6")
+	data.Subscrip = utils.MapGetString(g, "subscrip")
+	data.Subscrport = utils.MapGetInt64(g, "subscrport")
+	// td is a config-supplied key; NITRO omits it for the default traffic
+	// domain (0), so preserve the configured value instead of nulling it.
+	if tdv, tdok := g["td"]; tdok && tdv != nil {
+		if iv, err := utils.ConvertToInt64(tdv); err == nil {
+			data.Td = types.Int64Value(iv)
+		}
+	}
+	data.Transportprotocol = utils.MapGetString(g, "transportprotocol")
+
+	// Read-only attributes.
+	data.Status = utils.MapGetString(g, "status")
 }

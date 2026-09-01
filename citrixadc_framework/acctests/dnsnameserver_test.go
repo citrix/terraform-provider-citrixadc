@@ -588,6 +588,7 @@ func TestAccDnsnameserverDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnsnameserverDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsnameserver.dnsnameserver_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsnameserver.dnsnameserver_ds", "ip", "192.0.2.1"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsnameserver.dnsnameserver_ds", "type", "UDP"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsnameserver.dnsnameserver_ds", "local", "true"),

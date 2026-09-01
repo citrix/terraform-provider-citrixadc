@@ -35,7 +35,7 @@ func (d *NslimitidentifierDataSource) Schema(ctx context.Context, req datasource
 }
 
 func (d *NslimitidentifierDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NslimitidentifierResourceModel
+	var data NslimitidentifierDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *NslimitidentifierDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	nslimitidentifierSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	nslimitidentifierDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

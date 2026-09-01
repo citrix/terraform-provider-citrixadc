@@ -268,6 +268,8 @@ func TestAccAuditsyslogparamsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogparams.tf_auditsyslogparams_ds", "tcp", "ALL"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogparams.tf_auditsyslogparams_ds", "protocolviolations", "NONE"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogparams.tf_auditsyslogparams_ds", "streamanalytics", "DISABLED"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditsyslogparams.tf_auditsyslogparams_ds", "id"),
 				),
 			},
 		},

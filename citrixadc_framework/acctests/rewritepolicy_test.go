@@ -712,6 +712,7 @@ func TestAccRewritepolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicy.test", "name", "tf_rewritepolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewritepolicy.test", "action", "DROP"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_rewritepolicy.test", "rule"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewritepolicy.test", "id"),
 				),
 			},
 		},

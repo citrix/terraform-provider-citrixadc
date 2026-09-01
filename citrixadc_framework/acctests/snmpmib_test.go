@@ -146,6 +146,8 @@ func TestAccSnmpmibDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_snmpmib.tf_snmpmib_ds", "contact", "phone_number_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpmib.tf_snmpmib_ds", "name", "my_name_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpmib.tf_snmpmib_ds", "location", "LOCATION_DS"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpmib.tf_snmpmib_ds", "id"),
 				),
 			},
 		},

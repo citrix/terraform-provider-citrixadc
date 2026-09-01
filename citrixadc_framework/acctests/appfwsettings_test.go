@@ -365,6 +365,8 @@ func TestAccAppfwsettingsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "sessionlimit", "0"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "centralizedlearning", "ON"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwsettings.tf_appfwsettings", "proxyport", "9090"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwsettings.tf_appfwsettings", "id"),
 				),
 			},
 		},

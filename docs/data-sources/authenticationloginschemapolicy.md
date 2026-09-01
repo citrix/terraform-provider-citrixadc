@@ -51,6 +51,15 @@ The following requirements apply only to the Citrix ADC CLI:
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.
 * `id` - The id of the authenticationloginschemapolicy. It has the same value as the `name` attribute.
 
+### Read-only authenticationloginschemapolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationloginschemapolicy` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of Undef hits.
+* `builtin` - Flag to determine if policy is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+
 ## Import
 
 A authenticationloginschemapolicy can be imported using its name, e.g.

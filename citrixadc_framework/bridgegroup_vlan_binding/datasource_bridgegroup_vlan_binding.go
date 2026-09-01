@@ -37,7 +37,7 @@ func (d *BridgegroupVlanBindingDataSource) Schema(ctx context.Context, req datas
 }
 
 func (d *BridgegroupVlanBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data BridgegroupVlanBindingResourceModel
+	var data BridgegroupVlanBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -96,7 +96,7 @@ func (d *BridgegroupVlanBindingDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	bridgegroup_vlan_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	bridgegroup_vlan_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

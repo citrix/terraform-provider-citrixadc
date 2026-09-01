@@ -66,6 +66,10 @@ func TestAccSslcacertgroupDataSource_basic(t *testing.T) {
 				Config: testAccSslcacertgroupDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslcacertgroup.foo", "cacertgroupname", "foo_ds"),
+					// id is the universal runtime-binding proof; read-only
+					// metadata attrs are instance/config-dependent and Null
+					// when the appliance omits them.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcacertgroup.foo", "id"),
 				),
 			},
 		},

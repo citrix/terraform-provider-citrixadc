@@ -164,6 +164,8 @@ func TestAccAppflowparamDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appflowparam.tf_appflowparam", "flowrecordinterval", "200"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowparam.tf_appflowparam", "httpcookie", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowparam.tf_appflowparam", "httplocation", "ENABLED"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowparam.tf_appflowparam", "id"),
 				),
 			},
 		},

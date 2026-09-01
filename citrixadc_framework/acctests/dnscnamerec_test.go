@@ -222,6 +222,7 @@ func TestAccDnscnamerecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnscnamerecDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnscnamerec.dnscnamerec", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "aliasname", "tfacc-ds-cname-test.local"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "canonicalname", "tfacc-target.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscnamerec.dnscnamerec", "ttl", "3600"),

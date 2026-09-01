@@ -44,3 +44,9 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the label invoked.
 * `labeltype` - The invocation type.
 * `targetvserver` - Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.
+
+### Read-only crvserver_cmppolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_crvserver_cmppolicy_binding` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `inherited` - On State describes that policy bound is inherited from global binding. Possible values = ON, OFF.

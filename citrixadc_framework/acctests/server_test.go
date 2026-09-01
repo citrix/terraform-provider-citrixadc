@@ -425,6 +425,9 @@ func TestAccServerDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_server.tf_server", "name", "test_server_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_server.tf_server", "ipaddress", "192.168.11.14"),
+					// Read-only server metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_server.tf_server", "id"),
 				),
 			},
 		},

@@ -301,6 +301,7 @@ func TestAccCachepolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCachepolicyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_cachepolicy.tf_cachepolicy_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_cachepolicy.tf_cachepolicy_ds", "policyname", "tf_cachepolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cachepolicy.tf_cachepolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_cachepolicy.tf_cachepolicy_ds", "action", "CACHE"),

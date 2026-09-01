@@ -248,6 +248,8 @@ func TestAccVpnparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "splitdns", "LOCAL"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "sesstimeout", "30"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnparameter.tf_vpnparameter", "clientsecuritylog", "OFF"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnparameter.tf_vpnparameter", "id"),
 				),
 			},
 		},

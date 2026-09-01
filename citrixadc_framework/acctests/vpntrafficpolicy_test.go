@@ -249,6 +249,9 @@ func TestAccVpntrafficpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "name", "tf_vpntrafficpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "rule", "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "action", "Testingaction"),
+					// Runtime-binding proof + read-only counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy", "hits"),
 				),
 			},
 		},

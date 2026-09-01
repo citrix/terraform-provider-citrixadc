@@ -305,6 +305,8 @@ func TestAccCmpparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenameminlength", "12"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilenamemaxlength", "20"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmpparameter.tf_cmpparameter", "randomgzipfilename", "ENABLED"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cmpparameter.tf_cmpparameter", "id"),
 				),
 			},
 		},

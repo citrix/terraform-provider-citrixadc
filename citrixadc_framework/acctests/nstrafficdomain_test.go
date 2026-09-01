@@ -209,9 +209,14 @@ func TestAccNstrafficdomainDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNstrafficdomainDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "td", "3"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "aliasname", "tf_trafficdomain_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "vmac", "ENABLED"),
+					// state is a status read-only field the appliance always returns
+					// for an existing traffic domain (default ENABLED).
+					resource.TestCheckResourceAttrSet("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "state"),
 				),
 			},
 		},

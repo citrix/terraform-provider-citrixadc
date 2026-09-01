@@ -290,6 +290,8 @@ func TestAccVpnvserver_appcontroller_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appcontroller_binding.tf_bind", "name", "tf.citrix.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appcontroller_binding.tf_bind", "appcontroller", "http://www.example.com"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_appcontroller_binding.tf_bind", "id"),
 				),
 			},
 		},

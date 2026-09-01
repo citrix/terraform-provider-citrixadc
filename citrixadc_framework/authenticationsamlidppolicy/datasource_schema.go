@@ -1,8 +1,40 @@
 package authenticationsamlidppolicy
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AuthenticationsamlidppolicyDataSourceModel is the data-source-specific model,
+// decoupled from AuthenticationsamlidppolicyResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits
+// (gotopriorityexpression, hits). Every non-key attribute is Computed; the
+// Framework's per-attribute model <-> schema reflection requires this model to
+// have exactly the attributes the data-source schema declares, which is why it
+// cannot reuse the resource model.
+type AuthenticationsamlidppolicyDataSourceModel struct {
+	Id          types.String `tfsdk:"id"`
+	Action      types.String `tfsdk:"action"`
+	Comment     types.String `tfsdk:"comment"`
+	Logaction   types.String `tfsdk:"logaction"`
+	Name        types.String `tfsdk:"name"`
+	Newname     types.String `tfsdk:"newname"`
+	Rule        types.String `tfsdk:"rule"`
+	Undefaction types.String `tfsdk:"undefaction"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/authenticationsamlidppolicy.json). Never settable;
+	// populated from GET.
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Hits                   types.Int64  `tfsdk:"hits"`
+}
 
 func AuthenticationsamlidppolicyDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -44,6 +76,44 @@ func AuthenticationsamlidppolicyDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"gotopriorityexpression": schema.StringAttribute{
+				Computed:    true,
+				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
+			},
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of hits.",
+			},
 		},
 	}
+}
+
+// authenticationsamlidppolicyDataSourceSetAttrFromGet projects a NITRO
+// authenticationsamlidppolicy GET response onto the data-source model. Because a
+// data source has no plan/apply reconciliation, attributes are simply filled
+// from the GET (or left Null when the GET omits them). The shared utils.MapGet*
+// helpers implement that projection.
+func authenticationsamlidppolicyDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationsamlidppolicyDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In authenticationsamlidppolicyDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Action = utils.MapGetString(g, "action")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Logaction = utils.MapGetString(g, "logaction")
+	data.Rule = utils.MapGetString(g, "rule")
+	data.Undefaction = utils.MapGetString(g, "undefaction")
+
+	// newname is a rename-only input the GET never returns -> Null.
+	data.Newname = types.StringNull()
+
+	// Read-only attributes.
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Hits = utils.MapGetInt64(g, "hits")
 }

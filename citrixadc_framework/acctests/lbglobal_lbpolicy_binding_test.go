@@ -287,6 +287,10 @@ func TestAccLbglobal_lbpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "policyname", "tf_pol"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "type", "REQ_DEFAULT"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "id"),
+					// Read-only (GET-only) metadata: numpol is a counter always populated for a bound policy.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbglobal_lbpolicy_binding.tf_lbglobal_lbpolicy_binding", "numpol"),
 				),
 			},
 		},

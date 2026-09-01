@@ -183,6 +183,11 @@ func TestAccAuthenticationpushserviceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "name", "tf_pushservice_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "customerid", "cusID"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpushservice.tf_pushservice_data", "refreshinterval", "50"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationpushservice.tf_pushservice_data", "id"),
+					// Read-only metadata exposed only by the data source. pushservicestatus
+					// is a status field with a documented default (INIT), always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationpushservice.tf_pushservice_data", "pushservicestatus"),
 				),
 			},
 		},

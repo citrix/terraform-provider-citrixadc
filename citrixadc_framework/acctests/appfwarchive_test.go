@@ -175,6 +175,8 @@ func TestAccAppfwarchiveDataSource_basic(t *testing.T) {
 				Config: testAccAppfwarchiveDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwarchive.tf_appfwarchive", "name", "new_tfappfwarch"),
+					// id is the universal runtime-binding proof (mirrors name).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwarchive.tf_appfwarchive", "id"),
 				),
 			},
 		},

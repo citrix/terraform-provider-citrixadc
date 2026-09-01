@@ -253,6 +253,7 @@ func TestAccAaauser_vpnintranetapplication_bindingDataSource_basic(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "username", "user1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "intranetapplication", "tf_vpnintranetapplication"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "id"),
 				),
 			},
 		},

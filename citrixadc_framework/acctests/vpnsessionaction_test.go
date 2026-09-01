@@ -323,6 +323,8 @@ func TestAccVpnsessionactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionaction.foo", "name", "newsession"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionaction.foo", "sesstimeout", "10"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionaction.foo", "defaultauthorizationaction", "ALLOW"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnsessionaction.foo", "id"),
 				),
 			},
 		},

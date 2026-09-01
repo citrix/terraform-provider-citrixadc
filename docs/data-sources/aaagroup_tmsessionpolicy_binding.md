@@ -36,3 +36,9 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the aaagroup_tmsessionpolicy_binding. It is the concatenation of `groupname` and `policy` attributes separated by a comma.
 * `priority` - Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies is 64000.
 * `type` - Bindpoint to which the policy is bound.
+
+### Read-only aaagroup_tmsessionpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaagroup_tmsessionpolicy_binding` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `acttype` - Bound policy action type.

@@ -37,3 +37,10 @@ In addition to the arguments, the following attributes are available:
 * `protocol` - VXLAN-GPE next protocol. RESERVED, IPv4, IPv6, ETHERNET, NSH.
 * `type` - VXLAN encapsulation type. VXLAN, VXLANGPE.
 * `vlan` - ID of VLANs whose traffic is allowed over this VXLAN. If you do not specify any VLAN IDs, the Citrix ADC allows traffic of all VLANs that are not part of any other VXLANs.
+
+### Read-only vxlan metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vxlan` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `td` - Integer value that uniquely identifies the traffic domain in which the entity is configured. If no ID is specified, the entity is part of the default traffic domain (ID 0).
+* `partitionname` - The partition to which this vxlan is bound.

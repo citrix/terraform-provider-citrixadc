@@ -255,6 +255,9 @@ func TestAccRnat6_nsip6_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "name", "my_rnat6"),
 					resource.TestCheckResourceAttr("data.citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "natip6", "2001:db8:85a3::8a2e:370:7334"),
+					// Universal runtime-binding proof; read-only GET-only field (td)
+					// is omitted for the default traffic domain, so not asserted.
+					resource.TestCheckResourceAttrSet("data.citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "id"),
 				),
 			},
 		},

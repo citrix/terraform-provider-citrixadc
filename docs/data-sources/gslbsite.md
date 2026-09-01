@@ -48,6 +48,17 @@ In addition to the arguments, the following attributes are available:
 * `triggermonitor` - Specify the conditions under which the GSLB service must be monitored by a monitor, if one is bound. Available settings function as follows: ALWAYS - Monitor the GSLB service at all times. MEPDOWN - Monitor the GSLB service only when the exchange of metrics through the Metrics Exchange Protocol (MEP) is disabled. MEPDOWN_SVCDOWN - Monitor the service in either of the following situations: The exchange of metrics through MEP is disabled, or the exchange of metrics through MEP is enabled but the status of the service, learned through metrics exchange, is DOWN.
 * `id` - The id of the gslbsite. It has the same value as the `sitename` attribute.
 
+### Read-only gslbsite metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_gslbsite` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `status` - Current metric exchange status (`ACTIVE`, `INACTIVE`, `DOWN`).
+* `persistencemepstatus` - Network metric and persistence exchange MEP connection status (`ACTIVE`, `INACTIVE`, `DOWN`).
+* `version` - Will be true if the remote site's version is ncore compatible with the local site (>= 9.2).
+* `curbackupparentip` - Current active backup parent IP address since the configured is DOWN.
+* `sitestate` - Site state (for example `UP`, `DOWN`, `OUT OF SERVICE`, `DISABLED`).
+* `oldname` - Old name for the GSLB site.
+
 
 ## Import
 

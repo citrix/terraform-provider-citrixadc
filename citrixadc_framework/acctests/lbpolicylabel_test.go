@@ -247,6 +247,8 @@ func TestAccLbpolicylabelDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLbpolicylabelDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					// id is the universal runtime-binding proof of a resolved data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbpolicylabel.tf_lbpolicylabel", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbpolicylabel.tf_lbpolicylabel", "labelname", "tf_lbpolicylabel"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbpolicylabel.tf_lbpolicylabel", "policylabeltype", "HTTP"),
 				),

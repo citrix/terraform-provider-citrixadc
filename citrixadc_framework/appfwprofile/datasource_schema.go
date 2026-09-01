@@ -1,9 +1,170 @@
 package appfwprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AppfwprofileDataSourceModel is the data-source-specific model, decoupled from
+// AppfwprofileResourceModel. A data source is a pure read surface, so it can
+// expose the FULL GET projection: the configurable attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits (state,
+// learning, csrftag, builtin). Every non-key attribute is Computed.
+type AppfwprofileDataSourceModel struct {
+	Id                                         types.String `tfsdk:"id"`
+	Addcookieflags                             types.String `tfsdk:"addcookieflags"`
+	Apispec                                    types.String `tfsdk:"apispec"`
+	Archivename                                types.String `tfsdk:"archivename"`
+	AsProfBypassListEnable                     types.String `tfsdk:"as_prof_bypass_list_enable"`
+	AsProfDenyListEnable                       types.String `tfsdk:"as_prof_deny_list_enable"`
+	Augment                                    types.Bool   `tfsdk:"augment"`
+	Blockkeywordaction                         types.List   `tfsdk:"blockkeywordaction"`
+	Bufferoverflowaction                       types.List   `tfsdk:"bufferoverflowaction"`
+	Bufferoverflowmaxcookielength              types.Int64  `tfsdk:"bufferoverflowmaxcookielength"`
+	Bufferoverflowmaxheaderlength              types.Int64  `tfsdk:"bufferoverflowmaxheaderlength"`
+	Bufferoverflowmaxquerylength               types.Int64  `tfsdk:"bufferoverflowmaxquerylength"`
+	Bufferoverflowmaxtotalheaderlength         types.Int64  `tfsdk:"bufferoverflowmaxtotalheaderlength"`
+	Bufferoverflowmaxurllength                 types.Int64  `tfsdk:"bufferoverflowmaxurllength"`
+	Canonicalizehtmlresponse                   types.String `tfsdk:"canonicalizehtmlresponse"`
+	Ceflogging                                 types.String `tfsdk:"ceflogging"`
+	Checkrequestheaders                        types.String `tfsdk:"checkrequestheaders"`
+	Clientipexpression                         types.String `tfsdk:"clientipexpression"`
+	Cmdinjectionaction                         types.List   `tfsdk:"cmdinjectionaction"`
+	Cmdinjectiongrammar                        types.String `tfsdk:"cmdinjectiongrammar"`
+	Cmdinjectiontype                           types.String `tfsdk:"cmdinjectiontype"`
+	Comment                                    types.String `tfsdk:"comment"`
+	Contenttypeaction                          types.List   `tfsdk:"contenttypeaction"`
+	Cookieconsistencyaction                    types.List   `tfsdk:"cookieconsistencyaction"`
+	Cookieencryption                           types.String `tfsdk:"cookieencryption"`
+	Cookiehijackingaction                      types.List   `tfsdk:"cookiehijackingaction"`
+	Cookieproxying                             types.String `tfsdk:"cookieproxying"`
+	Cookiesamesiteattribute                    types.String `tfsdk:"cookiesamesiteattribute"`
+	Cookietransforms                           types.String `tfsdk:"cookietransforms"`
+	Creditcard                                 types.List   `tfsdk:"creditcard"`
+	Creditcardaction                           types.List   `tfsdk:"creditcardaction"`
+	Creditcardmaxallowed                       types.Int64  `tfsdk:"creditcardmaxallowed"`
+	Creditcardxout                             types.String `tfsdk:"creditcardxout"`
+	Crosssitescriptingaction                   types.List   `tfsdk:"crosssitescriptingaction"`
+	Crosssitescriptingcheckcompleteurls        types.String `tfsdk:"crosssitescriptingcheckcompleteurls"`
+	Crosssitescriptingtransformunsafehtml      types.String `tfsdk:"crosssitescriptingtransformunsafehtml"`
+	Csrftagaction                              types.List   `tfsdk:"csrftagaction"`
+	Customsettings                             types.String `tfsdk:"customsettings"`
+	Defaultcharset                             types.String `tfsdk:"defaultcharset"`
+	Defaultfieldformatmaxlength                types.Int64  `tfsdk:"defaultfieldformatmaxlength"`
+	Defaultfieldformatmaxoccurrences           types.Int64  `tfsdk:"defaultfieldformatmaxoccurrences"`
+	Defaultfieldformatminlength                types.Int64  `tfsdk:"defaultfieldformatminlength"`
+	Defaultfieldformattype                     types.String `tfsdk:"defaultfieldformattype"`
+	Defaults                                   types.String `tfsdk:"defaults"`
+	Denyurlaction                              types.List   `tfsdk:"denyurlaction"`
+	Dosecurecreditcardlogging                  types.String `tfsdk:"dosecurecreditcardlogging"`
+	Dynamiclearning                            types.List   `tfsdk:"dynamiclearning"`
+	Enableformtagging                          types.String `tfsdk:"enableformtagging"`
+	Errorurl                                   types.String `tfsdk:"errorurl"`
+	Excludefileuploadfromchecks                types.String `tfsdk:"excludefileuploadfromchecks"`
+	Exemptclosureurlsfromsecuritychecks        types.String `tfsdk:"exemptclosureurlsfromsecuritychecks"`
+	Fakeaccountdetection                       types.String `tfsdk:"fakeaccountdetection"`
+	Fieldconsistencyaction                     types.List   `tfsdk:"fieldconsistencyaction"`
+	Fieldformataction                          types.List   `tfsdk:"fieldformataction"`
+	Fieldscan                                  types.String `tfsdk:"fieldscan"`
+	Fieldscanlimit                             types.Int64  `tfsdk:"fieldscanlimit"`
+	Fileuploadmaxnum                           types.Int64  `tfsdk:"fileuploadmaxnum"`
+	Fileuploadtypesaction                      types.List   `tfsdk:"fileuploadtypesaction"`
+	Geolocationlogging                         types.String `tfsdk:"geolocationlogging"`
+	Grpcaction                                 types.List   `tfsdk:"grpcaction"`
+	Htmlerrorobject                            types.String `tfsdk:"htmlerrorobject"`
+	Htmlerrorstatuscode                        types.Int64  `tfsdk:"htmlerrorstatuscode"`
+	Htmlerrorstatusmessage                     types.String `tfsdk:"htmlerrorstatusmessage"`
+	Importprofilename                          types.String `tfsdk:"importprofilename"`
+	Infercontenttypexmlpayloadaction           types.List   `tfsdk:"infercontenttypexmlpayloadaction"`
+	Insertcookiesamesiteattribute              types.String `tfsdk:"insertcookiesamesiteattribute"`
+	Inspectcontenttypes                        types.List   `tfsdk:"inspectcontenttypes"`
+	Inspectquerycontenttypes                   types.List   `tfsdk:"inspectquerycontenttypes"`
+	Invalidpercenthandling                     types.String `tfsdk:"invalidpercenthandling"`
+	Jsonblockkeywordaction                     types.List   `tfsdk:"jsonblockkeywordaction"`
+	Jsoncmdinjectionaction                     types.List   `tfsdk:"jsoncmdinjectionaction"`
+	Jsoncmdinjectiongrammar                    types.String `tfsdk:"jsoncmdinjectiongrammar"`
+	Jsoncmdinjectiontype                       types.String `tfsdk:"jsoncmdinjectiontype"`
+	Jsondosaction                              types.List   `tfsdk:"jsondosaction"`
+	Jsonerrorobject                            types.String `tfsdk:"jsonerrorobject"`
+	Jsonerrorstatuscode                        types.Int64  `tfsdk:"jsonerrorstatuscode"`
+	Jsonerrorstatusmessage                     types.String `tfsdk:"jsonerrorstatusmessage"`
+	Jsonfieldscan                              types.String `tfsdk:"jsonfieldscan"`
+	Jsonfieldscanlimit                         types.Int64  `tfsdk:"jsonfieldscanlimit"`
+	Jsonmessagescan                            types.String `tfsdk:"jsonmessagescan"`
+	Jsonmessagescanlimit                       types.Int64  `tfsdk:"jsonmessagescanlimit"`
+	Jsonsqlinjectionaction                     types.List   `tfsdk:"jsonsqlinjectionaction"`
+	Jsonsqlinjectiongrammar                    types.String `tfsdk:"jsonsqlinjectiongrammar"`
+	Jsonsqlinjectiontype                       types.String `tfsdk:"jsonsqlinjectiontype"`
+	Jsonxssaction                              types.List   `tfsdk:"jsonxssaction"`
+	Logeverypolicyhit                          types.String `tfsdk:"logeverypolicyhit"`
+	Matchurlstring                             types.String `tfsdk:"matchurlstring"`
+	Messagescan                                types.String `tfsdk:"messagescan"`
+	Messagescanlimit                           types.Int64  `tfsdk:"messagescanlimit"`
+	Messagescanlimitcontenttypes               types.List   `tfsdk:"messagescanlimitcontenttypes"`
+	Multipleheaderaction                       types.List   `tfsdk:"multipleheaderaction"`
+	Name                                       types.String `tfsdk:"name"`
+	Optimizepartialreqs                        types.String `tfsdk:"optimizepartialreqs"`
+	Overwrite                                  types.Bool   `tfsdk:"overwrite"`
+	Percentdecoderecursively                   types.String `tfsdk:"percentdecoderecursively"`
+	Postbodylimit                              types.Int64  `tfsdk:"postbodylimit"`
+	Postbodylimitaction                        types.List   `tfsdk:"postbodylimitaction"`
+	Postbodylimitsignature                     types.Int64  `tfsdk:"postbodylimitsignature"`
+	Protofileobject                            types.String `tfsdk:"protofileobject"`
+	Refererheadercheck                         types.String `tfsdk:"refererheadercheck"`
+	Relaxationrules                            types.Bool   `tfsdk:"relaxationrules"`
+	Replaceurlstring                           types.String `tfsdk:"replaceurlstring"`
+	Requestcontenttype                         types.String `tfsdk:"requestcontenttype"`
+	Responsecontenttype                        types.String `tfsdk:"responsecontenttype"`
+	Restaction                                 types.List   `tfsdk:"restaction"`
+	Rfcprofile                                 types.String `tfsdk:"rfcprofile"`
+	Semicolonfieldseparator                    types.String `tfsdk:"semicolonfieldseparator"`
+	Sessioncookiename                          types.String `tfsdk:"sessioncookiename"`
+	Sessionlessfieldconsistency                types.String `tfsdk:"sessionlessfieldconsistency"`
+	Sessionlessurlclosure                      types.String `tfsdk:"sessionlessurlclosure"`
+	Signatures                                 types.String `tfsdk:"signatures"`
+	Sqlinjectionaction                         types.List   `tfsdk:"sqlinjectionaction"`
+	Sqlinjectionchecksqlwildchars              types.String `tfsdk:"sqlinjectionchecksqlwildchars"`
+	Sqlinjectiongrammar                        types.String `tfsdk:"sqlinjectiongrammar"`
+	Sqlinjectiononlycheckfieldswithsqlchars    types.String `tfsdk:"sqlinjectiononlycheckfieldswithsqlchars"`
+	Sqlinjectionparsecomments                  types.String `tfsdk:"sqlinjectionparsecomments"`
+	Sqlinjectionruletype                       types.String `tfsdk:"sqlinjectionruletype"`
+	Sqlinjectiontransformspecialchars          types.String `tfsdk:"sqlinjectiontransformspecialchars"`
+	Sqlinjectiontype                           types.String `tfsdk:"sqlinjectiontype"`
+	Starturlaction                             types.List   `tfsdk:"starturlaction"`
+	Starturlclosure                            types.String `tfsdk:"starturlclosure"`
+	Streaming                                  types.String `tfsdk:"streaming"`
+	Stripcomments                              types.String `tfsdk:"stripcomments"`
+	Striphtmlcomments                          types.String `tfsdk:"striphtmlcomments"`
+	Stripxmlcomments                           types.String `tfsdk:"stripxmlcomments"`
+	Trace                                      types.String `tfsdk:"trace"`
+	Type                                       types.List   `tfsdk:"type"`
+	Urldecoderequestcookies                    types.String `tfsdk:"urldecoderequestcookies"`
+	Usehtmlerrorobject                         types.String `tfsdk:"usehtmlerrorobject"`
+	Verboseloglevel                            types.String `tfsdk:"verboseloglevel"`
+	Xmlattachmentaction                        types.List   `tfsdk:"xmlattachmentaction"`
+	Xmldosaction                               types.List   `tfsdk:"xmldosaction"`
+	Xmlerrorobject                             types.String `tfsdk:"xmlerrorobject"`
+	Xmlerrorstatuscode                         types.Int64  `tfsdk:"xmlerrorstatuscode"`
+	Xmlerrorstatusmessage                      types.String `tfsdk:"xmlerrorstatusmessage"`
+	Xmlformataction                            types.List   `tfsdk:"xmlformataction"`
+	Xmlsoapfaultaction                         types.List   `tfsdk:"xmlsoapfaultaction"`
+	Xmlsqlinjectionaction                      types.List   `tfsdk:"xmlsqlinjectionaction"`
+	Xmlsqlinjectionchecksqlwildchars           types.String `tfsdk:"xmlsqlinjectionchecksqlwildchars"`
+	Xmlsqlinjectiononlycheckfieldswithsqlchars types.String `tfsdk:"xmlsqlinjectiononlycheckfieldswithsqlchars"`
+	Xmlsqlinjectionparsecomments               types.String `tfsdk:"xmlsqlinjectionparsecomments"`
+	Xmlsqlinjectiontype                        types.String `tfsdk:"xmlsqlinjectiontype"`
+	Xmlvalidationaction                        types.List   `tfsdk:"xmlvalidationaction"`
+	Xmlwsiaction                               types.List   `tfsdk:"xmlwsiaction"`
+	Xmlxssaction                               types.List   `tfsdk:"xmlxssaction"`
+	State                                      types.String `tfsdk:"state"`
+	Learning                                   types.String `tfsdk:"learning"`
+	Csrftag                                    types.String `tfsdk:"csrftag"`
+	Builtin                                    types.Bool   `tfsdk:"builtin"`
+}
 
 func AppfwprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -769,6 +930,185 @@ func AppfwprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "One or more XML Cross-Site Scripting actions. Available settings function as follows:\n* Block - Block connections that violate this security check.\n* Log - Log violations of this security check.\n* Stats - Generate statistics for this security check.\n* None - Disable all actions for this security check.\n\nCLI users: To enable one or more actions, type \"set appfw profile -XMLXSSAction\" followed by the actions to be enabled. To turn off all actions, type \"set appfw profile -XMLXSSAction none\".",
 			},
+			// Read-only (GET-only) attributes from the NITRO doc read-only set
+			// (zion73x_readonly/appfwprofile.json). Never settable; populated from GET.
+			"state": schema.StringAttribute{
+				Computed:    true,
+				Description: "Enabled state of the profile. Possible values: ENABLED, DISABLED.",
+			},
+			"learning": schema.StringAttribute{
+				Computed:    true,
+				Description: "Profile level learning option that overrides the protection level learning. Possible values: ON, OFF.",
+			},
+			"csrftag": schema.StringAttribute{
+				Computed:    true,
+				Description: "The web form originating URL.",
+			},
+			"builtin": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Indicates that a profile is a built-in entity.",
+			},
 		},
 	}
+}
+
+// appfwprofileDataSourceSetAttrFromGet projects a NITRO appfwprofile GET
+// response onto the data-source model via the shared utils.MapGet* helpers.
+func appfwprofileDataSourceSetAttrFromGet(ctx context.Context, data *AppfwprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In appfwprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Addcookieflags = utils.MapGetString(g, "addcookieflags")
+	data.Apispec = utils.MapGetString(g, "apispec")
+	data.Archivename = utils.MapGetString(g, "archivename")
+	data.AsProfBypassListEnable = utils.MapGetString(g, "as_prof_bypass_list_enable")
+	data.AsProfDenyListEnable = utils.MapGetString(g, "as_prof_deny_list_enable")
+	data.Augment = utils.MapGetBool(g, "augment")
+	data.Blockkeywordaction = utils.MapGetStringList(g, "blockkeywordaction")
+	data.Bufferoverflowaction = utils.MapGetStringList(g, "bufferoverflowaction")
+	data.Bufferoverflowmaxcookielength = utils.MapGetInt64(g, "bufferoverflowmaxcookielength")
+	data.Bufferoverflowmaxheaderlength = utils.MapGetInt64(g, "bufferoverflowmaxheaderlength")
+	data.Bufferoverflowmaxquerylength = utils.MapGetInt64(g, "bufferoverflowmaxquerylength")
+	data.Bufferoverflowmaxtotalheaderlength = utils.MapGetInt64(g, "bufferoverflowmaxtotalheaderlength")
+	data.Bufferoverflowmaxurllength = utils.MapGetInt64(g, "bufferoverflowmaxurllength")
+	data.Canonicalizehtmlresponse = utils.MapGetString(g, "canonicalizehtmlresponse")
+	data.Ceflogging = utils.MapGetString(g, "ceflogging")
+	data.Checkrequestheaders = utils.MapGetString(g, "checkrequestheaders")
+	data.Clientipexpression = utils.MapGetString(g, "clientipexpression")
+	data.Cmdinjectionaction = utils.MapGetStringList(g, "cmdinjectionaction")
+	data.Cmdinjectiongrammar = utils.MapGetString(g, "cmdinjectiongrammar")
+	data.Cmdinjectiontype = utils.MapGetString(g, "cmdinjectiontype")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Contenttypeaction = utils.MapGetStringList(g, "contenttypeaction")
+	data.Cookieconsistencyaction = utils.MapGetStringList(g, "cookieconsistencyaction")
+	data.Cookieencryption = utils.MapGetString(g, "cookieencryption")
+	data.Cookiehijackingaction = utils.MapGetStringList(g, "cookiehijackingaction")
+	data.Cookieproxying = utils.MapGetString(g, "cookieproxying")
+	data.Cookiesamesiteattribute = utils.MapGetString(g, "cookiesamesiteattribute")
+	data.Cookietransforms = utils.MapGetString(g, "cookietransforms")
+	data.Creditcard = utils.MapGetStringList(g, "creditcard")
+	data.Creditcardaction = utils.MapGetStringList(g, "creditcardaction")
+	data.Creditcardmaxallowed = utils.MapGetInt64(g, "creditcardmaxallowed")
+	data.Creditcardxout = utils.MapGetString(g, "creditcardxout")
+	data.Crosssitescriptingaction = utils.MapGetStringList(g, "crosssitescriptingaction")
+	data.Crosssitescriptingcheckcompleteurls = utils.MapGetString(g, "crosssitescriptingcheckcompleteurls")
+	data.Crosssitescriptingtransformunsafehtml = utils.MapGetString(g, "crosssitescriptingtransformunsafehtml")
+	data.Csrftagaction = utils.MapGetStringList(g, "csrftagaction")
+	data.Customsettings = utils.MapGetString(g, "customsettings")
+	data.Defaultcharset = utils.MapGetString(g, "defaultcharset")
+	data.Defaultfieldformatmaxlength = utils.MapGetInt64(g, "defaultfieldformatmaxlength")
+	data.Defaultfieldformatmaxoccurrences = utils.MapGetInt64(g, "defaultfieldformatmaxoccurrences")
+	data.Defaultfieldformatminlength = utils.MapGetInt64(g, "defaultfieldformatminlength")
+	data.Defaultfieldformattype = utils.MapGetString(g, "defaultfieldformattype")
+	data.Defaults = utils.MapGetString(g, "defaults")
+	data.Denyurlaction = utils.MapGetStringList(g, "denyurlaction")
+	data.Dosecurecreditcardlogging = utils.MapGetString(g, "dosecurecreditcardlogging")
+	data.Dynamiclearning = utils.MapGetStringList(g, "dynamiclearning")
+	data.Enableformtagging = utils.MapGetString(g, "enableformtagging")
+	data.Errorurl = utils.MapGetString(g, "errorurl")
+	data.Excludefileuploadfromchecks = utils.MapGetString(g, "excludefileuploadfromchecks")
+	data.Exemptclosureurlsfromsecuritychecks = utils.MapGetString(g, "exemptclosureurlsfromsecuritychecks")
+	data.Fakeaccountdetection = utils.MapGetString(g, "fakeaccountdetection")
+	data.Fieldconsistencyaction = utils.MapGetStringList(g, "fieldconsistencyaction")
+	data.Fieldformataction = utils.MapGetStringList(g, "fieldformataction")
+	data.Fieldscan = utils.MapGetString(g, "fieldscan")
+	data.Fieldscanlimit = utils.MapGetInt64(g, "fieldscanlimit")
+	data.Fileuploadmaxnum = utils.MapGetInt64(g, "fileuploadmaxnum")
+	data.Fileuploadtypesaction = utils.MapGetStringList(g, "fileuploadtypesaction")
+	data.Geolocationlogging = utils.MapGetString(g, "geolocationlogging")
+	data.Grpcaction = utils.MapGetStringList(g, "grpcaction")
+	data.Htmlerrorobject = utils.MapGetString(g, "htmlerrorobject")
+	data.Htmlerrorstatuscode = utils.MapGetInt64(g, "htmlerrorstatuscode")
+	data.Htmlerrorstatusmessage = utils.MapGetString(g, "htmlerrorstatusmessage")
+	data.Importprofilename = utils.MapGetString(g, "importprofilename")
+	data.Infercontenttypexmlpayloadaction = utils.MapGetStringList(g, "infercontenttypexmlpayloadaction")
+	data.Insertcookiesamesiteattribute = utils.MapGetString(g, "insertcookiesamesiteattribute")
+	data.Inspectcontenttypes = utils.MapGetStringList(g, "inspectcontenttypes")
+	data.Inspectquerycontenttypes = utils.MapGetStringList(g, "inspectquerycontenttypes")
+	data.Invalidpercenthandling = utils.MapGetString(g, "invalidpercenthandling")
+	data.Jsonblockkeywordaction = utils.MapGetStringList(g, "jsonblockkeywordaction")
+	data.Jsoncmdinjectionaction = utils.MapGetStringList(g, "jsoncmdinjectionaction")
+	data.Jsoncmdinjectiongrammar = utils.MapGetString(g, "jsoncmdinjectiongrammar")
+	data.Jsoncmdinjectiontype = utils.MapGetString(g, "jsoncmdinjectiontype")
+	data.Jsondosaction = utils.MapGetStringList(g, "jsondosaction")
+	data.Jsonerrorobject = utils.MapGetString(g, "jsonerrorobject")
+	data.Jsonerrorstatuscode = utils.MapGetInt64(g, "jsonerrorstatuscode")
+	data.Jsonerrorstatusmessage = utils.MapGetString(g, "jsonerrorstatusmessage")
+	data.Jsonfieldscan = utils.MapGetString(g, "jsonfieldscan")
+	data.Jsonfieldscanlimit = utils.MapGetInt64(g, "jsonfieldscanlimit")
+	data.Jsonmessagescan = utils.MapGetString(g, "jsonmessagescan")
+	data.Jsonmessagescanlimit = utils.MapGetInt64(g, "jsonmessagescanlimit")
+	data.Jsonsqlinjectionaction = utils.MapGetStringList(g, "jsonsqlinjectionaction")
+	data.Jsonsqlinjectiongrammar = utils.MapGetString(g, "jsonsqlinjectiongrammar")
+	data.Jsonsqlinjectiontype = utils.MapGetString(g, "jsonsqlinjectiontype")
+	data.Jsonxssaction = utils.MapGetStringList(g, "jsonxssaction")
+	data.Logeverypolicyhit = utils.MapGetString(g, "logeverypolicyhit")
+	data.Matchurlstring = utils.MapGetString(g, "matchurlstring")
+	data.Messagescan = utils.MapGetString(g, "messagescan")
+	data.Messagescanlimit = utils.MapGetInt64(g, "messagescanlimit")
+	data.Messagescanlimitcontenttypes = utils.MapGetStringList(g, "messagescanlimitcontenttypes")
+	data.Multipleheaderaction = utils.MapGetStringList(g, "multipleheaderaction")
+	data.Optimizepartialreqs = utils.MapGetString(g, "optimizepartialreqs")
+	data.Overwrite = utils.MapGetBool(g, "overwrite")
+	data.Percentdecoderecursively = utils.MapGetString(g, "percentdecoderecursively")
+	data.Postbodylimit = utils.MapGetInt64(g, "postbodylimit")
+	data.Postbodylimitaction = utils.MapGetStringList(g, "postbodylimitaction")
+	data.Postbodylimitsignature = utils.MapGetInt64(g, "postbodylimitsignature")
+	data.Protofileobject = utils.MapGetString(g, "protofileobject")
+	data.Refererheadercheck = utils.MapGetString(g, "refererheadercheck")
+	data.Relaxationrules = utils.MapGetBool(g, "relaxationrules")
+	data.Replaceurlstring = utils.MapGetString(g, "replaceurlstring")
+	data.Requestcontenttype = utils.MapGetString(g, "requestcontenttype")
+	data.Responsecontenttype = utils.MapGetString(g, "responsecontenttype")
+	data.Restaction = utils.MapGetStringList(g, "restaction")
+	data.Rfcprofile = utils.MapGetString(g, "rfcprofile")
+	data.Semicolonfieldseparator = utils.MapGetString(g, "semicolonfieldseparator")
+	data.Sessioncookiename = utils.MapGetString(g, "sessioncookiename")
+	data.Sessionlessfieldconsistency = utils.MapGetString(g, "sessionlessfieldconsistency")
+	data.Sessionlessurlclosure = utils.MapGetString(g, "sessionlessurlclosure")
+	data.Signatures = utils.MapGetString(g, "signatures")
+	data.Sqlinjectionaction = utils.MapGetStringList(g, "sqlinjectionaction")
+	data.Sqlinjectionchecksqlwildchars = utils.MapGetString(g, "sqlinjectionchecksqlwildchars")
+	data.Sqlinjectiongrammar = utils.MapGetString(g, "sqlinjectiongrammar")
+	data.Sqlinjectiononlycheckfieldswithsqlchars = utils.MapGetString(g, "sqlinjectiononlycheckfieldswithsqlchars")
+	data.Sqlinjectionparsecomments = utils.MapGetString(g, "sqlinjectionparsecomments")
+	data.Sqlinjectionruletype = utils.MapGetString(g, "sqlinjectionruletype")
+	data.Sqlinjectiontransformspecialchars = utils.MapGetString(g, "sqlinjectiontransformspecialchars")
+	data.Sqlinjectiontype = utils.MapGetString(g, "sqlinjectiontype")
+	data.Starturlaction = utils.MapGetStringList(g, "starturlaction")
+	data.Starturlclosure = utils.MapGetString(g, "starturlclosure")
+	data.Streaming = utils.MapGetString(g, "streaming")
+	data.Stripcomments = utils.MapGetString(g, "stripcomments")
+	data.Striphtmlcomments = utils.MapGetString(g, "striphtmlcomments")
+	data.Stripxmlcomments = utils.MapGetString(g, "stripxmlcomments")
+	data.Trace = utils.MapGetString(g, "trace")
+	data.Type = utils.MapGetStringList(g, "type")
+	data.Urldecoderequestcookies = utils.MapGetString(g, "urldecoderequestcookies")
+	data.Usehtmlerrorobject = utils.MapGetString(g, "usehtmlerrorobject")
+	data.Verboseloglevel = utils.MapGetString(g, "verboseloglevel")
+	data.Xmlattachmentaction = utils.MapGetStringList(g, "xmlattachmentaction")
+	data.Xmldosaction = utils.MapGetStringList(g, "xmldosaction")
+	data.Xmlerrorobject = utils.MapGetString(g, "xmlerrorobject")
+	data.Xmlerrorstatuscode = utils.MapGetInt64(g, "xmlerrorstatuscode")
+	data.Xmlerrorstatusmessage = utils.MapGetString(g, "xmlerrorstatusmessage")
+	data.Xmlformataction = utils.MapGetStringList(g, "xmlformataction")
+	data.Xmlsoapfaultaction = utils.MapGetStringList(g, "xmlsoapfaultaction")
+	data.Xmlsqlinjectionaction = utils.MapGetStringList(g, "xmlsqlinjectionaction")
+	data.Xmlsqlinjectionchecksqlwildchars = utils.MapGetString(g, "xmlsqlinjectionchecksqlwildchars")
+	data.Xmlsqlinjectiononlycheckfieldswithsqlchars = utils.MapGetString(g, "xmlsqlinjectiononlycheckfieldswithsqlchars")
+	data.Xmlsqlinjectionparsecomments = utils.MapGetString(g, "xmlsqlinjectionparsecomments")
+	data.Xmlsqlinjectiontype = utils.MapGetString(g, "xmlsqlinjectiontype")
+	data.Xmlvalidationaction = utils.MapGetStringList(g, "xmlvalidationaction")
+	data.Xmlwsiaction = utils.MapGetStringList(g, "xmlwsiaction")
+	data.Xmlxssaction = utils.MapGetStringList(g, "xmlxssaction")
+
+	// Read-only attributes.
+	data.State = utils.MapGetString(g, "state")
+	data.Learning = utils.MapGetString(g, "learning")
+	data.Csrftag = utils.MapGetString(g, "csrftag")
+	data.Builtin = utils.MapGetBool(g, "builtin")
 }

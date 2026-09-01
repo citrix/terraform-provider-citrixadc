@@ -35,7 +35,7 @@ func (d *ExtendedmemoryparamDataSource) Schema(ctx context.Context, req datasour
 }
 
 func (d *ExtendedmemoryparamDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ExtendedmemoryparamResourceModel
+	var data ExtendedmemoryparamDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *ExtendedmemoryparamDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	extendedmemoryparamSetAttrFromGet(ctx, &data, getResponseData)
+	extendedmemoryparamDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

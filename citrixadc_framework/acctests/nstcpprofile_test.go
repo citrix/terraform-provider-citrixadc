@@ -214,9 +214,14 @@ func TestAccNstcpprofileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNstcpprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "name", "test_profile_datasource"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "ws", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "ackaggregation", "ENABLED"),
+					// refcnt is a counter-style read-only field the appliance always
+					// returns for an existing profile (0 for a freshly-created one).
+					resource.TestCheckResourceAttrSet("data.citrixadc_nstcpprofile.tf_nstcpprofile_data", "refcnt"),
 				),
 			},
 		},

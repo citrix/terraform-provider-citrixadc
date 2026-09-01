@@ -39,6 +39,15 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Expression or other value against which the traffic is evaluated. Must be a Boolean expression.
 * `id` - The id of the icapolicy. It has the same value as the `name` attribute.
 
+### Read-only icapolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_icapolicy` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `builtin` - Indicates that the ICA policy is a built-in (SYSTEM INTERNAL) type. A list of strings (possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.
+
 
 ## Import
 

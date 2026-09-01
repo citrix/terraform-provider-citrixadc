@@ -1,8 +1,36 @@
 package crvserver_cmppolicy_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// CrvserverCmppolicyBindingDataSourceModel is the data-source-specific model,
+// decoupled from CrvserverCmppolicyBindingResourceModel so the data source can
+// expose read-only (GET-only) attributes the resource omits.
+type CrvserverCmppolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Invoke                 types.Bool   `tfsdk:"invoke"`
+	Labelname              types.String `tfsdk:"labelname"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	Name                   types.String `tfsdk:"name"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Targetvserver          types.String `tfsdk:"targetvserver"`
+
+	// Read-only (GET-only) attributes from the NITRO read-only set
+	// (zion73x_readonly/crvserver_cmppolicy_binding.json). Never settable;
+	// populated from GET and null when the appliance omits them.
+	Inherited types.String `tfsdk:"inherited"`
+}
 
 func CrvserverCmppolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -53,6 +81,46 @@ func CrvserverCmppolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Name of the virtual server to which content is forwarded. Applicable only if the policy is a map policy and the cache redirection virtual server is of type REVERSE.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source.
+			"inherited": schema.StringAttribute{
+				Computed:    true,
+				Description: "On State describes that policy bound is inherited from global binding. Possible values = ON, OFF",
+			},
 		},
 	}
+}
+
+// crvserver_cmppolicy_bindingDataSourceSetAttrFromGet projects a NITRO
+// crvserver_cmppolicy_binding GET response onto the data-source model. The
+// shared utils.MapGet* helpers fill each attribute from the GET (or leave it
+// Null when the GET omits it).
+func crvserver_cmppolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *CrvserverCmppolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In crvserver_cmppolicy_bindingDataSourceSetAttrFromGet Function")
+
+	data.Bindpoint = utils.MapGetString(g, "bindpoint")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Invoke = utils.MapGetBool(g, "invoke")
+	data.Labelname = utils.MapGetString(g, "labelname")
+	data.Labeltype = utils.MapGetString(g, "labeltype")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Targetvserver = utils.MapGetString(g, "targetvserver")
+
+	// Lookup keys: prefer the GET value, but preserve the configured value when
+	// the appliance omits it from the binding response.
+	if v := utils.MapGetString(g, "name"); !v.IsNull() {
+		data.Name = v
+	}
+	if v := utils.MapGetString(g, "policyname"); !v.IsNull() {
+		data.Policyname = v
+	}
+
+	// Read-only (GET-only) attributes.
+	data.Inherited = utils.MapGetString(g, "inherited")
+
+	// Composite key -> id (key:UrlEncode(value) pairs).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

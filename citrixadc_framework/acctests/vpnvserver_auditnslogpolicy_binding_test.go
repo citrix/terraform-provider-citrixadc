@@ -381,6 +381,8 @@ func TestAccVpnvserver_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", "name", "tf_vpnvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", "policy", "tf_auditnslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", "priority", "200"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_auditnslogpolicy_binding.tf_bind", "id"),
 				),
 			},
 		},

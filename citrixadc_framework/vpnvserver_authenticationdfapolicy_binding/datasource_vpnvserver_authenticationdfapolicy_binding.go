@@ -35,7 +35,7 @@ func (d *VpnvserverAuthenticationdfapolicyBindingDataSource) Schema(ctx context.
 }
 
 func (d *VpnvserverAuthenticationdfapolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnvserverAuthenticationdfapolicyBindingResourceModel
+	var data VpnvserverAuthenticationdfapolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -95,7 +95,7 @@ func (d *VpnvserverAuthenticationdfapolicyBindingDataSource) Read(ctx context.Co
 
 	// Datasource has no prior plan/state, so use the datasource-specific setter that
 	// faithfully copies every field from the GET response and sets the ID (Pattern 7).
-	vpnvserver_authenticationdfapolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	vpnvserver_authenticationdfapolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

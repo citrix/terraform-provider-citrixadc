@@ -170,6 +170,8 @@ func TestAccSnmpalarmDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_snmpalarm.tf_snmpalarm_ds", "trapname", "CPU-USAGE"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpalarm.tf_snmpalarm_ds", "thresholdvalue", "25"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpalarm.tf_snmpalarm_ds", "normalvalue", "20"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpalarm.tf_snmpalarm_ds", "id"),
 				),
 			},
 		},

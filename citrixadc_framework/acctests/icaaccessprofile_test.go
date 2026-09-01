@@ -370,6 +370,10 @@ func TestAccIcaaccessprofileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccIcaaccessprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "id"),
+					// refcnt is a counter-style read-only field always populated on GET.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "refcnt"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "name", "my_ica_accessprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "connectclientlptports", "DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaaccessprofile.icaaccessprofile_data", "localremotedatasharing", "DEFAULT"),

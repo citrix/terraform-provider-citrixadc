@@ -35,7 +35,7 @@ func (d *VpnsessionpolicyDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *VpnsessionpolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnsessionpolicyResourceModel
+	var data VpnsessionpolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *VpnsessionpolicyDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	vpnsessionpolicySetAttrFromGet(ctx, &data, getResponseData)
+	vpnsessionpolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

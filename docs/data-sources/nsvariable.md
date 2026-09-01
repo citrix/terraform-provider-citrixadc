@@ -43,3 +43,9 @@ In addition to the arguments above, the following attributes are exported:
 * `scope` - Scope of the variable (global or transaction).
 * `type` - Specification of the variable type (ulong, text, or map).
 
+### Read-only nsvariable metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsvariable` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `referencecount` - The number of references to the variable in expressions and assignments.
+

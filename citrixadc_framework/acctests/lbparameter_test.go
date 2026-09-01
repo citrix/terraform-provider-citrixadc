@@ -529,6 +529,8 @@ func TestAccLbparameterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLbparameterDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof of a resolved data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbparameter.tf_lbparameter", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "httponlycookieflag", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "useencryptedpersistencecookie", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbparameter.tf_lbparameter", "consolidatedlconn", "NO"),

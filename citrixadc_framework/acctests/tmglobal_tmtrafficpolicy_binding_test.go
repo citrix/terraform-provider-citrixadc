@@ -293,6 +293,8 @@ func TestAccTmglobal_tmtrafficpolicy_binding_DataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", "policyname", "my_tmtrafficpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", "priority", "100"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmglobal_tmtrafficpolicy_binding.tf_tmglobal_tmtrafficpolicy_binding", "id"),
 				),
 			},
 		},

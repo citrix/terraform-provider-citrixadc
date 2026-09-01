@@ -214,6 +214,11 @@ func TestAccAppflowpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "name", "test_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "action", "test_action"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "rule", "client.TCP.DSTPORT.EQ(22)"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowpolicy.tf_appflowpolicy", "id"),
+					// Read-only counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowpolicy.tf_appflowpolicy", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowpolicy.tf_appflowpolicy", "undefhits"),
 				),
 			},
 		},

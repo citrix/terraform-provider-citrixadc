@@ -452,6 +452,8 @@ func TestAccServicegroupDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup.tf_servicegroup", "servicegroupname", "test_servicegroup_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup.tf_servicegroup", "servicetype", "HTTP"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_servicegroup.tf_servicegroup", "id"),
 				),
 			},
 		},

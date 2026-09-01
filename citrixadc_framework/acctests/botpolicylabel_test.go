@@ -123,6 +123,7 @@ func TestAccBotpolicylabelDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBotpolicylabelDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_botpolicylabel.tf_botpolicylabel_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel.tf_botpolicylabel_ds", "labelname", "tf_botpolicylabel_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel.tf_botpolicylabel_ds", "comment", "DATASOURCE TEST COMMENT"),
 				),

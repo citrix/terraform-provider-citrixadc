@@ -255,6 +255,10 @@ func TestAccIcaglobal_icapolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "policyname", "tf_icapolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "type", "ICA_REQ_DEFAULT"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "id"),
+					// Read-only (GET-only) metadata: numpol is a counter always populated for a bound policy.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaglobal_icapolicy_binding.tf_icaglobal_icapolicy_binding", "numpol"),
 				),
 			},
 		},

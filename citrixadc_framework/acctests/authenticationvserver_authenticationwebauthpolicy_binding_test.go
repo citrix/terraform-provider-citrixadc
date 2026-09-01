@@ -284,6 +284,7 @@ func TestAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_ba
 			{
 				Config: testAccAuthenticationvserverAuthenticationwebauthpolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "policy", "tf_webauthpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationwebauthpolicy_binding.tf_bind", "priority", "80"),

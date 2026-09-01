@@ -43,3 +43,10 @@ In addition to the arguments, the following attributes are available:
 * `priority` - The priority for the policy.
 * `labeltype` - The invocation type.
 * `targetvserver` - The CSW target server names.
+
+### Read-only crvserver_cspolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_crvserver_cspolicy_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `pipolicyhits` - Number of hits.

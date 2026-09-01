@@ -35,3 +35,9 @@ In addition to the arguments, the following attributes are available:
 * `azureapplication` - Name of the Azure Application object created on the ADC appliance. This object is used for authentication with Azure Active Directory.
 * `azurevaultname` - Name of the Key Vault configured in Azure cloud using either the Azure CLI or the Azure portal (GUI) with complete domain name. Example: `Test.vault.azure.net`.
 * `id` - The id of the azurekeyvault. It has the same value as the `name` attribute.
+
+### Read-only azurekeyvault metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_azurekeyvault` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `state` - Current state of keyvault.

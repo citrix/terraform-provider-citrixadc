@@ -1,8 +1,47 @@
 package sslocspresponder
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SslocspresponderDataSourceModel is the data-source-specific model, decoupled
+// from SslocspresponderResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits.
+// Every non-key attribute is Computed; the Framework's per-attribute model <->
+// schema reflection requires this model to have exactly the attributes the
+// data-source schema declares, which is why it cannot reuse the resource model.
+type SslocspresponderDataSourceModel struct {
+	Id                    types.String `tfsdk:"id"`
+	Batchingdelay         types.Int64  `tfsdk:"batchingdelay"`
+	Batchingdepth         types.Int64  `tfsdk:"batchingdepth"`
+	Cache                 types.String `tfsdk:"cache"`
+	Cachetimeout          types.Int64  `tfsdk:"cachetimeout"`
+	Httpmethod            types.String `tfsdk:"httpmethod"`
+	Insertclientcert      types.String `tfsdk:"insertclientcert"`
+	Name                  types.String `tfsdk:"name"` // Required lookup key
+	Ocspurlresolvetimeout types.Int64  `tfsdk:"ocspurlresolvetimeout"`
+	Producedattimeskew    types.Int64  `tfsdk:"producedattimeskew"`
+	Respondercert         types.String `tfsdk:"respondercert"`
+	Resptimeout           types.Int64  `tfsdk:"resptimeout"`
+	Signingcert           types.String `tfsdk:"signingcert"`
+	Trustresponder        types.Bool   `tfsdk:"trustresponder"`
+	Url                   types.String `tfsdk:"url"`
+	Usenonce              types.String `tfsdk:"usenonce"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/sslocspresponder.json). Never settable; populated from GET.
+	Ocspaiarefcount types.Int64  `tfsdk:"ocspaiarefcount"`
+	Ocspipaddrstr   types.String `tfsdk:"ocspipaddrstr"`
+	Port            types.Int64  `tfsdk:"port"`
+}
 
 func SslocspresponderDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -84,6 +123,55 @@ func SslocspresponderDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enable the OCSP nonce extension, which is designed to prevent replay attacks.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"ocspaiarefcount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "No of CA certs referencing this AIA responder.",
+			},
+			"ocspipaddrstr": schema.StringAttribute{
+				Computed:    true,
+				Description: "DNS resolved IP address.",
+			},
+			"port": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Port number on which OCSP Server listens. Range 1 - 65535. * in CLI is represented as 65535 in NITRO API.",
+			},
 		},
 	}
+}
+
+// sslocspresponderDataSourceSetAttrFromGet projects a NITRO sslocspresponder GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them) via the shared utils.MapGet* helpers.
+func sslocspresponderDataSourceSetAttrFromGet(ctx context.Context, data *SslocspresponderDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In sslocspresponderDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Batchingdelay = utils.MapGetInt64(g, "batchingdelay")
+	data.Batchingdepth = utils.MapGetInt64(g, "batchingdepth")
+	data.Cache = utils.MapGetString(g, "cache")
+	data.Cachetimeout = utils.MapGetInt64(g, "cachetimeout")
+	data.Httpmethod = utils.MapGetString(g, "httpmethod")
+	data.Insertclientcert = utils.MapGetString(g, "insertclientcert")
+	data.Ocspurlresolvetimeout = utils.MapGetInt64(g, "ocspurlresolvetimeout")
+	data.Producedattimeskew = utils.MapGetInt64(g, "producedattimeskew")
+	data.Respondercert = utils.MapGetString(g, "respondercert")
+	data.Resptimeout = utils.MapGetInt64(g, "resptimeout")
+	data.Signingcert = utils.MapGetString(g, "signingcert")
+	data.Trustresponder = utils.MapGetBool(g, "trustresponder")
+	data.Url = utils.MapGetString(g, "url")
+	data.Usenonce = utils.MapGetString(g, "usenonce")
+
+	// Read-only attributes.
+	data.Ocspaiarefcount = utils.MapGetInt64(g, "ocspaiarefcount")
+	data.Ocspipaddrstr = utils.MapGetString(g, "ocspipaddrstr")
+	data.Port = utils.MapGetInt64(g, "port")
 }

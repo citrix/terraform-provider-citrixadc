@@ -156,6 +156,8 @@ func TestAccAppfwfieldtypeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "regex", "test_.*regex_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "comment", "Test datasource comment"),
+					// id is the universal runtime-binding proof (mirrors name).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "id"),
 				),
 			},
 		},

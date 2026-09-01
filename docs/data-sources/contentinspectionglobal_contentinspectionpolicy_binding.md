@@ -43,3 +43,10 @@ In addition to the arguments, the following attributes are available:
 * `invoke` - Terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labelname` - If labelType is policylabel, name of the policy label to invoke. If labelType is reqvserver or resvserver, name of the virtual server to which to forward the request of response.
 * `labeltype` - Type of invocation. Available settings function as follows: reqvserver - Forward the request to the specified request virtual server. resvserver - Forward the response to the specified response virtual server. policylabel - Invoke the specified policy label.
+
+### Read-only contentinspectionglobal_contentinspectionpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_contentinspectionglobal_contentinspectionpolicy_binding` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `flowtype` - flowtype of the bound contentInspection policy.
+* `numpol` - The number of policies bound to the bindpoint.

@@ -321,6 +321,8 @@ func TestAccSystemparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "passwordhistorycontrol", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "maxsessionperuser", "10"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemparameter.tf_systemparameter", "daystoexpire", "45"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemparameter.tf_systemparameter", "id"),
 				),
 			},
 		},

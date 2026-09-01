@@ -198,6 +198,10 @@ func TestAccNsextensionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_nsextension.tf_nsextension", "name", "tf_nsextension_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsextension.tf_nsextension", "comment", "datasource test"),
+					// id is the universal runtime-binding proof. Read-only counter
+					// metadata (functionhits/functionundefhits/functionhaltcount) may be
+					// omitted for a never-invoked extension, so it is not asserted here.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsextension.tf_nsextension", "id"),
 				),
 			},
 		},

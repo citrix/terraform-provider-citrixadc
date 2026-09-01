@@ -29,3 +29,9 @@ In addition to the arguments, the following attributes are exported:
 * `comment` - Any comments to preserve information about the HTML page object.
 * `overwrite` - Indicates whether the existing file was overwritten.
 * `src` - Local path or URL for the file from which to retrieve the imported HTML page.
+
+### Read-only responderhtmlpage metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_responderhtmlpage` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `response` - The imported HTML page response content returned by the appliance.

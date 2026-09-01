@@ -7,7 +7,6 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*AuthenticationvserverDataSource)(nil)
@@ -36,7 +35,7 @@ func (d *AuthenticationvserverDataSource) Schema(ctx context.Context, req dataso
 }
 
 func (d *AuthenticationvserverDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationvserverResourceModel
+	var data AuthenticationvserverDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -56,11 +55,7 @@ func (d *AuthenticationvserverDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	authenticationvserverSetAttrFromGet(ctx, &data, getResponseData)
-
-	// The shared setter no longer computes the ID (the resource sets it in Create).
-	// The datasource has no Create, so set it here from the single unique attribute.
-	data.Id = types.StringValue(data.Name.ValueString())
+	authenticationvserverDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

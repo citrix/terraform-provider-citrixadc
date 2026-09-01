@@ -273,6 +273,8 @@ func TestAccSubscriberparamDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_subscriberparam.tf_subscriberparam", "interfacetype", "None"),
 					resource.TestCheckResourceAttr("data.citrixadc_subscriberparam.tf_subscriberparam", "idlettl", "40"),
 					resource.TestCheckResourceAttr("data.citrixadc_subscriberparam.tf_subscriberparam", "idleaction", "ccrTerminate"),
+					// Universal runtime-binding proof (read-only fields are config-dependent).
+					resource.TestCheckResourceAttrSet("data.citrixadc_subscriberparam.tf_subscriberparam", "id"),
 				),
 			},
 		},

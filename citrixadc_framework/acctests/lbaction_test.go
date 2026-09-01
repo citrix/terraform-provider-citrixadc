@@ -289,6 +289,10 @@ func TestAccLbactionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_lbaction.tf_lbaction_ds", "name", "tf_act_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbaction.tf_lbaction_ds", "type", "SELECTIONORDER"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbaction.tf_lbaction_ds", "id"),
+					// referencecount is a reference-count read-only field the appliance
+					// always returns for an existing action.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbaction.tf_lbaction_ds", "referencecount"),
 				),
 			},
 		},

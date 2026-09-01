@@ -44,3 +44,9 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslservice_sslcertkey_binding. It is a system-generated identifier.
 * `skipcaname` - The flag is used to indicate whether this particular CA certificate's CA_Name needs to be sent to the SSL client while requesting for client certificate in a SSL handshake.
+
+### Read-only sslservice_sslcertkey_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslservice_sslcertkey_binding` resource). They are GET-only/Computed and any attribute the appliance does not return is `null`.
+
+* `cleartextport` - The clearTextPort setting (range 1 - 65535; `*` in the CLI is represented as 65535 in the NITRO API).

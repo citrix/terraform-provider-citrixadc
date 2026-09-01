@@ -35,7 +35,7 @@ func (d *AaauserVpnurlpolicyBindingDataSource) Schema(ctx context.Context, req d
 }
 
 func (d *AaauserVpnurlpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AaauserVpnurlpolicyBindingResourceModel
+	var data AaauserVpnurlpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *AaauserVpnurlpolicyBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	aaauser_vpnurlpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	aaauser_vpnurlpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

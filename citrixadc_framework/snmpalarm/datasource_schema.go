@@ -1,8 +1,38 @@
 package snmpalarm
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SnmpalarmDataSourceModel is the data-source-specific model, decoupled from
+// SnmpalarmResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits. Every
+// non-key attribute is Computed; the Framework's per-attribute model <-> schema
+// reflection requires this model to have exactly the attributes the data-source
+// schema declares, which is why it cannot reuse the resource model.
+type SnmpalarmDataSourceModel struct {
+	Id             types.String `tfsdk:"id"`
+	Holdtime       types.Int64  `tfsdk:"holdtime"`
+	Logging        types.String `tfsdk:"logging"`
+	Normalvalue    types.Int64  `tfsdk:"normalvalue"`
+	Severity       types.String `tfsdk:"severity"`
+	State          types.String `tfsdk:"state"`
+	Thresholdvalue types.Int64  `tfsdk:"thresholdvalue"`
+	Time           types.Int64  `tfsdk:"time"`
+	Trapname       types.String `tfsdk:"trapname"` // Required lookup key
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/snmpalarm.json). Never settable; populated from GET.
+	Timeout types.Int64 `tfsdk:"timeout"`
+}
 
 func SnmpalarmDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -49,6 +79,37 @@ func SnmpalarmDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name of the SNMP alarm. This parameter is required for identifying the SNMP alarm and cannot be modified.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source (these are
+			// intentionally NOT modeled on the resource). All Computed.
+			"timeout": schema.Int64Attribute{
+				Computed:    true,
+				Description: "If DB is enabled and clear config is fired, then to reset timeinterval of alarm, corresponding default time value is needed. This hidden argument holds the default time value for the corresponding alarm.",
+			},
 		},
 	}
+}
+
+// snmpalarmDataSourceSetAttrFromGet projects a NITRO snmpalarm GET response onto
+// the data-source model. Because a data source has no plan/apply reconciliation,
+// attributes are simply filled from the GET (or left Null when the GET omits
+// them). The shared utils.MapGet* helpers implement that projection.
+func snmpalarmDataSourceSetAttrFromGet(ctx context.Context, data *SnmpalarmDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In snmpalarmDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["trapname"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Trapname = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Holdtime = utils.MapGetInt64(g, "holdtime")
+	data.Logging = utils.MapGetString(g, "logging")
+	data.Normalvalue = utils.MapGetInt64(g, "normalvalue")
+	data.Severity = utils.MapGetString(g, "severity")
+	data.State = utils.MapGetString(g, "state")
+	data.Thresholdvalue = utils.MapGetInt64(g, "thresholdvalue")
+	data.Time = utils.MapGetInt64(g, "time")
+
+	// Read-only (GET-only) metadata.
+	data.Timeout = utils.MapGetInt64(g, "timeout")
 }

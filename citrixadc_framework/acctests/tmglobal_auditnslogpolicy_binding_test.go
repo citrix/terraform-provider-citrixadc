@@ -302,6 +302,8 @@ func TestAccTmglobalAuditnslogpolicyBindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_auditnslogpolicy_binding.tf_tmglobal_auditnslogpolicy_binding", "policyname", "tf_auditnslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmglobal_auditnslogpolicy_binding.tf_tmglobal_auditnslogpolicy_binding", "priority", "100"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmglobal_auditnslogpolicy_binding.tf_tmglobal_auditnslogpolicy_binding", "id"),
 				),
 			},
 		},

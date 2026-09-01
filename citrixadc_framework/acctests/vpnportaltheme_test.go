@@ -223,6 +223,8 @@ func TestAccVpnportalthemeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnportaltheme.tf_vpnportaltheme", "name", "tf_vpnportaltheme"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnportaltheme.tf_vpnportaltheme", "basetheme", "X1"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnportaltheme.tf_vpnportaltheme", "id"),
 				),
 			},
 		},

@@ -295,6 +295,10 @@ func TestAccVlanDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vlan.tf_vlan", "vlanid", "40"),
 					resource.TestCheckResourceAttr("data.citrixadc_vlan.tf_vlan", "aliasname", "Test alias name"),
+					// Universal runtime-binding proof. The read-only membership/bitmap
+					// fields are config-dependent and may be omitted for a bare VLAN,
+					// so only id is asserted as always-set.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vlan.tf_vlan", "id"),
 				),
 			},
 		},

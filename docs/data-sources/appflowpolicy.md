@@ -45,3 +45,13 @@ In addition to the arguments, the following attributes are available:
 * `newname` - New name for the policy. Must begin with an ASCII alphabetic or underscore (_)character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 * `rule` - Expression or other value against which the traffic is evaluated. Must be a Boolean expression.
 * `undefaction` - Name of the appflow action to be associated with this policy when an undef event occurs.
+
+### Read-only appflowpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appflowpolicy` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `description` - Description of the policy.
+* `builtin` - Flag to determine if policy is built-in or not. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]. A list of strings.
+* `feature` - The feature to be checked while applying this config.

@@ -33,6 +33,12 @@ output "groupextraction" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vpnvserver_auditsyslogpolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.
+
+### Read-only vpnvserver_auditsyslogpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnvserver_auditsyslogpolicy_binding` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `acttype` - The bound entity (action) type, as returned by the appliance.
 * `bindpoint` - Bind point to which to bind the policy. Applies only to rewrite and cache policies. If you do not set this parameter, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
 * `gotopriorityexpression` - Applicable only to advance vpn session policy. Expression or other value specifying the next policy to evaluate if the current policy evaluates to TRUE. Specify one of the following values: NEXT - Evaluate the policy with the next higher priority number. END - End policy evaluation. An expression that evaluates to a number. If you specify an expression, the number to which it evaluates determines the next policy to evaluate.
 * `groupextraction` - Binds the authentication policy to a tertiary chain which will be used only for group extraction. The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.

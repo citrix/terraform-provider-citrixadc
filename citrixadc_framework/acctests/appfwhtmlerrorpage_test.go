@@ -208,6 +208,8 @@ func TestAccAppfwhtmlerrorpageDataSource_basic(t *testing.T) {
 				Config: testAccAppfwhtmlerrorpageDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage", "name", "tf_appfwhtmlerrorpage"),
+					// id is the universal runtime-binding proof (mirrors name).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage", "id"),
 				),
 			},
 		},

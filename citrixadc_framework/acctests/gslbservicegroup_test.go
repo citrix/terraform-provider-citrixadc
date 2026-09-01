@@ -140,6 +140,8 @@ func TestAccGslbservicegroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGslbservicegroupDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "servicegroupname", "test_gslbvservicegroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup.gslbservicegroup_data", "cip", "DISABLED"),

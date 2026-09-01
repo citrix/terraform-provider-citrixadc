@@ -307,6 +307,7 @@ func TestAccDnsmxrecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnsmxrecDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsmxrec.dnsmxrec", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsmxrec.dnsmxrec", "domain", "tftest-ds-mx.example.local"),
 				),
 			},

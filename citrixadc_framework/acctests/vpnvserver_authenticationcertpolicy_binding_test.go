@@ -396,6 +396,8 @@ func TestAccVpnvserver_authenticationcertpolicy_bindingDataSource_basic(t *testi
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "policy", "tf_certpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "priority", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "secondary", "false"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationcertpolicy_binding.tf_bind", "id"),
 				),
 			},
 		},

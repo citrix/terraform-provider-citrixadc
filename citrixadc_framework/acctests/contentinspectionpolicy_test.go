@@ -318,6 +318,9 @@ func TestAccContentinspectionpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy_ds", "name", "my_ci_policy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy_ds", "action", "RESET"),
+					// Runtime-binding proof; read-only metadata (hits/undefhits/
+					// builtin/feature) is exposed but may be omitted for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_contentinspectionpolicy.tf_contentinspectionpolicy_ds", "id"),
 				),
 			},
 		},

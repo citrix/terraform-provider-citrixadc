@@ -138,6 +138,10 @@ func TestAccAutoscalepolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair("data.citrixadc_autoscalepolicy.tf_autoscalepolicy", "name", "citrixadc_autoscalepolicy.tf_autoscalepolicy", "name"),
 					resource.TestCheckResourceAttr("data.citrixadc_autoscalepolicy.tf_autoscalepolicy", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_autoscalepolicy.tf_autoscalepolicy", "action", "my_autoscaleaction"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_autoscalepolicy.tf_autoscalepolicy", "id"),
+					// Read-only counter-style attribute always populated by the appliance.
+					resource.TestCheckResourceAttrSet("data.citrixadc_autoscalepolicy.tf_autoscalepolicy", "hits"),
 				),
 			},
 		},

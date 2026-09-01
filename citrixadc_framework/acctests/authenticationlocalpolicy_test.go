@@ -222,6 +222,7 @@ func TestAccAuthenticationlocalpolicyDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy_ds", "name", "tf_authenticationlocalpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy_ds", "rule", "ns_true"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy_ds", "id"),
 				),
 			},
 		},

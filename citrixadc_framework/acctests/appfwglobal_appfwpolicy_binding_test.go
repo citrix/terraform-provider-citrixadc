@@ -259,6 +259,11 @@ func TestAccAppfwglobal_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "priority", "30"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "type", "REQ_DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// numpol is a counter (policies bound to the bindpoint) always populated when a binding exists.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "numpol"),
 				),
 			},
 		},

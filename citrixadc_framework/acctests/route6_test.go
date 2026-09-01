@@ -344,6 +344,8 @@ func TestAccRoute6DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_route6.tf_route6", "vlan", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_route6.tf_route6", "weight", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_route6.tf_route6", "distance", "3"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_route6.tf_route6", "id"),
 				),
 			},
 		},

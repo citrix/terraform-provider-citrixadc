@@ -422,6 +422,8 @@ func TestAccSslvserver_sslpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "policyname", "tf_sslpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "priority", "333"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "type", "REQUEST"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslvserver_sslpolicy_binding.tf_binding_lb", "id"),
 				),
 			},
 		},

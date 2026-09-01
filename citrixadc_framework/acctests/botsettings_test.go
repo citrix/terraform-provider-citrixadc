@@ -179,6 +179,7 @@ func TestAccBotsettingsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBotsettingsDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_botsettings.botsettings", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "sessiontimeout", "900"),
 					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "proxyport", "8080"),
 					resource.TestCheckResourceAttr("data.citrixadc_botsettings.botsettings", "sessioncookiename", "citrix_bot_id"),

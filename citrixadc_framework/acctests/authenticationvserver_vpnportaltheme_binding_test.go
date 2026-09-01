@@ -249,6 +249,7 @@ func TestAccAuthenticationvserverVpnportalthemeBindingDataSource_basic(t *testin
 			{
 				Config: testAccAuthenticationvserverVpnportalthemeBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_vpnportaltheme_binding.tf_bind", "portaltheme", "tf_vpnportaltheme"),
 				),

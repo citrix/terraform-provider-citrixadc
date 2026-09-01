@@ -368,6 +368,12 @@ func TestAccAuthenticationsamlactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "digestmethod", "SHA1"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "signaturealg", "RSA-SHA256"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "statechecks", "false"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "id"),
+					// Read-only metadata exposed only by the data source.
+					// metadataimportstatus is a status field with a documented default
+					// (SUCCESS), always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "metadataimportstatus"),
 				),
 			},
 		},

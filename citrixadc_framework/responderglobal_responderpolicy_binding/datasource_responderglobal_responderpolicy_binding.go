@@ -36,7 +36,7 @@ func (d *ResponderglobalResponderpolicyBindingDataSource) Schema(ctx context.Con
 }
 
 func (d *ResponderglobalResponderpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ResponderglobalResponderpolicyBindingResourceModel
+	var data ResponderglobalResponderpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -122,7 +122,7 @@ func (d *ResponderglobalResponderpolicyBindingDataSource) Read(ctx context.Conte
 		return
 	}
 
-	responderglobal_responderpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	responderglobal_responderpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

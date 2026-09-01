@@ -313,6 +313,7 @@ func TestAccAaagroup_tmsessionpolicy_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAaagroup_tmsessionpolicy_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "policy", "my_tmsession_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_tmsessionpolicy_binding.tf_aaagroup_tmsessionpolicy_binding", "priority", "50"),

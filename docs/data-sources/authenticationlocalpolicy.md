@@ -35,6 +35,12 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Name of the Citrix ADC named rule, or an expression, that the policy uses to perform the authentication.
 * `id` - The id of the authenticationlocalpolicy. It has the same value as the `name` attribute.
 
+### Read-only authenticationlocalpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationlocalpolicy` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `reqaction` - The name of the RADIUS action the policy uses.
+
 ## Import
 
 A authenticationlocalpolicy can be imported using its name, e.g.

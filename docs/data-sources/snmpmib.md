@@ -27,3 +27,12 @@ In addition to the arguments, the following attributes are exported:
 * `customid` - Custom identification number for the Citrix ADC.
 * `location` - Physical location of the Citrix ADC. For example, you can specify building name, lab number, and rack number.
 * `name` - Name for this Citrix ADC.
+
+### Read-only snmpmib metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_snmpmib` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `sysdesc` - The description of the system.
+* `sysuptime` - The UP time of the system in 100th of a second.
+* `sysservices` - The services offered by the system.
+* `sysoid` - The OID of the system's management system.

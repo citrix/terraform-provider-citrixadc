@@ -271,6 +271,7 @@ func TestAccCsvserver_domain_binding_DataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_domain_binding.tf_csvserver_domain_binding", "name", "tf_csvserver_domain"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_domain_binding.tf_csvserver_domain_binding", "domainname", "example.com"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_csvserver_domain_binding.tf_csvserver_domain_binding", "id"),
 				),
 			},
 		},

@@ -285,6 +285,7 @@ func TestAccAuthenticationvserverAuthenticationnegotiatepolicyBindingDataSource_
 			{
 				Config: testAccAuthenticationvserverAuthenticationnegotiatepolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding", "policy", "tf_negotiatepolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationnegotiatepolicy_binding.tf_binding", "priority", "9"),

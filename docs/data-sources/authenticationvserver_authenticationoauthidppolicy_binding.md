@@ -39,3 +39,9 @@ In addition to the arguments, the following attributes are available:
 * `nextfactor` - On success invoke label.
 * `priority` - The priority, if any, of the vpn vserver policy.
 * `secondary` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor.
+
+### Read-only authenticationvserver_authenticationoauthidppolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationvserver_authenticationoauthidppolicy_binding` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `acttype` - The type of the authentication action associated with this policy binding.

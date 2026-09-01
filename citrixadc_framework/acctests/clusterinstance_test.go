@@ -319,6 +319,10 @@ func TestAccClusterinstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_clusterinstance.tf_clusterinstance_ds", "clid", "1"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusterinstance.tf_clusterinstance_ds", "deadinterval", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusterinstance.tf_clusterinstance_ds", "hellointerval", "600"),
+					// id is the universal runtime-binding proof; adminstate is a
+					// core cluster status field always populated for the instance.
+					resource.TestCheckResourceAttrSet("data.citrixadc_clusterinstance.tf_clusterinstance_ds", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_clusterinstance.tf_clusterinstance_ds", "adminstate"),
 				),
 			},
 		},

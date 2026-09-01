@@ -47,3 +47,15 @@ In addition to the arguments, the following attributes are available:
 * `vlan` - The vlan for multicast packets.
 * `vlantagging` - Option to select Vlan Tagging.
 * `vnid` - Virtual network identifier (VNID) is the value that identifies a specific virtual network in the data plane.
+
+### Read-only iptunnel metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_iptunnel` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `sysname` - The name of the ip tunnel.
+* `type` - The type of this tunnel.
+* `encapip` - The effective local IP address of the tunnel. Used as the source of the encapsulated packets.
+* `channel` - The tunnel that is bound to a netbridge.
+* `tunneltype` - Indicates that a tunnel is User-Configured, Internal or DELETE-IN-PROGRESS. A list of strings.
+* `ipsectunnelstatus` - Whether the ipsec on this tunnel is up or down.
+* `refcnt` - Number of PBRs to bound to this iptunnel.

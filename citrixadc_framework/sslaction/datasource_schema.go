@@ -1,8 +1,65 @@
 package sslaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SslactionDataSourceModel is the data-source-specific model, decoupled from
+// SslactionResourceModel. A data source is a pure read surface, so it exposes the
+// read/write attributes (as Computed outputs) AND the read-only attributes the
+// GET returns (hits, undefhits, referencecount, description, builtin, feature)
+// that the resource deliberately omits.
+type SslactionDataSourceModel struct {
+	Id                                types.String `tfsdk:"id"`
+	Alpnhttp2                         types.String `tfsdk:"alpnhttp2"`
+	Cacertgrpname                     types.String `tfsdk:"cacertgrpname"`
+	Certfingerprintdigest             types.String `tfsdk:"certfingerprintdigest"`
+	Certfingerprintheader             types.String `tfsdk:"certfingerprintheader"`
+	Certhashheader                    types.String `tfsdk:"certhashheader"`
+	Certheader                        types.String `tfsdk:"certheader"`
+	Certissuerheader                  types.String `tfsdk:"certissuerheader"`
+	Certnotafterheader                types.String `tfsdk:"certnotafterheader"`
+	Certnotbeforeheader               types.String `tfsdk:"certnotbeforeheader"`
+	Certserialheader                  types.String `tfsdk:"certserialheader"`
+	Certsubjectheader                 types.String `tfsdk:"certsubjectheader"`
+	Cipher                            types.String `tfsdk:"cipher"`
+	Cipherheader                      types.String `tfsdk:"cipherheader"`
+	Clientauth                        types.String `tfsdk:"clientauth"`
+	Clientcert                        types.String `tfsdk:"clientcert"`
+	Clientcertfingerprint             types.String `tfsdk:"clientcertfingerprint"`
+	Clientcerthash                    types.String `tfsdk:"clientcerthash"`
+	Clientcertissuer                  types.String `tfsdk:"clientcertissuer"`
+	Clientcertnotafter                types.String `tfsdk:"clientcertnotafter"`
+	Clientcertnotbefore               types.String `tfsdk:"clientcertnotbefore"`
+	Clientcertserialnumber            types.String `tfsdk:"clientcertserialnumber"`
+	Clientcertsubject                 types.String `tfsdk:"clientcertsubject"`
+	Clientcertverification            types.String `tfsdk:"clientcertverification"`
+	Forward                           types.String `tfsdk:"forward"`
+	Inhandshakeclientauth             types.String `tfsdk:"inhandshakeclientauth"`
+	Inhandshakeclientcertverification types.String `tfsdk:"inhandshakeclientcertverification"`
+	Name                              types.String `tfsdk:"name"`
+	Ocspcache                         types.String `tfsdk:"ocspcache"`
+	Ocspcertvalidation                types.String `tfsdk:"ocspcertvalidation"`
+	Ocspstapling                      types.String `tfsdk:"ocspstapling"`
+	Owasupport                        types.String `tfsdk:"owasupport"`
+	Sessionid                         types.String `tfsdk:"sessionid"`
+	Sessionidheader                   types.String `tfsdk:"sessionidheader"`
+	Ssllogprofile                     types.String `tfsdk:"ssllogprofile"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/sslaction.json). Never settable; populated from GET.
+	Hits           types.Int64  `tfsdk:"hits"`
+	Undefhits      types.Int64  `tfsdk:"undefhits"`
+	Referencecount types.Int64  `tfsdk:"referencecount"`
+	Description    types.String `tfsdk:"description"`
+	Builtin        types.List   `tfsdk:"builtin"`
+	Feature        types.String `tfsdk:"feature"`
+}
 
 func SslactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -179,6 +236,88 @@ func SslactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The name of the ssllogprofile.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source (these are
+			// intentionally NOT modeled on the resource). All Computed.
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of times the action has been taken.",
+			},
+			"undefhits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of times the action resulted in UNDEF.",
+			},
+			"referencecount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of references to the action.",
+			},
+			"description": schema.StringAttribute{
+				Computed:    true,
+				Description: "Description of the action.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine whether the SSL action is built-in or not. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ].",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this configuration.",
+			},
 		},
 	}
+}
+
+// sslactionDataSourceSetAttrFromGet projects a NITRO sslaction GET response onto
+// the data-source model. Attributes are filled from the GET (or left Null when
+// the GET omits them) via the shared utils.MapGet* helpers.
+func sslactionDataSourceSetAttrFromGet(ctx context.Context, data *SslactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In sslactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Alpnhttp2 = utils.MapGetString(g, "alpnhttp2")
+	data.Cacertgrpname = utils.MapGetString(g, "cacertgrpname")
+	data.Certfingerprintdigest = utils.MapGetString(g, "certfingerprintdigest")
+	data.Certfingerprintheader = utils.MapGetString(g, "certfingerprintheader")
+	data.Certhashheader = utils.MapGetString(g, "certhashheader")
+	data.Certheader = utils.MapGetString(g, "certheader")
+	data.Certissuerheader = utils.MapGetString(g, "certissuerheader")
+	data.Certnotafterheader = utils.MapGetString(g, "certnotafterheader")
+	data.Certnotbeforeheader = utils.MapGetString(g, "certnotbeforeheader")
+	data.Certserialheader = utils.MapGetString(g, "certserialheader")
+	data.Certsubjectheader = utils.MapGetString(g, "certsubjectheader")
+	data.Cipher = utils.MapGetString(g, "cipher")
+	data.Cipherheader = utils.MapGetString(g, "cipherheader")
+	data.Clientauth = utils.MapGetString(g, "clientauth")
+	data.Clientcert = utils.MapGetString(g, "clientcert")
+	data.Clientcertfingerprint = utils.MapGetString(g, "clientcertfingerprint")
+	data.Clientcerthash = utils.MapGetString(g, "clientcerthash")
+	data.Clientcertissuer = utils.MapGetString(g, "clientcertissuer")
+	data.Clientcertnotafter = utils.MapGetString(g, "clientcertnotafter")
+	data.Clientcertnotbefore = utils.MapGetString(g, "clientcertnotbefore")
+	data.Clientcertserialnumber = utils.MapGetString(g, "clientcertserialnumber")
+	data.Clientcertsubject = utils.MapGetString(g, "clientcertsubject")
+	data.Clientcertverification = utils.MapGetString(g, "clientcertverification")
+	data.Forward = utils.MapGetString(g, "forward")
+	data.Inhandshakeclientauth = utils.MapGetString(g, "inhandshakeclientauth")
+	data.Inhandshakeclientcertverification = utils.MapGetString(g, "inhandshakeclientcertverification")
+	data.Ocspcache = utils.MapGetString(g, "ocspcache")
+	data.Ocspcertvalidation = utils.MapGetString(g, "ocspcertvalidation")
+	data.Ocspstapling = utils.MapGetString(g, "ocspstapling")
+	data.Owasupport = utils.MapGetString(g, "owasupport")
+	data.Sessionid = utils.MapGetString(g, "sessionid")
+	data.Sessionidheader = utils.MapGetString(g, "sessionidheader")
+	data.Ssllogprofile = utils.MapGetString(g, "ssllogprofile")
+
+	// Read-only metadata.
+	data.Hits = utils.MapGetInt64(g, "hits")
+	data.Undefhits = utils.MapGetInt64(g, "undefhits")
+	data.Referencecount = utils.MapGetInt64(g, "referencecount")
+	data.Description = utils.MapGetString(g, "description")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

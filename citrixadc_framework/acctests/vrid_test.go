@@ -329,6 +329,9 @@ func TestAccVridDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "preemption", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "sharing", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "tracking", "NONE"),
+					// Runtime-binding proof + read-only priority metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vrid.tf_vrid", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vrid.tf_vrid", "effectivepriority"),
 				),
 			},
 		},

@@ -33,3 +33,9 @@ output "vserver" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the csvserver_gslbvserver_binding. It is the concatenation of the `name` and `vserver` attributes separated by a comma.
+
+### Read-only csvserver_gslbvserver_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_csvserver_gslbvserver_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.

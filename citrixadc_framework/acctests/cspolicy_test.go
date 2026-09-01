@@ -272,6 +272,8 @@ func TestAccCspolicyDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cspolicy.tf_cspolicy_ds", "policyname", "tf_test_policy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cspolicy.tf_cspolicy_ds", "rule", "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.85.0)"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cspolicy.tf_cspolicy_ds", "id"),
 				),
 			},
 		},

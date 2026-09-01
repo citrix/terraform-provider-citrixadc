@@ -35,7 +35,7 @@ func (d *TunneltrafficpolicyDataSource) Schema(ctx context.Context, req datasour
 }
 
 func (d *TunneltrafficpolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data TunneltrafficpolicyResourceModel
+	var data TunneltrafficpolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *TunneltrafficpolicyDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	tunneltrafficpolicySetAttrFromGet(ctx, &data, getResponseData)
+	tunneltrafficpolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

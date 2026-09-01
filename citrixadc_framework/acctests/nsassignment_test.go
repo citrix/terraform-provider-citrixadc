@@ -356,6 +356,10 @@ func TestAccNsassignmentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nsassignment.tf_nsassignment_data", "name", "tf_nsassignment"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsassignment.tf_nsassignment_data", "set", "1"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsassignment.tf_nsassignment_data", "comment", "Testing"),
+					// id is the universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsassignment.tf_nsassignment_data", "id"),
+					// referencecount is a refcnt-style read-only field always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsassignment.tf_nsassignment_data", "referencecount"),
 				),
 			},
 		},

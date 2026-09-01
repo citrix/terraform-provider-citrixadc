@@ -142,6 +142,7 @@ func TestAccAaatacacsparamsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAaatacacsparamsDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaatacacsparams.tf_aaatacacsparams", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaatacacsparams.tf_aaatacacsparams", "serverip", "10.222.74.158"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaatacacsparams.tf_aaatacacsparams", "serverport", "49"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaatacacsparams.tf_aaatacacsparams", "authtimeout", "5"),

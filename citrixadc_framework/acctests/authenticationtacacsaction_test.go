@@ -323,6 +323,10 @@ func TestAccAuthenticationtacacsactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "accounting", "ON"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "auditfailedcmds", "ON"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "groupattrname", "group"),
+					// Universal runtime-binding proof. The read-only success/failure
+					// counters are instance/config-dependent and may be omitted for a
+					// freshly-created action, so they are intentionally not asserted.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationtacacsaction.tf_tacacsaction_ds", "id"),
 				),
 			},
 		},

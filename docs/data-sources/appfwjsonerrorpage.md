@@ -38,6 +38,12 @@ In addition to the arguments, the following attributes are available:
 * `src` - URL (protocol, host, path, and name) for the location at which to store the imported JSON error object. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
 * `id` - The id of the appfwjsonerrorpage. It has the same value as the `name` attribute.
 
+### Read-only appfwjsonerrorpage metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwjsonerrorpage` resource) and are Computed/GET-only. Any attribute the appliance does not return is `null`.
+
+* `response` - JSON error object contents.
+
 ## Import
 
 A appfwjsonerrorpage can be imported using its name, e.g.

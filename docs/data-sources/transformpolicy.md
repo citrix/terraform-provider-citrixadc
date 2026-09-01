@@ -39,6 +39,15 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Expression, or name of a named expression, against which to evaluate traffic.
 * `id` - The id of the transformpolicy. It has the same value as the `name` attribute.
 
+### Read-only transformpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_transformpolicy` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
+
+* `hits` - Number of hits.
+* `isdefault` - A value of true is returned if it is a default transform policy.
+* `builtin` - Flag to determine if Transform policy is built-in or not. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+
 
 ## Import
 

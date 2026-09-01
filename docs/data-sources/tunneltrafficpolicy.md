@@ -39,6 +39,23 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Expression, against which traffic is evaluated.
 * `id` - The id of the tunneltrafficpolicy. It has the same value as the `name` attribute.
 
+### Read-only tunneltrafficpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_tunneltrafficpolicy` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `expressiontype` - Type of policy (Classic/Advanced).
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `txbytes` - Number of bytes transmitted.
+* `rxbytes` - Number of bytes received.
+* `clientttlb` - Total client TTLB value.
+* `clienttransactions` - Number of client transactions.
+* `serverttlb` - Total server TTLB value.
+* `servertransactions` - Number of server transactions.
+* `isdefault` - A value of true is returned if it is a default tunnelpolicy.
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+
 
 ## Import
 

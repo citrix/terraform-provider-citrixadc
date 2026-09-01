@@ -238,6 +238,9 @@ func TestAccDnsaddrecDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaddrec.dnsaddrec", "hostname", "tfacc-ds-addr-test.local"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaddrec.dnsaddrec", "ipaddress", "10.200.100.50"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaddrec.dnsaddrec", "ttl", "3600"),
+					// Universal runtime-binding proof (read-only vservername/authtype
+					// are config-dependent and may be omitted by the appliance).
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsaddrec.dnsaddrec", "id"),
 				),
 			},
 		},

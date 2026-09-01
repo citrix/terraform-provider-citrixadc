@@ -232,6 +232,7 @@ func TestAccDnscaarecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnscaarecDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnscaarec.tf_dnscaarec", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscaarec.tf_dnscaarec", "domain", "tf-caa-ds.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscaarec.tf_dnscaarec", "valuestring", "letsencrypt.org"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscaarec.tf_dnscaarec", "tag", "issue"),

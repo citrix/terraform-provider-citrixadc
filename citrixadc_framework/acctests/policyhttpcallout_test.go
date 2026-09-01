@@ -418,6 +418,11 @@ func TestAccPolicyhttpcalloutDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "scheme", "http"),
 					resource.TestCheckResourceAttr("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "returntype", "TEXT"),
 					resource.TestCheckResourceAttr("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "comment", "Test datasource callout"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "id"),
+					// Read-only metadata exposed only by the data source. hits is a
+					// counter-style field always populated for a freshly-created object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyhttpcallout.tf_policyhttpcallout_ds", "hits"),
 				),
 			},
 		},

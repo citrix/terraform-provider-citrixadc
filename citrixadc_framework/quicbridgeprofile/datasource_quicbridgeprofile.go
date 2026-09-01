@@ -35,7 +35,7 @@ func (d *QuicbridgeprofileDataSource) Schema(ctx context.Context, req datasource
 }
 
 func (d *QuicbridgeprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data QuicbridgeprofileResourceModel
+	var data QuicbridgeprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *QuicbridgeprofileDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	quicbridgeprofileSetAttrFromGet(ctx, &data, getResponseData)
+	quicbridgeprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

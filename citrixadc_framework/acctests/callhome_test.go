@@ -258,6 +258,8 @@ func TestAccCallhomeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_callhome.tf_callhome", "hbcustominterval", "10"),
 					resource.TestCheckResourceAttr("data.citrixadc_callhome.tf_callhome", "emailaddress", "test@example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_callhome.tf_callhome", "proxymode", "NO"),
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_callhome.tf_callhome", "id"),
 				),
 			},
 		},

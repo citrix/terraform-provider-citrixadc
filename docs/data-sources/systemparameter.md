@@ -54,3 +54,9 @@ In addition to the arguments, the following attributes are available:
 * `totalauthtimeout` - Total time a request can take for authentication/authorization.
 * `wafprotection` - Configure WAF protection for endpoints used by NetScaler management interfaces. Possible values: [ DEFAULT, GUI, DISABLED ]
 * `warnpriorndays` - Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.
+
+### Read-only systemparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_systemparameter` resource) and are `null` when the appliance omits them.
+
+* `allowdefaultpartition` - Enable/Disable the allowing partition users to access default partition. Possible values: `YES`, `NO`.

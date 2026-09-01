@@ -334,6 +334,7 @@ func TestAccVpnvserver_vpnsessionpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind", "name", "vpn_vserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind", "policy", "tf_vpnsessionpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind", "priority", "20"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_vpnsessionpolicy_binding.tf_bind", "id"),
 				),
 			},
 		},

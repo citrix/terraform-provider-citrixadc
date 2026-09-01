@@ -183,7 +183,11 @@ func TestAccAaakcdaccountDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "kcdaccount", "my_kcdaccount"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "delegateduser", "john"),
-					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "realmstr", "my_realm"),
+					// NITRO upper-cases Kerberos realm names, so the data source (read fresh from the
+					// GET) returns MY_REALM even though the config supplied "my_realm".
+					resource.TestCheckResourceAttr("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "realmstr", "MY_REALM"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaakcdaccount.tf_aaakcdaccount", "id"),
 				),
 			},
 		},

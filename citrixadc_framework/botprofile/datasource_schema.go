@@ -1,9 +1,60 @@
 package botprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// BotprofileDataSourceModel is the data-source-specific model, decoupled from
+// BotprofileResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only metadata attributes that the resource deliberately
+// omits (builtin, feature). Every non-key attribute is Computed; the Framework's
+// per-attribute model <-> schema reflection requires this model to have exactly
+// the attributes the data-source schema declares, which is why it cannot reuse
+// the resource model.
+type BotprofileDataSourceModel struct {
+	Id                                     types.String `tfsdk:"id"`
+	Addcookieflags                         types.String `tfsdk:"addcookieflags"`
+	BotEnableBlackList                     types.String `tfsdk:"bot_enable_black_list"`
+	BotEnableIpReputation                  types.String `tfsdk:"bot_enable_ip_reputation"`
+	BotEnableRateLimit                     types.String `tfsdk:"bot_enable_rate_limit"`
+	BotEnableTps                           types.String `tfsdk:"bot_enable_tps"`
+	BotEnableWhiteList                     types.String `tfsdk:"bot_enable_white_list"`
+	Clientipexpression                     types.String `tfsdk:"clientipexpression"`
+	Comment                                types.String `tfsdk:"comment"`
+	Devicefingerprint                      types.String `tfsdk:"devicefingerprint"`
+	Devicefingerprintaction                types.List   `tfsdk:"devicefingerprintaction"`
+	Devicefingerprintmobile                types.List   `tfsdk:"devicefingerprintmobile"`
+	Dfprequestlimit                        types.Int64  `tfsdk:"dfprequestlimit"`
+	Errorurl                               types.String `tfsdk:"errorurl"`
+	Headlessbrowserdetection               types.String `tfsdk:"headlessbrowserdetection"`
+	Kmdetection                            types.String `tfsdk:"kmdetection"`
+	Kmeventspostbodylimit                  types.Int64  `tfsdk:"kmeventspostbodylimit"`
+	Kmjavascriptname                       types.String `tfsdk:"kmjavascriptname"`
+	Name                                   types.String `tfsdk:"name"` // Required lookup key
+	Sessioncookiename                      types.String `tfsdk:"sessioncookiename"`
+	Sessiontimeout                         types.Int64  `tfsdk:"sessiontimeout"`
+	Signature                              types.String `tfsdk:"signature"`
+	Signaturemultipleuseragentheaderaction types.List   `tfsdk:"signaturemultipleuseragentheaderaction"`
+	Signaturenouseragentheaderaction       types.List   `tfsdk:"signaturenouseragentheaderaction"`
+	Spoofedreqaction                       types.List   `tfsdk:"spoofedreqaction"`
+	Trap                                   types.String `tfsdk:"trap"`
+	Trapaction                             types.List   `tfsdk:"trapaction"`
+	Trapurl                                types.String `tfsdk:"trapurl"`
+	Verboseloglevel                        types.String `tfsdk:"verboseloglevel"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/botprofile.json). Never settable; populated from GET.
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func BotprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -156,6 +207,65 @@ func BotprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Bot verbose Logging. Based on the log level, ADC will log additional information whenever client is detected as a bot.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine if bot profile is built-in or not. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// botprofileDataSourceSetAttrFromGet projects a NITRO botprofile GET response
+// onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func botprofileDataSourceSetAttrFromGet(ctx context.Context, data *BotprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In botprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Addcookieflags = utils.MapGetString(g, "addcookieflags")
+	data.BotEnableBlackList = utils.MapGetString(g, "bot_enable_black_list")
+	data.BotEnableIpReputation = utils.MapGetString(g, "bot_enable_ip_reputation")
+	data.BotEnableRateLimit = utils.MapGetString(g, "bot_enable_rate_limit")
+	data.BotEnableTps = utils.MapGetString(g, "bot_enable_tps")
+	data.BotEnableWhiteList = utils.MapGetString(g, "bot_enable_white_list")
+	data.Clientipexpression = utils.MapGetString(g, "clientipexpression")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Devicefingerprint = utils.MapGetString(g, "devicefingerprint")
+	data.Devicefingerprintaction = utils.MapGetStringList(g, "devicefingerprintaction")
+	data.Devicefingerprintmobile = utils.MapGetStringList(g, "devicefingerprintmobile")
+	data.Dfprequestlimit = utils.MapGetInt64(g, "dfprequestlimit")
+	data.Errorurl = utils.MapGetString(g, "errorurl")
+	data.Headlessbrowserdetection = utils.MapGetString(g, "headlessbrowserdetection")
+	data.Kmdetection = utils.MapGetString(g, "kmdetection")
+	data.Kmeventspostbodylimit = utils.MapGetInt64(g, "kmeventspostbodylimit")
+	data.Kmjavascriptname = utils.MapGetString(g, "kmjavascriptname")
+	data.Sessioncookiename = utils.MapGetString(g, "sessioncookiename")
+	data.Sessiontimeout = utils.MapGetInt64(g, "sessiontimeout")
+	data.Signature = utils.MapGetString(g, "signature")
+	data.Signaturemultipleuseragentheaderaction = utils.MapGetStringList(g, "signaturemultipleuseragentheaderaction")
+	data.Signaturenouseragentheaderaction = utils.MapGetStringList(g, "signaturenouseragentheaderaction")
+	data.Spoofedreqaction = utils.MapGetStringList(g, "spoofedreqaction")
+	data.Trap = utils.MapGetString(g, "trap")
+	data.Trapaction = utils.MapGetStringList(g, "trapaction")
+	data.Trapurl = utils.MapGetString(g, "trapurl")
+	data.Verboseloglevel = utils.MapGetString(g, "verboseloglevel")
+
+	// Read-only metadata.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

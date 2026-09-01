@@ -39,3 +39,10 @@ In addition to the arguments, the following attributes are available:
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labelname` - Name of the policy label to invoke. If the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is policylabel.
 * `labeltype` - Type of invocation. Possible values: [ vserver, policylabel ]
+
+### Read-only responderglobal_responderpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_responderglobal_responderpolicy_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `numpol` - Number of policies bound to label.
+* `flowtype` - Flowtype of the bound responder policy.

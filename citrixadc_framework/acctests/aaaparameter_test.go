@@ -155,6 +155,8 @@ func TestAccAaaparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaaparameter.tf_aaaparameter", "defaultauthtype", "LOCAL"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaparameter.tf_aaaparameter", "maxloginattempts", "5"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaparameter.tf_aaaparameter", "failedlogintimeout", "15"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaaparameter.tf_aaaparameter", "id"),
 				),
 			},
 		},

@@ -213,6 +213,8 @@ func TestAccGslbsiteDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGslbsiteDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbsite.tf_gslbsite_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "sitename", "Site-GSLB-East-Coast-DS"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "siteipaddress", "172.31.11.25"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbsite.tf_gslbsite_ds", "metricexchange", "ENABLED"),

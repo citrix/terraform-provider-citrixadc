@@ -35,7 +35,7 @@ func (d *HanodeRoutemonitorBindingDataSource) Schema(ctx context.Context, req da
 }
 
 func (d *HanodeRoutemonitorBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data HanodeRoutemonitorBindingResourceModel
+	var data HanodeRoutemonitorBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -98,7 +98,7 @@ func (d *HanodeRoutemonitorBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	hanode_routemonitor_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	hanode_routemonitor_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

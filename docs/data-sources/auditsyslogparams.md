@@ -53,3 +53,10 @@ The following attributes are available:
 * `timezone` - Time zone used for date and timestamps in the logs. Available settings: GMT_TIME, LOCAL_TIME.
 * `urlfiltering` - Log URL filtering event information.
 * `userdefinedauditlog` - Log user-configurable log messages to syslog.
+
+### Read-only auditsyslogparams metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_auditsyslogparams` resource) and are Computed-only. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. Possible values = `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.
+* `feature` - The feature to be checked while applying this config.

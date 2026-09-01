@@ -72,6 +72,9 @@ func TestAccIcaactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_icaaction.tf_icaaction_ds", "name", "my_ica_action"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaaction.tf_icaaction_ds", "accessprofilename", "default_ica_accessprofile"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_icaaction.tf_icaaction_ds", "id"),
+					// Read-only metadata exposed only by the data source. referencecount
+					// is a refcnt-style field always populated for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaaction.tf_icaaction_ds", "referencecount"),
 				),
 			},
 		},

@@ -1,8 +1,31 @@
 package policydataset
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// PolicydatasetDataSourceModel is the data-source-specific model, decoupled from
+// PolicydatasetResourceModel. A data source is a pure read surface, so it exposes
+// the full GET projection: the read/write attributes (as Computed outputs) plus
+// the read-only attributes the resource deliberately omits.
+type PolicydatasetDataSourceModel struct {
+	Id         types.String `tfsdk:"id"`
+	Comment    types.String `tfsdk:"comment"`
+	Dynamic    types.String `tfsdk:"dynamic"`
+	Name       types.String `tfsdk:"name"`
+	Patsetfile types.String `tfsdk:"patsetfile"`
+	Type       types.String `tfsdk:"type"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/policydataset.json). Never settable; populated from GET.
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func PolicydatasetDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -34,6 +57,38 @@ func PolicydatasetDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Type of value to bind to the dataset.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source.
+			"builtin": schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type (MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL).",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// policydatasetDataSourceSetAttrFromGet projects a NITRO policydataset GET response
+// onto the data-source model. Attributes are simply filled from the GET (or left
+// Null when the GET omits them) via the shared utils.MapGet* helpers.
+func policydatasetDataSourceSetAttrFromGet(ctx context.Context, data *PolicydatasetDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In policydatasetDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Dynamic = utils.MapGetString(g, "dynamic")
+	data.Patsetfile = utils.MapGetString(g, "patsetfile")
+	data.Type = utils.MapGetString(g, "type")
+
+	// Read-only attributes.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

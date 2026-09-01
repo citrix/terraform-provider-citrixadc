@@ -207,6 +207,7 @@ func TestAccAppfwurlencodedformcontenttypeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype", "urlencodedformcontenttypevalue", "tf_urlencodedformcontenttype"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype", "isregex", "NOTREGEX"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwurlencodedformcontenttype.tf_urlencodedformcontenttype", "id"),
 				),
 			},
 		},

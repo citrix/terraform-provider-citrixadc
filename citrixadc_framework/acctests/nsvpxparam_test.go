@@ -223,6 +223,9 @@ func TestAccNsvpxparamDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "id"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "cpuyield"),
+					// Read-only status/environment attributes exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "vpxenvironment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsvpxparam.test", "memorystatus"),
 				),
 			},
 		},

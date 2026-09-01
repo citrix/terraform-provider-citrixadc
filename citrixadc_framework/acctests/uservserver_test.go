@@ -402,6 +402,8 @@ func TestAccUservserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "userprotocol", "MQTT"),
 					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "ipaddress", "10.222.74.180"),
 					resource.TestCheckResourceAttr("data.citrixadc_uservserver.tf_uservserver", "port", "3200"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_uservserver.tf_uservserver", "id"),
 				),
 			},
 		},

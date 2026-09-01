@@ -10,12 +10,13 @@ import (
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
-// NslicenseModel describes the DATASOURCE data model. It mirrors the fields the
-// NITRO `nslicense` GET returns (the licensed-feature flags), which is what a
-// user queries via the datasource. This is intentionally distinct from the
-// resource model (NslicenseResourceModel), because the resource is a custom
-// SSH/SFTP license-upload resource, not a plain NITRO CRUD object.
-type NslicenseModel struct {
+// NslicenseDataSourceModel describes the DATASOURCE data model. It mirrors the
+// fields the NITRO `nslicense` GET returns (the licensed-feature flags and the
+// read-only license metadata), which is what a user queries via the datasource.
+// This is intentionally distinct from the resource model
+// (NslicenseResourceModel), because the resource is a custom SSH/SFTP
+// license-upload resource, not a plain NITRO CRUD object.
+type NslicenseDataSourceModel struct {
 	Id                      types.String `tfsdk:"id"`
 	Wl                      types.Bool   `tfsdk:"wl"`
 	Sp                      types.Bool   `tfsdk:"sp"`
@@ -74,302 +75,85 @@ type NslicenseModel struct {
 	Cqa                     types.Bool   `tfsdk:"cqa"`
 	Bot                     types.Bool   `tfsdk:"bot"`
 	Apigateway              types.Bool   `tfsdk:"apigateway"`
+
+	// Read-only (GET-only) license metadata from the NITRO doc read-only set
+	// (zion73x_readonly/nslicense.json). Never settable; populated from GET.
+	Cloudsubscriptionimage types.String `tfsdk:"cloudsubscriptionimage"`
+	Daystoexpiration       types.Int64  `tfsdk:"daystoexpiration"`
+	Daystolasenforcement   types.Int64  `tfsdk:"daystolasenforcement"`
 }
 
-func nslicenseSetAttrFromGet(ctx context.Context, data *NslicenseModel, getResponseData map[string]interface{}) *NslicenseModel {
-	tflog.Debug(ctx, "In nslicenseSetAttrFromGet Function")
+// nslicenseDataSourceSetAttrFromGet projects a NITRO nslicense GET response onto
+// the data-source model using the shared utils.MapGet* helpers. Attributes the
+// GET omits are left Null.
+func nslicenseDataSourceSetAttrFromGet(ctx context.Context, data *NslicenseDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nslicenseDataSourceSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["wl"]; ok && val != nil {
-		data.Wl = types.BoolValue(val.(bool))
-	} else {
-		data.Wl = types.BoolNull()
-	}
-	if val, ok := getResponseData["sp"]; ok && val != nil {
-		data.Sp = types.BoolValue(val.(bool))
-	} else {
-		data.Sp = types.BoolNull()
-	}
-	if val, ok := getResponseData["lb"]; ok && val != nil {
-		data.Lb = types.BoolValue(val.(bool))
-	} else {
-		data.Lb = types.BoolNull()
-	}
-	if val, ok := getResponseData["cs"]; ok && val != nil {
-		data.Cs = types.BoolValue(val.(bool))
-	} else {
-		data.Cs = types.BoolNull()
-	}
-	if val, ok := getResponseData["cr"]; ok && val != nil {
-		data.Cr = types.BoolValue(val.(bool))
-	} else {
-		data.Cr = types.BoolNull()
-	}
-	if val, ok := getResponseData["cmp"]; ok && val != nil {
-		data.Cmp = types.BoolValue(val.(bool))
-	} else {
-		data.Cmp = types.BoolNull()
-	}
-	if val, ok := getResponseData["delta"]; ok && val != nil {
-		data.Delta = types.BoolValue(val.(bool))
-	} else {
-		data.Delta = types.BoolNull()
-	}
-	if val, ok := getResponseData["ssl"]; ok && val != nil {
-		data.Ssl = types.BoolValue(val.(bool))
-	} else {
-		data.Ssl = types.BoolNull()
-	}
-	if val, ok := getResponseData["gslb"]; ok && val != nil {
-		data.Gslb = types.BoolValue(val.(bool))
-	} else {
-		data.Gslb = types.BoolNull()
-	}
-	if val, ok := getResponseData["gslbp"]; ok && val != nil {
-		data.Gslbp = types.BoolValue(val.(bool))
-	} else {
-		data.Gslbp = types.BoolNull()
-	}
-	if val, ok := getResponseData["routing"]; ok && val != nil {
-		data.Routing = types.BoolValue(val.(bool))
-	} else {
-		data.Routing = types.BoolNull()
-	}
-	if val, ok := getResponseData["cf"]; ok && val != nil {
-		data.Cf = types.BoolValue(val.(bool))
-	} else {
-		data.Cf = types.BoolNull()
-	}
-	if val, ok := getResponseData["contentaccelerator"]; ok && val != nil {
-		data.Contentaccelerator = types.BoolValue(val.(bool))
-	} else {
-		data.Contentaccelerator = types.BoolNull()
-	}
-	if val, ok := getResponseData["ic"]; ok && val != nil {
-		data.Ic = types.BoolValue(val.(bool))
-	} else {
-		data.Ic = types.BoolNull()
-	}
-	if val, ok := getResponseData["sslvpn"]; ok && val != nil {
-		data.Sslvpn = types.BoolValue(val.(bool))
-	} else {
-		data.Sslvpn = types.BoolNull()
-	}
-	if val, ok := getResponseData["f_sslvpn_users"]; ok && val != nil {
-		data.F_sslvpn_users = types.StringValue(utils.ToString(val))
-	} else {
-		data.F_sslvpn_users = types.StringNull()
-	}
-	if val, ok := getResponseData["f_ica_users"]; ok && val != nil {
-		data.F_ica_users = types.StringValue(utils.ToString(val))
-	} else {
-		data.F_ica_users = types.StringNull()
-	}
-	if val, ok := getResponseData["aaa"]; ok && val != nil {
-		data.Aaa = types.BoolValue(val.(bool))
-	} else {
-		data.Aaa = types.BoolNull()
-	}
-	if val, ok := getResponseData["ospf"]; ok && val != nil {
-		data.Ospf = types.BoolValue(val.(bool))
-	} else {
-		data.Ospf = types.BoolNull()
-	}
-	if val, ok := getResponseData["rip"]; ok && val != nil {
-		data.Rip = types.BoolValue(val.(bool))
-	} else {
-		data.Rip = types.BoolNull()
-	}
-	if val, ok := getResponseData["bgp"]; ok && val != nil {
-		data.Bgp = types.BoolValue(val.(bool))
-	} else {
-		data.Bgp = types.BoolNull()
-	}
-	if val, ok := getResponseData["rewrite"]; ok && val != nil {
-		data.Rewrite = types.BoolValue(val.(bool))
-	} else {
-		data.Rewrite = types.BoolNull()
-	}
-	if val, ok := getResponseData["ipv6pt"]; ok && val != nil {
-		data.Ipv6pt = types.BoolValue(val.(bool))
-	} else {
-		data.Ipv6pt = types.BoolNull()
-	}
-	if val, ok := getResponseData["appfw"]; ok && val != nil {
-		data.Appfw = types.BoolValue(val.(bool))
-	} else {
-		data.Appfw = types.BoolNull()
-	}
-	if val, ok := getResponseData["responder"]; ok && val != nil {
-		data.Responder = types.BoolValue(val.(bool))
-	} else {
-		data.Responder = types.BoolNull()
-	}
-	if val, ok := getResponseData["agee"]; ok && val != nil {
-		data.Agee = types.BoolValue(val.(bool))
-	} else {
-		data.Agee = types.BoolNull()
-	}
-	if val, ok := getResponseData["nsxn"]; ok && val != nil {
-		data.Nsxn = types.BoolValue(val.(bool))
-	} else {
-		data.Nsxn = types.BoolNull()
-	}
-	if val, ok := getResponseData["modelid"]; ok && val != nil {
-		data.Modelid = types.StringValue(utils.ToString(val))
-	} else {
-		data.Modelid = types.StringNull()
-	}
-	if val, ok := getResponseData["push"]; ok && val != nil {
-		data.Push = types.BoolValue(val.(bool))
-	} else {
-		data.Push = types.BoolNull()
-	}
-	if val, ok := getResponseData["appflow"]; ok && val != nil {
-		data.Appflow = types.BoolValue(val.(bool))
-	} else {
-		data.Appflow = types.BoolNull()
-	}
-	if val, ok := getResponseData["cloudbridge"]; ok && val != nil {
-		data.Cloudbridge = types.BoolValue(val.(bool))
-	} else {
-		data.Cloudbridge = types.BoolNull()
-	}
-	if val, ok := getResponseData["cloudbridgeappliance"]; ok && val != nil {
-		data.Cloudbridgeappliance = types.BoolValue(val.(bool))
-	} else {
-		data.Cloudbridgeappliance = types.BoolNull()
-	}
-	if val, ok := getResponseData["cloudextenderappliance"]; ok && val != nil {
-		data.Cloudextenderappliance = types.BoolValue(val.(bool))
-	} else {
-		data.Cloudextenderappliance = types.BoolNull()
-	}
-	if val, ok := getResponseData["isis"]; ok && val != nil {
-		data.Isis = types.BoolValue(val.(bool))
-	} else {
-		data.Isis = types.BoolNull()
-	}
-	if val, ok := getResponseData["cluster"]; ok && val != nil {
-		data.Cluster = types.BoolValue(val.(bool))
-	} else {
-		data.Cluster = types.BoolNull()
-	}
-	if val, ok := getResponseData["ch"]; ok && val != nil {
-		data.Ch = types.BoolValue(val.(bool))
-	} else {
-		data.Ch = types.BoolNull()
-	}
-	if val, ok := getResponseData["appqoe"]; ok && val != nil {
-		data.Appqoe = types.BoolValue(val.(bool))
-	} else {
-		data.Appqoe = types.BoolNull()
-	}
-	if val, ok := getResponseData["appflowica"]; ok && val != nil {
-		data.Appflowica = types.BoolValue(val.(bool))
-	} else {
-		data.Appflowica = types.BoolNull()
-	}
-	if val, ok := getResponseData["isstandardlic"]; ok && val != nil {
-		data.Isstandardlic = types.BoolValue(val.(bool))
-	} else {
-		data.Isstandardlic = types.BoolNull()
-	}
-	if val, ok := getResponseData["isenterpriselic"]; ok && val != nil {
-		data.Isenterpriselic = types.BoolValue(val.(bool))
-	} else {
-		data.Isenterpriselic = types.BoolNull()
-	}
-	if val, ok := getResponseData["isplatinumlic"]; ok && val != nil {
-		data.Isplatinumlic = types.BoolValue(val.(bool))
-	} else {
-		data.Isplatinumlic = types.BoolNull()
-	}
-	if val, ok := getResponseData["issgwylic"]; ok && val != nil {
-		data.Issgwylic = types.BoolValue(val.(bool))
-	} else {
-		data.Issgwylic = types.BoolNull()
-	}
-	if val, ok := getResponseData["isswglic"]; ok && val != nil {
-		data.Isswglic = types.BoolValue(val.(bool))
-	} else {
-		data.Isswglic = types.BoolNull()
-	}
-	if val, ok := getResponseData["feo"]; ok && val != nil {
-		data.Feo = types.BoolValue(val.(bool))
-	} else {
-		data.Feo = types.BoolNull()
-	}
-	if val, ok := getResponseData["lsn"]; ok && val != nil {
-		data.Lsn = types.BoolValue(val.(bool))
-	} else {
-		data.Lsn = types.BoolNull()
-	}
-	if val, ok := getResponseData["licensingmode"]; ok && val != nil {
-		data.Licensingmode = types.StringValue(utils.ToString(val))
-	} else {
-		data.Licensingmode = types.StringNull()
-	}
-	if val, ok := getResponseData["rdpproxy"]; ok && val != nil {
-		data.Rdpproxy = types.BoolValue(val.(bool))
-	} else {
-		data.Rdpproxy = types.BoolNull()
-	}
-	if val, ok := getResponseData["rep"]; ok && val != nil {
-		data.Rep = types.BoolValue(val.(bool))
-	} else {
-		data.Rep = types.BoolNull()
-	}
-	if val, ok := getResponseData["urlfiltering"]; ok && val != nil {
-		data.Urlfiltering = types.BoolValue(val.(bool))
-	} else {
-		data.Urlfiltering = types.BoolNull()
-	}
-	if val, ok := getResponseData["videooptimization"]; ok && val != nil {
-		data.Videooptimization = types.BoolValue(val.(bool))
-	} else {
-		data.Videooptimization = types.BoolNull()
-	}
-	if val, ok := getResponseData["forwardproxy"]; ok && val != nil {
-		data.Forwardproxy = types.BoolValue(val.(bool))
-	} else {
-		data.Forwardproxy = types.BoolNull()
-	}
-	if val, ok := getResponseData["sslinterception"]; ok && val != nil {
-		data.Sslinterception = types.BoolValue(val.(bool))
-	} else {
-		data.Sslinterception = types.BoolNull()
-	}
-	if val, ok := getResponseData["remotecontentinspection"]; ok && val != nil {
-		data.Remotecontentinspection = types.BoolValue(val.(bool))
-	} else {
-		data.Remotecontentinspection = types.BoolNull()
-	}
-	if val, ok := getResponseData["adaptivetcp"]; ok && val != nil {
-		data.Adaptivetcp = types.BoolValue(val.(bool))
-	} else {
-		data.Adaptivetcp = types.BoolNull()
-	}
-	if val, ok := getResponseData["cqa"]; ok && val != nil {
-		data.Cqa = types.BoolValue(val.(bool))
-	} else {
-		data.Cqa = types.BoolNull()
-	}
-	if val, ok := getResponseData["bot"]; ok && val != nil {
-		data.Bot = types.BoolValue(val.(bool))
-	} else {
-		data.Bot = types.BoolNull()
-	}
-	if val, ok := getResponseData["apigateway"]; ok && val != nil {
-		data.Apigateway = types.BoolValue(val.(bool))
-	} else {
-		data.Apigateway = types.BoolNull()
-	}
+	data.Wl = utils.MapGetBool(g, "wl")
+	data.Sp = utils.MapGetBool(g, "sp")
+	data.Lb = utils.MapGetBool(g, "lb")
+	data.Cs = utils.MapGetBool(g, "cs")
+	data.Cr = utils.MapGetBool(g, "cr")
+	data.Cmp = utils.MapGetBool(g, "cmp")
+	data.Delta = utils.MapGetBool(g, "delta")
+	data.Ssl = utils.MapGetBool(g, "ssl")
+	data.Gslb = utils.MapGetBool(g, "gslb")
+	data.Gslbp = utils.MapGetBool(g, "gslbp")
+	data.Routing = utils.MapGetBool(g, "routing")
+	data.Cf = utils.MapGetBool(g, "cf")
+	data.Contentaccelerator = utils.MapGetBool(g, "contentaccelerator")
+	data.Ic = utils.MapGetBool(g, "ic")
+	data.Sslvpn = utils.MapGetBool(g, "sslvpn")
+	data.F_sslvpn_users = utils.MapGetString(g, "f_sslvpn_users")
+	data.F_ica_users = utils.MapGetString(g, "f_ica_users")
+	data.Aaa = utils.MapGetBool(g, "aaa")
+	data.Ospf = utils.MapGetBool(g, "ospf")
+	data.Rip = utils.MapGetBool(g, "rip")
+	data.Bgp = utils.MapGetBool(g, "bgp")
+	data.Rewrite = utils.MapGetBool(g, "rewrite")
+	data.Ipv6pt = utils.MapGetBool(g, "ipv6pt")
+	data.Appfw = utils.MapGetBool(g, "appfw")
+	data.Responder = utils.MapGetBool(g, "responder")
+	data.Agee = utils.MapGetBool(g, "agee")
+	data.Nsxn = utils.MapGetBool(g, "nsxn")
+	data.Modelid = utils.MapGetString(g, "modelid")
+	data.Push = utils.MapGetBool(g, "push")
+	data.Appflow = utils.MapGetBool(g, "appflow")
+	data.Cloudbridge = utils.MapGetBool(g, "cloudbridge")
+	data.Cloudbridgeappliance = utils.MapGetBool(g, "cloudbridgeappliance")
+	data.Cloudextenderappliance = utils.MapGetBool(g, "cloudextenderappliance")
+	data.Isis = utils.MapGetBool(g, "isis")
+	data.Cluster = utils.MapGetBool(g, "cluster")
+	data.Ch = utils.MapGetBool(g, "ch")
+	data.Appqoe = utils.MapGetBool(g, "appqoe")
+	data.Appflowica = utils.MapGetBool(g, "appflowica")
+	data.Isstandardlic = utils.MapGetBool(g, "isstandardlic")
+	data.Isenterpriselic = utils.MapGetBool(g, "isenterpriselic")
+	data.Isplatinumlic = utils.MapGetBool(g, "isplatinumlic")
+	data.Issgwylic = utils.MapGetBool(g, "issgwylic")
+	data.Isswglic = utils.MapGetBool(g, "isswglic")
+	data.Feo = utils.MapGetBool(g, "feo")
+	data.Lsn = utils.MapGetBool(g, "lsn")
+	data.Licensingmode = utils.MapGetString(g, "licensingmode")
+	data.Rdpproxy = utils.MapGetBool(g, "rdpproxy")
+	data.Rep = utils.MapGetBool(g, "rep")
+	data.Urlfiltering = utils.MapGetBool(g, "urlfiltering")
+	data.Videooptimization = utils.MapGetBool(g, "videooptimization")
+	data.Forwardproxy = utils.MapGetBool(g, "forwardproxy")
+	data.Sslinterception = utils.MapGetBool(g, "sslinterception")
+	data.Remotecontentinspection = utils.MapGetBool(g, "remotecontentinspection")
+	data.Adaptivetcp = utils.MapGetBool(g, "adaptivetcp")
+	data.Cqa = utils.MapGetBool(g, "cqa")
+	data.Bot = utils.MapGetBool(g, "bot")
+	data.Apigateway = utils.MapGetBool(g, "apigateway")
 
-	// Set ID for the datasource
+	// Read-only license metadata.
+	data.Cloudsubscriptionimage = utils.MapGetString(g, "cloudsubscriptionimage")
+	data.Daystoexpiration = utils.MapGetInt64(g, "daystoexpiration")
+	data.Daystolasenforcement = utils.MapGetInt64(g, "daystolasenforcement")
+
+	// nslicense is a singleton; use a fixed ID.
 	data.Id = types.StringValue("nslicense")
-
-	return data
 }
 
 func NslicenseDataSourceSchema() schema.Schema {
@@ -607,6 +391,20 @@ func NslicenseDataSourceSchema() schema.Schema {
 			"apigateway": schema.BoolAttribute{
 				Computed:    true,
 				Description: "API Gateway feature is licensed",
+			},
+
+			// Read-only (GET-only) license metadata surfaced by the data source.
+			"cloudsubscriptionimage": schema.StringAttribute{
+				Computed:    true,
+				Description: "Cloud Subscription Image (YES/NO). Null when the appliance omits it.",
+			},
+			"daystoexpiration": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Days to license expiration. Null when the appliance omits it.",
+			},
+			"daystolasenforcement": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Days to expiration for LAS enforcement. Null when the appliance omits it.",
 			},
 		},
 	}

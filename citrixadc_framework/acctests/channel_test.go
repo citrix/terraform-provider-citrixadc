@@ -308,6 +308,8 @@ func TestAccChannelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_channel.tf_channel_ds", "channelid", "LA/3"),
 					resource.TestCheckResourceAttr("data.citrixadc_channel.tf_channel_ds", "tagall", "ON"),
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_channel.tf_channel_ds", "id"),
 				),
 			},
 		},

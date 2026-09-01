@@ -90,3 +90,13 @@ In addition to the argument, the following attributes are available:
 * `rtsptunnel` - Enable or disable RTSP tunneling.
 * `weblog` - Enable or disable web logging.
 * `websocket` - Enable or disable WebSocket support.
+
+### Read-only nshttpprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nshttpprofile` resource). They are all GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `refcnt` - Number of entities using this profile.
+* `builtin` - Flag to determine if the HTTP profile is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `apdexsvrresptimethreshold` - Satisfactory threshold (T) for server response time in milliseconds to be used for APDEX calculations.
+* `dropinvalreqswarning` - Display warning if Drop invalid reqs is disabled in the profile.
+* `feature` - The feature to be checked while applying this configuration.

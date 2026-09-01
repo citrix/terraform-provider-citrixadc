@@ -318,6 +318,9 @@ func TestAccNspartitionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.citrixadc_nspartition.tf_nspartition_ds", "maxbandwidth"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_nspartition.tf_nspartition_ds", "maxconn"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_nspartition.tf_nspartition_ds", "maxmemlimit"),
+					// Read-only metadata exposed only by the data source. partitionid
+					// is always assigned to a freshly-created partition.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nspartition.tf_nspartition_ds", "partitionid"),
 				),
 			},
 		},

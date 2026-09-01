@@ -35,7 +35,7 @@ func (d *AuthenticationvserverAuthenticationsamlidppolicyBindingDataSource) Sche
 }
 
 func (d *AuthenticationvserverAuthenticationsamlidppolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationvserverAuthenticationsamlidppolicyBindingResourceModel
+	var data AuthenticationvserverAuthenticationsamlidppolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -84,7 +84,7 @@ func (d *AuthenticationvserverAuthenticationsamlidppolicyBindingDataSource) Read
 		return
 	}
 
-	authenticationvserver_authenticationsamlidppolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationsamlidppolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

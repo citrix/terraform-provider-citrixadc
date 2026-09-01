@@ -350,6 +350,8 @@ func TestAccVpnvserver_aaapreauthenticationpolicy_bindingDataSource_basic(t *tes
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "name", "tf_vpnvserverexample"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "policy", "tf_aaapolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "priority", "40"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_aaapreauthenticationpolicy_binding.tf_binding", "id"),
 				),
 			},
 		},

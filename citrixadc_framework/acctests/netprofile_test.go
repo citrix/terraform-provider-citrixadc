@@ -380,6 +380,8 @@ func TestAccNetprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_netprofile.tf_netprofile_ds", "proxyprotocol", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_netprofile.tf_netprofile_ds", "proxyprotocoltxversion", "V1"),
 					resource.TestCheckResourceAttr("data.citrixadc_netprofile.tf_netprofile_ds", "srcippersistency", "ENABLED"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_netprofile.tf_netprofile_ds", "id"),
 				),
 			},
 		},

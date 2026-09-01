@@ -49,6 +49,15 @@ In addition to the arguments, the following attributes are available:
     * Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.
 
+### Read-only videooptimizationdetectionpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_videooptimizationdetectionpolicy` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `builtin` - Flag to determine if the videooptimization detection policy is built-in or not. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+
 ## Import
 
 A videooptimizationdetectionpolicy can be imported using its name, e.g.

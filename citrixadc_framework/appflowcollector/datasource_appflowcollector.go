@@ -35,7 +35,7 @@ func (d *AppflowcollectorDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *AppflowcollectorDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppflowcollectorResourceModel
+	var data AppflowcollectorDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *AppflowcollectorDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	appflowcollectorSetAttrFromGet(ctx, &data, getResponseData)
+	appflowcollectorDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

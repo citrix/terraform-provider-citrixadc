@@ -403,6 +403,11 @@ func TestAccGslbservicegroup_gslbservicegroupmember_bindingDataSource_basic(t *t
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "servername", "tf_server"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "port", "60"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "ip", "192.168.11.13"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// svrstate is a state field always populated for a live member.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbservicegroup_gslbservicegroupmember_binding.tf_binding", "svrstate"),
 				),
 			},
 		},

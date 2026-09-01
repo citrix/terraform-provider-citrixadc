@@ -206,6 +206,8 @@ func TestAccAppfwxmlschemaDataSource_basic(t *testing.T) {
 				Config: testAccAppfwxmlschemaDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlschema.tf_appfwxmlschema_ds", "name", "tf_appfwxmlschema_ds"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwxmlschema.tf_appfwxmlschema_ds", "id"),
 				),
 			},
 		},

@@ -322,6 +322,9 @@ func TestAccDnsaction64DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaction64.dnsaction64_datasource", "prefix", "64:ff9c::/96"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaction64.dnsaction64_datasource", "mappedrule", "DNS.RR.RDATA.IP.IN_SUBNET(10.0.0.0/8)"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaction64.dnsaction64_datasource", "excluderule", "DNS.RR.RDATA.IPV6.IN_SUBNET(::ffff:0:0/96)"),
+					// Universal runtime-binding proof (read-only builtin/feature are
+					// config-dependent and may be omitted by the appliance).
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsaction64.dnsaction64_datasource", "id"),
 				),
 			},
 		},

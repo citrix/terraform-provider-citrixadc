@@ -380,6 +380,8 @@ func TestAccVrid6_interface_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "vrid_id", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "ifnum", "1/1"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vrid6_interface_binding.tf_vrid6_interface_binding", "id"),
 				),
 			},
 		},

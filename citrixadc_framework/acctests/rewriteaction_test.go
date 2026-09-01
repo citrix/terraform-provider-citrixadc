@@ -317,6 +317,7 @@ func TestAccRewriteactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteaction.tf_rewrite_action_ds", "type", "delete"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteaction.tf_rewrite_action_ds", "target", "HTTP.REQ.HOSTNAME"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteaction.tf_rewrite_action_ds", "comment", "datasource test comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewriteaction.tf_rewrite_action_ds", "id"),
 				),
 			},
 		},

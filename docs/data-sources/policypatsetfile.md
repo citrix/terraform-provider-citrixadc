@@ -35,3 +35,13 @@ In addition to the arguments, the following attributes are available:
 * `delimiter` - Patset file patterns delimiter.
 * `overwrite` - Overwrites the existing file.
 * `src` - URL in protocol, host, path, and file name format from where the patset file was imported.
+
+### Read-only policypatsetfile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_policypatsetfile` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `totalpatterns` - Total number of patterns in the patset file.
+* `boundpatterns` - Total number of patterns bound to a patset.
+* `patsetname` - The patset with which the patsetfile is associated.
+* `bindstatuscode` - The status code of pattern bindings to patset.
+* `bindstatus` - The status of pattern bindings to patset.

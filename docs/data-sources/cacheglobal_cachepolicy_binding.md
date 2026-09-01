@@ -44,3 +44,10 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE. (To invoke a label associated with a virtual server, specify the name of the virtual server.)
 * `labeltype` - Type of policy label to invoke.
 * `precededefrules` - Specify whether this policy should be evaluated.
+
+### Read-only cacheglobal_cachepolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cacheglobal_cachepolicy_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `flowtype` - flowtype of the bound cache policy.
+* `numpol` - The number of policies bound to the bindpoint.

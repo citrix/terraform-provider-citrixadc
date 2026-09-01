@@ -48,6 +48,15 @@ In addition to the arguments, the following attributes are available:
 * `wiaredirection` - Allow default access or disable WIA scanner redirection.
 * `id` - The id of the icaaccessprofile. It has the same value as the `name` attribute.
 
+### Read-only icaaccessprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_icaaccessprofile` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `refcnt` - Number of entities using this accessprofile.
+* `builtin` - Indicates that the ICA accessprofile is a built-in (SYSTEM INTERNAL) type (`MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `isdefault` - A value of true is returned if it is a default accessprofile.
+
 
 ## Import
 

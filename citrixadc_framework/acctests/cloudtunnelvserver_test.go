@@ -194,6 +194,10 @@ func TestAccCloudtunnelvserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "servicetype", "TCP"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "listenpolicy", "none"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "listenpriority", "50"),
+					// id is the universal runtime-binding proof; state is a
+					// status field always populated for a created vserver.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "state"),
 				),
 			},
 		},

@@ -192,6 +192,8 @@ func TestAccSnmpmanagerDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_snmpmanager.tf_snmpmanager_ds", "ipaddress", "192.168.2.10"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpmanager.tf_snmpmanager_ds", "netmask", "255.255.255.255"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpmanager.tf_snmpmanager_ds", "id"),
 				),
 			},
 		},

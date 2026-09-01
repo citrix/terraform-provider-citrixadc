@@ -96,6 +96,11 @@ func TestAccSslactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslaction.foo", "name", "tf_sslaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslaction.foo", "clientauth", "DOCLIENTAUTH"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslaction.foo", "clientcertverification", "Mandatory"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslaction.foo", "id"),
+					// Read-only counter metadata exposed only by the data source;
+					// referencecount is always populated (0 for a freshly-created action).
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslaction.foo", "referencecount"),
 				),
 			},
 		},

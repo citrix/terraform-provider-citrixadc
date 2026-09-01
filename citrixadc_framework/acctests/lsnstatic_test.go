@@ -296,6 +296,12 @@ func TestAccLsnstaticDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "transportprotocol", "TCP"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "subscrip", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "subscrport", "3000"),
+					// Universal runtime-binding proof that the data source read
+					// resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "id"),
+					// status is a state field always populated (ACTIVE/INACTIVE)
+					// for an existing mapping.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "status"),
 				),
 			},
 		},

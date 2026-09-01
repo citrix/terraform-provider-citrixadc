@@ -273,6 +273,8 @@ func TestAccTmsessionparameterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTmsessionparameterDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// "id" is the universal runtime-binding proof (singleton static ID).
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmsessionparameter.tf_tmsessionparameter", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionparameter.tf_tmsessionparameter", "sesstimeout", "40"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionparameter.tf_tmsessionparameter", "defaultauthorizationaction", "ALLOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionparameter.tf_tmsessionparameter", "sso", "ON"),

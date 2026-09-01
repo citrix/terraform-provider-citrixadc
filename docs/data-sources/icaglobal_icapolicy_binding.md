@@ -39,3 +39,10 @@ In addition to the arguments, the following attributes are available:
 * `priority` - Specifies the priority of the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `globalbindtype` - The global bind point to which the policy is bound. Possible values: [ SYSTEM_GLOBAL, VPN_GLOBAL, RNAT_GLOBAL ]
+
+### Read-only icaglobal_icapolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_icaglobal_icapolicy_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `numpol` - The number of policies bound to the bindpoint.
+* `flowtype` - Flow type of the bound ICA policy.

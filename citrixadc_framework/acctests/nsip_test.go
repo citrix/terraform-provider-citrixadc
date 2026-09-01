@@ -482,6 +482,8 @@ func TestAccNsipDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "arp", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "icmp", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "snmp", "ENABLED"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsip.tf_nsip_ds", "id"),
 				),
 			},
 		},

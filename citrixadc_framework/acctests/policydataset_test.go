@@ -275,6 +275,7 @@ func TestAccPolicydatasetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPolicydatasetDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_policydataset.tf_dataset_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_policydataset.tf_dataset_ds", "name", "tf_dataset_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_policydataset.tf_dataset_ds", "type", "ipv4"),
 				),

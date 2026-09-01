@@ -53,3 +53,9 @@ The following attributes are available:
 * `v6persistmasklen` - Persistence mask to apply to source IPv6 addresses when creating source IP based persistence sessions.
 * `newname` - New name for the load balancing virtual server group.
 * `id` - The id of the lbgroup. It is a system-generated identifier.
+
+### Read-only lbgroup metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbgroup` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `td` - Integer value that uniquely identifies the traffic domain in which the entity is configured. Defaults to 0 (default traffic domain).

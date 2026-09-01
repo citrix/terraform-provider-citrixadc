@@ -250,6 +250,7 @@ func TestAcccontentinspectionglobal_contentinspectionpolicy_bindingDataSource_ba
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding", "policyname", "tf_contentinspectionpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding", "type", "REQ_OVERRIDE"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_contentinspectionglobal_contentinspectionpolicy_binding.tf_contentinspectionglobal_contentinspectionpolicy_binding", "id"),
 				),
 			},
 		},

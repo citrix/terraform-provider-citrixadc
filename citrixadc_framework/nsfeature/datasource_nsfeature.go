@@ -36,7 +36,7 @@ func (d *NsfeatureDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *NsfeatureDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NsfeatureResourceModel
+	var data NsfeatureDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -57,7 +57,7 @@ func (d *NsfeatureDataSource) Read(ctx context.Context, req datasource.ReadReque
 		enabledFeatures[i] = strings.ToLower(val)
 	}
 
-	nsfeatureSetAttrFromGet(ctx, &data, enabledFeatures)
+	nsfeatureDataSourceSetAttrFromGet(ctx, &data, enabledFeatures)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

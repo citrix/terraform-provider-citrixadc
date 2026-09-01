@@ -276,6 +276,8 @@ func TestAccLbmetrictable_metric_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "metric", "2.3.6.4.5"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "metrictable", "Table-Custom"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "snmpoid", "1.2.3.6.5"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmetrictable_metric_binding.tf_bind", "id"),
 				),
 			},
 		},

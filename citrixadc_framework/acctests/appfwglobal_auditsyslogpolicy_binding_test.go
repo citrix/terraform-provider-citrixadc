@@ -260,6 +260,8 @@ func TestAccAppfwglobal_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) 
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding", "policyname", "tf_auditsyslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding", "priority", "90"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding", "state", "ENABLED"),
+					// Universal runtime-binding proof (data source id is always set).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwglobal_auditsyslogpolicy_binding.tf_binding", "id"),
 				),
 			},
 		},

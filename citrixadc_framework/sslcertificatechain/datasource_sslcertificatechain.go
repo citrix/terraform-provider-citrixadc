@@ -35,7 +35,7 @@ func (d *SslcertificatechainDataSource) Schema(ctx context.Context, req datasour
 }
 
 func (d *SslcertificatechainDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslcertificatechainResourceModel
+	var data SslcertificatechainDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *SslcertificatechainDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	sslcertificatechainSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	sslcertificatechainDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

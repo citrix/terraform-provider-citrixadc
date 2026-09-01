@@ -335,6 +335,7 @@ func TestAccAuthenticationnegotiateactionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthenticationnegotiateactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "name", "tf_negotiateaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "domain", "DomainName"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationnegotiateaction.tf_negotiateaction_ds", "domainuser", "username"),

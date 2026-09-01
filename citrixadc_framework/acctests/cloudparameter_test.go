@@ -174,6 +174,8 @@ func TestAccCloudparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cloudparameter.tf_cloudparameter", "controllerport", "443"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudparameter.tf_cloudparameter", "deployment", "Production"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudparameter.tf_cloudparameter", "connectorresidence", "Aws"),
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cloudparameter.tf_cloudparameter", "id"),
 				),
 			},
 		},

@@ -192,6 +192,7 @@ func TestAccApispecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccApispecDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_apispec.tf_apispec", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_apispec.tf_apispec", "name", "tf_apispec"),
 					resource.TestCheckResourceAttr("data.citrixadc_apispec.tf_apispec", "file", "test_apispecfile"),
 					resource.TestCheckResourceAttr("data.citrixadc_apispec.tf_apispec", "type", "OAS"),

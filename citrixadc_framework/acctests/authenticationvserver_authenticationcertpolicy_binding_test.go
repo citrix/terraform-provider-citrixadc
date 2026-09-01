@@ -280,6 +280,7 @@ func TestAccAuthenticationvserverAuthenticationcertpolicyBindingDataSource_basic
 			{
 				Config: testAccAuthenticationvserverAuthenticationcertpolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", "policy", "tf_certpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationcertpolicy_binding.tf_bind", "priority", "90"),

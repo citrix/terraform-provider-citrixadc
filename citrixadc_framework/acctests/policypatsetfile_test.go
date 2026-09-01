@@ -217,6 +217,11 @@ func TestAccPolicypatsetfileDataSource_basic(t *testing.T) {
 				Config: testAccPolicypatsetfileDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_policypatsetfile.tf_policypatsetfile", "name", "tf_policypatsetfile"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policypatsetfile.tf_policypatsetfile", "id"),
+					// Read-only metadata exposed only by the data source. totalpatterns
+					// is a counter-style field always populated for an imported file.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policypatsetfile.tf_policypatsetfile", "totalpatterns"),
 				),
 			},
 		},

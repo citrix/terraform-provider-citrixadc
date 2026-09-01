@@ -246,6 +246,10 @@ func TestAccLocationparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_locationparameter.tf_locationpara", "context", "geographic"),
 					resource.TestCheckResourceAttr("data.citrixadc_locationparameter.tf_locationpara", "q1label", "asia"),
 					resource.TestCheckResourceAttr("data.citrixadc_locationparameter.tf_locationpara", "matchwildcardtoany", "YES"),
+					// Universal runtime-binding proof that the data source read
+					// resolved (read-only metadata fields are instance/config
+					// dependent and may be null, so only id is asserted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_locationparameter.tf_locationpara", "id"),
 				),
 			},
 		},

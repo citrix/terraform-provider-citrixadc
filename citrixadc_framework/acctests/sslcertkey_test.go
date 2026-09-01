@@ -638,6 +638,16 @@ func TestAccSslcertkeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "key", "/nsconfig/ssl/servercert1.key"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "notificationperiod", "40"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "expirymonitor", "ENABLED"),
+					// Read-only cert metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "serial"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "subject"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "issuer"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "daystoexpiration"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "status"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "signaturealg"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "publickeysize"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "certificatetype.#"),
 				),
 			},
 		},

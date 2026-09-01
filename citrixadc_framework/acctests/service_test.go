@@ -459,6 +459,10 @@ func TestAccServiceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_service.tf_service", "name", "test_service_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_service.tf_service", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_service.tf_service", "port", "80"),
+					// Read-only operational/status metadata exposed only by the data
+					// source (the resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_service.tf_service", "svrstate"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_service.tf_service", "id"),
 				),
 			},
 		},

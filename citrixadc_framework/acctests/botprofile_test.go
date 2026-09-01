@@ -394,6 +394,7 @@ func TestAccBotprofileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBotprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_botprofile.tf_botprofile_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "name", "tf_botprofile_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "addcookieflags", "secure"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile.tf_botprofile_ds", "dfprequestlimit", "25"),

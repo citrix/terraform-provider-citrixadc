@@ -164,6 +164,8 @@ func TestAccAppflowcollectorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appflowcollector.tf_appflowcollector", "ipaddress", "192.168.2.3"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowcollector.tf_appflowcollector", "transport", "logstream"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowcollector.tf_appflowcollector", "port", "80"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowcollector.tf_appflowcollector", "id"),
 				),
 			},
 		},

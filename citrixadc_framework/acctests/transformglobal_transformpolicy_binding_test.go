@@ -325,6 +325,10 @@ func TestAccTransformglobal_transformpolicy_bindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "policyname", "tf_trans_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "priority", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "type", "REQ_DEFAULT"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "id"),
+					// Read-only (GET-only) counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "numpol"),
 				),
 			},
 		},

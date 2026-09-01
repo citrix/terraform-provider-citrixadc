@@ -243,6 +243,10 @@ func TestAccLsnparameterDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_lsnparameter.tf_lsnparameter_ds", "sessionsync", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsnparameter.tf_lsnparameter_ds", "subscrsessionremoval", "ENABLED"),
+					// Universal runtime-binding proof that the data source read
+					// resolved (read-only metadata fields are instance/config
+					// dependent and may be null, so only id is asserted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsnparameter.tf_lsnparameter_ds", "id"),
 				),
 			},
 		},

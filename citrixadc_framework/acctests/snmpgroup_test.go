@@ -243,6 +243,8 @@ func TestAccSnmpgroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "name", "tf_group_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "securitylevel", "noAuthNoPriv"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "readviewname", "tf_view_ds"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpgroup.tf_snmpgroup_ds", "id"),
 				),
 			},
 		},

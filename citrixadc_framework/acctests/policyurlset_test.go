@@ -233,6 +233,11 @@ func TestAccPolicyurlsetDataSource_basic(t *testing.T) {
 				Config: testAccPolicyurlsetDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_policyurlset.tf_policyurlset", "name", "tf_policyurlset_ds"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyurlset.tf_policyurlset", "id"),
+					// Read-only metadata exposed only by the data source. patterncount
+					// is a counter-style field always populated for an imported urlset.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyurlset.tf_policyurlset", "patterncount"),
 				),
 			},
 		},

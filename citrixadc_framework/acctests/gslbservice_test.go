@@ -656,6 +656,7 @@ func TestAccGslbserviceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGslbserviceDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbservice.tf_gslbservice_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "servicename", "tf_gslbservice_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "ipaddress", "172.16.1.102"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "port", "80"),

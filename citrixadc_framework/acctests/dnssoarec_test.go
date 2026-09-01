@@ -93,6 +93,8 @@ func TestAccDnssoarecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnssoarecDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "domain", "test.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "originserver", "10.2.3.5"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssoarec.tf_dnssoarec_ds", "contact", "other"),

@@ -1,8 +1,43 @@
 package nscentralmanagementserver
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// NscentralmanagementserverDataSourceModel is the data-source-specific model,
+// decoupled from NscentralmanagementserverResourceModel. A data source is a pure
+// read surface, so it exposes the read/write attributes (as Computed outputs)
+// AND the read-only ADM-service metadata the resource deliberately omits
+// (instanceid, customerid, admserviceenvironment, admserviceconnectionstatus).
+type NscentralmanagementserverDataSourceModel struct {
+	Id                   types.String `tfsdk:"id"`
+	Activationcode       types.String `tfsdk:"activationcode"`
+	Adcpassword          types.String `tfsdk:"adcpassword"`
+	AdcpasswordWo        types.String `tfsdk:"adcpassword_wo"`
+	AdcpasswordWoVersion types.Int64  `tfsdk:"adcpassword_wo_version"`
+	Adcusername          types.String `tfsdk:"adcusername"`
+	Deviceprofilename    types.String `tfsdk:"deviceprofilename"`
+	Ipaddress            types.String `tfsdk:"ipaddress"`
+	Password             types.String `tfsdk:"password"`
+	PasswordWo           types.String `tfsdk:"password_wo"`
+	PasswordWoVersion    types.Int64  `tfsdk:"password_wo_version"`
+	Servername           types.String `tfsdk:"servername"`
+	Type                 types.String `tfsdk:"type"`
+	Username             types.String `tfsdk:"username"`
+	Validatecert         types.String `tfsdk:"validatecert"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/nscentralmanagementserver.json). Never settable; populated from GET.
+	Instanceid                 types.String `tfsdk:"instanceid"`
+	Customerid                 types.String `tfsdk:"customerid"`
+	Admserviceenvironment      types.String `tfsdk:"admserviceenvironment"`
+	Admserviceconnectionstatus types.String `tfsdk:"admserviceconnectionstatus"`
+}
 
 func NscentralmanagementserverDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -18,10 +53,12 @@ func NscentralmanagementserverDataSourceSchema() schema.Schema {
 			"adcpassword": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "ADC password used to create device profile on ADM",
 			},
 			"adcpassword_wo": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "ADC password used to create device profile on ADM",
 			},
 			"adcpassword_wo_version": schema.Int64Attribute{
@@ -47,10 +84,12 @@ func NscentralmanagementserverDataSourceSchema() schema.Schema {
 			"password": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "Password for access to central management server. Required for any user account.",
 			},
 			"password_wo": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "Password for access to central management server. Required for any user account.",
 			},
 			"password_wo_version": schema.Int64Attribute{
@@ -77,6 +116,59 @@ func NscentralmanagementserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "validate the server certificate for secure SSL connections.",
 			},
+
+			// Read-only (GET-only) ADM-service metadata surfaced by the data source.
+			"instanceid": schema.StringAttribute{
+				Computed:    true,
+				Description: "Instance ID of the customer provided by Trust.",
+			},
+			"customerid": schema.StringAttribute{
+				Computed:    true,
+				Description: "Customer ID of the citrix cloud customer.",
+			},
+			"admserviceenvironment": schema.StringAttribute{
+				Computed:    true,
+				Description: "ADM service environment (PRODUCTION/STAGING/DEV).",
+			},
+			"admserviceconnectionstatus": schema.StringAttribute{
+				Computed:    true,
+				Description: "Built-in agent's (mastools) connection status to ADM service.",
+			},
 		},
 	}
+}
+
+// nscentralmanagementserverDataSourceSetAttrFromGet projects a NITRO
+// nscentralmanagementserver GET response onto the data-source model. Attributes
+// are filled from the GET (or left Null when the GET omits them) via the shared
+// utils.MapGet* helpers; secret/write-only inputs the GET never returns are Null.
+func nscentralmanagementserverDataSourceSetAttrFromGet(ctx context.Context, data *NscentralmanagementserverDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nscentralmanagementserverDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["type"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Type = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Activationcode = utils.MapGetString(g, "activationcode")
+	data.Adcusername = utils.MapGetString(g, "adcusername")
+	data.Deviceprofilename = utils.MapGetString(g, "deviceprofilename")
+	data.Ipaddress = utils.MapGetString(g, "ipaddress")
+	data.Servername = utils.MapGetString(g, "servername")
+	data.Username = utils.MapGetString(g, "username")
+	data.Validatecert = utils.MapGetString(g, "validatecert")
+
+	// Secret / write-only inputs the GET never returns -> Null.
+	data.Adcpassword = types.StringNull()
+	data.AdcpasswordWo = types.StringNull()
+	data.AdcpasswordWoVersion = types.Int64Null()
+	data.Password = types.StringNull()
+	data.PasswordWo = types.StringNull()
+	data.PasswordWoVersion = types.Int64Null()
+
+	// Read-only ADM-service metadata.
+	data.Instanceid = utils.MapGetString(g, "instanceid")
+	data.Customerid = utils.MapGetString(g, "customerid")
+	data.Admserviceenvironment = utils.MapGetString(g, "admserviceenvironment")
+	data.Admserviceconnectionstatus = utils.MapGetString(g, "admserviceconnectionstatus")
 }

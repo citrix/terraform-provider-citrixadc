@@ -47,3 +47,10 @@ The following attributes are available:
 * `trapurlinterval` - Time in seconds after which trap URL is updated.
 * `trapurllength` - Length of the auto-generated trap URL.
 * `id` - The id of the botsettings. It is a system-generated identifier.
+
+### Read-only botsettings metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_botsettings` resource) and are always `Computed`. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if the bot engine setting is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

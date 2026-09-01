@@ -297,6 +297,8 @@ func TestAccNshttpparamDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "conmultiplex", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "http2serverside", "OFF"),
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "ignoreconnectcodingscheme", "ENABLED"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nshttpparam.tf_nshttpparam_ds", "id"),
 				),
 			},
 		},

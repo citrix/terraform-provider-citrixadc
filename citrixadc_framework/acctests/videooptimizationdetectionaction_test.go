@@ -302,6 +302,8 @@ func TestAccVideooptimizationdetectionactionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionaction.tf_detectionaction", "name", "tf_videooptimizationdetectionaction"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionaction.tf_detectionaction", "type", "clear_text_pd"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationdetectionaction.tf_detectionaction", "id"),
 				),
 			},
 		},

@@ -189,6 +189,9 @@ func TestAccSystemextramgmtcpuDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "id", "systemextramgmtcpu-config"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "enabled", "false"),
+					// Read-only state that is always present in the GET response.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "configuredstate"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "effectivestate"),
 				),
 			},
 		},

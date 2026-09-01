@@ -287,6 +287,7 @@ func TestAccIpv6DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.citrixadc_ipv6.tf_ipv6_ds", "ndbasereachtime"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_ipv6.tf_ipv6_ds", "routerredirection"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_ipv6.tf_ipv6_ds", "td"),
+					// Read-only ND6 timers the appliance always returns for global ipv6.
 				),
 			},
 		},

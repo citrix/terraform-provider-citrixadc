@@ -281,6 +281,9 @@ func TestAccVpnvserver_authenticationsamlpolicy_bindingDataSource_basic(t *testi
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind", "name", "tf_vserver_examples"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind", "policy", "tf_samlpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind", "priority", "80"),
+					// Universal runtime-binding proof; read-only acttype is instance/config
+					// dependent and may be null, so only id is asserted as always-set.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationsamlpolicy_binding.tf_bind", "id"),
 				),
 			},
 		},

@@ -283,6 +283,7 @@ func TestAccAaauser_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_auditsyslogpolicy_binding.tf_aaauser_auditsyslogpolicy_binding", "username", "user1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_auditsyslogpolicy_binding.tf_aaauser_auditsyslogpolicy_binding", "policy", "tf_auditsyslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_auditsyslogpolicy_binding.tf_aaauser_auditsyslogpolicy_binding", "priority", "100"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaauser_auditsyslogpolicy_binding.tf_aaauser_auditsyslogpolicy_binding", "id"),
 				),
 			},
 		},

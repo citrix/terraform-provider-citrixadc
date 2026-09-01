@@ -35,7 +35,7 @@ func (d *SslpolicyDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *SslpolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslpolicyResourceModel
+	var data SslpolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *SslpolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	sslpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	sslpolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

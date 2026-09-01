@@ -188,6 +188,8 @@ func TestAccDnstxtrecDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_dnstxtrec.dnstxtrec", "domain", "tfacc-ds-txtrec-test.local"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnstxtrec.dnstxtrec", "ttl", "3600"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnstxtrec.dnstxtrec", "id"),
 				),
 			},
 		},

@@ -43,3 +43,9 @@ In addition to the arguments, the following attributes are available:
 * `invoke` - Invoke policies bound to a virtual server or a policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority.
 * `labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
 * `labeltype` - Type of policy label invocation.
+
+### Read-only cmpglobal_cmppolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cmpglobal_cmppolicy_binding` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `numpol` - The number of policies bound to the bindpoint.

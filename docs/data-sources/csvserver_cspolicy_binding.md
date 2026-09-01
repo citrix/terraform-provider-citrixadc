@@ -44,3 +44,13 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the label invoked.
 * `labeltype` - The invocation type.
 * `targetlbvserver` - Target vserver name.
+
+### Read-only csvserver_cspolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_csvserver_cspolicy_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `rule` - Rule.
+* `cookieipport` - Vserver id of the lb vserver that is inserted into the set-cookie HTTP header.
+* `hits` - Number of hits.
+* `pipolicyhits` - Number of hits.
+* `vserverid` - Vserver Id of vserver.

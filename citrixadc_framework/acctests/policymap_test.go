@@ -213,6 +213,9 @@ func TestAccPolicymapDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "td", "www.google.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "su", "/www.citrix.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "tu", "/www.google.com"),
+					// Universal runtime-binding proof. targetname is not asserted
+					// because it may be omitted for a basic object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policymap.tf_policymap_ds", "id"),
 				),
 			},
 		},

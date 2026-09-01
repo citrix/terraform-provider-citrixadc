@@ -35,7 +35,7 @@ func (d *CloudtunnelvserverDataSource) Schema(ctx context.Context, req datasourc
 }
 
 func (d *CloudtunnelvserverDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CloudtunnelvserverResourceModel
+	var data CloudtunnelvserverDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *CloudtunnelvserverDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	cloudtunnelvserverSetAttrFromGet(ctx, &data, getResponseData)
+	cloudtunnelvserverDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -265,6 +265,9 @@ func TestAccRnat_nsip_bindingDataSource(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", "name", "my_rnat"),
 					resource.TestCheckResourceAttr("data.citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", "natip", "10.222.74.200"),
+					// Universal runtime-binding proof; read-only GET-only fields
+					// (ownergroup/td) may be omitted for a basic standalone binding.
+					resource.TestCheckResourceAttrSet("data.citrixadc_rnat_nsip_binding.tf_rnat_nsip_binding", "id"),
 				),
 			},
 		},

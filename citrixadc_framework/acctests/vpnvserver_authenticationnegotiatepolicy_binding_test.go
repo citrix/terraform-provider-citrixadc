@@ -342,6 +342,7 @@ func TestAccVpnvserver_authenticationnegotiatepolicy_bindingDataSource_basic(t *
 			{
 				Config: testAccVpnvserver_authenticationnegotiatepolicy_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "name", "tf_vpnvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "policy", "tf_negotiatepolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationnegotiatepolicy_binding.tf_binding", "priority", "33"),

@@ -286,6 +286,8 @@ func TestAccNd6ravariablesDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables.tf_nd6ravariables_data", "ceaserouteradv", "NO"),
 					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables.tf_nd6ravariables_data", "onlyunicastrtadvresponse", "NO"),
 					resource.TestCheckResourceAttr("data.citrixadc_nd6ravariables.tf_nd6ravariables_data", "srclinklayeraddroption", "NO"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nd6ravariables.tf_nd6ravariables_data", "id"),
 				),
 			},
 		},

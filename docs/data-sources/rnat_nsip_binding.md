@@ -37,3 +37,10 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the rnat_nsip_binding. It is a system-generated identifier.
 
+### Read-only rnat_nsip_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_rnat_nsip_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `ownergroup` - The owner node group in a Cluster for this rnat rule.
+* `td` - Integer value that uniquely identifies the traffic domain in which the entity is configured. Omitted (null) for the default traffic domain (ID 0).
+

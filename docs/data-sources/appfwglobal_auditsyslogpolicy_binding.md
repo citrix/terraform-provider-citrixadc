@@ -53,3 +53,9 @@ In addition to the arguments, the following attributes are available:
   * reqvserver. Invoke the unnamed policy label associated with the specified request virtual server.
   * policylabel. Invoke the specified user-defined policy label.
 * `state` - Enable or disable the binding to activate or deactivate the policy. This is applicable to classic policies only.
+
+### Read-only appfwglobal_auditsyslogpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwglobal_auditsyslogpolicy_binding` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `policytype` - Policy type. Possible values: [ Classic Policy, Advanced Policy ].

@@ -1,8 +1,58 @@
 package lbparameter
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// LbparameterDataSourceModel is the data-source-specific model, decoupled from
+// LbparameterResourceModel. A data source is a pure read surface (Read only), so
+// it exposes the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits
+// (sessionsthreshold, builtin, feature, adccookieattributewarningmsg,
+// lbhashalgowinsize, overridepersistencyfororder).
+type LbparameterDataSourceModel struct {
+	Id                            types.String `tfsdk:"id"`
+	Allowboundsvcremoval          types.String `tfsdk:"allowboundsvcremoval"`
+	Computedadccookieattribute    types.String `tfsdk:"computedadccookieattribute"`
+	Consolidatedlconn             types.String `tfsdk:"consolidatedlconn"`
+	Cookiepassphrase              types.String `tfsdk:"cookiepassphrase"`
+	CookiepassphraseWo            types.String `tfsdk:"cookiepassphrase_wo"`
+	CookiepassphraseWoVersion     types.Int64  `tfsdk:"cookiepassphrase_wo_version"`
+	Dbsttl                        types.Int64  `tfsdk:"dbsttl"`
+	Dropmqttjumbomessage          types.String `tfsdk:"dropmqttjumbomessage"`
+	Httponlycookieflag            types.String `tfsdk:"httponlycookieflag"`
+	Lbhashalgorithm               types.String `tfsdk:"lbhashalgorithm"`
+	Lbhashfingers                 types.Int64  `tfsdk:"lbhashfingers"`
+	Literaladccookieattribute     types.String `tfsdk:"literaladccookieattribute"`
+	Maxpipelinenat                types.Int64  `tfsdk:"maxpipelinenat"`
+	Monitorconnectionclose        types.String `tfsdk:"monitorconnectionclose"`
+	Monitorskipmaxclient          types.String `tfsdk:"monitorskipmaxclient"`
+	Preferdirectroute             types.String `tfsdk:"preferdirectroute"`
+	Proximityfromself             types.String `tfsdk:"proximityfromself"`
+	Radiusmessageauthenticator    types.String `tfsdk:"radiusmessageauthenticator"`
+	Retainservicestate            types.String `tfsdk:"retainservicestate"`
+	Startuprrfactor               types.Int64  `tfsdk:"startuprrfactor"`
+	Storemqttclientidandusername  types.String `tfsdk:"storemqttclientidandusername"`
+	Undefaction                   types.String `tfsdk:"undefaction"`
+	Useencryptedpersistencecookie types.String `tfsdk:"useencryptedpersistencecookie"`
+	Useportforhashlb              types.String `tfsdk:"useportforhashlb"`
+	Usesecuredpersistencecookie   types.String `tfsdk:"usesecuredpersistencecookie"`
+	Vserverspecificmac            types.String `tfsdk:"vserverspecificmac"`
+
+	// Read-only (GET-only) metadata from the NITRO read-only set
+	// (zion73x_readonly/lbparameter.json). Never settable; populated from GET.
+	Sessionsthreshold            types.Int64  `tfsdk:"sessionsthreshold"`
+	Builtin                      types.List   `tfsdk:"builtin"`
+	Feature                      types.String `tfsdk:"feature"`
+	Adccookieattributewarningmsg types.String `tfsdk:"adccookieattributewarningmsg"`
+	Lbhashalgowinsize            types.Int64  `tfsdk:"lbhashalgowinsize"`
+	Overridepersistencyfororder  types.String `tfsdk:"overridepersistencyfororder"`
+}
 
 func LbparameterDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -139,6 +189,84 @@ func LbparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Allow a MAC-mode virtual server to accept traffic returned by an intermediary device, such as a firewall, to which the traffic was previously forwarded by another MAC-mode virtual server. The second virtual server can then distribute that traffic across the destination server farm. Also useful when load balancing Branch Repeater appliances.\nNote: The second virtual server can also send the traffic to another set of intermediary devices, such as another set of firewalls. If necessary, you can configure multiple MAC-mode virtual servers to pass traffic successively through multiple sets of intermediary devices.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"sessionsthreshold": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Upper-limit on the number of persistent sessions set by the administrator for this system.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine whether the lb parameter configuration is built-in. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]. A list of strings.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this configuration.",
+			},
+			"adccookieattributewarningmsg": schema.StringAttribute{
+				Computed:    true,
+				Description: "Describes any configuration issue with respect to the ns variable configured as part of set lb parameter.",
+			},
+			"lbhashalgowinsize": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Window size used in the LB hashing algorithm (DEFAULT). Default value: 16.",
+			},
+			"overridepersistencyfororder": schema.StringAttribute{
+				Computed:    true,
+				Description: "Whether persistency is overridden when order is configured for services or servicegroups. Possible values: [ YES, NO ]. Default value: NO.",
+			},
 		},
 	}
+}
+
+// lbparameterDataSourceSetAttrFromGet projects a NITRO lbparameter GET response
+// onto the data-source model. lbparameter is a singleton, so the ID is static.
+// Attributes are simply filled from the GET (or left Null when the GET omits
+// them) via the shared utils.MapGet* helpers.
+func lbparameterDataSourceSetAttrFromGet(ctx context.Context, data *LbparameterDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In lbparameterDataSourceSetAttrFromGet Function")
+
+	// lbparameter is a singleton -> static ID.
+	data.Id = types.StringValue("lbparameter-config")
+
+	// Read/write attributes as read-back outputs.
+	data.Allowboundsvcremoval = utils.MapGetString(g, "allowboundsvcremoval")
+	data.Computedadccookieattribute = utils.MapGetString(g, "computedadccookieattribute")
+	data.Consolidatedlconn = utils.MapGetString(g, "consolidatedlconn")
+	data.Dbsttl = utils.MapGetInt64(g, "dbsttl")
+	data.Dropmqttjumbomessage = utils.MapGetString(g, "dropmqttjumbomessage")
+	data.Httponlycookieflag = utils.MapGetString(g, "httponlycookieflag")
+	data.Lbhashalgorithm = utils.MapGetString(g, "lbhashalgorithm")
+	data.Lbhashfingers = utils.MapGetInt64(g, "lbhashfingers")
+	data.Literaladccookieattribute = utils.MapGetString(g, "literaladccookieattribute")
+	data.Maxpipelinenat = utils.MapGetInt64(g, "maxpipelinenat")
+	data.Monitorconnectionclose = utils.MapGetString(g, "monitorconnectionclose")
+	data.Monitorskipmaxclient = utils.MapGetString(g, "monitorskipmaxclient")
+	data.Preferdirectroute = utils.MapGetString(g, "preferdirectroute")
+	data.Proximityfromself = utils.MapGetString(g, "proximityfromself")
+	data.Radiusmessageauthenticator = utils.MapGetString(g, "radiusmessageauthenticator")
+	data.Retainservicestate = utils.MapGetString(g, "retainservicestate")
+	data.Startuprrfactor = utils.MapGetInt64(g, "startuprrfactor")
+	data.Storemqttclientidandusername = utils.MapGetString(g, "storemqttclientidandusername")
+	data.Undefaction = utils.MapGetString(g, "undefaction")
+	data.Useencryptedpersistencecookie = utils.MapGetString(g, "useencryptedpersistencecookie")
+	data.Useportforhashlb = utils.MapGetString(g, "useportforhashlb")
+	data.Usesecuredpersistencecookie = utils.MapGetString(g, "usesecuredpersistencecookie")
+	data.Vserverspecificmac = utils.MapGetString(g, "vserverspecificmac")
+
+	// cookiepassphrase / cookiepassphrase_wo(+version) are secret/write-only
+	// inputs the GET never returns -> Null.
+	data.Cookiepassphrase = types.StringNull()
+	data.CookiepassphraseWo = types.StringNull()
+	data.CookiepassphraseWoVersion = types.Int64Null()
+
+	// Read-only metadata.
+	data.Sessionsthreshold = utils.MapGetInt64(g, "sessionsthreshold")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
+	data.Adccookieattributewarningmsg = utils.MapGetString(g, "adccookieattributewarningmsg")
+	data.Lbhashalgowinsize = utils.MapGetInt64(g, "lbhashalgowinsize")
+	data.Overridepersistencyfororder = utils.MapGetString(g, "overridepersistencyfororder")
 }

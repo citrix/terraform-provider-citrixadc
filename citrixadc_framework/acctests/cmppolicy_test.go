@@ -228,6 +228,8 @@ func TestAccCmppolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "name", "tf_cmppolicy_datasource"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "rule", "HTTP.RES.HEADER(\"Content-Type\").CONTAINS(\"text\")"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "resaction", "COMPRESS"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cmppolicy.tf_cmppolicy_datasource", "id"),
 				),
 			},
 		},

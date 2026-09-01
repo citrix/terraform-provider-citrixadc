@@ -35,7 +35,7 @@ func (d *NsipDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 }
 
 func (d *NsipDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NsipResourceModel
+	var data NsipDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -86,7 +86,7 @@ func (d *NsipDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	nsipSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	nsipDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

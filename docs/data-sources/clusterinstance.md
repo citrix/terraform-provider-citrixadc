@@ -43,6 +43,30 @@ In addition to the arguments, the following attributes are available:
 * `secureheartbeats` - By turning on this option cluster heartbeats will have security enabled.
 * `syncstatusstrictmode` - strict mode for sync status of cluster. Depending on the the mode if there are any errors while applying config, sync status is displayed accordingly. By default the flag is disabled.
 
+### Read-only clusterinstance metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_clusterinstance` resource). Any attribute the appliance does not return is `null`.
+
+* `adminstate` - Cluster Admin State. Possible values: `ENABLED`, `DISABLED`.
+* `propstate` - Whether execution of commands on the cluster is enabled/disabled. This does not impact command execution on individual cluster nodes by using the NSIP.
+* `validmtu` - Correct MTU value that has to be set on the backplane.
+* `heterogeneousflag` - Indicates whether heterogeneity is detected in the cluster system. Possible values: `YES`, `NO`.
+* `operationalstate` - Cluster Operational State. Possible values: `ENABLED`, `DISABLED`.
+* `status` - Cluster operational status. Possible values: `DOWN`, `UP`, `PARTIAL-UP`, `UNKNOWN`.
+* `rsskeymismatch` - Whether there is an RSS key mismatch at cluster instance level.
+* `penummismatch` - Whether there is a PE number mismatch at cluster instance level.
+* `nodegroupstatewarning` - Whether all the cluster nodes are bound to a nodegroup with state set.
+* `licensemismatch` - Whether there is a License mismatch at cluster instance level.
+* `jumbonotsupported` - Whether the Jumbo framework is not supported at cluster instance level.
+* `clustertunnelmodemismatch` - Whether a different tunnel mode is configured on cluster nodes.
+* `clusternoheartbeatonnode` - Whether heartbeat is not seen on the backplane interface of a member node.
+* `clusternolinksetmbf` - Whether MBF is enabled but linkset is not configured.
+* `clusternospottedip` - Whether there is no spotted SNIP or MIP.
+* `clusterclipfailure` - Whether CLIP movement failed (CLIP is not attached to CCO).
+* `clusterhbhmacerrordetected` - Whether a cluster heartbeat HMAC error was detected (could be due to version mismatch).
+* `nodepenummismatch` - Whether there is a PE mismatch at cluster node level.
+* `operationalpropstate` - Cluster Operational Propagation State. Possible values: `UNKNOWN`, `ENABLED`, `DISABLED`, `AUTO DISABLED`, `AUTO DISABLED (Disk Encryption Mismatch)`.
+
 ## Import
 
 A clusterinstance can be imported using its clid, e.g.

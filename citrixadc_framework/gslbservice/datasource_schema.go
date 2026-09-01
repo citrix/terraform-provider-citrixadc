@@ -1,8 +1,82 @@
 package gslbservice
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// GslbserviceDataSourceModel is the data-source-specific model, decoupled from
+// GslbserviceResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits (gslb,
+// svrstate, svreffgslbstate, health/state metadata, ...). Every non-key
+// attribute is Computed.
+type GslbserviceDataSourceModel struct {
+	Id               types.String `tfsdk:"id"`
+	Appflowlog       types.String `tfsdk:"appflowlog"`
+	Cip              types.String `tfsdk:"cip"`
+	Cipheader        types.String `tfsdk:"cipheader"`
+	Clttimeout       types.Int64  `tfsdk:"clttimeout"`
+	Cnameentry       types.String `tfsdk:"cnameentry"`
+	Comment          types.String `tfsdk:"comment"`
+	Cookietimeout    types.Int64  `tfsdk:"cookietimeout"`
+	Delay            types.Int64  `tfsdk:"delay"`
+	Downstateflush   types.String `tfsdk:"downstateflush"`
+	Hashid           types.Int64  `tfsdk:"hashid"`
+	Healthmonitor    types.String `tfsdk:"healthmonitor"`
+	Ip               types.String `tfsdk:"ip"`
+	Ipaddress        types.String `tfsdk:"ipaddress"`
+	Maxaaausers      types.Int64  `tfsdk:"maxaaausers"`
+	Maxbandwidth     types.Int64  `tfsdk:"maxbandwidth"`
+	Maxclient        types.Int64  `tfsdk:"maxclient"`
+	Monitornamesvc   types.String `tfsdk:"monitornamesvc"`
+	Monthreshold     types.Int64  `tfsdk:"monthreshold"`
+	Naptrdomainttl   types.Int64  `tfsdk:"naptrdomainttl"`
+	Naptrorder       types.Int64  `tfsdk:"naptrorder"`
+	Naptrpreference  types.Int64  `tfsdk:"naptrpreference"`
+	Naptrreplacement types.String `tfsdk:"naptrreplacement"`
+	Naptrservices    types.String `tfsdk:"naptrservices"`
+	Port             types.Int64  `tfsdk:"port"`
+	Publicip         types.String `tfsdk:"publicip"`
+	Publicport       types.Int64  `tfsdk:"publicport"`
+	Servername       types.String `tfsdk:"servername"`
+	Servicename      types.String `tfsdk:"servicename"` // Required lookup key
+	Servicetype      types.String `tfsdk:"servicetype"`
+	Sitename         types.String `tfsdk:"sitename"`
+	Sitepersistence  types.String `tfsdk:"sitepersistence"`
+	Siteprefix       types.String `tfsdk:"siteprefix"`
+	State            types.String `tfsdk:"state"`
+	Svrtimeout       types.Int64  `tfsdk:"svrtimeout"`
+	Viewip           types.String `tfsdk:"viewip"`
+	Viewname         types.String `tfsdk:"viewname"`
+	Weight           types.Int64  `tfsdk:"weight"`
+	Lbmonitorbinding types.Set    `tfsdk:"lbmonitorbinding"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/gslbservice.json). Never settable; populated from GET.
+	Gslb                      types.String `tfsdk:"gslb"`
+	Svrstate                  types.String `tfsdk:"svrstate"`
+	Svreffgslbstate           types.String `tfsdk:"svreffgslbstate"`
+	Gslbthreshold             types.Int64  `tfsdk:"gslbthreshold"`
+	Gslbsvcstats              types.Int64  `tfsdk:"gslbsvcstats"`
+	Monstate                  types.String `tfsdk:"monstate"`
+	Preferredlocation         types.String `tfsdk:"preferredlocation"`
+	MonitorState              types.String `tfsdk:"monitor_state"`
+	Statechangetimesec        types.String `tfsdk:"statechangetimesec"`
+	Tickssincelaststatechange types.Int64  `tfsdk:"tickssincelaststatechange"`
+	Threshold                 types.String `tfsdk:"threshold"`
+	Clmonowner                types.Int64  `tfsdk:"clmonowner"`
+	Clmonview                 types.Int64  `tfsdk:"clmonview"`
+	Gslbsvchealth             types.Int64  `tfsdk:"gslbsvchealth"`
+	Glsbsvchealthdescr        types.String `tfsdk:"glsbsvchealthdescr"`
+	Nodefaultbindings         types.String `tfsdk:"nodefaultbindings"`
+}
 
 func GslbserviceDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -194,30 +268,157 @@ func GslbserviceDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"gslb": schema.StringAttribute{
+				Computed:    true,
+				Description: "GSLB service scope. Possible values: REMOTE, LOCAL.",
+			},
+			"svrstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "Server state.",
+			},
+			"svreffgslbstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "Effective state of the gslb svc.",
+			},
+			"gslbthreshold": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Indicates if gslb svc has reached threshold.",
+			},
+			"gslbsvcstats": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Indicates if gslb svc has stats of the primary or the whole chain.",
+			},
+			"monstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "State of the monitor bound to gslb service. Possible values: ENABLED, DISABLED.",
+			},
+			"preferredlocation": schema.StringAttribute{
+				Computed:    true,
+				Description: "Prefered location.",
+			},
+			"monitor_state": schema.StringAttribute{
+				Computed:    true,
+				Description: "The running state of the monitor on this service.",
+			},
+			"statechangetimesec": schema.StringAttribute{
+				Computed:    true,
+				Description: "Time when last state change happened. Seconds part.",
+			},
+			"tickssincelaststatechange": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time in 10 millisecond ticks since the last state change.",
+			},
+			"threshold": schema.StringAttribute{
+				Computed:    true,
+				Description: "Threshold state. Possible values: ABOVE, BELOW.",
+			},
+			"clmonowner": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Tells the mon owner of the gslb service.",
+			},
+			"clmonview": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Tells the view id of the monitoring owner.",
+			},
+			"gslbsvchealth": schema.Int64Attribute{
+				Computed:    true,
+				Description: "This parameter displays effective health of a GSLB service.",
+			},
+			"glsbsvchealthdescr": schema.StringAttribute{
+				Computed:    true,
+				Description: "Displays the warning message related to health a of GSLB service.",
+			},
+			"nodefaultbindings": schema.StringAttribute{
+				Computed:    true,
+				Description: "To determine if the configuration will have default ssl CIPHER and ECC curve bindings. Possible values: YES, NO.",
+			},
 		},
 		Blocks: map[string]schema.Block{
+			// The nested attributes are defined in gslbserviceLbmonitorbindingDSAttrs
+			// so this schema stays a clean top-level attribute/block map.
 			"lbmonitorbinding": schema.SetNestedBlock{
 				Description: "Monitors bound to the GSLB service.",
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"weight": schema.Int64Attribute{
-							Optional:    true,
-							Computed:    true,
-							Description: "Weight to assign to the monitor-service binding.",
-						},
-						"monitor_name": schema.StringAttribute{
-							Optional:    true,
-							Computed:    true,
-							Description: "Name of the monitor bound to the GSLB service.",
-						},
-						"monstate": schema.StringAttribute{
-							Optional:    true,
-							Computed:    true,
-							Description: "State of the monitor bound to the GSLB service.",
-						},
-					},
+					Attributes: gslbserviceLbmonitorbindingDSAttrs(),
 				},
 			},
 		},
 	}
+}
+
+// gslbserviceDataSourceSetAttrFromGet projects a NITRO gslbservice GET response
+// onto the data-source model. Attributes are filled from the GET (or left Null
+// when the GET omits them) via the shared utils.MapGet* helpers. The
+// lbmonitorbinding block is left as read from config (the gslbservice GET does
+// not return it), preserving the prior data-source behavior.
+func gslbserviceDataSourceSetAttrFromGet(ctx context.Context, data *GslbserviceDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In gslbserviceDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["servicename"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Servicename = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Appflowlog = utils.MapGetString(g, "appflowlog")
+	data.Cip = utils.MapGetString(g, "cip")
+	data.Cipheader = utils.MapGetString(g, "cipheader")
+	data.Clttimeout = utils.MapGetInt64(g, "clttimeout")
+	data.Cnameentry = utils.MapGetString(g, "cnameentry")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Cookietimeout = utils.MapGetInt64(g, "cookietimeout")
+	// delay is config-only; NITRO never returns it -> Null.
+	data.Delay = utils.MapGetInt64(g, "delay")
+	data.Downstateflush = utils.MapGetString(g, "downstateflush")
+	data.Hashid = utils.MapGetInt64(g, "hashid")
+	data.Healthmonitor = utils.MapGetString(g, "healthmonitor")
+	// ip is not returned by NITRO; it is mapped from ipaddress.
+	data.Ip = utils.MapGetString(g, "ipaddress")
+	data.Ipaddress = utils.MapGetString(g, "ipaddress")
+	data.Maxaaausers = utils.MapGetInt64(g, "maxaaausers")
+	data.Maxbandwidth = utils.MapGetInt64(g, "maxbandwidth")
+	data.Maxclient = utils.MapGetInt64(g, "maxclient")
+	data.Monitornamesvc = utils.MapGetString(g, "monitornamesvc")
+	data.Monthreshold = utils.MapGetInt64(g, "monthreshold")
+	data.Naptrdomainttl = utils.MapGetInt64(g, "naptrdomainttl")
+	data.Naptrorder = utils.MapGetInt64(g, "naptrorder")
+	data.Naptrpreference = utils.MapGetInt64(g, "naptrpreference")
+	data.Naptrreplacement = utils.MapGetString(g, "naptrreplacement")
+	data.Naptrservices = utils.MapGetString(g, "naptrservices")
+	data.Port = utils.MapGetInt64(g, "port")
+	data.Publicip = utils.MapGetString(g, "publicip")
+	data.Publicport = utils.MapGetInt64(g, "publicport")
+	data.Servername = utils.MapGetString(g, "servername")
+	data.Servicetype = utils.MapGetString(g, "servicetype")
+	data.Sitename = utils.MapGetString(g, "sitename")
+	data.Sitepersistence = utils.MapGetString(g, "sitepersistence")
+	data.Siteprefix = utils.MapGetString(g, "siteprefix")
+	data.State = utils.MapGetString(g, "state")
+	data.Svrtimeout = utils.MapGetInt64(g, "svrtimeout")
+	data.Viewip = utils.MapGetString(g, "viewip")
+	data.Viewname = utils.MapGetString(g, "viewname")
+	data.Weight = utils.MapGetInt64(g, "weight")
+
+	// Read-only attributes.
+	data.Gslb = utils.MapGetString(g, "gslb")
+	data.Svrstate = utils.MapGetString(g, "svrstate")
+	data.Svreffgslbstate = utils.MapGetString(g, "svreffgslbstate")
+	data.Gslbthreshold = utils.MapGetInt64(g, "gslbthreshold")
+	data.Gslbsvcstats = utils.MapGetInt64(g, "gslbsvcstats")
+	data.Monstate = utils.MapGetString(g, "monstate")
+	data.Preferredlocation = utils.MapGetString(g, "preferredlocation")
+	data.MonitorState = utils.MapGetString(g, "monitor_state")
+	data.Statechangetimesec = utils.MapGetString(g, "statechangetimesec")
+	data.Tickssincelaststatechange = utils.MapGetInt64(g, "tickssincelaststatechange")
+	data.Threshold = utils.MapGetString(g, "threshold")
+	data.Clmonowner = utils.MapGetInt64(g, "clmonowner")
+	data.Clmonview = utils.MapGetInt64(g, "clmonview")
+	data.Gslbsvchealth = utils.MapGetInt64(g, "gslbsvchealth")
+	data.Glsbsvchealthdescr = utils.MapGetString(g, "glsbsvchealthdescr")
+	data.Nodefaultbindings = utils.MapGetString(g, "nodefaultbindings")
+
+	// lbmonitorbinding block: left as read from config (GET does not return it).
 }

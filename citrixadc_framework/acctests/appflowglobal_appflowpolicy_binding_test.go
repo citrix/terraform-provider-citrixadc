@@ -272,6 +272,8 @@ func TestAccAppflowglobal_appflowpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "type", "REQ_OVERRIDE"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "priority", "55"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "id"),
 				),
 			},
 		},

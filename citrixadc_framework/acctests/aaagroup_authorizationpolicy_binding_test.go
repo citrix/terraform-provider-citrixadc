@@ -115,6 +115,7 @@ func TestAccAaagroupAuthorizationpolicyBindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAaagroupAuthorizationpolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "policy", "tp-authorize-1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_authorizationpolicy_binding.tf_aaagroup_authorizationpolicy_binding", "priority", "100"),

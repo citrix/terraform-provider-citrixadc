@@ -239,6 +239,7 @@ func TestAccDnsglobal_dnspolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "policyname", "policy_A"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "type", "REQ_DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "priority", "30"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsglobal_dnspolicy_binding.dnsglobal_dnspolicy_binding", "id"),
 				),
 			},
 		},

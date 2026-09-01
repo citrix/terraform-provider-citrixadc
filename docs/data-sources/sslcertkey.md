@@ -21,6 +21,19 @@ output "cert" {
 output "key" {
   value = data.citrixadc_sslcertkey.tf_sslcertkey.key
 }
+
+# Read-only certificate metadata returned by the appliance
+output "days_to_expiration" {
+  value = data.citrixadc_sslcertkey.tf_sslcertkey.daystoexpiration
+}
+
+output "subject" {
+  value = data.citrixadc_sslcertkey.tf_sslcertkey.subject
+}
+
+output "status" {
+  value = data.citrixadc_sslcertkey.tf_sslcertkey.status
+}
 ```
 
 
@@ -48,6 +61,35 @@ In addition to the arguments, the following attributes are available:
 * `deletecertkeyfilesonremoval` -  This option is used to automatically delete certificate/key files from physical device when the added certkey is removed. When deleteCertKeyFilesOnRemoval option is used at rm certkey command, it overwrites the deleteCertKeyFilesOnRemoval setting used at add/set certkey command
 * `deletefromdevice` -  Delete cert/key file from file system.
 * `id` - The id of the sslcertkey. It has the same value as the `certkey` attribute.
+
+### Read-only certificate metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslcertkey` resource). Any attribute the appliance does not return is `null`.
+
+* `signaturealg` - Algorithm used to sign the certificate.
+* `certificatetype` - Certificate type(s) (for example `ROOT_CERT`, `INTM_CERT`, `SRVR_CERT`, `CLNT_CERT`). A list of strings.
+* `serial` - Serial number of the certificate.
+* `issuer` - Distinguished name of the certificate issuer.
+* `clientcertnotbefore` - Date and time from which the certificate is valid.
+* `clientcertnotafter` - Date and time after which the certificate expires.
+* `daystoexpiration` - Number of days remaining before the certificate expires.
+* `subject` - Distinguished name of the certificate subject.
+* `publickey` - Public key algorithm of the certificate.
+* `publickeysize` - Public key size, in bits.
+* `version` - Version number of the certificate.
+* `priority` - Priority of the certificate.
+* `status` - Validity status of the certificate (for example `Valid`, `Expired`).
+* `passcrypt` - (Sensitive) Encrypted passphrase of the private-key as stored on the appliance.
+* `data` - Number of references to the certificate-key pair.
+* `servicename` - Service name to which the certificate is bound.
+* `sandns` - Subject Alternative Name (DNS) entries of the certificate.
+* `sanipadd` - Subject Alternative Name (IP address) entries of the certificate.
+* `ocspresponsestatus` - OCSP response status for the certificate.
+* `builtin` - Whether the certificate-key pair is built-in. A list of strings.
+* `feature` - The feature to be checked while applying this configuration.
+* `certkeydigest` - Digest (fingerprint) of the certificate.
+* `certificatesource` - Source of the certificate.
+* `certkeystatus` - Status of the certificate-key pair.
 
 
 ## Import

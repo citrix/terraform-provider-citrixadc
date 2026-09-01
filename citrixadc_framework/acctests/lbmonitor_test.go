@@ -209,6 +209,11 @@ func TestAccLbmonitorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "type", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "interval", "350"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "resptimeout", "2"),
+					// Read-only lbmonitor metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmonitor.tf_lbmonitor", "lrtmconf"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmonitor.tf_lbmonitor", "lrtmconfstr"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmonitor.tf_lbmonitor", "dup_state"),
 				),
 			},
 		},

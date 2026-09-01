@@ -35,3 +35,9 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the auditnslogglobal_auditnslogpolicy_binding. It is the concatenation of the `globalbindtype` and `policyname` attributes separated by a comma.
 * `priority` - Specifies the priority of the policy.
 * `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type.
+
+### Read-only auditnslogglobal_auditnslogpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_auditnslogglobal_auditnslogpolicy_binding` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `numpol` - Number of policies bound to the label.

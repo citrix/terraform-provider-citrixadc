@@ -35,6 +35,16 @@ In addition to the arguments, the following attributes are available:
 * `newname` - New name for the videooptimization pacing action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 * `rate` - ABR Video Optimization Pacing Rate (in Kbps)
 
+### Read-only videooptimizationpacingaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_videooptimizationpacingaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the action has been taken.
+* `referencecount` - The number of references to the action.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `builtin` - Flag to determine whether video optimization detection action is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+
 ## Import
 
 A videooptimizationpacingaction can be imported using its name, e.g.

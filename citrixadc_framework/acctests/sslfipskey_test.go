@@ -222,6 +222,8 @@ func TestAccSslfipskeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "fipskeyname", "f1"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "keytype", "ECDSA"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslfipskey.demo_sslfipskey", "curve", "P_256"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslfipskey.demo_sslfipskey", "id"),
 				),
 			},
 		},

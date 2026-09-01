@@ -279,6 +279,7 @@ func TestAccclusternode_routemonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "nodeid", "0"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "routemonitor", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "netmask", "255.255.255.192"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "id"),
 				),
 			},
 		},

@@ -239,6 +239,7 @@ func TestAccArpDataSource_basic(t *testing.T) {
 			{
 				Config: testAccArpDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_arp.tf_arp_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "ipaddress", "10.222.74.175"),
 					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "mac", "3b:fd:37:27:a1:f8"),
 					resource.TestCheckResourceAttr("data.citrixadc_arp.tf_arp_ds", "vxlan", "2"),

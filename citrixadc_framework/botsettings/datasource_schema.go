@@ -1,8 +1,49 @@
 package botsettings
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// BotsettingsDataSourceModel is the data-source-specific model, decoupled from
+// BotsettingsResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only metadata attributes that the resource deliberately
+// omits (builtin, feature). Every non-key attribute is Computed; the Framework's
+// per-attribute model <-> schema reflection requires this model to have exactly
+// the attributes the data-source schema declares, which is why it cannot reuse
+// the resource model.
+type BotsettingsDataSourceModel struct {
+	Id                         types.String `tfsdk:"id"`
+	Defaultnonintrusiveprofile types.String `tfsdk:"defaultnonintrusiveprofile"`
+	Defaultprofile             types.String `tfsdk:"defaultprofile"`
+	Dfprequestlimit            types.Int64  `tfsdk:"dfprequestlimit"`
+	Javascriptname             types.String `tfsdk:"javascriptname"`
+	Proxypassword              types.String `tfsdk:"proxypassword"`
+	ProxypasswordWo            types.String `tfsdk:"proxypassword_wo"`
+	ProxypasswordWoVersion     types.Int64  `tfsdk:"proxypassword_wo_version"`
+	Proxyport                  types.Int64  `tfsdk:"proxyport"`
+	Proxyserver                types.String `tfsdk:"proxyserver"`
+	Proxyusername              types.String `tfsdk:"proxyusername"`
+	Sessioncookiename          types.String `tfsdk:"sessioncookiename"`
+	Sessiontimeout             types.Int64  `tfsdk:"sessiontimeout"`
+	Signatureautoupdate        types.String `tfsdk:"signatureautoupdate"`
+	Signatureurl               types.String `tfsdk:"signatureurl"`
+	Trapurlautogenerate        types.String `tfsdk:"trapurlautogenerate"`
+	Trapurlinterval            types.Int64  `tfsdk:"trapurlinterval"`
+	Trapurllength              types.Int64  `tfsdk:"trapurllength"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/botsettings.json). Never settable; populated from GET.
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func BotsettingsDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -94,6 +135,57 @@ func BotsettingsDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Length of the auto-generated trap URL.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine if bot engine setting is built-in or not. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// botsettingsDataSourceSetAttrFromGet projects a NITRO botsettings GET response
+// onto the data-source model. botsettings is a singleton, so the ID is a static
+// identifier rather than a lookup key. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func botsettingsDataSourceSetAttrFromGet(ctx context.Context, data *BotsettingsDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In botsettingsDataSourceSetAttrFromGet Function")
+
+	// botsettings is a singleton config - use a static ID.
+	data.Id = types.StringValue("botsettings-config")
+
+	// Read/write attributes as read-back outputs.
+	data.Defaultnonintrusiveprofile = utils.MapGetString(g, "defaultnonintrusiveprofile")
+	data.Defaultprofile = utils.MapGetString(g, "defaultprofile")
+	data.Dfprequestlimit = utils.MapGetInt64(g, "dfprequestlimit")
+	data.Javascriptname = utils.MapGetString(g, "javascriptname")
+	data.Proxyport = utils.MapGetInt64(g, "proxyport")
+	data.Proxyserver = utils.MapGetString(g, "proxyserver")
+	data.Proxyusername = utils.MapGetString(g, "proxyusername")
+	data.Sessioncookiename = utils.MapGetString(g, "sessioncookiename")
+	data.Sessiontimeout = utils.MapGetInt64(g, "sessiontimeout")
+	data.Signatureautoupdate = utils.MapGetString(g, "signatureautoupdate")
+	data.Signatureurl = utils.MapGetString(g, "signatureurl")
+	data.Trapurlautogenerate = utils.MapGetString(g, "trapurlautogenerate")
+	data.Trapurlinterval = utils.MapGetInt64(g, "trapurlinterval")
+	data.Trapurllength = utils.MapGetInt64(g, "trapurllength")
+
+	// proxypassword / proxypassword_wo / proxypassword_wo_version are write-only
+	// secrets the GET never returns -> Null.
+	data.Proxypassword = types.StringNull()
+	data.ProxypasswordWo = types.StringNull()
+	data.ProxypasswordWoVersion = types.Int64Null()
+
+	// Read-only metadata.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

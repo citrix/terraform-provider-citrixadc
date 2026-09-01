@@ -182,6 +182,7 @@ func TestAccAppflowactionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAppflowactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowaction.tf_appflowaction", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowaction.tf_appflowaction", "name", "test_action"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowaction.tf_appflowaction", "securityinsight", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowaction.tf_appflowaction", "botinsight", "ENABLED"),

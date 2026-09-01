@@ -379,6 +379,7 @@ func TestAccSslserviceSslpolicyBindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSslserviceSslpolicyBindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslservice_sslpolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslpolicy_binding.tf_binding", "servicename", "tf_sslsvc_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslpolicy_binding.tf_binding", "policyname", "tf_sslsvc_policy_pol"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslpolicy_binding.tf_binding", "priority", "100"),

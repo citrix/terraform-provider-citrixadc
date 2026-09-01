@@ -52,3 +52,9 @@ In addition to the arguments, the following attributes are available:
   In either scenario, do not create the zone's Start of Authority (SOA) and name server (NS) resource records on the appliance.
   
   Disable if the appliance is authoritative for the zone, but make sure that you have created the SOA and NS records on the appliance before you create the zone.
+
+### Read-only dnszone metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnszone` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `flags` - Flags controlling display.

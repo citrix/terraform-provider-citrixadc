@@ -323,6 +323,7 @@ func TestAccVpnvserver_authenticationlocalpolicy_bindingDataSource_basic(t *test
 			{
 				Config: testAccVpnvserver_authenticationlocalpolicy_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationlocalpolicy_binding.tf_bind", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationlocalpolicy_binding.tf_bind", "name", "tfvserver_example"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationlocalpolicy_binding.tf_bind", "policy", "tf_localpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationlocalpolicy_binding.tf_bind", "priority", "90"),

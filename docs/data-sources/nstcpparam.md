@@ -80,3 +80,10 @@ In addition to the arguments, the following attributes are available:
 * `tcpmaxretries` - Maximum number of retries for TCP.
 * `ws` - Enable or disable window scaling.
 * `wsval` - Window scaling factor.
+
+### Read-only nstcpparam metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nstcpparam` resource) and are computed. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if the tcp param is built-in or not. A list of strings (possible values: MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL).
+* `feature` - The feature to be checked while applying this config.

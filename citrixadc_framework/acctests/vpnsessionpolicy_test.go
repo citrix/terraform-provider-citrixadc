@@ -265,6 +265,9 @@ func TestAccVpnsessionpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "name", "tf_vpnsessionpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "rule", "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnsessionpolicy.foo", "action", "newsession"),
+					// Runtime-binding proof + read-only counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnsessionpolicy.foo", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnsessionpolicy.foo", "hits"),
 				),
 			},
 		},

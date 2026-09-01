@@ -91,6 +91,7 @@ func TestAccDnspolicyDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_dnspolicy.dnspolicy_data", "name", "policy_A"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnspolicy.dnspolicy_data", "rule", "CLIENT.IP.SRC.IN_SUBNET(1.1.1.1/24)"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnspolicy.dnspolicy_data", "id"),
 				),
 			},
 		},

@@ -35,7 +35,7 @@ func (d *AppfwsettingsDataSource) Schema(ctx context.Context, req datasource.Sch
 }
 
 func (d *AppfwsettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppfwsettingsResourceModel
+	var data AppfwsettingsDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -52,7 +52,7 @@ func (d *AppfwsettingsDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	appfwsettingsSetAttrFromGet(ctx, &data, getResponseData)
+	appfwsettingsDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

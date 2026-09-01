@@ -468,6 +468,11 @@ func TestAccAuthenticationradiusactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "passencoding", "chap"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "transport", "UDP"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "messageauthenticator", "OFF"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "id"),
+					// Read-only metadata exposed only by the data source. success is a
+					// counter-style field always populated for a fresh action.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "success"),
 				),
 			},
 		},

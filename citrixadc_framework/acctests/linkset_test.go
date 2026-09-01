@@ -251,6 +251,8 @@ func TestAccLinksetDataSource_basic(t *testing.T) {
 				Config: testAccLinksetDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_linkset.tf_linkset", "linkset_id", "LS/2"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_linkset.tf_linkset", "id"),
 				),
 			},
 		},

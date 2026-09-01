@@ -39,6 +39,12 @@ In addition to the arguments, the following attributes are available:
 * `kcdaccount` - Name of the KCD account that is used for Windows authentication.
 * `stickiness` - If the queries are related to each other, forward to the same backend server. Possible values: [ YES, NO ]
 
+### Read-only dbdbprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dbdbprofile` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `refcnt` - Profile Reference Count.
+
 
 ## Import
 

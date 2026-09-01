@@ -290,6 +290,7 @@ func TestAccAuthenticationnoauthactionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthenticationnoauthactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationnoauthaction.tf_noauthaction_ds", "id"),
 					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationnoauthaction.tf_noauthaction_ds", "name", "citrixadc_authenticationnoauthaction.tf_noauthaction", "name"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationnoauthaction.tf_noauthaction_ds", "name", "tf_noauthaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationnoauthaction.tf_noauthaction_ds", "defaultauthenticationgroup", "test_group"),

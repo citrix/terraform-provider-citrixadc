@@ -383,6 +383,7 @@ func TestAccChannel_interface_binding_DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_channel_interface_binding.tf_channel_interface_binding", "channelid", "LA/1"),
 					// TODO_PLACEHOLDER: must match the free interface used above.
 					resource.TestCheckResourceAttr("data.citrixadc_channel_interface_binding.tf_channel_interface_binding", "ifnum.0", "1/2"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_channel_interface_binding.tf_channel_interface_binding", "id"),
 				),
 			},
 		},

@@ -84,6 +84,8 @@ func TestAccDnszoneDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "proxymode", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "dnssecoffload", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "nsec", "DISABLED"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnszone.dnszone_data", "id"),
 				),
 			},
 		},

@@ -35,7 +35,7 @@ func (d *TransformglobalTransformpolicyBindingDataSource) Schema(ctx context.Con
 }
 
 func (d *TransformglobalTransformpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data TransformglobalTransformpolicyBindingResourceModel
+	var data TransformglobalTransformpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -106,7 +106,7 @@ func (d *TransformglobalTransformpolicyBindingDataSource) Read(ctx context.Conte
 		return
 	}
 
-	transformglobal_transformpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	transformglobal_transformpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

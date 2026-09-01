@@ -323,6 +323,9 @@ func TestAccVrid6DataSource_basic(t *testing.T) {
 			{
 				Config: testAccVrid6DataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source read
+					// resolved against the appliance.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vrid6.tf_vrid6", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid6.tf_vrid6", "vrid6_id", "3"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid6.tf_vrid6", "priority", "30"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid6.tf_vrid6", "preemption", "DISABLED"),

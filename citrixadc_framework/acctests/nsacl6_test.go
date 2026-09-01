@@ -350,6 +350,10 @@ func TestAccNsacl6DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "ratelimit", "120"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "state", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsacl6.tf_nsacl6_ds", "protocol", "ICMPV6"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsacl6.tf_nsacl6_ds", "id"),
+					// kernelstate (commit status) is always populated for a created ACL6.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsacl6.tf_nsacl6_ds", "kernelstate"),
 				),
 			},
 		},

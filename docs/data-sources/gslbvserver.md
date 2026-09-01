@@ -81,3 +81,28 @@ In addition to the arguments, the following attributes are available:
 * `v6netmasklen` - Number of bits to consider, in an IPv6 source IP address, for creating the hash that is required by the SOURCEIPHASH load balancing method.
 * `v6persistmasklen` - Number of bits to consider in an IPv6 source IP address when creating source IP address based persistence sessions.
 * `weight` - Weight for the service.
+
+### Read-only gslbvserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_gslbvserver` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `curstate` - State of the gslb vserver (for example `UP`, `DOWN`, `OUT OF SERVICE`, `DISABLED`).
+* `status` - Current status of the gslb vserver. During the initial phase, if the configured lb method is not round robin, the vserver will adopt round robin to distribute traffic for a predefined number of requests.
+* `lbrrreason` - Reason why a vserver is in RR (round robin).
+* `iscname` - Is cname feature set on vserver (`ENABLED`, `DISABLED`).
+* `sitepersistence` - Type of Site Persistence set (`ConnectionProxy`, `HTTPRedirect`, `NONE`).
+* `totalservices` - Total number of services bound to the vserver.
+* `activeservices` - Total number of active services bound to the vserver.
+* `statechangetimesec` - Time when last state change happened. Seconds part.
+* `statechangetimemsec` - Time at which last state change happened. Milliseconds part.
+* `tickssincelaststatechange` - Time in 10 millisecond ticks since the last state change.
+* `health` - Health of vserver based on percentage of weights of active svcs/all svcs. This does not consider administratively disabled svcs.
+* `policyname` - Name of the policy bound to the GSLB vserver.
+* `priority` - Priority.
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `type` - The bindpoint to which the policy is bound (`REQUEST`, `RESPONSE`, `MQTT_JUMBO_REQ`, `HTTP_EVENT_RESPONSE`).
+* `vsvrbindsvcip` - Used for showing the ip of bound entities.
+* `vsvrbindsvcport` - Used for showing ports of bound entities.
+* `servername` - Used to display server name in case of GSLB servicegroup binding to GSLB vserver.
+* `nodefaultbindings` - To determine if the configuration will have default ssl CIPHER and ECC curve bindings (`YES`, `NO`).
+* `currentactiveorder` - Current order that takes the traffic in case service or servicegroup is bound with order.

@@ -39,3 +39,9 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the policy label to invoke if the current policy evaluates to TRUE, the invoke parameter is set, and Label Type is set to Policy Label.
 * `labeltype` - Type of policy label to invoke if the current policy evaluates to TRUE and the invoke parameter is set. Available settings function as follows: * reqvserver. Invoke the unnamed policy label associated with the specified request virtual server. * policylabel. Invoke the specified user-defined policy label.
 * `state` - Enable or disable the binding to activate or deactivate the policy. This is applicable to classic policies only.
+
+### Read-only appfwglobal_auditnslogpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwglobal_auditnslogpolicy_binding` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `policytype` - Policy type. Possible values: [ Classic Policy, Advanced Policy ].

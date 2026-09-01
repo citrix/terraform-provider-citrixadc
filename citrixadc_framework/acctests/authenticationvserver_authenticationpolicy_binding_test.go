@@ -280,6 +280,8 @@ func TestAccAuthenticationvserverAuthenticationpolicyBindingDataSource_basic(t *
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationpolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationpolicy_binding.tf_bind", "policy", "tf_authenticationpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationpolicy_binding.tf_bind", "priority", "30"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationpolicy_binding.tf_bind", "id"),
 				),
 			},
 		},

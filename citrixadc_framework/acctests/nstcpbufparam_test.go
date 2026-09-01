@@ -229,6 +229,8 @@ func TestAccNstcpbufparamDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNstcpbufparamDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nstcpbufparam.tf_nstcpbufparam_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpbufparam.tf_nstcpbufparam_ds", "size", "32"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpbufparam.tf_nstcpbufparam_ds", "memlimit", "8"),
 				),

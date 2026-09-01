@@ -35,7 +35,7 @@ func (d *BotpolicyDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *BotpolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data BotpolicyResourceModel
+	var data BotpolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *BotpolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	botpolicySetAttrFromGet(ctx, &data, getResponseData)
+	botpolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

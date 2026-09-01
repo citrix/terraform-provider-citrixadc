@@ -225,6 +225,10 @@ func TestAccAzurekeyvaultDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_azurekeyvault.tf_azurekeyvault", "name", "tf_azurekeyvault"),
 					resource.TestCheckResourceAttr("data.citrixadc_azurekeyvault.tf_azurekeyvault", "azureapplication", "tf_azureapplication"),
 					resource.TestCheckResourceAttr("data.citrixadc_azurekeyvault.tf_azurekeyvault", "azurevaultname", "tfadcnew.vault.azure.net"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_azurekeyvault.tf_azurekeyvault", "id"),
+					// Read-only state attribute always populated for a live keyvault.
+					resource.TestCheckResourceAttrSet("data.citrixadc_azurekeyvault.tf_azurekeyvault", "state"),
 				),
 			},
 		},

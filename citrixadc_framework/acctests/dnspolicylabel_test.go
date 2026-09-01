@@ -211,6 +211,8 @@ func TestAccDnspolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel.dnspolicylabel", "labelname", "label1"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel.dnspolicylabel", "transform", "dns_req"),
+					// id is the universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnspolicylabel.dnspolicylabel", "id"),
 				),
 			},
 		},

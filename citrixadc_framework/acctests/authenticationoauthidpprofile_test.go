@@ -177,6 +177,7 @@ func TestAccAuthenticationoauthidpprofileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthenticationoauthidpprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "name", "tf_idpprofile_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "clientid", "cliId_datasource"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthidpprofile.tf_idpprofile_ds", "redirecturl", "http://www.example.com/datasource/"),

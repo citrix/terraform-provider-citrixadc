@@ -372,6 +372,11 @@ func TestAccPolicyexpressionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "name", "tf_policyexpression_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "value", "HTTP.REQ.HOSTNAME.EQ(\"example.com\")"),
 					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "comment", "Test datasource expression"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyexpression.tf_policyexpression_ds", "id"),
+					// Read-only metadata exposed only by the data source. hits is a
+					// counter-style field always populated for a freshly-created object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyexpression.tf_policyexpression_ds", "hits"),
 				),
 			},
 		},

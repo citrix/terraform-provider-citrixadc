@@ -562,6 +562,8 @@ func TestAccNstcpparamDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNstcpparamDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nstcpparam.tf_nstcpparam_data", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpparam.tf_nstcpparam_data", "delayedack", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstcpparam.tf_nstcpparam_data", "maxburst", "6"),
 				),

@@ -234,6 +234,10 @@ func TestAccSslcertkeybundleDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkeybundle.tf_sslcertkeybundle", "certkeybundlename", "tf_sslcertkeybundle"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkeybundle.tf_sslcertkeybundle", "bundlefile", "servercert1_certkeybundle.pem"),
+					// id is the universal runtime-binding proof; read-only
+					// metadata attrs are instance/config-dependent and Null when
+					// the appliance omits them.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkeybundle.tf_sslcertkeybundle", "id"),
 				),
 			},
 		},

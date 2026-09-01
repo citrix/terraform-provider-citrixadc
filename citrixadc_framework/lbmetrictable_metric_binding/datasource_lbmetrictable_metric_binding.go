@@ -35,7 +35,7 @@ func (d *LbmetrictableMetricBindingDataSource) Schema(ctx context.Context, req d
 }
 
 func (d *LbmetrictableMetricBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LbmetrictableMetricBindingResourceModel
+	var data LbmetrictableMetricBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *LbmetrictableMetricBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	lbmetrictable_metric_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbmetrictable_metric_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

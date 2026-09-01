@@ -35,3 +35,15 @@ In addition to the arguments, the following attributes are available:
 * `dynamicrouting` - Enable dynamic routing for this bridgegroup.
 * `ipv6dynamicrouting` - Enable all IPv6 dynamic routing protocols on all VLANs bound to this bridgegroup. Note: For the ENABLED setting to work, you must configure IPv6 dynamic routing protocols from the VTYSH command line.
 * `id` - The id of the bridgegroup. It has the same value as the `bridgegroup_id` attribute.
+
+### Read-only bridgegroup metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_bridgegroup` resource) and are Computed-only. Any attribute the appliance does not return is `null`.
+
+* `flags` - Temporary flag used for internal purpose.
+* `portbitmap` - Member interfaces of this bridge group.
+* `tagbitmap` - Tagged members of this bridge group.
+* `ifaces` - Names of all member interfaces of this bridge group.
+* `tagifaces` - Names of all tagged member interfaces of this bridge group.
+* `rnat` - Temporary flag used for internal purpose.
+* `partitionname` - Name of the Partition to which this vlan bound to.

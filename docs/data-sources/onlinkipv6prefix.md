@@ -41,3 +41,10 @@ In addition to the arguments, the following attributes are available:
 * `onlinkprefix` - RA Prefix onlink flag. Possible values: [ YES, NO ]
 * `prefixpreferredlifetime` - Preferred life time of the prefix, in seconds.
 * `prefixvalidelifetime` - Valid life time of the prefix, in seconds.
+
+### Read-only onlinkipv6prefix metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_onlinkipv6prefix` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `prefixcurrvalidelft` - Prefix current valid life time.
+* `prefixcurrpreferredlft` - Prefix current prefered life time.

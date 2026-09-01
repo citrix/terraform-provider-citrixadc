@@ -201,6 +201,7 @@ func TestAccFisDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFisDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_fis.tf_fis_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_fis.tf_fis_ds", "name", "tf_fis_ds"),
 				),
 			},

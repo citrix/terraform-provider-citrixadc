@@ -35,7 +35,7 @@ func (d *Ip6tunnelDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *Ip6tunnelDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Ip6tunnelResourceModel
+	var data Ip6tunnelDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -85,7 +85,7 @@ func (d *Ip6tunnelDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	ip6tunnelSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	ip6tunnelDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

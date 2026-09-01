@@ -331,6 +331,7 @@ func TestAccVpnvserver_sharefileserver_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVpnvserver_sharefileserver_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_sharefileserver_binding.tf_bind", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_sharefileserver_binding.tf_bind", "name", "tf_vpnvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_sharefileserver_binding.tf_bind", "sharefile", "3.3.4.3:90"),
 				),

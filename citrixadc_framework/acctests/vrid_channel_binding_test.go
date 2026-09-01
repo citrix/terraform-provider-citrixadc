@@ -369,6 +369,8 @@ func TestAccVrid_channel_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVrid_channel_bindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					// id is always composed at runtime; the universal binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "vrid_id", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid_channel_binding.tf_vrid_channel_binding", "ifnum", "LA/1"),
 				),

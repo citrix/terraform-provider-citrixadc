@@ -1,8 +1,36 @@
 package lbpolicy
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// LbpolicyDataSourceModel is the data-source-specific model, decoupled from
+// LbpolicyResourceModel. A data source is a pure read surface (Read only), so it
+// exposes the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits (hits,
+// undefhits, feature, builtin).
+type LbpolicyDataSourceModel struct {
+	Id          types.String `tfsdk:"id"`
+	Action      types.String `tfsdk:"action"`
+	Comment     types.String `tfsdk:"comment"`
+	Logaction   types.String `tfsdk:"logaction"`
+	Name        types.String `tfsdk:"name"` // Required lookup key
+	Newname     types.String `tfsdk:"newname"`
+	Rule        types.String `tfsdk:"rule"`
+	Undefaction types.String `tfsdk:"undefaction"`
+
+	// Read-only (GET-only) metadata from the NITRO read-only set
+	// (zion73x_readonly/lbpolicy.json). Never settable; populated from GET.
+	Hits      types.Int64  `tfsdk:"hits"`
+	Undefhits types.Int64  `tfsdk:"undefhits"`
+	Feature   types.String `tfsdk:"feature"`
+	Builtin   types.List   `tfsdk:"builtin"`
+}
 
 func LbpolicyDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -44,6 +72,56 @@ func LbpolicyDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Available settings function as follows:\n* NOLBACTION - Does not consider LB actions in making LB decision.\n* RESET - Reset the request and notify the user, so that the user can resend the request.\n* DROP - Drop the request without sending a response to the user.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of hits.",
+			},
+			"undefhits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of policy UNDEF hits.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this configuration.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine whether the LB policy is built-in. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]. A list of strings.",
+			},
 		},
 	}
+}
+
+// lbpolicyDataSourceSetAttrFromGet projects a NITRO lbpolicy GET response onto
+// the data-source model. Attributes are simply filled from the GET (or left Null
+// when the GET omits them) via the shared utils.MapGet* helpers.
+func lbpolicyDataSourceSetAttrFromGet(ctx context.Context, data *LbpolicyDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In lbpolicyDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	} else {
+		data.Id = data.Name
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Action = utils.MapGetString(g, "action")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Logaction = utils.MapGetString(g, "logaction")
+	data.Rule = utils.MapGetString(g, "rule")
+	data.Undefaction = utils.MapGetString(g, "undefaction")
+
+	// newname is rename-only and never returned by GET -> Null.
+	data.Newname = types.StringNull()
+
+	// Read-only metadata.
+	data.Hits = utils.MapGetInt64(g, "hits")
+	data.Undefhits = utils.MapGetInt64(g, "undefhits")
+	data.Feature = utils.MapGetString(g, "feature")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
 }

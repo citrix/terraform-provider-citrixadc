@@ -289,6 +289,8 @@ func TestAccCmpactionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cmpaction.tf_cmpaction_ds", "name", "tf_cmpaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmpaction.tf_cmpaction_ds", "cmptype", "nocompress"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cmpaction.tf_cmpaction_ds", "id"),
 				),
 			},
 		},

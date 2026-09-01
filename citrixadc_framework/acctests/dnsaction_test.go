@@ -104,6 +104,9 @@ func TestAccDnsactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaction.dnsaction_data", "actionname", "tf_action1"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaction.dnsaction_data", "actiontype", "Rewrite_Response"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaction.dnsaction_data", "dnsprofilename", "tf_profile1"),
+					// Universal runtime-binding proof (read-only drop/cachebypass/
+					// builtin/feature are config-dependent and may be omitted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsaction.dnsaction_data", "id"),
 				),
 			},
 		},

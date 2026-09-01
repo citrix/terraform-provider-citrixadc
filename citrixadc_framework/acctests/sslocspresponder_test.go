@@ -399,6 +399,8 @@ func TestAccSslocspresponderDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "httpmethod", "GET"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "insertclientcert", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslocspresponder.tf_sslocspresponder", "usenonce", "NO"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslocspresponder.tf_sslocspresponder", "id"),
 				),
 			},
 		},

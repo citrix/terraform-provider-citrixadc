@@ -244,6 +244,10 @@ func TestAccLbrouteDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbroute.tf_lbroute", "netmask", "255.0.0.0"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbroute.tf_lbroute", "td", "0"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute.tf_lbroute", "gatewayname"),
+					// Runtime-binding proof plus the read-only gateway state field the
+					// appliance always returns.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute.tf_lbroute", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute.tf_lbroute", "flags"),
 				),
 			},
 		},

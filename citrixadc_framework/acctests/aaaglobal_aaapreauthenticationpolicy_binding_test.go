@@ -231,6 +231,7 @@ func TestAccAaaglobal_aaapreauthenticationpolicy_binding_DataSource_basic(t *tes
 			{
 				Config: testAccAaaglobal_aaapreauthenticationpolicy_binding_DataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "policy", "my_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaglobal_aaapreauthenticationpolicy_binding.tf_aaaglobal_aaapreauthenticationpolicy_binding", "priority", "50"),
 				),

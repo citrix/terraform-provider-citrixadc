@@ -1,8 +1,37 @@
 package authenticationvserver_authenticationsamlpolicy_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AuthenticationvserverAuthenticationsamlpolicyBindingDataSourceModel is the
+// data-source-specific model, decoupled from the resource model. A data source is
+// a pure read surface, so it can expose the FULL GET projection: the read/write
+// attributes (as Computed outputs) AND the read-only attributes the resource
+// deliberately omits. Every non-key attribute is Computed.
+type AuthenticationvserverAuthenticationsamlpolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
+	Name                   types.String `tfsdk:"name"`
+	Nextfactor             types.String `tfsdk:"nextfactor"`
+	Policy                 types.String `tfsdk:"policy"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Secondary              types.Bool   `tfsdk:"secondary"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/authenticationvserver_authenticationsamlpolicy_binding.json).
+	// Never settable; populated from GET, null when the appliance omits them.
+	Acttype types.Int64 `tfsdk:"acttype"`
+}
 
 func AuthenticationvserverAuthenticationsamlpolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -48,6 +77,41 @@ func AuthenticationvserverAuthenticationsamlpolicyBindingDataSourceSchema() sche
 				Computed:    true,
 				Description: "Bind the authentication policy to the secondary chain.\nProvides for multifactor authentication in which a user must authenticate via both a primary authentication method and, afterward, via a secondary authentication method.\nBecause user groups are aggregated across authentication systems, usernames must be the same on all authentication servers. Passwords can be different.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source (these are
+			// intentionally NOT modeled on the resource). All Computed.
+			"acttype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The type of the authentication action associated with this policy binding.",
+			},
 		},
 	}
+}
+
+// authenticationvserver_authenticationsamlpolicy_bindingDataSourceSetAttrFromGet
+// projects a NITRO GET response onto the data-source model. Because a data source
+// has no plan/apply reconciliation, attributes are simply filled from the GET (or
+// left Null when the GET omits them) via the shared utils.MapGet* helpers.
+func authenticationvserver_authenticationsamlpolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationvserverAuthenticationsamlpolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In authenticationvserver_authenticationsamlpolicy_bindingDataSourceSetAttrFromGet Function")
+
+	data.Bindpoint = utils.MapGetString(g, "bindpoint")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Groupextraction = utils.MapGetBool(g, "groupextraction")
+	data.Name = utils.MapGetString(g, "name")
+	data.Nextfactor = utils.MapGetString(g, "nextfactor")
+	data.Policy = utils.MapGetString(g, "policy")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Secondary = utils.MapGetBool(g, "secondary")
+
+	// Read-only attributes.
+	data.Acttype = utils.MapGetInt64(g, "acttype")
+
+	// Composite ID (groupextraction,name,policy,secondary) mirroring the resource id format.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupextraction:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupextraction.ValueBool()))))
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("secondary:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Secondary.ValueBool()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

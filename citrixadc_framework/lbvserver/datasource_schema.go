@@ -1,9 +1,176 @@
 package lbvserver
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// LbvserverDataSourceModel is the data-source-specific model, decoupled from
+// LbvserverResourceModel. A data source is a pure read surface, so it can expose
+// the full GET projection: the read/write attributes (as Computed outputs) AND
+// the read-only attributes that the resource deliberately omits.
+type LbvserverDataSourceModel struct {
+	Id                                 types.String `tfsdk:"id"`
+	Sslcertkey                         types.String `tfsdk:"sslcertkey"`
+	Snisslcertkeys                     types.Set    `tfsdk:"snisslcertkeys"`
+	Sslprofile                         types.String `tfsdk:"sslprofile"`
+	Ciphers                            types.List   `tfsdk:"ciphers"`
+	Ciphersuites                       types.List   `tfsdk:"ciphersuites"`
+	Sslpolicybinding                   types.Set    `tfsdk:"sslpolicybinding"`
+	Adfsproxyprofile                   types.String `tfsdk:"adfsproxyprofile"`
+	Aigwprofilename                    types.String `tfsdk:"aigwprofilename"`
+	Apiprofile                         types.String `tfsdk:"apiprofile"`
+	Appflowlog                         types.String `tfsdk:"appflowlog"`
+	Authentication                     types.String `tfsdk:"authentication"`
+	Authenticationhost                 types.String `tfsdk:"authenticationhost"`
+	Authn401                           types.String `tfsdk:"authn401"`
+	Authnprofile                       types.String `tfsdk:"authnprofile"`
+	Authnvsname                        types.String `tfsdk:"authnvsname"`
+	Backuplbmethod                     types.String `tfsdk:"backuplbmethod"`
+	Backuppersistencetimeout           types.Int64  `tfsdk:"backuppersistencetimeout"`
+	Backupvserver                      types.String `tfsdk:"backupvserver"`
+	Bypassaaaa                         types.String `tfsdk:"bypassaaaa"`
+	Cacheable                          types.String `tfsdk:"cacheable"`
+	Clttimeout                         types.Int64  `tfsdk:"clttimeout"`
+	Comment                            types.String `tfsdk:"comment"`
+	Connfailover                       types.String `tfsdk:"connfailover"`
+	Cookiename                         types.String `tfsdk:"cookiename"`
+	Datalength                         types.Int64  `tfsdk:"datalength"`
+	Dataoffset                         types.Int64  `tfsdk:"dataoffset"`
+	Dbprofilename                      types.String `tfsdk:"dbprofilename"`
+	Dbslb                              types.String `tfsdk:"dbslb"`
+	Disableprimaryondown               types.String `tfsdk:"disableprimaryondown"`
+	Dns64                              types.String `tfsdk:"dns64"`
+	Dnsoverhttps                       types.String `tfsdk:"dnsoverhttps"`
+	Dnsprofilename                     types.String `tfsdk:"dnsprofilename"`
+	Downstateflush                     types.String `tfsdk:"downstateflush"`
+	Hashlength                         types.Int64  `tfsdk:"hashlength"`
+	Healththreshold                    types.Int64  `tfsdk:"healththreshold"`
+	Httpprofilename                    types.String `tfsdk:"httpprofilename"`
+	Httpsredirecturl                   types.String `tfsdk:"httpsredirecturl"`
+	Icmpvsrresponse                    types.String `tfsdk:"icmpvsrresponse"`
+	Insertvserveripport                types.String `tfsdk:"insertvserveripport"`
+	Ipmask                             types.String `tfsdk:"ipmask"`
+	Ippattern                          types.String `tfsdk:"ippattern"`
+	Ipset                              types.String `tfsdk:"ipset"`
+	Ipv46                              types.String `tfsdk:"ipv46"`
+	L2conn                             types.String `tfsdk:"l2conn"`
+	Lbmethod                           types.String `tfsdk:"lbmethod"`
+	Lbprofilename                      types.String `tfsdk:"lbprofilename"`
+	Listenpolicy                       types.String `tfsdk:"listenpolicy"`
+	Listenpriority                     types.Int64  `tfsdk:"listenpriority"`
+	M                                  types.String `tfsdk:"m"`
+	Macmoderetainvlan                  types.String `tfsdk:"macmoderetainvlan"`
+	Maxautoscalemembers                types.Int64  `tfsdk:"maxautoscalemembers"`
+	Mcpprofilename                     types.String `tfsdk:"mcpprofilename"`
+	Minautoscalemembers                types.Int64  `tfsdk:"minautoscalemembers"`
+	Mssqlserverversion                 types.String `tfsdk:"mssqlserverversion"`
+	Mysqlcharacterset                  types.Int64  `tfsdk:"mysqlcharacterset"`
+	Mysqlprotocolversion               types.Int64  `tfsdk:"mysqlprotocolversion"`
+	Mysqlservercapabilities            types.Int64  `tfsdk:"mysqlservercapabilities"`
+	Mysqlserverversion                 types.String `tfsdk:"mysqlserverversion"`
+	Name                               types.String `tfsdk:"name"`
+	Netmask                            types.String `tfsdk:"netmask"`
+	Netprofile                         types.String `tfsdk:"netprofile"`
+	Newname                            types.String `tfsdk:"newname"`
+	Newservicerequest                  types.Int64  `tfsdk:"newservicerequest"`
+	Newservicerequestincrementinterval types.Int64  `tfsdk:"newservicerequestincrementinterval"`
+	Newservicerequestunit              types.String `tfsdk:"newservicerequestunit"`
+	Oracleserverversion                types.String `tfsdk:"oracleserverversion"`
+	Order                              types.Int64  `tfsdk:"order"`
+	Orderthreshold                     types.Int64  `tfsdk:"orderthreshold"`
+	Persistavpno                       types.List   `tfsdk:"persistavpno"`
+	Persistencebackup                  types.String `tfsdk:"persistencebackup"`
+	Persistencetype                    types.String `tfsdk:"persistencetype"`
+	Persistmask                        types.String `tfsdk:"persistmask"`
+	Port                               types.Int64  `tfsdk:"port"`
+	Probeport                          types.Int64  `tfsdk:"probeport"`
+	Probeprotocol                      types.String `tfsdk:"probeprotocol"`
+	Probesuccessresponsecode           types.String `tfsdk:"probesuccessresponsecode"`
+	Processlocal                       types.String `tfsdk:"processlocal"`
+	Push                               types.String `tfsdk:"push"`
+	Pushlabel                          types.String `tfsdk:"pushlabel"`
+	Pushmulticlients                   types.String `tfsdk:"pushmulticlients"`
+	Pushvserver                        types.String `tfsdk:"pushvserver"`
+	Quicbridgeprofilename              types.String `tfsdk:"quicbridgeprofilename"`
+	Quicprofilename                    types.String `tfsdk:"quicprofilename"`
+	Range                              types.Int64  `tfsdk:"range"`
+	Recursionavailable                 types.String `tfsdk:"recursionavailable"`
+	Redirectfromport                   types.Int64  `tfsdk:"redirectfromport"`
+	Redirectportrewrite                types.String `tfsdk:"redirectportrewrite"`
+	Redirurl                           types.String `tfsdk:"redirurl"`
+	Redirurlflags                      types.Bool   `tfsdk:"redirurlflags"`
+	Resrule                            types.String `tfsdk:"resrule"`
+	Retainconnectionsoncluster         types.String `tfsdk:"retainconnectionsoncluster"`
+	Rhistate                           types.String `tfsdk:"rhistate"`
+	Rtspnat                            types.String `tfsdk:"rtspnat"`
+	Rule                               types.String `tfsdk:"rule"`
+	Servicename                        types.String `tfsdk:"servicename"`
+	Servicetype                        types.String `tfsdk:"servicetype"`
+	Sessionless                        types.String `tfsdk:"sessionless"`
+	Skippersistency                    types.String `tfsdk:"skippersistency"`
+	Sobackupaction                     types.String `tfsdk:"sobackupaction"`
+	Somethod                           types.String `tfsdk:"somethod"`
+	Sopersistence                      types.String `tfsdk:"sopersistence"`
+	Sopersistencetimeout               types.Int64  `tfsdk:"sopersistencetimeout"`
+	Sothreshold                        types.Int64  `tfsdk:"sothreshold"`
+	State                              types.String `tfsdk:"state"`
+	Tcpprobeport                       types.Int64  `tfsdk:"tcpprobeport"`
+	Tcpprofilename                     types.String `tfsdk:"tcpprofilename"`
+	Td                                 types.Int64  `tfsdk:"td"`
+	Timeout                            types.Int64  `tfsdk:"timeout"`
+	Toggleorder                        types.String `tfsdk:"toggleorder"`
+	Tosid                              types.Int64  `tfsdk:"tosid"`
+	Trofspersistence                   types.String `tfsdk:"trofspersistence"`
+	V6netmasklen                       types.Int64  `tfsdk:"v6netmasklen"`
+	V6persistmasklen                   types.Int64  `tfsdk:"v6persistmasklen"`
+	Vipheader                          types.String `tfsdk:"vipheader"`
+	Wasmmodule                         types.String `tfsdk:"wasmmodule"`
+	Weight                             types.Int64  `tfsdk:"weight"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/lbvserver.json). Never settable; populated from GET.
+	Value                     types.String `tfsdk:"value"`
+	Ipmapping                 types.String `tfsdk:"ipmapping"`
+	Ngname                    types.String `tfsdk:"ngname"`
+	Type                      types.String `tfsdk:"type"`
+	Curstate                  types.String `tfsdk:"curstate"`
+	Effectivestate            types.String `tfsdk:"effectivestate"`
+	Status                    types.Int64  `tfsdk:"status"`
+	Lbrrreason                types.Int64  `tfsdk:"lbrrreason"`
+	Redirect                  types.String `tfsdk:"redirect"`
+	Precedence                types.String `tfsdk:"precedence"`
+	Homepage                  types.String `tfsdk:"homepage"`
+	Dnsvservername            types.String `tfsdk:"dnsvservername"`
+	Domain                    types.String `tfsdk:"domain"`
+	Cachevserver              types.String `tfsdk:"cachevserver"`
+	Health                    types.Int64  `tfsdk:"health"`
+	Ruletype                  types.Int64  `tfsdk:"ruletype"`
+	Groupname                 types.String `tfsdk:"groupname"`
+	Cookiedomain              types.String `tfsdk:"cookiedomain"`
+	Map                       types.String `tfsdk:"map"`
+	Gt2gb                     types.String `tfsdk:"gt2gb"`
+	Consolidatedlconn         types.String `tfsdk:"consolidatedlconn"`
+	Consolidatedlconngbl      types.String `tfsdk:"consolidatedlconngbl"`
+	Thresholdvalue            types.Int64  `tfsdk:"thresholdvalue"`
+	Bindpoint                 types.String `tfsdk:"bindpoint"`
+	Version                   types.Int64  `tfsdk:"version"`
+	Totalservices             types.Int64  `tfsdk:"totalservices"`
+	Activeservices            types.Int64  `tfsdk:"activeservices"`
+	Statechangetimesec        types.String `tfsdk:"statechangetimesec"`
+	Statechangetimeseconds    types.Int64  `tfsdk:"statechangetimeseconds"`
+	Statechangetimemsec       types.Int64  `tfsdk:"statechangetimemsec"`
+	Tickssincelaststatechange types.Int64  `tfsdk:"tickssincelaststatechange"`
+	Isgslb                    types.Bool   `tfsdk:"isgslb"`
+	Vsvrdynconnsothreshold    types.Int64  `tfsdk:"vsvrdynconnsothreshold"`
+	Backupvserverstatus       types.String `tfsdk:"backupvserverstatus"`
+	Nodefaultbindings         types.String `tfsdk:"nodefaultbindings"`
+	Currentactiveorder        types.String `tfsdk:"currentactiveorder"`
+}
 
 func LbvserverDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -169,22 +336,22 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"icmpvsrresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "How the Citrix ADC responds to ping requests received for an IP address that is common to one or more virtual servers. Available settings function as follows:\n* If set to PASSIVE on all the virtual servers that share the IP address, the appliance always responds to the ping requests.\n* If set to ACTIVE on all the virtual servers that share the IP address, the appliance responds to the ping requests if at least one of the virtual servers is UP. Otherwise, the appliance does not respond.\n* If set to ACTIVE on some virtual servers and PASSIVE on the others, the appliance responds if at least one virtual server with the ACTIVE setting is UP. Otherwise, the appliance does not respond.\nNote: This parameter is available at the virtual server level. A similar parameter, ICMP Response, is available at the IP address level, for IPv4 addresses of type VIP. To set that parameter, use the add ip command in the CLI or the Create IP dialog box in the GUI.",
+				Description: "How the Citrix ADC responds to ping requests received for an IP address that is common to one or more virtual servers.",
 			},
 			"insertvserveripport": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Insert an HTTP header, whose value is the IP address and port number of the virtual server, before forwarding a request to the server. The format of the header is <vipHeader>: <virtual server IP address>_<port number >, where vipHeader is the name that you specify for the header. If the virtual server has an IPv6 address, the address in the header is enclosed in brackets ([ and ]) to separate it from the port number. If you have mapped an IPv4 address to a virtual server's IPv6 address, the value of this parameter determines which IP address is inserted in the header, as follows:\n* VIPADDR - Insert the IP address of the virtual server in the HTTP header regardless of whether the virtual server has an IPv4 address or an IPv6 address. A mapped IPv4 address, if configured, is ignored.\n* V6TOV4MAPPING - Insert the IPv4 address that is mapped to the virtual server's IPv6 address. If a mapped IPv4 address is not configured, insert the IPv6 address.\n* OFF - Disable header insertion.",
+				Description: "Insert an HTTP header, whose value is the IP address and port number of the virtual server, before forwarding a request to the server.",
 			},
 			"ipmask": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "IP mask, in dotted decimal notation, for the IP Pattern parameter. Can have leading or trailing non-zero octets (for example, 255.255.240.0 or 0.0.255.255). Accordingly, the mask specifies whether the first n bits or the last n bits of the destination IP address in a client request are to be matched with the corresponding bits in the IP pattern. The former is called a forward mask. The latter is called a reverse mask.",
+				Description: "IP mask, in dotted decimal notation, for the IP Pattern parameter.",
 			},
 			"ippattern": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server. The IP Mask parameter specifies which part of the destination IP address is matched against the pattern.  Mutually exclusive with the IP Address parameter.\nFor example, if the IP pattern assigned to the virtual server is 198.51.100.0 and the IP mask is 255.255.240.0 (a forward mask), the first 20 bits in the destination IP addresses are matched with the first 20 bits in the pattern. The virtual server accepts requests with IP addresses that range from 198.51.96.1 to 198.51.111.254.  You can also use a pattern such as 0.0.2.2 and a mask such as 0.0.255.255 (a reverse mask).\nIf a destination IP address matches more than one IP pattern, the pattern with the longest match is selected, and the associated virtual server processes the request. For example, if virtual servers vs1 and vs2 have the same IP pattern, 0.0.100.128, but different IP masks of 0.0.255.255 and 0.0.224.255, a destination IP address of 198.51.100.128 has the longest match with the IP pattern of vs1. If a destination IP address matches two or more virtual servers to the same extent, the request is processed by the virtual server whose port number matches the port number in the request.",
+				Description: "IP address pattern, in dotted decimal notation, for identifying packets to be accepted by the virtual server.",
 			},
 			"ipset": schema.StringAttribute{
 				Optional:    true,
@@ -199,12 +366,12 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"l2conn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Use Layer 2 parameters (channel number, MAC address, and VLAN ID) in addition to the 4-tuple (<source IP>:<source port>::<destination IP>:<destination port>) that is used to identify a connection. Allows multiple TCP and non-TCP connections with the same 4-tuple to co-exist on the Citrix ADC.",
+				Description: "Use Layer 2 parameters (channel number, MAC address, and VLAN ID) in addition to the 4-tuple to identify a connection.",
 			},
 			"lbmethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Load balancing method.  The available settings function as follows:\n* ROUNDROBIN - Distribute requests in rotation, regardless of the load. Weights can be assigned to services to enforce weighted round robin distribution.\n* LEASTCONNECTION (default) - Select the service with the fewest connections.\n* LEASTRESPONSETIME - Select the service with the lowest average response time.\n* LEASTBANDWIDTH - Select the service currently handling the least traffic.\n* LEASTPACKETS - Select the service currently serving the lowest number of packets per second.\n* CUSTOMLOAD - Base service selection on the SNMP metrics obtained by custom load monitors.\n* LRTM - Select the service with the lowest response time. Response times are learned through monitoring probes. This method also takes the number of active connections into account.\nAlso available are a number of hashing methods, in which the appliance extracts a predetermined portion of the request, creates a hash of the portion, and then checks whether any previous requests had the same hash value. If it finds a match, it forwards the request to the service that served those previous requests. Following are the hashing methods:\n* URLHASH - Create a hash of the request URL (or part of the URL).\n* DOMAINHASH - Create a hash of the domain name in the request (or part of the domain name). The domain name is taken from either the URL or the Host header. If the domain name appears in both locations, the URL is preferred. If the request does not contain a domain name, the load balancing method defaults to LEASTCONNECTION.\n* DESTINATIONIPHASH - Create a hash of the destination IP address in the IP header.\n* SOURCEIPHASH - Create a hash of the source IP address in the IP header.\n* TOKEN - Extract a token from the request, create a hash of the token, and then select the service to which any previous requests with the same token hash value were sent.\n* SRCIPDESTIPHASH - Create a hash of the string obtained by concatenating the source IP address and destination IP address in the IP header.\n* SRCIPSRCPORTHASH - Create a hash of the source IP address and source port in the IP header.\n* CALLIDHASH - Create a hash of the SIP Call-ID header.\n* USER_TOKEN - Same as TOKEN LB method but token needs to be provided from an extension.",
+				Description: "Load balancing method.",
 			},
 			"lbprofilename": schema.StringAttribute{
 				Optional:    true,
@@ -214,17 +381,17 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"listenpolicy": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Expression identifying traffic accepted by the virtual server. Can be either an expression (for example, CLIENT.IP.DST.IN_SUBNET(192.0.2.0/24) or the name of a named expression. In the above example, the virtual server accepts all requests whose destination IP address is in the 192.0.2.0/24 subnet.",
+				Description: "Expression identifying traffic accepted by the virtual server.",
 			},
 			"listenpriority": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Integer specifying the priority of the listen policy. A higher number specifies a lower priority. If a request matches the listen policies of more than one virtual server the virtual server whose listen policy has the highest priority (the lowest priority number) accepts the request.",
+				Description: "Integer specifying the priority of the listen policy. A higher number specifies a lower priority.",
 			},
 			"m": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Redirection mode for load balancing. Available settings function as follows:\n* IP - Before forwarding a request to a server, change the destination IP address to the server's IP address.\n* MAC - Before forwarding a request to a server, change the destination MAC address to the server's MAC address.  The destination IP address is not changed. MAC-based redirection mode is used mostly in firewall load balancing deployments.\n* IPTUNNEL - Perform IP-in-IP encapsulation for client IP packets. In the outer IP headers, set the destination IP address to the IP address of the server and the source IP address to the subnet IP (SNIP). The client IP packets are not modified. Applicable to both IPv4 and IPv6 packets.\n* TOS - Encode the virtual server's TOS ID in the TOS field of the IP header.\nYou can use either the IPTUNNEL or the TOS option to implement Direct Server Return (DSR).",
+				Description: "Redirection mode for load balancing.",
 			},
 			"macmoderetainvlan": schema.StringAttribute{
 				Optional:    true,
@@ -249,7 +416,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"mssqlserverversion": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "For a load balancing virtual server of type MSSQL, the Microsoft SQL Server version. Set this parameter if you expect some clients to run a version different from the version of the database. This setting provides compatibility between the client-side and server-side connections by ensuring that all communication conforms to the server's version.",
+				Description: "For a load balancing virtual server of type MSSQL, the Microsoft SQL Server version.",
 			},
 			"mysqlcharacterset": schema.Int64Attribute{
 				Optional:    true,
@@ -273,7 +440,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			},
 			"name": schema.StringAttribute{
 				Required:    true,
-				Description: "Name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. Can be changed after the virtual server is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my vserver\" or 'my vserver').",
+				Description: "Name for the virtual server.",
 			},
 			"netmask": schema.StringAttribute{
 				Optional:    true,
@@ -283,7 +450,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"netprofile": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Name of the network profile to associate with the virtual server. If you set this parameter, the virtual server uses only the IP addresses in the network profile as source IP addresses when initiating connections with servers.",
+				Description: "Name of the network profile to associate with the virtual server.",
 			},
 			"newname": schema.StringAttribute{
 				Optional:    true,
@@ -293,12 +460,12 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"newservicerequest": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Number of requests, or percentage of the load on existing services, by which to increase the load on a new service at each interval in slow-start mode. A non-zero value indicates that slow-start is applicable. A zero value indicates that the global RR startup parameter is applied. Changing the value to zero will cause services currently in slow start to take the full traffic as determined by the LB method. Subsequently, any new services added will use the global RR factor.",
+				Description: "Number of requests, or percentage of the load on existing services, by which to increase the load on a new service at each interval in slow-start mode.",
 			},
 			"newservicerequestincrementinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Interval, in seconds, between successive increments in the load on a new service or a service whose state has just changed from DOWN to UP. A value of 0 (zero) specifies manual slow start.",
+				Description: "Interval, in seconds, between successive increments in the load on a new service or a service whose state has just changed from DOWN to UP.",
 			},
 			"newservicerequestunit": schema.StringAttribute{
 				Optional:    true,
@@ -324,7 +491,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 				ElementType: types.Int64Type,
 				Optional:    true,
 				Computed:    true,
-				Description: "Persist AVP number for Diameter Persistency.\n            In case this AVP is not defined in Base RFC 3588 and it is nested inside a Grouped AVP,\n            define a sequence of AVP numbers (max 3) in order of parent to child. So say persist AVP number X\n            is nested inside AVP Y which is nested in Z, then define the list as  Z Y X",
+				Description: "Persist AVP number for Diameter Persistency.",
 			},
 			"persistencebackup": schema.StringAttribute{
 				Optional:    true,
@@ -334,7 +501,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"persistencetype": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Type of persistence for the virtual server. Available settings function as follows:\n* SOURCEIP - Connections from the same client IP address belong to the same persistence session.\n* COOKIEINSERT - Connections that have the same HTTP Cookie, inserted by a Set-Cookie directive from a server, belong to the same persistence session.\n* SSLSESSION - Connections that have the same SSL Session ID belong to the same persistence session.\n* CUSTOMSERVERID - Connections with the same server ID form part of the same session. For this persistence type, set the Server ID (CustomServerID) parameter for each service and configure the Rule parameter to identify the server ID in a request.\n* RULE - All connections that match a user defined rule belong to the same persistence session.\n* URLPASSIVE - Requests that have the same server ID in the URL query belong to the same persistence session. The server ID is the hexadecimal representation of the IP address and port of the service to which the request must be forwarded. This persistence type requires a rule to identify the server ID in the request.\n* DESTIP - Connections to the same destination IP address belong to the same persistence session.\n* SRCIPDESTIP - Connections that have the same source IP address and destination IP address belong to the same persistence session.\n* CALLID - Connections that have the same CALL-ID SIP header belong to the same persistence session.\n* RTSPSID - Connections that have the same RTSP Session ID belong to the same persistence session.\n* FIXSESSION - Connections that have the same SenderCompID and TargetCompID values belong to the same persistence session.\n* USERSESSION - Persistence session is created based on the persistence parameter value provided from an extension.",
+				Description: "Type of persistence for the virtual server.",
 			},
 			"persistmask": schema.StringAttribute{
 				Optional:    true,
@@ -364,7 +531,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"processlocal": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "By turning on this option packets destined to a vserver in a cluster will not under go any steering. Turn this option for single packet request response mode or when the upstream device is performing a proper RSS for connection based distribution.",
+				Description: "By turning on this option packets destined to a vserver in a cluster will not under go any steering.",
 			},
 			"push": schema.StringAttribute{
 				Optional:    true,
@@ -374,7 +541,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"pushlabel": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Expression for extracting a label from the server's response. Can be either an expression or the name of a named expression.",
+				Description: "Expression for extracting a label from the server's response.",
 			},
 			"pushmulticlients": schema.StringAttribute{
 				Optional:    true,
@@ -384,7 +551,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"pushvserver": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Name of the load balancing virtual server, of type PUSH or SSL_PUSH, to which the server pushes updates received on the load balancing virtual server that you are configuring.",
+				Description: "Name of the load balancing virtual server, of type PUSH or SSL_PUSH, to which the server pushes updates.",
 			},
 			"quicbridgeprofilename": schema.StringAttribute{
 				Optional:    true,
@@ -399,12 +566,12 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"range": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Number of IP addresses that the appliance must generate and assign to the virtual server. The virtual server then functions as a network virtual server, accepting traffic on any of the generated IP addresses. The IP addresses are generated automatically, as follows:\n* For a range of n, the last octet of the address specified by the IP Address parameter increments n-1 times.\n* If the last octet exceeds 255, it rolls over to 0 and the third octet increments by 1.\nNote: The Range parameter assigns multiple IP addresses to one virtual server. To generate an array of virtual servers, each of which owns only one IP address, use brackets in the IP Address and Name parameters to specify the range. For example:\nadd lb vserver my_vserver[1-3] HTTP 192.0.2.[1-3] 80",
+				Description: "Number of IP addresses that the appliance must generate and assign to the virtual server.",
 			},
 			"recursionavailable": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "When set to YES, this option causes the DNS replies from this vserver to have the RA bit turned on. Typically one would set this option to YES, when the vserver is load balancing a set of DNS servers thatsupport recursive queries.",
+				Description: "When set to YES, this option causes the DNS replies from this vserver to have the RA bit turned on.",
 			},
 			"redirectfromport": schema.Int64Attribute{
 				Optional:    true,
@@ -419,7 +586,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"redirurl": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "URL to which to redirect traffic if the virtual server becomes unavailable.\nWARNING! Make sure that the domain in the URL does not match the domain specified for a content switching policy. If it does, requests are continuously redirected to the unavailable virtual server.",
+				Description: "URL to which to redirect traffic if the virtual server becomes unavailable.",
 			},
 			"redirurlflags": schema.BoolAttribute{
 				Optional:    true,
@@ -429,17 +596,17 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"resrule": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Expression specifying which part of a server's response to use for creating rule based persistence sessions (persistence type RULE). Can be either an expression or the name of a named expression.\nExample:\nHTTP.RES.HEADER(\"setcookie\").VALUE(0).TYPECAST_NVLIST_T('=',';').VALUE(\"server1\").",
+				Description: "Expression specifying which part of a server's response to use for creating rule based persistence sessions (persistence type RULE).",
 			},
 			"retainconnectionsoncluster": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "This option enables you to retain existing connections on a node joining a Cluster system or when a node is being configured for passive timeout. By default, this option is disabled.",
+				Description: "This option enables you to retain existing connections on a node joining a Cluster system or when a node is being configured for passive timeout.",
 			},
 			"rhistate": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Route Health Injection (RHI) functionality of the NetSaler appliance for advertising the route of the VIP address associated with the virtual server. When Vserver RHI Level (RHI) parameter is set to VSVR_CNTRLD, the following are different RHI behaviors for the VIP address on the basis of RHIstate (RHI STATE) settings on the virtual servers associated with the VIP address:\n* If you set RHI STATE to PASSIVE on all virtual servers, the Citrix ADC always advertises the route for the VIP address.\n* If you set RHI STATE to ACTIVE on all virtual servers, the Citrix ADC advertises the route for the VIP address if at least one of the associated virtual servers is in UP state.\n* If you set RHI STATE to ACTIVE on some and PASSIVE on others, the Citrix ADC advertises the route for the VIP address if at least one of the associated virtual servers, whose RHI STATE set to ACTIVE, is in UP state.",
+				Description: "Route Health Injection (RHI) functionality of the NetScaler appliance for advertising the route of the VIP address associated with the virtual server.",
 			},
 			"rtspnat": schema.StringAttribute{
 				Optional:    true,
@@ -449,7 +616,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"rule": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Expression, or name of a named expression, against which traffic is evaluated.\nThe following requirements apply only to the Citrix ADC CLI:\n* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.\n* If the expression itself includes double quotation marks, escape the quotations by using the \\ character.\n* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.",
+				Description: "Expression, or name of a named expression, against which traffic is evaluated.",
 			},
 			"servicename": schema.StringAttribute{
 				Optional:    true,
@@ -464,7 +631,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"sessionless": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Perform load balancing on a per-packet basis, without establishing sessions. Recommended for load balancing of intrusion detection system (IDS) servers and scenarios involving direct server return (DSR), where session information is unnecessary.",
+				Description: "Perform load balancing on a per-packet basis, without establishing sessions.",
 			},
 			"skippersistency": schema.StringAttribute{
 				Optional:    true,
@@ -479,7 +646,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"somethod": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Type of threshold that, when exceeded, triggers spillover. Available settings function as follows:\n* CONNECTION - Spillover occurs when the number of client connections exceeds the threshold.\n* DYNAMICCONNECTION - Spillover occurs when the number of client connections at the virtual server exceeds the sum of the maximum client (Max Clients) settings for bound services. Do not specify a spillover threshold for this setting, because the threshold is implied by the Max Clients settings of bound services.\n* BANDWIDTH - Spillover occurs when the bandwidth consumed by the virtual server's incoming and outgoing traffic exceeds the threshold.\n* HEALTH - Spillover occurs when the percentage of weights of the services that are UP drops below the threshold. For example, if services svc1, svc2, and svc3 are bound to a virtual server, with weights 1, 2, and 3, and the spillover threshold is 50%, spillover occurs if svc1 and svc3 or svc2 and svc3 transition to DOWN.\n* NONE - Spillover does not occur.",
+				Description: "Type of threshold that, when exceeded, triggers spillover.",
 			},
 			"sopersistence": schema.StringAttribute{
 				Optional:    true,
@@ -494,7 +661,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"sothreshold": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Threshold at which spillover occurs. Specify an integer for the CONNECTION spillover method, a bandwidth value in kilobits per second for the BANDWIDTH method (do not enter the units), or a percentage for the HEALTH method (do not enter the percentage symbol).",
+				Description: "Threshold at which spillover occurs.",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,
@@ -504,7 +671,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"tcpprobeport": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Port number for external TCP probe. NetScaler provides support for external TCP health check of the vserver status over the selected port. This option is only supported for vservers assigned with an IPAddress or ipset.",
+				Description: "Port number for external TCP probe.",
 			},
 			"tcpprofilename": schema.StringAttribute{
 				Optional:    true,
@@ -514,7 +681,7 @@ func LbvserverDataSourceSchema() schema.Schema {
 			"td": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
+				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity.",
 			},
 			"timeout": schema.Int64Attribute{
 				Optional:    true,
@@ -589,6 +756,153 @@ func LbvserverDataSourceSchema() schema.Schema {
 				ElementType: types.StringType,
 				Description: "Individual cipher suite names bound to the (SSL) load balancing virtual server.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source (these
+			// are intentionally NOT modeled on the resource). All Computed.
+			"value": schema.StringAttribute{
+				Computed:    true,
+				Description: "SSL status. Possible values = Certkey/Certkeybundle/Vault not bound/Cert-store not usable, SSL feature disabled.",
+			},
+			"ipmapping": schema.StringAttribute{
+				Computed:    true,
+				Description: "The permanent mapping for the V6 Address.",
+			},
+			"ngname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Nodegroup name to which this lbvsever belongs to.",
+			},
+			"type": schema.StringAttribute{
+				Computed:    true,
+				Description: "Type of LB vserver. Possible values = CONTENT, ADDRESS.",
+			},
+			"curstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "Current LB vserver state.",
+			},
+			"effectivestate": schema.StringAttribute{
+				Computed:    true,
+				Description: "Effective state of the LB vserver, based on the state of backup vservers.",
+			},
+			"status": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Current status of the lb vserver.",
+			},
+			"lbrrreason": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Reason why a vserver is in RR.",
+			},
+			"redirect": schema.StringAttribute{
+				Computed:    true,
+				Description: "Cache redirect type. Possible values = CACHE, POLICY, ORIGIN.",
+			},
+			"precedence": schema.StringAttribute{
+				Computed:    true,
+				Description: "Precedence. Possible values = RULE, URL.",
+			},
+			"homepage": schema.StringAttribute{
+				Computed:    true,
+				Description: "Home page.",
+			},
+			"dnsvservername": schema.StringAttribute{
+				Computed:    true,
+				Description: "DNS vserver name.",
+			},
+			"domain": schema.StringAttribute{
+				Computed:    true,
+				Description: "Domain.",
+			},
+			"cachevserver": schema.StringAttribute{
+				Computed:    true,
+				Description: "Cache virtual server.",
+			},
+			"health": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Health of vserver based on percentage of weights of active svcs/all svcs.",
+			},
+			"ruletype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Rule type.",
+			},
+			"groupname": schema.StringAttribute{
+				Computed:    true,
+				Description: "LB group to which the lb vserver is to be bound.",
+			},
+			"cookiedomain": schema.StringAttribute{
+				Computed:    true,
+				Description: "Domain name to be used in the set cookie header in case of cookie persistence.",
+			},
+			"map": schema.StringAttribute{
+				Computed:    true,
+				Description: "Map. Possible values = ON, OFF.",
+			},
+			"gt2gb": schema.StringAttribute{
+				Computed:    true,
+				Description: "Allow for greater than 2 GB transactions on this vserver.",
+			},
+			"consolidatedlconn": schema.StringAttribute{
+				Computed:    true,
+				Description: "Use consolidated stats for LeastConnection.",
+			},
+			"consolidatedlconngbl": schema.StringAttribute{
+				Computed:    true,
+				Description: "Fetches Global setting.",
+			},
+			"thresholdvalue": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Tells whether threshold exceeded for this service participating in CUSTOMLB.",
+			},
+			"bindpoint": schema.StringAttribute{
+				Computed:    true,
+				Description: "The bindpoint to which the policy is bound.",
+			},
+			"version": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Cookie version.",
+			},
+			"totalservices": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Total number of services bound to the vserver.",
+			},
+			"activeservices": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Total number of active services bound to the vserver.",
+			},
+			"statechangetimesec": schema.StringAttribute{
+				Computed:    true,
+				Description: "Time when last state change happened. Seconds part.",
+			},
+			"statechangetimeseconds": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time when last state change happened. Seconds part.",
+			},
+			"statechangetimemsec": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time at which last state change happened. Milliseconds part.",
+			},
+			"tickssincelaststatechange": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time in 10 millisecond ticks since the last state change.",
+			},
+			"isgslb": schema.BoolAttribute{
+				Computed:    true,
+				Description: "This field is set to true if it is a GSLBVserver.",
+			},
+			"vsvrdynconnsothreshold": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Spillover threshold for dynamic connection.",
+			},
+			"backupvserverstatus": schema.StringAttribute{
+				Computed:    true,
+				Description: "Status of BackUp Vserver.",
+			},
+			"nodefaultbindings": schema.StringAttribute{
+				Computed:    true,
+				Description: "To determine if the configuration will have default ssl CIPHER and ECC curve bindings.",
+			},
+			"currentactiveorder": schema.StringAttribute{
+				Computed:    true,
+				Description: "Current order that takes the traffic in case service or servicegroup is bound with order.",
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"sslpolicybinding": schema.SetNestedBlock{
@@ -607,4 +921,204 @@ func LbvserverDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+// lbvserverDataSourceSetAttrFromGet projects a NITRO lbvserver GET response onto
+// the data-source model. The shared utils.MapGet* helpers fill each attribute
+// from the GET (or leave it Null when the GET omits it). Binding-sourced and
+// action-only inputs the base GET never returns are set to their typed Null.
+func lbvserverDataSourceSetAttrFromGet(ctx context.Context, data *LbvserverDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In lbvserverDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Adfsproxyprofile = utils.MapGetString(g, "adfsproxyprofile")
+	data.Aigwprofilename = utils.MapGetString(g, "aigwprofilename")
+	data.Apiprofile = utils.MapGetString(g, "apiprofile")
+	data.Appflowlog = utils.MapGetString(g, "appflowlog")
+	data.Authentication = utils.MapGetString(g, "authentication")
+	data.Authenticationhost = utils.MapGetString(g, "authenticationhost")
+	data.Authn401 = utils.MapGetString(g, "authn401")
+	data.Authnprofile = utils.MapGetString(g, "authnprofile")
+	data.Authnvsname = utils.MapGetString(g, "authnvsname")
+	data.Backuplbmethod = utils.MapGetString(g, "backuplbmethod")
+	data.Backuppersistencetimeout = utils.MapGetInt64(g, "backuppersistencetimeout")
+	data.Backupvserver = utils.MapGetString(g, "backupvserver")
+	data.Bypassaaaa = utils.MapGetString(g, "bypassaaaa")
+	data.Cacheable = utils.MapGetString(g, "cacheable")
+	data.Clttimeout = utils.MapGetInt64(g, "clttimeout")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Connfailover = utils.MapGetString(g, "connfailover")
+	data.Cookiename = utils.MapGetString(g, "cookiename")
+	data.Datalength = utils.MapGetInt64(g, "datalength")
+	data.Dataoffset = utils.MapGetInt64(g, "dataoffset")
+	data.Dbprofilename = utils.MapGetString(g, "dbprofilename")
+	data.Dbslb = utils.MapGetString(g, "dbslb")
+	data.Disableprimaryondown = utils.MapGetString(g, "disableprimaryondown")
+	data.Dns64 = utils.MapGetString(g, "dns64")
+	data.Dnsoverhttps = utils.MapGetString(g, "dnsoverhttps")
+	data.Dnsprofilename = utils.MapGetString(g, "dnsprofilename")
+	data.Downstateflush = utils.MapGetString(g, "downstateflush")
+	data.Hashlength = utils.MapGetInt64(g, "hashlength")
+	data.Healththreshold = utils.MapGetInt64(g, "healththreshold")
+	data.Httpprofilename = utils.MapGetString(g, "httpprofilename")
+	data.Httpsredirecturl = utils.MapGetString(g, "httpsredirecturl")
+	data.Icmpvsrresponse = utils.MapGetString(g, "icmpvsrresponse")
+	data.Insertvserveripport = utils.MapGetString(g, "insertvserveripport")
+	data.Ipmask = utils.MapGetString(g, "ipmask")
+	data.Ippattern = utils.MapGetString(g, "ippattern")
+	data.Ipset = utils.MapGetString(g, "ipset")
+	data.Ipv46 = utils.MapGetString(g, "ipv46")
+	data.L2conn = utils.MapGetString(g, "l2conn")
+	data.Lbmethod = utils.MapGetString(g, "lbmethod")
+	data.Lbprofilename = utils.MapGetString(g, "lbprofilename")
+	data.Listenpolicy = utils.MapGetString(g, "listenpolicy")
+	data.Listenpriority = utils.MapGetInt64(g, "listenpriority")
+	data.M = utils.MapGetString(g, "m")
+	data.Macmoderetainvlan = utils.MapGetString(g, "macmoderetainvlan")
+	data.Maxautoscalemembers = utils.MapGetInt64(g, "maxautoscalemembers")
+	data.Mcpprofilename = utils.MapGetString(g, "mcpprofilename")
+	data.Minautoscalemembers = utils.MapGetInt64(g, "minautoscalemembers")
+	data.Mssqlserverversion = utils.MapGetString(g, "mssqlserverversion")
+	data.Mysqlcharacterset = utils.MapGetInt64(g, "mysqlcharacterset")
+	data.Mysqlprotocolversion = utils.MapGetInt64(g, "mysqlprotocolversion")
+	data.Mysqlservercapabilities = utils.MapGetInt64(g, "mysqlservercapabilities")
+	data.Mysqlserverversion = utils.MapGetString(g, "mysqlserverversion")
+	data.Netmask = utils.MapGetString(g, "netmask")
+	data.Netprofile = utils.MapGetString(g, "netprofile")
+	data.Newservicerequest = utils.MapGetInt64(g, "newservicerequest")
+	data.Newservicerequestincrementinterval = utils.MapGetInt64(g, "newservicerequestincrementinterval")
+	data.Newservicerequestunit = utils.MapGetString(g, "newservicerequestunit")
+	data.Oracleserverversion = utils.MapGetString(g, "oracleserverversion")
+	data.Order = utils.MapGetInt64(g, "order")
+	data.Orderthreshold = utils.MapGetInt64(g, "orderthreshold")
+	data.Persistencebackup = utils.MapGetString(g, "persistencebackup")
+	data.Persistencetype = utils.MapGetString(g, "persistencetype")
+	data.Persistmask = utils.MapGetString(g, "persistmask")
+	data.Port = utils.MapGetInt64(g, "port")
+	data.Probeport = utils.MapGetInt64(g, "probeport")
+	data.Probeprotocol = utils.MapGetString(g, "probeprotocol")
+	data.Probesuccessresponsecode = utils.MapGetString(g, "probesuccessresponsecode")
+	data.Processlocal = utils.MapGetString(g, "processlocal")
+	data.Push = utils.MapGetString(g, "push")
+	data.Pushlabel = utils.MapGetString(g, "pushlabel")
+	data.Pushmulticlients = utils.MapGetString(g, "pushmulticlients")
+	data.Pushvserver = utils.MapGetString(g, "pushvserver")
+	data.Quicbridgeprofilename = utils.MapGetString(g, "quicbridgeprofilename")
+	data.Quicprofilename = utils.MapGetString(g, "quicprofilename")
+	data.Range = utils.MapGetInt64(g, "range")
+	data.Recursionavailable = utils.MapGetString(g, "recursionavailable")
+	data.Redirectfromport = utils.MapGetInt64(g, "redirectfromport")
+	data.Redirectportrewrite = utils.MapGetString(g, "redirectportrewrite")
+	data.Redirurl = utils.MapGetString(g, "redirurl")
+	data.Resrule = utils.MapGetString(g, "resrule")
+	data.Retainconnectionsoncluster = utils.MapGetString(g, "retainconnectionsoncluster")
+	data.Rhistate = utils.MapGetString(g, "rhistate")
+	data.Rtspnat = utils.MapGetString(g, "rtspnat")
+	data.Rule = utils.MapGetString(g, "rule")
+	data.Servicename = utils.MapGetString(g, "servicename")
+	data.Servicetype = utils.MapGetString(g, "servicetype")
+	data.Sessionless = utils.MapGetString(g, "sessionless")
+	data.Skippersistency = utils.MapGetString(g, "skippersistency")
+	data.Sobackupaction = utils.MapGetString(g, "sobackupaction")
+	data.Somethod = utils.MapGetString(g, "somethod")
+	data.Sopersistence = utils.MapGetString(g, "sopersistence")
+	data.Sopersistencetimeout = utils.MapGetInt64(g, "sopersistencetimeout")
+	data.Sothreshold = utils.MapGetInt64(g, "sothreshold")
+	data.State = utils.MapGetString(g, "state")
+	data.Tcpprobeport = utils.MapGetInt64(g, "tcpprobeport")
+	data.Tcpprofilename = utils.MapGetString(g, "tcpprofilename")
+	// td is a config-supplied key; NITRO omits it for the default traffic
+	// domain (0), so preserve the configured value instead of nulling it.
+	if tdv, tdok := g["td"]; tdok && tdv != nil {
+		if iv, err := utils.ConvertToInt64(tdv); err == nil {
+			data.Td = types.Int64Value(iv)
+		}
+	}
+	data.Timeout = utils.MapGetInt64(g, "timeout")
+	data.Toggleorder = utils.MapGetString(g, "toggleorder")
+	data.Tosid = utils.MapGetInt64(g, "tosid")
+	data.Trofspersistence = utils.MapGetString(g, "trofspersistence")
+	data.V6netmasklen = utils.MapGetInt64(g, "v6netmasklen")
+	data.V6persistmasklen = utils.MapGetInt64(g, "v6persistmasklen")
+	data.Vipheader = utils.MapGetString(g, "vipheader")
+	data.Wasmmodule = utils.MapGetString(g, "wasmmodule")
+	data.Weight = utils.MapGetInt64(g, "weight")
+
+	// persistavpno is an Int64-typed list; MapGetStringList would yield the wrong
+	// element type, so convert inline.
+	if v, ok := g["persistavpno"]; ok && v != nil {
+		if rawList, lok := v.([]interface{}); lok {
+			intList := make([]int64, 0, len(rawList))
+			for _, e := range rawList {
+				if iv, err := utils.ConvertToInt64(e); err == nil {
+					intList = append(intList, iv)
+				}
+			}
+			if lv, d := types.ListValueFrom(ctx, types.Int64Type, intList); !d.HasError() {
+				data.Persistavpno = lv
+			} else {
+				data.Persistavpno = types.ListNull(types.Int64Type)
+			}
+		} else {
+			data.Persistavpno = types.ListNull(types.Int64Type)
+		}
+	} else {
+		data.Persistavpno = types.ListNull(types.Int64Type)
+	}
+
+	// newname / redirurlflags are action-only inputs the GET never returns -> Null.
+	data.Newname = types.StringNull()
+	data.Redirurlflags = types.BoolNull()
+
+	// SSL bindings are sourced from separate binding endpoints, not the base
+	// lbvserver GET, so they are Null on this data source projection.
+	data.Sslcertkey = types.StringNull()
+	data.Sslprofile = types.StringNull()
+	data.Snisslcertkeys = types.SetNull(types.StringType)
+	data.Ciphers = types.ListNull(types.StringType)
+	data.Ciphersuites = types.ListNull(types.StringType)
+	data.Sslpolicybinding = types.SetNull(types.ObjectType{AttrTypes: sslpolicybindingAttrTypes})
+
+	// Read-only attributes.
+	data.Value = utils.MapGetString(g, "value")
+	data.Ipmapping = utils.MapGetString(g, "ipmapping")
+	data.Ngname = utils.MapGetString(g, "ngname")
+	data.Type = utils.MapGetString(g, "type")
+	data.Curstate = utils.MapGetString(g, "curstate")
+	data.Effectivestate = utils.MapGetString(g, "effectivestate")
+	data.Status = utils.MapGetInt64(g, "status")
+	data.Lbrrreason = utils.MapGetInt64(g, "lbrrreason")
+	data.Redirect = utils.MapGetString(g, "redirect")
+	data.Precedence = utils.MapGetString(g, "precedence")
+	data.Homepage = utils.MapGetString(g, "homepage")
+	data.Dnsvservername = utils.MapGetString(g, "dnsvservername")
+	data.Domain = utils.MapGetString(g, "domain")
+	data.Cachevserver = utils.MapGetString(g, "cachevserver")
+	data.Health = utils.MapGetInt64(g, "health")
+	data.Ruletype = utils.MapGetInt64(g, "ruletype")
+	data.Groupname = utils.MapGetString(g, "groupname")
+	data.Cookiedomain = utils.MapGetString(g, "cookiedomain")
+	data.Map = utils.MapGetString(g, "map")
+	data.Gt2gb = utils.MapGetString(g, "gt2gb")
+	data.Consolidatedlconn = utils.MapGetString(g, "consolidatedlconn")
+	data.Consolidatedlconngbl = utils.MapGetString(g, "consolidatedlconngbl")
+	data.Thresholdvalue = utils.MapGetInt64(g, "thresholdvalue")
+	data.Bindpoint = utils.MapGetString(g, "bindpoint")
+	data.Version = utils.MapGetInt64(g, "version")
+	data.Totalservices = utils.MapGetInt64(g, "totalservices")
+	data.Activeservices = utils.MapGetInt64(g, "activeservices")
+	data.Statechangetimesec = utils.MapGetString(g, "statechangetimesec")
+	data.Statechangetimeseconds = utils.MapGetInt64(g, "statechangetimeseconds")
+	data.Statechangetimemsec = utils.MapGetInt64(g, "statechangetimemsec")
+	data.Tickssincelaststatechange = utils.MapGetInt64(g, "tickssincelaststatechange")
+	data.Isgslb = utils.MapGetBool(g, "isgslb")
+	data.Vsvrdynconnsothreshold = utils.MapGetInt64(g, "vsvrdynconnsothreshold")
+	data.Backupvserverstatus = utils.MapGetString(g, "backupvserverstatus")
+	data.Nodefaultbindings = utils.MapGetString(g, "nodefaultbindings")
+	data.Currentactiveorder = utils.MapGetString(g, "currentactiveorder")
 }

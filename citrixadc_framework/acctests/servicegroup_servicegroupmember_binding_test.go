@@ -507,11 +507,14 @@ func TestAccServicegroup_servicegroupmember_bindingDataSource(t *testing.T) {
 			{
 				Config: testAccServicegroup_servicegroupmember_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "servicegroupname", "tf_servicegroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "ip", "10.78.22.33"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "port", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "servername", "10.78.22.33"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "order", "100"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_servicegroup_servicegroupmember_binding.tf_binding", "svrstate"),
 				),
 			},
 		},

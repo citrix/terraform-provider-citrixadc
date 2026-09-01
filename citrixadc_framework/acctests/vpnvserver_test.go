@@ -382,6 +382,9 @@ func TestAccVpnvserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "secureprivateaccess", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "deviceposture", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver.foo", "accessrestrictedpageredirect", "NS"),
+					// Runtime-binding proof + read-only runtime state exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver.foo", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver.foo", "curstate"),
 				),
 			},
 		},

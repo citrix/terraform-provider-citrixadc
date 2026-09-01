@@ -329,6 +329,7 @@ func TestAccAuthenticationvserverAuthenticationsmartaccesspolicyBindingDataSourc
 			{
 				Config: testAccAuthenticationvserverAuthenticationsmartaccesspolicyBindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding", "policy", "tf_authenticationsmartaccesspolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding", "priority", "100"),

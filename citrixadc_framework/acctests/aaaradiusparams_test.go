@@ -145,6 +145,7 @@ func TestAccAaaradiusparamsDataSource_basic(t *testing.T) {
 				Config: testAccAaaradiusparamsDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					// radkey is not checked as it's returned encrypted/hashed by the API
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.158"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "8"),

@@ -82,6 +82,12 @@ In addition to the arguments, the following attributes are available:
 * `storesamlresponse` - Option to store entire SAML Response through the life of user session.
 * `id` - The id of the authenticationsamlaction. It has the same value as the `name` attribute.
 
+### Read-only authenticationsamlaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationsamlaction` resource) and are `Computed`. Any attribute the appliance does not return is `null`.
+
+* `metadataimportstatus` - Describes the metadata import status (for example `INIT`, `SUCCESS`, `FAIL`).
+
 ## Import
 
 A authenticationsamlaction can be imported using its name, e.g.

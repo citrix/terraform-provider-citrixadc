@@ -335,6 +335,10 @@ func TestAccIcapolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_icapolicy.tf_icapolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_icapolicy.tf_icapolicy_ds", "action", "my_ica_action_ds"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_icapolicy.tf_icapolicy_ds", "id"),
+					// Read-only metadata exposed only by the data source. hits/undefhits
+					// are counter-style fields always populated for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icapolicy.tf_icapolicy_ds", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_icapolicy.tf_icapolicy_ds", "undefhits"),
 				),
 			},
 		},

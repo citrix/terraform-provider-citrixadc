@@ -143,6 +143,7 @@ func TestAccAaagroupAuditsyslogpolicyBindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAaagroupAuditsyslogpolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaagroup_auditsyslogpolicy_binding.tf_aaagroup_auditsyslogpolicy_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_auditsyslogpolicy_binding.tf_aaagroup_auditsyslogpolicy_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_auditsyslogpolicy_binding.tf_aaagroup_auditsyslogpolicy_binding", "policy", "tf_auditsyslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_auditsyslogpolicy_binding.tf_aaagroup_auditsyslogpolicy_binding", "priority", "100"),

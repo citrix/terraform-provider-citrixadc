@@ -202,6 +202,8 @@ func TestAccNssimpleacl6DataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_nssimpleacl6.tf_simpleacl6_ds", "aclname", "tf_simpleacl6_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nssimpleacl6.tf_simpleacl6_ds", "aclaction", "DENY"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nssimpleacl6.tf_simpleacl6_ds", "id"),
 				),
 			},
 		},

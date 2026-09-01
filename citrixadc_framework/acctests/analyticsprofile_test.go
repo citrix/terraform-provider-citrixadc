@@ -187,6 +187,9 @@ func TestAccAnalyticsprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_analyticsprofile.tf_analyticsprofile", "type", "webinsight"),
 					resource.TestCheckResourceAttr("data.citrixadc_analyticsprofile.tf_analyticsprofile", "httppagetracking", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_analyticsprofile.tf_analyticsprofile", "httpurl", "DISABLED"),
+					// Read-only metadata exposed only by the data source (the resource
+					// intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_analyticsprofile.tf_analyticsprofile", "refcnt"),
 				),
 			},
 		},

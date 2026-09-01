@@ -35,7 +35,7 @@ func (d *AuthenticationvserverAuthenticationradiuspolicyBindingDataSource) Schem
 }
 
 func (d *AuthenticationvserverAuthenticationradiuspolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationvserverAuthenticationradiuspolicyBindingResourceModel
+	var data AuthenticationvserverAuthenticationradiuspolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -81,7 +81,7 @@ func (d *AuthenticationvserverAuthenticationradiuspolicyBindingDataSource) Read(
 		return
 	}
 
-	authenticationvserver_authenticationradiuspolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_authenticationradiuspolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

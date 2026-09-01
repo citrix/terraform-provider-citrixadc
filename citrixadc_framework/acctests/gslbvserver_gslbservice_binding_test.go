@@ -352,6 +352,11 @@ func TestAccGslbvserver_gslbservice_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "name", "gslb_vserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "servicename", "gslb1vservice"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// curstate is a state field always populated for a live binding.
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbvserver_gslbservice_binding.tf_gslbvserver_gslbservice_binding", "curstate"),
 				),
 			},
 		},

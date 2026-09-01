@@ -42,6 +42,13 @@ In addition to the arguments, the following attributes are available:
 * `ssodomain` - Domain to use for single sign-on (SSO).
 * `id` - The id of the tmsessionaction. It has the same value as the `name` attribute.
 
+### Read-only tmsessionaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_tmsessionaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this configuration.
+
 ## Import
 
 A tmsessionaction can be imported using its name, e.g.

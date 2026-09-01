@@ -398,6 +398,8 @@ func TestAccDnsprofileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnsprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dnsprofilename", "tf_profile_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dnsquerylogging", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsprofile.tf_dnsprofile_ds", "dnsanswerseclogging", "DISABLED"),

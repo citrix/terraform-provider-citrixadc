@@ -368,6 +368,10 @@ func TestAccSsldtlsprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "pmtudiscovery", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "terminatesession", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "initialretrytimeout", "2"),
+					// id is the universal runtime-binding proof; read-only
+					// metadata attrs are instance/config-dependent and Null when
+					// the appliance omits them.
+					resource.TestCheckResourceAttrSet("data.citrixadc_ssldtlsprofile.tf_ssldtlsprofile", "id"),
 				),
 			},
 		},

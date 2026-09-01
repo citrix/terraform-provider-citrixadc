@@ -45,3 +45,9 @@ The following arguments are optional:
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslvserver_sslcertkey_binding. It is the concatenation of the `vservername`, `certkeyname`, `snicert` and `ca` attributes separated by a comma.
+
+### Read-only sslvserver_sslcertkey_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslvserver_sslcertkey_binding` resource). They are GET-only/Computed and any attribute the appliance does not return is `null`.
+
+* `cleartextport` - Port on which clear-text data is sent by the appliance to the server. Do not specify this parameter for SSL offloading with end-to-end encryption.

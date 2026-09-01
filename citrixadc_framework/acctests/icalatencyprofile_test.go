@@ -327,6 +327,10 @@ func TestAccIcalatencyprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "l7latencymonitoring", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "l7latencythresholdfactor", "120"),
 					resource.TestCheckResourceAttr("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "l7latencywaittime", "100"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "id"),
+					// Read-only metadata exposed only by the data source. refcnt is a
+					// refcnt-style field always populated for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_icalatencyprofile.tf_icalatencyprofile_ds", "refcnt"),
 				),
 			},
 		},

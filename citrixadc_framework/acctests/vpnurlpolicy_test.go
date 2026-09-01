@@ -373,6 +373,9 @@ func TestAccVpnurlpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "name", "new_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "action", "tf_vpnurlaction"),
+					// Runtime-binding proof + read-only counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnurlpolicy.tf_vpnurlpolicy", "undefhits"),
 				),
 			},
 		},

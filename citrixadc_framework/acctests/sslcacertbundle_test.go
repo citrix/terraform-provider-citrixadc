@@ -161,6 +161,9 @@ func TestAccSslcacertbundleDataSource_basic(t *testing.T) {
 				Config: testAccSslcacertbundleDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslcacertbundle.tf_sslcacertbundle", "cacertbundlename", "tf_sslcacertbundle"),
+					// Universal runtime-binding proof (read-only servername/
+					// cacertbundledigest are config-dependent and may be omitted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcacertbundle.tf_sslcacertbundle", "id"),
 				),
 			},
 		},

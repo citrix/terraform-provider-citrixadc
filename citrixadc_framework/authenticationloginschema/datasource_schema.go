@@ -1,8 +1,37 @@
 package authenticationloginschema
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AuthenticationloginschemaDataSourceModel is the data-source-specific model,
+// decoupled from AuthenticationloginschemaResourceModel. A data source is a pure
+// read surface, so it can expose the FULL GET projection: the read/write
+// attributes (as Computed outputs) AND the read-only attributes the resource
+// deliberately omits (builtin, feature). The Framework's per-attribute model
+// <-> schema reflection requires this model to have exactly the attributes the
+// data-source schema declares, which is why it cannot reuse the resource model.
+type AuthenticationloginschemaDataSourceModel struct {
+	Id                      types.String `tfsdk:"id"`
+	Authenticationschema    types.String `tfsdk:"authenticationschema"`
+	Authenticationstrength  types.Int64  `tfsdk:"authenticationstrength"`
+	Name                    types.String `tfsdk:"name"`
+	Passwdexpression        types.String `tfsdk:"passwdexpression"`
+	Passwordcredentialindex types.Int64  `tfsdk:"passwordcredentialindex"`
+	Ssocredentials          types.String `tfsdk:"ssocredentials"`
+	Usercredentialindex     types.Int64  `tfsdk:"usercredentialindex"`
+	Userexpression          types.String `tfsdk:"userexpression"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/authenticationloginschema.json). Never settable.
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func AuthenticationloginschemaDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -49,6 +78,43 @@ func AuthenticationloginschemaDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Expression for username extraction during login. This can be any relevant advanced policy expression.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type. Possible values: MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// authenticationloginschemaDataSourceSetAttrFromGet projects a NITRO
+// authenticationloginschema GET response onto the data-source model. Attributes
+// are simply filled from the GET (or left Null when the GET omits them) via the
+// shared utils.MapGet* helpers.
+func authenticationloginschemaDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationloginschemaDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In authenticationloginschemaDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Authenticationschema = utils.MapGetString(g, "authenticationschema")
+	data.Authenticationstrength = utils.MapGetInt64(g, "authenticationstrength")
+	data.Passwdexpression = utils.MapGetString(g, "passwdexpression")
+	data.Passwordcredentialindex = utils.MapGetInt64(g, "passwordcredentialindex")
+	data.Ssocredentials = utils.MapGetString(g, "ssocredentials")
+	data.Usercredentialindex = utils.MapGetInt64(g, "usercredentialindex")
+	data.Userexpression = utils.MapGetString(g, "userexpression")
+
+	// Read-only metadata.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

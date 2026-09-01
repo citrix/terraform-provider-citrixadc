@@ -308,6 +308,8 @@ func TestAccVrid_interface_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVrid_interface_bindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					// id is always composed at runtime; the universal binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "vrid_id", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid_interface_binding.tf_vrid_interface_binding", "ifnum", "1/1"),
 				),

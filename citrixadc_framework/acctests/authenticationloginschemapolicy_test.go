@@ -333,6 +333,7 @@ func TestAccAuthenticationloginschemapolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy_ds", "name", "tf_loginschemapolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy_ds", "comment", "datasource_test"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationloginschemapolicy.tf_loginschemapolicy_ds", "id"),
 				),
 			},
 		},

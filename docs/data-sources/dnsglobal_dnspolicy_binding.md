@@ -42,3 +42,10 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
 * `labeltype` - Type of policy label invocation.
 * `priority` - Specifies the priority of the policy with which it is bound. Maximum allowed priority should be less than 65535.
+
+### Read-only dnsglobal_dnspolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnsglobal_dnspolicy_binding` resource). Each is Computed and is `null` when the appliance does not return it.
+
+* `numpol` - The number of policies bound to the bindpoint.
+* `flowtype` - flowtype of the bound rewrite policy.

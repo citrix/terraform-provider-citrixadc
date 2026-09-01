@@ -224,6 +224,7 @@ func TestAccFeoglobal_feopolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "policyname", "tf_feopolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "type", "REQ_DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "priority", "100"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_feoglobal_feopolicy_binding.tf_feoglobal_feopolicy_binding", "id"),
 				),
 			},
 		},

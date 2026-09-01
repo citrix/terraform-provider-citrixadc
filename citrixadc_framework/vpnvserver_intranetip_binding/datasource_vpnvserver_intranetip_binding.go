@@ -35,7 +35,7 @@ func (d *VpnvserverIntranetipBindingDataSource) Schema(ctx context.Context, req 
 }
 
 func (d *VpnvserverIntranetipBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnvserverIntranetipBindingResourceModel
+	var data VpnvserverIntranetipBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *VpnvserverIntranetipBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	vpnvserver_intranetip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	vpnvserver_intranetip_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

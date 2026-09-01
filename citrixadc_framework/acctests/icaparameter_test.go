@@ -298,6 +298,7 @@ func TestAccIcaparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "edtlosstolerant", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "dfpersistence", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_icaparameter.tf_icaparameter_ds", "hdxinsightnonnsap", "NO"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_icaparameter.tf_icaparameter_ds", "id"),
 				),
 			},
 		},

@@ -409,6 +409,8 @@ func TestAccVpnvserver_vpnurlpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind", "policy", "new_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind", "priority", "20"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind", "gotopriorityexpression", "next"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_vpnurlpolicy_binding.tf_bind", "id"),
 				),
 			},
 		},

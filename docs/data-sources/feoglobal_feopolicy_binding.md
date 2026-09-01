@@ -40,3 +40,9 @@ In addition to the arguments, the following attributes are available:
 * `priority` - The priority assigned to the policy binding.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `id` - The id of the feoglobal_feopolicy_binding. It has the same value as the `policyname` attribute.
+
+### Read-only feoglobal_feopolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_feoglobal_feopolicy_binding` resource). Each is Computed and is `null` when the appliance does not return it.
+
+* `numpol` - The number of policies bound to the bindpoint.

@@ -320,6 +320,8 @@ func TestAccLbpolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLbpolicyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof of a resolved data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbpolicy.tf_pol_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbpolicy.tf_pol_ds", "name", "tf_pol_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbpolicy.tf_pol_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbpolicy.tf_pol_ds", "action", "tf_act_ds"),

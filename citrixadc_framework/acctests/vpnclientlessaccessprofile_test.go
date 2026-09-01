@@ -301,6 +301,8 @@ func TestAccVpnclientlessaccessprofileDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccessprofile.tf_vpnclientlessaccessprofile", "profilename", "tf_vpnclientlessaccessprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccessprofile.tf_vpnclientlessaccessprofile", "requirepersistentcookie", "ON"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnclientlessaccessprofile.tf_vpnclientlessaccessprofile", "id"),
 				),
 			},
 		},

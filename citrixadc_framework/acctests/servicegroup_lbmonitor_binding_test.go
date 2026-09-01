@@ -365,6 +365,7 @@ func TestAccServicegroup_lbmonitor_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServicegroup_lbmonitor_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "servicegroupname", "tf_servicegroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "monitor_name", "tf-monitor1"),
 					resource.TestCheckResourceAttr("data.citrixadc_servicegroup_lbmonitor_binding.bind1", "weight", "80"),

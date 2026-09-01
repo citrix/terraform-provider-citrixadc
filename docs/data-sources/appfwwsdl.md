@@ -39,3 +39,9 @@ In addition to the argument above, the following attributes are exported:
 * `src` - URL (protocol, host, path, and name) of the WSDL file that was imported.
 * `comment` - Any comments to preserve information about the WSDL.
 * `overwrite` - Whether to overwrite any existing WSDL of the same name.
+
+### Read-only appfwwsdl metadata
+
+These attributes are GET-only (Computed) and are returned by the appliance on a read; they are not configurable on the `citrixadc_appfwwsdl` resource. Any attribute the appliance does not return is `null`.
+
+* `response` - WSDL response returned by the appliance.

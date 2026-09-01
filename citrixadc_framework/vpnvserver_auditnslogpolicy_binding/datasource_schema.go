@@ -1,8 +1,33 @@
 package vpnvserver_auditnslogpolicy_binding
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// VpnvserverAuditnslogpolicyBindingDataSourceModel is the data-source-specific
+// model, decoupled from the resource model. It exposes the read/write attributes
+// (as Computed outputs) AND the read-only attributes the appliance returns on a
+// GET (zion73x_readonly/vpnvserver_auditnslogpolicy_binding.json) that the
+// resource intentionally omits.
+type VpnvserverAuditnslogpolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Groupextraction        types.Bool   `tfsdk:"groupextraction"`
+	Name                   types.String `tfsdk:"name"`   // Required lookup key (parent)
+	Policy                 types.String `tfsdk:"policy"` // Required lookup key
+	Priority               types.Int64  `tfsdk:"priority"`
+	Secondary              types.Bool   `tfsdk:"secondary"`
+
+	// Read-only (GET-only) attributes surfaced only by the data source.
+	Acttype types.Int64 `tfsdk:"acttype"`
+}
 
 func VpnvserverAuditnslogpolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -43,6 +68,34 @@ func VpnvserverAuditnslogpolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Binds the authentication policy as the secondary policy to use in a two-factor configuration. A user must then authenticate not only via a primary authentication method but also via a secondary authentication method. User groups are aggregated across both. The user name must be exactly the same for both authentication methods, but they can require different passwords.",
 			},
+
+			// Read-only (GET-only) attributes exposed only by the data source.
+			"acttype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The bound entity (action) type, as returned by the appliance. GET-only; null when the appliance omits it.",
+			},
 		},
 	}
+}
+
+// vpnvserver_auditnslogpolicy_bindingDataSourceSetAttrFromGet projects a NITRO GET
+// response onto the data-source model via the shared utils.MapGet* helpers. A data
+// source has no plan/apply reconciliation, so attributes are simply filled from the
+// GET (or left Null when the GET omits them).
+func vpnvserver_auditnslogpolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *VpnvserverAuditnslogpolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In vpnvserver_auditnslogpolicy_bindingDataSourceSetAttrFromGet Function")
+
+	data.Bindpoint = utils.MapGetString(g, "bindpoint")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Groupextraction = utils.MapGetBool(g, "groupextraction")
+	data.Name = utils.MapGetString(g, "name")
+	data.Policy = utils.MapGetString(g, "policy")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Secondary = utils.MapGetBool(g, "secondary")
+
+	// Read-only attribute.
+	data.Acttype = utils.MapGetInt64(g, "acttype")
+
+	// Composite ID (legacy SDK v2 order: name,policy).
+	data.Id = types.StringValue(fmt.Sprintf("name:%s,policy:%s", utils.UrlEncode(data.Name.ValueString()), utils.UrlEncode(data.Policy.ValueString())))
 }

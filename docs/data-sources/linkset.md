@@ -35,6 +35,12 @@ In addition to the arguments, the following attributes are available:
 * `interfacebinding` - Set of interface bindings for the linkset.
 * `id` - The id of the linkset. It has the same value as the `linkset_id` attribute.
 
+### Read-only linkset metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_linkset` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `ifnum` - The interfaces bound to the linkset, as returned by the appliance.
+
 
 ## Import
 

@@ -257,6 +257,7 @@ func TestAccFeoparameterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFeoparameterDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_feoparameter.feoparameter", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoparameter.feoparameter", "jpegqualitypercent", "10"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoparameter.feoparameter", "cssinlinethressize", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoparameter.feoparameter", "jsinlinethressize", "50"),

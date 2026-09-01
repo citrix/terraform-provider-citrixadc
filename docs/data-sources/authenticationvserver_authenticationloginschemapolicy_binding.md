@@ -39,3 +39,9 @@ In addition to the arguments, the following attributes are available:
 * `nextfactor` - Applicable only while binding advance authentication policy as classic authentication policy does not support nFactor.
 * `priority` - The priority, if any, of the vpn vserver policy.
 * `secondary` - Applicable only while bindind classic authentication policy as advance authentication policy use nFactor.
+
+### Read-only authenticationvserver_authenticationloginschemapolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationvserver_authenticationloginschemapolicy_binding` resource). They are GET-only / Computed. Any attribute the appliance does not return is `null`.
+
+* `acttype` - Action type associated with the policy binding.

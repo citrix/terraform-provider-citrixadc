@@ -37,3 +37,9 @@ In addition to the arguments, the following attributes are available:
 * `comment` - Any comments to preserve information about the XML error object.
 * `overwrite` - Overwrite any existing XML error object of the same name.
 * `src` - URL (protocol, host, path, and name) for the location at which to store the imported XML error object. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
+
+### Read-only appfwxmlerrorpage metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwxmlerrorpage` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `response` - Response returned by the appliance for the imported XML error object.

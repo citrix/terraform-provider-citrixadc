@@ -298,6 +298,7 @@ func TestAccBridgegroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBridgegroupDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_bridgegroup.tf_bridgegroup_ds", "id"),
 					resource.TestCheckResourceAttrPair("data.citrixadc_bridgegroup.tf_bridgegroup_ds", "bridgegroup_id", "citrixadc_bridgegroup.tf_bridgegroup", "bridgegroup_id"),
 					resource.TestCheckResourceAttrPair("data.citrixadc_bridgegroup.tf_bridgegroup_ds", "dynamicrouting", "citrixadc_bridgegroup.tf_bridgegroup", "dynamicrouting"),
 					resource.TestCheckResourceAttrPair("data.citrixadc_bridgegroup.tf_bridgegroup_ds", "ipv6dynamicrouting", "citrixadc_bridgegroup.tf_bridgegroup", "ipv6dynamicrouting"),

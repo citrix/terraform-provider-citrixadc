@@ -306,6 +306,12 @@ func TestAccVideooptimizationpacingactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingaction.tf_pacingaction", "name", "tf_pacingaction"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingaction.tf_pacingaction", "rate", "20"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingaction.tf_pacingaction", "comment", "Some Comment"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingaction.tf_pacingaction", "id"),
+					// Counter/refcount-style read-only attributes are always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingaction.tf_pacingaction", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingaction.tf_pacingaction", "referencecount"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationpacingaction.tf_pacingaction", "undefhits"),
 				),
 			},
 		},

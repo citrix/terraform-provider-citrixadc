@@ -38,6 +38,21 @@ In addition to the arguments, the following attributes are available:
 * `refreshinterval` - Interval at which certificates or idtoken is refreshed.
 * `id` - The id of the authenticationpushservice. It has the same value as the `name` attribute.
 
+### Read-only authenticationpushservice metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationpushservice` resource) and are `Computed`. Any attribute the appliance does not return is `null`.
+
+* `namespace` - Fully qualified domain name of the notification service in the cloud.
+* `hubname` - Name of the hub within a namespace, used to classify different identities within a namespace.
+* `servicekey` - (Sensitive) Key used to compute the signature necessary for registering to the notification service.
+* `servicekeyname` - Friendly name of the key used to compute the signature necessary for registering to the notification service.
+* `certendpoint` - URL of the endpoint that contains JWKs (Json Web Key) for JWT (Json Web Token) verification.
+* `pushservicestatus` - Status of the push service (for example `INIT`, `CERTFETCH`, `CCTOKEN`, `COMPLETE`).
+* `trustservice` - URL of the service that generates tokens for cloud access.
+* `pushcloudserverstatus` - Status of the cloud service that does push (for example `UP`, `DOWN`).
+* `signingkeyname` - Friendly name of the key used to compute the signature necessary for accessing the notification service.
+* `signingkey` - (Sensitive) Key used to compute the signature necessary for accessing the notification service.
+
 
 ## Import
 

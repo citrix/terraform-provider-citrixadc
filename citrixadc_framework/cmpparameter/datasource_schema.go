@@ -1,8 +1,48 @@
 package cmpparameter
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// CmpparameterDataSourceModel is the data-source-specific model, decoupled from
+// CmpparameterResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits
+// (builtin, feature). Every non-key attribute is Computed; the Framework's
+// per-attribute model <-> schema reflection requires this model to have exactly
+// the attributes the data-source schema declares, which is why it cannot reuse
+// the resource model.
+type CmpparameterDataSourceModel struct {
+	Id                          types.String `tfsdk:"id"`
+	Addvaryheader               types.String `tfsdk:"addvaryheader"`
+	Cmpbypasspct                types.Int64  `tfsdk:"cmpbypasspct"`
+	Cmplevel                    types.String `tfsdk:"cmplevel"`
+	Cmponpush                   types.String `tfsdk:"cmponpush"`
+	Externalcache               types.String `tfsdk:"externalcache"`
+	Heurexpiry                  types.String `tfsdk:"heurexpiry"`
+	Heurexpiryhistwt            types.Int64  `tfsdk:"heurexpiryhistwt"`
+	Heurexpirythres             types.Int64  `tfsdk:"heurexpirythres"`
+	Minressize                  types.Int64  `tfsdk:"minressize"`
+	Policytype                  types.String `tfsdk:"policytype"`
+	Quantumsize                 types.Int64  `tfsdk:"quantumsize"`
+	Randomgzipfilename          types.String `tfsdk:"randomgzipfilename"`
+	Randomgzipfilenamemaxlength types.Int64  `tfsdk:"randomgzipfilenamemaxlength"`
+	Randomgzipfilenameminlength types.Int64  `tfsdk:"randomgzipfilenameminlength"`
+	Servercmp                   types.String `tfsdk:"servercmp"`
+	Varyheadervalue             types.String `tfsdk:"varyheadervalue"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/cmpparameter.json). Never settable; populated from GET.
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func CmpparameterDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -90,6 +130,53 @@ func CmpparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The value of the HTTP Vary header for compressed responses. If this argument is not specified, a default value of \"Accept-Encoding\" will be used.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine whether compression is default or not.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// cmpparameterDataSourceSetAttrFromGet projects a NITRO cmpparameter GET response
+// onto the data-source model. cmpparameter is a singleton (unnamed) config
+// resource, so the id is a static value. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func cmpparameterDataSourceSetAttrFromGet(ctx context.Context, data *CmpparameterDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In cmpparameterDataSourceSetAttrFromGet Function")
+
+	// Read/write attributes as read-back outputs.
+	data.Addvaryheader = utils.MapGetString(g, "addvaryheader")
+	data.Cmpbypasspct = utils.MapGetInt64(g, "cmpbypasspct")
+	data.Cmplevel = utils.MapGetString(g, "cmplevel")
+	data.Cmponpush = utils.MapGetString(g, "cmponpush")
+	data.Externalcache = utils.MapGetString(g, "externalcache")
+	data.Heurexpiry = utils.MapGetString(g, "heurexpiry")
+	data.Heurexpiryhistwt = utils.MapGetInt64(g, "heurexpiryhistwt")
+	data.Heurexpirythres = utils.MapGetInt64(g, "heurexpirythres")
+	data.Minressize = utils.MapGetInt64(g, "minressize")
+	data.Policytype = utils.MapGetString(g, "policytype")
+	data.Quantumsize = utils.MapGetInt64(g, "quantumsize")
+	data.Randomgzipfilename = utils.MapGetString(g, "randomgzipfilename")
+	data.Randomgzipfilenamemaxlength = utils.MapGetInt64(g, "randomgzipfilenamemaxlength")
+	data.Randomgzipfilenameminlength = utils.MapGetInt64(g, "randomgzipfilenameminlength")
+	data.Servercmp = utils.MapGetString(g, "servercmp")
+	data.Varyheadervalue = utils.MapGetString(g, "varyheadervalue")
+
+	// Read-only attributes.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
+
+	// cmpparameter is a singleton (unnamed) config resource - static ID.
+	data.Id = types.StringValue("cmpparameter-config")
 }

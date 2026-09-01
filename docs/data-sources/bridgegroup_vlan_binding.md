@@ -33,3 +33,9 @@ output "vlan" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the bridgegroup_vlan_binding. It is a system-generated identifier.
+
+### Read-only bridgegroup_vlan_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_bridgegroup_vlan_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `rnat` - Temporary flag used for internal purpose.

@@ -260,6 +260,8 @@ func TestAccCsparameterDataSource_basic(t *testing.T) {
 				Config: testAccCsparameterDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_csparameter.tf_csparameter", "stateupdate", "ENABLED"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_csparameter.tf_csparameter", "id"),
 				),
 			},
 		},

@@ -357,6 +357,8 @@ func TestAccRouteDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "netmask", "255.255.255.0"),
 					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "gateway", "100.0.1.1"),
 					resource.TestCheckResourceAttr("data.citrixadc_route.tf_route", "advertise", "ENABLED"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_route.tf_route", "id"),
 				),
 			},
 		},

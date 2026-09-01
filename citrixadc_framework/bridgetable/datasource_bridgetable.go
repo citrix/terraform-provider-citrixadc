@@ -36,7 +36,7 @@ func (d *BridgetableDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *BridgetableDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data BridgetableResourceModel
+	var data BridgetableDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -82,7 +82,7 @@ func (d *BridgetableDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	bridgetableSetAttrFromGetForDatasource(ctx, &data, dataArray[foundIndex])
+	bridgetableDataSourceSetAttrFromGet(ctx, &data, dataArray[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

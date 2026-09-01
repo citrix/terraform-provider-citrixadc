@@ -1,8 +1,45 @@
 package dnsprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// DnsprofileDataSourceModel is the data-source-specific model, decoupled from
+// DnsprofileResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only metadata attributes that the resource deliberately
+// omits (referencecount). Every non-key attribute is Computed; the Framework's
+// per-attribute model <-> schema reflection requires this model to have exactly
+// the attributes the data-source schema declares, which is why it cannot reuse
+// the resource model.
+type DnsprofileDataSourceModel struct {
+	Id                           types.String `tfsdk:"id"`
+	Cacheecsresponses            types.String `tfsdk:"cacheecsresponses"`
+	Cachenegativeresponses       types.String `tfsdk:"cachenegativeresponses"`
+	Cacherecords                 types.String `tfsdk:"cacherecords"`
+	Dnsanswerseclogging          types.String `tfsdk:"dnsanswerseclogging"`
+	Dnserrorlogging              types.String `tfsdk:"dnserrorlogging"`
+	Dnsextendedlogging           types.String `tfsdk:"dnsextendedlogging"`
+	Dnsprofilename               types.String `tfsdk:"dnsprofilename"` // Required lookup key
+	Dnsquerylogging              types.String `tfsdk:"dnsquerylogging"`
+	Dropmultiqueryrequest        types.String `tfsdk:"dropmultiqueryrequest"`
+	Insertecs                    types.String `tfsdk:"insertecs"`
+	Maxcacheableecsprefixlength  types.Int64  `tfsdk:"maxcacheableecsprefixlength"`
+	Maxcacheableecsprefixlength6 types.Int64  `tfsdk:"maxcacheableecsprefixlength6"`
+	Recursiveresolution          types.String `tfsdk:"recursiveresolution"`
+	Replaceecs                   types.String `tfsdk:"replaceecs"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/dnsprofile.json). Never settable; populated from GET.
+	Referencecount types.Int64 `tfsdk:"referencecount"`
+}
 
 func DnsprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -79,6 +116,45 @@ func DnsprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Replace ECS Option on DNS query",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"referencecount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of entities using this profile.",
+			},
 		},
 	}
+}
+
+// dnsprofileDataSourceSetAttrFromGet projects a NITRO dnsprofile GET response
+// onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func dnsprofileDataSourceSetAttrFromGet(ctx context.Context, data *DnsprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In dnsprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["dnsprofilename"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Dnsprofilename = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Cacheecsresponses = utils.MapGetString(g, "cacheecsresponses")
+	data.Cachenegativeresponses = utils.MapGetString(g, "cachenegativeresponses")
+	data.Cacherecords = utils.MapGetString(g, "cacherecords")
+	data.Dnsanswerseclogging = utils.MapGetString(g, "dnsanswerseclogging")
+	data.Dnserrorlogging = utils.MapGetString(g, "dnserrorlogging")
+	data.Dnsextendedlogging = utils.MapGetString(g, "dnsextendedlogging")
+	data.Dnsquerylogging = utils.MapGetString(g, "dnsquerylogging")
+	data.Dropmultiqueryrequest = utils.MapGetString(g, "dropmultiqueryrequest")
+	data.Insertecs = utils.MapGetString(g, "insertecs")
+	data.Maxcacheableecsprefixlength = utils.MapGetInt64(g, "maxcacheableecsprefixlength")
+	data.Maxcacheableecsprefixlength6 = utils.MapGetInt64(g, "maxcacheableecsprefixlength6")
+	data.Recursiveresolution = utils.MapGetString(g, "recursiveresolution")
+	data.Replaceecs = utils.MapGetString(g, "replaceecs")
+
+	// Read-only metadata.
+	data.Referencecount = utils.MapGetInt64(g, "referencecount")
 }

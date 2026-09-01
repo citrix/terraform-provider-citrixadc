@@ -316,6 +316,8 @@ func TestAccAaagroup_vpntrafficpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", "groupname", "my_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", "policy", "tf_vpntrafficpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", "priority", "100"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaagroup_vpntrafficpolicy_binding.tf_aaagroup_vpntrafficpolicy_binding", "id"),
 				),
 			},
 		},

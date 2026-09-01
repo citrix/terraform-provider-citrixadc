@@ -265,6 +265,10 @@ func TestAccClusternodeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode.tf_clusternode_ds", "ipaddress", "10.101.132.123"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode.tf_clusternode_ds", "state", "ACTIVE"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode.tf_clusternode_ds", "nodegroup", "DEFAULT_NG"),
+					// id is the universal runtime-binding proof; masterstate is a
+					// node status field always populated for a real cluster node.
+					resource.TestCheckResourceAttrSet("data.citrixadc_clusternode.tf_clusternode_ds", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_clusternode.tf_clusternode_ds", "masterstate"),
 				),
 			},
 		},

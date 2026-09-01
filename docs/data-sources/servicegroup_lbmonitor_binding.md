@@ -48,3 +48,9 @@ In addition to the arguments, the following attributes are available:
 * `serverid` - The identifier for the service. This is used when the persistency type is set to Custom Server ID.
 * `state` - Initial state of the service after binding.
 * `weight` - Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
+
+### Read-only servicegroup_lbmonitor_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_servicegroup_lbmonitor_binding` resource). They are GET-only/Computed and any attribute the appliance does not return is `null`.
+
+* `monweight` - Weight of the monitor that is bound to the servicegroup.

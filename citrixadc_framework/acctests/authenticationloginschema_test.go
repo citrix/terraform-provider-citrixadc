@@ -302,6 +302,7 @@ func TestAccAuthenticationloginschemaDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "ssocredentials", "NO"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "authenticationstrength", "30"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "passwordcredentialindex", "10"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationloginschema.tf_loginschema_ds", "id"),
 				),
 			},
 		},

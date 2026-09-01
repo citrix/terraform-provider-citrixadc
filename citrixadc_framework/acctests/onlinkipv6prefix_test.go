@@ -306,6 +306,7 @@ func TestAccOnlinkipv6prefixDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOnlinkipv6prefixDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds", "ipv6prefix", "9000::/64"),
 					resource.TestCheckResourceAttr("data.citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds", "onlinkprefix", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_onlinkipv6prefix.tf_onlinkipv6prefix_ds", "autonomusprefix", "NO"),

@@ -309,6 +309,9 @@ func TestAccQuicbridgeprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "id"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "routingalgorithm"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "serveridlength"),
+					// Read-only metadata exposed only by the data source (counter-style,
+					// always populated for a freshly-created object).
+					resource.TestCheckResourceAttrSet("data.citrixadc_quicbridgeprofile.test", "refcnt"),
 				),
 			},
 		},

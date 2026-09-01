@@ -342,6 +342,11 @@ func TestAccAuthenticationpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "comment", "datasource_test"),
 					resource.TestCheckResourceAttrPair("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "action", "citrixadc_authenticationldapaction.tf_authenticationldapaction", "name"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "id"),
+					// Read-only metadata exposed only by the data source. hits is a
+					// counter-style field always populated for a fresh policy.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationpolicy.tf_authenticationpolicy_ds", "hits"),
 				),
 			},
 		},

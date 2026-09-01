@@ -120,6 +120,10 @@ func TestAccNscentralmanagementserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "type", "ONPREM"),
 					resource.TestCheckResourceAttr("data.citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "ipaddress", "10.101.132.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "username", "nsroot"),
+					// id is the universal runtime-binding proof. Read-only ADM-service
+					// metadata (instanceid/customerid/admservice*) is connection-dependent
+					// and may be null, so it is not asserted here.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nscentralmanagementserver.tf_nscentralmanagementserver", "id"),
 				),
 			},
 		},

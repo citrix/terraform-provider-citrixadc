@@ -219,6 +219,8 @@ func TestAccAppfwxmlerrorpageDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage_ds", "name", "tf_appfwxmlerrorpage_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage_ds", "src", "appfwxmlerrorpage_ds.xml"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwxmlerrorpage.tf_appfwxmlerrorpage_ds", "id"),
 				),
 			},
 		},

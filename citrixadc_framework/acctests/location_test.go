@@ -186,6 +186,8 @@ func TestAccLocationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "ipfrom", "8.8.8.8"),
 					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "ipto", "9.9.9.9"),
 					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "preferredlocation", "datasource_city.*.*.*.*.*"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_location.tf_location", "id"),
 				),
 			},
 		},

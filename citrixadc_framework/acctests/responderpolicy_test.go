@@ -743,6 +743,7 @@ func TestAccResponderpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "action", "tf_responder_action_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "rule", "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"testds\")"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "comment", "datasource test comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderpolicy.tf_responder_policy_ds", "id"),
 				),
 			},
 		},

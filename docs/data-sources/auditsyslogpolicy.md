@@ -36,6 +36,14 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Name of the Citrix ADC named rule, or an expression, that defines the messages to be logged to the syslog server.
 * `id` - The id of the auditsyslogpolicy. It has the same value as the `name` attribute.
 
+### Read-only auditsyslogpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_auditsyslogpolicy` resource) and are Computed-only. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. Possible values = `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `expressiontype` - Type of policy (Classic/Advanced). Possible values = `Classic Policy`, `Advanced Policy`.
+
 ## Import
 
 A auditsyslogpolicy can be imported using its name, e.g.

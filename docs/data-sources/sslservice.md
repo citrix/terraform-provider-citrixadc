@@ -70,6 +70,17 @@ In addition to the arguments, the following attributes are available:
 * `tls12` - State of TLSv1.2 protocol support for the SSL service.
 * `tls13` - State of TLSv1.3 protocol support for the SSL service.
 
+### Read-only sslservice metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslservice` resource). Any attribute the appliance does not return is `null`.
+
+* `nonfipsciphers` - The state of usage of non FIPS approved ciphers.
+* `service` - Service.
+* `skipcaname` - Whether this particular CA certificate's CA_Name is sent to the SSL client while requesting a client certificate in an SSL handshake.
+* `dtlsflag` - Whether DTLS is set or not.
+* `quicflag` - Whether the QUIC transport protocol is used by a virtual server or service.
+* `skipcacertbundle` - Whether all CA_names in this particular CA certificate bundle are sent to the SSL client while requesting a client certificate in an SSL handshake.
+
 ## Import
 
 A sslservice can be imported using its servicename, e.g.

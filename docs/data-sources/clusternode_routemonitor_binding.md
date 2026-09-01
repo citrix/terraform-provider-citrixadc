@@ -28,3 +28,9 @@ data "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonitor_b
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the binding. It is the concatenation of the `nodeid` and `routemonitor` attributes separated by a comma.
+
+### Read-only clusternode_routemonitor_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_clusternode_routemonitor_binding` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `routemonstate` - Current routemonstate.

@@ -199,6 +199,9 @@ func TestAccAuthenticationsmartaccesspolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "action", "tf_authenticationsmartaccessprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "rule", "TRUE"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "comment", "test_comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "hits"),
 				),
 			},
 		},

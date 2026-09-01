@@ -190,6 +190,7 @@ func TestAccAuthenticationoauthactionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthenticationoauthactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "name", "tf_authenticationoauthaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "authorizationendpoint", "https://example.com/auth"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationoauthaction.tf_authenticationoauthaction_ds", "tokenendpoint", "https://example.com/token"),

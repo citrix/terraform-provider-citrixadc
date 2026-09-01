@@ -35,7 +35,7 @@ func (d *FeoactionDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *FeoactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data FeoactionResourceModel
+	var data FeoactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *FeoactionDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	feoactionSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	feoactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

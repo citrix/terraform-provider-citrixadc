@@ -41,3 +41,11 @@ In addition to the arguments, the following attributes are available:
 * `partitionmac` - Special MAC address for the partition which is used for communication over shared vlans in this partition. If not specified, the MAC address is auto-generated.
 * `save` - Switches to new admin partition without prompt for saving configuration. Configuration will be saved.
 * `id` - The id of the nspartition. It has the same value as the `partitionname` attribute.
+
+### Read-only nspartition metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nspartition` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `partitionid` - Partition Id.
+* `partitiontype` - Type of the Partition. Possible values: `Default Partition`, `Current Partition`.
+* `pmacinternal` - Whether the partition MAC is generated internally.

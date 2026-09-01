@@ -237,6 +237,8 @@ func TestAccAaaotpparameterDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_aaaotpparameter.tf_aaaotpparameter", "encryption", "OFF"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaotpparameter.tf_aaaotpparameter", "maxotpdevices", "3"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaaotpparameter.tf_aaaotpparameter", "id"),
 				),
 			},
 		},

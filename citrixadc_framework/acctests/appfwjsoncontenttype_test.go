@@ -139,6 +139,8 @@ func TestAccAppfwjsoncontenttypeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", "jsoncontenttypevalue", "tf_Acc.*test"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", "isregex", "REGEX"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", "id"),
 				),
 			},
 		},

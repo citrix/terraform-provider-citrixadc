@@ -37,3 +37,9 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the lbmetrictable_metric_binding. It is the concatenation of the `metrictable` and `metric` attributes separated by a comma.
 * `snmpoid` - New SNMP OID of the metric.
+
+### Read-only lbmetrictable_metric_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbmetrictable_metric_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `metrictype` - Indication if it is a configured or internal metric. Possible values = INTERNAL, CONFIGURED.

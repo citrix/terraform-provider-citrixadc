@@ -381,6 +381,9 @@ func TestAccService_lbmonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_service_lbmonitor_binding.tf_binding", "monitor_name", "tf_monitor"),
 					resource.TestCheckResourceAttr("data.citrixadc_service_lbmonitor_binding.tf_binding", "monstate", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_service_lbmonitor_binding.tf_binding", "weight", "2"),
+					// Universal runtime-binding proof; read-only GET-only runtime
+					// counters/state fields are probe-timing dependent, so not asserted.
+					resource.TestCheckResourceAttrSet("data.citrixadc_service_lbmonitor_binding.tf_binding", "id"),
 				),
 			},
 		},

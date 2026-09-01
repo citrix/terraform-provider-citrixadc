@@ -185,6 +185,10 @@ func TestAccMetricsprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile.tf_metricsprofile", "metrics", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile.tf_metricsprofile", "servemode", "Push"),
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile.tf_metricsprofile", "metricsexportfrequency", "30"),
+					// Universal runtime-binding proof that the data source read
+					// resolved (read-only metadata fields such as refcnt are
+					// instance dependent and may be null, so only id is asserted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_metricsprofile.tf_metricsprofile", "id"),
 				),
 			},
 		},

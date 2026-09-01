@@ -94,3 +94,20 @@ data "citrixadc_sslprofile" "example" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+### Read-only sslprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslprofile` resource). Any attribute the appliance does not return is `null`.
+
+* `nonfipsciphers` - State of usage of ciphers that are not FIPS approved. Valid only for an SSL service bound with a FIPS key and certificate.
+* `crlcheck` - The state of the CRL check parameter (Mandatory/Optional).
+* `ocspcheck` - The state of the OCSP check parameter (Mandatory/Optional).
+* `snicert` - Whether a CertKey is bound for SNI processing.
+* `skipcaname` - Whether this CA certificate's CA_Name is sent to the SSL client while requesting a client certificate in an SSL handshake.
+* `invoke` - Invoke flag. Relevant only for ADVANCED policies.
+* `labeltype` - Type of policy label invocation. Possible values = vserver, service, policylabel.
+* `service` - Service.
+* `builtin` - Flag to determine whether the ssl profile is built-in or not. A list of strings. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.
+* `feature` - The feature to be checked while applying this config.
+* `sslpfobjecttype` - Internal flag to indicate what type of object binds this profile: monitor or service.
+* `ssliverifyservercertforreuse` - Verify the origin server's certificate before reusing the front-end SSL session.

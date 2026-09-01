@@ -231,6 +231,7 @@ func TestAcccacheglobal_cachepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "policy", "my_cachepolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "type", "REQ_DEFAULT"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_cacheglobal_cachepolicy_binding.tf_cacheglobal_cachepolicy_binding", "id"),
 				),
 			},
 		},

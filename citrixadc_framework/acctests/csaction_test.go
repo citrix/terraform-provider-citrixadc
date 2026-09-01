@@ -381,6 +381,8 @@ func TestAccCsactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "name", "tf_csaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "targetlbvserver", "ds_image_lb"),
 					resource.TestCheckResourceAttr("data.citrixadc_csaction.tf_csaction_ds", "comment", "DataSource test for csaction"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_csaction.tf_csaction_ds", "id"),
 				),
 			},
 		},

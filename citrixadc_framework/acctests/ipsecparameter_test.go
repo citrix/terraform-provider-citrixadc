@@ -276,6 +276,8 @@ func TestAccIpsecparameterDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_ipsecparameter.tf_ipsecparameter_datasource", "ikeversion", "V2"),
 					resource.TestCheckResourceAttr("data.citrixadc_ipsecparameter.tf_ipsecparameter_datasource", "livenesscheckinterval", "50"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_ipsecparameter.tf_ipsecparameter_datasource", "id"),
 				),
 			},
 		},

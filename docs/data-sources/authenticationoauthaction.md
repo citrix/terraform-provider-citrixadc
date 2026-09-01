@@ -79,6 +79,12 @@ In addition to the arguments, the following attributes are available:
 * `usernamefield` - Attribute in the token from which username should be extracted.
 * `id` - The id of the authenticationoauthaction. It has the same value as the `name` attribute.
 
+### Read-only authenticationoauthaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationoauthaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `oauthstatus` - Describes status information of the OAuth server. Possible values: `INIT`, `CERTFETCH`, `AADFORGRAPH`, `GRAPH`, `AADFORMDM`, `MDMINFO`, `COMPLETE`.
+
 ## Import
 
 An authenticationoauthaction can be imported using its name, e.g.

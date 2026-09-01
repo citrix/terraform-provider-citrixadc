@@ -38,6 +38,13 @@ In addition to the arguments, the following attributes are available:
 * `serverurl` - DFA Server URL.
 * `id` - The id of the authenticationdfaaction. It has the same value as the `name` attribute.
 
+### Read-only authenticationdfaaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationdfaaction` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `success` - Number of successful authentications through this DFA action.
+* `failure` - Number of failed authentications through this DFA action.
+
 ## Import
 
 A authenticationdfaaction can be imported using its name, e.g.

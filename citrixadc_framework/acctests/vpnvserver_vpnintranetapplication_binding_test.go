@@ -353,6 +353,7 @@ func TestAccVpnvserver_vpnintranetapplication_bindingDataSource_basic(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnintranetapplication_binding.tf_bind", "name", "tf_examplevserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnintranetapplication_binding.tf_bind", "intranetapplication", "tf_vpnintranetapplication"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_vpnintranetapplication_binding.tf_bind", "id"),
 				),
 			},
 		},

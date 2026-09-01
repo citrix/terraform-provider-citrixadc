@@ -32,3 +32,12 @@ In addition to the arguments, the following attributes are exported:
 * `newname` - New name for the responder policy (if renamed).
 * `rule` - Expression that the policy uses to determine whether to respond to the specified request. Written in the classic or default syntax.
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an error condition.
+
+### Read-only responderpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_responderpolicy` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `builtin` - Flag to determine if the responder policy is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this configuration.

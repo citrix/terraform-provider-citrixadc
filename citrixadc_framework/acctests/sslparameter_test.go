@@ -294,6 +294,8 @@ func TestAccSslparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslparameter.default", "denysslreneg", "NONSECURE"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslparameter.default", "defaultprofile", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslparameter.default", "operationqueuelimit", "4096"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslparameter.default", "id"),
 				),
 			},
 		},

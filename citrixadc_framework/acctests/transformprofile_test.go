@@ -307,6 +307,7 @@ func TestAccTransformprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "name", "tf_trans_profile"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "comment", "Some comment"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformprofile.tf_trans_profile", "onlytransformabsurlinbody", "ON"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformprofile.tf_trans_profile", "id"),
 				),
 			},
 		},

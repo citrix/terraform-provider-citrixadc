@@ -35,7 +35,7 @@ func (d *HanodeDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 }
 
 func (d *HanodeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data HanodeResourceModel
+	var data HanodeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *HanodeDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	hanodeSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	hanodeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

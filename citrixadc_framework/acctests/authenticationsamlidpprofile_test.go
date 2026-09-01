@@ -379,6 +379,10 @@ func TestAccAuthenticationsamlidpprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "digestmethod", "SHA1"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "rejectunsignedrequests", "ON"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "signaturealg", "RSA-SHA1"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// metadataimportstatus has a documented default (INIT).
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlidpprofile.tf_samlidpprofile", "metadataimportstatus"),
 				),
 			},
 		},

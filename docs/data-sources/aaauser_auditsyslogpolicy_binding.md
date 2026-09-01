@@ -36,3 +36,9 @@ In addition to the arguments, the following attributes are available:
 * `priority` - Integer specifying the priority of the policy. A lower number indicates a higher priority. Policies are evaluated in the order of their priority numbers. Maximum value for default syntax policies is 2147483647 and for classic policies max priority is 64000.
 * `type` - Bindpoint to which the policy is bound. Possible values: [ REQUEST, UDP_REQUEST, DNS_REQUEST, ICMP_REQUEST ]
 * `id` - The id of the aaauser_auditsyslogpolicy_binding. It is the concatenation of `username` and `policy` attributes separated by a comma.
+
+### Read-only aaauser_auditsyslogpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaauser_auditsyslogpolicy_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `acttype` - Action type of the bound policy.

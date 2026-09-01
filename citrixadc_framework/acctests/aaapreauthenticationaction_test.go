@@ -307,6 +307,8 @@ func TestAccAaapreauthenticationactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "name", "tf_aaapreauthenticationaction"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "preauthenticationaction", "ALLOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "deletefiles", "/var/tmp/new/hello.txt"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "id"),
 				),
 			},
 		},

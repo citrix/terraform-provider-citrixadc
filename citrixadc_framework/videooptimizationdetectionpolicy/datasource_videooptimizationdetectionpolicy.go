@@ -35,7 +35,7 @@ func (d *VideooptimizationdetectionpolicyDataSource) Schema(ctx context.Context,
 }
 
 func (d *VideooptimizationdetectionpolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VideooptimizationdetectionpolicyResourceModel
+	var data VideooptimizationdetectionpolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *VideooptimizationdetectionpolicyDataSource) Read(ctx context.Context, r
 		return
 	}
 
-	videooptimizationdetectionpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	videooptimizationdetectionpolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

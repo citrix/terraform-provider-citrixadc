@@ -35,7 +35,7 @@ func (d *AuthenticationsmartaccesspolicyDataSource) Schema(ctx context.Context, 
 }
 
 func (d *AuthenticationsmartaccesspolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationsmartaccesspolicyResourceModel
+	var data AuthenticationsmartaccesspolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *AuthenticationsmartaccesspolicyDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	authenticationsmartaccesspolicySetAttrFromGet(ctx, &data, getResponseData)
+	authenticationsmartaccesspolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

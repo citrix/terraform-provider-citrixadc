@@ -278,6 +278,10 @@ func TestAccTunnelglobal_tunneltrafficpolicy_bindingDataSource_basic(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "policyname", "my_tunneltrafficpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "priority", "50"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "id"),
+					// Read-only (GET-only) counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_tunnelglobal_tunneltrafficpolicy_binding.tf_tunnelglobal_tunneltrafficpolicy_binding", "numpol"),
 				),
 			},
 		},

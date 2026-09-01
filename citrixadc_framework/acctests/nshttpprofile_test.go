@@ -525,6 +525,10 @@ func TestAccNshttpprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "markhttpheaderextrawserror", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "markrfc7230noncompliantinval", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "allowonlywordcharactersandhyphen", "DISABLED"),
+					// Read-only metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "refcnt"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_nshttpprofile.tf_nshttpprofile_ds", "apdexsvrresptimethreshold"),
 				),
 			},
 		},

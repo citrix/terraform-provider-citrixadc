@@ -186,6 +186,7 @@ func TestAccNslicenseserverDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNslicenseserverDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslicenseserver.tf_licenseserver_datasource", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslicenseserver.tf_licenseserver_datasource", "servername", "10.101.132.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslicenseserver.tf_licenseserver_datasource", "port", "27000"),
 				),

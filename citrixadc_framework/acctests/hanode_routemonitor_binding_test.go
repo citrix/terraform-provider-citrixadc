@@ -245,6 +245,11 @@ func TestAccHanode_routemonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "hanode_id", "0"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "routemonitor", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "netmask", "255.255.255.192"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// routemonitorstate is a state field always populated for a live monitor.
+					resource.TestCheckResourceAttrSet("data.citrixadc_hanode_routemonitor_binding.tf_hanode_routemonitor_binding", "routemonitorstate"),
 				),
 			},
 		},

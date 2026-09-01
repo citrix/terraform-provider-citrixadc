@@ -39,3 +39,10 @@ In addition to the arguments, the following attributes are available:
 * `labelname` - Name of the label to invoke if the current policy evaluates to TRUE.
 * `labeltype` - Type of policy label to invoke. Specify vserver for a policy label associated with a virtual server, or policylabel for a user-defined policy label.
 * `id` - The id of the appflowglobal_appflowpolicy_binding. It has the same value as the `policyname` attribute.
+
+### Read-only appflowglobal_appflowpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appflowglobal_appflowpolicy_binding` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `flowtype` - Flow type of the bound AppFlow policy.
+* `numpol` - The number of policies bound to the bindpoint.

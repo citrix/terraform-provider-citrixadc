@@ -39,3 +39,9 @@ In addition to the arguments, the following attributes are available:
 * `priority` - The priority, if any, of the vpn vserver policy.
 * `secondary` - Bind the authentication policy to the secondary chain. Provides for multifactor authentication in which a user must authenticate via both a primary authentication method and, afterward, via a secondary authentication method. Because user groups are aggregated across authentication systems, usernames must be the same on all authentication servers. Passwords can be different.
 * `id` - The id of the authenticationvserver_authenticationldappolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.
+
+### Read-only authenticationvserver_authenticationldappolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationvserver_authenticationldappolicy_binding` resource). They are GET-only / Computed. Any attribute the appliance does not return is `null`.
+
+* `acttype` - Action type associated with the policy binding.

@@ -166,6 +166,7 @@ func TestAccAuthenticationdfaactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfaaction.tf_dfaaction_ds", "name", "tf_dfaaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfaaction.tf_dfaaction_ds", "serverurl", "https://example.com/"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationdfaaction.tf_dfaaction_ds", "clientid", "cliId"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationdfaaction.tf_dfaaction_ds", "id"),
 				),
 			},
 		},

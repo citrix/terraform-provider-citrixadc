@@ -230,6 +230,11 @@ func TestAccVpnclientlessaccesspolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "name", "tf_vpnclientlessaccesspolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "profilename", "ns_cvpn_default_profile"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "rule", "true"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "id"),
+					// Counter-style read-only attributes are always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy", "undefhits"),
 				),
 			},
 		},

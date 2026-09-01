@@ -1,8 +1,58 @@
 package aaaradiusparams
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AaaradiusparamsDataSourceModel is the data-source-specific model, decoupled
+// from AaaradiusparamsResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only metadata attributes that the resource deliberately
+// omits (groupauthname, ipaddress, builtin, feature). Every non-key attribute is
+// Computed; the Framework's per-attribute model <-> schema reflection requires
+// this model to have exactly the attributes the data-source schema declares,
+// which is why it cannot reuse the resource model.
+type AaaradiusparamsDataSourceModel struct {
+	Id                         types.String `tfsdk:"id"`
+	Accounting                 types.String `tfsdk:"accounting"`
+	Authentication             types.String `tfsdk:"authentication"`
+	Authservretry              types.Int64  `tfsdk:"authservretry"`
+	Authtimeout                types.Int64  `tfsdk:"authtimeout"`
+	Callingstationid           types.String `tfsdk:"callingstationid"`
+	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
+	Ipattributetype            types.Int64  `tfsdk:"ipattributetype"`
+	Ipvendorid                 types.Int64  `tfsdk:"ipvendorid"`
+	Messageauthenticator       types.String `tfsdk:"messageauthenticator"`
+	Passencoding               types.String `tfsdk:"passencoding"`
+	Pwdattributetype           types.Int64  `tfsdk:"pwdattributetype"`
+	Pwdvendorid                types.Int64  `tfsdk:"pwdvendorid"`
+	Radattributetype           types.Int64  `tfsdk:"radattributetype"`
+	Radgroupseparator          types.String `tfsdk:"radgroupseparator"`
+	Radgroupsprefix            types.String `tfsdk:"radgroupsprefix"`
+	Radkey                     types.String `tfsdk:"radkey"`
+	RadkeyWo                   types.String `tfsdk:"radkey_wo"`
+	RadkeyWoVersion            types.Int64  `tfsdk:"radkey_wo_version"`
+	Radnasid                   types.String `tfsdk:"radnasid"`
+	Radnasip                   types.String `tfsdk:"radnasip"`
+	Radvendorid                types.Int64  `tfsdk:"radvendorid"`
+	Serverip                   types.String `tfsdk:"serverip"`
+	Serverport                 types.Int64  `tfsdk:"serverport"`
+	Tunnelendpointclientip     types.String `tfsdk:"tunnelendpointclientip"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/aaaradiusparams.json). Never settable; populated from GET.
+	Groupauthname types.String `tfsdk:"groupauthname"`
+	Ipaddress     types.String `tfsdk:"ipaddress"`
+	Builtin       types.List   `tfsdk:"builtin"`
+	Feature       types.String `tfsdk:"feature"`
+}
 
 func AaaradiusparamsDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -88,10 +138,12 @@ func AaaradiusparamsDataSourceSchema() schema.Schema {
 			"radkey": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "The key shared between the RADIUS server and clients.\nRequired for allowing the Citrix ADC to communicate with the RADIUS server.",
 			},
 			"radkey_wo": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "The key shared between the RADIUS server and clients.\nRequired for allowing the Citrix ADC to communicate with the RADIUS server.",
 			},
 			"radkey_wo_version": schema.Int64Attribute{
@@ -129,6 +181,73 @@ func AaaradiusparamsDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Send Tunnel Endpoint Client IP address to the RADIUS server.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"groupauthname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Attribute name for group extraction from the RADIUS server.",
+			},
+			"ipaddress": schema.StringAttribute{
+				Computed:    true,
+				Description: "IP Address.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// aaaradiusparamsDataSourceSetAttrFromGet projects a NITRO aaaradiusparams GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func aaaradiusparamsDataSourceSetAttrFromGet(ctx context.Context, data *AaaradiusparamsDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In aaaradiusparamsDataSourceSetAttrFromGet Function")
+
+	// aaaradiusparams is a singleton; use the same static ID as the resource.
+	data.Id = types.StringValue("aaaradiusparams-config")
+
+	// Read/write attributes as read-back outputs.
+	data.Accounting = utils.MapGetString(g, "accounting")
+	data.Authentication = utils.MapGetString(g, "authentication")
+	data.Authservretry = utils.MapGetInt64(g, "authservretry")
+	data.Authtimeout = utils.MapGetInt64(g, "authtimeout")
+	data.Callingstationid = utils.MapGetString(g, "callingstationid")
+	data.Defaultauthenticationgroup = utils.MapGetString(g, "defaultauthenticationgroup")
+	data.Ipattributetype = utils.MapGetInt64(g, "ipattributetype")
+	data.Ipvendorid = utils.MapGetInt64(g, "ipvendorid")
+	data.Messageauthenticator = utils.MapGetString(g, "messageauthenticator")
+	data.Passencoding = utils.MapGetString(g, "passencoding")
+	data.Pwdattributetype = utils.MapGetInt64(g, "pwdattributetype")
+	data.Pwdvendorid = utils.MapGetInt64(g, "pwdvendorid")
+	data.Radattributetype = utils.MapGetInt64(g, "radattributetype")
+	data.Radgroupseparator = utils.MapGetString(g, "radgroupseparator")
+	data.Radgroupsprefix = utils.MapGetString(g, "radgroupsprefix")
+	data.Radnasid = utils.MapGetString(g, "radnasid")
+	data.Radnasip = utils.MapGetString(g, "radnasip")
+	data.Radvendorid = utils.MapGetInt64(g, "radvendorid")
+	data.Serverip = utils.MapGetString(g, "serverip")
+	data.Serverport = utils.MapGetInt64(g, "serverport")
+	data.Tunnelendpointclientip = utils.MapGetString(g, "tunnelendpointclientip")
+
+	// radkey / radkey_wo(+version) are write-only or secret inputs the GET never
+	// returns -> Null.
+	data.Radkey = types.StringNull()
+	data.RadkeyWo = types.StringNull()
+	data.RadkeyWoVersion = types.Int64Null()
+
+	// Read-only metadata.
+	data.Groupauthname = utils.MapGetString(g, "groupauthname")
+	data.Ipaddress = utils.MapGetString(g, "ipaddress")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

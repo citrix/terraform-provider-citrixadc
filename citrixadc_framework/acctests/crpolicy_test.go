@@ -322,6 +322,10 @@ func TestAccCrpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_crpolicy.crpolicy_data", "policyname", "crpolicy_datasource_test"),
 					resource.TestCheckResourceAttr("data.citrixadc_crpolicy.crpolicy_data", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_crpolicy.crpolicy_data", "action", "CACHE"),
+					// Runtime-binding proof; read-only metadata (boundto/vstype/hits/
+					// priority/labeltype/builtin/isdefault/...) is exposed but may be
+					// omitted for a fresh, unbound policy.
+					resource.TestCheckResourceAttrSet("data.citrixadc_crpolicy.crpolicy_data", "id"),
 				),
 			},
 		},

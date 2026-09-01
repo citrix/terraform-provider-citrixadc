@@ -219,6 +219,10 @@ func TestAccCrvserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver.tf_crvserver_ds", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver.tf_crvserver_ds", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver.tf_crvserver_ds", "arp", "OFF"),
+					// Runtime-binding proof; read-only metadata (ip/type/curstate/
+					// status/policyname/...) is exposed but may be omitted for a fresh
+					// vserver with no bindings.
+					resource.TestCheckResourceAttrSet("data.citrixadc_crvserver.tf_crvserver_ds", "id"),
 				),
 			},
 		},

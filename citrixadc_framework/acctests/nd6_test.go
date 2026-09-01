@@ -210,6 +210,8 @@ func TestAccNd6DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "neighbor", "2001::5"),
 					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "mac", "e6:ec:41:50:b1:d3"),
 					resource.TestCheckResourceAttr("data.citrixadc_nd6.tf_nd6_ds_data", "ifnum", "LO/1"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nd6.tf_nd6_ds_data", "id"),
 				),
 			},
 		},

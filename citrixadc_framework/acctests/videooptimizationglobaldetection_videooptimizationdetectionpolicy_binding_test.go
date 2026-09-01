@@ -338,6 +338,10 @@ func TestAccVideooptimizationglobaldetection_videooptimizationdetectionpolicy_bi
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding.tf_binding", "policyname", "tf_videooptimizationdetectionpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding.tf_binding", "priority", "100"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding.tf_binding", "id"),
+					// Read-only (GET-only) counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding.tf_binding", "numpol"),
 				),
 			},
 		},

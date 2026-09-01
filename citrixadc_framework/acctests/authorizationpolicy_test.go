@@ -89,6 +89,10 @@ func TestAccAuthorizationpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "name", "tp-authorize-datasource-1"),
 					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicy.foo", "action", "ALLOW"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authorizationpolicy.foo", "id"),
+					// Read-only counter-style attribute always populated by the appliance.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authorizationpolicy.foo", "hits"),
 				),
 			},
 		},

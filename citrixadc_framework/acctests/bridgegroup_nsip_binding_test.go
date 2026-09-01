@@ -253,6 +253,7 @@ func TestAccbridgegroup_nsip_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_nsip_binding.tf_binding", "bridgegroup_id", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_nsip_binding.tf_binding", "ipaddress", "2.2.2.3"),
 					resource.TestCheckResourceAttr("data.citrixadc_bridgegroup_nsip_binding.tf_binding", "netmask", "255.255.255.0"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_bridgegroup_nsip_binding.tf_binding", "id"),
 				),
 			},
 		},

@@ -1,9 +1,54 @@
 package gslbsite
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// GslbsiteDataSourceModel is the data-source-specific model, decoupled from
+// GslbsiteResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only NITRO attributes the resource deliberately omits
+// (status, sitestate, persistencemepstatus, ...). Every non-key attribute is
+// Computed; the Framework's per-attribute model <-> schema reflection requires
+// this model to have exactly the attributes the data-source schema declares,
+// which is why it cannot reuse the resource model.
+type GslbsiteDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Backupparentlist       types.List   `tfsdk:"backupparentlist"`
+	Clip                   types.String `tfsdk:"clip"`
+	Krpcnodesrcip          types.String `tfsdk:"krpcnodesrcip"`
+	Metricexchange         types.String `tfsdk:"metricexchange"`
+	Naptrreplacementsuffix types.String `tfsdk:"naptrreplacementsuffix"`
+	Newname                types.String `tfsdk:"newname"`
+	Nwmetricexchange       types.String `tfsdk:"nwmetricexchange"`
+	Parentsite             types.String `tfsdk:"parentsite"`
+	Publicclip             types.String `tfsdk:"publicclip"`
+	Publicip               types.String `tfsdk:"publicip"`
+	Sessionexchange        types.String `tfsdk:"sessionexchange"`
+	Siteipaddress          types.String `tfsdk:"siteipaddress"`
+	Sitename               types.String `tfsdk:"sitename"` // Required lookup key
+	Sitepassword           types.String `tfsdk:"sitepassword"`
+	SitepasswordWo         types.String `tfsdk:"sitepassword_wo"`
+	SitepasswordWoVersion  types.Int64  `tfsdk:"sitepassword_wo_version"`
+	Sitetype               types.String `tfsdk:"sitetype"`
+	Triggermonitor         types.String `tfsdk:"triggermonitor"`
+
+	// Read-only (GET-only) NITRO attributes from the read-only set
+	// (zion73x_readonly/gslbsite.json). Never settable; populated from GET.
+	Status               types.String `tfsdk:"status"`
+	Persistencemepstatus types.String `tfsdk:"persistencemepstatus"`
+	Version              types.Int64  `tfsdk:"version"`
+	Curbackupparentip    types.String `tfsdk:"curbackupparentip"`
+	Sitestate            types.String `tfsdk:"sitestate"`
+	Oldname              types.String `tfsdk:"oldname"`
+}
 
 func GslbsiteDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -100,6 +145,77 @@ func GslbsiteDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Specify the conditions under which the GSLB service must be monitored by a monitor, if one is bound. Available settings function as follows:\n* ALWAYS - Monitor the GSLB service at all times.\n* MEPDOWN - Monitor the GSLB service only when the exchange of metrics through the Metrics Exchange Protocol (MEP) is disabled.\nMEPDOWN_SVCDOWN - Monitor the service in either of the following situations:\n* The exchange of metrics through MEP is disabled.\n* The exchange of metrics through MEP is enabled but the status of the service, learned through metrics exchange, is DOWN.",
 			},
+
+			// Read-only (GET-only) NITRO attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"status": schema.StringAttribute{
+				Computed:    true,
+				Description: "Current metric exchange status (ACTIVE, INACTIVE, DOWN).",
+			},
+			"persistencemepstatus": schema.StringAttribute{
+				Computed:    true,
+				Description: "Network metric and persistence exchange MEP connection status (ACTIVE, INACTIVE, DOWN).",
+			},
+			"version": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Will be true if the remote site's version is ncore compatible with the local site (>= 9.2).",
+			},
+			"curbackupparentip": schema.StringAttribute{
+				Computed:    true,
+				Description: "Current active backup parent IP address since the configured is DOWN.",
+			},
+			"sitestate": schema.StringAttribute{
+				Computed:    true,
+				Description: "Site state (for example UP, DOWN, OUT OF SERVICE, DISABLED).",
+			},
+			"oldname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Old name for the GSLB site.",
+			},
 		},
 	}
+}
+
+// gslbsiteDataSourceSetAttrFromGet projects a NITRO gslbsite GET response onto
+// the data-source model. Because a data source has no plan/apply reconciliation,
+// attributes are simply filled from the GET (or left Null when the GET omits
+// them) — no unknown->null resolution or plan preservation is required. The
+// shared utils.MapGet* helpers implement that projection.
+func gslbsiteDataSourceSetAttrFromGet(ctx context.Context, data *GslbsiteDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In gslbsiteDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["sitename"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Sitename = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Backupparentlist = utils.MapGetStringList(g, "backupparentlist")
+	data.Clip = utils.MapGetString(g, "clip")
+	data.Krpcnodesrcip = utils.MapGetString(g, "krpcnodesrcip")
+	data.Metricexchange = utils.MapGetString(g, "metricexchange")
+	data.Naptrreplacementsuffix = utils.MapGetString(g, "naptrreplacementsuffix")
+	data.Newname = utils.MapGetString(g, "newname")
+	data.Nwmetricexchange = utils.MapGetString(g, "nwmetricexchange")
+	data.Parentsite = utils.MapGetString(g, "parentsite")
+	data.Publicclip = utils.MapGetString(g, "publicclip")
+	data.Publicip = utils.MapGetString(g, "publicip")
+	data.Sessionexchange = utils.MapGetString(g, "sessionexchange")
+	data.Siteipaddress = utils.MapGetString(g, "siteipaddress")
+	data.Sitetype = utils.MapGetString(g, "sitetype")
+	data.Triggermonitor = utils.MapGetString(g, "triggermonitor")
+
+	// sitepassword / sitepassword_wo(+version) are secret/write-only inputs the
+	// GET never returns -> Null.
+	data.Sitepassword = types.StringNull()
+	data.SitepasswordWo = types.StringNull()
+	data.SitepasswordWoVersion = types.Int64Null()
+
+	// Read-only NITRO attributes.
+	data.Status = utils.MapGetString(g, "status")
+	data.Persistencemepstatus = utils.MapGetString(g, "persistencemepstatus")
+	data.Version = utils.MapGetInt64(g, "version")
+	data.Curbackupparentip = utils.MapGetString(g, "curbackupparentip")
+	data.Sitestate = utils.MapGetString(g, "sitestate")
+	data.Oldname = utils.MapGetString(g, "oldname")
 }

@@ -318,6 +318,10 @@ func TestAccDbdbprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "stickiness", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "conmultiplex", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "interpretquery", "YES"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "id"),
+					// Read-only metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dbdbprofile.tf_dbdbprofile_datasource", "refcnt"),
 				),
 			},
 		},

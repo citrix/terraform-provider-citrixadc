@@ -205,6 +205,8 @@ func TestAccLbmonitor_metric_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "monitorname", "tf-monitor1"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metric", "metric1"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "metricthreshold", "100"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmonitor_metric_binding.tf_acclbmonitor_metric_binding", "id"),
 				),
 			},
 		},

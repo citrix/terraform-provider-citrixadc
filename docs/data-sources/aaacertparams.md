@@ -35,3 +35,9 @@ The following attributes are available:
 * `groupnamefield` - Client certificate field that specifies the group, in the format <field>:<subfield>.
 * `usernamefield` - Client certificate field that contains the username, in the format <field>:<subfield>.
 * `id` - The id of the aaacertparams. It is a system-generated identifier.
+
+### Read-only aaacertparams metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaacertparams` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `twofactor` - The state of the two-factor authentication. Possible values = ON, OFF.

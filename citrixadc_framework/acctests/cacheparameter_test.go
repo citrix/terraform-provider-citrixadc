@@ -253,6 +253,7 @@ func TestAccCacheparameterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCacheparameterDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_cacheparameter.tf_cacheparameter_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_cacheparameter.tf_cacheparameter_ds", "memlimit", "650"),
 					resource.TestCheckResourceAttr("data.citrixadc_cacheparameter.tf_cacheparameter_ds", "maxpostlen", "6000"),
 					resource.TestCheckResourceAttr("data.citrixadc_cacheparameter.tf_cacheparameter_ds", "verifyusing", "HOSTNAME"),

@@ -55,7 +55,7 @@ func (d *ChannelDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	channelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	channelDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

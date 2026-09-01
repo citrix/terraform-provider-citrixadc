@@ -204,6 +204,7 @@ func TestAccSslpolicylabelDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSslpolicylabelDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslpolicylabel.tf_sslpolicylabel", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel.tf_sslpolicylabel", "labelname", "tf_sslpolicylabel"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslpolicylabel.tf_sslpolicylabel", "type", "CONTROL"),
 				),

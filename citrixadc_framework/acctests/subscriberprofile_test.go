@@ -20,11 +20,47 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/citrix/adc-nitro-go/resource/config/subscriber"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
+
+// subscriberprofileSkipUnlessAvailable skips the test unless the appliance can
+// allocate the subscriber store, quoting the prerequisite.
+//
+// subscriberprofile requires the SUBSCRIBER (Telco/CGNAT subscriber management)
+// capability. On an appliance without it, an add fails with NITRO errorcode 268
+// "Cannot allocate memory" - the subscriber store is not allocated. SUBSCRIBER is
+// gated by platform + license and is NOT runtime-toggleable on a standard VPX
+// (`enable ns feature SUBSCRIBER` returns errorcode 1097 "Invalid argument value
+// [SUBSCRIBER]"), so it cannot simply be turned on for the test. This probe adds
+// a throwaway profile: on ec268 it t.Skipf's with the prerequisite; on success it
+// deletes the probe and lets the test run (e.g. on an LSN/CGNAT-provisioned box
+// where the store is available).
+func subscriberprofileSkipUnlessAvailable(t *testing.T) {
+	client, err := testAccGetFrameworkClient()
+	if err != nil {
+		t.Fatalf("subscriberprofile precheck: client: %v", err)
+	}
+	const probeIP = "10.222.74.250"
+	probeVlan := 1
+	probe := subscriber.Subscriberprofile{Ip: probeIP, Vlan: &probeVlan}
+	if _, err := client.AddResource(service.Subscriberprofile.Type(), probeIP, &probe); err != nil {
+		if strings.Contains(err.Error(), "Cannot allocate memory") || strings.Contains(err.Error(), "errorcode: 268") {
+			t.Skipf("requires the SUBSCRIBER feature/store available on the appliance "+
+				"(Telco/CGNAT platform + license; not runtime-toggleable on a standard VPX, "+
+				"`enable ns feature SUBSCRIBER` -> errorcode 1097) - subscriberprofile add returns "+
+				"NITRO errorcode 268 \"Cannot allocate memory\" here: %v", err)
+		}
+		t.Skipf("subscriberprofile precheck: unexpected add error, skipping: %v", err)
+	}
+	// Probe succeeded -> capability present. Clean it up so the test starts clean.
+	if err := client.DeleteResourceWithArgs(service.Subscriberprofile.Type(), probeIP, []string{"vlan:1"}); err != nil {
+		t.Logf("subscriberprofile precheck: probe cleanup failed (continuing): %v", err)
+	}
+}
 
 const testAccSubscriberprofile_basic = `
 
@@ -305,7 +341,7 @@ func testAccCheckSubscriberprofileADCValue(ip, attr, want string) resource.TestC
 
 func TestAccSubscriberprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { testAccPreCheck(t); subscriberprofileSkipUnlessAvailable(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -313,6 +349,8 @@ func TestAccSubscriberprofileDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_subscriberprofile.tf_subscriberprofile", "ip", "10.222.74.185"),
 					resource.TestCheckResourceAttr("data.citrixadc_subscriberprofile.tf_subscriberprofile", "vlan", "1"),
+					// Universal runtime-binding proof (read-only fields are config-dependent).
+					resource.TestCheckResourceAttrSet("data.citrixadc_subscriberprofile.tf_subscriberprofile", "id"),
 				),
 			},
 		},

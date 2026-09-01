@@ -299,6 +299,10 @@ func TestAccAuthenticationvserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver.tf_authenticationvserver_ds", "name", "tf_authenticationvserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver.tf_authenticationvserver_ds", "servicetype", "SSL"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver.tf_authenticationvserver_ds", "comment", "DataSource Test"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver.tf_authenticationvserver_ds", "id"),
+					// Read-only runtime/state attribute always populated for a live vserver.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver.tf_authenticationvserver_ds", "curstate"),
 				),
 			},
 		},

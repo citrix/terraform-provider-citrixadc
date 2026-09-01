@@ -381,6 +381,8 @@ func TestAccVpnvserver_vpnurl_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurl_binding.tf_bind", "name", "tf_examplevserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_vpnurl_binding.tf_bind", "urlname", "Firsturl"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_vpnurl_binding.tf_bind", "id"),
 				),
 			},
 		},

@@ -43,6 +43,13 @@ In addition to the arguments, the following attributes are available:
 * `cacert` - CA certificate to verify the KDC.
 * `id` - The id of the aaakcdaccount. It has the same value as the `kcdaccount` attribute.
 
+### Read-only aaakcdaccount metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaakcdaccount` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `principle` - SPN extracted from keytab file.
+* `kcdspn` - Host SPN extracted from keytab file.
+
 
 ## Import
 

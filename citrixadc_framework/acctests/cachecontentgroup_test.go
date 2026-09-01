@@ -366,6 +366,7 @@ func TestAccCachecontentgroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCachecontentgroupDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "name", "my_cachecontentgroup_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "heurexpiryparam", "30"),
 					resource.TestCheckResourceAttr("data.citrixadc_cachecontentgroup.tf_cachecontentgroup_ds", "prefetch", "YES"),

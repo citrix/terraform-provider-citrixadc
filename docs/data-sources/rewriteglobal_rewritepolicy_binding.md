@@ -42,3 +42,10 @@ In addition to the arguments, the following attributes are available:
 * `invoke` - Terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labelname` - If labelType is policylabel, name of the policy label to invoke. If labelType is reqvserver or resvserver, name of the virtual server to which to forward the request or response.
 * `labeltype` - Type of invocation. Available settings function as follows: reqvserver - Forward the request to the specified request virtual server. resvserver - Forward the response to the specified response virtual server. policylabel - Invoke the specified policy label. Possible values: [ reqvserver, resvserver, policylabel ]
+
+### Read-only rewriteglobal_rewritepolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_rewriteglobal_rewritepolicy_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `numpol` - The number of policies bound to the bindpoint.
+* `flowtype` - Flowtype of the bound rewrite policy.

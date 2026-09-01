@@ -697,6 +697,8 @@ func TestAccAppfwprofileDataSource_basic(t *testing.T) {
 				Config: testAccAppfwprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile.test_appfw", "name", "test_appfw"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwprofile.test_appfw", "id"),
 				),
 			},
 		},

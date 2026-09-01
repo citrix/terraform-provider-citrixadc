@@ -35,7 +35,7 @@ func (d *CachepolicylabelDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *CachepolicylabelDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CachepolicylabelResourceModel
+	var data CachepolicylabelDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *CachepolicylabelDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	cachepolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	cachepolicylabelDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

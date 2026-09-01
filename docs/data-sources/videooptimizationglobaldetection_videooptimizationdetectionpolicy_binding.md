@@ -38,3 +38,9 @@ In addition to the arguments, the following attributes are available:
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
 * `labeltype` - Type of invocation. Possible values: [ vserver, policylabel ]
 * `labelname` - Name of the policy label to invoke when `invoke` is set and `labeltype` is `policylabel`.
+
+### Read-only videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_videooptimizationglobaldetection_videooptimizationdetectionpolicy_binding` resource). They are Computed and are `null` when the appliance does not return them.
+
+* `numpol` - number of polices bound.

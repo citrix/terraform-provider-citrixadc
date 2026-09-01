@@ -37,6 +37,17 @@ In addition to the arguments, the following attributes are available:
 * `newname` - New name for the ICA action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#),period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 * `id` - The id of the icaaction. It has the same value as the `name` attribute.
 
+### Read-only icaaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_icaaction` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the action has been taken.
+* `referencecount` - The number of references to the action.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `builtin` - Indicates that the ICA action is a built-in (SYSTEM INTERNAL) type. A list of strings (possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.
+* `isdefault` - A value of true is returned if it is a default action.
+
 
 ## Import
 

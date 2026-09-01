@@ -35,7 +35,7 @@ func (d *AppfwglobalAuditnslogpolicyBindingDataSource) Schema(ctx context.Contex
 }
 
 func (d *AppfwglobalAuditnslogpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppfwglobalAuditnslogpolicyBindingResourceModel
+	var data AppfwglobalAuditnslogpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -98,7 +98,7 @@ func (d *AppfwglobalAuditnslogpolicyBindingDataSource) Read(ctx context.Context,
 		return
 	}
 
-	appfwglobal_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	appfwglobal_auditnslogpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

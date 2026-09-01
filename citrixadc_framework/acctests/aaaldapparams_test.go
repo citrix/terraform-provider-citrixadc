@@ -328,6 +328,8 @@ func TestAccAaaldapparamsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupsearchsubattribute", "cn"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "groupsearchfilter", "memberOf"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaldapparams.tf_aaaldapparams", "defaultauthenticationgroup", "default_group"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaaldapparams.tf_aaaldapparams", "id"),
 				),
 			},
 		},

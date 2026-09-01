@@ -249,6 +249,9 @@ func TestAccTmtrafficpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "name", "my_tmtraffic_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "action", "my_tmtraffic_action"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "rule", "true"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "id"),
+					// Read-only metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "hits"),
 				),
 			},
 		},

@@ -46,6 +46,13 @@ If the name includes one or more spaces, enclose the name in double or single qu
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only DROP/RESET actions can be used.
 * `id` - The id of the authenticationoauthidppolicy. It has the same value as the `name` attribute.
 
+### Read-only authenticationoauthidppolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationoauthidppolicy` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `hits` - Number of hits.
+
 ## Import
 
 A authenticationoauthidppolicy can be imported using its name, e.g.

@@ -35,7 +35,7 @@ func (d *AppfwglobalAppfwpolicyBindingDataSource) Schema(ctx context.Context, re
 }
 
 func (d *AppfwglobalAppfwpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppfwglobalAppfwpolicyBindingResourceModel
+	var data AppfwglobalAppfwpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -106,7 +106,7 @@ func (d *AppfwglobalAppfwpolicyBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	appfwglobal_appfwpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	appfwglobal_appfwpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

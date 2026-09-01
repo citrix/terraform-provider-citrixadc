@@ -35,7 +35,7 @@ func (d *BotglobalBotpolicyBindingDataSource) Schema(ctx context.Context, req da
 }
 
 func (d *BotglobalBotpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data BotglobalBotpolicyBindingResourceModel
+	var data BotglobalBotpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -106,7 +106,7 @@ func (d *BotglobalBotpolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	botglobal_botpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	botglobal_botpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

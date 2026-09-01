@@ -246,6 +246,7 @@ func TestAcccmpglobal_cmppolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "policyname", "tf_cmppolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "type", "RES_OVERRIDE"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_cmpglobal_cmppolicy_binding.tf_cmpglobal_cmppolicy_binding", "id"),
 				),
 			},
 		},

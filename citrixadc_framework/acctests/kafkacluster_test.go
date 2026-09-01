@@ -174,6 +174,7 @@ func TestAccKafkacluster_DataSource_basic(t *testing.T) {
 				Config: testAccKafkacluster_DataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_kafkacluster.tf_kafkacluster_data", "name", "tf_kafkacluster"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_kafkacluster.tf_kafkacluster_data", "id"),
 				),
 			},
 		},

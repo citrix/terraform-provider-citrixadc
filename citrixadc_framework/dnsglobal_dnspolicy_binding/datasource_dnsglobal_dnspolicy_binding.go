@@ -35,7 +35,7 @@ func (d *DnsglobalDnspolicyBindingDataSource) Schema(ctx context.Context, req da
 }
 
 func (d *DnsglobalDnspolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DnsglobalDnspolicyBindingResourceModel
+	var data DnsglobalDnspolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -106,7 +106,7 @@ func (d *DnsglobalDnspolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	dnsglobal_dnspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	dnsglobal_dnspolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

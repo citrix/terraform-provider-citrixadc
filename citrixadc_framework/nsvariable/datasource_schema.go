@@ -1,8 +1,34 @@
 package nsvariable
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// NsvariableDataSourceModel is the data-source-specific model, decoupled from
+// NsvariableResourceModel. A data source is a pure read surface, so it can expose
+// the full GET projection: the read/write attributes (as Computed outputs) plus
+// the read-only attributes the resource deliberately omits.
+type NsvariableDataSourceModel struct {
+	Id            types.String `tfsdk:"id"`
+	Comment       types.String `tfsdk:"comment"`
+	Expires       types.Int64  `tfsdk:"expires"`
+	Iffull        types.String `tfsdk:"iffull"`
+	Ifnovalue     types.String `tfsdk:"ifnovalue"`
+	Ifvaluetoobig types.String `tfsdk:"ifvaluetoobig"`
+	Init          types.String `tfsdk:"init"`
+	Name          types.String `tfsdk:"name"`
+	Scope         types.String `tfsdk:"scope"`
+	Type          types.String `tfsdk:"type"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/nsvariable.json). Never settable; populated from GET.
+	Referencecount types.Int64 `tfsdk:"referencecount"`
+}
 
 func NsvariableDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -54,6 +80,36 @@ func NsvariableDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Specification of the variable type; one of the following:\n   ulong - singleton variable with an unsigned 64-bit value.\n   text(value-max-size) - singleton variable with a text string value.\n   map(text(key-max-size),ulong,max-entries) - map of text string keys to unsigned 64-bit values.\n   map(text(key-max-size),text(value-max-size),max-entries) - map of text string keys to text string values.\nwhere\n   value-max-size is a positive integer that is the maximum number of bytes in a text string value.\n   key-max-size is a positive integer that is the maximum number of bytes in a text string key.\n   max-entries is a positive integer that is the maximum number of entries in a map variable.\n      For a global singleton text variable, value-max-size <= 64000.\n      For a global map with ulong values, key-max-size <= 64000.\n      For a global map with text values,  key-max-size + value-max-size <= 64000.\n   max-entries is a positive integer that is the maximum number of entries in a map variable. This has a theoretical maximum of 2^64-1, but in actual use will be much smaller, considering the memory available for use by the map.\nExample:\n   map(text(10),text(20),100) specifies a map of text string keys (max size 10 bytes) to text string values (max size 20 bytes), with 100 max entries.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source.
+			"referencecount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of references to the variable in expressions and assignments.",
+			},
 		},
 	}
+}
+
+// nsvariableDataSourceSetAttrFromGet projects a NITRO nsvariable GET response onto
+// the data-source model. Attributes are simply filled from the GET (or left Null
+// when the GET omits them) via the shared utils.MapGet* helpers.
+func nsvariableDataSourceSetAttrFromGet(ctx context.Context, data *NsvariableDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nsvariableDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Expires = utils.MapGetInt64(g, "expires")
+	data.Iffull = utils.MapGetString(g, "iffull")
+	data.Ifnovalue = utils.MapGetString(g, "ifnovalue")
+	data.Ifvaluetoobig = utils.MapGetString(g, "ifvaluetoobig")
+	data.Init = utils.MapGetString(g, "init")
+	data.Scope = utils.MapGetString(g, "scope")
+	data.Type = utils.MapGetString(g, "type")
+
+	// Read-only attributes.
+	data.Referencecount = utils.MapGetInt64(g, "referencecount")
 }

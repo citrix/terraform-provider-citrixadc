@@ -181,6 +181,8 @@ func TestAccIpsecprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "name", "my_ipsecprofile_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "ikeversion", "V2"),
 					resource.TestCheckResourceAttr("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "livenesscheckinterval", "50"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_ipsecprofile.tf_ipsecprofile_ds", "id"),
 				),
 			},
 		},

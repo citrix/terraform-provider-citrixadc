@@ -38,6 +38,18 @@ In addition to the arguments, the following attributes are available:
 * `type` - Type of feature (aaatm or rba) against which to match the policies bound to this policy label.
 * `id` - The id of the authenticationpolicylabel. It has the same value as the `labelname` attribute.
 
+### Read-only authenticationpolicylabel metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationpolicylabel` resource) and are `Computed`. Any attribute the appliance does not return is `null`.
+
+* `numpol` - Number of polices bound to label.
+* `hits` - Number of times policy label was invoked.
+* `policyname` - Name of the authentication policy bound to the policy label.
+* `priority` - Priority of the bound policy.
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `flowtype` - Flowtype of the bound authentication policy.
+* `description` - Description of the policylabel.
+
 ## Import
 
 A authenticationpolicylabel can be imported using its labelname, e.g.

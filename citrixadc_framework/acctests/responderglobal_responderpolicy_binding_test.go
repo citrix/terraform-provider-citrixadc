@@ -228,6 +228,9 @@ func TestAccResponderglobal_responderpolicy_bindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "policyname", "tf_responderpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "type", "REQ_DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					// Universal runtime-binding proof; read-only GET-only fields
+					// (numpol/flowtype) are context-dependent for a bindpoint binding.
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderglobal_responderpolicy_binding.tf_responderglobal_responderpolicy_binding", "id"),
 				),
 			},
 		},

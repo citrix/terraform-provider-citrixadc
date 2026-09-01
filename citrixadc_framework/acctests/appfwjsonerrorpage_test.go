@@ -207,6 +207,8 @@ func TestAccAppfwjsonerrorpageDataSource_basic(t *testing.T) {
 				Config: testAccAppfwjsonerrorpageDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage", "name", "tf_appfwjsonerrorpage"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwjsonerrorpage.tf_appfwjsonerrorpage", "id"),
 				),
 			},
 		},

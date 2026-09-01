@@ -46,6 +46,14 @@ In addition to the arguments, the following attributes are available:
 * `useencryptedpersistencecookie` - Encode persistence cookie values using SHA2 hash.
 * `usesecuredpersistencecookie` - Encode persistence cookie values using SHA2 hash.
 
+### Read-only lbprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbprofile` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `vsvrcount` - Total number of vservers the profile is bound to.
+* `adccookieattributewarningmsg` - Describes any configuration issue with respect to the ns variable configured as part of add/set lb profile.
+* `lbhashalgowinsize` - Window size used in the LB hashing algorithm (DEFAULT).
+
 
 ## Import
 

@@ -488,6 +488,7 @@ func TestAccSslvserver_sslcertkey_bindingDataSource(t *testing.T) {
 			{
 				Config: testAccSslvserver_sslcertkey_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslvserver_sslcertkey_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkey_binding.tf_binding", "vservername", "tf_lbvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkey_binding.tf_binding", "certkeyname", "tf_sslcertkey"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslvserver_sslcertkey_binding.tf_binding", "ca", "false"),

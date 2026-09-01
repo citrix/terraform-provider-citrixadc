@@ -375,6 +375,9 @@ func TestAccRewriteglobal_rewritepolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "invoke", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "labelname", "tf_rewritepolicylabel"),
 					resource.TestCheckResourceAttr("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "labeltype", "policylabel"),
+					// Universal runtime-binding proof; read-only GET-only fields
+					// (numpol/flowtype) are context-dependent for a bindpoint binding.
+					resource.TestCheckResourceAttrSet("data.citrixadc_rewriteglobal_rewritepolicy_binding.tf_rewriteglobal_rewritepolicy_binding", "id"),
 				),
 			},
 		},

@@ -180,6 +180,8 @@ func TestAccHanodeLocalDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHanodeLocalDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_hanode.local_node", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode.local_node", "hanode_id", "0"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode.local_node", "hellointerval", "200"),
 					resource.TestCheckResourceAttr("data.citrixadc_hanode.local_node", "deadinterval", "5"),

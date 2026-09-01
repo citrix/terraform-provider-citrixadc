@@ -344,6 +344,10 @@ func TestAccVideooptimizationglobalpacing_videooptimizationpacingpolicy_bindingD
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationglobalpacing_videooptimizationpacingpolicy_binding.tf_binding", "policyname", "tf_videooptimizationpacingpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationglobalpacing_videooptimizationpacingpolicy_binding.tf_binding", "priority", "100"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationglobalpacing_videooptimizationpacingpolicy_binding.tf_binding", "id"),
+					// Read-only (GET-only) counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationglobalpacing_videooptimizationpacingpolicy_binding.tf_binding", "numpol"),
 				),
 			},
 		},

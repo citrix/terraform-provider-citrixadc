@@ -49,3 +49,17 @@ In addition to the arguments, the following attributes are available:
 * `serverid` - The identifier for the service. This is used when the persistency type is set to Custom Server ID.
 * `state` - Initial state of the service group.
 * `weight` - Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
+
+### Read-only servicegroup_servicegroupmember_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_servicegroup_servicegroupmember_binding` resource). They are GET-only/Computed and any attribute the appliance does not return is `null`.
+
+* `svrstate` - The state of the service (for example `UP`, `DOWN`, `OUT OF SERVICE`).
+* `tickssincelaststatechange` - Time in 10 millisecond ticks since the last state change.
+* `statechangetimesec` - Time when the last state change occurred (seconds part).
+* `trofsreason` - Reason the service group member is in TROFS, if applicable.
+* `trofsdelay` - Delay before moving to TROFS.
+* `orderstr` - Order number in string form assigned to the servicegroup member.
+* `graceful` - Whether to wait for all existing connections to the service to terminate before shutting down the service.
+* `svcitmpriority` - The priority of the FQDN service items for SRV server binding.
+* `delay` - Time, in seconds, allocated for a shutdown of the services in the service group.

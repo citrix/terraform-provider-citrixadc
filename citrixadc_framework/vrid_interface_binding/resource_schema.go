@@ -2,8 +2,6 @@ package vrid_interface_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
@@ -30,16 +28,6 @@ type VridInterfaceBindingResourceModel struct {
 	Id     types.String `tfsdk:"id"`
 	VridId types.Int64  `tfsdk:"vrid_id"`
 	Ifnum  types.String `tfsdk:"ifnum"`
-}
-
-// VridInterfaceBindingDataSourceModel describes the DATASOURCE data model. It adds
-// the read-only output fields (flags, vlan) returned by the GET endpoint.
-type VridInterfaceBindingDataSourceModel struct {
-	Id     types.String `tfsdk:"id"`
-	VridId types.Int64  `tfsdk:"vrid_id"`
-	Ifnum  types.String `tfsdk:"ifnum"`
-	Flags  types.Int64  `tfsdk:"flags"`
-	Vlan   types.Int64  `tfsdk:"vlan"`
 }
 
 func (r *VridInterfaceBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -98,60 +86,6 @@ func vrid_interface_bindingSetAttrFromGet(ctx context.Context, data *VridInterfa
 	if val, ok := getResponseData["ifnum"]; ok && val != nil {
 		data.Ifnum = types.StringValue(val.(string))
 	}
-
-	return data
-}
-
-// vrid_interface_bindingSetAttrFromGetForDatasource faithfully copies every field
-// from the GET response (including the read-only flags and vlan) and composes the
-// ID, since the datasource has no Create to seed those values.
-func vrid_interface_bindingSetAttrFromGetForDatasource(ctx context.Context, data *VridInterfaceBindingDataSourceModel, getResponseData map[string]interface{}) *VridInterfaceBindingDataSourceModel {
-	tflog.Debug(ctx, "In vrid_interface_bindingSetAttrFromGetForDatasource Function")
-
-	if val, ok := getResponseData["id"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.VridId = types.Int64Value(intVal)
-		}
-	} else {
-		data.VridId = types.Int64Null()
-	}
-	if val, ok := getResponseData["ifnum"]; ok && val != nil {
-		// NITRO may echo ifnum as a scalar string or (on some firmware) a list.
-		switch t := val.(type) {
-		case string:
-			data.Ifnum = types.StringValue(t)
-		case []interface{}:
-			if len(t) > 0 {
-				if s, ok := t[0].(string); ok {
-					data.Ifnum = types.StringValue(s)
-				}
-			}
-		}
-	}
-	// NOTE: the firmware does NOT echo "ifnum" for vrid_interface_binding rows. When
-	// it is absent we deliberately RETAIN the config-supplied ifnum (the datasource's
-	// lookup key) instead of nulling it, so the composite ID and the ifnum output
-	// remain correct.
-	if val, ok := getResponseData["flags"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Flags = types.Int64Value(intVal)
-		}
-	} else {
-		data.Flags = types.Int64Null()
-	}
-	if val, ok := getResponseData["vlan"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Vlan = types.Int64Value(intVal)
-		}
-	} else {
-		data.Vlan = types.Int64Null()
-	}
-
-	// Set ID for the datasource. Composite key: vrid_id (NITRO id), ifnum.
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.VridId.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("ifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ifnum.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

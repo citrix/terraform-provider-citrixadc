@@ -1,8 +1,42 @@
 package cspolicylabel
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// CspolicylabelDataSourceModel is the data-source-specific model, decoupled from
+// CspolicylabelResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits
+// (numpol, hits, policyname, priority, targetvserver, gotopriorityexpression,
+// labeltype, invoke_labelname). Every non-key attribute is Computed; the
+// Framework's per-attribute model <-> schema reflection requires this model to
+// have exactly the attributes the data-source schema declares, which is why it
+// cannot reuse the resource model.
+type CspolicylabelDataSourceModel struct {
+	Id                types.String `tfsdk:"id"`
+	Labelname         types.String `tfsdk:"labelname"` // Required lookup key
+	Cspolicylabeltype types.String `tfsdk:"cspolicylabeltype"`
+	Newname           types.String `tfsdk:"newname"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/cspolicylabel.json). Never settable; populated from GET.
+	Numpol                 types.Int64  `tfsdk:"numpol"`
+	Hits                   types.Int64  `tfsdk:"hits"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Targetvserver          types.String `tfsdk:"targetvserver"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	InvokeLabelname        types.String `tfsdk:"invoke_labelname"`
+}
 
 func CspolicylabelDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -24,6 +58,69 @@ func CspolicylabelDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "The new name of the content switching policylabel.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"numpol": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of policies bound to the label.",
+			},
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of times the policy label was invoked.",
+			},
+			"policyname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Name of the content switching policy.",
+			},
+			"priority": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Specifies the priority of the policy.",
+			},
+			"targetvserver": schema.StringAttribute{
+				Computed:    true,
+				Description: "Name of the virtual server to which to forward requests that match the policy.",
+			},
+			"gotopriorityexpression": schema.StringAttribute{
+				Computed:    true,
+				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
+			},
+			"labeltype": schema.StringAttribute{
+				Computed:    true,
+				Description: "Type of policy label invocation. Possible values = policylabel.",
+			},
+			"invoke_labelname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Name of the label to invoke if the current policy rule evaluates to TRUE.",
+			},
 		},
 	}
+}
+
+// cspolicylabelDataSourceSetAttrFromGet projects a NITRO cspolicylabel GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func cspolicylabelDataSourceSetAttrFromGet(ctx context.Context, data *CspolicylabelDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In cspolicylabelDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["labelname"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Labelname = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Cspolicylabeltype = utils.MapGetString(g, "cspolicylabeltype")
+	data.Newname = utils.MapGetString(g, "newname")
+
+	// Read-only attributes.
+	data.Numpol = utils.MapGetInt64(g, "numpol")
+	data.Hits = utils.MapGetInt64(g, "hits")
+	data.Policyname = utils.MapGetString(g, "policyname")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Targetvserver = utils.MapGetString(g, "targetvserver")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Labeltype = utils.MapGetString(g, "labeltype")
+	data.InvokeLabelname = utils.MapGetString(g, "invoke_labelname")
 }

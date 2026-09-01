@@ -219,6 +219,7 @@ func TestAccResponderhtmlpageDataSource_basic(t *testing.T) {
 				Config: testAccResponderhtmlpageDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_responderhtmlpage.tf_responder_page_ds", "name", "tf_responder_page_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderhtmlpage.tf_responder_page_ds", "id"),
 				),
 			},
 		},

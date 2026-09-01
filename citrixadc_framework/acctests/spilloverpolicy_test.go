@@ -105,6 +105,11 @@ func TestAccSpilloverpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_spilloverpolicy.tf_spilloverpolicy", "name", "tf_spilloverpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_spilloverpolicy.tf_spilloverpolicy", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_spilloverpolicy.tf_spilloverpolicy", "comment", "This is example of spilloverpolicy"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_spilloverpolicy.tf_spilloverpolicy", "id"),
+					// Read-only counter metadata exposed only by the data source; hits is
+					// always populated (0 for a freshly-created policy).
+					resource.TestCheckResourceAttrSet("data.citrixadc_spilloverpolicy.tf_spilloverpolicy", "hits"),
 				),
 			},
 		},

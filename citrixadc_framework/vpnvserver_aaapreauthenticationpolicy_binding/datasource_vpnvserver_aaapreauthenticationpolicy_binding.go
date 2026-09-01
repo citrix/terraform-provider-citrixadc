@@ -35,7 +35,7 @@ func (d *VpnvserverAaapreauthenticationpolicyBindingDataSource) Schema(ctx conte
 }
 
 func (d *VpnvserverAaapreauthenticationpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnvserverAaapreauthenticationpolicyBindingResourceModel
+	var data VpnvserverAaapreauthenticationpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -94,7 +94,7 @@ func (d *VpnvserverAaapreauthenticationpolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	vpnvserver_aaapreauthenticationpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	vpnvserver_aaapreauthenticationpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

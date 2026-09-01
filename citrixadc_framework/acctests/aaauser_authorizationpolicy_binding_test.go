@@ -353,6 +353,7 @@ func TestAccAaauserAuthorizationpolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding", "policy", "tp-authorize-1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding", "type", "REQUEST"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding", "priority", "100"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaauser_authorizationpolicy_binding.tf_aaauser_authorizationpolicy_binding", "id"),
 				),
 			},
 		},

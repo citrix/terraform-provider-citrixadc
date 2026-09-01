@@ -173,6 +173,8 @@ func TestAccAppfwgrpccontenttypeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwgrpccontenttype.tf_appfwgrpccontenttype", "grpccontenttypevalue", "tf_acc_grpc_test"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwgrpccontenttype.tf_appfwgrpccontenttype", "isregex", "NOTREGEX"),
+					// id is the universal runtime-binding proof (mirrors grpccontenttypevalue).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwgrpccontenttype.tf_appfwgrpccontenttype", "id"),
 				),
 			},
 		},

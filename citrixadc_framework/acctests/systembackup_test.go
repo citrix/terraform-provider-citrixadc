@@ -212,6 +212,12 @@ func TestAccSystembackupDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_systembackup.tf_systembackup", "filename", "my_backup_file.tgz"),
 					resource.TestCheckResourceAttr("data.citrixadc_systembackup.tf_systembackup", "level", "basic"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systembackup.tf_systembackup", "id"),
+					// Read-only metadata that is always populated for a freshly-created backup file.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systembackup.tf_systembackup", "size"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systembackup.tf_systembackup", "creationtime"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systembackup.tf_systembackup", "version"),
 				),
 			},
 		},

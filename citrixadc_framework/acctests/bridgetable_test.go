@@ -220,6 +220,9 @@ func TestAccBridgetableDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.citrixadc_bridgetable.tf_bridgetable_ds", "mac"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_bridgetable.tf_bridgetable_ds", "id"),
+					// Read-only metadata exposed only by the data source; every
+					// bridge table entry is classified (STATIC/PERMANENT/DYNAMIC).
+					resource.TestCheckResourceAttrSet("data.citrixadc_bridgetable.tf_bridgetable_ds", "type"),
 				),
 			},
 		},

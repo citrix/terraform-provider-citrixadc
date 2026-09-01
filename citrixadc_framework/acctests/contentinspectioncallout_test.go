@@ -352,6 +352,9 @@ func TestAccContentinspectioncalloutDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "serverip", "2.2.2.2"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "returntype", "TEXT"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "resultexpr", "true"),
+					// Runtime-binding proof; read-only metadata (hits/undefhits/
+					// undefreason) is exposed but may be omitted for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_contentinspectioncallout.tf_contentinspectioncallout_ds", "id"),
 				),
 			},
 		},

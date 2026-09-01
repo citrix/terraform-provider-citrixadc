@@ -56,3 +56,16 @@ In addition to the arguments, the following attributes are available:
 * `units1` - Units for the expiry period.
 * `units2` - Units for the notification period.
 * `zonename` - Name of the zone for which to create a key.
+
+### Read-only dnskey metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnskey` resource) and are `Computed`. Any attribute the appliance does not return is `null`.
+
+* `state` - Current key state. Possible values = `Created`, `Activated`, `Deactivated`, `Revoked`.
+* `type` - Key type. Possible values = `KSK`, `KeySigningKey`, `ZSK`, `ZoneSigningKey`.
+* `tag` - Key tag/ID.
+* `createtimestr` - Key creation time.
+* `activationtimestr` - Key activation time.
+* `expirytimestr` - Key expiry time.
+* `deletiontimestr` - Key deletion time if the autorollover option is enabled.
+* `rolloverfailrc` - Reason code in case a rollover event failed.

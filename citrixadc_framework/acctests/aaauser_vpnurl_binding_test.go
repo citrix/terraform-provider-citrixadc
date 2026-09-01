@@ -267,6 +267,8 @@ func TestAccAaauser_vpnurl_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurl_binding.tf_aaauser_vpnurl_binding", "username", "user1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnurl_binding.tf_aaauser_vpnurl_binding", "urlname", "Firsturl"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaauser_vpnurl_binding.tf_aaauser_vpnurl_binding", "id"),
 				),
 			},
 		},

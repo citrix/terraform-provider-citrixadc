@@ -34,6 +34,12 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Name of the Citrix ADC named expression, or an expression, that the policy uses to determine whether to apply certain action on the current traffic.
 * `id` - The id of the tmtrafficpolicy. It has the same value as the `name` attribute.
 
+### Read-only tmtrafficpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_tmtrafficpolicy` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
+
+* `hits` - Number of hits.
+
 ## Import
 
 A tmtrafficpolicy can be imported using its name, e.g.

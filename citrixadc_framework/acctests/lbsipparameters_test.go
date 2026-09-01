@@ -292,6 +292,10 @@ func TestAccLbsipparametersDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "rnatsecuresrcport", "82"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "rnatsrcport", "83"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbsipparameters.tf_lbsipparameters", "sip503ratethreshold", "15"),
+					// Runtime-binding proof. builtin (list) and feature (capability
+					// flag) are omitted by the appliance for a basic config, so they
+					// are intentionally not asserted here.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbsipparameters.tf_lbsipparameters", "id"),
 				),
 			},
 		},

@@ -330,6 +330,7 @@ func TestAcccrvserver_lbvserver_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_lbvserver_binding.crvserver_lbvserver_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_lbvserver_binding.crvserver_lbvserver_binding", "lbvserver", "test_lbvserver_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_crvserver_lbvserver_binding.crvserver_lbvserver_binding", "id"),
 				),
 			},
 		},

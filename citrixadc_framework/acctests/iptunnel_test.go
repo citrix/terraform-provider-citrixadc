@@ -294,6 +294,9 @@ func TestAccIptunnelDataSource_basic(t *testing.T) {
 				Config: testAccIptunnelDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.citrixadc_iptunnel.tf_iptunnel_ds", "id"),
+					// refcnt is a counter-style read-only field the appliance always
+					// returns for an existing tunnel.
+					resource.TestCheckResourceAttrSet("data.citrixadc_iptunnel.tf_iptunnel_ds", "refcnt"),
 				),
 			},
 		},

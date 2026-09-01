@@ -41,4 +41,10 @@ The following attributes are available:
 * `deployment` - Describes whether the customer is a Staging, Production, or Dev Citrix Cloud customer. Possible values: [ Production, Staging, Dev ]
 * `connectorresidence` - Identifies where the connector is located. Possible values: [ None, Onprem, Aws, Azure, Cpx ]
 
+### Read-only cloudparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cloudparameter` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `controlconnectionstatus` - Status of the control connection: in case of successful registration to the controller, connection status will be shown as `Registered`, else `Unregistered`.
+
 ~> **Note:** `activationcode` is a write-only field. The NITRO GET/show operation never returns it, so this data source does not expose it as a readable value (it is always null). Use the `citrixadc_cloudparameter` resource to configure the activation code.

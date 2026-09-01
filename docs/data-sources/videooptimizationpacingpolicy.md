@@ -38,6 +38,15 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Expression that determines which request or response match the video optimization pacing policy. The following requirements apply only to the Citrix ADC CLI: If the expression includes one or more spaces, enclose the entire expression in double quotation marks. If the expression itself includes double quotation marks, escape the quotations by using the \ character. Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.
 
+### Read-only videooptimizationpacingpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_videooptimizationpacingpolicy` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `builtin` - Flag to determine if videooptimization pacing policy is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+
 ## Import
 
 A videooptimizationpacingpolicy can be imported using its name, e.g.

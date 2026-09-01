@@ -255,6 +255,8 @@ func TestAccAuditsyslogactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "serverport", "514"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "transport", "TCP"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "protocolviolations", "NONE"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditsyslogaction.tf_auditsyslogaction_ds", "id"),
 				),
 			},
 		},

@@ -274,6 +274,8 @@ func TestAccAaauser_vpnsessionpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "username", "user1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "policy", "tf_vpnsessionpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "priority", "100"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaauser_vpnsessionpolicy_binding.tf_aaauser_vpnsessionpolicy_binding", "id"),
 				),
 			},
 		},

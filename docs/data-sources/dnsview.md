@@ -29,3 +29,9 @@ output "viewname" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the dnsview. It has the same value as the `viewname` attribute.
+
+### Read-only dnsview metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnsview` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `flags` - Flags controlling display.

@@ -234,6 +234,8 @@ func TestAccSystemcmdpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "policyname", "tf_policy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "action", "ALLOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemcmdpolicy.tf_policy", "cmdspec", "show.*"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemcmdpolicy.tf_policy", "id"),
 				),
 			},
 		},

@@ -73,6 +73,9 @@ func TestAccSpilloveractionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_spilloveraction.tf_spilloveraction", "name", "my_spilloveraction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_spilloveraction.tf_spilloveraction", "action", "SPILLOVER"),
+					// Universal runtime-binding proof (read-only builtin/feature are
+					// config-dependent and may be omitted for a basic object).
+					resource.TestCheckResourceAttrSet("data.citrixadc_spilloveraction.tf_spilloveraction", "id"),
 				),
 			},
 		},

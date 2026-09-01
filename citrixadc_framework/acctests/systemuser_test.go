@@ -195,6 +195,8 @@ func TestAccSystemuserDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSystemuserDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// "id" is the universal runtime-binding proof (equals username).
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemuser.tf_user", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemuser.tf_user", "username", "tf_user"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemuser.tf_user", "timeout", "900"),
 				),

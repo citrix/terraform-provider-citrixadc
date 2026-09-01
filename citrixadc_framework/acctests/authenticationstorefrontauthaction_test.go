@@ -308,6 +308,10 @@ func TestAccAuthenticationstorefrontauthactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationstorefrontauthaction.tf_storefront_ds_data", "serverurl", "http://www.example.com/"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationstorefrontauthaction.tf_storefront_ds_data", "domain", "domainname_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationstorefrontauthaction.tf_storefront_ds_data", "defaultauthenticationgroup", "group_name_ds"),
+					// Universal runtime-binding proof. The read-only success/failure
+					// counters are instance/config-dependent and may be omitted for a
+					// freshly-created action, so they are intentionally not asserted.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationstorefrontauthaction.tf_storefront_ds_data", "id"),
 				),
 			},
 		},

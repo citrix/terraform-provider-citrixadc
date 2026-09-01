@@ -282,6 +282,9 @@ func TestAccGslbservicegroup_lbmonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding", "servicegroupname", "test_gslbvservicegroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding", "monitor_name", "tf_monitor"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding", "weight", "20"),
+					// Universal runtime-binding proof (read-only metadata such as
+					// monweight is instance-dependent and may be omitted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbservicegroup_lbmonitor_binding.tf_gslbservicegroup_lbmonitor_binding", "id"),
 				),
 			},
 		},

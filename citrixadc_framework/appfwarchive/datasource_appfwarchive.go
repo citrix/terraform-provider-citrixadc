@@ -7,7 +7,6 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*AppfwarchiveDataSource)(nil)
@@ -36,7 +35,7 @@ func (d *AppfwarchiveDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *AppfwarchiveDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppfwarchiveResourceModel
+	var data AppfwarchiveDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -60,11 +59,7 @@ func (d *AppfwarchiveDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	appfwarchiveSetAttrFromGet(ctx, &data, dataArr[0])
-
-	// Datasource has no Create step that would seed the ID; set it explicitly
-	// from the lookup name (single_unique => plain value, matching Create).
-	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+	appfwarchiveDataSourceSetAttrFromGet(ctx, &data, dataArr[0])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

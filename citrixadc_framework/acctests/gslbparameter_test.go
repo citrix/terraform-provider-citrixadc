@@ -285,6 +285,7 @@ func TestAccGslbparameterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGslbparameterDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbparameter.tf_gslbparameter", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbparameter.tf_gslbparameter", "ldnsentrytimeout", "50"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbparameter.tf_gslbparameter", "rtttolerance", "6"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbparameter.tf_gslbparameter", "ldnsmask", "255.255.255.255"),

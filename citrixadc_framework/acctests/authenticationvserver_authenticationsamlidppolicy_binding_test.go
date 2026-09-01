@@ -314,6 +314,8 @@ func TestAccAuthenticationvserverAuthenticationsamlidppolicyBindingDataSource_ba
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind", "policy", "tf_samlidppolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind", "priority", "88"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationsamlidppolicy_binding.tf_bind", "id"),
 				),
 			},
 		},

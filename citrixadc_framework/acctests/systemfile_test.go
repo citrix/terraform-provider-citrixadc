@@ -249,6 +249,8 @@ func TestAccSystemfileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemfile.tf_file_datasource", "fileencoding", "BASE64"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_systemfile.tf_file_datasource", "filecontent"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_systemfile.tf_file_datasource", "id"),
+					// Read-only file metadata that is always populated for an existing file.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemfile.tf_file_datasource", "filesize"),
 				),
 			},
 		},

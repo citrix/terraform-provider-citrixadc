@@ -168,6 +168,8 @@ func TestAccLbmetrictableDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLbmetrictableDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof of a resolved data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmetrictable.tf_lbmetrictable_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmetrictable.tf_lbmetrictable_ds", "metrictable", "tf_lbmetrictable_ds"),
 				),
 			},

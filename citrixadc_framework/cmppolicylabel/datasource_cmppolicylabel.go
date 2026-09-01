@@ -35,7 +35,7 @@ func (d *CmppolicylabelDataSource) Schema(ctx context.Context, req datasource.Sc
 }
 
 func (d *CmppolicylabelDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CmppolicylabelResourceModel
+	var data CmppolicylabelDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *CmppolicylabelDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	cmppolicylabelSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	cmppolicylabelDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

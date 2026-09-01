@@ -315,6 +315,8 @@ func TestAccDnssrvrecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnssrvrecDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "domain", "example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "target", "_sip._udp.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "priority", "1"),

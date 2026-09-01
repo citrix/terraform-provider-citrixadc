@@ -240,6 +240,7 @@ func TestAccBotglobalBotpolicyBindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBotglobalBotpolicyBindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "policyname", "tf_botpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "priority", "90"),
 					resource.TestCheckResourceAttr("data.citrixadc_botglobal_botpolicy_binding.tf_binding", "type", "REQ_OVERRIDE"),

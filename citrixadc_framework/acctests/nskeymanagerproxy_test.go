@@ -154,6 +154,8 @@ func TestAccNskeymanagerproxyDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_nskeymanagerproxy.tf_nskeymanagerproxy", "serverip", "192.0.2.50"),
 					resource.TestCheckResourceAttr("data.citrixadc_nskeymanagerproxy.tf_nskeymanagerproxy", "port", "1443"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nskeymanagerproxy.tf_nskeymanagerproxy", "id"),
 				),
 			},
 		},

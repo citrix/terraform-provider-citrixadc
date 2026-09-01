@@ -144,6 +144,8 @@ func TestAccSslhsmkeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslhsmkey.tf_hsmkey1", "hsmkeyname", "hsmkey1"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslhsmkey.tf_hsmkey1", "hsmtype", "Fillme"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslhsmkey.tf_hsmkey1", "serialnum", "Fillme"),
+					// Universal runtime-binding proof that the data source resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslhsmkey.tf_hsmkey1", "id"),
 				),
 			},
 		},

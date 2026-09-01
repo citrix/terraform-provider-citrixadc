@@ -360,6 +360,10 @@ func TestAccLsngroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lsngroup.tf_lsngroup_ds", "logging", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsngroup.tf_lsngroup_ds", "nattype", "DYNAMIC"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsngroup.tf_lsngroup_ds", "snmptraplimit", "50"),
+					// Universal runtime-binding proof that the data source read
+					// resolved (read-only metadata fields are instance/config
+					// dependent and may be null, so only id is asserted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsngroup.tf_lsngroup_ds", "id"),
 				),
 			},
 		},

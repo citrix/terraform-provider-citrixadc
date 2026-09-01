@@ -1,8 +1,98 @@
 package gslbvserver
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// GslbvserverDataSourceModel is the data-source-specific model, decoupled from
+// GslbvserverResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only NITRO attributes the resource deliberately omits
+// (curstate, status, health, totalservices, ...). Every non-key attribute is
+// Computed; the Framework's per-attribute model <-> schema reflection requires
+// this model to have exactly the attributes the data-source schema declares,
+// which is why it cannot reuse the resource model.
+type GslbvserverDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Appflowlog             types.String `tfsdk:"appflowlog"`
+	Backupip               types.String `tfsdk:"backupip"`
+	Backuplbmethod         types.String `tfsdk:"backuplbmethod"`
+	Backupsessiontimeout   types.Int64  `tfsdk:"backupsessiontimeout"`
+	Backupvserver          types.String `tfsdk:"backupvserver"`
+	Comment                types.String `tfsdk:"comment"`
+	Considereffectivestate types.String `tfsdk:"considereffectivestate"`
+	CookieDomain           types.String `tfsdk:"cookie_domain"`
+	Cookietimeout          types.Int64  `tfsdk:"cookietimeout"`
+	Disableprimaryondown   types.String `tfsdk:"disableprimaryondown"`
+	Dnsrecordtype          types.String `tfsdk:"dnsrecordtype"`
+	Domainname             types.String `tfsdk:"domainname"`
+	Dynamicweight          types.String `tfsdk:"dynamicweight"`
+	Ecs                    types.String `tfsdk:"ecs"`
+	Ecsaddrvalidation      types.String `tfsdk:"ecsaddrvalidation"`
+	Edr                    types.String `tfsdk:"edr"`
+	Iptype                 types.String `tfsdk:"iptype"`
+	Lbmethod               types.String `tfsdk:"lbmethod"`
+	Mir                    types.String `tfsdk:"mir"`
+	Name                   types.String `tfsdk:"name"` // Required lookup key
+	Netmask                types.String `tfsdk:"netmask"`
+	Newname                types.String `tfsdk:"newname"`
+	Order                  types.Int64  `tfsdk:"order"`
+	Orderthreshold         types.Int64  `tfsdk:"orderthreshold"`
+	Persistenceid          types.Int64  `tfsdk:"persistenceid"`
+	Persistencetype        types.String `tfsdk:"persistencetype"`
+	Persistmask            types.String `tfsdk:"persistmask"`
+	Rule                   types.String `tfsdk:"rule"`
+	Servicegroupname       types.String `tfsdk:"servicegroupname"`
+	Servicename            types.String `tfsdk:"servicename"`
+	Servicetype            types.String `tfsdk:"servicetype"`
+	Sitedomainttl          types.Int64  `tfsdk:"sitedomainttl"`
+	Sobackupaction         types.String `tfsdk:"sobackupaction"`
+	Somethod               types.String `tfsdk:"somethod"`
+	Sopersistence          types.String `tfsdk:"sopersistence"`
+	Sopersistencetimeout   types.Int64  `tfsdk:"sopersistencetimeout"`
+	Sothreshold            types.Int64  `tfsdk:"sothreshold"`
+	State                  types.String `tfsdk:"state"`
+	Timeout                types.Int64  `tfsdk:"timeout"`
+	Toggleorder            types.String `tfsdk:"toggleorder"`
+	Tolerance              types.Int64  `tfsdk:"tolerance"`
+	Ttl                    types.Int64  `tfsdk:"ttl"`
+	V6netmasklen           types.Int64  `tfsdk:"v6netmasklen"`
+	V6persistmasklen       types.Int64  `tfsdk:"v6persistmasklen"`
+	Weight                 types.Int64  `tfsdk:"weight"`
+	// Convenience binding blocks preserved from the SDK v2 resource.
+	Domain  types.Set `tfsdk:"domain"`
+	Service types.Set `tfsdk:"service"`
+
+	// Read-only (GET-only) NITRO attributes from the read-only set
+	// (zion73x_readonly/gslbvserver.json). Never settable; populated from GET.
+	Curstate                  types.String `tfsdk:"curstate"`
+	Status                    types.Int64  `tfsdk:"status"`
+	Lbrrreason                types.Int64  `tfsdk:"lbrrreason"`
+	Iscname                   types.String `tfsdk:"iscname"`
+	Sitepersistence           types.String `tfsdk:"sitepersistence"`
+	Totalservices             types.Int64  `tfsdk:"totalservices"`
+	Activeservices            types.Int64  `tfsdk:"activeservices"`
+	Statechangetimesec        types.String `tfsdk:"statechangetimesec"`
+	Statechangetimemsec       types.Int64  `tfsdk:"statechangetimemsec"`
+	Tickssincelaststatechange types.Int64  `tfsdk:"tickssincelaststatechange"`
+	Health                    types.Int64  `tfsdk:"health"`
+	Policyname                types.String `tfsdk:"policyname"`
+	Priority                  types.Int64  `tfsdk:"priority"`
+	Gotopriorityexpression    types.String `tfsdk:"gotopriorityexpression"`
+	Type                      types.String `tfsdk:"type"`
+	Vsvrbindsvcip             types.String `tfsdk:"vsvrbindsvcip"`
+	Vsvrbindsvcport           types.Int64  `tfsdk:"vsvrbindsvcport"`
+	Servername                types.String `tfsdk:"servername"`
+	Nodefaultbindings         types.String `tfsdk:"nodefaultbindings"`
+	Currentactiveorder        types.String `tfsdk:"currentactiveorder"`
+}
 
 func GslbvserverDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -234,6 +324,89 @@ func GslbvserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Weight for the service.",
 			},
+
+			// Read-only (GET-only) NITRO attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"curstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "State of the gslb vserver (for example UP, DOWN, OUT OF SERVICE, DISABLED).",
+			},
+			"status": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Current status of the gslb vserver. During the initial phase, if the configured lb method is not round robin, the vserver will adopt round robin to distribute traffic for a predefined number of requests.",
+			},
+			"lbrrreason": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Reason why a vserver is in RR (round robin).",
+			},
+			"iscname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Is cname feature set on vserver (ENABLED, DISABLED).",
+			},
+			"sitepersistence": schema.StringAttribute{
+				Computed:    true,
+				Description: "Type of Site Persistence set (ConnectionProxy, HTTPRedirect, NONE).",
+			},
+			"totalservices": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Total number of services bound to the vserver.",
+			},
+			"activeservices": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Total number of active services bound to the vserver.",
+			},
+			"statechangetimesec": schema.StringAttribute{
+				Computed:    true,
+				Description: "Time when last state change happened. Seconds part.",
+			},
+			"statechangetimemsec": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time at which last state change happened. Milliseconds part.",
+			},
+			"tickssincelaststatechange": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Time in 10 millisecond ticks since the last state change.",
+			},
+			"health": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Health of vserver based on percentage of weights of active svcs/all svcs. This does not consider administratively disabled svcs.",
+			},
+			"policyname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Name of the policy bound to the GSLB vserver.",
+			},
+			"priority": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Priority.",
+			},
+			"gotopriorityexpression": schema.StringAttribute{
+				Computed:    true,
+				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
+			},
+			"type": schema.StringAttribute{
+				Computed:    true,
+				Description: "The bindpoint to which the policy is bound (REQUEST, RESPONSE, MQTT_JUMBO_REQ, HTTP_EVENT_RESPONSE).",
+			},
+			"vsvrbindsvcip": schema.StringAttribute{
+				Computed:    true,
+				Description: "Used for showing the ip of bound entities.",
+			},
+			"vsvrbindsvcport": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Used for showing ports of bound entities.",
+			},
+			"servername": schema.StringAttribute{
+				Computed:    true,
+				Description: "Used to display server name in case of GSLB servicegroup binding to GSLB vserver.",
+			},
+			"nodefaultbindings": schema.StringAttribute{
+				Computed:    true,
+				Description: "To determine if the configuration will have default ssl CIPHER and ECC curve bindings (YES, NO).",
+			},
+			"currentactiveorder": schema.StringAttribute{
+				Computed:    true,
+				Description: "Current order that takes the traffic in case service or servicegroup is bound with order.",
+			},
 		},
 		Blocks: map[string]schema.Block{
 			"domain": schema.SetNestedBlock{
@@ -312,4 +485,91 @@ func GslbvserverDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+// gslbvserverDataSourceSetAttrFromGet projects a NITRO gslbvserver GET response
+// onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them) — no unknown->null resolution or plan preservation is
+// required. The shared utils.MapGet* helpers implement that projection.
+func gslbvserverDataSourceSetAttrFromGet(ctx context.Context, data *GslbvserverDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In gslbvserverDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Appflowlog = utils.MapGetString(g, "appflowlog")
+	data.Backupip = utils.MapGetString(g, "backupip")
+	data.Backuplbmethod = utils.MapGetString(g, "backuplbmethod")
+	data.Backupsessiontimeout = utils.MapGetInt64(g, "backupsessiontimeout")
+	data.Backupvserver = utils.MapGetString(g, "backupvserver")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Considereffectivestate = utils.MapGetString(g, "considereffectivestate")
+	data.CookieDomain = utils.MapGetString(g, "cookie_domain")
+	data.Cookietimeout = utils.MapGetInt64(g, "cookietimeout")
+	data.Disableprimaryondown = utils.MapGetString(g, "disableprimaryondown")
+	data.Dnsrecordtype = utils.MapGetString(g, "dnsrecordtype")
+	data.Domainname = utils.MapGetString(g, "domainname")
+	data.Dynamicweight = utils.MapGetString(g, "dynamicweight")
+	data.Ecs = utils.MapGetString(g, "ecs")
+	data.Ecsaddrvalidation = utils.MapGetString(g, "ecsaddrvalidation")
+	data.Edr = utils.MapGetString(g, "edr")
+	data.Iptype = utils.MapGetString(g, "iptype")
+	data.Lbmethod = utils.MapGetString(g, "lbmethod")
+	data.Mir = utils.MapGetString(g, "mir")
+	data.Netmask = utils.MapGetString(g, "netmask")
+	data.Newname = utils.MapGetString(g, "newname")
+	data.Order = utils.MapGetInt64(g, "order")
+	data.Orderthreshold = utils.MapGetInt64(g, "orderthreshold")
+	data.Persistenceid = utils.MapGetInt64(g, "persistenceid")
+	data.Persistencetype = utils.MapGetString(g, "persistencetype")
+	data.Persistmask = utils.MapGetString(g, "persistmask")
+	data.Rule = utils.MapGetString(g, "rule")
+	data.Servicegroupname = utils.MapGetString(g, "servicegroupname")
+	data.Servicename = utils.MapGetString(g, "servicename")
+	data.Servicetype = utils.MapGetString(g, "servicetype")
+	data.Sitedomainttl = utils.MapGetInt64(g, "sitedomainttl")
+	data.Sobackupaction = utils.MapGetString(g, "sobackupaction")
+	data.Somethod = utils.MapGetString(g, "somethod")
+	data.Sopersistence = utils.MapGetString(g, "sopersistence")
+	data.Sopersistencetimeout = utils.MapGetInt64(g, "sopersistencetimeout")
+	data.Sothreshold = utils.MapGetInt64(g, "sothreshold")
+	data.State = utils.MapGetString(g, "state")
+	data.Timeout = utils.MapGetInt64(g, "timeout")
+	data.Toggleorder = utils.MapGetString(g, "toggleorder")
+	data.Tolerance = utils.MapGetInt64(g, "tolerance")
+	data.Ttl = utils.MapGetInt64(g, "ttl")
+	data.V6netmasklen = utils.MapGetInt64(g, "v6netmasklen")
+	data.V6persistmasklen = utils.MapGetInt64(g, "v6persistmasklen")
+	data.Weight = utils.MapGetInt64(g, "weight")
+
+	// The domain/service convenience blocks are populated from separate binding
+	// GETs, not from the bare vserver GET, so leave them Null here.
+	data.Domain = types.SetNull(types.ObjectType{AttrTypes: domainbindingAttrTypes})
+	data.Service = types.SetNull(types.ObjectType{AttrTypes: servicebindingAttrTypes})
+
+	// Read-only NITRO attributes.
+	data.Curstate = utils.MapGetString(g, "curstate")
+	data.Status = utils.MapGetInt64(g, "status")
+	data.Lbrrreason = utils.MapGetInt64(g, "lbrrreason")
+	data.Iscname = utils.MapGetString(g, "iscname")
+	data.Sitepersistence = utils.MapGetString(g, "sitepersistence")
+	data.Totalservices = utils.MapGetInt64(g, "totalservices")
+	data.Activeservices = utils.MapGetInt64(g, "activeservices")
+	data.Statechangetimesec = utils.MapGetString(g, "statechangetimesec")
+	data.Statechangetimemsec = utils.MapGetInt64(g, "statechangetimemsec")
+	data.Tickssincelaststatechange = utils.MapGetInt64(g, "tickssincelaststatechange")
+	data.Health = utils.MapGetInt64(g, "health")
+	data.Policyname = utils.MapGetString(g, "policyname")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Type = utils.MapGetString(g, "type")
+	data.Vsvrbindsvcip = utils.MapGetString(g, "vsvrbindsvcip")
+	data.Vsvrbindsvcport = utils.MapGetInt64(g, "vsvrbindsvcport")
+	data.Servername = utils.MapGetString(g, "servername")
+	data.Nodefaultbindings = utils.MapGetString(g, "nodefaultbindings")
+	data.Currentactiveorder = utils.MapGetString(g, "currentactiveorder")
 }

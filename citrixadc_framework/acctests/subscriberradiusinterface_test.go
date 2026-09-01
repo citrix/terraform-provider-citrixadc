@@ -284,6 +284,8 @@ func TestAccSubscriberradiusinterfaceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface", "listeningservice", "srad1"),
 					resource.TestCheckResourceAttr("data.citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface", "radiusinterimasstart", "ENABLED"),
+					// Universal runtime-binding proof (read-only fields are config-dependent).
+					resource.TestCheckResourceAttrSet("data.citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface", "id"),
 				),
 			},
 		},

@@ -244,6 +244,10 @@ func TestAccVpnglobal_staserver_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "staserver", "http://www.example.com/"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "staaddresstype", "IPV4"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "id"),
+					// Read-only (GET-only) state metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "stastate"),
 				),
 			},
 		},

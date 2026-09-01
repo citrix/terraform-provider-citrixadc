@@ -118,6 +118,8 @@ func TestAccLbgroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLbgroupDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof of a resolved data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbgroup.tf_lbgroup", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "name", "tf_lbgroup_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "persistencetype", "COOKIEINSERT"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbgroup.tf_lbgroup", "persistencebackup", "SOURCEIP"),

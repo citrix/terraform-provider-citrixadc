@@ -26,3 +26,10 @@ In addition to the arguments, the following attributes are exported:
 
 * `id` - The ID of the SNMP manager.
 * `domainresolveretry` - Amount of time, in seconds, for which the Citrix ADC waits before sending another DNS query to resolve the host name of the SNMP manager if the last query failed. This parameter is valid for host-name based SNMP managers only. After a query succeeds, the TTL determines the wait time. The minimum and default value is 5.
+
+### Read-only snmpmanager metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_snmpmanager` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `ip` - The resolved IP address of the hostname manager.
+* `domain` - IP address of manager. It will be zero for hostname manager.

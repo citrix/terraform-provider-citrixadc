@@ -35,7 +35,7 @@ func (d *VpnvserverAuditnslogpolicyBindingDataSource) Schema(ctx context.Context
 }
 
 func (d *VpnvserverAuditnslogpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnvserverAuditnslogpolicyBindingResourceModel
+	var data VpnvserverAuditnslogpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -94,7 +94,7 @@ func (d *VpnvserverAuditnslogpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	vpnvserver_auditnslogpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	vpnvserver_auditnslogpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

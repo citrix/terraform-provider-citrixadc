@@ -38,7 +38,7 @@ func (d *AutoscalepolicyDataSource) Schema(ctx context.Context, req datasource.S
 }
 
 func (d *AutoscalepolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AutoscalepolicyResourceModel
+	var data AutoscalepolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *AutoscalepolicyDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	autoscalepolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	autoscalepolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

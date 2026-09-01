@@ -1,8 +1,32 @@
 package aaagroup_vpnintranetapplication_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AaagroupVpnintranetapplicationBindingDataSourceModel is the data-source-specific
+// model, decoupled from the resource model. A data source is a pure read surface
+// (Read only; no plan/apply lifecycle), so it can expose the FULL GET projection:
+// the read/write attributes (as Computed outputs) AND the read-only attributes
+// that the resource deliberately omits (e.g. acttype). Every non-key attribute is
+// Computed.
+type AaagroupVpnintranetapplicationBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Groupname              types.String `tfsdk:"groupname"`
+	Intranetapplication    types.String `tfsdk:"intranetapplication"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/aaagroup_vpnintranetapplication_binding.json).
+	Acttype types.Int64 `tfsdk:"acttype"`
+}
 
 func AaagroupVpnintranetapplicationBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -23,6 +47,33 @@ func AaagroupVpnintranetapplicationBindingDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Bind the group to the specified intranet VPN application.",
 			},
+
+			// Read-only (GET-only) attribute surfaced only by the data source.
+			"acttype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Action type of the binding. Read-only value returned by the appliance.",
+			},
 		},
 	}
+}
+
+// aaagroup_vpnintranetapplication_bindingDataSourceSetAttrFromGet projects a NITRO
+// GET response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when the
+// GET omits them). The shared utils.MapGet* helpers implement that projection.
+func aaagroup_vpnintranetapplication_bindingDataSourceSetAttrFromGet(ctx context.Context, data *AaagroupVpnintranetapplicationBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In aaagroup_vpnintranetapplication_bindingDataSourceSetAttrFromGet Function")
+
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Groupname = utils.MapGetString(g, "groupname")
+	data.Intranetapplication = utils.MapGetString(g, "intranetapplication")
+
+	// Read-only (GET-only) attribute.
+	data.Acttype = utils.MapGetInt64(g, "acttype")
+
+	// Composite ID (groupname + intranetapplication).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("intranetapplication:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Intranetapplication.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

@@ -328,12 +328,15 @@ func TestAccDnskeyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnskeyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnskey.dnskey", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "keyname", "adckey_ds_test"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "expires", "120"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "units1", "DAYS"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "notificationperiod", "7"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "units2", "DAYS"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnskey.dnskey", "ttl", "3600"),
+					// Read-only metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnskey.dnskey", "state"),
 				),
 			},
 		},

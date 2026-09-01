@@ -120,6 +120,7 @@ func TestAccAuditnslogparamsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuditnslogparamsDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditnslogparams.tf_auditnslogparams", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogparams.tf_auditnslogparams", "dateformat", "DDMMYYYY"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogparams.tf_auditnslogparams", "tcp", "ALL"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditnslogparams.tf_auditnslogparams", "protocolviolations", "NONE"),

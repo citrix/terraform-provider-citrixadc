@@ -228,6 +228,11 @@ func TestAccIp6tunnelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnel.tf_ip6tunnel_ds", "name", "tf_ip6tunnel"),
 					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnel.tf_ip6tunnel_ds", "remote", "2001:db8:0:b::/64"),
 					resource.TestCheckResourceAttr("data.citrixadc_ip6tunnel.tf_ip6tunnel_ds", "local", "23::30:20:23:34"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_ip6tunnel.tf_ip6tunnel_ds", "id"),
+					// Read-only metadata exposed only by the data source; remoteip is the
+					// GET-only echo of the configured remote and is always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_ip6tunnel.tf_ip6tunnel_ds", "remoteip"),
 				),
 			},
 		},

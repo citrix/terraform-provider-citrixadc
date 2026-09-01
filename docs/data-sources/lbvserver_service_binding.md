@@ -40,3 +40,20 @@ In addition to the arguments, the following attributes are available:
 * `order` - Order number to be assigned to the service when it is bound to the lb vserver.
 * `servicegroupname` - Name of the service group.
 * `weight` - Weight to assign to the specified service.
+
+### Read-only lbvserver_service_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbvserver_service_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `vserverid` - Vserver Id.
+* `vsvrbindsvcip` - Used for showing the ip of bound entities.
+* `preferredlocation` - Used for displaying the location of bound services.
+* `servicetype` - Protocol used by the service (also called the service type).
+* `dynamicweight` - Dynamic weight.
+* `orderstr` - Order in string form assigned to the service when it is bound to the lb vserver.
+* `curstate` - Current LB vserver state.
+* `port` - Port number for the virtual server.
+* `cookieipport` - Encryped Ip address and port of the service that is inserted into the set-cookie http header.
+* `cookiename` - Cookie name for COOKIE persistence type.
+* `vsvrbindsvcport` - Used for showing ports of bound entities.
+* `ipv46` - IPv4 or IPv6 address to assign to the virtual server.

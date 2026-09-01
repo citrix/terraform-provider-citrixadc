@@ -49,3 +49,10 @@ In addition to the arguments, the following attributes are available:
   * vserver - Forward the request to the specified virtual server.
   * policylabel - Invoke the specified policy label.
 * `id` - The id of the botglobal_botpolicy_binding. It is the concatenation of `policyname` and `type` attributes separated by a comma.
+
+### Read-only botglobal_botpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_botglobal_botpolicy_binding` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `flowtype` - flowtype of the bound bot policy.
+* `numpol` - number of polices bound to label.

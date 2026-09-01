@@ -467,6 +467,7 @@ func TestAccAuthenticationldapactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "serverport", "8080"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "authtimeout", "1"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "ldaploginname", "username"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationldapaction.tf_authenticationldapaction", "id"),
 				),
 			},
 		},

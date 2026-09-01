@@ -1,9 +1,124 @@
 package vpnparameter
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// VpnparameterDataSourceModel is the data-source-specific model, decoupled from
+// VpnparameterResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits. Every
+// non-key attribute is Computed; the Framework's per-attribute model <-> schema
+// reflection requires this model to have exactly the attributes the data-source
+// schema declares, which is why it cannot reuse the resource model.
+type VpnparameterDataSourceModel struct {
+	Id                           types.String `tfsdk:"id"`
+	Accessrestrictedpageredirect types.String `tfsdk:"accessrestrictedpageredirect"`
+	Advancedclientlessvpnmode    types.String `tfsdk:"advancedclientlessvpnmode"`
+	Allowedlogingroups           types.String `tfsdk:"allowedlogingroups"`
+	Allprotocolproxy             types.String `tfsdk:"allprotocolproxy"`
+	Alwaysonprofilename          types.String `tfsdk:"alwaysonprofilename"`
+	Apptokentimeout              types.Int64  `tfsdk:"apptokentimeout"`
+	Authorizationgroup           types.String `tfsdk:"authorizationgroup"`
+	Autoproxyurl                 types.String `tfsdk:"autoproxyurl"`
+	Backendcertvalidation        types.String `tfsdk:"backendcertvalidation"`
+	Backenddtls12                types.String `tfsdk:"backenddtls12"`
+	Backendserversni             types.String `tfsdk:"backendserversni"`
+	Citrixreceiverhome           types.String `tfsdk:"citrixreceiverhome"`
+	Clientchoices                types.String `tfsdk:"clientchoices"`
+	Clientcleanupprompt          types.String `tfsdk:"clientcleanupprompt"`
+	Clientconfiguration          types.List   `tfsdk:"clientconfiguration"`
+	Clientdebug                  types.String `tfsdk:"clientdebug"`
+	Clientidletimeout            types.Int64  `tfsdk:"clientidletimeout"`
+	Clientlessmodeurlencoding    types.String `tfsdk:"clientlessmodeurlencoding"`
+	Clientlesspersistentcookie   types.String `tfsdk:"clientlesspersistentcookie"`
+	Clientlessvpnmode            types.String `tfsdk:"clientlessvpnmode"`
+	Clientoptions                types.List   `tfsdk:"clientoptions"`
+	Clientsecurity               types.String `tfsdk:"clientsecurity"`
+	Clientsecuritygroup          types.String `tfsdk:"clientsecuritygroup"`
+	Clientsecuritylog            types.String `tfsdk:"clientsecuritylog"`
+	Clientsecuritymessage        types.String `tfsdk:"clientsecuritymessage"`
+	Clientversions               types.String `tfsdk:"clientversions"`
+	Defaultauthorizationaction   types.String `tfsdk:"defaultauthorizationaction"`
+	Deviceposture                types.String `tfsdk:"deviceposture"`
+	Dnsvservername               types.String `tfsdk:"dnsvservername"`
+	Emailhome                    types.String `tfsdk:"emailhome"`
+	Encryptcsecexp               types.String `tfsdk:"encryptcsecexp"`
+	Epaclienttype                types.String `tfsdk:"epaclienttype"`
+	Forcecleanup                 types.List   `tfsdk:"forcecleanup"`
+	Forcedtimeout                types.Int64  `tfsdk:"forcedtimeout"`
+	Forcedtimeoutwarning         types.Int64  `tfsdk:"forcedtimeoutwarning"`
+	Fqdnspoofedip                types.String `tfsdk:"fqdnspoofedip"`
+	Ftpproxy                     types.String `tfsdk:"ftpproxy"`
+	Gopherproxy                  types.String `tfsdk:"gopherproxy"`
+	Homepage                     types.String `tfsdk:"homepage"`
+	Httpport                     types.List   `tfsdk:"httpport"`
+	Httpproxy                    types.String `tfsdk:"httpproxy"`
+	Httptrackconnproxy           types.String `tfsdk:"httptrackconnproxy"`
+	Icaproxy                     types.String `tfsdk:"icaproxy"`
+	Icasessiontimeout            types.String `tfsdk:"icasessiontimeout"`
+	Icauseraccounting            types.String `tfsdk:"icauseraccounting"`
+	Iconwithreceiver             types.String `tfsdk:"iconwithreceiver"`
+	Iipdnssuffix                 types.String `tfsdk:"iipdnssuffix"`
+	Kcdaccount                   types.String `tfsdk:"kcdaccount"`
+	Killconnections              types.String `tfsdk:"killconnections"`
+	Linuxpluginupgrade           types.String `tfsdk:"linuxpluginupgrade"`
+	Locallanaccess               types.String `tfsdk:"locallanaccess"`
+	Loginscript                  types.String `tfsdk:"loginscript"`
+	Logoutscript                 types.String `tfsdk:"logoutscript"`
+	Macpluginupgrade             types.String `tfsdk:"macpluginupgrade"`
+	Maxiipperuser                types.Int64  `tfsdk:"maxiipperuser"`
+	Mdxtokentimeout              types.Int64  `tfsdk:"mdxtokentimeout"`
+	Netmask                      types.String `tfsdk:"netmask"`
+	Ntdomain                     types.String `tfsdk:"ntdomain"`
+	Pcoipprofilename             types.String `tfsdk:"pcoipprofilename"`
+	Proxy                        types.String `tfsdk:"proxy"`
+	Proxyexception               types.String `tfsdk:"proxyexception"`
+	Proxylocalbypass             types.String `tfsdk:"proxylocalbypass"`
+	Rdpclientprofilename         types.String `tfsdk:"rdpclientprofilename"`
+	Rfc1918                      types.String `tfsdk:"rfc1918"`
+	Samesite                     types.String `tfsdk:"samesite"`
+	Securebrowse                 types.String `tfsdk:"securebrowse"`
+	Secureprivateaccess          types.String `tfsdk:"secureprivateaccess"`
+	Secureprivateaccessprofile   types.String `tfsdk:"secureprivateaccessprofile"`
+	Sesstimeout                  types.Int64  `tfsdk:"sesstimeout"`
+	Smartgroup                   types.String `tfsdk:"smartgroup"`
+	Socksproxy                   types.String `tfsdk:"socksproxy"`
+	Splitdns                     types.String `tfsdk:"splitdns"`
+	Splittunnel                  types.String `tfsdk:"splittunnel"`
+	Spoofiip                     types.String `tfsdk:"spoofiip"`
+	Sslproxy                     types.String `tfsdk:"sslproxy"`
+	Sso                          types.String `tfsdk:"sso"`
+	Ssocredential                types.String `tfsdk:"ssocredential"`
+	Storefronturl                types.String `tfsdk:"storefronturl"`
+	Transparentinterception      types.String `tfsdk:"transparentinterception"`
+	Uitheme                      types.String `tfsdk:"uitheme"`
+	Useiip                       types.String `tfsdk:"useiip"`
+	Usemip                       types.String `tfsdk:"usemip"`
+	Userdomains                  types.String `tfsdk:"userdomains"`
+	Wihome                       types.String `tfsdk:"wihome"`
+	Wihomeaddresstype            types.String `tfsdk:"wihomeaddresstype"`
+	Windowsautologon             types.String `tfsdk:"windowsautologon"`
+	Windowsclienttype            types.String `tfsdk:"windowsclienttype"`
+	Windowspluginupgrade         types.String `tfsdk:"windowspluginupgrade"`
+	Winsip                       types.String `tfsdk:"winsip"`
+	Wiportalmode                 types.String `tfsdk:"wiportalmode"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/vpnparameter.json). Never settable; populated from GET.
+	Name                     types.String `tfsdk:"name"`
+	Clientidletimeoutwarning types.Int64  `tfsdk:"clientidletimeoutwarning"`
+	Stricturlcheck           types.String `tfsdk:"stricturlcheck"`
+	Vpnsessionpolicybindtype types.String `tfsdk:"vpnsessionpolicybindtype"`
+	Vpnsessionpolicycount    types.Int64  `tfsdk:"vpnsessionpolicycount"`
+}
 
 func VpnparameterDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -465,6 +580,162 @@ func VpnparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Layout on the Access Interface. The COMPACT value indicates the use of small icons.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source (these are
+			// intentionally NOT modeled on the resource). All Computed.
+			"name": schema.StringAttribute{
+				Computed:    true,
+				Description: "The VPN name.",
+			},
+			"clientidletimeoutwarning": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The time after which the client gets a timeout warning, in minutes.",
+			},
+			"stricturlcheck": schema.StringAttribute{
+				Computed:    true,
+				Description: "Enables or disables the strict endpoint or URL checking with respect to the configuration. Possible values = ENABLED, DISABLED.",
+			},
+			"vpnsessionpolicybindtype": schema.StringAttribute{
+				Computed:    true,
+				Description: "Indicates current bind type (Classic/Advanced) for VPN session policy across all bind entities. Possible values = Classic Policy, Advanced Policy.",
+			},
+			"vpnsessionpolicycount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Count of VPN session policies across all bind entities.",
+			},
 		},
 	}
+}
+
+// vpnparameterDataSourceSetAttrFromGet projects a NITRO vpnparameter GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection; the Int64-typed httpport list is projected inline to preserve its
+// element type.
+func vpnparameterDataSourceSetAttrFromGet(ctx context.Context, data *VpnparameterDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In vpnparameterDataSourceSetAttrFromGet Function")
+
+	// Read/write attributes as read-back outputs.
+	data.Accessrestrictedpageredirect = utils.MapGetString(g, "accessrestrictedpageredirect")
+	data.Advancedclientlessvpnmode = utils.MapGetString(g, "advancedclientlessvpnmode")
+	data.Allowedlogingroups = utils.MapGetString(g, "allowedlogingroups")
+	data.Allprotocolproxy = utils.MapGetString(g, "allprotocolproxy")
+	data.Alwaysonprofilename = utils.MapGetString(g, "alwaysonprofilename")
+	data.Apptokentimeout = utils.MapGetInt64(g, "apptokentimeout")
+	data.Authorizationgroup = utils.MapGetString(g, "authorizationgroup")
+	data.Autoproxyurl = utils.MapGetString(g, "autoproxyurl")
+	data.Backendcertvalidation = utils.MapGetString(g, "backendcertvalidation")
+	data.Backenddtls12 = utils.MapGetString(g, "backenddtls12")
+	data.Backendserversni = utils.MapGetString(g, "backendserversni")
+	data.Citrixreceiverhome = utils.MapGetString(g, "citrixreceiverhome")
+	data.Clientchoices = utils.MapGetString(g, "clientchoices")
+	data.Clientcleanupprompt = utils.MapGetString(g, "clientcleanupprompt")
+	data.Clientconfiguration = utils.MapGetStringList(g, "clientconfiguration")
+	data.Clientdebug = utils.MapGetString(g, "clientdebug")
+	data.Clientidletimeout = utils.MapGetInt64(g, "clientidletimeout")
+	data.Clientlessmodeurlencoding = utils.MapGetString(g, "clientlessmodeurlencoding")
+	data.Clientlesspersistentcookie = utils.MapGetString(g, "clientlesspersistentcookie")
+	data.Clientlessvpnmode = utils.MapGetString(g, "clientlessvpnmode")
+	data.Clientoptions = utils.MapGetStringList(g, "clientoptions")
+	data.Clientsecurity = utils.MapGetString(g, "clientsecurity")
+	data.Clientsecuritygroup = utils.MapGetString(g, "clientsecuritygroup")
+	data.Clientsecuritylog = utils.MapGetString(g, "clientsecuritylog")
+	data.Clientsecuritymessage = utils.MapGetString(g, "clientsecuritymessage")
+	data.Clientversions = utils.MapGetString(g, "clientversions")
+	data.Defaultauthorizationaction = utils.MapGetString(g, "defaultauthorizationaction")
+	data.Deviceposture = utils.MapGetString(g, "deviceposture")
+	data.Dnsvservername = utils.MapGetString(g, "dnsvservername")
+	data.Emailhome = utils.MapGetString(g, "emailhome")
+	data.Encryptcsecexp = utils.MapGetString(g, "encryptcsecexp")
+	data.Epaclienttype = utils.MapGetString(g, "epaclienttype")
+	data.Forcecleanup = utils.MapGetStringList(g, "forcecleanup")
+	data.Forcedtimeout = utils.MapGetInt64(g, "forcedtimeout")
+	data.Forcedtimeoutwarning = utils.MapGetInt64(g, "forcedtimeoutwarning")
+	data.Fqdnspoofedip = utils.MapGetString(g, "fqdnspoofedip")
+	data.Ftpproxy = utils.MapGetString(g, "ftpproxy")
+	data.Gopherproxy = utils.MapGetString(g, "gopherproxy")
+	data.Homepage = utils.MapGetString(g, "homepage")
+
+	// httpport is an Int64-typed list; project inline to preserve its element type.
+	if val, ok := g["httpport"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			intList := make([]int64, 0, len(sliceVal))
+			for _, v := range sliceVal {
+				if iv, err := utils.ConvertToInt64(v); err == nil {
+					intList = append(intList, iv)
+				}
+			}
+			if listValue, d := types.ListValueFrom(ctx, types.Int64Type, intList); !d.HasError() {
+				data.Httpport = listValue
+			} else {
+				data.Httpport = types.ListNull(types.Int64Type)
+			}
+		} else {
+			data.Httpport = types.ListNull(types.Int64Type)
+		}
+	} else {
+		data.Httpport = types.ListNull(types.Int64Type)
+	}
+
+	data.Httpproxy = utils.MapGetString(g, "httpproxy")
+	data.Httptrackconnproxy = utils.MapGetString(g, "httptrackconnproxy")
+	data.Icaproxy = utils.MapGetString(g, "icaproxy")
+	data.Icasessiontimeout = utils.MapGetString(g, "icasessiontimeout")
+	data.Icauseraccounting = utils.MapGetString(g, "icauseraccounting")
+	data.Iconwithreceiver = utils.MapGetString(g, "iconwithreceiver")
+	data.Iipdnssuffix = utils.MapGetString(g, "iipdnssuffix")
+	data.Kcdaccount = utils.MapGetString(g, "kcdaccount")
+	data.Killconnections = utils.MapGetString(g, "killconnections")
+	data.Linuxpluginupgrade = utils.MapGetString(g, "linuxpluginupgrade")
+	data.Locallanaccess = utils.MapGetString(g, "locallanaccess")
+	data.Loginscript = utils.MapGetString(g, "loginscript")
+	data.Logoutscript = utils.MapGetString(g, "logoutscript")
+	data.Macpluginupgrade = utils.MapGetString(g, "macpluginupgrade")
+	data.Maxiipperuser = utils.MapGetInt64(g, "maxiipperuser")
+	data.Mdxtokentimeout = utils.MapGetInt64(g, "mdxtokentimeout")
+	data.Netmask = utils.MapGetString(g, "netmask")
+	data.Ntdomain = utils.MapGetString(g, "ntdomain")
+	data.Pcoipprofilename = utils.MapGetString(g, "pcoipprofilename")
+	data.Proxy = utils.MapGetString(g, "proxy")
+	data.Proxyexception = utils.MapGetString(g, "proxyexception")
+	data.Proxylocalbypass = utils.MapGetString(g, "proxylocalbypass")
+	data.Rdpclientprofilename = utils.MapGetString(g, "rdpclientprofilename")
+	data.Rfc1918 = utils.MapGetString(g, "rfc1918")
+	data.Samesite = utils.MapGetString(g, "samesite")
+	data.Securebrowse = utils.MapGetString(g, "securebrowse")
+	data.Secureprivateaccess = utils.MapGetString(g, "secureprivateaccess")
+	data.Secureprivateaccessprofile = utils.MapGetString(g, "secureprivateaccessprofile")
+	data.Sesstimeout = utils.MapGetInt64(g, "sesstimeout")
+	data.Smartgroup = utils.MapGetString(g, "smartgroup")
+	data.Socksproxy = utils.MapGetString(g, "socksproxy")
+	data.Splitdns = utils.MapGetString(g, "splitdns")
+	data.Splittunnel = utils.MapGetString(g, "splittunnel")
+	data.Spoofiip = utils.MapGetString(g, "spoofiip")
+	data.Sslproxy = utils.MapGetString(g, "sslproxy")
+	data.Sso = utils.MapGetString(g, "sso")
+	data.Ssocredential = utils.MapGetString(g, "ssocredential")
+	data.Storefronturl = utils.MapGetString(g, "storefronturl")
+	data.Transparentinterception = utils.MapGetString(g, "transparentinterception")
+	data.Uitheme = utils.MapGetString(g, "uitheme")
+	data.Useiip = utils.MapGetString(g, "useiip")
+	data.Usemip = utils.MapGetString(g, "usemip")
+	data.Userdomains = utils.MapGetString(g, "userdomains")
+	data.Wihome = utils.MapGetString(g, "wihome")
+	data.Wihomeaddresstype = utils.MapGetString(g, "wihomeaddresstype")
+	data.Windowsautologon = utils.MapGetString(g, "windowsautologon")
+	data.Windowsclienttype = utils.MapGetString(g, "windowsclienttype")
+	data.Windowspluginupgrade = utils.MapGetString(g, "windowspluginupgrade")
+	data.Winsip = utils.MapGetString(g, "winsip")
+	data.Wiportalmode = utils.MapGetString(g, "wiportalmode")
+
+	// Read-only metadata.
+	data.Name = utils.MapGetString(g, "name")
+	data.Clientidletimeoutwarning = utils.MapGetInt64(g, "clientidletimeoutwarning")
+	data.Stricturlcheck = utils.MapGetString(g, "stricturlcheck")
+	data.Vpnsessionpolicybindtype = utils.MapGetString(g, "vpnsessionpolicybindtype")
+	data.Vpnsessionpolicycount = utils.MapGetInt64(g, "vpnsessionpolicycount")
+
+	// Set ID for the singleton resource (no unique key on GET).
+	data.Id = types.StringValue("vpnparameter-config")
 }

@@ -389,6 +389,7 @@ func TestAccTransformactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "requrlinto", "https://exp-proxy-v1.api.mydomain.com/$1"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "resurlfrom", "https://exp-proxy-v1.api.mydomain.com/(.*)"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformaction.tf_trans_action", "resurlinto", "https://m3.mydomain.com/$1"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformaction.tf_trans_action", "id"),
 				),
 			},
 		},

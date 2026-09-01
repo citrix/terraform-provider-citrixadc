@@ -269,6 +269,7 @@ func TestAccSslprofileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSslprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslprofile.tf_sslprofile_datasource", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "name", "tf_sslprofile_datasource"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "hsts", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile.tf_sslprofile_datasource", "snienable", "ENABLED"),

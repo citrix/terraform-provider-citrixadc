@@ -173,6 +173,8 @@ func TestAccFeoactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "cssminify", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "jsminify", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_feoaction.tf_feoaction_ds", "htmlminify", "true"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_feoaction.tf_feoaction_ds", "id"),
 				),
 			},
 		},

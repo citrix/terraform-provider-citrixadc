@@ -35,7 +35,7 @@ func (d *Nssimpleacl6DataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *Nssimpleacl6DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Nssimpleacl6ResourceModel
+	var data Nssimpleacl6DataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *Nssimpleacl6DataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	nssimpleacl6SetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	nssimpleacl6DataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

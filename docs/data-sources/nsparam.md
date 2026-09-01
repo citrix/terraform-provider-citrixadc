@@ -64,3 +64,9 @@ In addition to the arguments above, the following attributes are exported:
 * `timezone` - Time zone for the Citrix ADC appliance.
 * `useproxyport` - Enable or disable use_proxy_port setting.
 
+### Read-only nsparam metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsparam` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `autoscaleoption` - 64 bits provided for communication between ADM and ADC in cloud deployments. Currently the LSB 3 bits are used (`0x01`=AWS, `0x02`=Azure, `0x04`=GCP).
+

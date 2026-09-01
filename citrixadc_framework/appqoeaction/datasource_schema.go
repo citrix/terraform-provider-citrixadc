@@ -1,8 +1,41 @@
 package appqoeaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AppqoeactionDataSourceModel is the data-source-specific model, decoupled from
+// AppqoeactionResourceModel. A data source is a pure read surface, so it can
+// expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits.
+type AppqoeactionDataSourceModel struct {
+	Id                types.String `tfsdk:"id"`
+	Altcontentpath    types.String `tfsdk:"altcontentpath"`
+	Altcontentsvcname types.String `tfsdk:"altcontentsvcname"`
+	Customfile        types.String `tfsdk:"customfile"`
+	Delay             types.Int64  `tfsdk:"delay"`
+	Dosaction         types.String `tfsdk:"dosaction"`
+	Dostrigexpression types.String `tfsdk:"dostrigexpression"`
+	Maxconn           types.Int64  `tfsdk:"maxconn"`
+	Name              types.String `tfsdk:"name"`
+	Numretries        types.String `tfsdk:"numretries"`
+	Polqdepth         types.Int64  `tfsdk:"polqdepth"`
+	Priority          types.String `tfsdk:"priority"`
+	Priqdepth         types.Int64  `tfsdk:"priqdepth"`
+	Respondwith       types.String `tfsdk:"respondwith"`
+	Retryonreset      types.String `tfsdk:"retryonreset"`
+	Retryontimeout    types.Int64  `tfsdk:"retryontimeout"`
+	Tcpprofile        types.String `tfsdk:"tcpprofile"`
+
+	// Read-only (GET-only) attribute from the NITRO doc read-only set
+	// (zion73x_readonly/appqoeaction.json). Never settable; populated from GET.
+	Hits types.Int64 `tfsdk:"hits"`
+}
 
 func AppqoeactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -89,6 +122,44 @@ func AppqoeactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Bind TCP Profile based on L2/L3/L7 parameters.",
 			},
+
+			// Read-only (GET-only) attribute surfaced by the data source.
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of times the AppQoE action was applied.",
+			},
 		},
 	}
+}
+
+// appqoeactionDataSourceSetAttrFromGet projects a NITRO appqoeaction GET
+// response onto the data-source model. Attributes are simply filled from the GET
+// (or left Null when the GET omits them) via the shared utils.MapGet* helpers.
+func appqoeactionDataSourceSetAttrFromGet(ctx context.Context, data *AppqoeactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In appqoeactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Altcontentpath = utils.MapGetString(g, "altcontentpath")
+	data.Altcontentsvcname = utils.MapGetString(g, "altcontentsvcname")
+	data.Customfile = utils.MapGetString(g, "customfile")
+	data.Delay = utils.MapGetInt64(g, "delay")
+	data.Dosaction = utils.MapGetString(g, "dosaction")
+	data.Dostrigexpression = utils.MapGetString(g, "dostrigexpression")
+	data.Maxconn = utils.MapGetInt64(g, "maxconn")
+	data.Numretries = utils.MapGetString(g, "numretries")
+	data.Polqdepth = utils.MapGetInt64(g, "polqdepth")
+	data.Priority = utils.MapGetString(g, "priority")
+	data.Priqdepth = utils.MapGetInt64(g, "priqdepth")
+	data.Respondwith = utils.MapGetString(g, "respondwith")
+	data.Retryonreset = utils.MapGetString(g, "retryonreset")
+	data.Retryontimeout = utils.MapGetInt64(g, "retryontimeout")
+	data.Tcpprofile = utils.MapGetString(g, "tcpprofile")
+
+	// Read-only (GET-only) attribute.
+	data.Hits = utils.MapGetInt64(g, "hits")
 }

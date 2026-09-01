@@ -314,6 +314,8 @@ func TestAccSubscribergxinterfaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_subscribergxinterface.tf_subscribergxinterface", "pcrfrealm", "myrealm.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_subscribergxinterface.tf_subscribergxinterface", "healthcheck", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_subscribergxinterface.tf_subscribergxinterface", "healthcheckttl", "30"),
+					// Universal runtime-binding proof (read-only fields are config-dependent).
+					resource.TestCheckResourceAttrSet("data.citrixadc_subscribergxinterface.tf_subscribergxinterface", "id"),
 				),
 			},
 		},

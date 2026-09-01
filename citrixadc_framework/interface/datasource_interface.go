@@ -35,7 +35,7 @@ func (d *InterfaceDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *InterfaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data InterfaceResourceModel
+	var data InterfaceDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -87,7 +87,7 @@ func (d *InterfaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	interfaceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	interfaceDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

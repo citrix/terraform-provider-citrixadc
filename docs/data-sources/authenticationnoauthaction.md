@@ -31,6 +31,13 @@ In addition to the arguments, the following attributes are available:
 * `defaultauthenticationgroup` - This is the group that is added to user sessions that match current policy.
 * `id` - The id of the authenticationnoauthaction. It has the same value as the `name` attribute.
 
+### Read-only authenticationnoauthaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationnoauthaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. Possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+
 ## Import
 
 A authenticationnoauthaction can be imported using its name, e.g.

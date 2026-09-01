@@ -38,3 +38,9 @@ output "ownergroup" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the rnat6_nsip6_binding. It is a system-generated identifier.
+
+### Read-only rnat6_nsip6_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_rnat6_nsip6_binding` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `td` - Integer value that uniquely identifies the traffic domain in which the entity is configured. Omitted (null) for the default traffic domain (ID 0).

@@ -255,6 +255,7 @@ func TestAcccrvserver_cmppolicy_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding", "policyname", "my_cmppolicy_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_crvserver_cmppolicy_binding.crvserver_cmppolicy_binding", "id"),
 				),
 			},
 		},

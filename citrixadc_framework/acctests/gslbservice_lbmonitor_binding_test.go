@@ -324,6 +324,7 @@ func TestAccGslbservice_lbmonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "monitor_name", "tf_monitor"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "monstate", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "weight", "20"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbservice_lbmonitor_binding.tf_gslbservice_lbmonitor_binding", "id"),
 				),
 			},
 		},

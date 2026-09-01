@@ -35,7 +35,7 @@ func (d *SpilloverpolicyDataSource) Schema(ctx context.Context, req datasource.S
 }
 
 func (d *SpilloverpolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SpilloverpolicyResourceModel
+	var data SpilloverpolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *SpilloverpolicyDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	spilloverpolicySetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	spilloverpolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
