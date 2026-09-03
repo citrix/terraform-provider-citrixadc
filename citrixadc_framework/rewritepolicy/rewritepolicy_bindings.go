@@ -9,6 +9,7 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/resource/config/rewrite"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -16,6 +17,17 @@ import (
 // ---------------------------------------------------------------------------
 // small conversion helpers
 // ---------------------------------------------------------------------------
+
+// attrChanged reports whether a non-key binding attribute was edited between the
+// prior state (oldV) and the plan (newV). A newV that is unknown — an
+// unconfigured Computed attribute at plan time — is treated as unchanged so that
+// editing one set element does not force a spurious rebind of its siblings.
+func attrChanged(oldV, newV attr.Value) bool {
+	if newV.IsUnknown() {
+		return false
+	}
+	return !oldV.Equal(newV)
+}
 
 func rwAsString(v interface{}) string {
 	if v == nil {
@@ -98,26 +110,42 @@ func globalKey(b RewritepolicyGlobalbindingModel) string {
 	return fmt.Sprintf("%s|%d", b.Type.ValueString(), b.Priority.ValueInt64())
 }
 
+// globalbindingChanged reports whether a non-identity sub-attribute of a global
+// binding (matched on type+priority) was edited. Such an edit is invisible to a
+// key-only diff, so it must trigger a rebind (delete + re-add).
+func globalbindingChanged(o, n RewritepolicyGlobalbindingModel) bool {
+	return attrChanged(o.Gotopriorityexpression, n.Gotopriorityexpression) ||
+		attrChanged(o.Invoke, n.Invoke) ||
+		attrChanged(o.Labelname, n.Labelname) ||
+		attrChanged(o.Labeltype, n.Labeltype)
+}
+
 func (r *RewritepolicyResource) syncGlobalbindings(ctx context.Context, policyname string, oldSet, newSet types.Set) error {
 	oldB := r.extractGlobalbindings(ctx, oldSet)
 	newB := r.extractGlobalbindings(ctx, newSet)
-	newKeys := map[string]bool{}
+	newByKey := map[string]RewritepolicyGlobalbindingModel{}
 	for _, b := range newB {
-		newKeys[globalKey(b)] = true
+		newByKey[globalKey(b)] = b
 	}
-	oldKeys := map[string]bool{}
+	oldByKey := map[string]RewritepolicyGlobalbindingModel{}
 	for _, b := range oldB {
-		oldKeys[globalKey(b)] = true
+		oldByKey[globalKey(b)] = b
 	}
+	// Remove bindings dropped from config, plus the stale copy of any binding
+	// whose non-key sub-attributes changed (it is re-added below).
 	for _, b := range oldB {
-		if !newKeys[globalKey(b)] {
+		nb, ok := newByKey[globalKey(b)]
+		if !ok || globalbindingChanged(b, nb) {
 			if err := r.deleteSingleGlobalbinding(policyname, b); err != nil {
 				return err
 			}
 		}
 	}
+	// Add new bindings, plus re-add any binding whose non-key sub-attributes
+	// changed so the edit is pushed to the appliance (SDK v2 full-hash parity).
 	for _, b := range newB {
-		if !oldKeys[globalKey(b)] {
+		ob, ok := oldByKey[globalKey(b)]
+		if !ok || globalbindingChanged(ob, b) {
 			if err := r.addSingleGlobalbinding(policyname, b); err != nil {
 				return err
 			}
@@ -228,26 +256,42 @@ func lbvserverKey(b RewritepolicyLbvserverbindingModel) string {
 	return fmt.Sprintf("%s|%s|%d", b.Name.ValueString(), b.Bindpoint.ValueString(), b.Priority.ValueInt64())
 }
 
+// lbvserverbindingChanged reports whether a non-identity sub-attribute of an
+// lbvserver binding (matched on name+bindpoint+priority) was edited. Such an
+// edit is invisible to a key-only diff, so it must trigger a rebind.
+func lbvserverbindingChanged(o, n RewritepolicyLbvserverbindingModel) bool {
+	return attrChanged(o.Gotopriorityexpression, n.Gotopriorityexpression) ||
+		attrChanged(o.Invoke, n.Invoke) ||
+		attrChanged(o.Labelname, n.Labelname) ||
+		attrChanged(o.Labeltype, n.Labeltype)
+}
+
 func (r *RewritepolicyResource) syncLbvserverbindings(ctx context.Context, policyname string, oldSet, newSet types.Set) error {
 	oldB := r.extractLbvserverbindings(ctx, oldSet)
 	newB := r.extractLbvserverbindings(ctx, newSet)
-	newKeys := map[string]bool{}
+	newByKey := map[string]RewritepolicyLbvserverbindingModel{}
 	for _, b := range newB {
-		newKeys[lbvserverKey(b)] = true
+		newByKey[lbvserverKey(b)] = b
 	}
-	oldKeys := map[string]bool{}
+	oldByKey := map[string]RewritepolicyLbvserverbindingModel{}
 	for _, b := range oldB {
-		oldKeys[lbvserverKey(b)] = true
+		oldByKey[lbvserverKey(b)] = b
 	}
+	// Remove bindings dropped from config, plus the stale copy of any binding
+	// whose non-key sub-attributes changed (it is re-added below).
 	for _, b := range oldB {
-		if !newKeys[lbvserverKey(b)] {
+		nb, ok := newByKey[lbvserverKey(b)]
+		if !ok || lbvserverbindingChanged(b, nb) {
 			if err := r.deleteSingleLbvserverbinding(policyname, b); err != nil {
 				return err
 			}
 		}
 	}
+	// Add new bindings, plus re-add any binding whose non-key sub-attributes
+	// changed so the edit is pushed to the appliance (SDK v2 full-hash parity).
 	for _, b := range newB {
-		if !oldKeys[lbvserverKey(b)] {
+		ob, ok := oldByKey[lbvserverKey(b)]
+		if !ok || lbvserverbindingChanged(ob, b) {
 			if err := r.addSingleLbvserverbinding(policyname, b); err != nil {
 				return err
 			}
@@ -374,26 +418,44 @@ func csvserverKey(b RewritepolicyCsvserverbindingModel) string {
 	return fmt.Sprintf("%s|%s|%d", b.Name.ValueString(), b.Bindpoint.ValueString(), b.Priority.ValueInt64())
 }
 
+// csvserverbindingChanged reports whether a non-identity sub-attribute of a
+// csvserver binding (matched on name+bindpoint+priority) was edited. Such an
+// edit — including targetlbvserver — is invisible to a key-only diff, so it must
+// trigger a rebind.
+func csvserverbindingChanged(o, n RewritepolicyCsvserverbindingModel) bool {
+	return attrChanged(o.Gotopriorityexpression, n.Gotopriorityexpression) ||
+		attrChanged(o.Invoke, n.Invoke) ||
+		attrChanged(o.Labelname, n.Labelname) ||
+		attrChanged(o.Labeltype, n.Labeltype) ||
+		attrChanged(o.Targetlbvserver, n.Targetlbvserver)
+}
+
 func (r *RewritepolicyResource) syncCsvserverbindings(ctx context.Context, policyname string, oldSet, newSet types.Set) error {
 	oldB := r.extractCsvserverbindings(ctx, oldSet)
 	newB := r.extractCsvserverbindings(ctx, newSet)
-	newKeys := map[string]bool{}
+	newByKey := map[string]RewritepolicyCsvserverbindingModel{}
 	for _, b := range newB {
-		newKeys[csvserverKey(b)] = true
+		newByKey[csvserverKey(b)] = b
 	}
-	oldKeys := map[string]bool{}
+	oldByKey := map[string]RewritepolicyCsvserverbindingModel{}
 	for _, b := range oldB {
-		oldKeys[csvserverKey(b)] = true
+		oldByKey[csvserverKey(b)] = b
 	}
+	// Remove bindings dropped from config, plus the stale copy of any binding
+	// whose non-key sub-attributes changed (it is re-added below).
 	for _, b := range oldB {
-		if !newKeys[csvserverKey(b)] {
+		nb, ok := newByKey[csvserverKey(b)]
+		if !ok || csvserverbindingChanged(b, nb) {
 			if err := r.deleteSingleCsvserverbinding(policyname, b); err != nil {
 				return err
 			}
 		}
 	}
+	// Add new bindings, plus re-add any binding whose non-key sub-attributes
+	// changed so the edit is pushed to the appliance (SDK v2 full-hash parity).
 	for _, b := range newB {
-		if !oldKeys[csvserverKey(b)] {
+		ob, ok := oldByKey[csvserverKey(b)]
+		if !ok || csvserverbindingChanged(ob, b) {
 			if err := r.addSingleCsvserverbinding(policyname, b); err != nil {
 				return err
 			}

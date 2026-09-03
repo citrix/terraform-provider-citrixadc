@@ -112,17 +112,20 @@ func (r *RnatClearResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:    true,
 				Description: "Name handle for this set of RNAT rules. If omitted, a unique tf-rnat-* value is generated.",
 			},
-			// The set of RNAT rules managed by this resource. Optional+Computed as
-			// in SDK v2; Create always resolves an omitted set to a null value.
-			"rnat": schema.SetNestedAttribute{
-				Optional:    true,
-				Computed:    true,
+		},
+		Blocks: map[string]schema.Block{
+			// The set of RNAT rules managed by this resource, declared as a
+			// SetNestedBlock (NOT a SetNestedAttribute) so it keeps the SDK v2 block
+			// HCL syntax `rnat { ... }`. A SetNestedAttribute would force the
+			// `rnat = [ { ... } ]` assignment syntax and reject existing configs.
+			// This mirrors the nsacls (`acl {}`) / sslcipher (`ciphersuitebinding {}`)
+			// convenience blocks. Blocks cannot be Optional/Computed; an omitted block
+			// decodes to an empty set. Nested attributes are Optional (not Computed):
+			// Read is a no-op, so a Computed nested attribute would remain unknown
+			// after apply. The stored state type (set of objects) is unchanged.
+			"rnat": schema.SetNestedBlock{
 				Description: "Set of RNAT rules to apply. Rules removed from this set are cleared on the appliance.",
-				NestedObject: schema.NestedAttributeObject{
-					// Nested attributes are Optional (not Computed): Read is a
-					// no-op, so a Computed nested attribute would remain unknown
-					// after apply (Pattern 13). This does not change the stored
-					// state type compared with SDK v2.
+				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"aclname": schema.StringAttribute{
 							Optional:    true,
@@ -181,12 +184,18 @@ func (r *RnatClearResource) Create(ctx context.Context, req resource.CreateReque
 	}
 	data.Rnatsname = types.StringValue(rnatName)
 
-	// Apply every rule in the set. SDK v2 ignored per-rule errors here.
+	// Apply every rule in the set. Unlike SDK v2 (which swallowed per-rule errors),
+	// surface the failure so a rejected `set rnat` is not silently reported as a
+	// successful no-op. NOTE: the unnamed `set rnat` path is unsupported on 14.1+
+	// (errorcode 275 "Operation not supported by device" - RNAT moved to the named
+	// RNAT4 model, i.e. the citrixadc_rnat resource); on such firmware this now
+	// fails cleanly instead of pretending to succeed.
 	elems := rnat_clearElementsFromSet(ctx, data.Rnat, &resp.Diagnostics)
 	for i := range elems {
 		payload := rnat_clearGetThePayload(ctx, &elems[i])
 		if err := r.client.UpdateUnnamedResource(service.Rnat.Type(), &payload); err != nil {
-			tflog.Debug(ctx, fmt.Sprintf("error applying rnat rule: %s", err))
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to apply rnat rule, got error: %s", err))
+			return
 		}
 	}
 
@@ -243,12 +252,14 @@ func (r *RnatClearResource) Update(ctx context.Context, req resource.UpdateReque
 		}
 	}
 
-	// Rules present in the new set but not the old set are (re)applied.
+	// Rules present in the new set but not the old set are (re)applied. Surface the
+	// failure (see Create) instead of silently swallowing a rejected `set rnat`.
 	for i := range newElems {
 		if !rnat_clearContains(oldElems, newElems[i]) {
 			payload := rnat_clearGetThePayload(ctx, &newElems[i])
 			if err := r.client.UpdateUnnamedResource(service.Rnat.Type(), &payload); err != nil {
-				tflog.Debug(ctx, fmt.Sprintf("error applying rnat rule: %s", err))
+				resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to apply rnat rule, got error: %s", err))
+				return
 			}
 		}
 	}

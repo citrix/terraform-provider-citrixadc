@@ -455,7 +455,7 @@ func (r *GslbvserverResource) readDomainBindings(ctx context.Context, vserverNam
 				e.Backupipflag = types.BoolValue(bv)
 			}
 		}
-		if v, ok := m["cookiedomain"]; ok && v != nil {
+		if v, ok := m["cookie_domain"]; ok && v != nil {
 			if s, isStr := v.(string); isStr {
 				e.Cookiedomain = types.StringValue(s)
 			}

@@ -80,34 +80,19 @@ func (r *SslprofileResource) Create(ctx context.Context, req resource.CreateRequ
 	// Set ID for the resource before reading state
 	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
-	// Handle default binding deletions
-	if !data.Nodefaultecccurvebindings.IsNull() && data.Nodefaultecccurvebindings.ValueBool() {
-		if err := r.deleteDefaultEcccurveBindings(ctx, data.Name.ValueString()); err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete default ECC curve bindings: %s", err))
-			return
+	// Bind the convenience blocks (default-binding deletions + ecccurve/cipher
+	// bindings). Roll back the just-created profile on any failure so a failed bind
+	// does not orphan it on the appliance. The Framework only persists state on the
+	// success path (resp.State.Set below), so without this rollback a bind failure
+	// (e.g. ec3739 when the SSL default profile is disabled) would leave the profile
+	// on the ADC with no Terraform state - an orphan. (SDK v2 instead kept it in
+	// state via an early SetId; we prefer a clean rollback.)
+	if bindErr := r.createSslprofileBindings(ctx, &data); bindErr != nil {
+		resp.Diagnostics.AddError("Client Error", bindErr.Error())
+		if delErr := r.client.DeleteResource(service.Sslprofile.Type(), name_value); delErr != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Failed to roll back sslprofile %q after a binding failure: %s", name_value, delErr))
 		}
-	}
-	if !data.Nodefaultcipherbindings.IsNull() && data.Nodefaultcipherbindings.ValueBool() {
-		if err := r.deleteDefaultCipherBindings(ctx, data.Name.ValueString()); err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete default cipher bindings: %s", err))
-			return
-		}
-	}
-
-	// Handle ECC curve bindings
-	if !data.Ecccurvebindings.IsNull() {
-		if err := r.createEcccurveBindings(ctx, &data); err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ECC curve bindings: %s", err))
-			return
-		}
-	}
-
-	// Handle cipher bindings
-	if !data.Cipherbindings.IsNull() {
-		if err := r.createCipherBindings(ctx, &data); err != nil {
-			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cipher bindings: %s", err))
-			return
-		}
+		return
 	}
 
 	// Read the updated state back
@@ -813,6 +798,35 @@ func (r *SslprofileResource) readSslprofileFromApi(ctx context.Context, data *Ss
 }
 
 // ECC curve binding helpers
+
+// createSslprofileBindings applies the default-binding deletions and the
+// ecccurve/cipher convenience-block bindings after the profile object has been
+// created. It returns the first error so Create can roll back the just-created
+// profile (avoiding an orphan). The returned messages match the pre-refactor
+// Create diagnostics.
+func (r *SslprofileResource) createSslprofileBindings(ctx context.Context, data *SslprofileResourceModel) error {
+	if !data.Nodefaultecccurvebindings.IsNull() && data.Nodefaultecccurvebindings.ValueBool() {
+		if err := r.deleteDefaultEcccurveBindings(ctx, data.Name.ValueString()); err != nil {
+			return fmt.Errorf("Unable to delete default ECC curve bindings: %s", err)
+		}
+	}
+	if !data.Nodefaultcipherbindings.IsNull() && data.Nodefaultcipherbindings.ValueBool() {
+		if err := r.deleteDefaultCipherBindings(ctx, data.Name.ValueString()); err != nil {
+			return fmt.Errorf("Unable to delete default cipher bindings: %s", err)
+		}
+	}
+	if !data.Ecccurvebindings.IsNull() {
+		if err := r.createEcccurveBindings(ctx, data); err != nil {
+			return fmt.Errorf("Unable to create ECC curve bindings: %s", err)
+		}
+	}
+	if !data.Cipherbindings.IsNull() {
+		if err := r.createCipherBindings(ctx, data); err != nil {
+			return fmt.Errorf("Unable to create cipher bindings: %s", err)
+		}
+	}
+	return nil
+}
 
 func (r *SslprofileResource) deleteDefaultEcccurveBindings(ctx context.Context, profileName string) error {
 	tflog.Debug(ctx, "Deleting default ECC curve bindings")

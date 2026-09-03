@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -61,6 +62,34 @@ const testAccLbvserver_basic_step2 = `
 	orderthreshold = "10"
 	}
 `
+
+const testAccLbvserver_missing_sslcertkey = `
+resource "citrixadc_lbvserver" "tf_missingcert" {
+  name        = "tf_lb_missingcert"
+  ipv46       = "10.202.11.90"
+  port        = 443
+  servicetype = "SSL"
+  sslcertkey  = "tf_nonexistent_cert_pre"
+}
+`
+
+// TestAccLbvserver_missing_sslcertkey_precheck verifies the create-time cert
+// existence pre-check: referencing a non-existent sslcertkey must fail up-front
+// (before the vserver is created), so no orphaned lbvserver is left on the
+// appliance. Guards the SDK v2-parity pre-check + rollback fix.
+func TestAccLbvserver_missing_sslcertkey_precheck(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccLbvserver_missing_sslcertkey,
+				ExpectError: regexp.MustCompile("does not exist"),
+			},
+		},
+	})
+}
 
 func TestAccLbvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -1089,3 +1118,65 @@ func TestAccLbvserver_sdkv2StateUpgrade(t *testing.T) {
 		},
 	})
 }
+
+// TestAccLbvserver_sslpolicybinding_type asserts that an sslpolicybinding with an
+// explicit bind point (type = "REQUEST") applies cleanly and idempotently. Before
+// the fix, the NEW provider aborted with "Provider produced inconsistent result
+// after apply": readSslpolicyBindings set type="" (NITRO omits type for the default
+// REQUEST bind point on GET) while the plan held "REQUEST", breaking the Set-element
+// consistency check. Step 2's ExpectEmptyPlan guards against any perpetual replace.
+func TestAccLbvserver_sslpolicybinding_type(t *testing.T) {
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_sslpolicybinding_type,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_lbvserver", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_lbvserver.tf_lbvserver", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_sslpol_type", "priority": "100", "type": "REQUEST", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccLbvserver_sslpolicybinding_type,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+const testAccLbvserver_sslpolicybinding_type = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslact_type"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_sslpol_type"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  name        = "tf_lb_sslpol_type"
+  ipv46       = "10.222.74.10"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority               = 100
+    type                   = "REQUEST"
+    gotopriorityexpression = "END"
+  }
+}
+`

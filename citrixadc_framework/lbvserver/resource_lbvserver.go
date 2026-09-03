@@ -91,6 +91,13 @@ func (r *LbvserverResource) Create(ctx context.Context, req resource.CreateReque
 	lbvserver := lbvserverGetThePayloadFromtheConfig(ctx, &data)
 	lbvserver.Name = lbvserverName
 
+	// Pre-check referenced SSL cert key(s) exist before creating the vserver, so a
+	// missing cert fails cleanly up-front instead of orphaning a created vserver
+	// (SDK v2 parity).
+	if !r.precheckSslcertkeysExist(ctx, &data, &resp.Diagnostics) {
+		return
+	}
+
 	// Named resource - use AddResource (NITRO add is HTTP POST)
 	_, err := r.client.AddResource(service.Lbvserver.Type(), lbvserverName, &lbvserver)
 	if err != nil {
@@ -107,6 +114,11 @@ func (r *LbvserverResource) Create(ctx context.Context, req resource.CreateReque
 	// sslprofile, sslpolicybinding).
 	r.applyBindingsOnCreate(ctx, lbvserverName, &data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
+		// Roll back the just-created vserver so a failed bind does not leave an
+		// orphan on the appliance (SDK v2 parity).
+		if delErr := r.client.DeleteResource(service.Lbvserver.Type(), lbvserverName); delErr != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Failed to roll back lbvserver %q after a binding failure: %s", lbvserverName, delErr))
+		}
 		return
 	}
 

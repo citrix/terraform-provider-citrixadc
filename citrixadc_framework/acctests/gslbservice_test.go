@@ -709,3 +709,88 @@ data "citrixadc_gslbservice" "tf_gslbservice_ds" {
 }
 
 `
+
+// TestAccGslbservice_lbmonitorbinding_editweight edits only a NON-KEY sub-attribute
+// (weight) of an lbmonitor binding while its diff key (monitor_name) is unchanged.
+// A key-only reconciliation would silently drop the edit; the second step asserts
+// the new weight actually reached the appliance (both on the box and in state).
+func TestAccGslbservice_lbmonitorbinding_editweight(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicelbmonitor_editweight(80),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
+					verifyLbmonitorbindingWeight("tf_test_gslbservice", "tf_test_monitor1", 80),
+				),
+			},
+			{
+				Config: testAccGslbservicelbmonitor_editweight(50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
+					verifyLbmonitorbindingWeight("tf_test_gslbservice", "tf_test_monitor1", 50),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_gslbservice.tf_test_gslbservice", "lbmonitorbinding.*",
+						map[string]string{"monitor_name": "tf_test_monitor1", "weight": "50"}),
+				),
+			},
+		},
+	})
+}
+
+// verifyLbmonitorbindingWeight asserts the weight bound for monitorName on the
+// appliance equals expected.
+func verifyLbmonitorbindingWeight(servicename, monitorName string, expected int64) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		bindings, _ := client.FindResourceArray("gslbservice_lbmonitor_binding", servicename)
+		for _, val := range bindings {
+			if mn, ok := val["monitor_name"].(string); ok && mn == monitorName {
+				got, cErr := utils.ConvertToInt64(val["weight"])
+				if cErr != nil {
+					return fmt.Errorf("could not parse weight for monitor %s: %v", monitorName, cErr)
+				}
+				if got != expected {
+					return fmt.Errorf("weight for monitor %s = %d on the appliance, expected %d", monitorName, got, expected)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("no lbmonitor binding for monitor %s on gslbservice %s", monitorName, servicename)
+	}
+}
+
+func testAccGslbservicelbmonitor_editweight(weight int) string {
+	return fmt.Sprintf(`
+resource "citrixadc_lbmonitor" "tf_test_monitor1" {
+  monitorname = "tf_test_monitor1"
+  type        = "HTTP"
+}
+
+resource "citrixadc_gslbsite" "tf_test_site" {
+  sitename        = "tf_test_site"
+  siteipaddress   = "192.168.22.19"
+  sessionexchange = "DISABLED"
+  sitepassword    = "password123"
+}
+
+resource "citrixadc_gslbservice" "tf_test_gslbservice" {
+  ip          = "192.168.18.81"
+  port        = "80"
+  servicename = "tf_test_gslbservice"
+  servicetype = "HTTP"
+  sitename    = citrixadc_gslbsite.tf_test_site.sitename
+
+  lbmonitorbinding {
+    monitor_name = citrixadc_lbmonitor.tf_test_monitor1.monitorname
+    weight       = %d
+  }
+}
+`, weight)
+}

@@ -17,6 +17,7 @@ package citrixadc
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -43,6 +44,32 @@ func TestAccSystemuser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemuserExist("citrixadc_systemuser.tf_user", nil),
 				),
+			},
+		},
+	})
+}
+
+const testAccSystemuser_extauth_disabled_nopass = `
+resource "citrixadc_systemuser" "tf_local_nopw" {
+  username     = "tf_local_nopw"
+  externalauth = "DISABLED"
+}
+`
+
+// TestAccSystemuser_externalauth_disabled_requires_password verifies the local-
+// password guard still fires for an explicit local (externalauth=DISABLED) user
+// with no password. This must survive removing the externalauth schema Default
+// and adding the ValidateConfig/isPasswordExempt exemption for UNSET externalauth:
+// only an explicit non-ENABLED externalauth should still require a local password.
+func TestAccSystemuser_externalauth_disabled_requires_password(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSystemuser_extauth_disabled_nopass,
+				ExpectError: regexp.MustCompile("must be specified"),
 			},
 		},
 	})

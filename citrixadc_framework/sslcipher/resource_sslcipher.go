@@ -122,6 +122,25 @@ func (r *SslcipherResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
+	// Refresh the ciphersuitebinding set from the appliance ONLY when the block is
+	// explicitly configured (state value is non-null), so out-of-band changes to a
+	// block this resource manages are detected. This mirrors the SDK v2 read, which
+	// gated the refresh on d.GetOk("ciphersuitebinding"): when no block is configured
+	// the resource ignores bindings entirely, so it does not adopt (and then plan to
+	// remove) ciphers owned by a separate citrixadc_sslcipher_sslciphersuite_binding
+	// resource on the same cipher group. The refresh is done ONLY here in Read, not in
+	// the shared readSslcipherFromApi that Create/Update also call: overwriting the
+	// planned bindings there could make the post-apply state differ from the plan
+	// ("inconsistent result after apply"). Refresh has no such consistency check.
+	if !data.Ciphersuitebinding.IsNull() {
+		set, d := readSslcipherCiphersuiteBindings(ctx, r.client, data.Id.ValueString())
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		data.Ciphersuitebinding = set
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -203,10 +222,11 @@ func (r *SslcipherResource) Delete(ctx context.Context, req resource.DeleteReque
 
 // readSslcipherFromApi confirms the cipher group exists on the appliance and
 // refreshes ciphergroupname + id. It intentionally does NOT overwrite the
-// ciphersuitebinding set: the bindings are pushed to the appliance during
-// Create/Update and the state mirrors the configured value, which guarantees
-// plan-consistency for the (non-Computed) set. Returns false if the cipher
-// group no longer exists.
+// ciphersuitebinding set: Create/Update call this after pushing the bindings, and
+// preserving the planned value there guarantees plan-consistency for the
+// (non-Computed) set. Read refreshes the binding set separately (see Read) so
+// out-of-band drift is still detected. Returns false if the cipher group no
+// longer exists.
 func (r *SslcipherResource) readSslcipherFromApi(ctx context.Context, data *SslcipherResourceModel, diags *diag.Diagnostics) bool {
 	ciphergroupname := data.Id.ValueString()
 

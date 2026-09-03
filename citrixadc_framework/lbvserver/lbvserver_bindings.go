@@ -54,6 +54,20 @@ func asString(v interface{}) string {
 	return fmt.Sprintf("%v", v)
 }
 
+// sslpolicyBindpoint returns the bind point (`type`) for an
+// sslvserver_sslpolicy_binding read from NITRO. NITRO OMITS `type` on GET for the
+// default REQUEST bind point, so an empty value is normalized to "REQUEST";
+// explicit non-default bind points (INTERCEPT_REQ, CLIENTHELLO_REQ) are echoed
+// as-is. Without this, a config that sets `type = "REQUEST"` fails the Framework's
+// post-apply Set-element consistency check ("Provider produced inconsistent result
+// after apply") because the read-back would be "" while the plan holds "REQUEST".
+func sslpolicyBindpoint(v interface{}) string {
+	if t := asString(v); t != "" {
+		return t
+	}
+	return "REQUEST"
+}
+
 func stringSlicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
@@ -377,7 +391,7 @@ func (r *LbvserverResource) readSslpolicyBindings(ctx context.Context, name stri
 			Labeltype:              types.StringValue(asString(b["labeltype"])),
 			Policyname:             types.StringValue(asString(b["policyname"])),
 			Priority:               types.Int64Value(0),
-			Type:                   types.StringValue(asString(b["type"])),
+			Type:                   types.StringValue(sslpolicyBindpoint(b["type"])),
 		}
 		if p, ok := b["priority"]; ok && p != nil {
 			if iv, err := strconv.ParseInt(asString(p), 10, 64); err == nil {
@@ -395,6 +409,37 @@ func (r *LbvserverResource) readSslpolicyBindings(ctx context.Context, name stri
 // ---------------------------------------------------------------------------
 
 // applyBindingsOnCreate binds all convenience blocks after the base lbvserver is added.
+// precheckSslcertkeysExist verifies referenced sslcertkey / snisslcertkeys exist
+// on the appliance BEFORE the vserver is created, so a missing cert fails cleanly
+// up-front instead of orphaning a just-created vserver (SDK v2 parity). Returns
+// false (and appends an error) when a referenced cert is missing.
+func (r *LbvserverResource) precheckSslcertkeysExist(ctx context.Context, data *LbvserverResourceModel, diags *diag.Diagnostics) bool {
+	if !data.Sslcertkey.IsNull() && !data.Sslcertkey.IsUnknown() && data.Sslcertkey.ValueString() != "" {
+		if !r.client.ResourceExists(service.Sslcertkey.Type(), data.Sslcertkey.ValueString()) {
+			diags.AddError("Configuration Error", fmt.Sprintf("Specified sslcertkey %q does not exist on the NetScaler.", data.Sslcertkey.ValueString()))
+			return false
+		}
+	}
+	if !data.Snisslcertkeys.IsNull() && !data.Snisslcertkeys.IsUnknown() {
+		var sniCerts []string
+		diags.Append(data.Snisslcertkeys.ElementsAs(ctx, &sniCerts, false)...)
+		if diags.HasError() {
+			return false
+		}
+		var missing []string
+		for _, c := range sniCerts {
+			if c != "" && !r.client.ResourceExists(service.Sslcertkey.Type(), c) {
+				missing = append(missing, c)
+			}
+		}
+		if len(missing) > 0 {
+			diags.AddError("Configuration Error", fmt.Sprintf("The following SNI sslcertkey(s) do not exist on the NetScaler: %v", missing))
+			return false
+		}
+	}
+	return true
+}
+
 func (r *LbvserverResource) applyBindingsOnCreate(ctx context.Context, name string, data *LbvserverResourceModel, diags *diag.Diagnostics) {
 	if !data.Sslcertkey.IsNull() && data.Sslcertkey.ValueString() != "" {
 		if err := r.bindSslcertkey(name, data.Sslcertkey.ValueString()); err != nil {

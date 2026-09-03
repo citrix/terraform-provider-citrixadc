@@ -44,7 +44,7 @@ In addition to the arguments, the following attributes are available:
 * `backupvserver` - Name of the backup GSLB virtual server to which the appliance should to forward requests if the status of the primary GSLB virtual server is down or exceeds its spillover threshold.
 * `comment` - Any comments that you might want to associate with the GSLB virtual server.
 * `considereffectivestate` - If the primary state of all bound GSLB services is DOWN, consider the effective states of all the GSLB services, obtained through the Metrics Exchange Protocol (MEP), when determining the state of the GSLB virtual server. To consider the effective state, set the parameter to STATE_ONLY. To disregard the effective state, set the parameter to NONE.
-* `cookie_domain` - The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
+* `cookiedomain` - The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.
 * `cookietimeout` - Timeout, in minutes, for the GSLB site cookie.
 * `disableprimaryondown` - Continue to direct traffic to the backup chain even after the primary GSLB virtual server returns to the UP state. Used when spillover is configured for the virtual server.
 * `dnsrecordtype` - DNS record type to associate with the GSLB virtual server's domain name.

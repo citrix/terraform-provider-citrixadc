@@ -292,6 +292,51 @@ func TestAccSslcipher_selfHealing(t *testing.T) {
 	})
 }
 
+// TestAccSslcipher_ciphersuitebinding_drift verifies that Read refreshes the
+// ciphersuitebinding set from the appliance, so an out-of-band change to the
+// bound cipher suites is detected as drift (matching SDK v2). The middle step
+// unbinds a ciphersuite behind Terraform's back, then RefreshState +
+// ExpectNonEmptyPlan asserts the refresh surfaces the removal; the last step
+// re-applies to reconcile.
+func TestAccSslcipher_ciphersuitebinding_drift(t *testing.T) {
+	const resAddr = "citrixadc_sslcipher.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcipherDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcipher_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcipherExist(resAddr, nil),
+					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES-128-SHA256", 3),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("drift: client: %v", err)
+					}
+					args := []string{"ciphername:TLS1.2-ECDHE-RSA-AES-128-SHA256"}
+					if err := client.DeleteResourceWithArgs(service.Sslcipher_sslciphersuite_binding.Type(), "tfAccsslcipher", args); err != nil {
+						t.Fatalf("drift: out-of-band unbind failed: %v", err)
+					}
+				},
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccSslcipher_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslcipherExist(resAddr, nil),
+					testAccCheckSslcipherCiphersuiteBinding("tfAccsslcipher", "TLS1.2-ECDHE-RSA-AES-128-SHA256", 3),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSslcipher_import(t *testing.T) {
 	const resAddr = "citrixadc_sslcipher.foo"
 	resource.Test(t, resource.TestCase{

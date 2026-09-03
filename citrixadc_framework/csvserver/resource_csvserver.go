@@ -71,6 +71,13 @@ func (r *CsvserverResource) Create(ctx context.Context, req resource.CreateReque
 	// Create API request body from the model
 	csvserver := csvserverGetThePayloadFromtheConfig(ctx, &data)
 
+	// Pre-check referenced SSL cert key(s) exist before creating the vserver, so a
+	// missing cert fails cleanly up-front instead of orphaning a created vserver
+	// (SDK v2 parity).
+	if !r.precheckSslcertkeysExist(ctx, &data, &resp.Diagnostics) {
+		return
+	}
+
 	// Named resource - use AddResource (NITRO add is HTTP POST)
 	_, err := r.client.AddResource(service.Csvserver.Type(), csvserverName, &csvserver)
 	if err != nil {
@@ -87,6 +94,11 @@ func (r *CsvserverResource) Create(ctx context.Context, req resource.CreateReque
 	// sslprofile, lbvserverbinding, sslpolicybinding).
 	r.applyBindingsOnCreate(ctx, csvserverName, &data, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
+		// Roll back the just-created vserver so a failed bind does not leave an
+		// orphan on the appliance (SDK v2 parity).
+		if delErr := r.client.DeleteResource(service.Csvserver.Type(), csvserverName); delErr != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Failed to roll back csvserver %q after a binding failure: %s", csvserverName, delErr))
+		}
 		return
 	}
 

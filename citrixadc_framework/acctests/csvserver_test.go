@@ -18,6 +18,7 @@ package citrixadc
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -122,6 +123,34 @@ data "citrixadc_csvserver" "foo" {
   name = citrixadc_csvserver.foo.name
 }
 `
+
+const testAccCsvserver_missing_sslcertkey = `
+resource "citrixadc_csvserver" "tf_missingcert" {
+  name        = "tf_cs_missingcert"
+  ipv46       = "10.202.11.91"
+  port        = 443
+  servicetype = "SSL"
+  sslcertkey  = "tf_nonexistent_cert_pre"
+}
+`
+
+// TestAccCsvserver_missing_sslcertkey_precheck verifies the create-time cert
+// existence pre-check: referencing a non-existent sslcertkey must fail up-front
+// (before the vserver is created), so no orphaned csvserver is left on the
+// appliance. Guards the SDK v2-parity pre-check + rollback fix.
+func TestAccCsvserver_missing_sslcertkey_precheck(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCsvserver_missing_sslcertkey,
+				ExpectError: regexp.MustCompile("does not exist"),
+			},
+		},
+	})
+}
 
 func TestAccCsvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -1146,3 +1175,146 @@ func testAccCheckCsvserverADCValue(name, attr, want string) resource.TestCheckFu
 		return nil
 	}
 }
+
+// TestAccCsvserver_sslpolicybinding_editsubattr edits only a NON-KEY sub-attribute
+// (labelname) of an sslpolicy binding while its diff key (policyname+priority) is
+// unchanged. (gotopriorityexpression cannot be used here: NITRO pins it to END
+// for SSL vserver policy bindings, errorcode 3042.) A key-only reconciliation
+// would silently drop the edit, and the post-apply refresh would then disagree
+// with the plan ("inconsistent result after apply"). The second step asserts the
+// edit lands.
+func TestAccCsvserver_sslpolicybinding_editsubattr(t *testing.T) {
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_sslpolicybinding_editsubattr("tf_ssllbl1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_csvserver.tf_csvserver", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_policy", "priority": "100", "gotopriorityexpression": "END", "labelname": "tf_ssllbl1"}),
+				),
+			},
+			{
+				Config: testAccCsvserver_sslpolicybinding_editsubattr("tf_ssllbl2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_csvserver.tf_csvserver", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_policy", "priority": "100", "gotopriorityexpression": "END", "labelname": "tf_ssllbl2"}),
+				),
+			},
+		},
+	})
+}
+
+func testAccCsvserver_sslpolicybinding_editsubattr(labelname string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_sslpolicylabel" "tf_ssllbl1" {
+  labelname = "tf_ssllbl1"
+  type      = "CONTROL"
+}
+
+resource "citrixadc_sslpolicylabel" "tf_ssllbl2" {
+  labelname = "tf_ssllbl2"
+  type      = "CONTROL"
+}
+
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslaction"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_policy"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.22"
+  name        = "tf_csvserver"
+  port        = 443
+  servicetype = "SSL"
+  sslprofile  = "ns_default_ssl_profile_frontend"
+
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority               = 100
+    gotopriorityexpression = "END"
+    invoke                 = true
+    labeltype              = "policylabel"
+    labelname              = citrixadc_sslpolicylabel.%s.labelname
+  }
+}
+`, labelname)
+}
+
+// TestAccCsvserver_sslpolicybinding_type asserts that an sslpolicybinding with an
+// explicit bind point (type = "REQUEST") applies cleanly and idempotently. Before
+// the fix, the NEW provider aborted with "Provider produced inconsistent result
+// after apply": readSslpolicyBindings set type="" (NITRO omits type for the default
+// REQUEST bind point on GET) while the plan held "REQUEST". Step 2's ExpectEmptyPlan
+// guards against any perpetual replace.
+func TestAccCsvserver_sslpolicybinding_type(t *testing.T) {
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_sslpolicybinding_type,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserverExist("citrixadc_csvserver.tf_csvserver", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_csvserver.tf_csvserver", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_csslpol_type", "priority": "100", "type": "REQUEST", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccCsvserver_sslpolicybinding_type,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+const testAccCsvserver_sslpolicybinding_type = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_csslact_type"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_csslpol_type"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+  name        = "tf_cs_sslpol_type"
+  ipv46       = "10.222.74.11"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority               = 100
+    type                   = "REQUEST"
+    gotopriorityexpression = "END"
+  }
+}
+`

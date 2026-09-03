@@ -7,6 +7,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -34,9 +35,11 @@ func NewNsaclsResource() resource.Resource {
 //     added rules are added, and changed rules are re-added (exactly as SDK v2's
 //     createSingleAcl-for-update behavior), then ApplyResource(nsacls) is called.
 //   - Delete deletes every rule in state with DeleteResource(nsacl) and applies.
-//   - Read is a state-preserving no-op: nsacls has no aggregate GET; SDK v2 faked
-//     it by scanning ALL device nsacls (leaking foreign rules), which is unsafe in
-//     the framework. This matches the sibling rnat_clear migration.
+//   - Read refreshes ONLY the rules this resource manages (those already in
+//     state), one per-rule GET keyed by aclname. nsacls has no aggregate GET, and
+//     SDK v2 faked it with an unscoped scan of ALL device nsacls (leaking foreign
+//     rules). The state-scoped per-rule refresh restores drift detection without
+//     that leak; see the Read method for the echo-only / omit-on-default rules.
 type NsaclsResource struct {
 	client *service.NitroClient
 }
@@ -113,10 +116,27 @@ func (r *NsaclsResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	// nsacls has no aggregate GET. SDK v2's Read scanned ALL device nsacls and
-	// blindly wrote them into state (leaking foreign rules and risking framework
-	// "inconsistent result" errors). We preserve prior state instead.
-	tflog.Debug(ctx, "Read is a state-preserving no-op for nsacls")
+	tflog.Debug(ctx, "Reading nsacls resource")
+
+	// Refresh only the rules this resource manages (those already in prior state),
+	// keyed by aclname, via a per-rule GET. nsacls has no aggregate GET, and SDK
+	// v2's unscoped FindAllResources(nsacl) scan leaked foreign rules into state
+	// (perpetual plans / "inconsistent result"). Scoping the refresh to the rules
+	// in state avoids that leak entirely: a managed rule deleted on the appliance
+	// is dropped (recreated on the next apply -> self-healing), and a managed rule
+	// whose configured fields changed out-of-band is refreshed so the drift shows
+	// in the plan.
+	//
+	// The refresh is ECHO-ONLY / OMIT-ON-DEFAULT: only attributes the user actually
+	// set (non-null in prior state) are overwritten from the device. Unset (null)
+	// attributes are never populated with NITRO's per-rule defaults - doing so would
+	// flip the set element's identity hash and reintroduce the very
+	// "inconsistent result after apply" / perpetual-plan failure the previous no-op
+	// read was avoiding (the acl nested attributes are Optional, not Computed).
+	r.refreshManagedAcls(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// The effective ADC default for `type` is CLASSIC. The released SDK v2 provider
 	// stored `type` as null in state when it was left unset. Carrying that null
@@ -284,4 +304,132 @@ func nsaclsElementsFromSet(ctx context.Context, set types.Set, diags *diag.Diagn
 	}
 	diags.Append(set.ElementsAs(ctx, &elems, false)...)
 	return elems
+}
+
+// refreshManagedAcls re-reads each rule in prior state (keyed by aclname) from the
+// appliance and rebuilds data.Acl. Rules absent on the appliance are dropped
+// (out-of-band deletion -> recreated on next apply). This is scoped strictly to
+// the rules already in state, so unmanaged/foreign rules are never pulled in.
+func (r *NsaclsResource) refreshManagedAcls(ctx context.Context, data *NsaclsResourceModel, diags *diag.Diagnostics) {
+	if data.Acl.IsNull() || data.Acl.IsUnknown() {
+		return
+	}
+	elems := nsaclsElementsFromSet(ctx, data.Acl, diags)
+	if diags.HasError() {
+		return
+	}
+
+	refreshed := make([]NsaclEntryModel, 0, len(elems))
+	for i := range elems {
+		name := elems[i].Aclname.ValueString()
+		if name == "" {
+			// aclname is Required; keep any degenerate element as-is.
+			refreshed = append(refreshed, elems[i])
+			continue
+		}
+		dev, err := r.client.FindResource(service.Nsacl.Type(), name)
+		if err != nil {
+			if utils.IsNotFoundError(err) {
+				// Deleted out-of-band: drop it so the next apply recreates it.
+				tflog.Debug(ctx, fmt.Sprintf("nsacl rule %q no longer exists on the appliance; dropping from state", name))
+				continue
+			}
+			diags.AddError("Client Error", fmt.Sprintf("Unable to read nsacl rule %q, got error: %s", name, err))
+			return
+		}
+		refreshed = append(refreshed, refreshNsaclEntry(elems[i], dev))
+	}
+
+	setVal, d := types.SetValueFrom(ctx, nsaclObjectType(), refreshed)
+	diags.Append(d...)
+	if diags.HasError() {
+		return
+	}
+	data.Acl = setVal
+}
+
+// refreshNsaclEntry returns a copy of the prior-state rule with only the
+// user-configured (non-null) attributes overwritten from the device GET map.
+// aclname (the match key) is preserved as-is. Attributes that were null in state
+// are left null (omit-on-default) so device defaults never flip the set-element
+// identity.
+func refreshNsaclEntry(state NsaclEntryModel, dev map[string]interface{}) NsaclEntryModel {
+	out := state
+	out.Aclaction = echoStr(state.Aclaction, dev, "aclaction")
+	out.Destipop = echoStr(state.Destipop, dev, "destipop")
+	out.Destipval = echoStr(state.Destipval, dev, "destipval")
+	out.Destportop = echoStr(state.Destportop, dev, "destportop")
+	out.Destportval = echoStr(state.Destportval, dev, "destportval")
+	out.Interface = echoStr(state.Interface, dev, "interface")
+	out.Logstate = echoStr(state.Logstate, dev, "logstate")
+	out.Protocol = echoStr(state.Protocol, dev, "protocol")
+	out.Srcipop = echoStr(state.Srcipop, dev, "srcipop")
+	out.Srcipval = echoStr(state.Srcipval, dev, "srcipval")
+	out.Srcmac = echoStr(state.Srcmac, dev, "srcmac")
+	out.Srcportop = echoStr(state.Srcportop, dev, "srcportop")
+	out.Srcportval = echoStr(state.Srcportval, dev, "srcportval")
+	out.State = echoStr(state.State, dev, "state")
+	out.Srcportdataset = echoStr(state.Srcportdataset, dev, "srcportdataset")
+	out.Srcipdataset = echoStr(state.Srcipdataset, dev, "srcipdataset")
+	out.Destportdataset = echoStr(state.Destportdataset, dev, "destportdataset")
+	out.Destipdataset = echoStr(state.Destipdataset, dev, "destipdataset")
+
+	out.Established = echoBool(state.Established, dev, "established")
+
+	out.Icmpcode = echoInt(state.Icmpcode, dev, "icmpcode")
+	out.Icmptype = echoInt(state.Icmptype, dev, "icmptype")
+	out.Priority = echoInt(state.Priority, dev, "priority")
+	out.Protocolnumber = echoInt(state.Protocolnumber, dev, "protocolnumber")
+	out.Ratelimit = echoInt(state.Ratelimit, dev, "ratelimit")
+	out.Td = echoInt(state.Td, dev, "td")
+	out.Ttl = echoInt(state.Ttl, dev, "ttl")
+	out.Vlan = echoInt(state.Vlan, dev, "vlan")
+
+	return out
+}
+
+// echoStr overwrites a string attribute from the device only when it was set in
+// prior state (omit-on-default) and the device echoes the key.
+func echoStr(cur types.String, dev map[string]interface{}, key string) types.String {
+	if cur.IsNull() || cur.IsUnknown() {
+		return cur
+	}
+	if v, ok := dev[key]; ok && v != nil {
+		return types.StringValue(nsaclDevString(v))
+	}
+	return cur
+}
+
+// echoInt overwrites an int attribute from the device only when it was set in
+// prior state and the device echoes a parseable value.
+func echoInt(cur types.Int64, dev map[string]interface{}, key string) types.Int64 {
+	if cur.IsNull() || cur.IsUnknown() {
+		return cur
+	}
+	if v, ok := dev[key]; ok && v != nil {
+		if iv, err := utils.ConvertToInt64(v); err == nil {
+			return types.Int64Value(iv)
+		}
+	}
+	return cur
+}
+
+// echoBool overwrites a bool attribute from the device only when it was set in
+// prior state and the device echoes the key.
+func echoBool(cur types.Bool, dev map[string]interface{}, key string) types.Bool {
+	if cur.IsNull() || cur.IsUnknown() {
+		return cur
+	}
+	if v, ok := dev[key]; ok && v != nil {
+		return types.BoolValue(v == true || v == "true")
+	}
+	return cur
+}
+
+// nsaclDevString coerces a NITRO GET value into a string.
+func nsaclDevString(v interface{}) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return fmt.Sprintf("%v", v)
 }

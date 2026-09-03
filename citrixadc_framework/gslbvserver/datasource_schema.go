@@ -28,7 +28,7 @@ type GslbvserverDataSourceModel struct {
 	Backupvserver          types.String `tfsdk:"backupvserver"`
 	Comment                types.String `tfsdk:"comment"`
 	Considereffectivestate types.String `tfsdk:"considereffectivestate"`
-	CookieDomain           types.String `tfsdk:"cookie_domain"`
+	CookieDomain           types.String `tfsdk:"cookiedomain"`
 	Cookietimeout          types.Int64  `tfsdk:"cookietimeout"`
 	Disableprimaryondown   types.String `tfsdk:"disableprimaryondown"`
 	Dnsrecordtype          types.String `tfsdk:"dnsrecordtype"`
@@ -135,7 +135,7 @@ func GslbvserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "If the primary state of all bound GSLB services is DOWN, consider the effective states of all the GSLB services, obtained through the Metrics Exchange Protocol (MEP), when determining the state of the GSLB virtual server. To consider the effective state, set the parameter to STATE_ONLY. To disregard the effective state, set the parameter to NONE.\n\nThe effective state of a GSLB service is the ability of the corresponding virtual server to serve traffic. The effective state of the load balancing virtual server, which is transferred to the GSLB service, is UP even if only one virtual server in the backup chain of virtual servers is in the UP state.",
 			},
-			"cookie_domain": schema.StringAttribute{
+			"cookiedomain": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "The cookie domain for the GSLB site. Used when inserting the GSLB site cookie in the HTTP response.",

@@ -7,6 +7,7 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -15,6 +16,25 @@ import (
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// attrChanged reports whether a non-key binding attribute was edited between the
+// prior state (oldV) and the plan (newV). A newV that is unknown — an
+// unconfigured Computed attribute at plan time — is treated as unchanged so that
+// editing one set element does not force a spurious rebind of its siblings.
+func attrChanged(oldV, newV attr.Value) bool {
+	if newV.IsUnknown() {
+		return false
+	}
+	return !oldV.Equal(newV)
+}
+
+// lbmonitorBindingChanged reports whether a non-identity sub-attribute of an
+// lbmonitor binding (matched on monitor_name) was edited. Weight/monstate edits
+// are invisible to a name-only diff, so they must trigger a rebind.
+func lbmonitorBindingChanged(o, n LbmonitorbindingModel) bool {
+	return attrChanged(o.Weight, n.Weight) ||
+		attrChanged(o.Monstate, n.Monstate)
+}
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &GslbserviceResource{}
@@ -352,19 +372,27 @@ func (r *GslbserviceResource) syncLbmonitorBindings(ctx context.Context, service
 		return diags
 	}
 
-	newNames := make(map[string]bool)
+	newByName := make(map[string]LbmonitorbindingModel)
 	for _, b := range newBindings {
-		newNames[b.MonitorName.ValueString()] = true
+		if mn := b.MonitorName.ValueString(); mn != "" {
+			newByName[mn] = b
+		}
 	}
-	oldNames := make(map[string]bool)
+	oldByName := make(map[string]LbmonitorbindingModel)
 	for _, b := range oldBindings {
-		oldNames[b.MonitorName.ValueString()] = true
+		if mn := b.MonitorName.ValueString(); mn != "" {
+			oldByName[mn] = b
+		}
 	}
 
-	// Remove bindings that are no longer present.
+	// Remove bindings dropped from config, plus the stale copy of any binding
+	// whose weight/monstate changed (it is re-added below).
 	for _, b := range oldBindings {
 		mn := b.MonitorName.ValueString()
-		if mn == "" || newNames[mn] {
+		if mn == "" {
+			continue
+		}
+		if nb, ok := newByName[mn]; ok && !lbmonitorBindingChanged(b, nb) {
 			continue
 		}
 		args := []string{fmt.Sprintf("monitor_name:%s", mn)}
@@ -374,10 +402,14 @@ func (r *GslbserviceResource) syncLbmonitorBindings(ctx context.Context, service
 		}
 	}
 
-	// Add bindings that are new.
+	// Add new bindings, plus re-add any binding whose weight/monstate changed so
+	// the edit is pushed to the appliance (SDK v2 full-hash parity).
 	for _, b := range newBindings {
 		mn := b.MonitorName.ValueString()
-		if mn == "" || oldNames[mn] {
+		if mn == "" {
+			continue
+		}
+		if ob, ok := oldByName[mn]; ok && !lbmonitorBindingChanged(ob, b) {
 			continue
 		}
 		bind := gslb.Gslbservicemonitorbinding{Servicename: servicename}

@@ -730,3 +730,158 @@ data "citrixadc_rewritepolicy" "test" {
 	name = citrixadc_rewritepolicy.test.name
 }
 `
+
+// The three tests below each edit only a NON-KEY sub-attribute
+// (gotopriorityexpression) of a convenience-block binding while its diff key is
+// unchanged (globalbinding: type+priority; lb/csvserverbinding:
+// name+bindpoint+priority). A key-only reconciliation would silently drop the
+// edit, and the post-apply refresh would then disagree with the plan
+// ("inconsistent result after apply"). The second step asserts the edit lands.
+
+func TestAccRewritepolicy_globalbinding_editgotopri(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicy_globalbinding_editgotopri("END"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_rewritepolicy.tf_rewrite_policy", "globalbinding.*",
+						map[string]string{"type": "REQ_OVERRIDE", "priority": "666", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccRewritepolicy_globalbinding_editgotopri("NEXT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_rewritepolicy.tf_rewrite_policy", "globalbinding.*",
+						map[string]string{"type": "REQ_OVERRIDE", "priority": "666", "gotopriorityexpression": "NEXT"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRewritepolicy_lbvserverbinding_editgotopri(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicy_lbvserverbinding_editgotopri("END"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_rewritepolicy.tf_rewrite_policy", "lbvserverbinding.*",
+						map[string]string{"name": "tf_lbvserver1", "bindpoint": "REQUEST", "priority": "114", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccRewritepolicy_lbvserverbinding_editgotopri("NEXT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_rewritepolicy.tf_rewrite_policy", "lbvserverbinding.*",
+						map[string]string{"name": "tf_lbvserver1", "bindpoint": "REQUEST", "priority": "114", "gotopriorityexpression": "NEXT"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRewritepolicy_csvserverbinding_editgotopri(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRewritepolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRewritepolicy_csvserverbinding_editgotopri("END"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_rewritepolicy.tf_rewrite_policy", "csvserverbinding.*",
+						map[string]string{"name": "tf_csvserver1", "bindpoint": "REQUEST", "priority": "114", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccRewritepolicy_csvserverbinding_editgotopri("NEXT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRewritepolicyExist("citrixadc_rewritepolicy.tf_rewrite_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_rewritepolicy.tf_rewrite_policy", "csvserverbinding.*",
+						map[string]string{"name": "tf_csvserver1", "bindpoint": "REQUEST", "priority": "114", "gotopriorityexpression": "NEXT"}),
+				),
+			},
+		},
+	})
+}
+
+func testAccRewritepolicy_globalbinding_editgotopri(gotopri string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+  name   = "tf_rewrite_policy"
+  action = "DROP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+
+  globalbinding {
+    type                   = "REQ_OVERRIDE"
+    priority               = 666
+    gotopriorityexpression = "%s"
+  }
+}
+`, gotopri)
+}
+
+func testAccRewritepolicy_lbvserverbinding_editgotopri(gotopri string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_lbvserver" "tf_lbvserver1" {
+  ipv46       = "10.22.22.22"
+  name        = "tf_lbvserver1"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+  name   = "tf_rewrite_policy"
+  action = "DROP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+
+  lbvserverbinding {
+    name                   = citrixadc_lbvserver.tf_lbvserver1.name
+    bindpoint              = "REQUEST"
+    priority               = 114
+    gotopriorityexpression = "%s"
+  }
+}
+`, gotopri)
+}
+
+func testAccRewritepolicy_csvserverbinding_editgotopri(gotopri string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_csvserver" "tf_csvserver1" {
+  ipv46       = "192.168.45.66"
+  name        = "tf_csvserver1"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_rewritepolicy" "tf_rewrite_policy" {
+  name   = "tf_rewrite_policy"
+  action = "DROP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"helloandby\")"
+
+  csvserverbinding {
+    name                   = citrixadc_csvserver.tf_csvserver1.name
+    bindpoint              = "REQUEST"
+    priority               = 114
+    gotopriorityexpression = "%s"
+  }
+}
+`, gotopri)
+}

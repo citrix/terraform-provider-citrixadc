@@ -242,6 +242,44 @@ data "citrixadc_gslbvserver" "tf_gslbvserver" {
 }
 `
 
+const testAccGslbvserver_cookiedomain = `
+resource "citrixadc_gslbvserver" "cd" {
+  name          = "tf_gslbvserver_cd"
+  servicetype   = "HTTP"
+  dnsrecordtype = "A"
+  domain {
+    domainname   = "www.cdtest.co"
+    ttl          = 60
+    cookiedomain = ".cdtest.co"
+  }
+}
+`
+
+// TestAccGslbvserver_cookiedomain exercises the kept HCL attribute name
+// "cookiedomain" inside the domain{} block. cookiedomain is a per-domain-binding
+// attribute (NITRO wire key "cookie_domain"); it must round-trip: create binds it
+// and Read populates it back via the correct wire key. Guards against the rename
+// (cookie_domain) and the domain-block read-key regressions.
+func TestAccGslbvserver_cookiedomain(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_cookiedomain,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserverExist("citrixadc_gslbvserver.cd", nil),
+					resource.TestCheckTypeSetElemNestedAttrs("citrixadc_gslbvserver.cd", "domain.*", map[string]string{
+						"domainname":   "www.cdtest.co",
+						"cookiedomain": ".cdtest.co",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGslbvserver_selfHealing(t *testing.T) {
 	const resAddr = "citrixadc_gslbvserver.foo"
 	resource.Test(t, resource.TestCase{
