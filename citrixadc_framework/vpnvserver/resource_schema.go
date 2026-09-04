@@ -132,9 +132,11 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Indicates whether device certificate check as a part of EPA is on or off.",
 			},
 			"deviceposture": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Enable device posture",
 			},
 			"doublehop": schema.StringAttribute{
@@ -298,9 +300,11 @@ func (r *VpnvserverResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "SameSite attribute value for Cookies generated in VPN context. This attribute value will be appended only for the cookies which are specified in the builtin patset ns_cookies_samesite",
 			},
 			"secureprivateaccess": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Configure secure private access",
 			},
 			// SDK v2: Required + ForceNew.

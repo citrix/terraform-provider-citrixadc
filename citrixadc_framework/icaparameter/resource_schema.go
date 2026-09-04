@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -42,9 +43,11 @@ func (r *IcaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			// own defaults; values omitted from config are populated from the GET
 			// response (Computed), avoiding perpetual diffs.
 			"dfpersistence": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Enable/Disable DF Persistence",
 			},
 			"edtlosstolerant": schema.StringAttribute{
@@ -65,9 +68,11 @@ func (r *IcaparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "DF enforcement timeout for EDTPMTUDDF",
 			},
 			"edtpmtudrediscovery": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Enable/Disable EDT PMTUD Rediscovery",
 			},
 			"enablesronhafailover": schema.StringAttribute{

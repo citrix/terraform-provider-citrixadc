@@ -58,9 +58,11 @@ func (r *BotprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "The ID of the botprofile resource.",
 			},
 			"addcookieflags": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("httpOnly"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "httpOnly"},
+				},
 				Description: "Add the specified flags to bot session cookies. Available settings function as follows:\n* None - Do not add flags to cookies.\n* HTTP Only - Add the HTTP Only flag to cookies, which prevents scripts from accessing cookies.\n* Secure - Add Secure flag to cookies.\n* All - Add both HTTPOnly and Secure flags to cookies.",
 			},
 			"bot_enable_black_list": schema.StringAttribute{

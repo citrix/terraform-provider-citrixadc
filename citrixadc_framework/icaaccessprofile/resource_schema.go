@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // IcaaccessprofileResourceModel describes the resource data model.
@@ -73,9 +75,11 @@ func (r *IcaaccessprofileResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Allow Default access/Disable client printers to be mapped to a server when a user logs on to a session",
 			},
 			"clienttwaindeviceredirection": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Allow default access or disable TWAIN devices, such as digital cameras or scanners, on the client device from published image processing applications",
 			},
 			"clientusbdriveredirection": schema.StringAttribute{
@@ -91,15 +95,19 @@ func (r *IcaaccessprofileResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Allow Default access/Disable automatic connection of LPT ports from the client when the user logs on",
 			},
 			"draganddrop": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Allow default access or disable drag and drop between client and remote applications and desktops",
 			},
 			"fido2redirection": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Allow default access or disable FIDO2 redirection",
 			},
 			"localremotedatasharing": schema.StringAttribute{
@@ -122,15 +130,19 @@ func (r *IcaaccessprofileResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Name for the ICA accessprofile. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and\nthe hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the ICA accessprofile is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my ica accessprofile\" or 'my ica accessprofile').\n\nEach of the features can be configured as DEFAULT/DISABLED.\nHere, DISABLED means that the policy settings on the backend XenApp/XenDesktop server are overridden and the Citrix ADC makes the decision to deny access. Whereas DEFAULT means that the Citrix ADC allows the request to reach the XenApp/XenDesktop that takes the decision to allow/deny access based on the policy configured on it. For example, if ClientAudioRedirection is enabled on the backend XenApp/XenDesktop server, and the configured profile has ClientAudioRedirection as DISABLED, the Citrix ADC makes the decision to deny the request irrespective of the configuration on the backend. If the configured profile has ClientAudioRedirection as DEFAULT, then the Citrix ADC forwards the requests to the backend XenApp/XenDesktop server.It then makes the decision to allow/deny access based on the policy configured on it.",
 			},
 			"smartcardredirection": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Allow default access or disable smart card redirection. Smart card virtual channel is always allowed in CVAD",
 			},
 			"wiaredirection": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Allow default access or disable WIA scanner redirection",
 			},
 		},

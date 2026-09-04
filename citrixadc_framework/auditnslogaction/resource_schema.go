@@ -123,9 +123,11 @@ func (r *AuditnslogactionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Name of the nslog action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the nslog action is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my nslog action\" or 'my nslog action').",
 			},
 			"protocolviolations": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("NONE"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "NONE"},
+				},
 				Description: "Log protocol violations",
 			},
 			"serverdomainname": schema.StringAttribute{

@@ -101,9 +101,11 @@ func (r *SslservicegroupResource) Schema(ctx context.Context, req resource.Schem
 				Description: "State of SSLv3 protocol support for the SSL service group.\nNote: On platforms with SSL acceleration chips, if the SSL chip does not support SSLv3, this parameter cannot be set to ENABLED.",
 			},
 			"sslclientlogs": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI names, from SSL handshakes to the audit logs.",
 			},
 			"sslprofile": schema.StringAttribute{

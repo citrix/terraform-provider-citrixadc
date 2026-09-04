@@ -85,9 +85,11 @@ func (r *DnsparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			// All attributes mirror the SDK v2 contract: Optional+Computed with no
 			// Default (the ADC supplies the effective value, which is read back).
 			"autosavekeyops": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Flag to enable/disable saving of rollover operations executed automatically to avoid config loss.\nApplicable only when autorollover option is enabled on a key. Note: when you enable this, full configuration will be saved",
 			},
 			"cacheecszeroprefix": schema.StringAttribute{
@@ -199,21 +201,27 @@ func (r *DnsparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Type of DNS queries (A, AAAA, or both) to generate during the routine functioning of certain Citrix ADC features, such as SSL VPN, cache redirection, and the integrated cache. The queries are sent to the external name servers that are configured for the forwarder function. If you specify both query types, you can also specify the order. Available settings function as follows:\n* OnlyAQuery. Send queries for IPv4 address records (A records) only.\n* OnlyAAAAQuery. Send queries for IPv6 address records (AAAA records) instead of queries for IPv4 address records (A records).\n* AThenAAAAQuery. Send a query for an A record, and then send a query for an AAAA record if the query for the A record results in a NODATA response from the name server.\n* AAAAThenAQuery. Send a query for an AAAA record, and then send a query for an A record if the query for the AAAA record results in a NODATA response from the name server.",
 			},
 			"resolvermaxactiveresolutions": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(0),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 0},
+				},
 				Description: "Maximum number of active concurrent DNS resolutions per Packet Engine",
 			},
 			"resolvermaxtcpconnections": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(1000),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 1000},
+				},
 				Description: "Maximum DNS-TCP connections opened for recursive resolution per Packet Engine",
 			},
 			"resolvermaxtcptimeout": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(5),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 5},
+				},
 				Description: "Maximum wait time in seconds for the response on DNS-TCP connection for recursive resolution per Packet Engine",
 			},
 			"retries": schema.Int64Attribute{
@@ -229,9 +237,11 @@ func (r *DnsparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Processing requests split across multiple packets",
 			},
 			"zonetransfer": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Flag to enable/disable DNS zones configuration transfer to remote GSLB site nodes",
 			},
 		},

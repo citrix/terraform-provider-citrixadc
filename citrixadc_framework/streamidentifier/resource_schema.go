@@ -69,21 +69,27 @@ func (r *StreamidentifierResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Number of minutes of data to use when calculating session statistics (number of requests, bandwidth, and response times). The interval is a moving window that keeps the most recently collected data. Older data is discarded at regular intervals.",
 			},
 			"log": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("NONE"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "NONE"},
+				},
 				Description: "Location where objects collected on the identifier will be logged.",
 			},
 			"loginterval": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(5),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 5},
+				},
 				Description: "Time interval in minutes for logging the collected objects.\nLog interval should be greater than or equal to the inteval \nof the stream identifier.",
 			},
 			"loglimit": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     int64default.StaticInt64(100),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 100},
+				},
 				Description: "Maximum number of objects to be logged in the log interval.",
 			},
 			"maxtransactionthreshold": schema.Int64Attribute{

@@ -117,9 +117,11 @@ func (r *ClusterinstanceResource) Schema(ctx context.Context, req resource.Schem
 				Description: "This option enables you to retain existing connections on a node joining a Cluster system or when a node is being configured for passive timeout. By default, this option is disabled.",
 			},
 			"secureheartbeats": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "By turning on this option cluster heartbeats will have security enabled.",
 			},
 			"syncstatusstrictmode": schema.StringAttribute{

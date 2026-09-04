@@ -322,9 +322,11 @@ func (r *NstcpprofileResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Maximum connection queue size in bytes, when BurstRateControl is used",
 			},
 			"rfc5961compliance": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Enable or disable RFC 5961 compliance to protect against tcp spoofing(RST/SYN/Data). When enabled, will be compliant with RFC 5961.",
 			},
 			"rstmaxack": schema.StringAttribute{

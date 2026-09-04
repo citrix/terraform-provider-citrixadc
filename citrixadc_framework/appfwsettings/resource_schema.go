@@ -74,9 +74,11 @@ func (r *AppfwsettingsResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Name of an HTTP header that contains the IP address that the client used to connect to the protected web site or service.",
 			},
 			"cookieflags": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("none"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "none"},
+				},
 				Description: "Add the specified flags to AppFW cookies. Available setttings function as follows:\n* None - Do not add flags to AppFW cookies.\n* HTTP Only - Add the HTTP Only flag to AppFW cookies, which prevent scripts from accessing them.\n* Secure - Add Secure flag to AppFW cookies.\n* All - Add both HTTPOnly and Secure flag to AppFW cookies.",
 			},
 			"cookiepostencryptprefix": schema.StringAttribute{

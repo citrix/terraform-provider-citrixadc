@@ -240,9 +240,11 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Named ECC curves bound to the SSL profile.",
 			},
 			"encryptedclienthello": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "State of TLS 1.3 Encrypted Client Hello Support",
 			},
 			"encrypttriggerpktcount": schema.Int64Attribute{
@@ -445,9 +447,11 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "State of SSLv3 protocol support for the SSL profile.\nNote: On platforms with SSL acceleration chips, if the SSL chip does not support SSLv3, this parameter cannot be set to ENABLED.",
 			},
 			"sslclientlogs": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "When enabled, NetScaler will log the session ID and SNI name during SSL handshakes on both the external and internal interfaces.",
 			},
 			"sslimaxsessperserver": schema.Int64Attribute{

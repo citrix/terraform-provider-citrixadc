@@ -299,9 +299,11 @@ func (r *NshttpprofileResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Minimum number of HTTP/3 connections established to backend server, on receiving HTTP requests from client before multiplexing the streams into the available HTTP/3 connections.",
 			},
 			"http3webtransport": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Choose whether to enable support for WebTransport over HTTP/3.",
 			},
 			"httppipelinebuffsize": schema.Int64Attribute{

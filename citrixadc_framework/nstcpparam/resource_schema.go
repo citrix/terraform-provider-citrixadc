@@ -347,11 +347,14 @@ func (r *NstcpparamResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description:   "TCP Receive buffer size",
 			},
 			"rfc5961chlgacklimit": schema.Int64Attribute{
-				Optional:      true,
-				Computed:      true,
-				Default:       int64default.StaticInt64(0),
-				PlanModifiers: int64PM,
-				Description:   "Limits number of Challenge ACK sent per second, as recommended in RFC 5961(Improving TCP's Robustness to Blind In-Window Attacks)",
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 0},
+				},
+				Description: "Limits number of Challenge ACK sent per second, as recommended in RFC 5961(Improving TCP's Robustness to Blind In-Window Attacks)",
 			},
 			"sack": schema.StringAttribute{
 				Optional:      true,
