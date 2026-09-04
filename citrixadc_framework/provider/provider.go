@@ -1002,6 +1002,7 @@ func (p *CitrixAdcFrameworkProvider) Schema(ctx context.Context, req provider.Sc
 			"password": schema.StringAttribute{
 				Description: "Password to login to the NetScaler",
 				Optional:    true,
+				Sensitive:   true,
 			},
 			"endpoint": schema.StringAttribute{
 				Description: "The URL to the API",
