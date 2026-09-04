@@ -28,10 +28,6 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    env:
-      MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
-      MEND_USER_KEY: ${{ secrets.MEND_USER_KEY }}
-      MEND_URL: ${{ secrets.MEND_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -43,20 +39,31 @@ jobs:
           cache: true
 
       - name: Download and install Mend CLI
+        env:
+          MEND_CLI_SHA256: "6f18733f57fee2aae5fb8e04345c6909f63a153a9e36d489015c265783133b01"
         run: |
-          curl -fsSL https://downloads.mend.io/cli/linux_amd64/mend -o /usr/local/bin/mend
-          chmod +x /usr/local/bin/mend
+          curl -fsSL https://downloads.mend.io/cli/linux_amd64/mend -o /tmp/mend
+          echo "${MEND_CLI_SHA256}  /tmp/mend" | sha256sum -c -
+          install -m 0755 /tmp/mend /usr/local/bin/mend
           mend version
 
       - name: Run Mend dependency scan
         id: mend_scan
         continue-on-error: true
+        env:
+          MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
+          MEND_USER_KEY: ${{ secrets.MEND_USER_KEY }}
+          MEND_URL: ${{ secrets.MEND_URL }}
         run: |
           mend dep --dir . --scope "terraform-provider-citrixadc" --non-interactive --export-results mend-results.json
 
       - name: Convert results to SARIF
         if: always() && steps.mend_scan.outcome != 'skipped'
         continue-on-error: true
+        env:
+          MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
+          MEND_USER_KEY: ${{ secrets.MEND_USER_KEY }}
+          MEND_URL: ${{ secrets.MEND_URL }}
         run: |
           mend dep --dir . --scope "terraform-provider-citrixadc" --non-interactive --format sarif --filename mend-output.sarif || true
 
