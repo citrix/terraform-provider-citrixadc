@@ -70,6 +70,7 @@ func providerSchema() map[string]*schema.Schema {
 		"password": {
 			Type:        schema.TypeString,
 			Optional:    true,
+			Sensitive:   true,
 			Description: "Password to login to the NetScaler",
 			DefaultFunc: schema.EnvDefaultFunc("NS_PASSWORD", nil),
 		},
