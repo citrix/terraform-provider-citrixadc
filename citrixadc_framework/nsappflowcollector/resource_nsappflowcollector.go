@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *NsappflowcollectorResource) Create(ctx context.Context, req resource.Cr
 
 	tflog.Debug(ctx, "Creating nsappflowcollector resource")
 
-	// nsappflowcollector := nsappflowcollectorGetThePayloadFromtheConfig(ctx, &data)
+	nsappflowcollector := nsappflowcollectorGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsappflowcollector.Type(), &nsappflowcollector)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsappflowcollector, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nsappflowcollector-config")
+	// Named resource - use AddResource
+	nsappflowcollectorName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Nsappflowcollector.Type(), nsappflowcollectorName, &nsappflowcollector)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsappflowcollector, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nsappflowcollector resource")
 
+	// Set ID for the resource before reading state back
+	data.Id = types.StringValue(fmt.Sprintf("%v", nsappflowcollectorName))
+
 	// Read the updated state back
-	r.readNsappflowcollectorFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsappflowcollectorFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsappflowcollector not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *NsappflowcollectorResource) Read(ctx context.Context, req resource.Read
 
 	tflog.Debug(ctx, "Reading nsappflowcollector resource")
 
-	r.readNsappflowcollectorFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNsappflowcollectorFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NsappflowcollectorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsappflowcollectorResourceModel
+	var data, state NsappflowcollectorResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,21 @@ func (r *NsappflowcollectorResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	tflog.Debug(ctx, "Updating nsappflowcollector resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// nsappflowcollector := nsappflowcollectorGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsappflowcollector.Type(), &nsappflowcollector)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsappflowcollector, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated nsappflowcollector resource")
+	// nsappflowcollector has no NITRO-updatable attributes (all attributes are
+	// ForceNew in SDK v2, so changes force replacement rather than an update).
+	// This Update simply reads current state back.
+	tflog.Debug(ctx, "Updating nsappflowcollector resource (no updatable attributes)")
 
 	// Read the updated state back
-	r.readNsappflowcollectorFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsappflowcollectorFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsappflowcollector not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +152,34 @@ func (r *NsappflowcollectorResource) Delete(ctx context.Context, req resource.De
 
 	tflog.Debug(ctx, "Deleting nsappflowcollector resource")
 
-	// For nsappflowcollector, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nsappflowcollector resource from state")
+	// Named resource - delete using DeleteResource
+	nsappflowcollectorName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Nsappflowcollector.Type(), nsappflowcollectorName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nsappflowcollector, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nsappflowcollector resource")
 }
 
-// Helper function to read nsappflowcollector data from API
-func (r *NsappflowcollectorResource) readNsappflowcollectorFromApi(ctx context.Context, data *NsappflowcollectorResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nsappflowcollector.Type(), "")
+// Helper function to read nsappflowcollector data from API.
+// Returns false (without an error diagnostic) when the resource no longer exists.
+func (r *NsappflowcollectorResource) readNsappflowcollectorFromApi(ctx context.Context, data *NsappflowcollectorResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	nsappflowcollectorName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Nsappflowcollector.Type(), nsappflowcollectorName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsappflowcollector, got error: %s", err))
-		return
+		return false
 	}
 
 	nsappflowcollectorSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -29,6 +29,8 @@ resource "citrixadc_dnsnsrec" "tf_dnsnsrec" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the dnsnsrec. It is the concatenation of the `domain` and `nameserver` attributes separated by a comma.
+* `ecssubnet` - Subnet for which the cached name server record need to be removed.
+* `nodeid` - Unique number that identifies the cluster node.
 
 
 ## Import

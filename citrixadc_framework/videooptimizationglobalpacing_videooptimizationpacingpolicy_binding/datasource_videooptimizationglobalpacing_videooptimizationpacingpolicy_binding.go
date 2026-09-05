@@ -36,7 +36,7 @@ func (d *VideooptimizationglobalpacingVideooptimizationpacingpolicyBindingDataSo
 }
 
 func (d *VideooptimizationglobalpacingVideooptimizationpacingpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VideooptimizationglobalpacingVideooptimizationpacingpolicyBindingResourceModel
+	var data VideooptimizationglobalpacingVideooptimizationpacingpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -120,7 +120,7 @@ func (d *VideooptimizationglobalpacingVideooptimizationpacingpolicyBindingDataSo
 		return
 	}
 
-	videooptimizationglobalpacing_videooptimizationpacingpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	videooptimizationglobalpacing_videooptimizationpacingpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

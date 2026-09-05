@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationlocalpolicy_add = `
@@ -139,6 +140,77 @@ data "citrixadc_authenticationlocalpolicy" "tf_authenticationlocalpolicy_ds" {
 }
 `
 
+func TestAccAuthenticationlocalpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationlocalpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationlocalpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationlocalpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationlocalpolicy.Type(), "tf_authenticationlocalpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationlocalpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationlocalpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationlocalpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationlocalpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationlocalpolicy_add},
+			{
+				Config:                  testAccAuthenticationlocalpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationlocalpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationlocalpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationlocalpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationlocalpolicyExist("citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationlocalpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationlocalpolicyExist("citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthenticationlocalpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -150,6 +222,7 @@ func TestAccAuthenticationlocalpolicyDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy_ds", "name", "tf_authenticationlocalpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy_ds", "rule", "ns_true"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationlocalpolicy.tf_authenticationlocalpolicy_ds", "id"),
 				),
 			},
 		},

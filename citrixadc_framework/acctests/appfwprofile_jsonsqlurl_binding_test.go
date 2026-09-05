@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_jsonsqlurl_binding_basic = `
@@ -89,6 +92,80 @@ func TestAccAppfwprofile_jsonsqlurl_binding_basic(t *testing.T) {
 	})
 }
 
+// testAccAppfwprofile_jsonsqlurl_binding_upgrade_basic mirrors the _basic config
+// (same resource labels + values) so it validates under BOTH the last SDK v2 release
+// (citrix/citrixadc 2.2.0) and the current Framework provider. Used by the
+// sdkv2StateUpgrade test to verify a legacy comma-joined ID upgrades to the new
+// key:value ID format on Read through the Framework provider.
+const testAccAppfwprofile_jsonsqlurl_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsonsqlurl     = "[abc][a-z]a*"
+		isautodeployed = "AUTODEPLOYED"
+		state          = "ENABLED"
+		alertonly      = "ON"
+		comment        = "Testing"
+	}
+	resource "citrixadc_appfwprofile_jsonsqlurl_binding" "tf_binding2" {
+		name           = citrixadc_appfwprofile.tf_appfwprofile.name
+		jsonsqlurl     = "[abc][a-z]a*"
+		keyname_json_sql = "id"
+		as_value_type_json_sql = "SpecialString"
+		as_value_expr_json_sql = "p"
+		isautodeployed = "AUTODEPLOYED"
+		state          = "ENABLED"
+		alertonly      = "ON"
+		comment        = "Testing"
+	}
+`
+
+// TestAccAppfwprofile_jsonsqlurl_binding_sdkv2StateUpgrade verifies that state written
+// by the last SDK v2 release (legacy comma-joined ID) is read cleanly by the current
+// Framework provider, which recomputes the ID into the new key:value format on Read.
+func TestAccAppfwprofile_jsonsqlurl_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_jsonsqlurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the LAST SDK v2 release -> state holds the LEGACY id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_jsonsqlurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "id", "tf_appfwprofile,[abc][a-z]a*"),
+					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "id", "tf_appfwprofile,[abc][a-z]a*,id,SpecialString,p"),
+				),
+			},
+			// Step 2: same config through the CURRENT (framework) provider. Read parses the
+			// legacy id via ParseIdString then recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_jsonsqlurl_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "id", "name:tf_appfwprofile,jsonsqlurl:%5Babc%5D%5Ba-z%5Da%2A"),
+					testAccCheckAppfwprofile_jsonsqlurl_bindingExist("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding2", "id", "name:tf_appfwprofile,jsonsqlurl:%5Babc%5D%5Ba-z%5Da%2A,keyname_json_sql:id,as_value_type_json_sql:SpecialString,as_value_expr_json_sql:p"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAppfwprofile_jsonsqlurl_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -114,21 +191,15 @@ func testAccCheckAppfwprofile_jsonsqlurl_bindingExist(n string, id *string) reso
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-
-		name := idSlice[0]
-		jsonsqlurl := idSlice[1]
-		keyname_json_sql := ""
-		as_value_type_json_sql := ""
-		as_value_expr_json_sql := ""
-		if len(idSlice) > 2 {
-			keyname_json_sql = idSlice[2]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "jsonsqlurl", "keyname_json_sql", "as_value_type_json_sql", "as_value_expr_json_sql"}, []string{"keyname_json_sql", "as_value_type_json_sql", "as_value_expr_json_sql"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
 		}
-		if len(idSlice) > 4 {
-			as_value_type_json_sql = idSlice[3]
-			as_value_expr_json_sql = idSlice[4]
-		}
+		name := idMap["name"]
+		jsonsqlurl := idMap["jsonsqlurl"]
+		keyname_json_sql := idMap["keyname_json_sql"]
+		as_value_type_json_sql := idMap["as_value_type_json_sql"]
+		as_value_expr_json_sql := idMap["as_value_expr_json_sql"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_jsonsqlurl_binding",
@@ -336,6 +407,77 @@ func TestAccAppfwprofile_jsonsqlurl_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "isautodeployed", "AUTODEPLOYED"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding", "comment", "Testing"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_jsonsqlurl_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,jsonsqlurl,keyname_json_sql,as_value_type_json_sql,as_value_expr_json_sql) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "jsonsqlurl", "keyname_json_sql", "as_value_type_json_sql", "as_value_expr_json_sql"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_jsonsqlurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_jsonsqlurl_binding_basic},
+			{Config: testAccAppfwprofile_jsonsqlurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"alertonly", "isautodeployed"}},
+			{Config: testAccAppfwprofile_jsonsqlurl_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"alertonly", "isautodeployed"}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_jsonsqlurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_jsonsqlurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_jsonsqlurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_jsonsqlurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_jsonsqlurl_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_jsonsqlurl_binding.Type(), "tf_appfwprofile", []string{fmt.Sprintf("jsonsqlurl:%s", utils.UrlEncode("[abc][a-z]a*"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_jsonsqlurl_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_jsonsqlurl_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *AppalgparamResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating appalgparam resource")
 
-	// appalgparam := appalgparamGetThePayloadFromtheConfig(ctx, &data)
+	appalgparam := appalgparamGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appalgparam.Type(), &appalgparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appalgparam, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Appalgparam.Type(), &appalgparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appalgparam, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Created appalgparam resource")
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("appalgparam-config")
 
-	tflog.Trace(ctx, "Created appalgparam resource")
-
 	// Read the updated state back
-	r.readAppalgparamFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppalgparamFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appalgparam not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *AppalgparamResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading appalgparam resource")
 
-	r.readAppalgparamFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppalgparamFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppalgparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppalgparamResourceModel
+	var data, state AppalgparamResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,42 @@ func (r *AppalgparamResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appalgparam resource")
 
-	// Create API request body from the model
-	// appalgparam := appalgparamGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Pptpgreidletimeout.Equal(state.Pptpgreidletimeout) {
+		tflog.Debug(ctx, "pptpgreidletimeout has changed for appalgparam")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appalgparam.Type(), &appalgparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appalgparam, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		appalgparam := appalgparamGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated appalgparam resource")
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Appalgparam.Type(), &appalgparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appalgparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated appalgparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appalgparam resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAppalgparamFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppalgparamFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appalgparam not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -143,13 +179,19 @@ func (r *AppalgparamResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 // Helper function to read appalgparam data from API
-func (r *AppalgparamResource) readAppalgparamFromApi(ctx context.Context, data *AppalgparamResourceModel, diags *diag.Diagnostics) {
+func (r *AppalgparamResource) readAppalgparamFromApi(ctx context.Context, data *AppalgparamResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 1: Simple find without ID (singleton resource)
 	getResponseData, err := r.client.FindResource(service.Appalgparam.Type(), "")
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appalgparam, got error: %s", err))
-		return
+		return false
 	}
 
 	appalgparamSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

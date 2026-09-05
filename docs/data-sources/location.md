@@ -41,3 +41,14 @@ In addition to the arguments, the following attributes are available:
 * `latitude` - Numerical value, in degrees, specifying the latitude of the geographical location of the IP address-range. Note: Longitude and latitude parameters are used for selecting a service with the static proximity GSLB method. If they are not specified, selection is based on the qualifiers specified for the location.
 * `longitude` - Numerical value, in degrees, specifying the longitude of the geographical location of the IP address-range. Note: Longitude and latitude parameters are used for selecting a service with the static proximity GSLB method. If they are not specified, selection is based on the qualifiers specified for the location.
 * `preferredlocation` - String of qualifiers, in dotted notation, describing the geographical location of the IP address range. Each qualifier is more specific than the one that precedes it, as in continent.country.region.city.isp.organization. For example, "NA.US.CA.San Jose.ATT.citrix". Note: A qualifier that includes a dot (.) or space ( ) must be enclosed in double quotation marks.
+
+### Read-only location metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_location` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `q1label` - Least specific location qualifier.
+* `q2label` - Location qualifier 2.
+* `q3label` - Location qualifier 3.
+* `q4label` - Location qualifier 4.
+* `q5label` - Location qualifier 5.
+* `q6label` - Most specific location qualifier.

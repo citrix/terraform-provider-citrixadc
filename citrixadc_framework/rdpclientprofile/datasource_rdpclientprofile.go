@@ -35,7 +35,7 @@ func (d *RdpclientprofileDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *RdpclientprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RdpclientprofileResourceModel
+	var data RdpclientprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *RdpclientprofileDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	rdpclientprofileSetAttrFromGet(ctx, &data, getResponseData)
+	rdpclientprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

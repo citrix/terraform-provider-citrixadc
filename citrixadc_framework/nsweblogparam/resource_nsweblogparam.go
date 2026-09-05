@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -55,14 +57,15 @@ func (r *NsweblogparamResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating nsweblogparam resource")
 
-	// nsweblogparam := nsweblogparamGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan (singleton).
+	nsweblogparam := nsweblogparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsweblogparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton uses UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsweblogparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nsweblogparam-config")
@@ -95,10 +98,13 @@ func (r *NsweblogparamResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *NsweblogparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsweblogparamResourceModel
+	var data, config, state NsweblogparamResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read prior state and config (config carries nulls for removed attributes)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +112,47 @@ func (r *NsweblogparamResource) Update(ctx context.Context, req resource.UpdateR
 
 	tflog.Debug(ctx, "Updating nsweblogparam resource")
 
-	// Create API request body from the model
-	// nsweblogparam := nsweblogparamGetThePayloadFromtheConfig(ctx, &data)
+	// Determine changed attributes and which were removed from config (unset).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Buffersizemb.Equal(state.Buffersizemb) {
+		tflog.Debug(ctx, "buffersizemb has changed for nsweblogparam")
+		if config.Buffersizemb.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "buffersizemb")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Customreqhdrs.Equal(state.Customreqhdrs) {
+		hasChange = true
+	}
+	if !data.Customrsphdrs.Equal(state.Customrsphdrs) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsweblogparam, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		nsweblogparam := nsweblogparamGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated nsweblogparam resource")
+		// Make API call - singleton uses UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Nsweblogparam.Type(), &nsweblogparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsweblogparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nsweblogparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nsweblogparam resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their NITRO defaults. Singleton resource -> empty id payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nsweblogparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsweblogparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNsweblogparamFromApi(ctx, &data, &resp.Diagnostics)

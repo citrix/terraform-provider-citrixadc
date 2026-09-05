@@ -39,7 +39,7 @@ resource "citrixadc_vxlan_srcip_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vxlan_srcip_binding. It is the concatenation of `vxlanid` and `srcip` attributes seperated by comma.
+* `id` - The id of the vxlan_srcip_binding. It is the concatenation of `vxlanid` and `srcip` attributes separated by a comma.
 
 
 ## Import

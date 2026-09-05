@@ -20,6 +20,10 @@ package ns
 * Configuration for License activation data resource.
 */
 type Nslicenseactivationdata struct {
+	/**
+	* Use hostname as identifier in licenseactivation request
+	*/
+	Usehostname bool `json:"usehostname,omitempty"`
 
 	//------- Read only Parameter ---------;
 

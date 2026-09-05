@@ -32,3 +32,9 @@ In addition to the arguments above, the following attributes are exported:
 * `id` - The ID of the snmpengineid datasource.
 * `engineid` - A hexadecimal value of at least 10 characters, uniquely identifying the engineid.
 
+### Read-only snmpengineid metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_snmpengineid` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `defaultengineid` - Unique identifier to assign to the SNMPv3 engine. Should be a hexadecimal value with a minimum length of 10 hex characters.
+

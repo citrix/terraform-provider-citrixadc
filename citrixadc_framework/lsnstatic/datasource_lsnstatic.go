@@ -35,7 +35,7 @@ func (d *LsnstaticDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *LsnstaticDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LsnstaticResourceModel
+	var data LsnstaticDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -83,7 +83,7 @@ func (d *LsnstaticDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	lsnstaticSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lsnstaticDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

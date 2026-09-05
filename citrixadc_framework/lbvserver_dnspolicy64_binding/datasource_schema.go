@@ -10,6 +10,11 @@ func LbvserverDnspolicy64BindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Bind point to which to bind the policy.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

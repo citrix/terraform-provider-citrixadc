@@ -38,3 +38,14 @@ In addition to the arguments, the following attributes are exported:
 * `clientsecuritymessage` - Message to display if the expression fails client security check.
 * `comment` - Comments associated with the expression.
 * `value` - Expression string that defines the policy expression logic.
+
+### Read-only policyexpression metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_policyexpression` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `hits` - The total number of hits.
+* `pihits` - The total number of hits.
+* `type1` - The type of expression. This is for output only. Possible values: `CLASSIC`, `ADVANCED`.
+* `isdefault` - A value of true is returned if it is a default policy expression.
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings. Possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`.
+* `feature` - The feature to be checked while applying this config.

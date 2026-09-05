@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwxmlschema_basic = `
@@ -112,6 +113,53 @@ func testAccCheckAppfwxmlschemaDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwxmlschema_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwxmlschema.tf_appfwxmlschema"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwxmlschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwxmlschema_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlschemaExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwxmlschema.Type(), "tf_appfwxmlschema"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwxmlschema_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlschemaExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwxmlschema_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwxmlschema.tf_appfwxmlschema"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwxmlschemaDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwxmlschema_basic},
+			{
+				Config:                  testAccAppfwxmlschema_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
+}
+
 const testAccAppfwxmlschemaDataSource_basic = `
 	resource "citrixadc_appfwxmlschema" "tf_appfwxmlschema_ds" {
 		name       = "tf_appfwxmlschema_ds"
@@ -124,6 +172,30 @@ const testAccAppfwxmlschemaDataSource_basic = `
 	}
 `
 
+func TestAccAppfwxmlschema_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doAppfwPreChecks(t) },
+		CheckDestroy: testAccCheckAppfwxmlschemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppfwxmlschema_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlschemaExist("citrixadc_appfwxmlschema.tf_appfwxmlschema", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwxmlschema_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwxmlschemaExist("citrixadc_appfwxmlschema.tf_appfwxmlschema", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwxmlschemaDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doAppfwPreChecks(t) },
@@ -134,6 +206,8 @@ func TestAccAppfwxmlschemaDataSource_basic(t *testing.T) {
 				Config: testAccAppfwxmlschemaDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwxmlschema.tf_appfwxmlschema_ds", "name", "tf_appfwxmlschema_ds"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwxmlschema.tf_appfwxmlschema_ds", "id"),
 				),
 			},
 		},

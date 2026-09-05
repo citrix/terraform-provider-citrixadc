@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *DnssuffixResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating dnssuffix resource")
 
-	// dnssuffix := dnssuffixGetThePayloadFromtheConfig(ctx, &data)
+	dnssuffix := dnssuffixGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnssuffix.Type(), &dnssuffix)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnssuffix, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnssuffix-config")
+	// Named resource - use AddResource
+	dnssuffixName := data.Dnssuffix.ValueString()
+	_, err := r.client.AddResource(service.Dnssuffix.Type(), dnssuffixName, &dnssuffix)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnssuffix, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnssuffix resource")
 
+	// Set ID for the resource before reading state (matches SDK v2 d.SetId(dnssuffix))
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Dnssuffix.ValueString()))
+
 	// Read the updated state back
-	r.readDnssuffixFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnssuffixFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnssuffix not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *DnssuffixResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading dnssuffix resource")
 
-	r.readDnssuffixFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnssuffixFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnssuffixResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnssuffixResourceModel
+	var data, state DnssuffixResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,23 @@ func (r *DnssuffixResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnssuffix resource")
 
-	// Create API request body from the model
-	// dnssuffix := dnssuffixGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnssuffix.Type(), &dnssuffix)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnssuffix, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated dnssuffix resource")
+	// dnssuffix has no NITRO-updatable attributes: the only configurable attribute is
+	// "dnssuffix" itself, which is the primary key and carries RequiresReplace (matching
+	// SDK v2 ForceNew). Any change forces a destroy/recreate, so Update never issues a
+	// NITRO write call. Just read the current state back.
 
 	// Read the updated state back
-	r.readDnssuffixFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnssuffixFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnssuffix not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +155,33 @@ func (r *DnssuffixResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting dnssuffix resource")
 
-	// For dnssuffix, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnssuffix resource from state")
+	// Named resource - delete using DeleteResource (matches SDK v2 DeleteResource(type, d.Id()))
+	dnssuffixName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Dnssuffix.Type(), dnssuffixName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnssuffix, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted dnssuffix resource")
 }
 
 // Helper function to read dnssuffix data from API
-func (r *DnssuffixResource) readDnssuffixFromApi(ctx context.Context, data *DnssuffixResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnssuffix.Type(), "")
+func (r *DnssuffixResource) readDnssuffixFromApi(ctx context.Context, data *DnssuffixResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (the dnssuffix name)
+	dnssuffixName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Dnssuffix.Type(), dnssuffixName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnssuffix, got error: %s", err))
-		return
+		return false
 	}
 
 	dnssuffixSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

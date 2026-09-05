@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -21,7 +22,6 @@ type NsassignmentResourceModel struct {
 	Clear    types.Bool   `tfsdk:"clear"`
 	Comment  types.String `tfsdk:"comment"`
 	Name     types.String `tfsdk:"name"`
-	Newname  types.String `tfsdk:"newname"`
 	Set      types.String `tfsdk:"set"`
 	Sub      types.String `tfsdk:"sub"`
 	Variable types.String `tfsdk:"variable"`
@@ -53,19 +53,15 @@ func (r *NsassignmentResource) Schema(ctx context.Context, req resource.SchemaRe
 			"comment": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Comment. Can be used to preserve information about this rewrite action.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name for the assignment. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the assignment is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my assignment\" or my assignment).",
-			},
-			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "New name for the assignment.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the rewrite policy is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my assignment\" or my assignment).",
+				Description: "Name for the assignment. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Can be changed after the assignment is added.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my assignment\" or my assignment).",
 			},
 			"set": schema.StringAttribute{
 				Optional:    true,
@@ -90,31 +86,28 @@ func nsassignmentGetThePayloadFromtheConfig(ctx context.Context, data *Nsassignm
 
 	// Create API request body from the model
 	nsassignment := ns.Nsassignment{}
-	if !data.Add.IsNull() {
+	if !data.Add.IsNull() && !data.Add.IsUnknown() {
 		nsassignment.Add = data.Add.ValueString()
 	}
-	if !data.Append.IsNull() {
+	if !data.Append.IsNull() && !data.Append.IsUnknown() {
 		nsassignment.Append = data.Append.ValueString()
 	}
-	if !data.Clear.IsNull() {
+	if !data.Clear.IsNull() && !data.Clear.IsUnknown() {
 		nsassignment.Clear = data.Clear.ValueBool()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		nsassignment.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		nsassignment.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		nsassignment.Newname = data.Newname.ValueString()
-	}
-	if !data.Set.IsNull() {
+	if !data.Set.IsNull() && !data.Set.IsUnknown() {
 		nsassignment.Set = data.Set.ValueString()
 	}
-	if !data.Sub.IsNull() {
+	if !data.Sub.IsNull() && !data.Sub.IsUnknown() {
 		nsassignment.Sub = data.Sub.ValueString()
 	}
-	if !data.Variable.IsNull() {
+	if !data.Variable.IsNull() && !data.Variable.IsUnknown() {
 		nsassignment.Variable = data.Variable.ValueString()
 	}
 
@@ -124,51 +117,64 @@ func nsassignmentGetThePayloadFromtheConfig(ctx context.Context, data *Nsassignm
 func nsassignmentSetAttrFromGet(ctx context.Context, data *NsassignmentResourceModel, getResponseData map[string]interface{}) *NsassignmentResourceModel {
 	tflog.Debug(ctx, "In nsassignmentSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["Add"]; ok && val != nil {
-		data.Add = types.StringValue(val.(string))
-	} else {
+	// Convert API response to model.
+	// NITRO omits some values from GET when they equal the NITRO default
+	// (e.g. an empty string or a false boolean). To avoid clobbering a value
+	// the user explicitly configured (omit-on-default trap), the else-branches
+	// only null the attribute when the current value is unknown; otherwise the
+	// previously-known (plan/state/config) value is preserved.
+
+	// NITRO returns the "add" field using the JSON key "Add" (capitalised in the
+	// nitro-go struct tag); fall back to the lowercase form for robustness.
+	addVal, addOk := getResponseData["Add"]
+	if !addOk || addVal == nil {
+		addVal, addOk = getResponseData["add"]
+	}
+	if addOk && addVal != nil {
+		data.Add = types.StringValue(addVal.(string))
+	} else if data.Add.IsUnknown() {
 		data.Add = types.StringNull()
 	}
+
 	if val, ok := getResponseData["append"]; ok && val != nil {
 		data.Append = types.StringValue(val.(string))
-	} else {
+	} else if data.Append.IsUnknown() {
 		data.Append = types.StringNull()
 	}
 	if val, ok := getResponseData["clear"]; ok && val != nil {
-		data.Clear = types.BoolValue(val.(bool))
-	} else {
+		switch v := val.(type) {
+		case bool:
+			data.Clear = types.BoolValue(v)
+		case string:
+			data.Clear = types.BoolValue(v == "true" || v == "True")
+		default:
+			if data.Clear.IsUnknown() {
+				data.Clear = types.BoolNull()
+			}
+		}
+	} else if data.Clear.IsUnknown() {
 		data.Clear = types.BoolNull()
 	}
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
-	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
 	}
 	if val, ok := getResponseData["set"]; ok && val != nil {
 		data.Set = types.StringValue(val.(string))
-	} else {
+	} else if data.Set.IsUnknown() {
 		data.Set = types.StringNull()
 	}
 	if val, ok := getResponseData["sub"]; ok && val != nil {
 		data.Sub = types.StringValue(val.(string))
-	} else {
+	} else if data.Sub.IsUnknown() {
 		data.Sub = types.StringNull()
 	}
 	if val, ok := getResponseData["variable"]; ok && val != nil {
 		data.Variable = types.StringValue(val.(string))
-	} else {
-		data.Variable = types.StringNull()
 	}
 
 	// Set ID for the resource

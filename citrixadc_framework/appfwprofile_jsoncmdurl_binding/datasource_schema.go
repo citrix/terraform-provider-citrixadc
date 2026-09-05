@@ -16,13 +16,11 @@ func AppfwprofileJsoncmdurlBindingDataSourceSchema() schema.Schema {
 				Description: "Send SNMP alert?",
 			},
 			"as_value_expr_json_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The JSON CMD key value expression.",
 			},
 			"as_value_type_json_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Type of the relaxed JSON CMD key value",
 			},
 			"comment": schema.StringAttribute{
@@ -50,8 +48,7 @@ func AppfwprofileJsoncmdurlBindingDataSourceSchema() schema.Schema {
 				Description: "A regular expression that designates a URL on the Json CMD URL list for which Command injection violations are relaxed.\nEnclose URLs in double quotes to ensure preservation of any embedded spaces or non-alphanumeric characters.",
 			},
 			"keyname_json_cmd": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "An expression that designates a keyname on the JSON CMD URL for which Command injection violations are relaxed.",
 			},
 			"name": schema.StringAttribute{
@@ -62,6 +59,11 @@ func AppfwprofileJsoncmdurlBindingDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "A \"id\" that identifies the rule.",
+			},
+			"ruletype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies rule type of binding.",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,

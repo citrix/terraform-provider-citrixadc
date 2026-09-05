@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *SystemgroupSystemuserBindingResource) Schema(ctx context.Context, req r
 				Description: "The ID of the systemgroup_systemuser_binding resource.",
 			},
 			"groupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the system group.",
 			},
 			"username": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The system user.",
 			},
 		},
 	}
 }
 
-func systemgroup_systemuser_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SystemgroupSystemuserBindingResourceModel) system.Systemgroupsystemuserbinding {
-	tflog.Debug(ctx, "In systemgroup_systemuser_bindingGetThePayloadFromtheConfig Function")
+func systemgroup_systemuser_bindingGetThePayloadFromthePlan(ctx context.Context, data *SystemgroupSystemuserBindingResourceModel) system.Systemgroupsystemuserbinding {
+	tflog.Debug(ctx, "In systemgroup_systemuser_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	systemgroup_systemuser_binding := system.Systemgroupsystemuserbinding{}
-	if !data.Groupname.IsNull() {
+	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		systemgroup_systemuser_binding.Groupname = data.Groupname.ValueString()
 	}
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		systemgroup_systemuser_binding.Username = data.Username.ValueString()
 	}
 

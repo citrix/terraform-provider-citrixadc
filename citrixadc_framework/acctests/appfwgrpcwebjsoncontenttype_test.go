@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwgrpcwebjsoncontenttype_basic_step1 = `
@@ -174,6 +174,37 @@ func TestAccAppfwgrpcwebjsoncontenttypeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwgrpcwebjsoncontenttype.tf_appfwgrpcwebjsoncontenttype", "grpcwebjsoncontenttypevalue", "tf_acc_grpcwebjson_test"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwgrpcwebjsoncontenttype.tf_appfwgrpcwebjsoncontenttype", "isregex", "NOTREGEX"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccAppfwgrpcwebjsoncontenttype_selfHealing verifies drift recovery: after the
+// resource is deleted out-of-band on the ADC, the next refresh's Read must detect
+// it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwgrpcwebjsoncontenttype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwgrpcwebjsoncontenttype.tf_appfwgrpcwebjsoncontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwgrpcwebjsoncontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwgrpcwebjsoncontenttype_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwgrpcwebjsoncontenttypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwgrpcwebjsoncontenttype.Type(), "tf_acc_grpcwebjson_test"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwgrpcwebjsoncontenttype_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwgrpcwebjsoncontenttypeExist(resAddr, nil)),
 			},
 		},
 	})

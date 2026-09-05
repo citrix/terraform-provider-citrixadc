@@ -38,9 +38,10 @@ type Rewritepolicylabelpolicybindingbinding struct {
 	Invoke bool `json:"invoke,omitempty"`
 	/**
 	* Type of invocation. Available settings function as follows:
-		* reqvserver - Forward the request to the specified request virtual server.
-		* resvserver - Forward the response to the specified response virtual server.
-		* policylabel - Invoke the specified policy label.
+		* reqvserver - Invoke policies bound to the virtual server at the REQUEST bindpoint
+		* resvserver - Invoke policies bound to the virtual server at the RESPONSE bindpoint
+		* resHttpEventVserver - Invoke policies bound to the virtual server at the HTTP_EVENT_RESPONSE bindpoint
+		* policylabel - Invoke policies bound at the specified policy label.
 	*/
 	Labeltype string `json:"labeltype,omitempty"`
 	/**

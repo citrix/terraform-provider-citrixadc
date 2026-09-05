@@ -28,13 +28,13 @@ resource "citrixadc_vpnglobal_intranetip_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnglobal_intranetip_binding. It has the same value as the `intranetip` attribute.
+* `id` - The id of the vpnglobal_intranetip_binding. It is the concatenation of `intranetip` and `netmask` attributes separated by a comma.
 
 
 ## Import
 
-A vpnglobal_intranetip_binding can be imported using its intranetip, e.g.
+A vpnglobal_intranetip_binding can be imported using its intranetip and netmask separated by a comma, e.g.
 
 ```shell
-terraform import citrixadc_vpnglobal_intranetip_binding.tf_bind 2.3.4.5
+terraform import citrixadc_vpnglobal_intranetip_binding.tf_bind 2.3.4.5,255.255.255.0
 ```

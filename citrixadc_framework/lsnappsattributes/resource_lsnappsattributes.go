@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *LsnappsattributesResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Debug(ctx, "Creating lsnappsattributes resource")
 
-	// lsnappsattributes := lsnappsattributesGetThePayloadFromtheConfig(ctx, &data)
+	lsnappsattributes := lsnappsattributesGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnappsattributes.Type(), &lsnappsattributes)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnappsattributes, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsnappsattributes-config")
+	// Named resource - use AddResource
+	lsnappsattributesName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Lsnappsattributes.Type(), lsnappsattributesName, &lsnappsattributes)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnappsattributes, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lsnappsattributes resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(lsnappsattributesName)
+
 	// Read the updated state back
-	r.readLsnappsattributesFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnappsattributesFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnappsattributes not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,81 @@ func (r *LsnappsattributesResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading lsnappsattributes resource")
 
-	r.readLsnappsattributesFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLsnappsattributesFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LsnappsattributesResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsnappsattributesResourceModel
+	var data, config, state LsnappsattributesResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (candidates for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsnappsattributes resource")
 
-	// Create API request body from the model
-	// lsnappsattributes := lsnappsattributesGetThePayloadFromtheConfig(ctx, &data)
+	// Only sessiontimeout is updateable in place; name/port/transportprotocol are
+	// ForceNew and force recreation instead of reaching Update.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Sessiontimeout.Equal(state.Sessiontimeout) {
+		tflog.Debug(ctx, "sessiontimeout has changed for lsnappsattributes")
+		if config.Sessiontimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "sessiontimeout")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnappsattributes.Type(), &lsnappsattributes)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnappsattributes, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		lsnappsattributes := lsnappsattributesGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Matches SDK v2: sessiontimeout is pushed via UpdateUnnamedResource.
+		err := r.client.UpdateUnnamedResource(service.Lsnappsattributes.Type(), &lsnappsattributes)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnappsattributes, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated lsnappsattributes resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lsnappsattributes resource, skipping update")
+	}
 
-	tflog.Trace(ctx, "Updated lsnappsattributes resource")
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lsnappsattributes.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lsnappsattributes attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readLsnappsattributesFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnappsattributesFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnappsattributes not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +187,32 @@ func (r *LsnappsattributesResource) Delete(ctx context.Context, req resource.Del
 
 	tflog.Debug(ctx, "Deleting lsnappsattributes resource")
 
-	// For lsnappsattributes, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsnappsattributes resource from state")
+	// Named resource - delete using DeleteResource
+	lsnappsattributesName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Lsnappsattributes.Type(), lsnappsattributesName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnappsattributes, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsnappsattributes resource")
 }
 
 // Helper function to read lsnappsattributes data from API
-func (r *LsnappsattributesResource) readLsnappsattributesFromApi(ctx context.Context, data *LsnappsattributesResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsnappsattributes.Type(), "")
+func (r *LsnappsattributesResource) readLsnappsattributesFromApi(ctx context.Context, data *LsnappsattributesResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	lsnappsattributesName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lsnappsattributes.Type(), lsnappsattributesName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsnappsattributes, got error: %s", err))
-		return
+		return false
 	}
 
 	lsnappsattributesSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -7,7 +7,7 @@ subcategory: "SSL"
 The sslvserver_ecccurve_binding data source allows you to retrieve information about the ECC curve binding to an SSL virtual server.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslvserver_ecccurve_binding" "tf_sslvserver_ecccurve_binding" {

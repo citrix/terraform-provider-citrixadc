@@ -38,10 +38,17 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Expression, or name of a named expression, against which traffic is evaluated. The following requirements apply only to the Citrix ADC CLI: * If the expression includes one or more spaces, enclose the entire expression in double quotation marks. * If the expression itself includes double quotation marks, escape the quotations by using the \ character. * Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 * `id` - The id of the crpolicy. It has the same value as the `policyname` attribute.
 
-## Import
+### Read-only crpolicy metadata
 
-A crpolicy can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_crpolicy` resource) and are Computed / GET-only. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_crpolicy.tf_crpolicy my_crpolicy
-```
+* `boundto` - Domain name.
+* `vstype` - Virtual server type.
+* `hits` - Total number of hits.
+* `priority` - Priority of the bound policy.
+* `activepolicy` - Indicates whether the policy is bound or not.
+* `labelname` - Name of the label invoked.
+* `labeltype` - The invocation type (for example `reqvserver`, `resvserver`, `policylabel`).
+* `builtin` - Flag to determine if the cr policy is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `isdefault` - A value of true is returned if it is a default cr policy.

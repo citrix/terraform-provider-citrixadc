@@ -32,7 +32,7 @@ output "bot_bind_comment" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the botprofile_whitelist_binding. It is a system-generated identifier.
+* `id` - The id of the botprofile_whitelist_binding. It is the concatenation of the `name` and `bot_whitelist_value` attributes separated by a comma.
 * `bot_whitelist` - Whitelist binding. Maximum 32 bindings can be configured per profile for Whitelist detection.
 * `bot_bind_comment` - Any comments about this binding.
 * `bot_whitelist_enabled` - Enabled or disabled white-list binding.

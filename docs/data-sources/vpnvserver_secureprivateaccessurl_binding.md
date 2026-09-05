@@ -32,3 +32,9 @@ output "secureprivateaccessurl" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vpnvserver_secureprivateaccessurl_binding. It is a comma-separated list of `key:value` pairs in the form `name:<name>,secureprivateaccessurl:<secureprivateaccessurl>`, where each value is URL-encoded.
+
+### Read-only vpnvserver_secureprivateaccessurl_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnvserver_secureprivateaccessurl_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `acttype` - Action type of the binding.

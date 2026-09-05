@@ -29,6 +29,7 @@ resource "citrixadc_contentinspectionaction" "tf_contentinspectionaction" {
 * `serverip` - (Optional) IP address of remoteService
 * `servername` - (Optional) Name of the LB vserver or service
 * `serverport` - (Optional) Port of remoteService
+* `wasmprofilename` - (Optional) Name of the CI WASM profile to be attached to the contentInspection action.
 
 
 ## Attribute Reference

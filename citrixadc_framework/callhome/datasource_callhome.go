@@ -35,7 +35,7 @@ func (d *CallhomeDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 }
 
 func (d *CallhomeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CallhomeResourceModel
+	var data CallhomeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -52,7 +52,7 @@ func (d *CallhomeDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	callhomeSetAttrFromGet(ctx, &data, getResponseData)
+	callhomeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

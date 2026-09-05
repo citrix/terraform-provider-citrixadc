@@ -1,8 +1,38 @@
 package dnscaarec
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// DnscaarecDataSourceModel is the data-source-specific model, decoupled from
+// DnscaarecResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits.
+// The Framework's per-attribute model <-> schema reflection requires this model
+// to have exactly the attributes the data-source schema declares.
+type DnscaarecDataSourceModel struct {
+	Id          types.String `tfsdk:"id"`
+	Domain      types.String `tfsdk:"domain"` // Required lookup key
+	Ecssubnet   types.String `tfsdk:"ecssubnet"`
+	Flag        types.String `tfsdk:"flag"`
+	Recordid    types.Int64  `tfsdk:"recordid"` // Required lookup key
+	Tag         types.String `tfsdk:"tag"`
+	Ttl         types.Int64  `tfsdk:"ttl"`
+	Valuestring types.String `tfsdk:"valuestring"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/dnscaarec.json). Never settable; populated from GET.
+	Authtype types.String `tfsdk:"authtype"`
+}
 
 func DnscaarecDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -43,6 +73,38 @@ func DnscaarecDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Value associated with the chosen property tag in the CAA resource record. Enclose the string in single or double quotation marks.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source (these
+			// are intentionally NOT modeled on the resource). All Computed.
+			"authtype": schema.StringAttribute{
+				Computed:    true,
+				Description: "Authentication type. Possible values = ALL, ADNS, PROXY.",
+			},
 		},
 	}
+}
+
+// dnscaarecDataSourceSetAttrFromGet projects a NITRO dnscaarec GET response onto
+// the data-source model. Because a data source has no plan/apply reconciliation,
+// attributes are simply filled from the GET (or left Null when the GET omits
+// them). The shared utils.MapGet* helpers implement that projection.
+func dnscaarecDataSourceSetAttrFromGet(ctx context.Context, data *DnscaarecDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In dnscaarecDataSourceSetAttrFromGet Function")
+
+	data.Domain = utils.MapGetString(g, "domain")
+	data.Ecssubnet = utils.MapGetString(g, "ecssubnet")
+	data.Flag = utils.MapGetString(g, "flag")
+	data.Recordid = utils.MapGetInt64(g, "recordid")
+	data.Tag = utils.MapGetString(g, "tag")
+	data.Ttl = utils.MapGetInt64(g, "ttl")
+	data.Valuestring = utils.MapGetString(g, "valuestring")
+
+	// Read-only attributes.
+	data.Authtype = utils.MapGetString(g, "authtype")
+
+	// Composite key: domain,recordid (multiple CAA records may share a domain).
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("domain:%s", utils.UrlEncode(data.Domain.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("recordid:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Recordid.ValueInt64()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

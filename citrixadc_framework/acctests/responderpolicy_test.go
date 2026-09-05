@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccResponderpolicy_globalbinding(t *testing.T) {
@@ -567,6 +568,169 @@ data "citrixadc_responderpolicy" "tf_responder_policy_ds" {
 }
 `
 
+func TestAccResponderpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicy.tf_responder_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicy_globalbinding_not_exists,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Responderpolicy.Type(), "tf_responder_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderpolicy_globalbinding_not_exists,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccResponderpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicy.tf_responder_policy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderpolicy_globalbinding_not_exists},
+			{
+				Config:                  testAccResponderpolicy_globalbinding_not_exists,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccResponderpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccResponderpolicy_globalbinding_not_exists,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderpolicy_globalbinding_not_exists,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil)),
+			},
+		},
+	})
+}
+
+// Unset test: undefaction and logaction are the only spec-unsettable mutable
+// attributes whose NITRO unset default is a real value echoed back by GET
+// (undefaction -> "Use Global", logaction -> "None"). comment and appflowaction
+// revert to absent/null on unset, so they have no non-null default and are not
+// exercised here.
+const testAccResponderpolicy_unset_step1 = `
+resource "citrixadc_auditmessageaction" "tf_unset_msg" {
+  name              = "tf_responderpolicy_unset_msg"
+  loglevel          = "INFORMATIONAL"
+  stringbuilderexpr = "\"hi\""
+}
+
+resource "citrixadc_responderpolicy" "tf_unset" {
+  name        = "tf_responderpolicy_unset"
+  action      = "NOOP"
+  rule        = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+  undefaction = "RESET"
+  logaction   = citrixadc_auditmessageaction.tf_unset_msg.name
+}
+`
+
+const testAccResponderpolicy_unset_step2 = `
+resource "citrixadc_auditmessageaction" "tf_unset_msg" {
+  name              = "tf_responderpolicy_unset_msg"
+  loglevel          = "INFORMATIONAL"
+  stringbuilderexpr = "\"hi\""
+}
+
+resource "citrixadc_responderpolicy" "tf_unset" {
+  name   = "tf_responderpolicy_unset"
+  action = "NOOP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+  # undefaction and logaction removed from config -> provider must unset them
+  # (revert to NITRO defaults "Use Global" and "None").
+}
+`
+
+func TestAccResponderpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccResponderpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicy.tf_unset", "undefaction", "RESET"),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicy.tf_unset", "logaction", "tf_responderpolicy_unset_msg"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccResponderpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicy.tf_unset", "undefaction", "Use Global"),
+					resource.TestCheckResourceAttr("citrixadc_responderpolicy.tf_unset", "logaction", "None"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckResponderpolicyADCValue("tf_responderpolicy_unset", "undefaction", "Use Global"),
+					testAccCheckResponderpolicyADCValue("tf_responderpolicy_unset", "logaction", "None"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckResponderpolicyADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset reverted it.
+func testAccCheckResponderpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Responderpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("responderpolicy %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("responderpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccResponderpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -579,8 +743,166 @@ func TestAccResponderpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "action", "tf_responder_action_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "rule", "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"testds\")"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicy.tf_responder_policy_ds", "comment", "datasource test comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderpolicy.tf_responder_policy_ds", "id"),
 				),
 			},
 		},
 	})
+}
+
+// The three tests below each edit only a NON-KEY sub-attribute
+// (gotopriorityexpression) of a convenience-block binding while its diff key is
+// unchanged (globalbinding: type+priority; lb/csvserverbinding:
+// name+bindpoint+priority). A key-only reconciliation would silently drop the
+// edit, and the post-apply refresh would then disagree with the plan
+// ("inconsistent result after apply"). The second step asserts the edit lands.
+
+func TestAccResponderpolicy_globalbinding_editgotopri(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicy_globalbinding_editgotopri("END"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_responderpolicy.tf_responder_policy", "globalbinding.*",
+						map[string]string{"type": "REQ_OVERRIDE", "priority": "666", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccResponderpolicy_globalbinding_editgotopri("NEXT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_responderpolicy.tf_responder_policy", "globalbinding.*",
+						map[string]string{"type": "REQ_OVERRIDE", "priority": "666", "gotopriorityexpression": "NEXT"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccResponderpolicy_lbvserverbinding_editgotopri(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicy_lbvserverbinding_editgotopri("END"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_responderpolicy.tf_responder_policy", "lbvserverbinding.*",
+						map[string]string{"name": "tf_lbvserver1", "bindpoint": "REQUEST", "priority": "100", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccResponderpolicy_lbvserverbinding_editgotopri("NEXT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_responderpolicy.tf_responder_policy", "lbvserverbinding.*",
+						map[string]string{"name": "tf_lbvserver1", "bindpoint": "REQUEST", "priority": "100", "gotopriorityexpression": "NEXT"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccResponderpolicy_csvserverbinding_editgotopri(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicy_csvserverbinding_editgotopri("END"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_responderpolicy.tf_responder_policy", "csvserverbinding.*",
+						map[string]string{"name": "tf_csvserver1", "bindpoint": "REQUEST", "priority": "100", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccResponderpolicy_csvserverbinding_editgotopri("NEXT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderpolicyExist("citrixadc_responderpolicy.tf_responder_policy", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_responderpolicy.tf_responder_policy", "csvserverbinding.*",
+						map[string]string{"name": "tf_csvserver1", "bindpoint": "REQUEST", "priority": "100", "gotopriorityexpression": "NEXT"}),
+				),
+			},
+		},
+	})
+}
+
+func testAccResponderpolicy_globalbinding_editgotopri(gotopri string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_responderpolicy" "tf_responder_policy" {
+  name   = "tf_responder_policy"
+  action = "NOOP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+
+  globalbinding {
+    type                   = "REQ_OVERRIDE"
+    priority               = 666
+    gotopriorityexpression = "%s"
+  }
+}
+`, gotopri)
+}
+
+func testAccResponderpolicy_lbvserverbinding_editgotopri(gotopri string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_lbvserver" "tf_lbvserver1" {
+  ipv46       = "192.168.43.66"
+  name        = "tf_lbvserver1"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_responderpolicy" "tf_responder_policy" {
+  name   = "tf_responder_policy"
+  action = "NOOP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+
+  lbvserverbinding {
+    priority               = 100
+    name                   = citrixadc_lbvserver.tf_lbvserver1.name
+    gotopriorityexpression = "%s"
+    invoke                 = false
+    bindpoint              = "REQUEST"
+  }
+}
+`, gotopri)
+}
+
+func testAccResponderpolicy_csvserverbinding_editgotopri(gotopri string) string {
+	return fmt.Sprintf(`
+resource "citrixadc_csvserver" "tf_csvserver1" {
+  ipv46       = "192.168.43.66"
+  name        = "tf_csvserver1"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_responderpolicy" "tf_responder_policy" {
+  name   = "tf_responder_policy"
+  action = "NOOP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+
+  csvserverbinding {
+    priority               = 100
+    name                   = citrixadc_csvserver.tf_csvserver1.name
+    gotopriorityexpression = "%s"
+    invoke                 = false
+    bindpoint              = "REQUEST"
+  }
+}
+`, gotopri)
 }

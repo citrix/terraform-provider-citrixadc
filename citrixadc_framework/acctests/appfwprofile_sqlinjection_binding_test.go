@@ -17,13 +17,16 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_sqlinjection_binding_basic = `
@@ -136,13 +139,16 @@ func testAccCheckAppfwprofile_sqlinjection_bindingExist(n string, id *string) re
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		appFwName := idSlice[0]
-		sqlinjection := idSlice[1]
-		formactionurl_sql := idSlice[2]
-		as_scan_location_sql := idSlice[3]
-		as_value_type_sql := idSlice[4]
-		as_value_expr_sql := idSlice[5]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "sqlinjection", "formactionurl_sql", "as_scan_location_sql", "as_value_type_sql", "as_value_expr_sql", "ruletype"}, []string{"as_value_type_sql", "as_value_expr_sql", "ruletype"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		appFwName := idMap["name"]
+		sqlinjection := idMap["sqlinjection"]
+		formactionurl_sql := idMap["formactionurl_sql"]
+		as_scan_location_sql := idMap["as_scan_location_sql"]
+		as_value_type_sql := idMap["as_value_type_sql"]
+		as_value_expr_sql := idMap["as_value_expr_sql"]
 
 		findParams := service.FindParams{
 			ResourceType:             service.Appfwprofile_sqlinjection_binding.Type(),
@@ -193,10 +199,13 @@ func testAccCheckAppfwprofile_sqlinjection_bindingDestroy(s *terraform.State) er
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		appFwName := idSlice[0]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "sqlinjection", "formactionurl_sql", "as_scan_location_sql", "as_value_type_sql", "as_value_expr_sql", "ruletype"}, []string{"as_value_type_sql", "as_value_expr_sql", "ruletype"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		appFwName := idMap["name"]
 
-		_, err := client.FindResource(service.Appfwprofile_sqlinjection_binding.Type(), appFwName)
+		_, err = client.FindResource(service.Appfwprofile_sqlinjection_binding.Type(), appFwName)
 		if err == nil {
 			return fmt.Errorf("appfwprofile_sqlinjection_binding %s still exists", appFwName)
 		}
@@ -286,6 +295,137 @@ func TestAccAppfwprofileSqlinjectionBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "state", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_sqlinjection_binding.tf_binding2_data", "isautodeployed", "NOTAUTODEPLOYED"),
 				),
+			},
+		},
+	})
+}
+
+const testAccAppfwprofile_sqlinjection_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile_sqlinjection_binding" "appfw-szw-bi-test-sqlinject-relax-7" {
+		name                 = citrixadc_appfwprofile.demo_appfw.name
+		sqlinjection         = "data"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		as_scan_location_sql = "FORMFIELD"
+		formactionurl_sql    = "^https://citrix.csg.com/analytics/saw.dll$"
+		as_value_type_sql    = "Keyword"
+		isvalueregex_sql     = "REGEX"
+		as_value_expr_sql    = ".*"
+		state                = "ENABLED"
+		depends_on           = [citrixadc_appfwprofile.demo_appfw]
+	}
+
+	resource "citrixadc_appfwprofile" "demo_appfw" {
+		name = "demo_appfwprofile"
+		type = ["HTML"]
+	}
+`
+
+// TestAccAppfwprofile_sqlinjection_binding_sdkv2StateUpgrade verifies that a
+// resource created with the last SDK v2 release (2.2.0, legacy comma-joined ID)
+// upgrades cleanly when refreshed through the current Framework provider, and
+// that the Framework Read re-derives the canonical new-format (key:value) ID.
+func TestAccAppfwprofile_sqlinjection_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,sqlinjection,formactionurl_sql,as_scan_location_sql,as_value_type_sql,as_value_expr_sql,ruletype) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "sqlinjection", "formactionurl_sql", "as_scan_location_sql", "as_value_type_sql", "as_value_expr_sql", "ruletype"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_sqlinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_sqlinjection_binding_basic},
+			{Config: testAccAppfwprofile_sqlinjection_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppfwprofile_sqlinjection_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_sqlinjection_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_sqlinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy positional ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_sqlinjection_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "id", "demo_appfwprofile,data,^https://citrix.csg.com/analytics/saw.dll$,FORMFIELD,Keyword,.*,ALLOW"),
+				),
+			},
+			// Step 2: refresh/apply the SAME config through the current Framework
+			// provider. Read parses the legacy ID and re-derives the new-format ID.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_sqlinjection_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_sqlinjection_bindingExist("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7", "id", "as_scan_location_sql:FORMFIELD,as_value_expr_sql:.%2A,as_value_type_sql:Keyword,formactionurl_sql:%5Ehttps%3A%2F%2Fcitrix.csg.com%2Fanalytics%2Fsaw.dll%24,name:demo_appfwprofile,sqlinjection:data"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_sqlinjection_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_sqlinjection_binding.appfw-szw-bi-test-sqlinject-relax-7"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_sqlinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_sqlinjection_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_sqlinjection_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_sqlinjection_binding.Type(), "demo_appfwprofile", map[string]string{"as_scan_location_sql": utils.UrlEncode("FORMFIELD"), "as_value_expr_sql": utils.UrlEncode(".*"), "as_value_type_sql": utils.UrlEncode("Keyword"), "formactionurl_sql": utils.UrlEncode("^https://citrix.csg.com/analytics/saw.dll$"), "sqlinjection": utils.UrlEncode("data")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_sqlinjection_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_sqlinjection_bindingExist(resAddr, nil)),
 			},
 		},
 	})

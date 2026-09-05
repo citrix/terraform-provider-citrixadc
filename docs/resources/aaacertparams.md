@@ -30,3 +30,12 @@ resource "citrixadc_aaacertparams" "tf_aaacertparams" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the aaacertparams. It is a unique string prefixed with `tf-aaacertparams-`.
+
+
+## Import
+
+A aaacertparams can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_aaacertparams.tf_aaacertparams aaacertparams-config
+```

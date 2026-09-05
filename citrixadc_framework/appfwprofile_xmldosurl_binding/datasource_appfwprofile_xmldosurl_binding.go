@@ -93,7 +93,7 @@ func (d *AppfwprofileXmldosurlBindingDataSource) Read(ctx context.Context, req d
 		return
 	}
 
-	appfwprofile_xmldosurl_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_xmldosurl_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

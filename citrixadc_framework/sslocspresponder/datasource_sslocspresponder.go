@@ -35,7 +35,7 @@ func (d *SslocspresponderDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *SslocspresponderDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslocspresponderResourceModel
+	var data SslocspresponderDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *SslocspresponderDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	sslocspresponderSetAttrFromGet(ctx, &data, getResponseData)
+	sslocspresponderDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

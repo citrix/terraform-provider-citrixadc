@@ -46,6 +46,7 @@ resource "citrixadc_nsparam" "tf_nsparam" {
 * `icaports` - (Optional) The ICA ports on the Web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports.
 * `secureicaports` - (Optional) The Secure ICA ports on the Web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports.
 * `ipttl` - (Optional) Set the IP Time to Live (TTL) and Hop Limit value for all outgoing packets from Citrix ADC.
+* `httpport` - (Optional) HTTP ports on the web server. This allows the system to perform connection off-load for any client request that has a destination port matching one of these configured ports.
 
 
 ## Attribute Reference
@@ -53,3 +54,12 @@ resource "citrixadc_nsparam" "tf_nsparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nsparam. It is a random string prefixed with "tf-nsparam-"
+
+
+## Import
+
+A nsparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_nsparam.tf_nsparam nsparam-config
+```

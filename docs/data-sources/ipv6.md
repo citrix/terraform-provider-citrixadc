@@ -44,3 +44,12 @@ In addition to the arguments, the following attributes are available:
 * `routerredirection` - Enable the Citrix ADC to do Router Redirection.
 * `usipnatprefix` - IPV6 NATPREFIX used in NAT46 scenario when USIP is turned on.
 * `id` - The id of the ipv6 resource.
+
+### Read-only ipv6 metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_ipv6` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `basereachtime` - ND6 base reachable time (ms).
+* `reachtime` - ND6 computed reachable time (ms).
+* `ndreachtime` - ND6 computed reachable time (ms).
+* `retransmissiontime` - ND6 retransmission time (ms).

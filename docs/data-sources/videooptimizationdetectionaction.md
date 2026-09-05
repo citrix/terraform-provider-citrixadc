@@ -40,10 +40,12 @@ In addition to the arguments, the following attributes are available:
   * trigger_enc_abr - Possible encrypted ABR is detected.
   * trigger_body_detection - Possible cleartext ABR is detected. Triggers body content detection.
 
-## Import
+### Read-only videooptimizationdetectionaction metadata
 
-A videooptimizationdetectionaction can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_videooptimizationdetectionaction` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_videooptimizationdetectionaction.tf_detectionaction tf_videooptimizationdetectionaction
-```
+* `hits` - The number of times the action has been taken.
+* `referencecount` - The number of references to the action.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `builtin` - Flag to determine whether the video optimization detection action is built-in or not. A list of strings.
+* `feature` - The feature to be checked while applying this config.

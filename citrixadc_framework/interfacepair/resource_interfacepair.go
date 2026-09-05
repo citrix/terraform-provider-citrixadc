@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,31 @@ func (r *InterfacepairResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating interfacepair resource")
 
-	// interfacepair := interfacepairGetThePayloadFromtheConfig(ctx, &data)
+	interfacepair := interfacepairGetThePayloadFromthePlan(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Interfacepair.Type(), &interfacepair)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create interfacepair, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("interfacepair-config")
+	// Named resource - use AddResource. The resource name is the numeric interface id.
+	interfacepairName := fmt.Sprintf("%d", data.Interfaceid.ValueInt64())
+	_, err := r.client.AddResource(service.Interfacepair.Type(), interfacepairName, &interfacepair)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create interfacepair, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created interfacepair resource")
 
+	// Set ID for the resource before reading state (single unique attribute: interface_id)
+	data.Id = types.StringValue(interfacepairName)
+
 	// Read the updated state back
-	r.readInterfacepairFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readInterfacepairFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "interfacepair not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +98,24 @@ func (r *InterfacepairResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading interfacepair resource")
 
-	r.readInterfacepairFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readInterfacepairFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *InterfacepairResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data InterfacepairResourceModel
+	var data, state InterfacepairResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +123,21 @@ func (r *InterfacepairResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating interfacepair resource")
 
-	// Create API request body from the model
-	// interfacepair := interfacepairGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Interfacepair.Type(), &interfacepair)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update interfacepair, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated interfacepair resource")
-
-	// Read the updated state back
-	r.readInterfacepairFromApi(ctx, &data, &resp.Diagnostics)
+	// interfacepair exposes no NITRO "update" verb and every configurable attribute
+	// (interface_id, ifnum) is RequiresReplace, so any attribute change triggers a
+	// destroy/recreate rather than reaching this path. This method therefore performs
+	// no API write and only refreshes state.
+	if !r.readInterfacepairFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "interfacepair not found during update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +155,32 @@ func (r *InterfacepairResource) Delete(ctx context.Context, req resource.DeleteR
 
 	tflog.Debug(ctx, "Deleting interfacepair resource")
 
-	// For interfacepair, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted interfacepair resource from state")
+	// Named resource - delete using DeleteResource keyed on the numeric id.
+	err := r.client.DeleteResource(service.Interfacepair.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete interfacepair, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted interfacepair resource")
 }
 
-// Helper function to read interfacepair data from API
-func (r *InterfacepairResource) readInterfacepairFromApi(ctx context.Context, data *InterfacepairResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Interfacepair.Type(), "")
+// Helper function to read interfacepair data from API. Returns false when the
+// resource no longer exists on the ADC so callers can remove it from state.
+func (r *InterfacepairResource) readInterfacepairFromApi(ctx context.Context, data *InterfacepairResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain numeric value
+	interfacepairName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Interfacepair.Type(), interfacepairName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read interfacepair, got error: %s", err))
-		return
+		return false
 	}
 
 	interfacepairSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

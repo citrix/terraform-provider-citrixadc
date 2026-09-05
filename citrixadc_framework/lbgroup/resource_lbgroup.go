@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,28 @@ func (r *LbgroupResource) Create(ctx context.Context, req resource.CreateRequest
 
 	tflog.Debug(ctx, "Creating lbgroup resource")
 
-	// lbgroup := lbgroupGetThePayloadFromtheConfig(ctx, &data)
+	lbgroup := lbgroupGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbgroup.Type(), &lbgroup)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbgroup, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lbgroup-config")
+	// Named resource - use AddResource
+	lbgroupName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Lbgroup.Type(), lbgroupName, &lbgroup)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbgroup, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lbgroup resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(lbgroupName)
+
 	// Read the updated state back
-	r.readLbgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbgroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbgroup not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,136 @@ func (r *LbgroupResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	tflog.Debug(ctx, "Reading lbgroup resource")
 
-	r.readLbgroupFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LbgroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LbgroupResourceModel
+	var data, config, state LbgroupResourceModel
 
+	// Read Terraform prior state to preserve the live ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve the live ID from prior state (tracks the current object name).
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lbgroup resource")
 
-	// Create API request body from the model
-	// lbgroup := lbgroupGetThePayloadFromtheConfig(ctx, &data)
+	// Handle in-place rename via the NITRO rename action. The rename source must
+	// be the CURRENT LIVE name, which is held in state.Id (not the configured
+	// name attribute, which is pinned to the originally-configured value).
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		renamePayload := lb.Lbgroup{
+			Name:    state.Id.ValueString(),
+			Newname: data.Newname.ValueString(),
+		}
+		err := r.client.ActOnResource(service.Lbgroup.Type(), &renamePayload, "rename")
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename lbgroup, got error: %s", err))
+			return
+		}
+		// The live object is now named newname; track it in the ID.
+		data.Id = types.StringValue(data.Newname.ValueString())
+		tflog.Trace(ctx, "Renamed lbgroup resource")
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbgroup.Type(), &lbgroup)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbgroup, got error: %s", err))
-	//	 return
-	// }
+	// Check whether any updatable attribute changed.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Backuppersistencetimeout.Equal(state.Backuppersistencetimeout) {
+		if config.Backuppersistencetimeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "backuppersistencetimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cookiedomain.Equal(state.Cookiedomain) {
+		hasChange = true
+	}
+	if !data.Cookiename.Equal(state.Cookiename) {
+		hasChange = true
+	}
+	if !data.Mastervserver.Equal(state.Mastervserver) {
+		hasChange = true
+	}
+	if !data.Persistencebackup.Equal(state.Persistencebackup) {
+		hasChange = true
+	}
+	if !data.Persistencetype.Equal(state.Persistencetype) {
+		hasChange = true
+	}
+	if !data.Persistmask.Equal(state.Persistmask) {
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		hasChange = true
+	}
+	if !data.Timeout.Equal(state.Timeout) {
+		if config.Timeout.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "timeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Usevserverpersistency.Equal(state.Usevserverpersistency) {
+		hasChange = true
+	}
+	if !data.V6persistmasklen.Equal(state.V6persistmasklen) {
+		if config.V6persistmasklen.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "v6persistmasklen")
+		} else {
+			hasChange = true
+		}
+	}
 
-	tflog.Trace(ctx, "Updated lbgroup resource")
+	if hasChange {
+		lbgroup := lbgroupGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Key off the current live name (after a possible rename).
+		lbgroup.Name = data.Id.ValueString()
+		_, err := r.client.UpdateResource(service.Lbgroup.Type(), data.Id.ValueString(), &lbgroup)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbgroup, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated lbgroup resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lbgroup resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Keyed off the current live name (after rename).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lbgroup.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbgroup attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readLbgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbgroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbgroup not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +243,31 @@ func (r *LbgroupResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	tflog.Debug(ctx, "Deleting lbgroup resource")
 
-	// For lbgroup, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lbgroup resource from state")
+	// Named resource - delete by live ID (correct even after a rename).
+	err := r.client.DeleteResource(service.Lbgroup.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lbgroup, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lbgroup resource")
 }
 
 // Helper function to read lbgroup data from API
-func (r *LbgroupResource) readLbgroupFromApi(ctx context.Context, data *LbgroupResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lbgroup.Type(), "")
+func (r *LbgroupResource) readLbgroupFromApi(ctx context.Context, data *LbgroupResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the live name.
+	lbgroupName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lbgroup.Type(), lbgroupName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbgroup, got error: %s", err))
-		return
+		return false
 	}
 
 	lbgroupSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

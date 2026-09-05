@@ -63,6 +63,7 @@ type AuthenticationoauthactionResourceModel struct {
 	Refreshinterval            types.Int64  `tfsdk:"refreshinterval"`
 	Requestattribute           types.String `tfsdk:"requestattribute"`
 	Resourceuri                types.String `tfsdk:"resourceuri"`
+	Scopes                     types.String `tfsdk:"scopes"`
 	Skewtime                   types.Int64  `tfsdk:"skewtime"`
 	Tenantid                   types.String `tfsdk:"tenantid"`
 	Tokenendpoint              types.String `tfsdk:"tokenendpoint"`
@@ -299,6 +300,11 @@ func (r *AuthenticationoauthactionResource) Schema(ctx context.Context, req reso
 				Computed:    true,
 				Description: "Resource URL for Oauth configuration.",
 			},
+			"scopes": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "OAuth Scopes expected. Please specify scopes in space separated format as per RFC 6749 (OAuth 2.0). Each scope value can contain any printable ASCII character except double-quote (\") and backslash (\\). Maximum length is 1024.",
+			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -465,6 +471,9 @@ func authenticationoauthactionGetThePayloadFromthePlan(ctx context.Context, data
 	}
 	if !data.Resourceuri.IsNull() && !data.Resourceuri.IsUnknown() {
 		authenticationoauthaction.Resourceuri = data.Resourceuri.ValueString()
+	}
+	if !data.Scopes.IsNull() && !data.Scopes.IsUnknown() {
+		authenticationoauthaction.Scopes = data.Scopes.ValueString()
 	}
 	if !data.Skewtime.IsNull() && !data.Skewtime.IsUnknown() {
 		authenticationoauthaction.Skewtime = utils.IntPtr(int(data.Skewtime.ValueInt64()))
@@ -716,6 +725,11 @@ func authenticationoauthactionSetAttrFromGet(ctx context.Context, data *Authenti
 		data.Resourceuri = types.StringValue(val.(string))
 	} else {
 		data.Resourceuri = types.StringNull()
+	}
+	if val, ok := getResponseData["scopes"]; ok && val != nil {
+		data.Scopes = types.StringValue(val.(string))
+	} else {
+		data.Scopes = types.StringNull()
 	}
 	if val, ok := getResponseData["skewtime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {

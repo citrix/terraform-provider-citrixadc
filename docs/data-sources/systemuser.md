@@ -39,10 +39,14 @@ In addition to the arguments, the following attributes are available:
 * `promptstring` - String to display at the command-line prompt.
 * `timeout` - CLI session inactivity timeout, in seconds.
 
-## Import
+### Read-only systemuser metadata
 
-A systemuser can be imported using its username, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_systemuser` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_systemuser.tf_user tf_user
-```
+* `encrypted` - Whether the password stored on the appliance is encrypted.
+* `hashmethod` - Hash method used for the system user password (for example `SHA1`, `SHA512`, `PBKDF2`).
+* `promptinheritedfrom` - From where the prompt has been inherited (`User`, `Group`, `Global`, `Climode`).
+* `timeoutkind` - From where the timeout has been inherited (`User`, `Group`, `Global`, `Climode`).
+* `allowedmanagementinterfacekind` - Value of allowed interface which can be inherited from `Global`, `Group` or `User` (`User`, `Group`, `Global`, `Climode`).
+* `lastpwdchangetimestamp` - Timestamp for the last password change for the system user.
+* `daystoexpirekind` - From where the daystoexpire value has been inherited (`User`, `Group`, `Global`, `Climode`).

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,16 @@ func (r *ContentinspectionparameterResource) Create(ctx context.Context, req res
 
 	tflog.Debug(ctx, "Creating contentinspectionparameter resource")
 
-	// contentinspectionparameter := contentinspectionparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	contentinspectionparameter := contentinspectionparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Contentinspectionparameter.Type(), &contentinspectionparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create contentinspectionparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Contentinspectionparameter.Type(), &contentinspectionparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create contentinspectionparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("contentinspectionparameter-config")
@@ -71,6 +74,9 @@ func (r *ContentinspectionparameterResource) Create(ctx context.Context, req res
 
 	// Read the updated state back
 	r.readContentinspectionparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,31 +101,66 @@ func (r *ContentinspectionparameterResource) Read(ctx context.Context, req resou
 }
 
 func (r *ContentinspectionparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ContentinspectionparameterResourceModel
+	var data, config, state ContentinspectionparameterResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating contentinspectionparameter resource")
 
-	// Create API request body from the model
-	// contentinspectionparameter := contentinspectionparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Undefaction.Equal(state.Undefaction) {
+		tflog.Debug(ctx, "undefaction has changed for contentinspectionparameter")
+		if config.Undefaction.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "undefaction")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Contentinspectionparameter.Type(), &contentinspectionparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update contentinspectionparameter, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		contentinspectionparameter := contentinspectionparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated contentinspectionparameter resource")
+		// Make API call
+		// Singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Contentinspectionparameter.Type(), &contentinspectionparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update contentinspectionparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated contentinspectionparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for contentinspectionparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Contentinspectionparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset contentinspectionparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readContentinspectionparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

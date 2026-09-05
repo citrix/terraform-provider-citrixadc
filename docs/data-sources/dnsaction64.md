@@ -39,3 +39,10 @@ The following attributes are available:
 * `prefix` - The dns64 prefix to be used if the after evaluating the rules.
 * `mappedrule` - The expression to select the criteria for ipv4 addresses to be used for synthesis. Only if the mappedrule is evaluated to true the corresponding ipv4 address is used for synthesis using respective prefix, otherwise the A RR is discarded.
 * `excluderule` - The expression to select the criteria for eliminating the corresponding ipv6 addresses from the response.
+
+### Read-only dnsaction64 metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnsaction64` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine whether dna64action is default or not. A list of strings. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ].
+* `feature` - The feature to be checked while applying this config.

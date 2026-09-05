@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppflowpolicy_basic = `
@@ -212,7 +214,192 @@ func TestAccAppflowpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "name", "test_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "action", "test_action"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowpolicy.tf_appflowpolicy", "rule", "client.TCP.DSTPORT.EQ(22)"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowpolicy.tf_appflowpolicy", "id"),
+					// Read-only counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowpolicy.tf_appflowpolicy", "hits"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowpolicy.tf_appflowpolicy", "undefhits"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppflowpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicy.tf_appflowpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowpolicy_basic},
+			{
+				Config:                  testAccAppflowpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppflowpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppflowpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppflowpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicyExist("citrixadc_appflowpolicy.tf_appflowpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppflowpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicyExist("citrixadc_appflowpolicy.tf_appflowpolicy", nil)),
+			},
+		},
+	})
+}
+
+// The appflowpolicy unset test covers the two spec-unsettable, mutable
+// attributes (comment, undefaction). Step 1 sets them to non-default values;
+// step 2 removes them from config, so the provider must unset them and the
+// appliance reverts them to their defaults (absent -> empty string).
+const testAccAppflowpolicy_unset_step1 = `
+	resource "citrixadc_appflowcollector" "tf_unset_col" {
+		name      = "tf_unset_col"
+		ipaddress = "192.168.2.4"
+		port      = 80
+	}
+	resource "citrixadc_appflowaction" "tf_unset_action" {
+		name       = "tf_unset_action"
+		collectors = [citrixadc_appflowcollector.tf_unset_col.name]
+	}
+	resource "citrixadc_appflowaction" "tf_unset_undefaction" {
+		name       = "tf_unset_undefaction"
+		collectors = [citrixadc_appflowcollector.tf_unset_col.name]
+	}
+	resource "citrixadc_appflowpolicy" "tf_unset" {
+		name        = "tf_unset_policy"
+		action      = citrixadc_appflowaction.tf_unset_action.name
+		rule        = "client.TCP.DSTPORT.EQ(22)"
+		comment     = "unset test comment"
+		undefaction = citrixadc_appflowaction.tf_unset_undefaction.name
+	}
+`
+
+const testAccAppflowpolicy_unset_step2 = `
+	resource "citrixadc_appflowcollector" "tf_unset_col" {
+		name      = "tf_unset_col"
+		ipaddress = "192.168.2.4"
+		port      = 80
+	}
+	resource "citrixadc_appflowaction" "tf_unset_action" {
+		name       = "tf_unset_action"
+		collectors = [citrixadc_appflowcollector.tf_unset_col.name]
+	}
+	resource "citrixadc_appflowaction" "tf_unset_undefaction" {
+		name       = "tf_unset_undefaction"
+		collectors = [citrixadc_appflowcollector.tf_unset_col.name]
+	}
+	resource "citrixadc_appflowpolicy" "tf_unset" {
+		name   = "tf_unset_policy"
+		action = citrixadc_appflowaction.tf_unset_action.name
+		rule   = "client.TCP.DSTPORT.EQ(22)"
+		# comment and undefaction removed from config -> provider must unset them.
+	}
+`
+
+func TestAccAppflowpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAppflowpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowpolicyExist("citrixadc_appflowpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appflowpolicy.tf_unset", "comment", "unset test comment"),
+					resource.TestCheckResourceAttr("citrixadc_appflowpolicy.tf_unset", "undefaction", "tf_unset_undefaction"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccAppflowpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowpolicyExist("citrixadc_appflowpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appflowpolicy.tf_unset", "comment", ""),
+					resource.TestCheckResourceAttr("citrixadc_appflowpolicy.tf_unset", "undefaction", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppflowpolicyADCValue("tf_unset_policy", "comment", ""),
+					testAccCheckAppflowpolicyADCValue("tf_unset_policy", "undefaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppflowpolicyADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. An attribute absent from the GET response is treated as "".
+func testAccCheckAppflowpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appflowpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("appflowpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if raw, ok := data[attr]; ok && raw != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", raw))
+		}
+		if got != want {
+			return fmt.Errorf("appflowpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccAppflowpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowpolicy.tf_appflowpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appflowpolicy.Type(), "test_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowpolicyExist(resAddr, nil)),
 			},
 		},
 	})

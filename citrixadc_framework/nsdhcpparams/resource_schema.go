@@ -7,15 +7,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // NsdhcpparamsResourceModel describes the resource data model.
 type NsdhcpparamsResourceModel struct {
-	Id         types.String `tfsdk:"id"`
-	Dhcpclient types.String `tfsdk:"dhcpclient"`
-	Saveroute  types.String `tfsdk:"saveroute"`
+	Id              types.String `tfsdk:"id"`
+	Dhcpclient      types.String `tfsdk:"dhcpclient"`
+	Saveroute       types.String `tfsdk:"saveroute"`
+	Subnetselection types.String `tfsdk:"subnetselection"`
 }
 
 func (r *NsdhcpparamsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -29,12 +31,19 @@ func (r *NsdhcpparamsResource) Schema(ctx context.Context, req resource.SchemaRe
 			"dhcpclient": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Enables DHCP client to acquire IP address from the DHCP server in the next boot. When set to OFF, disables the DHCP client in the next boot.",
 			},
 			"saveroute": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "DHCP acquired routes are saved on the Citrix ADC.",
+			},
+			"subnetselection": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Subnet Selection option (RFC 3011) to request IP from a specific subnet.",
 			},
 		},
 	}
@@ -45,11 +54,14 @@ func nsdhcpparamsGetThePayloadFromtheConfig(ctx context.Context, data *Nsdhcppar
 
 	// Create API request body from the model
 	nsdhcpparams := ns.Nsdhcpparams{}
-	if !data.Dhcpclient.IsNull() {
+	if !data.Dhcpclient.IsNull() && !data.Dhcpclient.IsUnknown() {
 		nsdhcpparams.Dhcpclient = data.Dhcpclient.ValueString()
 	}
-	if !data.Saveroute.IsNull() {
+	if !data.Saveroute.IsNull() && !data.Saveroute.IsUnknown() {
 		nsdhcpparams.Saveroute = data.Saveroute.ValueString()
+	}
+	if !data.Subnetselection.IsNull() && !data.Subnetselection.IsUnknown() {
+		nsdhcpparams.Subnetselection = data.Subnetselection.ValueString()
 	}
 
 	return nsdhcpparams
@@ -58,16 +70,23 @@ func nsdhcpparamsGetThePayloadFromtheConfig(ctx context.Context, data *Nsdhcppar
 func nsdhcpparamsSetAttrFromGet(ctx context.Context, data *NsdhcpparamsResourceModel, getResponseData map[string]interface{}) *NsdhcpparamsResourceModel {
 	tflog.Debug(ctx, "In nsdhcpparamsSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard the else-branch: only null when the current value is unknown, so a
+	// configured value that NITRO omits from GET is never clobbered (omit-on-default trap).
 	if val, ok := getResponseData["dhcpclient"]; ok && val != nil {
 		data.Dhcpclient = types.StringValue(val.(string))
-	} else {
+	} else if data.Dhcpclient.IsUnknown() {
 		data.Dhcpclient = types.StringNull()
 	}
 	if val, ok := getResponseData["saveroute"]; ok && val != nil {
 		data.Saveroute = types.StringValue(val.(string))
-	} else {
+	} else if data.Saveroute.IsUnknown() {
 		data.Saveroute = types.StringNull()
+	}
+	if val, ok := getResponseData["subnetselection"]; ok && val != nil {
+		data.Subnetselection = types.StringValue(val.(string))
+	} else if data.Subnetselection.IsUnknown() {
+		data.Subnetselection = types.StringNull()
 	}
 
 	// Set ID for the resource

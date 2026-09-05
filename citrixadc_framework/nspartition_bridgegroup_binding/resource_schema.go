@@ -9,6 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +34,32 @@ func (r *NspartitionBridgegroupBindingResource) Schema(ctx context.Context, req 
 				Description: "The ID of the nspartition_bridgegroup_binding resource.",
 			},
 			"bridgegroup": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Identifier of the bridge group that is assigned to this partition.",
 			},
 			"partitionname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the Partition. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.",
 			},
 		},
 	}
 }
 
-func nspartition_bridgegroup_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NspartitionBridgegroupBindingResourceModel) ns.Nspartitionbridgegroupbinding {
-	tflog.Debug(ctx, "In nspartition_bridgegroup_bindingGetThePayloadFromtheConfig Function")
+func nspartition_bridgegroup_bindingGetThePayloadFromthePlan(ctx context.Context, data *NspartitionBridgegroupBindingResourceModel) ns.Nspartitionbridgegroupbinding {
+	tflog.Debug(ctx, "In nspartition_bridgegroup_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nspartition_bridgegroup_binding := ns.Nspartitionbridgegroupbinding{}
-	if !data.Bridgegroup.IsNull() {
+	if !data.Bridgegroup.IsNull() && !data.Bridgegroup.IsUnknown() {
 		nspartition_bridgegroup_binding.Bridgegroup = utils.IntPtr(int(data.Bridgegroup.ValueInt64()))
 	}
-	if !data.Partitionname.IsNull() {
+	if !data.Partitionname.IsNull() && !data.Partitionname.IsUnknown() {
 		nspartition_bridgegroup_binding.Partitionname = data.Partitionname.ValueString()
 	}
 

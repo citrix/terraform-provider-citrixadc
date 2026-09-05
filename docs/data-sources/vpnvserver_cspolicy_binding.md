@@ -35,6 +35,7 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
+* `bindpoint` - Bind point to which the policy is bound. Applies only to rewrite and cache policies. If not set, the policy is bound to REQ_DEFAULT or RES_DEFAULT, depending on whether the policy rule is a response-time or a request-time expression.
 * `gotopriorityexpression` - Next priority expression.
 * `groupextraction` - Binds the authentication policy to a tertiary chain which will be used only for group extraction. The user will not authenticate against this server, and this will only be called if primary and/or secondary authentication has succeeded.
 * `id` - The id of the vpnvserver_cspolicy_binding. It is the concatenation of `name` and `policy` attributes.

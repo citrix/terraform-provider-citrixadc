@@ -65,7 +65,14 @@ func (r *NsconfigSaveResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "The ID of the nsconfig_save resource (equals the configured timestamp).",
 			},
 			"all": schema.BoolAttribute{
+				// SDK v2 declared `all` as Optional+Computed (no Default). Keep Computed for
+				// backward-compat and add a false Default so an omitted value resolves to a
+				// known `false` (matching SDK v2's computed zero-value) instead of Unknown —
+				// this avoids both "inconsistent result after apply" and a spurious
+				// RequiresReplace on the first plan after upgrading from SDK v2.
 				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},

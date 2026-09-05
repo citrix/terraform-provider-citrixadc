@@ -35,7 +35,7 @@ func (d *ReputationsettingsDataSource) Schema(ctx context.Context, req datasourc
 }
 
 func (d *ReputationsettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ReputationsettingsResourceModel
+	var data ReputationsettingsDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -52,7 +52,7 @@ func (d *ReputationsettingsDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	reputationsettingsSetAttrFromGet(ctx, &data, getResponseData)
+	reputationsettingsDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

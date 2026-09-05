@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Participating-entity config reused from:
@@ -329,9 +329,42 @@ func TestAccAuthenticationvserverAuthenticationsmartaccesspolicyBindingDataSourc
 			{
 				Config: testAccAuthenticationvserverAuthenticationsmartaccesspolicyBindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding", "name", "tf_authenticationvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding", "policy", "tf_authenticationsmartaccesspolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding", "priority", "100"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationvserver_authenticationsmartaccesspolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationvserver_authenticationsmartaccesspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationsmartaccesspolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Authenticationvserver_authenticationsmartaccesspolicy_binding.Type(), "tf_authenticationvserver", map[string]string{"policy": "tf_authenticationsmartaccesspolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationvserver_authenticationsmartaccesspolicy_binding_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationvserver_authenticationsmartaccesspolicy_bindingExist(resAddr, nil),
 				),
 			},
 		},

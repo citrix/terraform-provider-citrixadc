@@ -39,3 +39,10 @@ In addition to the arguments, the following attributes are available:
 * `interfacetype` - Subscriber Interface refers to Citrix ADC interaction with control plane protocols, RADIUS and GX. Types of subscriber interface: NONE, RadiusOnly, RadiusAndGx, GxOnly. NONE: Only static subscribers can be configured. RadiusOnly: GX interface is absent. Subscriber information is obtained through RADIUS Accounting messages. RadiusAndGx: Subscriber ID obtained through RADIUS Accounting is used to query PCRF. Subscriber information is obtained from both RADIUS and PCRF. GxOnly: RADIUS interface is absent. Subscriber information is queried using Subscriber IP or IP+VLAN.
 * `ipv6prefixlookuplist` - The ipv6PrefixLookupList should consist of all the ipv6 prefix lengths assigned to the UE's.
 * `keytype` - Type of subscriber key type IP or IPANDVLAN. IPANDVLAN option can be used only when the interfaceType is set to gxOnly. Changing the lookup method should result to the subscriber session database being flushed.
+
+### Read-only subscriberparam metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_subscriberparam` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine whether the configuration is built-in or not. A list of strings.
+* `feature` - The feature to be checked while applying this config.

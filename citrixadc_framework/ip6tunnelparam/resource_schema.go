@@ -65,19 +65,19 @@ func ip6tunnelparamGetThePayloadFromtheConfig(ctx context.Context, data *Ip6tunn
 
 	// Create API request body from the model
 	ip6tunnelparam := network.Ip6tunnelparam{}
-	if !data.Dropfrag.IsNull() {
+	if !data.Dropfrag.IsNull() && !data.Dropfrag.IsUnknown() {
 		ip6tunnelparam.Dropfrag = data.Dropfrag.ValueString()
 	}
-	if !data.Dropfragcputhreshold.IsNull() {
+	if !data.Dropfragcputhreshold.IsNull() && !data.Dropfragcputhreshold.IsUnknown() {
 		ip6tunnelparam.Dropfragcputhreshold = utils.IntPtr(int(data.Dropfragcputhreshold.ValueInt64()))
 	}
-	if !data.Srcip.IsNull() {
+	if !data.Srcip.IsNull() && !data.Srcip.IsUnknown() {
 		ip6tunnelparam.Srcip = data.Srcip.ValueString()
 	}
-	if !data.Srciproundrobin.IsNull() {
+	if !data.Srciproundrobin.IsNull() && !data.Srciproundrobin.IsUnknown() {
 		ip6tunnelparam.Srciproundrobin = data.Srciproundrobin.ValueString()
 	}
-	if !data.Useclientsourceipv6.IsNull() {
+	if !data.Useclientsourceipv6.IsNull() && !data.Useclientsourceipv6.IsUnknown() {
 		ip6tunnelparam.Useclientsourceipv6 = data.Useclientsourceipv6.ValueString()
 	}
 
@@ -97,7 +97,10 @@ func ip6tunnelparamSetAttrFromGet(ctx context.Context, data *Ip6tunnelparamResou
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Dropfragcputhreshold = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Dropfragcputhreshold.IsUnknown() {
+		// NITRO GET omits dropfragcputhreshold (its default is not echoed back).
+		// Only null it when the value is unknown so a user-configured value is preserved,
+		// avoiding "inconsistent result after apply".
 		data.Dropfragcputhreshold = types.Int64Null()
 	}
 	if val, ok := getResponseData["srcip"]; ok && val != nil {

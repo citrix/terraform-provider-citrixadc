@@ -3,6 +3,7 @@ package vlan_nsip6_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
@@ -42,8 +43,8 @@ func (d *VlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vlanid.ValueInt64())
+	// Array filter with parent ID (vlanid -> NITRO "id")
+	vlanid := strconv.FormatInt(data.Vlanid.ValueInt64(), 10)
 	ipaddress_Name := data.Ipaddress
 
 	var dataArr []map[string]interface{}
@@ -51,7 +52,7 @@ func (d *VlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.Re
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vlan_nsip6_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             vlanid,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -75,11 +76,9 @@ func (d *VlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.Re
 		if val, ok := v["ipaddress"].(string); ok {
 			if ipaddress_Name.IsNull() || val != ipaddress_Name.ValueString() {
 				match = false
-				continue
 			}
 		} else if !ipaddress_Name.IsNull() {
 			match = false
-			continue
 		}
 
 		if match {
@@ -94,7 +93,7 @@ func (d *VlanNsip6BindingDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	vlan_nsip6_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vlan_nsip6_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

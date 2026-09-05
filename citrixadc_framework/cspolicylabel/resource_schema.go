@@ -2,6 +2,7 @@ package cspolicylabel
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/cs"
 
@@ -30,6 +31,8 @@ func (r *CspolicylabelResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "The ID of the cspolicylabel resource.",
 			},
 			"cspolicylabeltype": schema.StringAttribute{
+				// Required + RequiresReplace to preserve the SDK v2 contract
+				// (Required + ForceNew).
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -37,6 +40,8 @@ func (r *CspolicylabelResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Protocol supported by the policy label. All policies bound to the policy label must either match the specified protocol or be a subtype of that protocol. Available settings function as follows:\n* HTTP - Supports policies that process HTTP traffic. Used to access unencrypted Web sites. (The default.)\n* SSL - Supports policies that process HTTPS/SSL encrypted traffic. Used to access encrypted Web sites.\n* TCP - Supports policies that process any type of TCP traffic, including HTTP.\n* SSL_TCP - Supports policies that process SSL-encrypted TCP traffic, including SSL.\n* UDP - Supports policies that process any type of UDP-based traffic, including DNS.\n* DNS - Supports policies that process DNS traffic.\n* ANY - Supports all types of policies except HTTP, SSL, and TCP.\n* SIP_UDP - Supports policies that process UDP based Session Initiation Protocol (SIP) traffic. SIP initiates, manages, and terminates multimedia communications sessions, and has emerged as the standard for Internet telephony (VoIP).\n* RTSP - Supports policies that process Real Time Streaming Protocol (RTSP) traffic. RTSP provides delivery of multimedia and other streaming data, such as audio, video, and other types of streamed media.\n* RADIUS - Supports policies that process Remote Authentication Dial In User Service (RADIUS) traffic. RADIUS supports combined authentication, authorization, and auditing services for network management.\n* MYSQL - Supports policies that process MYSQL traffic.\n* MSSQL - Supports policies that process Microsoft SQL traffic.",
 			},
 			"labelname": schema.StringAttribute{
+				// Required + RequiresReplace to preserve the SDK v2 contract
+				// (Required + ForceNew). This is the primary key / resource name.
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -44,31 +49,30 @@ func (r *CspolicylabelResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "Name for the policy label. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters.\nThe label name must be unique within the list of policy labels for content switching.\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my policylabel\" or 'my policylabel').",
 			},
 			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// newname is the rename trigger (NITRO ?action=rename). Changing it must
+				// NOT force replacement - it drives an in-place rename via Update. It is a
+				// pure user input, never echoed back by GET, so it is NOT Computed
+				// (Computed would cause known-after-apply churn).
+				Optional:    true,
 				Description: "The new name of the content switching policylabel.",
 			},
 		},
 	}
 }
 
-func cspolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *CspolicylabelResourceModel) cs.Cspolicylabel {
-	tflog.Debug(ctx, "In cspolicylabelGetThePayloadFromtheConfig Function")
+func cspolicylabelGetThePayloadFromthePlan(ctx context.Context, data *CspolicylabelResourceModel) cs.Cspolicylabel {
+	tflog.Debug(ctx, "In cspolicylabelGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	cspolicylabel := cs.Cspolicylabel{}
-	if !data.Cspolicylabeltype.IsNull() {
+	if !data.Cspolicylabeltype.IsNull() && !data.Cspolicylabeltype.IsUnknown() {
 		cspolicylabel.Cspolicylabeltype = data.Cspolicylabeltype.ValueString()
 	}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		cspolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		cspolicylabel.Newname = data.Newname.ValueString()
-	}
+	// newname is a rename-only argument (NITRO ?action=rename). It is NOT part of the
+	// add payload, so it is deliberately excluded from the create POST body.
 
 	return cspolicylabel
 }
@@ -76,7 +80,32 @@ func cspolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *Cspolicy
 func cspolicylabelSetAttrFromGet(ctx context.Context, data *CspolicylabelResourceModel, getResponseData map[string]interface{}) *CspolicylabelResourceModel {
 	tflog.Debug(ctx, "In cspolicylabelSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	if val, ok := getResponseData["cspolicylabeltype"]; ok && val != nil {
+		data.Cspolicylabeltype = types.StringValue(val.(string))
+	}
+	// labelname is the user-facing key. Once a rename has happened (via newname), the
+	// live object name (tracked by data.Id) diverges from the configured labelname, and
+	// GET returns the live (new) name. Overwriting labelname from GET would clobber the
+	// user's configured value and trigger a spurious RequiresReplace diff. So only adopt
+	// the GET value when we don't already have one (e.g. on import, where state carries
+	// only the ID); otherwise preserve.
+	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
+		if val, ok := getResponseData["labelname"]; ok && val != nil {
+			data.Labelname = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve plan/state value.
+
+	return data
+}
+
+// cspolicylabelSetAttrFromGetForDatasource faithfully copies every field from the GET
+// response. The datasource has no prior plan/state to preserve, so it must populate the
+// model directly from the API response and set the ID itself.
+func cspolicylabelSetAttrFromGetForDatasource(ctx context.Context, data *CspolicylabelResourceModel, getResponseData map[string]interface{}) *CspolicylabelResourceModel {
+	tflog.Debug(ctx, "In cspolicylabelSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["cspolicylabeltype"]; ok && val != nil {
 		data.Cspolicylabeltype = types.StringValue(val.(string))
 	} else {
@@ -93,9 +122,8 @@ func cspolicylabelSetAttrFromGet(ctx context.Context, data *CspolicylabelResourc
 		data.Newname = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Labelname.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
 
 	return data
 }

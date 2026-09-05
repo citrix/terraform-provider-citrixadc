@@ -32,6 +32,7 @@ type Sslcacertbundle struct {
 	//------- Read only Parameter ---------;
 
 	Servername string `json:"servername,omitempty"`
+	Cacertbundledigest string `json:"cacertbundledigest,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

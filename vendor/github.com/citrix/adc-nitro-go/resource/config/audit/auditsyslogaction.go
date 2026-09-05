@@ -154,6 +154,10 @@ type Auditsyslogaction struct {
 	*/
 	Httpendpointurl string `json:"httpendpointurl,omitempty"`
 	/**
+	* HTTP Schema file to input tokens to be sent in log message to log server
+	*/
+	Httpschemafile string `json:"httpschemafile,omitempty"`
+	/**
 	* Name of the TCP profile whose settings are to be applied to the audit server info to tune the TCP connection parameters.
 	*/
 	Tcpprofilename string `json:"tcpprofilename,omitempty"`
@@ -190,6 +194,10 @@ type Auditsyslogaction struct {
 	* Log protocol violations
 	*/
 	Protocolviolations string `json:"protocolviolations,omitempty"`
+	/**
+	* Log denylist violations
+	*/
+	Denylistviolations string `json:"denylistviolations,omitempty"`
 	/**
 	* Immediately send a DNS query to resolve the server's domain name.
 	*/

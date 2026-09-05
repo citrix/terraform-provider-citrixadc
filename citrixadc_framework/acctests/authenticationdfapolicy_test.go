@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationdfapolicy_add = `
@@ -159,6 +160,77 @@ const testAccAuthenticationdfapolicyDataSource_basic = `
 		depends_on = [citrixadc_authenticationdfapolicy.td_dfapolicy]
 	}
 `
+
+func TestAccAuthenticationdfapolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationdfapolicy.td_dfapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationdfapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationdfapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationdfapolicy.Type(), "td_dfapolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationdfapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationdfapolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationdfapolicy.td_dfapolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationdfapolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationdfapolicy_add},
+			{
+				Config:                  testAccAuthenticationdfapolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationdfapolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationdfapolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationdfapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist("citrixadc_authenticationdfapolicy.td_dfapolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationdfapolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationdfapolicyExist("citrixadc_authenticationdfapolicy.td_dfapolicy", nil)),
+			},
+		},
+	})
+}
 
 func TestAccAuthenticationdfapolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

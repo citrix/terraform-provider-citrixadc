@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *SystemuserNspartitionBindingResource) Schema(ctx context.Context, req r
 				Description: "The ID of the systemuser_nspartition_binding resource.",
 			},
 			"partitionname": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the Partition to bind to the system user.",
 			},
 			"username": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the system-user entry to which to bind the command policy.",
 			},
 		},
 	}
 }
 
-func systemuser_nspartition_bindingGetThePayloadFromtheConfig(ctx context.Context, data *SystemuserNspartitionBindingResourceModel) system.Systemusernspartitionbinding {
-	tflog.Debug(ctx, "In systemuser_nspartition_bindingGetThePayloadFromtheConfig Function")
+func systemuser_nspartition_bindingGetThePayloadFromthePlan(ctx context.Context, data *SystemuserNspartitionBindingResourceModel) system.Systemusernspartitionbinding {
+	tflog.Debug(ctx, "In systemuser_nspartition_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	systemuser_nspartition_binding := system.Systemusernspartitionbinding{}
-	if !data.Partitionname.IsNull() {
+	if !data.Partitionname.IsNull() && !data.Partitionname.IsUnknown() {
 		systemuser_nspartition_binding.Partitionname = data.Partitionname.ValueString()
 	}
-	if !data.Username.IsNull() {
+	if !data.Username.IsNull() && !data.Username.IsUnknown() {
 		systemuser_nspartition_binding.Username = data.Username.ValueString()
 	}
 

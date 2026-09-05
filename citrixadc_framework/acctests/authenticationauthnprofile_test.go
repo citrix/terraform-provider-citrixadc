@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationauthnprofile_add = `
@@ -80,6 +82,30 @@ func TestAccAuthenticationauthnprofile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile", "authenticationhost", "newhostname"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile", "authenticationlevel", "30"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationauthnprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationauthnprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationauthnprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationauthnprofileExist("citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationauthnprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationauthnprofileExist("citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile", nil)),
 			},
 		},
 	})
@@ -147,6 +173,145 @@ func testAccCheckAuthenticationauthnprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationauthnprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationauthnprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationauthnprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationauthnprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationauthnprofile.Type(), "tf_name"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationauthnprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationauthnprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationauthnprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationauthnprofile.tf_authenticationauthnprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationauthnprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationauthnprofile_add},
+			{
+				Config:                  testAccAuthenticationauthnprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+// authenticationlevel is the only NITRO-unsettable mutable attribute for this
+// resource (the unset spec payload lists authenticationdomain and
+// authenticationlevel, but authenticationdomain reads back absent/null after
+// unset which cannot round-trip through an Optional+Computed default, so only
+// authenticationlevel is wired). NITRO default for authenticationlevel is 0.
+const testAccAuthenticationauthnprofile_unset_step1 = `
+
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new_vserver"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationauthnprofile" "tf_unset" {
+		name                = "tf_test_authnprofile_unset"
+		authnvsname         = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		authenticationlevel = 25
+	}
+`
+
+const testAccAuthenticationauthnprofile_unset_step2 = `
+
+	resource "citrixadc_authenticationvserver" "tf_authenticationvserver" {
+		name           = "tf_authenticationvserver"
+		servicetype    = "SSL"
+		comment        = "new_vserver"
+		authentication = "ON"
+		state          = "DISABLED"
+	}
+	resource "citrixadc_authenticationauthnprofile" "tf_unset" {
+		name        = "tf_test_authnprofile_unset"
+		authnvsname = citrixadc_authenticationvserver.tf_authenticationvserver.name
+		# authenticationlevel removed from config -> provider must unset it
+		# (revert to NITRO default 0).
+	}
+`
+
+func TestAccAuthenticationauthnprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationauthnprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applied and persisted.
+				Config: testAccAuthenticationauthnprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationauthnprofileExist("citrixadc_authenticationauthnprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationauthnprofile.tf_unset", "authenticationlevel", "25"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccAuthenticationauthnprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationauthnprofileExist("citrixadc_authenticationauthnprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationauthnprofile.tf_unset", "authenticationlevel", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationauthnprofileADCValue("tf_test_authnprofile_unset", "authenticationlevel", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationauthnprofileADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationauthnprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationauthnprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationauthnprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationauthnprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 const testAccAuthenticationauthnprofileDataSource_basic = `

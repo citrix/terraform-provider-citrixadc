@@ -38,12 +38,12 @@ func (r *VxlanvlanmapResource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func vxlanvlanmapGetThePayloadFromtheConfig(ctx context.Context, data *VxlanvlanmapResourceModel) network.Vxlanvlanmap {
-	tflog.Debug(ctx, "In vxlanvlanmapGetThePayloadFromtheConfig Function")
+func vxlanvlanmapGetThePayloadFromthePlan(ctx context.Context, data *VxlanvlanmapResourceModel) network.Vxlanvlanmap {
+	tflog.Debug(ctx, "In vxlanvlanmapGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vxlanvlanmap := network.Vxlanvlanmap{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vxlanvlanmap.Name = data.Name.ValueString()
 	}
 

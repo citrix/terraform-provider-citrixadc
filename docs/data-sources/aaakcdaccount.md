@@ -43,11 +43,9 @@ In addition to the arguments, the following attributes are available:
 * `cacert` - CA certificate to verify the KDC.
 * `id` - The id of the aaakcdaccount. It has the same value as the `kcdaccount` attribute.
 
+### Read-only aaakcdaccount metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaakcdaccount` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
 
-A aaakcdaccount can be imported using its kcdaccount, e.g.
-
-```shell
-terraform import citrixadc_aaakcdaccount.tf_aaakcdaccount my_kcdaccount
-```
+* `principle` - SPN extracted from keytab file.
+* `kcdspn` - Host SPN extracted from keytab file.

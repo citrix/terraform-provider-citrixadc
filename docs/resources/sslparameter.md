@@ -53,3 +53,12 @@ resource "citrixadc_sslparameter" "default" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslparameter. It is a unique string prefixed with "tf-sslparameter-"
+
+
+## Import
+
+A sslparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_sslparameter.tf_sslparameter sslparameter-config
+```

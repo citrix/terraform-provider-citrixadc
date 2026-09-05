@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -297,6 +297,34 @@ func TestAccLbvserver_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_auditnslogpolicy_binding.tf_binding", "policyname", "tf_auditnslogpolicy_bind"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_auditnslogpolicy_binding.tf_binding", "priority", "100"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_auditnslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_auditnslogpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_auditnslogpolicy_binding.Type(), "tf_lbvserver_audit", map[string]string{"policyname": "tf_auditnslogpolicy_bind"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_auditnslogpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_auditnslogpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

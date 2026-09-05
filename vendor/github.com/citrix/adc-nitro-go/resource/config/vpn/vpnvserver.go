@@ -193,6 +193,10 @@ type Vpnvserver struct {
 	*/
 	Vserverfqdn string `json:"vserverfqdn,omitempty"`
 	/**
+	* Fully qualified domain name of the SPA site. This is used for Secure Private Access configuration.
+	*/
+	Gslbsitefqdn string `json:"gslbsitefqdn,omitempty"`
+	/**
 	* Name of the PCoIP vserver profile associated with the vserver.
 	*/
 	Pcoipvserverprofilename string `json:"pcoipvserverprofilename,omitempty"`
@@ -208,6 +212,10 @@ type Vpnvserver struct {
 	* Enable device posture
 	*/
 	Deviceposture string `json:"deviceposture,omitempty"`
+	/**
+	* Name of the WASM module to assign to this virtual server
+	*/
+	Wasmmodule string `json:"wasmmodule,omitempty"`
 	/**
 	* New name for the Citrix Gateway virtual server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 		The following requirement applies only to the Citrix ADC CLI:

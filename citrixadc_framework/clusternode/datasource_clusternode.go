@@ -35,7 +35,7 @@ func (d *ClusternodeDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *ClusternodeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ClusternodeResourceModel
+	var data ClusternodeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *ClusternodeDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	clusternodeSetAttrFromGet(ctx, &data, getResponseData)
+	clusternodeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

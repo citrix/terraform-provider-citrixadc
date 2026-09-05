@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -55,22 +58,26 @@ func (r *NslicenseserverResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating nslicenseserver resource")
 
-	// nslicenseserver := nslicenseserverGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload and add the license server (SDK v2 used AddResource).
+	nslicenseserver := nslicenseserverGetThePayloadFromthePlan(ctx, &data)
+	_, err := r.client.AddResource(service.Nslicenseserver.Type(), "", &nslicenseserver)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nslicenseserver, got error: %s", err))
+		return
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nslicenseserver.Type(), &nslicenseserver)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nslicenseserver, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nslicenseserver-config")
+	// ID matches SDK v2: d.SetId(servername)
+	data.Id = types.StringValue(data.Servername.ValueString())
 
 	tflog.Trace(ctx, "Created nslicenseserver resource")
 
 	// Read the updated state back
-	r.readNslicenseserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNslicenseserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nslicenseserver not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *NslicenseserverResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading nslicenseserver resource")
 
-	r.readNslicenseserverFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNslicenseserverFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NslicenseserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NslicenseserverResourceModel
+	var data, state NslicenseserverResourceModel
 
+	// Read Terraform prior state to detect changes and preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,46 @@ func (r *NslicenseserverResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nslicenseserver resource")
 
-	// Create API request body from the model
-	// nslicenseserver := nslicenseserverGetThePayloadFromtheConfig(ctx, &data)
+	// Only licensemode and port are updateable in SDK v2; everything else is
+	// RequiresReplace and never reaches Update.
+	nslicenseserver := ns.Nslicenseserver{Servername: data.Servername.ValueString()}
+	hasChange := false
+	if !data.Licensemode.Equal(state.Licensemode) {
+		tflog.Debug(ctx, "licensemode has changed for nslicenseserver, starting update")
+		nslicenseserver.Licensemode = data.Licensemode.ValueString()
+		hasChange = true
+	}
+	if !data.Port.Equal(state.Port) {
+		tflog.Debug(ctx, "port has changed for nslicenseserver, starting update")
+		if !data.Port.IsNull() && !data.Port.IsUnknown() {
+			nslicenseserver.Port = utils.IntPtr(int(data.Port.ValueInt64()))
+		}
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nslicenseserver.Type(), &nslicenseserver)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nslicenseserver, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated nslicenseserver resource")
+	if hasChange {
+		_, err := r.client.UpdateResource(service.Nslicenseserver.Type(), "", &nslicenseserver)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nslicenseserver, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated nslicenseserver resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nslicenseserver resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readNslicenseserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNslicenseserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nslicenseserver not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +177,39 @@ func (r *NslicenseserverResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting nslicenseserver resource")
 
-	// For nslicenseserver, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nslicenseserver resource from state")
-}
-
-// Helper function to read nslicenseserver data from API
-func (r *NslicenseserverResource) readNslicenseserverFromApi(ctx context.Context, data *NslicenseserverResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nslicenseserver.Type(), "")
+	// SDK v2 deleted with args: servername:<value>
+	args := []string{fmt.Sprintf("servername:%s", data.Servername.ValueString())}
+	err := r.client.DeleteResourceWithArgs(service.Nslicenseserver.Type(), "", args)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read nslicenseserver, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nslicenseserver, got error: %s", err))
 		return
 	}
 
-	nslicenseserverSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted nslicenseserver resource")
+}
 
+// readNslicenseserverFromApi reads the license server via the array-filter GET
+// (matching SDK v2 FindResourceArrayWithParams). Returns false when no license
+// server is configured so the caller can remove it from state.
+func (r *NslicenseserverResource) readNslicenseserverFromApi(ctx context.Context, data *NslicenseserverResourceModel, diags *diag.Diagnostics) bool {
+	findParams := service.FindParams{
+		ResourceType:             "nslicenseserver",
+		ResourceMissingErrorCode: 258,
+	}
+
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read nslicenseserver, got error: %s", err))
+		return false
+	}
+
+	// No license server configured.
+	if len(dataArr) == 0 {
+		return false
+	}
+
+	// License server returns at most one element.
+	nslicenseserverSetAttrFromGet(ctx, data, dataArr[0])
+
+	return true
 }

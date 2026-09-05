@@ -19,6 +19,7 @@ type CloudngsparameterResourceModel struct {
 	Allowedudtversion          types.String `tfsdk:"allowedudtversion"`
 	Blockonallowedngstktprof   types.String `tfsdk:"blockonallowedngstktprof"`
 	Csvserverticketingdecouple types.String `tfsdk:"csvserverticketingdecouple"`
+	Wafprotection              types.String `tfsdk:"wafprotection"`
 }
 
 func (r *CloudngsparameterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -53,6 +54,11 @@ func (r *CloudngsparameterResource) Schema(ctx context.Context, req resource.Sch
 				Default:     stringdefault.StaticString("NO"),
 				Description: "Enables Decoupling CSVSERVER state from Ticketing Service state in the CGS deployment",
 			},
+			"wafprotection": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Configure WAF protection for CGS deployment. The available options are:",
+			},
 		},
 	}
 }
@@ -73,6 +79,9 @@ func cloudngsparameterGetThePayloadFromthePlan(ctx context.Context, data *Cloudn
 	}
 	if !data.Csvserverticketingdecouple.IsNull() && !data.Csvserverticketingdecouple.IsUnknown() {
 		cloudngsparameter.Csvserverticketingdecouple = data.Csvserverticketingdecouple.ValueString()
+	}
+	if !data.Wafprotection.IsNull() && !data.Wafprotection.IsUnknown() {
+		cloudngsparameter.Wafprotection = data.Wafprotection.ValueString()
 	}
 
 	return cloudngsparameter
@@ -101,6 +110,11 @@ func cloudngsparameterSetAttrFromGet(ctx context.Context, data *Cloudngsparamete
 		data.Csvserverticketingdecouple = types.StringValue(val.(string))
 	} else {
 		data.Csvserverticketingdecouple = types.StringNull()
+	}
+	if val, ok := getResponseData["wafprotection"]; ok && val != nil {
+		data.Wafprotection = types.StringValue(val.(string))
+	} else {
+		data.Wafprotection = types.StringNull()
 	}
 
 	// Set ID for the resource

@@ -91,3 +91,92 @@ In addition to the argument above, the following attributes are exported:
 * `trunkallowedvlan` - VLAN ID or range of VLAN IDs will be allowed on this trunk interface. In the command line interface, separate the range with a hyphen. For example: 40-90.
 
 * `trunkmode` - Accept and send 802.1q VLAN tagged packets, based on Allowed Vlan List of this interface.
+
+### Read-only interface metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_interface` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `devicename` - Name of the interface.
+* `unit` - Unit number for this interface, signifying the sequence number in which this interface is discovered on this Citrix ADC.
+* `description` - Display the type of interface, the speeds at which this interface can operate, and, if applicable, the type of SFP.
+* `flags` - Flags for this interface. Used for communicating the device states.
+* `actualmtu` - MTU for this interface (the largest frame that can transit this interface).
+* `vlan` - Native VLAN for this interface.
+* `mac` - MAC address for this interface.
+* `uptime` - Duration for which the interface has been UP. Reset when the interface state changes to DOWN.
+* `downtime` - Duration for which the interface has been DOWN. Reset when the interface state changes to UP.
+* `actualringsize` - Actual receive ringsize of the interface.
+* `reqmedia` - Requested media setting for this interface.
+* `reqspeed` - Requested speed setting for this interface.
+* `reqduplex` - Requested duplex setting for this interface.
+* `reqflowcontrol` - Requested flow control setting for this interface.
+* `actmedia` - Actual media setting for this interface.
+* `actspeed` - Actual speed setting for this interface.
+* `actduplex` - Actual duplex setting for this interface.
+* `actflowctl` - Actual flow control setting for this interface.
+* `mode` - Interface Link Aggregation mode (Auto/Manual) setting.
+* `autonegresult` - Actual auto-negotiation setting for this interface.
+* `tagged` - VLAN tags setting on this channel.
+* `taggedany` - Interface setting to accept/drop all tagged packets.
+* `taggedautolearn` - Dynamic VLAN membership autolearning enabled or disabled on this interface.
+* `hangdetect` - Hang detection enabled or disabled for this interface.
+* `hangreset` - Hang reset enabled or disabled for this interface.
+* `linkstate` - The current state of the link associated with the interface.
+* `intfstate` - Current state of the specified interface.
+* `rxpackets` - Number of packets received by an interface.
+* `rxbytes` - Number of bytes received by an interface.
+* `rxerrors` - Number of inbound packets dropped by the hardware on a specified interface.
+* `rxdrops` - Number of inbound packets dropped by the specified interface.
+* `txpackets` - Number of packets transmitted by an interface.
+* `txbytes` - Number of bytes transmitted by an interface.
+* `txerrors` - Number of outbound packets dropped by the hardware on a specified interface.
+* `txdrops` - Number of packets dropped in transmission by the specified interface.
+* `indisc` - Number of error-free inbound packets discarded because of a lack of resources.
+* `outdisc` - Number of error-free outbound packets discarded because of a lack of resources.
+* `fctls` - Number of times flow control is performed because of received pause frames.
+* `hangs` - Number of times the specified interface detected hangs in the transmit and receive paths.
+* `stsstalls` - Number of times the status updates for a specified interface were stalled.
+* `txstalls` - Number of times the interface stalled when transmitting packets.
+* `rxstalls` - Number of times the interface stalled when receiving packets.
+* `bdgmacmoved` - Number of MAC moves between ports.
+* `bdgmuted` - Number of times the interface stopped transmitting and receiving packets because of MAC moves between ports.
+* `vmac` - Virtual MAC of this interface.
+* `vmac6` - Virtual MAC for IPv6 of this interface.
+* `reqthroughput` - Minimum required throughput for an interface.
+* `actthroughput` - Actual throughput for the interface.
+* `backplane` - The cluster backplane status of the interface.
+* `ifnum` - Contains the LA Master, if the interface is part of LA channel. A list of strings.
+* `cleartime` - Time since the interface stats are cleared last time.
+* `slavestate` - State of the member interfaces.
+* `slavemedia` - Media type of the member interfaces.
+* `slavespeed` - Speed of the member interfaces.
+* `slaveduplex` - Duplex of the member interfaces.
+* `slaveflowctl` - Flowcontrol of the member interfaces.
+* `slavetime` - UP time of the member interfaces.
+* `intftype` - Interface Type (virtual, physical or loopback).
+* `svmcmd` - Attribute to identify the source of cmd; set to 1 when SVM fires the nitro cmd.
+* `lacpactormode` - LACP actor mode (DISABLED, ACTIVE, PASSIVE).
+* `lacpactortimeout` - Interval at which the Citrix ADC sends LACPDU messages (LONG, SHORT).
+* `lacpactorpriority` - LACP Actor Priority.
+* `lacpactorportno` - LACP Actor port number.
+* `lacppartnerstate` - LACP Partner State.
+* `lacppartnertimeout` - The timeout value for the information received in LACPDUs (LONG, SHORT).
+* `lacppartneraggregation` - The Aggregation flag of the partner.
+* `lacppartnerinsync` - The Synchronization flag of the partner.
+* `lacppartnercollecting` - The Collecting flag of the partner.
+* `lacppartnerdistributing` - The Distributing flag of the partner.
+* `lacppartnerdefaulted` - Whether the Receive Machine of the partner entered the Defaulted state.
+* `lacppartnerexpired` - Whether the Receive Machine of the partner entered the Expired state.
+* `lacppartnerpriority` - LACP Partner Priority.
+* `lacppartnersystemmac` - LACP Partner System MAC.
+* `lacppartnersystempriority` - LACP Partner System Priority.
+* `lacppartnerportno` - LACP Partner Port number.
+* `lacppartnerkey` - LACP Partner Key.
+* `lacpactoraggregation` - The Aggregation flag of the actor.
+* `lacpactorinsync` - The Synchronization flag of the actor.
+* `lacpactorcollecting` - The Collecting flag of the actor.
+* `lacpactordistributing` - The Distributing flag of the actor.
+* `lacpportmuxstate` - LACP Port MUX state.
+* `lacpportrxstat` - LACP Port RX state.
+* `lacpportselectstate` - LACP Port SELECT state (SELECTED, UNSELECTED, STANDBY).
+* `lractiveintf` - LR set member interface state (active/inactive).

@@ -93,7 +93,7 @@ func (d *CrvserverCachepolicyBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	crvserver_cachepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	crvserver_cachepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

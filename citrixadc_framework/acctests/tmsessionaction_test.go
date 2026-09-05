@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTmsessionaction_basic = `
@@ -74,6 +76,76 @@ func TestAccTmsessionaction_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+const testAccTmsessionaction_unset_step1 = `
+	resource "citrixadc_tmsessionaction" "tf_unset" {
+		name           = "tf_tmsessionaction_unset"
+		sso            = "ON"
+		httponlycookie = "NO"
+	}
+`
+
+const testAccTmsessionaction_unset_step2 = `
+	resource "citrixadc_tmsessionaction" "tf_unset" {
+		name = "tf_tmsessionaction_unset"
+	}
+`
+
+func TestAccTmsessionaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccTmsessionaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmsessionactionExist("citrixadc_tmsessionaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionaction.tf_unset", "sso", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionaction.tf_unset", "httponlycookie", "NO"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state reverts to the
+				// documented NITRO defaults and the implicit post-apply plan is empty.
+				Config: testAccTmsessionaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmsessionactionExist("citrixadc_tmsessionaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionaction.tf_unset", "sso", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_tmsessionaction.tf_unset", "httponlycookie", "YES"),
+					// Independent appliance-level confirmation the unset took effect.
+					// Note: NITRO omits sso from GET when at its default (OFF), so it
+					// is verified via Terraform state only; httponlycookie is echoed.
+					testAccCheckTmsessionactionADCValue("tf_tmsessionaction_unset", "httponlycookie", "YES"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckTmsessionactionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset reverted it.
+func testAccCheckTmsessionactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Tmsessionaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("tmsessionaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("tmsessionaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckTmsessionactionExist(n string, id *string) resource.TestCheckFunc {
@@ -140,6 +212,77 @@ func testAccCheckTmsessionactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTmsessionaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionaction.tf_tmsessionaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmsessionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Tmsessionaction.Type(), "my_tmsession_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmsessionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTmsessionaction_import(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionaction.tf_tmsessionaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmsessionaction_basic},
+			{
+				Config:                  testAccTmsessionaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccTmsessionaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmsessionactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccTmsessionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionactionExist("citrixadc_tmsessionaction.tf_tmsessionaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTmsessionaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionactionExist("citrixadc_tmsessionaction.tf_tmsessionaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccTmsessionactionDataSource_basic = `
 
 
@@ -163,6 +306,8 @@ func TestAccTmsessionactionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTmsessionactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// "id" is the universal runtime-binding proof (equals name).
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmsessionaction.tf_tmsessionaction", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionaction.tf_tmsessionaction", "name", "my_tmsession_action"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionaction.tf_tmsessionaction", "sesstimeout", "10"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionaction.tf_tmsessionaction", "defaultauthorizationaction", "ALLOW"),

@@ -35,7 +35,7 @@ func (d *BotsignatureDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *BotsignatureDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data BotsignatureResourceModel
+	var data BotsignatureDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *BotsignatureDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	botsignatureSetAttrFromGet(ctx, &data, getResponseData)
+	botsignatureDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

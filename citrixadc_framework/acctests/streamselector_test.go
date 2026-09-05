@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccStreamselector_basic = `
@@ -121,6 +122,53 @@ func testAccCheckStreamselectorDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccStreamselector_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_streamselector.tf_streamselector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckStreamselectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamselector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamselectorExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Streamselector.Type(), "my_streamselector"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccStreamselector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamselectorExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccStreamselector_import(t *testing.T) {
+	const resAddr = "citrixadc_streamselector.tf_streamselector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckStreamselectorDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccStreamselector_basic},
+			{
+				Config:                  testAccStreamselector_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccStreamselectorDataSource_basic = `
 	resource "citrixadc_streamselector" "tf_streamselector" {
 		name = "my_streamselector"
@@ -131,6 +179,30 @@ const testAccStreamselectorDataSource_basic = `
 		name = citrixadc_streamselector.tf_streamselector.name
 	}
 `
+
+func TestAccStreamselector_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckStreamselectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccStreamselector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamselectorExist("citrixadc_streamselector.tf_streamselector", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccStreamselector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckStreamselectorExist("citrixadc_streamselector.tf_streamselector", nil)),
+			},
+		},
+	})
+}
 
 func TestAccStreamselectorDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

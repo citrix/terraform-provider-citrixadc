@@ -45,3 +45,10 @@ In addition to the arguments, the following attributes are available:
 * `nocharmaps` - Will not show internal field types added as part of FieldFormat learn rules deployment.
 * `priority` - Positive integer specifying the priority of the field type. A lower number specifies a higher priority. Field types are checked in the order of their priority numbers.
 * `regex` - PCRE - format regular expression defining the characters and length allowed for this field type.
+
+### Read-only appfwfieldtype metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwfieldtype` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `builtin` - Flag to determine if the field type is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this configuration.

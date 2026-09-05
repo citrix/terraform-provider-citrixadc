@@ -57,9 +57,21 @@ type Techsupport struct {
 	*/
 	Time string `json:"time,omitempty"`
 	/**
+	* Specifies the time window in hours around the time specified by -time option. This parameter is only valid when -time is specified. Defines the range for collecting newnslog files, text logs, and non-PE core files. For example, with -time "01/Jan/2026:12:00:00" and -period 2, logs and cores from 11:00:00 to 13:00:00 will be collected.
+	*/
+	Period *int `json:"period,omitempty"`
+	/**
 	* Option for collecting showtechsupport bundle on ADSS cluster/node.
 	*/
 	Adss bool `json:"adss,omitempty"`
+	/**
+	* Option for collecting showtechsupport bundle without truncating log files.
+	*/
+	Notruncate bool `json:"notruncate,omitempty"`
+	/**
+	* Option for collecting showtechsupport bundle without PE core files.
+	*/
+	Nopecore bool `json:"nopecore,omitempty"`
 	/**
 	* Use this option to collect showtechsupport bundle only from the nodes given as a list to this option. If -file option is used, it will collect the files from the given nodes back to the cco and will upload the compressed folder containing the files from there.
 	*/

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNspartition_vxlan_binding_basic = `
@@ -86,6 +89,49 @@ func TestAccNspartition_vxlan_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccNspartition_vxlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_vxlan_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: partitionname,vxlan) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"partitionname", "vxlan"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNspartition_vxlan_binding_basic},
+			{Config: testAccNspartition_vxlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNspartition_vxlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckNspartition_vxlan_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -113,10 +159,12 @@ func testAccCheckNspartition_vxlan_bindingExist(n string, id *string) resource.T
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		partitionname := idSlice[0]
-		vxlan := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"partitionname", "vxlan"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		partitionname := idMap["partitionname"]
+		vxlan := idMap["vxlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nspartition_vxlan_binding",
@@ -155,13 +203,12 @@ func testAccCheckNspartition_vxlan_bindingNotExist(n string, id string) resource
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"partitionname", "vxlan"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		partitionname := idSlice[0]
-		vxlan := idSlice[1]
+		partitionname := idMap["partitionname"]
+		vxlan := idMap["vxlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nspartition_vxlan_binding",
@@ -218,6 +265,63 @@ func testAccCheckNspartition_vxlan_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccNspartition_vxlan_binding_upgrade_basic = `
+	resource "citrixadc_nspartition" "tf_nspartition" {
+		partitionname = "tf_nspartition"
+		maxbandwidth  = 10240
+		minbandwidth  = 512
+		maxconn       = 512
+		maxmemlimit   = 11
+	}
+	resource "citrixadc_vxlan" "tf_vxlan" {
+		vxlanid            = 123
+		port               = 33
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+		innervlantagging   = "ENABLED"
+	}
+	resource "citrixadc_nspartition_vxlan_binding" "tf_binding" {
+		partitionname = citrixadc_nspartition.tf_nspartition.partitionname
+		vxlan         = citrixadc_vxlan.tf_vxlan.vxlanid
+	}
+`
+
+func TestAccNspartition_vxlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNspartition_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNspartition_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_vxlan_bindingExist("citrixadc_nspartition_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_vxlan_binding.tf_binding", "id", "tf_nspartition,123"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNspartition_vxlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNspartition_vxlan_bindingExist("citrixadc_nspartition_vxlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nspartition_vxlan_binding.tf_binding", "id", "partitionname:tf_nspartition,vxlan:123"),
+				),
+			},
+		},
+	})
+}
+
 const testAccNspartition_vxlan_bindingDataSource_basic = `
 	resource "citrixadc_nspartition" "tf_nspartition" {
 		partitionname = "tf_nspartition"
@@ -255,6 +359,34 @@ func TestAccNspartition_vxlan_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nspartition_vxlan_binding.tf_binding", "partitionname", "tf_nspartition"),
 					resource.TestCheckResourceAttr("data.citrixadc_nspartition_vxlan_binding.tf_binding", "vxlan", "123"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNspartition_vxlan_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nspartition_vxlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNspartition_vxlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNspartition_vxlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartition_vxlan_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Nspartition_vxlan_binding.Type(), "tf_nspartition", map[string]string{"vxlan": "123"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNspartition_vxlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNspartition_vxlan_bindingExist(resAddr, nil)),
 			},
 		},
 	})

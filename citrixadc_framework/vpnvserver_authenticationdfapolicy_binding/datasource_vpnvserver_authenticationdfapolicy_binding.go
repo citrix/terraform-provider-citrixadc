@@ -35,7 +35,7 @@ func (d *VpnvserverAuthenticationdfapolicyBindingDataSource) Schema(ctx context.
 }
 
 func (d *VpnvserverAuthenticationdfapolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnvserverAuthenticationdfapolicyBindingResourceModel
+	var data VpnvserverAuthenticationdfapolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -66,7 +66,7 @@ func (d *VpnvserverAuthenticationdfapolicyBindingDataSource) Read(ctx context.Co
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the matching policy (the binding key).
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
@@ -89,11 +89,13 @@ func (d *VpnvserverAuthenticationdfapolicyBindingDataSource) Read(ctx context.Co
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationdfapolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_authenticationdfapolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	vpnvserver_authenticationdfapolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	// Datasource has no prior plan/state, so use the datasource-specific setter that
+	// faithfully copies every field from the GET response and sets the ID (Pattern 7).
+	vpnvserver_authenticationdfapolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -1,9 +1,82 @@
 package cachecontentgroup
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// CachecontentgroupDataSourceModel is the data-source-specific model, decoupled
+// from CachecontentgroupResourceModel. A data source is a pure read surface, so
+// it can expose the full GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits.
+type CachecontentgroupDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Absexpiry              types.List   `tfsdk:"absexpiry"`
+	Absexpirygmt           types.List   `tfsdk:"absexpirygmt"`
+	Alwaysevalpolicies     types.String `tfsdk:"alwaysevalpolicies"`
+	Cachecontrol           types.String `tfsdk:"cachecontrol"`
+	Expireatlastbyte       types.String `tfsdk:"expireatlastbyte"`
+	Flashcache             types.String `tfsdk:"flashcache"`
+	Heurexpiryparam        types.Int64  `tfsdk:"heurexpiryparam"`
+	Hitparams              types.List   `tfsdk:"hitparams"`
+	Hitselector            types.String `tfsdk:"hitselector"`
+	Host                   types.String `tfsdk:"host"`
+	Ignoreparamvaluecase   types.String `tfsdk:"ignoreparamvaluecase"`
+	Ignorereloadreq        types.String `tfsdk:"ignorereloadreq"`
+	Ignorereqcachinghdrs   types.String `tfsdk:"ignorereqcachinghdrs"`
+	Insertage              types.String `tfsdk:"insertage"`
+	Insertetag             types.String `tfsdk:"insertetag"`
+	Insertvia              types.String `tfsdk:"insertvia"`
+	Invalparams            types.List   `tfsdk:"invalparams"`
+	Invalrestrictedtohost  types.String `tfsdk:"invalrestrictedtohost"`
+	Invalselector          types.String `tfsdk:"invalselector"`
+	Lazydnsresolve         types.String `tfsdk:"lazydnsresolve"`
+	Matchcookies           types.String `tfsdk:"matchcookies"`
+	Maxressize             types.Int64  `tfsdk:"maxressize"`
+	Memlimit               types.Int64  `tfsdk:"memlimit"`
+	Minhits                types.Int64  `tfsdk:"minhits"`
+	Minressize             types.Int64  `tfsdk:"minressize"`
+	Name                   types.String `tfsdk:"name"`
+	Persistha              types.String `tfsdk:"persistha"`
+	Pinned                 types.String `tfsdk:"pinned"`
+	Polleverytime          types.String `tfsdk:"polleverytime"`
+	Prefetch               types.String `tfsdk:"prefetch"`
+	Prefetchmaxpending     types.Int64  `tfsdk:"prefetchmaxpending"`
+	Prefetchperiod         types.Int64  `tfsdk:"prefetchperiod"`
+	Prefetchperiodmillisec types.Int64  `tfsdk:"prefetchperiodmillisec"`
+	Query                  types.String `tfsdk:"query"`
+	Quickabortsize         types.Int64  `tfsdk:"quickabortsize"`
+	Relexpiry              types.Int64  `tfsdk:"relexpiry"`
+	Relexpirymillisec      types.Int64  `tfsdk:"relexpirymillisec"`
+	Removecookies          types.String `tfsdk:"removecookies"`
+	Selectorvalue          types.String `tfsdk:"selectorvalue"`
+	Tosecondary            types.String `tfsdk:"tosecondary"`
+	Type                   types.String `tfsdk:"type"`
+	Weaknegrelexpiry       types.Int64  `tfsdk:"weaknegrelexpiry"`
+	Weakposrelexpiry       types.Int64  `tfsdk:"weakposrelexpiry"`
+
+	// Read-only (GET-only) metadata from the NITRO read-only set
+	// (zion73x_readonly/cachecontentgroup.json). Never settable; from GET.
+	Flags                 types.Int64  `tfsdk:"flags"`
+	Prefetchcur           types.Int64  `tfsdk:"prefetchcur"`
+	Memusage              types.Int64  `tfsdk:"memusage"`
+	Memdusage             types.Int64  `tfsdk:"memdusage"`
+	Disklimit             types.Int64  `tfsdk:"disklimit"`
+	Cachenon304hits       types.Int64  `tfsdk:"cachenon304hits"`
+	Cache304hits          types.Int64  `tfsdk:"cache304hits"`
+	Cachecells            types.Int64  `tfsdk:"cachecells"`
+	Cachegroupincarnation types.Int64  `tfsdk:"cachegroupincarnation"`
+	Persist               types.String `tfsdk:"persist"`
+	Policyname            types.List   `tfsdk:"policyname"`
+	Cachenuminvalpolicy   types.Int64  `tfsdk:"cachenuminvalpolicy"`
+	Markercells           types.Int64  `tfsdk:"markercells"`
+	Builtin               types.List   `tfsdk:"builtin"`
+	Feature               types.String `tfsdk:"feature"`
+}
 
 func CachecontentgroupDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -229,6 +302,144 @@ func CachecontentgroupDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Relative expiry time, in seconds, for expiring positive responses with response codes between 200 and 399. Cannot be used in combination with other Expiry attributes. Similar to -relExpiry but has lower precedence.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"flags": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Flags.",
+			},
+			"prefetchcur": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Current outstanding prefetches.",
+			},
+			"memusage": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Current memory usage.",
+			},
+			"memdusage": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Current disk memory usage.",
+			},
+			"disklimit": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Maximum amount of disk that the cache can use. The effective limit is based on the available memory of the Citrix ADC.",
+			},
+			"cachenon304hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Cache non 304 hits.",
+			},
+			"cache304hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Cache 304 hits.",
+			},
+			"cachecells": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of cells.",
+			},
+			"cachegroupincarnation": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Cache group incarnation.",
+			},
+			"persist": schema.StringAttribute{
+				Computed:    true,
+				Description: "Setting persist to YES causes IC to save objects in contentgroup to disk. Possible values = YES, NO",
+			},
+			"policyname": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Active cache policies referring to this group.",
+			},
+			"cachenuminvalpolicy": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of active Invalidation policies referring to this group.",
+			},
+			"markercells": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Numbers of marker cells in this group.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine whether the content group is built-in. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// cachecontentgroupDataSourceSetAttrFromGet projects a NITRO cachecontentgroup
+// GET response onto the data-source model. Attributes are filled from the GET
+// (or left Null when the GET omits them) via the shared utils.MapGet* helpers.
+func cachecontentgroupDataSourceSetAttrFromGet(ctx context.Context, data *CachecontentgroupDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In cachecontentgroupDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Absexpiry = utils.MapGetStringList(g, "absexpiry")
+	data.Absexpirygmt = utils.MapGetStringList(g, "absexpirygmt")
+	data.Alwaysevalpolicies = utils.MapGetString(g, "alwaysevalpolicies")
+	data.Cachecontrol = utils.MapGetString(g, "cachecontrol")
+	data.Expireatlastbyte = utils.MapGetString(g, "expireatlastbyte")
+	data.Flashcache = utils.MapGetString(g, "flashcache")
+	data.Heurexpiryparam = utils.MapGetInt64(g, "heurexpiryparam")
+	data.Hitparams = utils.MapGetStringList(g, "hitparams")
+	data.Hitselector = utils.MapGetString(g, "hitselector")
+	data.Host = utils.MapGetString(g, "host")
+	data.Ignoreparamvaluecase = utils.MapGetString(g, "ignoreparamvaluecase")
+	data.Ignorereloadreq = utils.MapGetString(g, "ignorereloadreq")
+	data.Ignorereqcachinghdrs = utils.MapGetString(g, "ignorereqcachinghdrs")
+	data.Insertage = utils.MapGetString(g, "insertage")
+	data.Insertetag = utils.MapGetString(g, "insertetag")
+	data.Insertvia = utils.MapGetString(g, "insertvia")
+	data.Invalparams = utils.MapGetStringList(g, "invalparams")
+	data.Invalrestrictedtohost = utils.MapGetString(g, "invalrestrictedtohost")
+	data.Invalselector = utils.MapGetString(g, "invalselector")
+	data.Lazydnsresolve = utils.MapGetString(g, "lazydnsresolve")
+	data.Matchcookies = utils.MapGetString(g, "matchcookies")
+	data.Maxressize = utils.MapGetInt64(g, "maxressize")
+	data.Memlimit = utils.MapGetInt64(g, "memlimit")
+	data.Minhits = utils.MapGetInt64(g, "minhits")
+	data.Minressize = utils.MapGetInt64(g, "minressize")
+	data.Persistha = utils.MapGetString(g, "persistha")
+	data.Pinned = utils.MapGetString(g, "pinned")
+	data.Polleverytime = utils.MapGetString(g, "polleverytime")
+	data.Prefetch = utils.MapGetString(g, "prefetch")
+	data.Prefetchmaxpending = utils.MapGetInt64(g, "prefetchmaxpending")
+	data.Prefetchperiod = utils.MapGetInt64(g, "prefetchperiod")
+	data.Prefetchperiodmillisec = utils.MapGetInt64(g, "prefetchperiodmillisec")
+	data.Query = utils.MapGetString(g, "query")
+	data.Quickabortsize = utils.MapGetInt64(g, "quickabortsize")
+	data.Relexpiry = utils.MapGetInt64(g, "relexpiry")
+	data.Relexpirymillisec = utils.MapGetInt64(g, "relexpirymillisec")
+	data.Removecookies = utils.MapGetString(g, "removecookies")
+	data.Selectorvalue = utils.MapGetString(g, "selectorvalue")
+	data.Tosecondary = utils.MapGetString(g, "tosecondary")
+	data.Type = utils.MapGetString(g, "type")
+	data.Weaknegrelexpiry = utils.MapGetInt64(g, "weaknegrelexpiry")
+	data.Weakposrelexpiry = utils.MapGetInt64(g, "weakposrelexpiry")
+
+	// Read-only metadata.
+	data.Flags = utils.MapGetInt64(g, "flags")
+	data.Prefetchcur = utils.MapGetInt64(g, "prefetchcur")
+	data.Memusage = utils.MapGetInt64(g, "memusage")
+	data.Memdusage = utils.MapGetInt64(g, "memdusage")
+	data.Disklimit = utils.MapGetInt64(g, "disklimit")
+	data.Cachenon304hits = utils.MapGetInt64(g, "cachenon304hits")
+	data.Cache304hits = utils.MapGetInt64(g, "cache304hits")
+	data.Cachecells = utils.MapGetInt64(g, "cachecells")
+	data.Cachegroupincarnation = utils.MapGetInt64(g, "cachegroupincarnation")
+	data.Persist = utils.MapGetString(g, "persist")
+	data.Policyname = utils.MapGetStringList(g, "policyname")
+	data.Cachenuminvalpolicy = utils.MapGetInt64(g, "cachenuminvalpolicy")
+	data.Markercells = utils.MapGetInt64(g, "markercells")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

@@ -35,7 +35,7 @@ func (d *SslprofileDataSource) Schema(ctx context.Context, req datasource.Schema
 }
 
 func (d *SslprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslprofileResourceModel
+	var data SslprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *SslprofileDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	sslprofileSetAttrFromGet(ctx, &data, getResponseData)
+	sslprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

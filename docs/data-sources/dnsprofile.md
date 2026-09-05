@@ -50,3 +50,9 @@ In addition to the arguments, the following attributes are available:
 * `maxcacheableecsprefixlength6` - The maximum ecs prefix length that will be cached for IPv6 subnets.
 * `recursiveresolution` - DNS recursive resolution; if enabled, will do recursive resolution for DNS query when the profile is associated with ADNS service, CS Vserver and DNS action.
 * `replaceecs` - Replace ECS Option on DNS query.
+
+### Read-only dnsprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnsprofile` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `referencecount` - Number of entities using this profile.

@@ -82,7 +82,7 @@ func (d *VridChannelBindingDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	vrid_channel_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	vrid_channel_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -33,3 +33,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nsratecontrol. It is a unique string prefixed with "tf-nsratecontrol-"
 
+
+## Import
+
+A nsratecontrol can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_nsratecontrol.tf_nsratecontrol nsratecontrol-config
+```

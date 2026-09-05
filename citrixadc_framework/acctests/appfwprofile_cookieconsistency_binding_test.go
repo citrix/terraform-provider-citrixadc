@@ -17,13 +17,16 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_cookieconsistency_binding_basic_step1 = `
@@ -102,9 +105,12 @@ func testAccCheckAppfwprofile_cookieconsistency_bindingExist(n string, id *strin
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 2)
-		appFwName := idSlice[0]
-		cookieconsistency := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "cookieconsistency"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
+		}
+		appFwName := idMap["name"]
+		cookieconsistency := idMap["cookieconsistency"]
 
 		findParams := service.FindParams{
 			ResourceType:             service.Appfwprofile_cookieconsistency_binding.Type(),
@@ -234,6 +240,143 @@ func TestAccAppfwprofile_cookieconsistency_bindingDataSource_basic(t *testing.T)
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1", "name", "demo_appfwprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1", "cookieconsistency", "^logon_[0-9A-Za-z]{2,15}$"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAppfwprofile_cookieconsistency_binding_upgrade_basic reuses the _basic config
+// (the binding + its appfwprofile prerequisite) with the same values. It is valid under
+// BOTH the SDK v2 2.2.0 schema and the current Framework schema because the migration
+// restored the SDK v2 attribute names (name, cookieconsistency).
+const testAccAppfwprofile_cookieconsistency_binding_upgrade_basic = `
+	resource citrixadc_appfwprofile_cookieconsistency_binding demo_binding1 {
+		name              = citrixadc_appfwprofile.demo_appfw.name
+		cookieconsistency = "^logon_[0-9A-Za-z]{2,15}$"
+	}
+
+	resource citrixadc_appfwprofile demo_appfw {
+		name = "demo_appfwprofile"
+		type = ["HTML"]
+	}
+`
+
+// TestAccAppfwprofile_cookieconsistency_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider.
+//
+// Step 1 creates the binding with citrix/citrixadc 2.2.0, which writes the legacy
+// comma-joined id (SDK v2 d.SetId(fmt.Sprintf("%s,%s", name, cookieconsistency)) =>
+// "demo_appfwprofile,^logon_[0-9A-Za-z]{2,15}$").
+// Step 2 refreshes/plans/applies the SAME config through the current Framework provider,
+// exercising ParseIdString on the legacy id. The Framework recomputes the id on Read
+// (appfwprofile_cookieconsistency_bindingSetAttrFromGet), so the id is upgraded to the
+// canonical new key:value format
+// "cookieconsistency:%5Elogon_%5B0-9A-Za-z%5D%7B2%2C15%7D%24,name:demo_appfwprofile".
+func TestAccAppfwprofile_cookieconsistency_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_cookieconsistency_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cookieconsistency_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "demo_appfwprofile,^logon_[0-9A-Za-z]{2,15}$"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read to the canonical new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_cookieconsistency_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cookieconsistency_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "cookieconsistency:%5Elogon_%5B0-9A-Za-z%5D%7B2%2C15%7D%24,name:demo_appfwprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_cookieconsistency_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,cookieconsistency) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "cookieconsistency"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1},
+			{Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_cookieconsistency_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_cookieconsistency_binding.demo_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_cookieconsistency_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_cookieconsistency_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_cookieconsistency_binding.Type(), "demo_appfwprofile", map[string]string{"cookieconsistency": utils.UrlEncode("^logon_[0-9A-Za-z]{2,15}$")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_cookieconsistency_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_cookieconsistency_bindingExist(resAddr, nil)),
 			},
 		},
 	})

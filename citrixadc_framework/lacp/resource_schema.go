@@ -30,14 +30,19 @@ func (r *LacpResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed:    true,
 				Description: "The ID of the lacp resource.",
 			},
+			// Backward-compat with SDK v2: Optional + Default(255). A Default
+			// requires Computed:true in the Framework. SDK v2 had no ForceNew on
+			// ownernode, so no RequiresReplace plan modifier is added.
 			"ownernode": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(255),
 				Description: "The owner node in a cluster for which we want to set the lacp priority. Owner node can vary from 0 to 31. Ownernode value of 254 is used for Cluster.",
 			},
+			// Backward-compat with SDK v2: Required with NO Default (a Required
+			// attribute cannot carry a Default in the Framework).
 			"syspriority": schema.Int64Attribute{
 				Required:    true,
-				Default:     int64default.StaticInt64(32768),
 				Description: "Priority number that determines which peer device of an LACP LA channel can have control over the LA channel. This parameter is globally applied to all LACP channels on the Citrix ADC. The lower the number, the higher the priority.",
 			},
 		},
@@ -49,10 +54,12 @@ func lacpGetThePayloadFromtheConfig(ctx context.Context, data *LacpResourceModel
 
 	// Create API request body from the model
 	lacp := network.Lacp{}
-	if !data.Ownernode.IsNull() {
+	// ownernode uses a pointer without omitempty in the NITRO struct (0 is a
+	// valid value), so always send it when known.
+	if !data.Ownernode.IsNull() && !data.Ownernode.IsUnknown() {
 		lacp.Ownernode = utils.IntPtr(int(data.Ownernode.ValueInt64()))
 	}
-	if !data.Syspriority.IsNull() {
+	if !data.Syspriority.IsNull() && !data.Syspriority.IsUnknown() {
 		lacp.Syspriority = utils.IntPtr(int(data.Syspriority.ValueInt64()))
 	}
 
@@ -62,20 +69,19 @@ func lacpGetThePayloadFromtheConfig(ctx context.Context, data *LacpResourceModel
 func lacpSetAttrFromGet(ctx context.Context, data *LacpResourceModel, getResponseData map[string]interface{}) *LacpResourceModel {
 	tflog.Debug(ctx, "In lacpSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Guard against the omit-on-default trap: only overwrite when NITRO returns
+	// a value. Never clobber a known/configured value with null when NITRO
+	// omits it from the GET response.
 	if val, ok := getResponseData["ownernode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ownernode = types.Int64Value(intVal)
 		}
-	} else {
-		data.Ownernode = types.Int64Null()
 	}
 	if val, ok := getResponseData["syspriority"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Syspriority = types.Int64Value(intVal)
 		}
-	} else {
-		data.Syspriority = types.Int64Null()
 	}
 
 	// Set ID for the resource

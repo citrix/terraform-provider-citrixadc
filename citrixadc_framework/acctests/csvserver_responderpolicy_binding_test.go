@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"net/url"
+	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"fmt"
-	"strings"
 	"testing"
 )
 
@@ -147,9 +150,12 @@ func testAccCheckCsvserver_responderpolicy_bindingExist(n string, id *string) re
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 		bindingId := rs.Primary.ID
-		idSlice := strings.SplitN(bindingId, ",", 2)
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "csvserver_responderpolicy_binding",
@@ -197,7 +203,13 @@ func testAccCheckCsvserver_responderpolicy_bindingDestroy(s *terraform.State) er
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Csvserver_responderpolicy_binding.Type(), rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+
+		_, err = client.FindResource(service.Csvserver_responderpolicy_binding.Type(), name)
 		if err == nil {
 			return fmt.Errorf("csvserver_responderpolicy_binding %s still exists", rs.Primary.ID)
 		}
@@ -247,6 +259,145 @@ func TestAccCsvserver_responderpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_responderpolicy_binding.tf_bind", "policyname", "tf_responder_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_csvserver_responderpolicy_binding.tf_bind", "priority", "100"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_responderpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_responderpolicy_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_responderpolicy_binding_basic_step1,
+			},
+			{
+				Config:                  testAccCsvserver_responderpolicy_binding_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{Config: testAccCsvserver_responderpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+const testAccCsvserver_responderpolicy_binding_upgrade_basic = `
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_responderpolicy" "tf_responder_policy" {
+  name   = "tf_responder_policy"
+  action = "NOOP"
+  rule   = "HTTP.REQ.URL.PATH_AND_QUERY.CONTAINS(\"nosuchthing\")"
+}
+
+resource "citrixadc_csvserver_responderpolicy_binding" "tf_bind" {
+    name = citrixadc_csvserver.tf_csvserver.name
+    policyname = citrixadc_responderpolicy.tf_responder_policy.name
+    priority = 100
+    bindpoint = "REQUEST"
+}
+`
+
+func TestAccCsvserver_responderpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCsvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccCsvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_responderpolicy_bindingExist("citrixadc_csvserver_responderpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_responderpolicy_binding.tf_bind", "id", "tf_csvserver,tf_responder_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCsvserver_responderpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCsvserver_responderpolicy_bindingExist("citrixadc_csvserver_responderpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_csvserver_responderpolicy_binding.tf_bind", "id", "name:tf_csvserver,policyname:tf_responder_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCsvserver_responderpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_csvserver_responderpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCsvserver_responderpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCsvserver_responderpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_responderpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Csvserver_responderpolicy_binding.Type(), "tf_csvserver", map[string]string{"policyname": "tf_responder_policy", "bindpoint": "REQUEST", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCsvserver_responderpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCsvserver_responderpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSystemextramgmtcpu_basic(t *testing.T) {
@@ -108,6 +109,65 @@ resource "citrixadc_systemextramgmtcpu" "tf_extramgmtcpu" {
 
 `
 
+func TestAccSystemextramgmtcpu_import(t *testing.T) {
+	if adcTestbed != "STANDALONE_12CORES" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_12CORES.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("CPX does not support the feature")
+		// TODO actually we need a VPX with 12 cores licensed to test this resource
+		// otherwise the systemextramgmtcpu enable action is a noop
+	}
+	const resAddr = "citrixadc_systemextramgmtcpu.tf_extramgmtcpu"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemextramgmtcpu_basic_step1},
+			{
+				Config:                  testAccSystemextramgmtcpu_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccSystemextramgmtcpu_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "STANDALONE_12CORES" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_12CORES.", adcTestbed)
+	}
+	if isCpxRun {
+		t.Skip("CPX does not support the feature")
+		// TODO actually we need a VPX with 12 cores licensed to test this resource
+		// otherwise the systemextramgmtcpu enable action is a noop
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSystemextramgmtcpu_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemextramgmtcpuExist("citrixadc_systemextramgmtcpu.tf_extramgmtcpu", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemextramgmtcpu_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemextramgmtcpuExist("citrixadc_systemextramgmtcpu.tf_extramgmtcpu", nil)),
+			},
+		},
+	})
+}
+
 const testAccSystemextramgmtcpuDataSource_basic = `
 
 data "citrixadc_systemextramgmtcpu" "tf_extramgmtcpu" {
@@ -129,6 +189,9 @@ func TestAccSystemextramgmtcpuDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "id", "systemextramgmtcpu-config"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "enabled", "false"),
+					// Read-only state that is always present in the GET response.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "configuredstate"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemextramgmtcpu.tf_extramgmtcpu", "effectivestate"),
 				),
 			},
 		},

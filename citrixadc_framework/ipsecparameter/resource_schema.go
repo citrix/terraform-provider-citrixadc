@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -39,46 +40,55 @@ func (r *IpsecparameterResource) Schema(ctx context.Context, req resource.Schema
 			"encalgo": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Type of encryption algorithm (Note: Selection of AES enables AES128)",
 			},
 			"hashalgo": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
 				Description: "Type of hashing algorithm",
 			},
 			"ikeretryinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(60),
 				Description: "IKE retry interval for bringing up the connection",
 			},
 			"ikeversion": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("V2"),
 				Description: "IKE Protocol Version",
 			},
 			"lifetime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(28800),
 				Description: "Lifetime of IKE SA in seconds. Lifetime of IPSec SA will be (lifetime of IKE SA/8)",
 			},
 			"livenesscheckinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(10),
 				Description: "Number of seconds after which a notify payload is sent to check the liveliness of the peer. Additional retries are done as per retransmit interval setting. Zero value disables liveliness checks.",
 			},
 			"perfectforwardsecrecy": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLE"),
 				Description: "Enable/Disable PFS.",
 			},
 			"replaywindowsize": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(9216),
 				Description: "IPSec Replay window size for the data traffic",
 			},
 			"retransmissiontime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1),
 				Description: "The interval in seconds to retry sending the IKE messages to peer, three consecutive attempts are done with doubled interval after every failure,\nincreases for every retransmit till 6 retransmits.",
 			},
 		},
@@ -90,25 +100,35 @@ func ipsecparameterGetThePayloadFromtheConfig(ctx context.Context, data *Ipsecpa
 
 	// Create API request body from the model
 	ipsecparameter := ipsec.Ipsecparameter{}
-	if !data.Ikeretryinterval.IsNull() {
+	if !data.Encalgo.IsNull() && !data.Encalgo.IsUnknown() {
+		var encalgoList []string
+		data.Encalgo.ElementsAs(ctx, &encalgoList, false)
+		ipsecparameter.Encalgo = encalgoList
+	}
+	if !data.Hashalgo.IsNull() && !data.Hashalgo.IsUnknown() {
+		var hashalgoList []string
+		data.Hashalgo.ElementsAs(ctx, &hashalgoList, false)
+		ipsecparameter.Hashalgo = hashalgoList
+	}
+	if !data.Ikeretryinterval.IsNull() && !data.Ikeretryinterval.IsUnknown() {
 		ipsecparameter.Ikeretryinterval = utils.IntPtr(int(data.Ikeretryinterval.ValueInt64()))
 	}
-	if !data.Ikeversion.IsNull() {
+	if !data.Ikeversion.IsNull() && !data.Ikeversion.IsUnknown() {
 		ipsecparameter.Ikeversion = data.Ikeversion.ValueString()
 	}
-	if !data.Lifetime.IsNull() {
+	if !data.Lifetime.IsNull() && !data.Lifetime.IsUnknown() {
 		ipsecparameter.Lifetime = utils.IntPtr(int(data.Lifetime.ValueInt64()))
 	}
-	if !data.Livenesscheckinterval.IsNull() {
+	if !data.Livenesscheckinterval.IsNull() && !data.Livenesscheckinterval.IsUnknown() {
 		ipsecparameter.Livenesscheckinterval = utils.IntPtr(int(data.Livenesscheckinterval.ValueInt64()))
 	}
-	if !data.Perfectforwardsecrecy.IsNull() {
+	if !data.Perfectforwardsecrecy.IsNull() && !data.Perfectforwardsecrecy.IsUnknown() {
 		ipsecparameter.Perfectforwardsecrecy = data.Perfectforwardsecrecy.ValueString()
 	}
-	if !data.Replaywindowsize.IsNull() {
+	if !data.Replaywindowsize.IsNull() && !data.Replaywindowsize.IsUnknown() {
 		ipsecparameter.Replaywindowsize = utils.IntPtr(int(data.Replaywindowsize.ValueInt64()))
 	}
-	if !data.Retransmissiontime.IsNull() {
+	if !data.Retransmissiontime.IsNull() && !data.Retransmissiontime.IsUnknown() {
 		ipsecparameter.Retransmissiontime = utils.IntPtr(int(data.Retransmissiontime.ValueInt64()))
 	}
 
@@ -119,49 +139,71 @@ func ipsecparameterSetAttrFromGet(ctx context.Context, data *IpsecparameterResou
 	tflog.Debug(ctx, "In ipsecparameterSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["encalgo"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Encalgo = listValue
+		} else if data.Encalgo.IsUnknown() {
+			data.Encalgo = types.ListNull(types.StringType)
+		}
+	} else if data.Encalgo.IsUnknown() {
+		data.Encalgo = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["hashalgo"]; ok && val != nil {
+		if sliceVal, ok := val.([]interface{}); ok {
+			stringList := utils.ToStringList(sliceVal)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Hashalgo = listValue
+		} else if data.Hashalgo.IsUnknown() {
+			data.Hashalgo = types.ListNull(types.StringType)
+		}
+	} else if data.Hashalgo.IsUnknown() {
+		data.Hashalgo = types.ListNull(types.StringType)
+	}
 	if val, ok := getResponseData["ikeretryinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ikeretryinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ikeretryinterval.IsUnknown() {
 		data.Ikeretryinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["ikeversion"]; ok && val != nil {
 		data.Ikeversion = types.StringValue(val.(string))
-	} else {
+	} else if data.Ikeversion.IsUnknown() {
 		data.Ikeversion = types.StringNull()
 	}
 	if val, ok := getResponseData["lifetime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Lifetime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Lifetime.IsUnknown() {
 		data.Lifetime = types.Int64Null()
 	}
 	if val, ok := getResponseData["livenesscheckinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Livenesscheckinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Livenesscheckinterval.IsUnknown() {
 		data.Livenesscheckinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["perfectforwardsecrecy"]; ok && val != nil {
 		data.Perfectforwardsecrecy = types.StringValue(val.(string))
-	} else {
+	} else if data.Perfectforwardsecrecy.IsUnknown() {
 		data.Perfectforwardsecrecy = types.StringNull()
 	}
 	if val, ok := getResponseData["replaywindowsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Replaywindowsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Replaywindowsize.IsUnknown() {
 		data.Replaywindowsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["retransmissiontime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Retransmissiontime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Retransmissiontime.IsUnknown() {
 		data.Retransmissiontime = types.Int64Null()
 	}
 

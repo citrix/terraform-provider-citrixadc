@@ -1,8 +1,51 @@
 package quicprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// QuicprofileDataSourceModel is the data-source-specific model, decoupled from
+// QuicprofileResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits (refcnt,
+// builtin, feature). Every non-key attribute is Computed; the Framework's
+// per-attribute model <-> schema reflection requires this model to have exactly
+// the attributes the data-source schema declares, which is why it cannot reuse
+// the resource model.
+type QuicprofileDataSourceModel struct {
+	Id                             types.String `tfsdk:"id"`
+	Ackdelayexponent               types.Int64  `tfsdk:"ackdelayexponent"`
+	Activeconnectionidlimit        types.Int64  `tfsdk:"activeconnectionidlimit"`
+	Activeconnectionmigration      types.String `tfsdk:"activeconnectionmigration"`
+	Congestionctrlalgorithm        types.String `tfsdk:"congestionctrlalgorithm"`
+	Initialmaxdata                 types.Int64  `tfsdk:"initialmaxdata"`
+	Initialmaxstreamdatabidilocal  types.Int64  `tfsdk:"initialmaxstreamdatabidilocal"`
+	Initialmaxstreamdatabidiremote types.Int64  `tfsdk:"initialmaxstreamdatabidiremote"`
+	Initialmaxstreamdatauni        types.Int64  `tfsdk:"initialmaxstreamdatauni"`
+	Initialmaxstreamsbidi          types.Int64  `tfsdk:"initialmaxstreamsbidi"`
+	Initialmaxstreamsuni           types.Int64  `tfsdk:"initialmaxstreamsuni"`
+	Maxackdelay                    types.Int64  `tfsdk:"maxackdelay"`
+	Maxidletimeout                 types.Int64  `tfsdk:"maxidletimeout"`
+	Maxudpdatagramsperburst        types.Int64  `tfsdk:"maxudpdatagramsperburst"`
+	Maxudppayloadsize              types.Int64  `tfsdk:"maxudppayloadsize"`
+	Name                           types.String `tfsdk:"name"` // Required lookup key
+	Newtokenvalidityperiod         types.Int64  `tfsdk:"newtokenvalidityperiod"`
+	Retrytokenvalidityperiod       types.Int64  `tfsdk:"retrytokenvalidityperiod"`
+	Statelessaddressvalidation     types.String `tfsdk:"statelessaddressvalidation"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/quicprofile.json). Never settable; populated from GET.
+	Refcnt  types.Int64  `tfsdk:"refcnt"`
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func QuicprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -99,6 +142,60 @@ func QuicprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Specify whether the Citrix ADC should perform stateless address validation for QUIC clients, by sending tokens in QUIC Retry packets during QUIC connection establishment, and by sending tokens in QUIC NEW_TOKEN frames after QUIC connection establishment.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source (these
+			// are intentionally NOT modeled on the resource). All Computed.
+			"refcnt": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of entities using this profile.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine if the QUIC profile is built-in or not. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// quicprofileDataSourceSetAttrFromGet projects a NITRO quicprofile GET response
+// onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func quicprofileDataSourceSetAttrFromGet(ctx context.Context, data *QuicprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In quicprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Ackdelayexponent = utils.MapGetInt64(g, "ackdelayexponent")
+	data.Activeconnectionidlimit = utils.MapGetInt64(g, "activeconnectionidlimit")
+	data.Activeconnectionmigration = utils.MapGetString(g, "activeconnectionmigration")
+	data.Congestionctrlalgorithm = utils.MapGetString(g, "congestionctrlalgorithm")
+	data.Initialmaxdata = utils.MapGetInt64(g, "initialmaxdata")
+	data.Initialmaxstreamdatabidilocal = utils.MapGetInt64(g, "initialmaxstreamdatabidilocal")
+	data.Initialmaxstreamdatabidiremote = utils.MapGetInt64(g, "initialmaxstreamdatabidiremote")
+	data.Initialmaxstreamdatauni = utils.MapGetInt64(g, "initialmaxstreamdatauni")
+	data.Initialmaxstreamsbidi = utils.MapGetInt64(g, "initialmaxstreamsbidi")
+	data.Initialmaxstreamsuni = utils.MapGetInt64(g, "initialmaxstreamsuni")
+	data.Maxackdelay = utils.MapGetInt64(g, "maxackdelay")
+	data.Maxidletimeout = utils.MapGetInt64(g, "maxidletimeout")
+	data.Maxudpdatagramsperburst = utils.MapGetInt64(g, "maxudpdatagramsperburst")
+	data.Maxudppayloadsize = utils.MapGetInt64(g, "maxudppayloadsize")
+	data.Newtokenvalidityperiod = utils.MapGetInt64(g, "newtokenvalidityperiod")
+	data.Retrytokenvalidityperiod = utils.MapGetInt64(g, "retrytokenvalidityperiod")
+	data.Statelessaddressvalidation = utils.MapGetString(g, "statelessaddressvalidation")
+
+	// Read-only attributes.
+	data.Refcnt = utils.MapGetInt64(g, "refcnt")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

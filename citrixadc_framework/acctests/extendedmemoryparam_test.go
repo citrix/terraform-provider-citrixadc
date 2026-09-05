@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccExtendedmemoryparam_add = `
@@ -97,6 +98,25 @@ func testAccCheckExtendedmemoryparamExist(n string, id *string) resource.TestChe
 	}
 }
 
+func TestAccExtendedmemoryparam_import(t *testing.T) {
+	const resAddr = "citrixadc_extendedmemoryparam.tf_extendedmemoryparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccExtendedmemoryparam_add},
+			{
+				Config:                  testAccExtendedmemoryparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccExtendedmemoryparamDataSource_basic = `
 	resource "citrixadc_extendedmemoryparam" "tf_extendedmemoryparam" {
 		memlimit = 512
@@ -106,6 +126,30 @@ const testAccExtendedmemoryparamDataSource_basic = `
 		depends_on = [citrixadc_extendedmemoryparam.tf_extendedmemoryparam]
 	}
 `
+
+func TestAccExtendedmemoryparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccExtendedmemoryparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckExtendedmemoryparamExist("citrixadc_extendedmemoryparam.tf_extendedmemoryparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccExtendedmemoryparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckExtendedmemoryparamExist("citrixadc_extendedmemoryparam.tf_extendedmemoryparam", nil)),
+			},
+		},
+	})
+}
 
 func TestAccExtendedmemoryparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

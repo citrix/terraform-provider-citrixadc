@@ -83,3 +83,23 @@ In addition to the arguments, the following attributes are available:
 * `type` - The type of the content group.
 * `weaknegrelexpiry` - Relative expiry time, in seconds, for expiring negative responses. This value is used only if the expiry time cannot be determined from any other source. It is applicable only to the following status codes: 307, 403, 404, and 410.
 * `weakposrelexpiry` - Relative expiry time, in seconds, for expiring positive responses with response codes between 200 and 399. Cannot be used in combination with other Expiry attributes. Similar to -relExpiry but has lower precedence.
+
+### Read-only cachecontentgroup metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cachecontentgroup` resource) and are Computed-only. Any attribute the appliance does not return is `null`.
+
+* `flags` - Flags.
+* `prefetchcur` - Current outstanding prefetches.
+* `memusage` - Current memory usage.
+* `memdusage` - Current disk memory usage.
+* `disklimit` - Maximum amount of disk that the cache can use. The effective limit is based on the available memory of the Citrix ADC.
+* `cachenon304hits` - Cache non 304 hits.
+* `cache304hits` - Cache 304 hits.
+* `cachecells` - Number of cells.
+* `cachegroupincarnation` - Cache group incarnation.
+* `persist` - Whether IC saves objects in the content group to disk. Possible values = YES, NO.
+* `policyname` - Active cache policies referring to this group. A list of strings.
+* `cachenuminvalpolicy` - Number of active Invalidation policies referring to this group.
+* `markercells` - Number of marker cells in this group.
+* `builtin` - Whether the content group is built-in. A list of strings. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.
+* `feature` - The feature to be checked while applying this config.

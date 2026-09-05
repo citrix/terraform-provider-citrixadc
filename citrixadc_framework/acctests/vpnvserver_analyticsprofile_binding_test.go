@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_analyticsprofile_binding_basic = `
@@ -107,10 +110,12 @@ func testAccCheckVpnvserver_analyticsprofile_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		analyticsprofile := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "analyticsprofile"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		analyticsprofile := idMap["analyticsprofile"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_analyticsprofile_binding",
@@ -152,10 +157,12 @@ func testAccCheckVpnvserver_analyticsprofile_bindingNotExist(n string, id string
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		analyticsprofile := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "analyticsprofile"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		}
+		name := idMap["name"]
+		analyticsprofile := idMap["analyticsprofile"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_analyticsprofile_binding",
@@ -236,16 +243,158 @@ const testAccVpnvserver_analyticsprofile_bindingDataSource_basic = `
 	}
 `
 
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// resource block and prerequisites; valid under both the SDK v2 2.2.0 schema
+// and the current Framework schema (same attribute names).
+const testAccVpnvserver_analyticsprofile_binding_upgrade_basic = `
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name = "new_profile"
+		type = "tcpinsight"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name           = "tf_vserver"
+		servicetype    = "SSL"
+		ipv46          = "3.3.3.3"
+		port           = 443
+	}
+	resource "citrixadc_vpnvserver_analyticsprofile_binding" "tf_bind" {
+		name 			 = citrixadc_vpnvserver.tf_vpnvserver.name
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+`
+
+// TestAccVpnvserver_analyticsprofile_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-joined id "name,analyticsprofile")
+// is transparently upgraded by the current Framework provider. Step 1 creates the
+// binding with citrix/citrixadc 2.2.0; step 2 refreshes/plans the same config through
+// the current Framework provider, whose Read parses the legacy id and recomputes it
+// to the new "analyticsprofile:<v>,name:<v>" canonical format (SetAttrFromGet).
+func TestAccVpnvserver_analyticsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnvserver_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_analyticsprofile_bindingExist("citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "id", "tf_vserver,new_profile"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_analyticsprofile_bindingExist("citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "id", "analyticsprofile:new_profile,name:tf_vserver"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_analyticsprofile_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		// Verify the binding is unbound/destroyed on teardown so a leftover cannot leave the
+		// analyticsprofile "in use" (errorcode 3940) and poison later analyticsprofile tests.
+		CheckDestroy: testAccCheckVpnvserver_analyticsprofile_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpnvserver_analyticsprofile_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "name", "tf_vserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_analyticsprofile_binding.tf_bind", "analyticsprofile", "new_profile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_analyticsprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_analyticsprofile_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,analyticsprofile) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "analyticsprofile"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_analyticsprofile_binding_basic},
+			{Config: testAccVpnvserver_analyticsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccVpnvserver_analyticsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnvserver_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_analyticsprofile_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_analyticsprofile_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_analyticsprofile_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_analyticsprofile_binding.Type(), "tf_vserver", map[string]string{"analyticsprofile": "new_profile"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_analyticsprofile_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_analyticsprofile_bindingExist(resAddr, nil),
 				),
 			},
 		},

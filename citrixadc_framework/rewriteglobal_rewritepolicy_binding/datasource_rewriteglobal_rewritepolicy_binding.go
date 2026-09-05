@@ -6,6 +6,7 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -35,7 +36,7 @@ func (d *RewriteglobalRewritepolicyBindingDataSource) Schema(ctx context.Context
 }
 
 func (d *RewriteglobalRewritepolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RewriteglobalRewritepolicyBindingResourceModel
+	var data RewriteglobalRewritepolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -44,6 +45,7 @@ func (d *RewriteglobalRewritepolicyBindingDataSource) Read(ctx context.Context, 
 
 	// Case 3: Array filter without parent ID
 	policyname_Name := data.Policyname
+	priority_Name := data.Priority
 	type_Name := data.Type
 
 	var dataArr []map[string]interface{}
@@ -86,6 +88,20 @@ func (d *RewriteglobalRewritepolicyBindingDataSource) Read(ctx context.Context, 
 			continue
 		}
 
+		// Check priority (only filter when caller supplied a priority)
+		if !priority_Name.IsNull() {
+			if val, ok := v["priority"]; ok {
+				val, _ = utils.ConvertToInt64(val)
+				if val != priority_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
 			if v, ok := v["type"]; ok {
 				if v.(string) != type_Name.ValueString() {
@@ -106,7 +122,7 @@ func (d *RewriteglobalRewritepolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	rewriteglobal_rewritepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	rewriteglobal_rewritepolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

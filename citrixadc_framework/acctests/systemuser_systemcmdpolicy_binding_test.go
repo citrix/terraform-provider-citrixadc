@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSystemuser_systemcmdpolicy_binding_basic = `
@@ -109,10 +112,12 @@ func testAccCheckSystemuser_systemcmdpolicy_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		username := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"username", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		username := idMap["username"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "systemuser_systemcmdpolicy_binding",
@@ -154,10 +159,12 @@ func testAccCheckSystemuser_systemcmdpolicy_bindingNotExist(n string, id string)
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		username := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"username", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		username := idMap["username"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "systemuser_systemcmdpolicy_binding",
@@ -240,6 +247,62 @@ const testAccSystemuser_systemcmdpolicy_bindingDataSource_basic = `
 	}
 `
 
+const testAccSystemuser_systemcmdpolicy_binding_upgrade_basic = `
+	resource "citrixadc_systemuser" "tf_user" {
+		username = "tf_user"
+		password = "tf_password"
+		timeout  = 200
+	}
+
+	resource "citrixadc_systemcmdpolicy" "tf_policy" {
+		policyname = "tf_policy"
+		action     = "DENY"
+		cmdspec    = "add.*"
+	}
+
+	resource "citrixadc_systemuser_systemcmdpolicy_binding" "tf_bind" {
+		username   = citrixadc_systemuser.tf_user.username
+		policyname = citrixadc_systemcmdpolicy.tf_policy.policyname
+		priority   = 100
+	}
+`
+
+func TestAccSystemuser_systemcmdpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemuser_systemcmdpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes legacy id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccSystemuser_systemcmdpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuser_systemcmdpolicy_bindingExist("citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", "id", "tf_user,tf_policy"),
+				),
+			},
+			// Step 2: Refresh/apply the legacy-id state through the current (framework) provider.
+			// Framework Read recomputes the id to the new canonical format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemuser_systemcmdpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemuser_systemcmdpolicy_bindingExist("citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", "id", "policyname:tf_policy,username:tf_user"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSystemuser_systemcmdpolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -252,6 +315,77 @@ func TestAccSystemuser_systemcmdpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", "policyname", "tf_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_systemuser_systemcmdpolicy_binding.tf_bind", "priority", "100"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSystemuser_systemcmdpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_systemuser_systemcmdpolicy_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: username,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"username", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuser_systemcmdpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemuser_systemcmdpolicy_binding_basic},
+			{Config: testAccSystemuser_systemcmdpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccSystemuser_systemcmdpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccSystemuser_systemcmdpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemuser_systemcmdpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemuser_systemcmdpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemuser_systemcmdpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemuser_systemcmdpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Systemuser_systemcmdpolicy_binding.Type(), "tf_user", map[string]string{"policyname": "tf_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemuser_systemcmdpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemuser_systemcmdpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

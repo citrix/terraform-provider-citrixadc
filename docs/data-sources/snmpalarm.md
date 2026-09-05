@@ -41,3 +41,9 @@ In addition to the arguments above, the following attributes are exported:
 * `thresholdvalue` - Value for the high threshold. The Citrix ADC generates an SNMP trap message when the value of the attribute associated with the alarm is greater than or equal to the specified high threshold value.
 * `time` - Interval, in seconds, at which the Citrix ADC generates SNMP trap messages when the conditions specified in the SNMP alarm are met. Can be specified for various alarms like SYNFLOOD, HA-VERSION-MISMATCH, CLUSTER-NODE-HEALTH, etc.
 
+### Read-only snmpalarm metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_snmpalarm` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `timeout` - If DB is enabled and clear config is fired, then to reset timeinterval of alarm, corresponding default time value is needed. This hidden argument holds the default time value for the corresponding alarm.
+

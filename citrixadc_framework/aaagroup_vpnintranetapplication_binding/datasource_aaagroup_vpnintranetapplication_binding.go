@@ -35,7 +35,7 @@ func (d *AaagroupVpnintranetapplicationBindingDataSource) Schema(ctx context.Con
 }
 
 func (d *AaagroupVpnintranetapplicationBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AaagroupVpnintranetapplicationBindingResourceModel
+	var data AaagroupVpnintranetapplicationBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *AaagroupVpnintranetapplicationBindingDataSource) Read(ctx context.Conte
 		return
 	}
 
-	aaagroup_vpnintranetapplication_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	aaagroup_vpnintranetapplication_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -7,6 +7,9 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 var _ datasource.DataSource = (*SslprofileEcccurveBindingDataSource)(nil)
@@ -35,14 +38,13 @@ func (d *SslprofileEcccurveBindingDataSource) Schema(ctx context.Context, req da
 }
 
 func (d *SslprofileEcccurveBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslprofileEcccurveBindingResourceModel
+	var data SslprofileEcccurveBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	ecccurvename_Name := data.Ecccurvename
 
@@ -66,34 +68,49 @@ func (d *SslprofileEcccurveBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one with the right ecccurvename
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check ecccurvename
 		if val, ok := v["ecccurvename"].(string); ok {
-			if ecccurvename_Name.IsNull() || val != ecccurvename_Name.ValueString() {
-				match = false
-				continue
+			if !ecccurvename_Name.IsNull() && val == ecccurvename_Name.ValueString() {
+				foundIndex = i
+				break
 			}
-		} else if !ecccurvename_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
-			foundIndex = i
-			break
 		}
 	}
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("sslprofile_ecccurve_binding with ecccurvename %s not found", ecccurvename_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("sslprofile_ecccurve_binding with ecccurvename %s not found", ecccurvename_Name.ValueString()))
 		return
 	}
 
-	sslprofile_ecccurve_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	sslprofile_ecccurve_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// sslprofile_ecccurve_bindingSetAttrFromGetForDatasource faithfully copies the GET
+// response into the datasource model and computes the composite ID.
+func sslprofile_ecccurve_bindingSetAttrFromGetForDatasource(ctx context.Context, data *SslprofileEcccurveBindingDataSourceModel, getResponseData map[string]interface{}) {
+	if val, ok := getResponseData["cipherpriority"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Cipherpriority = types.Int64Value(intVal)
+		}
+	} else {
+		data.Cipherpriority = types.Int64Null()
+	}
+	if val, ok := getResponseData["ecccurvename"]; ok && val != nil {
+		data.Ecccurvename = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	}
+
+	// Composite ID: name:UrlEncode(name),ecccurvename:UrlEncode(ecccurvename)
+	idParts := []string{
+		fmt.Sprintf("name:%s", utils.UrlEncode(data.Name.ValueString())),
+		fmt.Sprintf("ecccurvename:%s", utils.UrlEncode(data.Ecccurvename.ValueString())),
+	}
+	data.Id = types.StringValue(idParts[0] + "," + idParts[1])
 }

@@ -35,7 +35,7 @@ func (d *AppfwjsoncontenttypeDataSource) Schema(ctx context.Context, req datasou
 }
 
 func (d *AppfwjsoncontenttypeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppfwjsoncontenttypeResourceModel
+	var data AppfwjsoncontenttypeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *AppfwjsoncontenttypeDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	appfwjsoncontenttypeSetAttrFromGet(ctx, &data, getResponseData)
+	appfwjsoncontenttypeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

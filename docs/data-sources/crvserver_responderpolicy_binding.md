@@ -37,6 +37,7 @@ output "priority" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the crvserver_responderpolicy_binding. It is a system-generated identifier.
+* `bindpoint` - For a rewrite policy, the bind point to which to bind the policy.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - Invoke flag.
 * `priority` - The priority for the policy.

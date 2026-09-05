@@ -1,9 +1,57 @@
 package sslparameter
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SslparameterDataSourceModel is the data-source-specific model, decoupled from
+// SslparameterResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits.
+// Every non-key attribute is Computed; the Framework's per-attribute model <->
+// schema reflection requires this model to have exactly the attributes the
+// data-source schema declares, which is why it cannot reuse the resource model.
+type SslparameterDataSourceModel struct {
+	Id                       types.String `tfsdk:"id"`
+	Crlmemorysizemb          types.Int64  `tfsdk:"crlmemorysizemb"`
+	Cryptodevdisablelimit    types.Int64  `tfsdk:"cryptodevdisablelimit"`
+	Defaultprofile           types.String `tfsdk:"defaultprofile"`
+	Denysslreneg             types.String `tfsdk:"denysslreneg"`
+	Dropreqwithnohostheader  types.String `tfsdk:"dropreqwithnohostheader"`
+	Encrypttriggerpktcount   types.Int64  `tfsdk:"encrypttriggerpktcount"`
+	Heterogeneoussslhw       types.String `tfsdk:"heterogeneoussslhw"`
+	Hybridfipsmode           types.String `tfsdk:"hybridfipsmode"`
+	Insertcertspace          types.String `tfsdk:"insertcertspace"`
+	Insertionencoding        types.String `tfsdk:"insertionencoding"`
+	Ndcppcompliancecertcheck types.String `tfsdk:"ndcppcompliancecertcheck"`
+	Ocspcachesize            types.Int64  `tfsdk:"ocspcachesize"`
+	Operationqueuelimit      types.Int64  `tfsdk:"operationqueuelimit"`
+	Pushenctriggertimeout    types.Int64  `tfsdk:"pushenctriggertimeout"`
+	Pushflag                 types.Int64  `tfsdk:"pushflag"`
+	Quantumsize              types.String `tfsdk:"quantumsize"`
+	Sendclosenotify          types.String `tfsdk:"sendclosenotify"`
+	Sigdigesttype            types.List   `tfsdk:"sigdigesttype"`
+	Snihttphostmatch         types.String `tfsdk:"snihttphostmatch"`
+	Softwarecryptothreshold  types.Int64  `tfsdk:"softwarecryptothreshold"`
+	Sslierrorcache           types.String `tfsdk:"sslierrorcache"`
+	Sslimaxerrorcachemem     types.Int64  `tfsdk:"sslimaxerrorcachemem"`
+	Ssltriggertimeout        types.Int64  `tfsdk:"ssltriggertimeout"`
+	Strictcachecks           types.String `tfsdk:"strictcachecks"`
+	Undefactioncontrol       types.String `tfsdk:"undefactioncontrol"`
+	Undefactiondata          types.String `tfsdk:"undefactiondata"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/sslparameter.json). Never settable; populated from GET.
+	Svctls1112disable types.String `tfsdk:"svctls1112disable"`
+	Montls1112disable types.String `tfsdk:"montls1112disable"`
+}
 
 func SslparameterDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -142,6 +190,61 @@ func SslparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Name of the undefined built-in data action: NOOP, RESET or DROP.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"svctls1112disable": schema.StringAttribute{
+				Computed:    true,
+				Description: "Disable TLS 1.1 and 1.2 for dynamic and VPN created services. Possible values = YES, NO.",
+			},
+			"montls1112disable": schema.StringAttribute{
+				Computed:    true,
+				Description: "Disable TLS 1.1 and 1.2 for secure (https) monitors bound to SSL_BRIDGE services. Possible values = YES, NO.",
+			},
 		},
 	}
+}
+
+// sslparameterDataSourceSetAttrFromGet projects a NITRO sslparameter GET response
+// onto the data-source model. sslparameter is a singleton (no lookup key), so the
+// id is a fixed synthetic value. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them) via the shared utils.MapGet* helpers.
+func sslparameterDataSourceSetAttrFromGet(ctx context.Context, data *SslparameterDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In sslparameterDataSourceSetAttrFromGet Function")
+
+	// Singleton: fixed id matching the resource getter.
+	data.Id = types.StringValue("sslparameter-config")
+
+	// Read/write attributes as read-back outputs.
+	data.Crlmemorysizemb = utils.MapGetInt64(g, "crlmemorysizemb")
+	data.Cryptodevdisablelimit = utils.MapGetInt64(g, "cryptodevdisablelimit")
+	data.Defaultprofile = utils.MapGetString(g, "defaultprofile")
+	data.Denysslreneg = utils.MapGetString(g, "denysslreneg")
+	data.Dropreqwithnohostheader = utils.MapGetString(g, "dropreqwithnohostheader")
+	data.Encrypttriggerpktcount = utils.MapGetInt64(g, "encrypttriggerpktcount")
+	data.Heterogeneoussslhw = utils.MapGetString(g, "heterogeneoussslhw")
+	data.Hybridfipsmode = utils.MapGetString(g, "hybridfipsmode")
+	data.Insertcertspace = utils.MapGetString(g, "insertcertspace")
+	data.Insertionencoding = utils.MapGetString(g, "insertionencoding")
+	data.Ndcppcompliancecertcheck = utils.MapGetString(g, "ndcppcompliancecertcheck")
+	data.Ocspcachesize = utils.MapGetInt64(g, "ocspcachesize")
+	data.Operationqueuelimit = utils.MapGetInt64(g, "operationqueuelimit")
+	data.Pushenctriggertimeout = utils.MapGetInt64(g, "pushenctriggertimeout")
+	data.Pushflag = utils.MapGetInt64(g, "pushflag")
+	data.Quantumsize = utils.MapGetString(g, "quantumsize")
+	data.Sendclosenotify = utils.MapGetString(g, "sendclosenotify")
+	data.Sigdigesttype = utils.MapGetStringList(g, "sigdigesttype")
+	data.Snihttphostmatch = utils.MapGetString(g, "snihttphostmatch")
+	data.Softwarecryptothreshold = utils.MapGetInt64(g, "softwarecryptothreshold")
+	data.Sslierrorcache = utils.MapGetString(g, "sslierrorcache")
+	data.Sslimaxerrorcachemem = utils.MapGetInt64(g, "sslimaxerrorcachemem")
+	data.Ssltriggertimeout = utils.MapGetInt64(g, "ssltriggertimeout")
+	data.Strictcachecks = utils.MapGetString(g, "strictcachecks")
+	data.Undefactioncontrol = utils.MapGetString(g, "undefactioncontrol")
+	data.Undefactiondata = utils.MapGetString(g, "undefactiondata")
+
+	// Read-only attributes.
+	data.Svctls1112disable = utils.MapGetString(g, "svctls1112disable")
+	data.Montls1112disable = utils.MapGetString(g, "montls1112disable")
 }

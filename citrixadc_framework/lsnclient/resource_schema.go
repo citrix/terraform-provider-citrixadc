@@ -2,6 +2,7 @@ package lsnclient
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lsn"
 
@@ -43,7 +44,7 @@ func lsnclientGetThePayloadFromtheConfig(ctx context.Context, data *LsnclientRes
 
 	// Create API request body from the model
 	lsnclient := lsn.Lsnclient{}
-	if !data.Clientname.IsNull() {
+	if !data.Clientname.IsNull() && !data.Clientname.IsUnknown() {
 		lsnclient.Clientname = data.Clientname.ValueString()
 	}
 
@@ -56,13 +57,14 @@ func lsnclientSetAttrFromGet(ctx context.Context, data *LsnclientResourceModel, 
 	// Convert API response to model
 	if val, ok := getResponseData["clientname"]; ok && val != nil {
 		data.Clientname = types.StringValue(val.(string))
-	} else {
+	} else if data.Clientname.IsUnknown() {
+		// Only null when unknown; never clobber a known configured value.
 		data.Clientname = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Clientname.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Clientname.ValueString()))
 
 	return data
 }

@@ -32,3 +32,16 @@ output "bound_interfaces" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The ID of the channel\_interface\_binding resource. It is a composite key of the form `id:<channelid>,ifnum:<ifnum>`, with each value URL-encoded.
+
+### Read-only channel\_interface\_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_channel_interface_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `slavespeed` - Speed of the member interfaces.
+* `slaveflowctl` - Flowcontrol of the member interfaces.
+* `lamode` - The mode (AUTO/MANUAL) for the LA channel. Possible values: `MANUAL`, `AUTO`.
+* `slavestate` - State of the member interfaces.
+* `lractiveintf` - LR set member interface state (active/inactive).
+* `slaveduplex` - Duplex of the member interfaces.
+* `slavetime` - UP time of the member interfaces.
+* `slavemedia` - Media type of the member interfaces.

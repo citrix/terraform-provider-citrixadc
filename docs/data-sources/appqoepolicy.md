@@ -41,3 +41,9 @@ In addition to the argument, the following attributes are exported:
 * `id` - The id of the appqoepolicy. It has the same value as the `name` attribute.
 * `action` - The configured AppQoE action to trigger when the policy rule evaluates to true.
 * `rule` - Expression or name of a named expression, against which the request is evaluated. The policy is applied if the rule evaluates to true.
+
+### Read-only appqoepolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appqoepolicy` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.

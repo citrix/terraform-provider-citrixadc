@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnnexthopserver_add = `
@@ -131,6 +132,53 @@ func testAccCheckVpnnexthopserverDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVpnnexthopserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnnexthopserver.tf_vpnnexthopserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnnexthopserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnnexthopserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnnexthopserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnnexthopserver.Type(), "tf_vpnnexthopserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnnexthopserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnnexthopserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnnexthopserver_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnnexthopserver.tf_vpnnexthopserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnnexthopserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnnexthopserver_add},
+			{
+				Config:                  testAccVpnnexthopserver_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccVpnnexthopserverDataSource_basic = `
 
 	resource "citrixadc_vpnnexthopserver" "tf_vpnnexthopserver" {
@@ -143,6 +191,30 @@ data "citrixadc_vpnnexthopserver" "tf_vpnnexthopserver" {
 	name = citrixadc_vpnnexthopserver.tf_vpnnexthopserver.name
 }
 `
+
+func TestAccVpnnexthopserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnnexthopserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVpnnexthopserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnnexthopserverExist("citrixadc_vpnnexthopserver.tf_vpnnexthopserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnnexthopserver_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnnexthopserverExist("citrixadc_vpnnexthopserver.tf_vpnnexthopserver", nil)),
+			},
+		},
+	})
+}
 
 func TestAccVpnnexthopserverDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

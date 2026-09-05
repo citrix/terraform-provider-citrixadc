@@ -38,3 +38,15 @@ In addition to the arguments, the following attributes are available:
 * `sharing` - In an active-active mode configuration, enable the backup VIP address to process any traffic instead of dropping it.
 * `trackifnumpriority` - Priority by which the Effective priority will be reduced if any of the tracked interfaces goes down in an active-active configuration.
 * `tracking` - The effective priority (EP) value, relative to the base priority (BP) value in an active-active mode configuration. When EP is set to a value other than None, it is EP, not BP, which determines the master VIP address. Available settings function as follows: NONE - No tracking. EP = BP; ALL - If the status of all virtual servers is UP, EP = BP. Otherwise, EP = 0; ONE - If the status of at least one virtual server is UP, EP = BP. Otherwise, EP = 0; PROGRESSIVE - If the status of all virtual servers is UP, EP = BP. If the status of all virtual servers is DOWN, EP = 0. Otherwise EP = BP (1 - K/N), where N is the total number of virtual servers associated with the VIP address and K is the number of virtual servers for which the status is DOWN. Default: NONE.
+
+### Read-only vrid metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vrid` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `ifaces` - Interfaces bound to this VRID.
+* `type` - Indicates whether this VRID entry was added manually (STATIC) or dynamically (DYNAMIC).
+* `effectivepriority` - The effective priority of this VRID.
+* `flags` - Flags.
+* `ipaddress` - The IP address bound to the VRID.
+* `state` - State of this VRID.
+* `operationalownernode` - Run time owner node of the vrid.

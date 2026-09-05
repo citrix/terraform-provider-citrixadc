@@ -39,10 +39,12 @@ In addition to the arguments, the following attributes are available:
 * `targetvserverexpr` - Information about this content switching action.
 * `id` - The id of the csaction. It has the same value as the `name` attribute.
 
-## Import
+### Read-only csaction metadata
 
-A csaction can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_csaction` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_csaction.tf_csaction my_csaction
-```
+* `hits` - The number of times the action has been taken.
+* `referencecount` - The number of references to the action.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `builtin` - Flag to determine whether the action is built-in (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

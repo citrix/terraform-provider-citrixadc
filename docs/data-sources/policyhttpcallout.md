@@ -46,3 +46,14 @@ In addition to the arguments, the following attributes are available:
 * `scheme` - Type of scheme for the callout server. Possible values: [ http, https ]
 * `urlstemexpr` - String expression for generating the URL stem.
 * `vserver` - Name of the load balancing or content switching virtual server or service to which the HTTP callout agent is bound.
+
+### Read-only policyhttpcallout metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_policyhttpcallout` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `hits` - Total hits.
+* `undefhits` - Total undefs.
+* `svrstate` - The state of the service. Possible values: `UP`, `DOWN`, `UNKNOWN`, `BUSY`, `OUT OF SERVICE`, `GOING OUT OF SERVICE`, `DOWN WHEN GOING OUT OF SERVICE`, `NS_EMPTY_STR`, `Unknown`, `DISABLED`.
+* `effectivestate` - The effective state of the service. Possible values: `UP`, `DOWN`, `UNKNOWN`, `BUSY`, `OUT OF SERVICE`, `GOING OUT OF SERVICE`, `DOWN WHEN GOING OUT OF SERVICE`, `NS_EMPTY_STR`, `Unknown`, `DISABLED`.
+* `undefreason` - Reason for last undef.
+* `recursivecallout` - Number of recursive callouts.

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_vpnportaltheme_binding_basic = `
@@ -60,6 +61,77 @@ func TestAccVpnglobal_vpnportaltheme_binding_basic(t *testing.T) {
 				Config: testAccVpnglobal_vpnportaltheme_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_vpnportaltheme_bindingNotExist("citrixadc_vpnglobal_vpnportaltheme_binding.tf_bind", "tf_vpnportaltheme"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnportaltheme_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnportaltheme_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_vpnportaltheme_binding_basic},
+			{Config: testAccVpnglobal_vpnportaltheme_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+const testAccVpnglobal_vpnportaltheme_binding_upgrade_basic = `
+
+	resource "citrixadc_vpnportaltheme" "tf_vpnportaltheme" {
+		name      = "tf_vpnportaltheme"
+		basetheme = "X1"
+	}
+	resource "citrixadc_vpnglobal_vpnportaltheme_binding" "tf_bind" {
+		portaltheme = citrixadc_vpnportaltheme.tf_vpnportaltheme.name
+	}
+`
+
+// TestAccVpnglobal_vpnportaltheme_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0 (writes the legacy id "tf_vpnportaltheme"). Step 2
+// refreshes/plans/applies the same config through the Framework provider, exercising
+// ParseIdString on the legacy id; the Framework recomputes the id on Read
+// (SetAttrFromGet). This is a single-key resource, so the canonical new id is the
+// plain portaltheme value, identical to the legacy id.
+func TestAccVpnglobal_vpnportaltheme_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_vpnglobal_vpnportaltheme_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_vpnportaltheme_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnportaltheme_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_vpnportaltheme"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed via SetAttrFromGet (plain portaltheme value for this single-key
+			// resource).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_vpnportaltheme_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnportaltheme_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "tf_vpnportaltheme"),
 				),
 			},
 		},
@@ -208,6 +280,38 @@ func TestAccVpnglobal_vpnportaltheme_bindingDataSource_basic(t *testing.T) {
 				Config: testAccVpnglobal_vpnportaltheme_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnportaltheme_binding.tf_bind", "portaltheme", "tf_vpnportaltheme"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnportaltheme_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnportaltheme_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnportaltheme_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnportaltheme_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnportaltheme_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpnportaltheme_binding.Type(), "", []string{"portaltheme:tf_vpnportaltheme"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpnportaltheme_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnportaltheme_bindingExist(resAddr, nil),
 				),
 			},
 		},

@@ -74,10 +74,8 @@ In addition to the arguments, the following attributes are available:
 * `urlcategory` - On enabling this option, the Citrix ADC will send the URL category record.
 * `id` - The id of the analyticsprofile. It has the same value as the `name` attribute.
 
-## Import
+### Read-only analyticsprofile metadata
 
-A analyticsprofile can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_analyticsprofile` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_analyticsprofile.tf_analyticsprofile my_analyticsprofile
-```
+* `refcnt` - The number of references to the profile.

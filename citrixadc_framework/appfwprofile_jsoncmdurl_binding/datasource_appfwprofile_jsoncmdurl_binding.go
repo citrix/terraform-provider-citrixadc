@@ -129,7 +129,7 @@ func (d *AppfwprofileJsoncmdurlBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	appfwprofile_jsoncmdurl_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_jsoncmdurl_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

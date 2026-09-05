@@ -34,9 +34,10 @@ The following arguments are required:
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_trustedlearningclients_binding. It is a system-generated identifier.
 * `alertonly` - Send SNMP alert?
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
+* `id` - The id of the appfwprofile_trustedlearningclients_binding. It is the concatenation of the `name` and `trustedlearningclients` attributes separated by a comma.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

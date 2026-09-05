@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_vpneula_binding_basic = `
@@ -203,6 +204,100 @@ func TestAccVpnglobal_vpneula_bindingDataSource_basic(t *testing.T) {
 				Config: testAccVpnglobal_vpneula_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpneula_binding.tf_bind", "eula", "tf_vpneula"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnglobal_vpneula_binding_upgrade_basic = `
+	resource "citrixadc_vpneula" "tf_vpneula" {
+		name = "tf_vpneula"
+	}
+	resource "citrixadc_vpnglobal_vpneula_binding" "tf_bind" {
+		eula = citrixadc_vpneula.tf_vpneula.name
+	}
+`
+
+func TestAccVpnglobal_vpneula_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_vpneula_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_vpneula_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpneula_bindingExist("citrixadc_vpnglobal_vpneula_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpneula_binding.tf_bind", "id", "tf_vpneula"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id. For this single-key binding
+				// the canonical new id is the plain eula value, which equals the
+				// legacy id.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_vpneula_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpneula_bindingExist("citrixadc_vpnglobal_vpneula_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpneula_binding.tf_bind", "id", "tf_vpneula"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpneula_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpneula_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpneula_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_vpneula_binding_basic},
+			{Config: testAccVpnglobal_vpneula_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpneula_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpneula_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpneula_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpneula_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpneula_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpneula_binding.Type(), "", []string{"eula:tf_vpneula"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpneula_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpneula_bindingExist(resAddr, nil),
 				),
 			},
 		},

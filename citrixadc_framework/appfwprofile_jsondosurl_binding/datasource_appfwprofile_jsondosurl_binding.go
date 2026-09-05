@@ -93,7 +93,7 @@ func (d *AppfwprofileJsondosurlBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	appfwprofile_jsondosurl_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_jsondosurl_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

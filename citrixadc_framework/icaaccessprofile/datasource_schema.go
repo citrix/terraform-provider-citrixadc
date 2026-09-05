@@ -1,8 +1,49 @@
 package icaaccessprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// IcaaccessprofileDataSourceModel is the data-source-specific model, decoupled
+// from IcaaccessprofileResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only NITRO attributes the resource deliberately omits
+// (refcnt, builtin, feature, isdefault). Every non-key attribute is Computed;
+// the Framework's per-attribute model <-> schema reflection requires this model
+// to have exactly the attributes the data-source schema declares, which is why
+// it cannot reuse the resource model.
+type IcaaccessprofileDataSourceModel struct {
+	Id                           types.String `tfsdk:"id"`
+	Clientaudioredirection       types.String `tfsdk:"clientaudioredirection"`
+	Clientclipboardredirection   types.String `tfsdk:"clientclipboardredirection"`
+	Clientcomportredirection     types.String `tfsdk:"clientcomportredirection"`
+	Clientdriveredirection       types.String `tfsdk:"clientdriveredirection"`
+	Clientprinterredirection     types.String `tfsdk:"clientprinterredirection"`
+	Clienttwaindeviceredirection types.String `tfsdk:"clienttwaindeviceredirection"`
+	Clientusbdriveredirection    types.String `tfsdk:"clientusbdriveredirection"`
+	Connectclientlptports        types.String `tfsdk:"connectclientlptports"`
+	Draganddrop                  types.String `tfsdk:"draganddrop"`
+	Fido2redirection             types.String `tfsdk:"fido2redirection"`
+	Localremotedatasharing       types.String `tfsdk:"localremotedatasharing"`
+	Multistream                  types.String `tfsdk:"multistream"`
+	Name                         types.String `tfsdk:"name"` // Required lookup key
+	Smartcardredirection         types.String `tfsdk:"smartcardredirection"`
+	Wiaredirection               types.String `tfsdk:"wiaredirection"`
+
+	// Read-only (GET-only) NITRO attributes from the read-only set
+	// (zion73x_readonly/icaaccessprofile.json). Never settable; populated from GET.
+	Refcnt    types.Int64  `tfsdk:"refcnt"`
+	Builtin   types.List   `tfsdk:"builtin"`
+	Feature   types.String `tfsdk:"feature"`
+	Isdefault types.Bool   `tfsdk:"isdefault"`
+}
 
 func IcaaccessprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -84,6 +125,62 @@ func IcaaccessprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Allow default access or disable WIA scanner redirection",
 			},
+
+			// Read-only (GET-only) NITRO attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"refcnt": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of entities using this accessprofile.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Indicates that the ICA accessprofile is a built-in (SYSTEM INTERNAL) type (MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL).",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
+			"isdefault": schema.BoolAttribute{
+				Computed:    true,
+				Description: "A value of true is returned if it is a default accessprofile.",
+			},
 		},
 	}
+}
+
+// icaaccessprofileDataSourceSetAttrFromGet projects a NITRO icaaccessprofile GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them) — no unknown->null resolution or plan preservation is
+// required. The shared utils.MapGet* helpers implement that projection.
+func icaaccessprofileDataSourceSetAttrFromGet(ctx context.Context, data *IcaaccessprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In icaaccessprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Clientaudioredirection = utils.MapGetString(g, "clientaudioredirection")
+	data.Clientclipboardredirection = utils.MapGetString(g, "clientclipboardredirection")
+	data.Clientcomportredirection = utils.MapGetString(g, "clientcomportredirection")
+	data.Clientdriveredirection = utils.MapGetString(g, "clientdriveredirection")
+	data.Clientprinterredirection = utils.MapGetString(g, "clientprinterredirection")
+	data.Clienttwaindeviceredirection = utils.MapGetString(g, "clienttwaindeviceredirection")
+	data.Clientusbdriveredirection = utils.MapGetString(g, "clientusbdriveredirection")
+	data.Connectclientlptports = utils.MapGetString(g, "connectclientlptports")
+	data.Draganddrop = utils.MapGetString(g, "draganddrop")
+	data.Fido2redirection = utils.MapGetString(g, "fido2redirection")
+	data.Localremotedatasharing = utils.MapGetString(g, "localremotedatasharing")
+	data.Multistream = utils.MapGetString(g, "multistream")
+	data.Smartcardredirection = utils.MapGetString(g, "smartcardredirection")
+	data.Wiaredirection = utils.MapGetString(g, "wiaredirection")
+
+	// Read-only NITRO attributes.
+	data.Refcnt = utils.MapGetInt64(g, "refcnt")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
+	data.Isdefault = utils.MapGetBool(g, "isdefault")
 }

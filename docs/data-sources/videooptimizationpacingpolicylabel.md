@@ -35,3 +35,14 @@ In addition to the arguments, the following attributes are available:
 * `policylabeltype` - Type of policies that the policy label can contain, which determines the traffic direction the bound pacing policies evaluate. Possible values: [ videoopt_req, videoopt_res ]
 * `comment` - Any comments to preserve information about this video optimization pacing policy label.
 * `newname` - New name for the video optimization pacing policy label (rename-only attribute).
+
+### Read-only videooptimizationpacingpolicylabel metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_videooptimizationpacingpolicylabel` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `numpol` - Number of policies bound to the label.
+* `hits` - Number of times the policy label was invoked.
+* `priority` - Specifies the priority of the policy.
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `labeltype` - Type of policy label to invoke (for example `vserver`, `policylabel`).
+* `invoke_labelname` - If labelType is policylabel, name of the policy label to invoke. If labelType is reqvserver or resvserver, name of the virtual server.

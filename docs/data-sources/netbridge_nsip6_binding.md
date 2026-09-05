@@ -6,7 +6,7 @@ subcategory: "Network"
 
 The netbridge_nsip6_binding data source allows you to retrieve information about an IPv6 address binding to a network bridge.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_netbridge_nsip6_binding" "tf_netbridge_nsip6_binding" {
@@ -33,4 +33,4 @@ output "id" {
 In addition to the arguments, the following attributes are available:
 
 * `netmask` - The network mask for the subnet.
-* `id` - The id of the netbridge_nsip6_binding. It is a system-generated identifier.
+* `id` - The id of the netbridge_nsip6_binding. It is the concatenation of `name` and `ipaddress` attributes separated by a comma.

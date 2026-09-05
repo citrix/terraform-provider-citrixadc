@@ -17,15 +17,28 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternodegroup_streamidentifier_binding_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
 
 	resource "citrixadc_streamselector" "tf_streamselector" {
 		name = "my_streamselector"
@@ -42,20 +55,42 @@ const testAccClusternodegroup_streamidentifier_binding_basic = `
 		log = "NONE"
 	}
 
+	resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
+		name           = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
+		depends_on     = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+`
+
+// Step 2 keeps the participating entities (nodegroup, clusternode binding,
+// streamselector and streamidentifier) but drops the binding itself so proper
+// deletion of the binding can be verified while the endpoints still exist.
+const testAccClusternodegroup_streamidentifier_binding_basic_step2 = `
+
 	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
 		name   = "my_tf_group"
 		strict = "NO"
 	}
 
-	resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
-		name           = "my_tf_group"
-		identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
-		depends_on     = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_streamidentifier.tf_streamidentifier]
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
 	}
-`
 
-const testAccClusternodegroup_streamidentifier_binding_basic_step2 = `
-	# Keep the above bound resources without the actual binding to check proper deletion
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+	resource "citrixadc_streamidentifier" "tf_streamidentifier" {
+		name         = "my_streamidentifier"
+		selectorname = citrixadc_streamselector.tf_streamselector.name
+		samplecount  = 10
+		sort         = "CONNECTIONS"
+		snmptrap     = "ENABLED"
+		loglimit	 = 500
+		loginterval = 60
+		log = "NONE"
+	}
 `
 
 func TestAccClusternodegroup_streamidentifier_binding_basic(t *testing.T) {
@@ -110,10 +145,12 @@ func testAccCheckClusternodegroup_streamidentifier_bindingExist(n string, id *st
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		identifiername := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "identifiername"}, nil)
+		if err != nil {
+			return fmt.Errorf("Unable to parse id %v: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		identifiername := idMap["identifiername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_streamidentifier_binding",
@@ -152,13 +189,12 @@ func testAccCheckClusternodegroup_streamidentifier_bindingNotExist(n string, id 
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "identifiername"}, nil)
+		if err != nil {
+			return fmt.Errorf("Unable to parse id %v: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		identifiername := idSlice[1]
+		name := idMap["name"]
+		identifiername := idMap["identifiername"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_streamidentifier_binding",
@@ -217,6 +253,16 @@ func testAccCheckClusternodegroup_streamidentifier_bindingDestroy(s *terraform.S
 
 const testAccClusternodegroup_streamidentifier_bindingDataSource_basic = `
 
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_streamselector" "tf_streamselector" {
 		name = "my_streamselector"
 		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
@@ -232,15 +278,10 @@ const testAccClusternodegroup_streamidentifier_bindingDataSource_basic = `
 		log = "NONE"
 	}
 
-resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
-  name   = "my_tf_group"
-  strict = "NO"
-}
-
 resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
-name           = "my_tf_group"
+name           = citrixadc_clusternodegroup.tf_clusternodegroup.name
 identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
-depends_on     = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_streamidentifier.tf_streamidentifier]
+depends_on     = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 }
 
 data "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
@@ -264,6 +305,172 @@ func TestAccclusternodegroup_streamidentifier_bindingDataSource_basic(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "identifiername", "my_streamidentifier"),
+				),
+			},
+		},
+	})
+}
+
+// testAccClusternodegroup_streamidentifier_binding_upgrade_basic reuses the working
+// _basic config values (prerequisite streamselector + streamidentifier plus the binding).
+// It must be valid under BOTH the SDK v2 2.2.0 schema (step 1) and the current provider
+// schema (step 2), so it uses the SDK v2 attribute names.
+const testAccClusternodegroup_streamidentifier_binding_upgrade_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_streamselector" "tf_streamselector" {
+		name = "my_streamselector"
+		rule = ["HTTP.REQ.URL", "CLIENT.IP.SRC"]
+	}
+	resource "citrixadc_streamidentifier" "tf_streamidentifier" {
+		name         = "my_streamidentifier"
+		selectorname = citrixadc_streamselector.tf_streamselector.name
+		samplecount  = 10
+		sort         = "CONNECTIONS"
+		snmptrap     = "ENABLED"
+		loglimit	 = 500
+		loginterval = 60
+		log = "NONE"
+	}
+
+	resource "citrixadc_clusternodegroup_streamidentifier_binding" "tf_clusternodegroup_streamidentifier_binding" {
+		name           = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		identifiername = citrixadc_streamidentifier.tf_streamidentifier.name
+		depends_on     = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+`
+
+// TestAccClusternodegroup_streamidentifier_binding_sdkv2StateUpgrade creates the binding with
+// the last SDK v2 provider release (2.2.0) — which writes state with the legacy comma-joined id
+// (name,identifiername) — then refreshes/applies that legacy-id state through the current
+// provider.
+//
+// NOTE: On this branch the *resource* citrixadc_clusternodegroup_streamidentifier_binding is NOT
+// registered in the Framework provider (only its datasource is); the resource is still served by
+// the SDK v2 provider. Therefore the current provider's Read does NOT recompute the id to the new
+// key:value format — it keeps the legacy comma-joined id. Step 2 asserts the Exist helper only
+// (the recompute is genuinely absent at runtime for this un-migrated resource).
+func TestAccClusternodegroup_streamidentifier_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_streamidentifier_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (writes the legacy comma-joined id).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccClusternodegroup_streamidentifier_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_streamidentifier_bindingExist("citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", "id", "my_tf_group,my_streamidentifier"),
+				),
+			},
+			// Step 2: refresh/apply the legacy-id state through the current provider.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternodegroup_streamidentifier_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_streamidentifier_bindingExist("citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_streamidentifier_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,identifiername) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "identifiername"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_streamidentifier_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_streamidentifier_binding_basic},
+			{Config: testAccClusternodegroup_streamidentifier_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccClusternodegroup_streamidentifier_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccClusternodegroup_streamidentifier_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_streamidentifier_binding.tf_clusternodegroup_streamidentifier_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_streamidentifier_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_streamidentifier_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_streamidentifier_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Clusternodegroup_streamidentifier_binding.Type(), "my_tf_group", map[string]string{"identifiername": "my_streamidentifier"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternodegroup_streamidentifier_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_streamidentifier_bindingExist(resAddr, nil),
 				),
 			},
 		},

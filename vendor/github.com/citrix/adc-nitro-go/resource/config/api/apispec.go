@@ -50,6 +50,7 @@ type Apispec struct {
 
 	Builtin string `json:"builtin,omitempty"`
 	Ready string `json:"ready,omitempty"`
+	Nsappversion string `json:"nsappversion,omitempty"`
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
 
 }

@@ -19,11 +19,13 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnssrvrec_add = `
@@ -84,6 +86,25 @@ func TestAccDnssrvrec_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_dnssrvrec.dnssrvrec", "port", "21"),
 					resource.TestCheckResourceAttr("citrixadc_dnssrvrec.dnssrvrec", "ttl", "3604"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDnssrvrec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnssrvrec.dnssrvrec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssrvrecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnssrvrec_add},
+			{
+				Config:                  testAccDnssrvrec_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -174,6 +195,117 @@ func testAccCheckDnssrvrecDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnssrvrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnssrvrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnssrvrec_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssrvrecExist("citrixadc_dnssrvrec.dnssrvrec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnssrvrec_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnssrvrecExist("citrixadc_dnssrvrec.dnssrvrec", nil)),
+			},
+		},
+	})
+}
+
+// ttl is the spec-documented unsettable attribute for dnssrvrec (NITRO default
+// 3600). step1 sets a non-default ttl; step2 removes it so the provider must
+// unset it (revert to 3600).
+const testAccDnssrvrec_unset_step1 = `
+resource "citrixadc_dnssrvrec" "tf_unset" {
+	domain   = "example.com"
+	target   = "_sip._udp.example.com"
+	priority = 1
+	weight   = 1
+	port     = 22
+	ttl      = 7200
+}
+`
+
+const testAccDnssrvrec_unset_step2 = `
+resource "citrixadc_dnssrvrec" "tf_unset" {
+	domain   = "example.com"
+	target   = "_sip._udp.example.com"
+	priority = 1
+	weight   = 1
+	port     = 22
+	# ttl removed from config -> provider must unset it (revert to NITRO default 3600).
+}
+`
+
+func TestAccDnssrvrec_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnssrvrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccDnssrvrec_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnssrvrecExist("citrixadc_dnssrvrec.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnssrvrec.tf_unset", "ttl", "7200"),
+				),
+			},
+			{
+				// Removing ttl must unset it: state (read back from the appliance)
+				// reverts to the documented NITRO default, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccDnssrvrec_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnssrvrecExist("citrixadc_dnssrvrec.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnssrvrec.tf_unset", "ttl", "3600"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckDnssrvrecADCValue("example.com", "_sip._udp.example.com", "ttl", "3600"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDnssrvrecADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckDnssrvrecADCValue(domain, target, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		findParams := service.FindParams{
+			ResourceType: service.Dnssrvrec.Type(),
+		}
+		dataArray, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		for _, d := range dataArray {
+			if dm, _ := d["domain"].(string); dm != domain {
+				continue
+			}
+			if tg, _ := d["target"].(string); tg != target {
+				continue
+			}
+			got := strings.TrimSpace(fmt.Sprintf("%v", d[attr]))
+			if got != want {
+				return fmt.Errorf("dnssrvrec %s,%s: appliance attr %q = %q, want %q (unset did not revert it)", domain, target, attr, got, want)
+			}
+			return nil
+		}
+		return fmt.Errorf("dnssrvrec %s,%s not found on appliance", domain, target)
+	}
+}
+
 func TestAccDnssrvrecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -183,6 +315,8 @@ func TestAccDnssrvrecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnssrvrecDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// id is the universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "domain", "example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "target", "_sip._udp.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnssrvrec.tf_dnssrvrec_ds", "priority", "1"),

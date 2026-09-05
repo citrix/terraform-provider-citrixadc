@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnurl_add = `
@@ -78,6 +80,25 @@ func TestAccVpnurl_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "ssotype", "unifiedgateway"),
 					resource.TestCheckResourceAttr("citrixadc_vpnurl.foo", "vservername", "server1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnurl_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnurl.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnurlDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnurl_add},
+			{
+				Config:                  testAccVpnurl_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -145,6 +166,152 @@ func testAccCheckVpnurlDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnurl_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnurl.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnurlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnurl_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnurl.Type(), "Firsturl"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnurl_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// testAccVpnurl_unset_step1 sets the unset-eligible attributes to valid
+// non-default values; step2 removes them so the provider must unset them
+// (revert to NITRO defaults).
+const testAccVpnurl_unset_step1 = `
+resource "citrixadc_vpnurl" "tf_unset" {
+	urlname          = "tf_test_vpnurl_unset"
+	linkname         = "Description"
+	actualurl        = "http://www.citrix.com"
+	appjson          = "xyz"
+	applicationtype  = "CVPN"
+	clientlessaccess = "ON"
+	comment          = "Testing"
+	iconurl          = "http://www.citrix.com/icon.png"
+	ssotype          = "unifiedgateway"
+	vservername      = "server1"
+}
+`
+
+const testAccVpnurl_unset_step2 = `
+resource "citrixadc_vpnurl" "tf_unset" {
+	urlname   = "tf_test_vpnurl_unset"
+	linkname  = "Description"
+	actualurl = "http://www.citrix.com"
+	# All unset-eligible attributes removed from config -> the provider must
+	# unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccVpnurl_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnurlDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVpnurl_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnurlExist("citrixadc_vpnurl.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "appjson", "xyz"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "applicationtype", "CVPN"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "clientlessaccess", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "comment", "Testing"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "iconurl", "http://www.citrix.com/icon.png"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "ssotype", "unifiedgateway"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "vservername", "server1"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the NITRO defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccVpnurl_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnurlExist("citrixadc_vpnurl.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "appjson", ""),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "applicationtype", ""),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "clientlessaccess", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "comment", ""),
+					resource.TestCheckNoResourceAttr("citrixadc_vpnurl.tf_unset", "iconurl"),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "ssotype", ""),
+					resource.TestCheckResourceAttr("citrixadc_vpnurl.tf_unset", "vservername", ""),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVpnurlADCValue("tf_test_vpnurl_unset", "clientlessaccess", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVpnurlADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckVpnurlADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnurl.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vpnurl %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vpnurl %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccVpnurl_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnurlDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVpnurl_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlExist("citrixadc_vpnurl.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnurl_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnurlExist("citrixadc_vpnurl.foo", nil)),
+			},
+		},
+	})
 }
 
 const testAccVpnurlDataSource_basic = `

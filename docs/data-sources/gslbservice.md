@@ -78,11 +78,23 @@ In addition to the arguments, the following attributes are available:
 * `weight` - Weight to assign to the monitor-service binding. A larger number specifies a greater weight. Contributes to the monitoring threshold, which determines the state of the service.
 * `id` - The id of the gslbservice. It has the same value as the `servicename` attribute.
 
+### Read-only gslbservice metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_gslbservice` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
 
-A gslbservice can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_gslbservice.tf_gslbservice my_gslbservice
-```
+* `gslb` - GSLB service scope. Possible values: `REMOTE`, `LOCAL`.
+* `svrstate` - Server state.
+* `svreffgslbstate` - Effective state of the GSLB service.
+* `gslbthreshold` - Indicates if the GSLB service has reached its threshold.
+* `gslbsvcstats` - Indicates if the GSLB service has stats of the primary or the whole chain.
+* `monstate` - State of the monitor bound to the GSLB service. Possible values: `ENABLED`, `DISABLED`.
+* `preferredlocation` - Preferred location.
+* `monitor_state` - The running state of the monitor on this service.
+* `statechangetimesec` - Time when the last state change happened. Seconds part.
+* `tickssincelaststatechange` - Time in 10 millisecond ticks since the last state change.
+* `threshold` - Threshold state. Possible values: `ABOVE`, `BELOW`.
+* `clmonowner` - Tells the mon owner of the GSLB service.
+* `clmonview` - Tells the view id of the monitoring owner.
+* `gslbsvchealth` - Effective health of the GSLB service.
+* `glsbsvchealthdescr` - Warning message related to the health of the GSLB service.
+* `nodefaultbindings` - Whether the configuration will have default SSL CIPHER and ECC curve bindings. Possible values: `YES`, `NO`.

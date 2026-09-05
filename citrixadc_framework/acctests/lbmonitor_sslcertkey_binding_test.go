@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbmonitor_sslcertkey_binding_basic = `
@@ -163,6 +166,49 @@ func TestAccLbmonitor_sslcertkey_binding_ca(t *testing.T) {
 	})
 }
 
+func TestAccLbmonitor_sslcertkey_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: monitorname,certkeyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"monitorname", "certkeyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitor_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbmonitor_sslcertkey_binding_basic},
+			{Config: testAccLbmonitor_sslcertkey_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccLbmonitor_sslcertkey_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckLbmonitor_sslcertkey_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -190,10 +236,12 @@ func testAccCheckLbmonitor_sslcertkey_bindingExist(n string, id *string) resourc
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		monitorName := idSlice[0]
-		sslcertkeyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"monitorname", "certkeyname"}, nil)
+		if err != nil {
+			return err
+		}
+		monitorName := idMap["monitorname"]
+		sslcertkeyName := idMap["certkeyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbmonitor_sslcertkey_binding",
@@ -235,10 +283,12 @@ func testAccCheckLbmonitor_sslcertkey_bindingNotExist(n string, id string) resou
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		lbmonitorName := idSlice[0]
-		sslcertkeyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"monitorname", "certkeyname"}, nil)
+		if err != nil {
+			return err
+		}
+		lbmonitorName := idMap["monitorname"]
+		sslcertkeyName := idMap["certkeyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbmonitor_sslcertkey_binding",
@@ -307,6 +357,91 @@ func TestAccLbmonitor_sslcertkey_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "certkeyname", "tf_sslcertkey"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "ca", "false"),
 				),
+			},
+		},
+	})
+}
+
+const testAccLbmonitor_sslcertkey_binding_upgrade_basic = `
+	resource "citrixadc_lbmonitor_sslcertkey_binding" "tf_lbmonitor_sslcertkey_binding" {
+		monitorname = citrixadc_lbmonitor.tf_monitor.monitorname
+		certkeyname = citrixadc_sslcertkey.tf_sslcertkey.certkey
+	}
+
+	resource "citrixadc_lbmonitor" "tf_monitor" {
+		monitorname = "tf_monitor"
+		type = "HTTP"
+		sslprofile = "ns_default_ssl_profile_backend"
+	}
+
+	resource "citrixadc_sslcertkey" "tf_sslcertkey" {
+		certkey = "tf_sslcertkey"
+		cert = "/var/tmp/certificate1.crt"
+		key = "/var/tmp/key1.pem"
+	}
+`
+
+func TestAccLbmonitor_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslcertkeyPreChecks(t) },
+		CheckDestroy: testAccCheckLbmonitor_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccLbmonitor_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_sslcertkey_bindingExist("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "id", "tf_monitor,tf_sslcertkey"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbmonitor_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbmonitor_sslcertkey_bindingExist("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding", "id", "monitorname:tf_monitor,certkeyname:tf_sslcertkey"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbmonitor_sslcertkey_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbmonitor_sslcertkey_binding.tf_lbmonitor_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitor_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_sslcertkey_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitor_sslcertkey_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbmonitor_sslcertkey_binding.Type(), "tf_monitor", map[string]string{"certkeyname": "tf_sslcertkey"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbmonitor_sslcertkey_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitor_sslcertkey_bindingExist(resAddr, nil)),
 			},
 		},
 	})

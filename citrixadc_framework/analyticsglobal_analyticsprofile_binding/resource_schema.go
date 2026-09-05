@@ -2,11 +2,14 @@ package analyticsglobal_analyticsprofile_binding
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/analytics"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -26,19 +29,22 @@ func (r *AnalyticsglobalAnalyticsprofileBindingResource) Schema(ctx context.Cont
 				Description: "The ID of the analyticsglobal_analyticsprofile_binding resource.",
 			},
 			"analyticsprofile": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the analytics profile bound.",
 			},
 		},
 	}
 }
 
-func analyticsglobal_analyticsprofile_bindingGetThePayloadFromtheConfig(ctx context.Context, data *AnalyticsglobalAnalyticsprofileBindingResourceModel) analytics.Analyticsglobalanalyticsprofilebinding {
-	tflog.Debug(ctx, "In analyticsglobal_analyticsprofile_bindingGetThePayloadFromtheConfig Function")
+func analyticsglobal_analyticsprofile_bindingGetThePayloadFromthePlan(ctx context.Context, data *AnalyticsglobalAnalyticsprofileBindingResourceModel) analytics.Analyticsglobalanalyticsprofilebinding {
+	tflog.Debug(ctx, "In analyticsglobal_analyticsprofile_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	analyticsglobal_analyticsprofile_binding := analytics.Analyticsglobalanalyticsprofilebinding{}
-	if !data.Analyticsprofile.IsNull() {
+	if !data.Analyticsprofile.IsNull() && !data.Analyticsprofile.IsUnknown() {
 		analyticsglobal_analyticsprofile_binding.Analyticsprofile = data.Analyticsprofile.ValueString()
 	}
 
@@ -56,8 +62,8 @@ func analyticsglobal_analyticsprofile_bindingSetAttrFromGet(ctx context.Context,
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Analyticsprofile.ValueString())
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Analyticsprofile.ValueString()))
 
 	return data
 }

@@ -43,3 +43,13 @@ In addition to the arguments, the following attributes are available:
 * `dnsprofilename` - Name of the DNS profile to be associated with the name server.
 * `local` - Mark the IP address as one that belongs to a local recursive DNS server on the Citrix ADC. The appliance recursively resolves queries received on an IP address that is marked as being local. For recursive resolution to work, the global DNS parameter, Recursion, must also be set. If no name server is marked as being local, the appliance functions as a stub resolver and load balances the name servers.
 * `state` - Administrative state of the name server.
+
+### Read-only dnsnameserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnsnameserver` resource) and are `Computed`. Any attribute the appliance does not return is `null`.
+
+* `servicename` - The name of the DNS vserver.
+* `port` - Port of the service. Range 1 - 65535 (`*` in the CLI is represented as 65535 in the NITRO API).
+* `nameserverstate` - State of the server. Possible values = `UP`, `DOWN`, `UNKNOWN`, `BUSY`, `OUT OF SERVICE`, `GOING OUT OF SERVICE`, `DOWN WHEN GOING OUT OF SERVICE`, `NS_EMPTY_STR`, `Unknown`, `DISABLED`.
+* `clmonowner` - Tells the mon owner of the service.
+* `clmonview` - Tells the view id by which state of the service is updated.

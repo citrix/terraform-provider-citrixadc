@@ -55,7 +55,7 @@ func (d *NstimerDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	nstimerSetAttrFromGet(ctx, &data, getResponseData)
+	nstimerSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

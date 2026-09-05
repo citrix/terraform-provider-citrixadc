@@ -40,3 +40,9 @@ The following attributes are available:
 * `hdxinsightnonnsap` - Enable/Disable HDXInsight for Non NSAP ICA Sessions. The default value is Yes.
 * `l7latencyfrequency` - Specify the time interval/period for which L7 Client Latency value is to be calculated. By default, L7 Client Latency is calculated for every packet. The default value is 0.
 * `id` - The id of the icaparameter. It is a system-generated identifier.
+
+### Read-only icaparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_icaparameter` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Indicates that the ICA parameter is a built-in (SYSTEM INTERNAL) type. A list of strings (possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).

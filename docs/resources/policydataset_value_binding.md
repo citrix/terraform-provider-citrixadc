@@ -19,15 +19,15 @@ resource "citrixadc_policydataset" "tf_dataset" {
 resource "citrixadc_policydataset_value_binding" "tf_value1" {
   name = citrixadc_policydataset.tf_dataset.name
 
-  value    = 100
+  value    = "100"
   index    = 111
-  endrange = 160
+  endrange = "160"
 }
 
 resource "citrixadc_policydataset_value_binding" "tf_value2" {
   name = citrixadc_policydataset.tf_dataset.name
 
-  value    = 200
+  value = "200"
 }
 ```
 

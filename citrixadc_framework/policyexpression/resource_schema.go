@@ -8,9 +8,37 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward
+// and removal is a silent no-op. It does nothing when the config still carries a
+// value, on create (no prior state), or when the prior value is already empty.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
 
 // PolicyexpressionResourceModel describes the resource data model.
 type PolicyexpressionResourceModel struct {
@@ -30,21 +58,34 @@ func (r *PolicyexpressionResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the policyexpression resource.",
 			},
 			"clientsecuritymessage": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Message to display if the expression fails. Allowed for classic end-point check expressions only.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
+				},
 				Description: "Any comments associated with the expression. Displayed upon viewing the policy expression.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 marked name as ForceNew -> RequiresReplace for backward compatibility.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Unique name for the expression. Not case sensitive. Must begin with an ASCII letter or underscore (_) character, and must consist only of ASCII alphanumeric or underscore characters. Must not begin with 're' or 'xp' or be a word reserved for use as an expression qualifier prefix (such as HTTP) or enumeration value (such as ASCII). Must not be the name of an existing named expression, pattern set, dataset, stringmap, or HTTP callout.",
 			},
 			"value": schema.StringAttribute{
-				Required:    true,
+				// SDK v2 declared value as Optional+Computed (not Required); preserve that
+				// contract for backward compatibility even though NITRO treats it as mandatory.
+				Optional:    true,
+				Computed:    true,
 				Description: "Expression string. For example: http.req.body(100).contains(\"this\").",
 			},
 		},
@@ -56,16 +97,16 @@ func policyexpressionGetThePayloadFromtheConfig(ctx context.Context, data *Polic
 
 	// Create API request body from the model
 	policyexpression := policy.Policyexpression{}
-	if !data.Clientsecuritymessage.IsNull() {
+	if !data.Clientsecuritymessage.IsNull() && !data.Clientsecuritymessage.IsUnknown() {
 		policyexpression.Clientsecuritymessage = data.Clientsecuritymessage.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		policyexpression.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		policyexpression.Name = data.Name.ValueString()
 	}
-	if !data.Value.IsNull() {
+	if !data.Value.IsNull() && !data.Value.IsUnknown() {
 		policyexpression.Value = data.Value.ValueString()
 	}
 
@@ -98,8 +139,8 @@ func policyexpressionSetAttrFromGet(ctx context.Context, data *PolicyexpressionR
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s", data.Name.ValueString()))
+	// Case 2: Single unique attribute - use plain value (name) as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

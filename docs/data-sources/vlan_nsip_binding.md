@@ -35,4 +35,4 @@ In addition to the arguments, the following attributes are available:
 * `netmask` - Subnet mask for the network address defined for this VLAN.
 * `ownergroup` - The owner node group in a Cluster for this VLAN.
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
-* `id` - The id of the vlan_nsip_binding. It is a system-generated identifier.
+* `id` - The id of the vlan_nsip_binding. It is the concatenation of the `vlanid` and `ipaddress` attributes separated by a comma.

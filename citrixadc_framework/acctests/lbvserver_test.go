@@ -19,14 +19,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -60,6 +62,34 @@ const testAccLbvserver_basic_step2 = `
 	orderthreshold = "10"
 	}
 `
+
+const testAccLbvserver_missing_sslcertkey = `
+resource "citrixadc_lbvserver" "tf_missingcert" {
+  name        = "tf_lb_missingcert"
+  ipv46       = "10.202.11.90"
+  port        = 443
+  servicetype = "SSL"
+  sslcertkey  = "tf_nonexistent_cert_pre"
+}
+`
+
+// TestAccLbvserver_missing_sslcertkey_precheck verifies the create-time cert
+// existence pre-check: referencing a non-existent sslcertkey must fail up-front
+// (before the vserver is created), so no orphaned lbvserver is left on the
+// appliance. Guards the SDK v2-parity pre-check + rollback fix.
+func TestAccLbvserver_missing_sslcertkey_precheck(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccLbvserver_missing_sslcertkey,
+				ExpectError: regexp.MustCompile("does not exist"),
+			},
+		},
+	})
+}
 
 func TestAccLbvserver_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -249,6 +279,12 @@ func TestAccLbvserver_standalone_ciphersuites_mixed(t *testing.T) {
 	// if isCluster {
 	// 	t.Skip("cluster ADC deployment")
 	// }
+	// Direct sslvserver_sslciphersuite bindings are only permitted when the SSL
+	// default profile is disabled; on a default-profile ADC the bind fails with
+	// errorcode 3740. Gate this test to the non-default-SSL-profile testbed.
+	if adcTestbed != "STANDALONE_NON_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_NON_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -354,6 +390,34 @@ func TestAccLbvserver_cluster_ciphers(t *testing.T) {
 					testCheckCiphersEqualToActual([]string{}, "tf-acc-ciphers-test"),
 					testCheckCiphersConfiguredExpected("citrixadc_lbvserver.ciphers", []string{}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lbvserver.Type(), "terraform-lb"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserverExist(resAddr, nil)),
 			},
 		},
 	})
@@ -886,7 +950,336 @@ func TestAccLbvserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "persistencetype", "COOKIEINSERT"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "port", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver.tf_lbvserver", "servicetype", "HTTP"),
+					// Runtime-binding proof plus read-only state/type/status fields the
+					// appliance always returns for a freshly-created lb vserver.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver.tf_lbvserver", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver.tf_lbvserver", "type"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver.tf_lbvserver", "curstate"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbvserver.tf_lbvserver", "status"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_basic},
+			{
+				Config:            testAccLbvserver_basic,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// NITRO omits these on default so they are absent after import
+				// (present as "" / "0" in the apply state).
+				ImportStateVerifyIgnore: []string{"backupvserver", "redirectfromport"},
+			},
+		},
+	})
+}
+
+// TestAccLbvserver_unset exercises the NITRO ?action=unset behaviour: the two
+// attributes that carry the unsetOnRemove plan modifier (backupvserver,
+// redirectfromport) are set to non-default values, then removed from config so
+// the provider must issue the unset and the appliance reverts them to their
+// NITRO defaults ("" / 0). The other Optional+Computed attributes in
+// lbvserverUnsettableAttrs have non-empty server defaults (e.g. appflowlog
+// defaults to ENABLED); attaching the unset-on-remove modifier to them would
+// produce a perpetual plan diff, so they are intentionally not covered here.
+const testAccLbvserver_unset_step1 = `
+resource "citrixadc_lbvserver" "tf_unset_backup" {
+  name        = "tf_unset_backup"
+  ipv46       = "10.202.11.40"
+  port        = 443
+  servicetype = "SSL"
+}
+
+resource "citrixadc_lbvserver" "tf_unset" {
+  name             = "tf_test_lbvserver_unset"
+  ipv46            = "10.202.11.41"
+  port             = 443
+  servicetype      = "SSL"
+  backupvserver    = citrixadc_lbvserver.tf_unset_backup.name
+  redirectfromport = 80
+}
+`
+
+const testAccLbvserver_unset_step2 = `
+resource "citrixadc_lbvserver" "tf_unset_backup" {
+  name        = "tf_unset_backup"
+  ipv46       = "10.202.11.40"
+  port        = 443
+  servicetype = "SSL"
+}
+
+resource "citrixadc_lbvserver" "tf_unset" {
+  name        = "tf_test_lbvserver_unset"
+  ipv46       = "10.202.11.41"
+  port        = 443
+  servicetype = "SSL"
+  # backupvserver and redirectfromport removed from config -> the provider must
+  # unset them (revert to NITRO defaults "" / 0).
+}
+`
+
+func TestAccLbvserver_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccLbvserver_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_unset", "backupvserver", "tf_unset_backup"),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_unset", "redirectfromport", "80"),
+					testAccCheckLbvserverADCValue("tf_test_lbvserver_unset", "backupvserver", "tf_unset_backup"),
+					testAccCheckLbvserverADCValue("tf_test_lbvserver_unset", "redirectfromport", "80"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the NITRO defaults, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccLbvserver_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_unset", "backupvserver", ""),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver.tf_unset", "redirectfromport", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckLbvserverADCValue("tf_test_lbvserver_unset", "backupvserver", ""),
+					testAccCheckLbvserverADCValue("tf_test_lbvserver_unset", "redirectfromport", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckLbvserverADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. NITRO omits attributes at their default, so an absent value is treated as
+// the empty string / zero for comparison purposes.
+func testAccCheckLbvserverADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Lbvserver.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("lbvserver %s not found on appliance", name)
+		}
+		got := ""
+		if raw, ok := data[attr]; ok && raw != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", raw))
+		}
+		// A NITRO-omitted (absent) attribute reads as "" here; treat it as the
+		// numeric zero default too so redirectfromport compares cleanly.
+		if got == "" && want == "0" {
+			return nil
+		}
+		if got != want {
+			return fmt.Errorf("lbvserver %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccLbvserver_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserverExist("citrixadc_lbvserver.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbvserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserverExist("citrixadc_lbvserver.foo", nil)),
+			},
+		},
+	})
+}
+
+// TestAccLbvserver_sslpolicybinding_type asserts that an sslpolicybinding with an
+// explicit bind point (type = "REQUEST") applies cleanly and idempotently. Before
+// the fix, the NEW provider aborted with "Provider produced inconsistent result
+// after apply": readSslpolicyBindings set type="" (NITRO omits type for the default
+// REQUEST bind point on GET) while the plan held "REQUEST", breaking the Set-element
+// consistency check. Step 2's ExpectEmptyPlan guards against any perpetual replace.
+func TestAccLbvserver_sslpolicybinding_type(t *testing.T) {
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_sslpolicybinding_type,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_lbvserver", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_lbvserver.tf_lbvserver", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_sslpol_type", "priority": "100", "type": "REQUEST", "gotopriorityexpression": "END"}),
+				),
+			},
+			{
+				Config: testAccLbvserver_sslpolicybinding_type,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+			},
+		},
+	})
+}
+
+const testAccLbvserver_sslpolicybinding_type = `
+resource "citrixadc_sslaction" "tf_sslaction" {
+  name                   = "tf_sslact_type"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+
+resource "citrixadc_sslpolicy" "tf_sslpolicy" {
+  name   = "tf_sslpol_type"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction.name
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+  name        = "tf_lb_sslpol_type"
+  ipv46       = "10.222.74.10"
+  port        = 443
+  servicetype = "SSL"
+
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy.name
+    priority               = 100
+    type                   = "REQUEST"
+    gotopriorityexpression = "END"
+  }
+}
+`
+
+// TestAccLbvserver_sslpolicybinding_subattrUpdate is a regression guard: editing a
+// non-key sub-attribute of an sslpolicy binding (here invoke/labeltype/labelname)
+// while keeping the same policyname+priority must reach the appliance. Pre-fix,
+// syncSslpolicyBindings diffed on (policyname, priority) only, so the edit produced
+// no delete/add and was silently dropped ("Provider produced inconsistent result
+// after apply"; regression vs SDK v2 full-hash parity).
+const testAccLbvserver_sslpolicybinding_subattr_v1 = `
+resource "citrixadc_sslaction" "tf_sslaction_sub" {
+  name                   = "tf_sslact_sub"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+resource "citrixadc_sslpolicy" "tf_sslpolicy_sub" {
+  name   = "tf_sslpol_sub"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction_sub.name
+}
+resource "citrixadc_sslpolicylabel" "tf_sslpol_label" {
+  labelname = "tf_sslpol_label"
+  type      = "CONTROL"
+}
+resource "citrixadc_lbvserver" "tf_lb_sub" {
+  name        = "tf_lb_sslpol_sub"
+  ipv46       = "10.222.74.11"
+  port        = 443
+  servicetype = "SSL"
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy_sub.name
+    priority               = 100
+    type                   = "REQUEST"
+    gotopriorityexpression = "END"
+  }
+}
+`
+
+const testAccLbvserver_sslpolicybinding_subattr_v2 = `
+resource "citrixadc_sslaction" "tf_sslaction_sub" {
+  name                   = "tf_sslact_sub"
+  clientauth             = "DOCLIENTAUTH"
+  clientcertverification = "Mandatory"
+}
+resource "citrixadc_sslpolicy" "tf_sslpolicy_sub" {
+  name   = "tf_sslpol_sub"
+  rule   = "true"
+  action = citrixadc_sslaction.tf_sslaction_sub.name
+}
+resource "citrixadc_sslpolicylabel" "tf_sslpol_label" {
+  labelname = "tf_sslpol_label"
+  type      = "CONTROL"
+}
+resource "citrixadc_lbvserver" "tf_lb_sub" {
+  name        = "tf_lb_sslpol_sub"
+  ipv46       = "10.222.74.11"
+  port        = 443
+  servicetype = "SSL"
+  sslpolicybinding {
+    policyname             = citrixadc_sslpolicy.tf_sslpolicy_sub.name
+    priority               = 100
+    type                   = "REQUEST"
+    gotopriorityexpression = "END"
+    invoke                 = true
+    labeltype              = "policylabel"
+    labelname              = citrixadc_sslpolicylabel.tf_sslpol_label.labelname
+  }
+}
+`
+
+func TestAccLbvserver_sslpolicybinding_subattrUpdate(t *testing.T) {
+	if isCpxRun {
+		t.Skip("TODO fix sslaction for CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_sslpolicybinding_subattr_v1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserverExist("citrixadc_lbvserver.tf_lb_sub", nil),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_lbvserver.tf_lb_sub", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_sslpol_sub", "priority": "100", "invoke": "false"}),
+				),
+			},
+			{
+				// Same policyname+priority; invoke false->true (+labeltype/labelname).
+				Config: testAccLbvserver_sslpolicybinding_subattr_v2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_lbvserver.tf_lb_sub", "sslpolicybinding.*",
+						map[string]string{"policyname": "tf_sslpol_sub", "priority": "100", "invoke": "true", "labelname": "tf_sslpol_label"}),
+				),
+			},
+			{
+				Config: testAccLbvserver_sslpolicybinding_subattr_v2,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
 			},
 		},
 	})

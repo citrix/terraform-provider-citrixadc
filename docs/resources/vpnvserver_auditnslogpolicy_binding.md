@@ -16,9 +16,23 @@ resource "citrixadc_vpnvserver" "tf_vpnvserver" {
   ipv46       = "3.3.3.3"
   port        = 443
 }
+resource "citrixadc_auditnslogaction" "tf_nslogaction" {
+  name       = "tf_nslogaction"
+  serverip   = "10.78.60.33"
+  serverport = 514
+  loglevel = [
+    "ERROR",
+    "NOTICE",
+  ]
+}
+resource "citrixadc_auditnslogpolicy" "tf_policy" {
+  name   = "tf_auditnslogpolicy"
+  rule   = "ns_true"
+  action = citrixadc_auditnslogaction.tf_nslogaction.name
+}
 resource "citrixadc_vpnvserver_auditnslogpolicy_binding" "tf_bind" {
   name      = citrixadc_vpnvserver.tf_vpnvserver.name
-  policy    = "tf_auditnslogpolicy"
+  policy    = citrixadc_auditnslogpolicy.tf_policy.name
   bindpoint = "REQUEST"
   priority  = 200
 }

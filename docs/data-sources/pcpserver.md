@@ -34,11 +34,3 @@ In addition to the arguments, the following attributes are available:
 * `ipaddress` - The IP address of the PCP server.
 * `pcpprofile` - pcp profile name
 * `port` - Port number for the PCP server.
-
-## Import
-
-A pcpserver can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_pcpserver.tf_pcpserver my_pcpserver
-```

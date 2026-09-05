@@ -35,12 +35,3 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the authenticationsamlpolicy. It has the same value as the `name` attribute.
 * `reqaction` - Name of the SAML authentication action to be performed if the policy matches.
 * `rule` - Name of the Citrix ADC named rule, or an expression, that the policy uses to determine whether to attempt to authenticate the user with the SAML server.
-
-
-## Import
-
-A authenticationsamlpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_authenticationsamlpolicy.tf_samlpolicy my_samlpolicy
-```

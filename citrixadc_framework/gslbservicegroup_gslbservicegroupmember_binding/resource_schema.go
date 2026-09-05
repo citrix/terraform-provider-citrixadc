@@ -45,21 +45,21 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			"hashid": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
 			},
 			"ip": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "IP Address.",
 			},
 			"order": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Order number to be assigned to the gslb servicegroup member",
 			},
@@ -73,21 +73,21 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			"publicip": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The public IP address that a NAT device translates to the GSLB service's private IP address. Optional.",
 			},
 			"publicport": schema.Int64Attribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The public port associated with the GSLB service's public IP address. The port is mapped to the service's private port number. Applicable to the local GSLB service. Optional.",
 			},
 			"servername": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the server to which to bind the service group.",
 			},
@@ -101,7 +101,7 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 			"siteprefix": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string NONE is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.",
 			},
@@ -109,7 +109,9 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436: preserve state on unknown; only replace when user explicitly configures (create-only attr).
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Initial state of the GSLB service group.",
 			},
@@ -117,7 +119,9 @@ func (r *GslbservicegroupGslbservicegroupmemberBindingResource) Schema(ctx conte
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: preserve weight on unknown; only replace when user explicitly configures (create-only attr).
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.",
 			},
@@ -263,12 +267,26 @@ func gslbservicegroup_gslbservicegroupmember_bindingSetAttrFromGetForDatasource(
 
 	// Set ID for the datasource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("ip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ip.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Port.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servername.ValueString()))))
-	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Servicegroupname.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
+	data.Id = types.StringValue(gslbservicegroup_gslbservicegroupmember_bindingBuildId(
+		data.Servicegroupname.ValueString(),
+		data.Servername.ValueString(),
+		data.Ip.ValueString(),
+		data.Port.ValueInt64(),
+	))
 
 	return data
+}
+
+// gslbservicegroup_gslbservicegroupmember_bindingBuildId composes the canonical
+// Framework ID as comma-separated key:UrlEncode(value) pairs, in the same order
+// Create emits. Exactly one of servername/ip is populated for a given member; the
+// unused one is written as an empty segment (the Read matcher skips empty segments),
+// so the id round-trips against a config that sets only that field.
+func gslbservicegroup_gslbservicegroupmember_bindingBuildId(servicegroupname, servername, ip string, port int64) string {
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("ip:%s", utils.UrlEncode(ip)))
+	idParts = append(idParts, fmt.Sprintf("port:%s", utils.UrlEncode(fmt.Sprintf("%v", port))))
+	idParts = append(idParts, fmt.Sprintf("servername:%s", utils.UrlEncode(servername)))
+	idParts = append(idParts, fmt.Sprintf("servicegroupname:%s", utils.UrlEncode(servicegroupname)))
+	return strings.Join(idParts, ",")
 }

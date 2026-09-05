@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsnstatic_basic = `
@@ -105,6 +107,81 @@ func TestAccLsnstatic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_lsnstatic.tf_lsnstatic", "subscrip", "10.222.74.128"),
 					resource.TestCheckResourceAttr("citrixadc_lsnstatic.tf_lsnstatic", "subscrport", "4000"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLsnstatic_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsnstatic.tf_lsnstatic"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnstaticDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsnstatic_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnstaticExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Lsnstatic.Type(), "my_lsn_static"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsnstatic_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnstaticExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccLsnstatic_import(t *testing.T) {
+	const resAddr = "citrixadc_lsnstatic.tf_lsnstatic"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsnstaticDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsnstatic_basic},
+			{
+				Config:                  testAccLsnstatic_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccLsnstatic_sdkv2StateUpgrade(t *testing.T) {
+	// No upgrade baseline possible: the released citrix/citrixadc 2.2.0 provider
+	// cannot create the prerequisite lsnclient (ec1074 "set command not present"),
+	// so step 1 never establishes SDK-v2 state. The current provider is unaffected.
+	t.Skip("no 2.2.0 baseline: released 2.2.0 provider fails to create lsnclient prerequisite (ec1074)")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsnstaticDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLsnstatic_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnstaticExist("citrixadc_lsnstatic.tf_lsnstatic", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsnstatic_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsnstaticExist("citrixadc_lsnstatic.tf_lsnstatic", nil)),
 			},
 		},
 	})
@@ -219,6 +296,12 @@ func TestAccLsnstaticDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "transportprotocol", "TCP"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "subscrip", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "subscrport", "3000"),
+					// Universal runtime-binding proof that the data source read
+					// resolved.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "id"),
+					// status is a state field always populated (ACTIVE/INACTIVE)
+					// for an existing mapping.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lsnstatic.tf_lsnstatic_ds", "status"),
 				),
 			},
 		},

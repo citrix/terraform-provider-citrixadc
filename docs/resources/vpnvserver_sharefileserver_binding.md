@@ -33,7 +33,7 @@ resource "citrixadc_vpnvserver_sharefileserver_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_sharefileserver_binding. It is the concatenation of `name` and `sharefile` attributes seperated by comma.
+* `id` - The id of the vpnvserver_sharefileserver_binding. It is the concatenation of `name` and `sharefile` attributes separated by a comma.
 
 
 ## Import

@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCmpaction_basic = `
@@ -63,6 +65,34 @@ func TestAccCmpaction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cmpaction.tf_cmpaction", "name", "my_cmpaction"),
 					resource.TestCheckResourceAttr("citrixadc_cmpaction.tf_cmpaction", "cmptype", "compress"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCmpaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cmpaction.tf_cmpaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmpactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmpaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cmpaction.Type(), "my_cmpaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCmpaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpactionExist(resAddr, nil)),
 			},
 		},
 	})
@@ -132,6 +162,122 @@ func testAccCheckCmpactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCmpaction_import(t *testing.T) {
+	const resAddr = "citrixadc_cmpaction.tf_cmpaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmpactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCmpaction_basic},
+			{
+				Config:                  testAccCmpaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccCmpaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCmpactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccCmpaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpactionExist("citrixadc_cmpaction.tf_cmpaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCmpaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmpactionExist("citrixadc_cmpaction.tf_cmpaction", nil)),
+			},
+		},
+	})
+}
+
+// The cmpaction unset test covers addvaryheader, whose NITRO default is GLOBAL.
+// Step 1 sets a non-default value; step 2 removes it so the provider unsets it
+// (reverts to GLOBAL). cmptype is required and carried in both steps.
+const testAccCmpaction_unset_step1 = `
+resource "citrixadc_cmpaction" "tf_unset" {
+  name          = "tf_test_cmpaction_unset"
+  cmptype       = "compress"
+  addvaryheader = "DISABLED"
+}
+`
+
+const testAccCmpaction_unset_step2 = `
+resource "citrixadc_cmpaction" "tf_unset" {
+  name    = "tf_test_cmpaction_unset"
+  cmptype = "compress"
+  # addvaryheader removed from config -> the provider must unset it (revert to
+  # the NITRO default, "GLOBAL").
+}
+`
+
+func TestAccCmpaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmpactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccCmpaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCmpactionExist("citrixadc_cmpaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cmpaction.tf_unset", "addvaryheader", "DISABLED"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default, and the implicit
+				// post-apply plan must be empty.
+				Config: testAccCmpaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCmpactionExist("citrixadc_cmpaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cmpaction.tf_unset", "addvaryheader", "GLOBAL"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCmpactionADCValue("tf_test_cmpaction_unset", "addvaryheader", "GLOBAL"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCmpactionADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckCmpactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Cmpaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("cmpaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("cmpaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccCmpactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -143,6 +289,8 @@ func TestAccCmpactionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cmpaction.tf_cmpaction_ds", "name", "tf_cmpaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmpaction.tf_cmpaction_ds", "cmptype", "nocompress"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cmpaction.tf_cmpaction_ds", "id"),
 				),
 			},
 		},

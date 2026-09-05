@@ -45,6 +45,7 @@ resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
 * `comment` - (Optional) Any comments about this policy.
 * `rule` - (Optional) Expression or other value against which the traffic is evaluated. Must be a Boolean expression.  The following requirements apply only to the Citrix ADC CLI: * If the expression includes one or more spaces, enclose the entire expression in double quotation marks. * If the expression itself includes double quotation marks, escape the quotations by using the \ character.  * Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.
 * `undefaction` - (Optional) Name of the appflow action to be associated with this policy when an undef event occurs.
+* `newname` - (Optional) New name for the policy. Must begin with an ASCII alphabetic or underscore (_)character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my appflow policy" or 'my appflow policy').
 
 
 ## Attribute Reference

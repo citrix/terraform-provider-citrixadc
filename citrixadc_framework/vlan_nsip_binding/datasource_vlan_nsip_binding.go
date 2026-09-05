@@ -3,9 +3,11 @@ package vlan_nsip_binding
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 )
 
@@ -42,16 +44,19 @@ func (d *VlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	// Case 4: Array filter with parent ID
-	id_Name := fmt.Sprintf("%d", data.Vlanid.ValueInt64())
+	// The parent name for the binding GET is the vlanid.
+	parentName := strconv.FormatInt(data.Vlanid.ValueInt64(), 10)
 	ipaddress_Name := data.Ipaddress
+	netmask_Name := data.Netmask
+	ownergroup_Name := data.Ownergroup
+	td_Name := data.Td
 
 	var dataArr []map[string]interface{}
 	var err error
 
 	findParams := service.FindParams{
 		ResourceType:             service.Vlan_nsip_binding.Type(),
-		ResourceName:             id_Name,
+		ResourceName:             parentName,
 		ResourceMissingErrorCode: 258,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
@@ -66,12 +71,12 @@ func (d *VlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the matching binding
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check ipaddress
+		// Check ipaddress (always provided by the datasource user)
 		if val, ok := v["ipaddress"].(string); ok {
 			if ipaddress_Name.IsNull() || val != ipaddress_Name.ValueString() {
 				match = false
@@ -82,6 +87,45 @@ func (d *VlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Rea
 			continue
 		}
 
+		// Check netmask only when supplied
+		if !netmask_Name.IsNull() {
+			if val, ok := v["netmask"].(string); ok {
+				if val != netmask_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+
+		// Check ownergroup only when supplied
+		if !ownergroup_Name.IsNull() {
+			if val, ok := v["ownergroup"].(string); ok {
+				if val != ownergroup_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
+
+		// Check td only when supplied
+		if !td_Name.IsNull() {
+			if val, ok := v["td"]; ok {
+				valInt, _ := utils.ConvertToInt64(val)
+				if valInt != td_Name.ValueInt64() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
 		if match {
 			foundIndex = i
 			break
@@ -94,7 +138,7 @@ func (d *VlanNsipBindingDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	vlan_nsip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vlan_nsip_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -6,7 +6,7 @@ subcategory: "LSN"
 
 The lsnclient_nsacl_binding data source allows you to retrieve information about the binding between an LSN client and NSACLs.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_lsnclient_nsacl_binding" "tf_lsnclient_nsacl_binding" {
@@ -32,5 +32,5 @@ output "aclname" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lsnclient_nsacl_binding. It is a system-generated identifier.
+* `id` - The id of the lsnclient_nsacl_binding. It is the concatenation of `clientname` and `aclname` attributes separated by a comma.
 * `td` - ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. If you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.

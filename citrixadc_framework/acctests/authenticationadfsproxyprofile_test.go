@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationadfsproxyprofile_basic_step1 = `
@@ -182,6 +182,8 @@ func TestAccAuthenticationadfsproxyprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "certkeyname", "TODO_PLACEHOLDER"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "serverurl", "https://adfs.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "username", "adfsuser"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "id"),
 				),
 			},
 		},
@@ -313,6 +315,35 @@ func TestAccAuthenticationadfsproxyprofile_password_wo_ephemeral(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "username", "adfsuser"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile", "password_wo_version", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationadfsproxyprofile_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_authenticationadfsproxyprofile.tf_authenticationadfsproxyprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationadfsproxyprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationadfsproxyprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationadfsproxyprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationadfsproxyprofile.Type(), "tf_adfsproxy_profile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationadfsproxyprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationadfsproxyprofileExist(resAddr, nil)),
 			},
 		},
 	})

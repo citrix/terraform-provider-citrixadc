@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *ClusternodegroupCrvserverBindingResource) Schema(ctx context.Context, r
 				Description: "The ID of the clusternodegroup_crvserver_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.",
 			},
 			"vserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "vserver that need to be bound to this nodegroup.",
 			},
 		},
 	}
 }
 
-func clusternodegroup_crvserver_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodegroupCrvserverBindingResourceModel) cluster.Clusternodegroupcrvserverbinding {
-	tflog.Debug(ctx, "In clusternodegroup_crvserver_bindingGetThePayloadFromtheConfig Function")
+func clusternodegroup_crvserver_bindingGetThePayloadFromthePlan(ctx context.Context, data *ClusternodegroupCrvserverBindingResourceModel) cluster.Clusternodegroupcrvserverbinding {
+	tflog.Debug(ctx, "In clusternodegroup_crvserver_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	clusternodegroup_crvserver_binding := cluster.Clusternodegroupcrvserverbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		clusternodegroup_crvserver_binding.Name = data.Name.ValueString()
 	}
-	if !data.Vserver.IsNull() {
+	if !data.Vserver.IsNull() && !data.Vserver.IsUnknown() {
 		clusternodegroup_crvserver_binding.Vserver = data.Vserver.ValueString()
 	}
 

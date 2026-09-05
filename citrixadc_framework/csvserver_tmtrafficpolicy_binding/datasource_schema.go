@@ -10,6 +10,11 @@ func CsvserverTmtrafficpolicyBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Bind point at which policy needs to be bound. Note: Content switching policies are evaluated only at request time.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

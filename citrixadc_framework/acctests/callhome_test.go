@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // callhome is a SINGLETON set-get parameter resource:
@@ -258,6 +258,8 @@ func TestAccCallhomeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_callhome.tf_callhome", "hbcustominterval", "10"),
 					resource.TestCheckResourceAttr("data.citrixadc_callhome.tf_callhome", "emailaddress", "test@example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_callhome.tf_callhome", "proxymode", "NO"),
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_callhome.tf_callhome", "id"),
 				),
 			},
 		},

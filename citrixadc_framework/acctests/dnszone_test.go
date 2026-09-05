@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnszone_add = `
@@ -83,7 +84,80 @@ func TestAccDnszoneDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "proxymode", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "dnssecoffload", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnszone.dnszone_data", "nsec", "DISABLED"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnszone.dnszone_data", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDnszone_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnszone.dnszone"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnszoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnszone_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnszoneExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnszone.Type(), "tf_zone1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnszone_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnszoneExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnszone_import(t *testing.T) {
+	const resAddr = "citrixadc_dnszone.dnszone"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnszoneDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnszone_add},
+			{
+				Config:                  testAccDnszone_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccDnszone_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnszoneDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnszone_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnszoneExist("citrixadc_dnszone.dnszone", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnszone_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnszoneExist("citrixadc_dnszone.dnszone", nil)),
 			},
 		},
 	})

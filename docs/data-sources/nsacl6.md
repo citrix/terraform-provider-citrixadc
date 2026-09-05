@@ -70,3 +70,11 @@ In addition to the arguments, the following attributes are available:
 * `ttl` - Time to expire this ACL6 (in seconds).
 * `vlan` - ID of the VLAN. The Citrix ADC applies the ACL6 rule only to the incoming packets on the specified VLAN.
 * `vxlan` - ID of the VXLAN. The Citrix ADC applies the ACL6 rule only to the incoming packets on the specified VXLAN.
+
+### Read-only nsacl6 metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsacl6` resource); they are Computed/GET-only. Any attribute the appliance does not return is `null`.
+
+* `kernelstate` - Commit status of the ACL6 (for example `APPLIED`, `NOTAPPLIED`, `RE-APPLY`).
+* `hits` - Number of hits of this ACL6.
+* `aclassociate` - ACL6 linked (for example `NAT`, `FORWARDINGSESSION`, `NAT64`, `LSN`). A list of strings.

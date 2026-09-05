@@ -11,7 +11,7 @@ The rnat6_nsip6_binding resource is used to create rnat6_nsip6_binding.
 
 ```hcl
 resource "citrixadc_rnat6_nsip6_binding" "tf_rnat6_nsip6_binding" {
-  name  = "my_rnat6"
+  name   = "my_rnat6"
   natip6 = "2001:db8:85a3::8a2e:370:7334"
 }
 ```
@@ -19,16 +19,16 @@ resource "citrixadc_rnat6_nsip6_binding" "tf_rnat6_nsip6_binding" {
 
 ## Argument Reference
 
-* `natip6` - (Required) Nat IP Address. Minimum length =  1
-* `name` - (Required) Name of the RNAT6 rule to which to bind NAT IPs. Minimum length =  1
-* `ownergroup` - (Optional) The owner node group in a Cluster for this rnat rule. Minimum length =  1
+* `name` - (Required) Name of the RNAT6 rule to which to bind NAT IPs.
+* `natip6` - (Required) Nat IP Address.
+* `ownergroup` - (Optional) The owner node group in a Cluster for this rnat rule. Defaults to `"DEFAULT_NG"`.
 
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the rnat6_nsip6_binding. It has the same value as the `name` and `natip6` attributes separated by a comma.
+* `id` - The id of the rnat6_nsip6_binding. It is the concatenation of the `name` and `natip6` attributes separated by a comma.
 
 
 ## Import

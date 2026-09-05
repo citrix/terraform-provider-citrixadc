@@ -51,3 +51,28 @@ The following attributes are available:
 * `servicepathvendorid` - The vendorid of the AVP in which PCRF sends service path for subscriber.
 * `vserver` - Name of the load balancing, or content switching vserver to which the Gx connections are established. The service type of the virtual server must be DIAMETER/SSL_DIAMETER. Mutually exclusive with the service parameter. Therefore, you cannot set both service and the Virtual Server in the Gx Interface.
 * `id` - The id of the subscribergxinterface. It is a system-generated identifier.
+
+### Read-only subscribergxinterface metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_subscribergxinterface` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `svrstate` - The state of the gx service.
+* `identity` - DiameterIdentity to be used by NS. DiameterIdentity is used to identify a Diameter node uniquely.
+* `realm` - Diameter Realm to be used by NS.
+* `status` - Citrix ADC PCRF connection Status. (Gx Protocol State).
+* `servicepathinfomode` - The type of info in which service path is passed from PCRF.
+* `gxreportingavp1` - The AVP code to report as 1st custom AVP. A list of strings.
+* `gxreportingavp1vendorid` - The vendorid of the AVP which will be reported as 1st custom AVP.
+* `gxreportingavp1type` - The type of the AVP which will be reported as 1st custom AVP.
+* `gxreportingavp2` - The AVP code to report as 2nd custom AVP. A list of strings.
+* `gxreportingavp2vendorid` - The vendorid of the AVP which will be reported as 2nd custom AVP.
+* `gxreportingavp2type` - The type of the AVP which will be reported as 2nd custom AVP.
+* `gxreportingavp3` - The AVP code to report as 3rd custom AVP. A list of strings.
+* `gxreportingavp3vendorid` - The vendorid of the AVP which will be reported as 3rd custom AVP.
+* `gxreportingavp3type` - The type of the AVP which will be reported as 3rd custom AVP.
+* `gxreportingavp4` - The AVP code to report as 4th custom AVP. A list of strings.
+* `gxreportingavp4vendorid` - The vendorid of the AVP which will be reported as 4th custom AVP.
+* `gxreportingavp4type` - The type of the AVP which will be reported as 4th custom AVP.
+* `gxreportingavp5` - The AVP code to report as 5th custom AVP. A list of strings.
+* `gxreportingavp5vendorid` - The vendorid of the AVP which will be reported as 5th custom AVP.
+* `gxreportingavp5type` - The type of the AVP which will be reported as 5th custom AVP.

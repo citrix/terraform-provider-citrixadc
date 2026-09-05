@@ -20,7 +20,7 @@ func RewritepolicylabelRewritepolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Suspend evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "* If labelType is policylabel, name of the policy label to invoke. \n* If labelType is reqvserver or resvserver, name of the virtual server to which to forward the request or response.",

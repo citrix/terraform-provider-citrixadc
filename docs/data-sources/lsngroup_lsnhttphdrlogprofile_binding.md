@@ -6,7 +6,7 @@ subcategory: "LSN"
 
 The lsngroup_lsnhttphdrlogprofile_binding data source allows you to retrieve information about an LSN group to LSN HTTP header logging profile binding.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_lsngroup_lsnhttphdrlogprofile_binding" "tf_binding" {

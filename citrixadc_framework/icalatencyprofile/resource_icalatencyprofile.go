@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *IcalatencyprofileResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Debug(ctx, "Creating icalatencyprofile resource")
 
-	// icalatencyprofile := icalatencyprofileGetThePayloadFromtheConfig(ctx, &data)
+	icalatencyprofile := icalatencyprofileGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Icalatencyprofile.Type(), &icalatencyprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create icalatencyprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("icalatencyprofile-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Icalatencyprofile.Type(), name_value, &icalatencyprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create icalatencyprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created icalatencyprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(name_value)
+
 	// Read the updated state back
-	r.readIcalatencyprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readIcalatencyprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "icalatencyprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,116 @@ func (r *IcalatencyprofileResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading icalatencyprofile resource")
 
-	r.readIcalatencyprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readIcalatencyprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *IcalatencyprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data IcalatencyprofileResourceModel
+	var data, config, state IcalatencyprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating icalatencyprofile resource")
 
-	// Create API request body from the model
-	// icalatencyprofile := icalatencyprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.L7latencymaxnotifycount.Equal(state.L7latencymaxnotifycount) {
+		tflog.Debug(ctx, "l7latencymaxnotifycount has changed for icalatencyprofile")
+		if config.L7latencymaxnotifycount.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencymaxnotifycount")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.L7latencymonitoring.Equal(state.L7latencymonitoring) {
+		tflog.Debug(ctx, "l7latencymonitoring has changed for icalatencyprofile")
+		if config.L7latencymonitoring.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencymonitoring")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.L7latencynotifyinterval.Equal(state.L7latencynotifyinterval) {
+		tflog.Debug(ctx, "l7latencynotifyinterval has changed for icalatencyprofile")
+		if config.L7latencynotifyinterval.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencynotifyinterval")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.L7latencythresholdfactor.Equal(state.L7latencythresholdfactor) {
+		tflog.Debug(ctx, "l7latencythresholdfactor has changed for icalatencyprofile")
+		if config.L7latencythresholdfactor.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencythresholdfactor")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.L7latencywaittime.Equal(state.L7latencywaittime) {
+		tflog.Debug(ctx, "l7latencywaittime has changed for icalatencyprofile")
+		if config.L7latencywaittime.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "l7latencywaittime")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Icalatencyprofile.Type(), &icalatencyprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update icalatencyprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		icalatencyprofile := icalatencyprofileGetThePayloadFromthePlan(ctx, &data)
+		// Make API call
+		// Named resource - use UpdateResource
+		name_value := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Icalatencyprofile.Type(), name_value, &icalatencyprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update icalatencyprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated icalatencyprofile resource")
+		tflog.Trace(ctx, "Updated icalatencyprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for icalatencyprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Icalatencyprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset icalatencyprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readIcalatencyprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readIcalatencyprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "icalatencyprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +222,34 @@ func (r *IcalatencyprofileResource) Delete(ctx context.Context, req resource.Del
 	}
 
 	tflog.Debug(ctx, "Deleting icalatencyprofile resource")
+	// Named resource - delete using DeleteResource
+	name_value := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Icalatencyprofile.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete icalatencyprofile, got error: %s", err))
+		return
+	}
 
-	// For icalatencyprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted icalatencyprofile resource from state")
+	tflog.Trace(ctx, "Deleted icalatencyprofile resource")
 }
 
-// Helper function to read icalatencyprofile data from API
-func (r *IcalatencyprofileResource) readIcalatencyprofileFromApi(ctx context.Context, data *IcalatencyprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Icalatencyprofile.Type(), "")
+// Helper function to read icalatencyprofile data from API.
+// Returns false when the resource no longer exists on the ADC.
+func (r *IcalatencyprofileResource) readIcalatencyprofileFromApi(ctx context.Context, data *IcalatencyprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	name_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Icalatencyprofile.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read icalatencyprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	icalatencyprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

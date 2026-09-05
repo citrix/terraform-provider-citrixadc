@@ -27,3 +27,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the ptp. It is a unique string prefixed with "tf-ptp-"
 
+
+## Import
+
+A ptp can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_ptp.tf_ptp ptp-config
+```

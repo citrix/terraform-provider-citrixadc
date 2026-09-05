@@ -17,13 +17,16 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_crosssitescripting_binding_basic = `
@@ -121,13 +124,16 @@ func testAccCheckAppfwprofile_crosssitescripting_bindingExist(n string, id *stri
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		appFwName := idSlice[0]
-		crosssitescripting := idSlice[1]
-		formactionurl_xss := idSlice[2]
-		as_scan_location_xss := idSlice[3]
-		as_value_type_xss := idSlice[4]
-		as_value_expr_xss := idSlice[5]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "crosssitescripting", "formactionurl_xss", "as_scan_location_xss", "as_value_type_xss", "as_value_expr_xss"}, []string{"as_value_type_xss", "as_value_expr_xss"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		appFwName := idMap["name"]
+		crosssitescripting := idMap["crosssitescripting"]
+		formactionurl_xss := idMap["formactionurl_xss"]
+		as_scan_location_xss := idMap["as_scan_location_xss"]
+		as_value_type_xss := idMap["as_value_type_xss"]
+		as_value_expr_xss := idMap["as_value_expr_xss"]
 
 		findParams := service.FindParams{
 			ResourceType:             service.Appfwprofile_crosssitescripting_binding.Type(),
@@ -232,6 +238,141 @@ func TestAccAppfwprofile_crosssitescripting_bindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "isvalueregex_xss", "REGEX"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_crosssitescripting_binding.tf_binding1", "state", "ENABLED"),
 				),
+			},
+		},
+	})
+}
+
+const testAccAppfwprofile_crosssitescripting_binding_upgrade_basic = `
+
+resource "citrixadc_appfwprofile_crosssitescripting_binding" "demo_binding1" {
+  name                 = citrixadc_appfwprofile.demo_appfw.name
+  crosssitescripting   = "file"
+  isregex_xss          = "NOTREGEX"
+  formactionurl_xss    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+  as_scan_location_xss = "FORMFIELD"
+  as_value_type_xss    = "Tag"
+  isvalueregex_xss     = "REGEX"
+  as_value_expr_xss    = ".*"
+  state                = "ENABLED"
+}
+
+resource "citrixadc_appfwprofile" "demo_appfw" {
+	name                     = "demo_appfwprofile"
+	type                     = ["HTML"]
+  }
+`
+
+func TestAccAppfwprofile_crosssitescripting_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_crosssitescripting_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_crosssitescripting_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_crosssitescripting_bindingExist("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "id", "demo_appfwprofile,file,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$,FORMFIELD,Tag,.*"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_crosssitescripting_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_crosssitescripting_bindingExist("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1", "id", "as_scan_location_xss:FORMFIELD,as_value_expr_xss:.%2A,as_value_type_xss:Tag,crosssitescripting:file,formactionurl_xss:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fdocument%2Fcontent%24,name:demo_appfwprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_crosssitescripting_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,crosssitescripting,formactionurl_xss,as_scan_location_xss,as_value_type_xss,as_value_expr_xss) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "crosssitescripting", "formactionurl_xss", "as_scan_location_xss", "as_value_type_xss", "as_value_expr_xss"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_crosssitescripting_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_crosssitescripting_binding_basic},
+			{Config: testAccAppfwprofile_crosssitescripting_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppfwprofile_crosssitescripting_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_crosssitescripting_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_crosssitescripting_binding.demo_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_crosssitescripting_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_crosssitescripting_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_crosssitescripting_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_crosssitescripting_binding.Type(), "demo_appfwprofile", map[string]string{
+						"as_scan_location_xss": utils.UrlEncode("FORMFIELD"),
+						"as_value_expr_xss":    utils.UrlEncode(".*"),
+						"as_value_type_xss":    utils.UrlEncode("Tag"),
+						"crosssitescripting":   utils.UrlEncode("file"),
+						"formactionurl_xss":    utils.UrlEncode("^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+					}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_crosssitescripting_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_crosssitescripting_bindingExist(resAddr, nil)),
 			},
 		},
 	})

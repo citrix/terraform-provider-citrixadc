@@ -33,3 +33,12 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the vpnsessionpolicy. It is the same as the `name` attribute.
 * `action` - Action to be applied by the new session policy if the rule criteria are met.
 * `rule` - Expression, or name of a named expression, specifying the traffic that matches the policy.
+
+### Read-only vpnsessionpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnsessionpolicy` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `expressiontype` - Type of policy (Classic/Advanced).
+* `hits` - Number of hits.

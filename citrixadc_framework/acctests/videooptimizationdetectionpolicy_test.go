@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVideooptimizationdetectionpolicy_add = `
@@ -158,6 +161,184 @@ func testAccCheckVideooptimizationdetectionpolicyDestroy(s *terraform.State) err
 	return nil
 }
 
+func TestAccVideooptimizationdetectionpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Videooptimizationdetectionpolicy.Type(), "tf_videooptimizationdetectionpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationdetectionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationdetectionpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVideooptimizationdetectionpolicy_add},
+			{
+				Config:                  testAccVideooptimizationdetectionpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationdetectionpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVideooptimizationdetectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVideooptimizationdetectionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicyExist("citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVideooptimizationdetectionpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicyExist("citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", nil)),
+			},
+		},
+	})
+}
+
+// The videooptimizationdetectionpolicy unset test covers the spec-unsettable
+// attributes (comment, logaction, undefaction). Step 1 sets them to non-default
+// values; step 2 removes them from config so the provider issues the NITRO
+// ?action=unset, reverting them to their appliance defaults (empty).
+const testAccVideooptimizationdetectionpolicy_unset_step1 = `
+	resource "citrixadc_videooptimizationdetectionaction" "tf_unset_action" {
+		name = "tf_vodp_unset_action"
+		type = "clear_text_abr"
+	}
+
+	resource "citrixadc_auditmessageaction" "tf_unset_msgaction" {
+		name              = "tf_vodp_unset_msg"
+		loglevel          = "NOTICE"
+		stringbuilderexpr = "\"hello\""
+		logtonewnslog     = "YES"
+	}
+
+	resource "citrixadc_videooptimizationdetectionpolicy" "tf_unset" {
+		name        = "tf_vodp_unset"
+		rule        = "true"
+		action      = citrixadc_videooptimizationdetectionaction.tf_unset_action.name
+		comment     = "managed by terraform"
+		logaction   = citrixadc_auditmessageaction.tf_unset_msgaction.name
+		undefaction = "RESET"
+	}
+`
+
+const testAccVideooptimizationdetectionpolicy_unset_step2 = `
+	resource "citrixadc_videooptimizationdetectionaction" "tf_unset_action" {
+		name = "tf_vodp_unset_action"
+		type = "clear_text_abr"
+	}
+
+	resource "citrixadc_auditmessageaction" "tf_unset_msgaction" {
+		name              = "tf_vodp_unset_msg"
+		loglevel          = "NOTICE"
+		stringbuilderexpr = "\"hello\""
+		logtonewnslog     = "YES"
+	}
+
+	resource "citrixadc_videooptimizationdetectionpolicy" "tf_unset" {
+		name   = "tf_vodp_unset"
+		rule   = "true"
+		action = citrixadc_videooptimizationdetectionaction.tf_unset_action.name
+		# comment, logaction and undefaction removed -> provider must unset them.
+	}
+`
+
+func TestAccVideooptimizationdetectionpolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVideooptimizationdetectionpolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVideooptimizationdetectionpolicyExist("citrixadc_videooptimizationdetectionpolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_videooptimizationdetectionpolicy.tf_unset", "comment", "managed by terraform"),
+					resource.TestCheckResourceAttr("citrixadc_videooptimizationdetectionpolicy.tf_unset", "logaction", "tf_vodp_unset_msg"),
+					resource.TestCheckResourceAttr("citrixadc_videooptimizationdetectionpolicy.tf_unset", "undefaction", "RESET"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance reverts
+				// them to their defaults (empty) and the implicit post-apply plan
+				// must be empty.
+				Config: testAccVideooptimizationdetectionpolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVideooptimizationdetectionpolicyExist("citrixadc_videooptimizationdetectionpolicy.tf_unset", nil),
+					testAccCheckVideooptimizationdetectionpolicyADCValue("tf_vodp_unset", "comment", ""),
+					testAccCheckVideooptimizationdetectionpolicyADCValue("tf_vodp_unset", "logaction", ""),
+					testAccCheckVideooptimizationdetectionpolicyADCValue("tf_vodp_unset", "undefaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVideooptimizationdetectionpolicyADCValue asserts an attribute's
+// value directly on the appliance (not just in Terraform state), proving the
+// unset reverted it.
+func testAccCheckVideooptimizationdetectionpolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Videooptimizationdetectionpolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("videooptimizationdetectionpolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("videooptimizationdetectionpolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccVideooptimizationdetectionpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -169,6 +350,8 @@ func TestAccVideooptimizationdetectionpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "name", "tf_videooptimizationdetectionpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "action", "tf_videooptimizationdetectionaction"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationdetectionpolicy.tf_detectionpolicy", "id"),
 				),
 			},
 		},

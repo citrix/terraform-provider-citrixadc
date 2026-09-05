@@ -35,7 +35,7 @@ func (d *DbdbprofileDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *DbdbprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DbdbprofileResourceModel
+	var data DbdbprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *DbdbprofileDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	dbdbprofileSetAttrFromGet(ctx, &data, getResponseData)
+	dbdbprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

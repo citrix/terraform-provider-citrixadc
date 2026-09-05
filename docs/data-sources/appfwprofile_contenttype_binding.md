@@ -44,4 +44,5 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the appfwprofile_contenttype_binding. It is a system-generated identifier.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

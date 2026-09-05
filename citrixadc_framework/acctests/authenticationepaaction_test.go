@@ -17,10 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationepaaction_add = `
@@ -168,6 +171,164 @@ const testAccAuthenticationepaactionDataSource_basic = `
 		name = citrixadc_authenticationepaaction.tf_epaaction_ds.name
 	}
 `
+
+func TestAccAuthenticationepaaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationepaaction.tf_epaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationepaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationepaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationepaactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationepaaction.Type(), "tf_epaaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationepaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationepaactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationepaaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationepaaction.tf_epaaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationepaactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationepaaction_add},
+			{
+				Config:                  testAccAuthenticationepaaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationepaaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationepaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationepaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_epaaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationepaaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_epaaction", nil)),
+			},
+		},
+	})
+}
+
+// The unset test covers the four NITRO unset-eligible attributes for
+// authenticationepaaction (killprocess, deletefiles, defaultepagroup,
+// quarantinegroup). csecexpr and deviceposture are NOT listed in the NITRO
+// unset operation, so they are not unset-eligible and are excluded.
+const testAccAuthenticationepaaction_unset_step1 = `
+	resource "citrixadc_authenticationepaaction" "tf_unset" {
+		name            = "tf_epaaction_unset"
+		csecexpr        = "sys.client_expr (\"app_0_MAC-BROWSER_1001_VERSION_<=_10.0.3\")"
+		killprocess     = "some_process"
+		deletefiles     = "/tmp/somefile"
+		defaultepagroup = "def_group"
+		quarantinegroup = "quar_group"
+	}
+`
+
+const testAccAuthenticationepaaction_unset_step2 = `
+	resource "citrixadc_authenticationepaaction" "tf_unset" {
+		name     = "tf_epaaction_unset"
+		# csecexpr is a prerequisite for killprocess and is not unset-eligible, so
+		# it is retained. All unset-eligible attributes are removed from config ->
+		# the provider must unset them (revert to NITRO defaults / absent).
+		csecexpr = "sys.client_expr (\"app_0_MAC-BROWSER_1001_VERSION_<=_10.0.3\")"
+	}
+`
+
+func TestAccAuthenticationepaaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationepaactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAuthenticationepaaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_unset", "killprocess", "some_process"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_unset", "deletefiles", "/tmp/somefile"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_unset", "defaultepagroup", "def_group"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationepaaction.tf_unset", "quarantinegroup", "quar_group"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the NITRO defaults (absent/empty), and
+				// the implicit post-apply plan must be empty.
+				Config: testAccAuthenticationepaaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationepaactionExist("citrixadc_authenticationepaaction.tf_unset", nil),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationepaactionADCValue("tf_epaaction_unset", "killprocess", ""),
+					testAccCheckAuthenticationepaactionADCValue("tf_epaaction_unset", "deletefiles", ""),
+					testAccCheckAuthenticationepaactionADCValue("tf_epaaction_unset", "defaultepagroup", ""),
+					testAccCheckAuthenticationepaactionADCValue("tf_epaaction_unset", "quarantinegroup", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationepaactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it. An absent/nil value is treated as the empty string.
+func testAccCheckAuthenticationepaactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationepaaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationepaaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("authenticationepaaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccAuthenticationepaactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

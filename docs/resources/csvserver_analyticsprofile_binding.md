@@ -39,7 +39,8 @@ In addition to the arguments, the following attributes are available:
 
 ## Import
 
-A csvserver_analyticsprofile_binding can be imported using its name, e.g.
+A csvserver_analyticsprofile_binding can be imported using its id, e.g.
 
-```shellterraform import terraform import citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding tf_csvserver,ns_analytics_global_profile
+```shell
+terraform import citrixadc_csvserver_analyticsprofile_binding.tf_csvserver_analyticsprofile_binding tf_csvserver,ns_analytics_global_profile
 ```

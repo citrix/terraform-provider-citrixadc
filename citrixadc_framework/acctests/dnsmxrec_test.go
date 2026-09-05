@@ -19,11 +19,13 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnsmxrec_add = `
@@ -177,6 +179,126 @@ func testAccCheckDnsmxrecDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnsmxrec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsmxrec.dnsmxrec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsmxrecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsmxrec_add},
+			{
+				Config:                  testAccDnsmxrec_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccDnsmxrec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsmxrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnsmxrec_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsmxrecExist("citrixadc_dnsmxrec.dnsmxrec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnsmxrec_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsmxrecExist("citrixadc_dnsmxrec.dnsmxrec", nil)),
+			},
+		},
+	})
+}
+
+// dnsmxrec unset: ttl is the only spec-unsettable attribute (the NITRO unset
+// operation payload lists domain, mx and ttl; its documented default is 3600).
+// domain/mx/pref are mandatory and are kept across both steps; only ttl is
+// removed in step2 so the provider must unset it back to 3600.
+const testAccDnsmxrec_unset_step1 = `
+resource "citrixadc_dnsmxrec" "tf_unset" {
+	domain = "tf-unset-mx.example.local"
+	mx     = "mail-tf-unset.example.local"
+	pref   = 5
+	ttl    = 1800
+}
+`
+
+const testAccDnsmxrec_unset_step2 = `
+resource "citrixadc_dnsmxrec" "tf_unset" {
+	domain = "tf-unset-mx.example.local"
+	mx     = "mail-tf-unset.example.local"
+	pref   = 5
+	# ttl removed from config -> provider must unset it (revert to NITRO default 3600).
+}
+`
+
+func TestAccDnsmxrec_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsmxrecDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccDnsmxrec_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsmxrecExist("citrixadc_dnsmxrec.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsmxrec.tf_unset", "ttl", "1800"),
+				),
+			},
+			{
+				// Removing ttl must unset it: state (read back from the appliance)
+				// reverts to the NITRO default 3600, and the implicit post-apply
+				// plan must be empty.
+				Config: testAccDnsmxrec_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDnsmxrecExist("citrixadc_dnsmxrec.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_dnsmxrec.tf_unset", "ttl", "3600"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckDnsmxrecADCValue("tf-unset-mx.example.local", "mail-tf-unset.example.local", "ttl", "3600"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckDnsmxrecADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. dnsmxrec is looked up by domain + mx.
+func testAccCheckDnsmxrecADCValue(domain, mx, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		_ = mx
+		data, err := client.FindResource(service.Dnsmxrec.Type(), domain)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("dnsmxrec %s not found on appliance", domain)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("dnsmxrec %s: appliance attr %q = %q, want %q (unset did not revert it)", domain, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccDnsmxrecDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -185,6 +307,7 @@ func TestAccDnsmxrecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnsmxrecDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsmxrec.dnsmxrec", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsmxrec.dnsmxrec", "domain", "tftest-ds-mx.example.local"),
 				),
 			},

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNstrafficdomain_bridgegroup_binding_basic = `
@@ -132,10 +135,12 @@ func testAccCheckNstrafficdomain_bridgegroup_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		td := idSlice[0]
-		bridgegroup := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"td", "bridgegroup"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		td := idMap["td"]
+		bridgegroup := idMap["bridgegroup"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nstrafficdomain_bridgegroup_binding",
@@ -177,10 +182,12 @@ func testAccCheckNstrafficdomain_bridgegroup_bindingNotExist(n string, id string
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		td := idSlice[0]
-		bridgegroup := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"td", "bridgegroup"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		}
+		td := idMap["td"]
+		bridgegroup := idMap["bridgegroup"]
 
 		findParams := service.FindParams{
 			ResourceType:             "nstrafficdomain_bridgegroup_binding",
@@ -237,6 +244,65 @@ func testAccCheckNstrafficdomain_bridgegroup_bindingDestroy(s *terraform.State) 
 	return nil
 }
 
+const testAccNstrafficdomain_bridgegroup_binding_upgrade_basic = `
+
+	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
+		td        = 2
+		aliasname = "tf_trafficdomain"
+		vmac      = "DISABLED"
+	}
+	resource "citrixadc_bridgegroup" "tf_bridgegroup" {
+		bridgegroup_id     = 2
+		dynamicrouting     = "DISABLED"
+		ipv6dynamicrouting = "DISABLED"
+	}
+	resource "citrixadc_nstrafficdomain_bridgegroup_binding" "tf_binding" {
+		td          = citrixadc_nstrafficdomain.tf_trafficdomain.td
+		bridgegroup = citrixadc_bridgegroup.tf_bridgegroup.bridgegroup_id
+	}
+`
+
+// TestAccNstrafficdomain_bridgegroup_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (2.2.0), which stores the legacy comma-joined
+// id ("<td>,<bridgegroup>"), is upgraded correctly when refreshed/applied through the
+// current Framework provider. The Framework Read recomputes the id to the new
+// key:value format ("bridgegroup:<v>,td:<v>").
+func TestAccNstrafficdomain_bridgegroup_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNstrafficdomain_bridgegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release from the registry.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNstrafficdomain_bridgegroup_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstrafficdomain_bridgegroup_bindingExist("citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", "id", "2,2"),
+				),
+			},
+			{
+				// Step 2: same config, now served by the current Framework provider.
+				// Read parses the legacy id and recomputes it to the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNstrafficdomain_bridgegroup_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNstrafficdomain_bridgegroup_bindingExist("citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", "id", "bridgegroup:2,td:2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNstrafficdomain_bridgegroup_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -249,6 +315,77 @@ func TestAccNstrafficdomain_bridgegroup_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", "td", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding", "bridgegroup", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNstrafficdomain_bridgegroup_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: td,bridgegroup) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"td", "bridgegroup"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomain_bridgegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNstrafficdomain_bridgegroup_binding_basic},
+			{Config: testAccNstrafficdomain_bridgegroup_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNstrafficdomain_bridgegroup_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNstrafficdomain_bridgegroup_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain_bridgegroup_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomain_bridgegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstrafficdomain_bridgegroup_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomain_bridgegroup_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Nstrafficdomain_bridgegroup_binding.Type(), "2", map[string]string{"bridgegroup": "2"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNstrafficdomain_bridgegroup_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomain_bridgegroup_bindingExist(resAddr, nil)),
 			},
 		},
 	})

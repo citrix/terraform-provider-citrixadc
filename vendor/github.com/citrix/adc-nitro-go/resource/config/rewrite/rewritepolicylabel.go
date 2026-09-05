@@ -46,6 +46,7 @@ type Rewritepolicylabel struct {
 		* dns_res - DNS responses
 		* mqtt_req - MQTT requests
 		* mqtt_res - MQTT responses
+		* http_event_res - HTTP event responses
 	*/
 	Transform string `json:"transform,omitempty"`
 	/**

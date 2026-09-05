@@ -31,3 +31,10 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslcacertbundle. It has the same value as the `cacertbundlename` attribute.
 * `bundlefile` - Name of and, optionally, path to the X509 CA certificate bundle file that is used to form the cacertbundle entity.
+
+### Read-only sslcacertbundle metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslcacertbundle` resource) and are Computed. Any attribute the appliance does not return is `null`.
+
+* `servername` - Vserver/Service/Servicegroup name to which the cacertbundle is bound.
+* `cacertbundledigest` - Stores the digest of a CA certificate bundle file.

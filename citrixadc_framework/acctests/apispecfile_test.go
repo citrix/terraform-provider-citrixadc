@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // TODO_PLACEHOLDER: Replace src with a real URL accessible by the ADC appliance.
@@ -179,6 +179,34 @@ func TestAccApispecfileDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_apispecfile.tf_apispecfile", "name", "test_apispecfile"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccApispecfile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_apispecfile.tf_apispecfile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doApiSpecPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApispecfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApispecfile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApispecfileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Apispecfile.Type(), "test_apispecfile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccApispecfile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApispecfileExist(resAddr, nil)),
 			},
 		},
 	})

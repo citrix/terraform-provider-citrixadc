@@ -35,7 +35,7 @@ func (d *AuthenticationazurekeyvaultDataSource) Schema(ctx context.Context, req 
 }
 
 func (d *AuthenticationazurekeyvaultDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationazurekeyvaultResourceModel
+	var data AuthenticationazurekeyvaultDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *AuthenticationazurekeyvaultDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	authenticationazurekeyvaultSetAttrFromGet(ctx, &data, getResponseData)
+	authenticationazurekeyvaultDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

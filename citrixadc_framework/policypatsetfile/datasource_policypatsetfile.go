@@ -35,7 +35,7 @@ func (d *PolicypatsetfileDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *PolicypatsetfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data PolicypatsetfileResourceModel
+	var data PolicypatsetfileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -58,7 +58,7 @@ func (d *PolicypatsetfileDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	policypatsetfileSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	policypatsetfileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

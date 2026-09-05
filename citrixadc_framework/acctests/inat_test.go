@@ -19,12 +19,14 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -137,6 +139,34 @@ resource "citrixadc_inat" "foo" {
 }
 `
 
+func TestAccInat_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_inat.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckInatDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInat_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInatExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Inat.Type(), "ip4ip"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccInat_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInatExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 
 	if tfAcc := os.Getenv("TF_ACC"); tfAcc == "" {
@@ -190,6 +220,25 @@ func TestAccInat_AssertNonUpdateableAttributes(t *testing.T) {
 	inatInstance.Td = utils.IntPtr(0)
 }
 
+func TestAccInat_import(t *testing.T) {
+	const resAddr = "citrixadc_inat.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckInatDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccInat_basic},
+			{
+				Config:                  testAccInat_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccInatDataSource_basic = `
 
 resource "citrixadc_inat" "foo" {
@@ -206,6 +255,122 @@ data "citrixadc_inat" "foo" {
 }
 `
 
+func TestAccInat_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckInatDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccInat_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInatExist("citrixadc_inat.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccInat_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInatExist("citrixadc_inat.foo", nil)),
+			},
+		},
+	})
+}
+
+// The inat unset test covers the mutable, unset-eligible attributes that have a
+// documented NITRO default: tcpproxy, ftp, tftp (DISABLED), useproxyport
+// (ENABLED) and connfailover (DISABLED). step1 sets each to a non-default value;
+// step2 removes them from config so the provider unsets them and the appliance
+// reverts them to their defaults.
+const testAccInat_unset_step1 = `
+resource "citrixadc_inat" "tf_unset" {
+  name         = "tf_test_inat_unset"
+  publicip     = "172.16.9.9"
+  privateip    = "192.168.9.9"
+  tcpproxy     = "ENABLED"
+  ftp          = "ENABLED"
+  tftp         = "ENABLED"
+  useproxyport = "DISABLED"
+  connfailover = "ENABLED"
+}
+`
+
+const testAccInat_unset_step2 = `
+resource "citrixadc_inat" "tf_unset" {
+  name      = "tf_test_inat_unset"
+  publicip  = "172.16.9.9"
+  privateip = "192.168.9.9"
+  # All unset-eligible attributes removed from config -> the provider must unset
+  # them (revert to NITRO defaults).
+}
+`
+
+func TestAccInat_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckInatDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccInat_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInatExist("citrixadc_inat.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "tcpproxy", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "ftp", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "tftp", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "useproxyport", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "connfailover", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccInat_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInatExist("citrixadc_inat.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "tcpproxy", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "ftp", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "tftp", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "useproxyport", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_inat.tf_unset", "connfailover", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckInatADCValue("tf_test_inat_unset", "tcpproxy", "DISABLED"),
+					testAccCheckInatADCValue("tf_test_inat_unset", "useproxyport", "ENABLED"),
+					testAccCheckInatADCValue("tf_test_inat_unset", "connfailover", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckInatADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckInatADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Inat.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("inat %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("inat %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccInatDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -220,6 +385,7 @@ func TestAccInatDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "tcpproxy", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "usnip", "ON"),
 					resource.TestCheckResourceAttr("data.citrixadc_inat.foo", "connfailover", "DISABLED"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_inat.foo", "id"),
 				),
 			},
 		},

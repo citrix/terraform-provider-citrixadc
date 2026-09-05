@@ -22,7 +22,7 @@ resource "citrixadc_vpntrafficpolicy" "tf_vpntrafficpolicy" {
   rule   = "HTTP.REQ.HEADER(\"User-Agent\").CONTAINS(\"CitrixReceiver\").NOT"
   action = citrixadc_vpntrafficaction.foo.name
 }
-resource "citrixadc_vpngobal_vpntrafficpolicy_binding" "tf_bond" {
+resource "citrixadc_vpnglobal_vpntrafficpolicy_binding" "tf_bond" {
   policyname = citrixadc_vpntrafficpolicy.tf_vpntrafficpolicy.name
   priority   = 20
 }
@@ -50,5 +50,5 @@ In addition to the arguments, the following attributes are available:
 A vpnglobal_vpntrafficpolicy_binding can be imported using its policyname, e.g.
 
 ```shell
-terraform import citrixadc_vpngobal_vpntrafficpolicy_binding.tf_bond tf_vpntrafficpolicy
+terraform import citrixadc_vpnglobal_vpntrafficpolicy_binding.tf_bond tf_vpntrafficpolicy
 ```

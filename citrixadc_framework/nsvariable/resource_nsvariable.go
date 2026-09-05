@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *NsvariableResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nsvariable resource")
 
-	// nsvariable := nsvariableGetThePayloadFromtheConfig(ctx, &data)
+	nsvariable := nsvariableGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsvariable.Type(), &nsvariable)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsvariable, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nsvariable-config")
+	// Named resource - use AddResource
+	nsvariableName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Nsvariable.Type(), nsvariableName, &nsvariable)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsvariable, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nsvariable resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", nsvariableName))
+
 	// Read the updated state back
-	r.readNsvariableFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsvariableFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsvariable not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +95,117 @@ func (r *NsvariableResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading nsvariable resource")
 
-	r.readNsvariableFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNsvariableFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NsvariableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsvariableResourceModel
+	var data, config, state NsvariableResourceModel
 
+	// Read Terraform prior state to preserve ID and detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nsvariable resource")
 
-	// Create API request body from the model
-	// nsvariable := nsvariableGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for nsvariable")
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Expires.Equal(state.Expires) {
+		tflog.Debug(ctx, "expires has changed for nsvariable")
+		if config.Expires.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "expires")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Iffull.Equal(state.Iffull) {
+		tflog.Debug(ctx, "iffull has changed for nsvariable")
+		if config.Iffull.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "iffull")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Ifnovalue.Equal(state.Ifnovalue) {
+		tflog.Debug(ctx, "ifnovalue has changed for nsvariable")
+		if config.Ifnovalue.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ifnovalue")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Ifvaluetoobig.Equal(state.Ifvaluetoobig) {
+		tflog.Debug(ctx, "ifvaluetoobig has changed for nsvariable")
+		if config.Ifvaluetoobig.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "ifvaluetoobig")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Init.Equal(state.Init) {
+		tflog.Debug(ctx, "init has changed for nsvariable")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsvariable.Type(), &nsvariable)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsvariable, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		nsvariable := nsvariableGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Named resource - use UpdateResource
+		nsvariableName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Nsvariable.Type(), nsvariableName, &nsvariable)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsvariable, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated nsvariable resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nsvariable resource, skipping update")
+	}
 
-	tflog.Trace(ctx, "Updated nsvariable resource")
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Nsvariable.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsvariable attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readNsvariableFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNsvariableFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nsvariable not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +223,33 @@ func (r *NsvariableResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting nsvariable resource")
 
-	// For nsvariable, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nsvariable resource from state")
+	// Named resource - delete using DeleteResource
+	nsvariableName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Nsvariable.Type(), nsvariableName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nsvariable, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nsvariable resource")
 }
 
 // Helper function to read nsvariable data from API
-func (r *NsvariableResource) readNsvariableFromApi(ctx context.Context, data *NsvariableResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nsvariable.Type(), "")
+func (r *NsvariableResource) readNsvariableFromApi(ctx context.Context, data *NsvariableResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	nsvariableName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Nsvariable.Type(), nsvariableName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsvariable, got error: %s", err))
-		return
+		return false
 	}
 
 	nsvariableSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

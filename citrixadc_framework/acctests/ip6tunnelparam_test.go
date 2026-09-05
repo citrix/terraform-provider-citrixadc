@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIp6tunnelparam_add = `
@@ -121,6 +122,25 @@ func testAccCheckIp6tunnelparamExist(n string, id *string) resource.TestCheckFun
 	}
 }
 
+func TestAccIp6tunnelparam_import(t *testing.T) {
+	const resAddr = "citrixadc_ip6tunnelparam.tf_ip6tunnelparam"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccIp6tunnelparam_add},
+			{
+				Config:                  testAccIp6tunnelparam_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccIp6tunnelparamDataSource_basic = `
 	resource "citrixadc_nsip6" "name" {
 		ipv6address = "2001:db8:100::fa/64"
@@ -139,6 +159,30 @@ const testAccIp6tunnelparamDataSource_basic = `
 		depends_on = [citrixadc_ip6tunnelparam.tf_ip6tunnelparam]
 	}
 `
+
+func TestAccIp6tunnelparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccIp6tunnelparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIp6tunnelparamExist("citrixadc_ip6tunnelparam.tf_ip6tunnelparam", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIp6tunnelparam_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIp6tunnelparamExist("citrixadc_ip6tunnelparam.tf_ip6tunnelparam", nil)),
+			},
+		},
+	})
+}
 
 func TestAccIp6tunnelparamDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

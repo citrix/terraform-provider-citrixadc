@@ -57,6 +57,10 @@ type Netprofile struct {
 	* ADC doesnt look for proxy header before TLS handshake, if enabled. Proxy protocol parsed after TLS handshake
 	*/
 	Proxyprotocolaftertlshandshake string `json:"proxyprotocolaftertlshandshake,omitempty"`
+	/**
+	* Number of protocol violation from an IP address before taking action.
+	*/
+	Badipactionthreshold *int `json:"badipactionthreshold,omitempty"`
 
 	//------- Read only Parameter ---------;
 

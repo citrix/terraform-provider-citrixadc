@@ -35,7 +35,7 @@ func (d *BridgegroupDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *BridgegroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data BridgegroupResourceModel
+	var data BridgegroupDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *BridgegroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	bridgegroupSetAttrFromGet(ctx, &data, getResponseData)
+	bridgegroupDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

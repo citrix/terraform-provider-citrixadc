@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,15 @@ func (r *NtpparamResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating ntpparam resource")
 
-	// ntpparam := ntpparamGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	ntpparam := ntpparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ntpparam, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create ntpparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("ntpparam-config")
@@ -95,10 +97,14 @@ func (r *NtpparamResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *NtpparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NtpparamResourceModel
+	var data, config, state NtpparamResourceModel
 
+	// Read Terraform prior state to detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +112,56 @@ func (r *NtpparamResource) Update(ctx context.Context, req resource.UpdateReques
 
 	tflog.Debug(ctx, "Updating ntpparam resource")
 
-	// Create API request body from the model
-	// ntpparam := ntpparamGetThePayloadFromtheConfig(ctx, &data)
+	// Determine which attributes changed and which were removed from config (unset)
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Authentication.Equal(state.Authentication) {
+		if config.Authentication.IsNull() {
+			attributesToUnset = append(attributesToUnset, "authentication")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Autokeylogsec.Equal(state.Autokeylogsec) {
+		if config.Autokeylogsec.IsNull() {
+			attributesToUnset = append(attributesToUnset, "autokeylogsec")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Revokelogsec.Equal(state.Revokelogsec) {
+		if config.Revokelogsec.IsNull() {
+			attributesToUnset = append(attributesToUnset, "revokelogsec")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Trustedkey.Equal(state.Trustedkey) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ntpparam, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Build the payload from the plan
+		ntpparam := ntpparamGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated ntpparam resource")
+		// Make API call - singleton resource, use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Ntpparam.Type(), &ntpparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ntpparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated ntpparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for ntpparam resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts to defaults
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Ntpparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset ntpparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNtpparamFromApi(ctx, &data, &resp.Diagnostics)

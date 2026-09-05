@@ -23,6 +23,7 @@ resource "citrixadc_contentinspectionpolicylabel" "tf_contentinspectionpolicylab
 * `labelname` - (Required) Name for the contentInspection policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the contentInspection policy label is added.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my contentInspection policy label" or 'my contentInspection policy label').
 * `type` - (Required) Type of packets (request or response packets) against which to match the policies bound to this policy label.
 * `comment` - (Optional) Any comments to preserve information about this contentInspection policy label.
+* `newname` - (Optional) New name for the contentInspection policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my policy label" or 'my policy label').
 
 
 ## Attribute Reference

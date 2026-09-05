@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // apiprofile_apispec_binding is a binding_with_parent resource.
@@ -306,6 +306,34 @@ func TestAccApiprofileApispecBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_apiprofile_apispec_binding.tf_apiprofile_apispec_binding", "name", "test_apiprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_apiprofile_apispec_binding.tf_apiprofile_apispec_binding", "apispec", "tf_apispec"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccApiprofileApispecBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_apiprofile_apispec_binding.tf_apiprofile_apispec_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doApiSpecPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckApiprofileApispecBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApiprofileApispecBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApiprofileApispecBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Apiprofile_apispec_binding.Type(), "test_apiprofile", map[string]string{"apispec": "tf_apispec"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccApiprofileApispecBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckApiprofileApispecBindingExist(resAddr, nil)),
 			},
 		},
 	})

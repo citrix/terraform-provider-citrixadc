@@ -33,10 +33,9 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the appfwxmlcontenttype. It has the same value as the `xmlcontenttypevalue` attribute.
 * `isregex` - Is field name a regular expression?. Possible values: [ REGEX, NOTREGEX ]
 
-## Import
+### Read-only appfwxmlcontenttype metadata
 
-A appfwxmlcontenttype can be imported using its xmlcontenttypevalue, e.g.
+These attributes are GET-only (Computed) and are returned by the appliance on a read; they are not configurable on the `citrixadc_appfwxmlcontenttype` resource. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_appfwxmlcontenttype.tf_appfwxmlcontenttype application/xml
-```
+* `builtin` - Flag to determine if xmlcontenttype is built-in or not. A list of strings (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.

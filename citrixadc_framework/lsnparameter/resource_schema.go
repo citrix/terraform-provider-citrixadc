@@ -37,11 +37,13 @@ func (r *LsnparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"sessionsync": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Synchronize all LSN sessions with the secondary node in a high availability (HA) deployment (global synchronization). After a failover, established TCP connections and UDP packet flows are kept active and resumed on the secondary node (new primary).\n\nThe global session synchronization parameter and session synchronization parameters (group level) of all LSN groups are enabled by default.\n\nFor a group, when both the global level and the group level LSN session synchronization parameters are enabled, the primary node synchronizes information of all LSN sessions related to this LSN group with the secondary node.",
 			},
 			"subscrsessionremoval": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "LSN global setting for controlling subscriber aware session removal, when this is enabled, when ever the subscriber info is deleted from subscriber database, sessions corresponding to that subscriber will be removed. if this setting is disabled, subscriber sessions will be timed out as per the idle time out settings.",
 			},
@@ -54,13 +56,13 @@ func lsnparameterGetThePayloadFromtheConfig(ctx context.Context, data *Lsnparame
 
 	// Create API request body from the model
 	lsnparameter := lsn.Lsnparameter{}
-	if !data.Memlimit.IsNull() {
+	if !data.Memlimit.IsNull() && !data.Memlimit.IsUnknown() {
 		lsnparameter.Memlimit = utils.IntPtr(int(data.Memlimit.ValueInt64()))
 	}
-	if !data.Sessionsync.IsNull() {
+	if !data.Sessionsync.IsNull() && !data.Sessionsync.IsUnknown() {
 		lsnparameter.Sessionsync = data.Sessionsync.ValueString()
 	}
-	if !data.Subscrsessionremoval.IsNull() {
+	if !data.Subscrsessionremoval.IsNull() && !data.Subscrsessionremoval.IsUnknown() {
 		lsnparameter.Subscrsessionremoval = data.Subscrsessionremoval.ValueString()
 	}
 
@@ -75,17 +77,19 @@ func lsnparameterSetAttrFromGet(ctx context.Context, data *LsnparameterResourceM
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Memlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Memlimit.IsUnknown() {
+		// NITRO omits the field (omit-on-default); only resolve an unresolved
+		// Computed value to null, never clobber a known configured value.
 		data.Memlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["sessionsync"]; ok && val != nil {
 		data.Sessionsync = types.StringValue(val.(string))
-	} else {
+	} else if data.Sessionsync.IsUnknown() {
 		data.Sessionsync = types.StringNull()
 	}
 	if val, ok := getResponseData["subscrsessionremoval"]; ok && val != nil {
 		data.Subscrsessionremoval = types.StringValue(val.(string))
-	} else {
+	} else if data.Subscrsessionremoval.IsUnknown() {
 		data.Subscrsessionremoval = types.StringNull()
 	}
 

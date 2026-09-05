@@ -36,7 +36,7 @@ output "percentage" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the botprofile_tps_binding. It is a system-generated identifier.
+* `id` - The id of the botprofile_tps_binding. It is the concatenation of the `name` and `bot_tps_type` attributes separated by a comma.
 * `bot_tps` - TPS binding. For each type only binding can be configured. To update the values of an existing binding, user has to first unbind that binding, and then needs to bind again with new values.
 * `bot_bind_comment` - Any comments about this binding.
 * `bot_tps_action` - One to more actions to be taken if bot is detected based on this TPS binding. Only LOG action can be combined with DROP, RESET, REDIRECT, or MITIGIATION action.

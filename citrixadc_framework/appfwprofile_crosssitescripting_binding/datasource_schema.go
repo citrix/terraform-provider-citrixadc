@@ -20,13 +20,11 @@ func AppfwprofileCrosssitescriptingBindingDataSourceSchema() schema.Schema {
 				Description: "Location of cross-site scripting exception - form field, header, cookie or URL.",
 			},
 			"as_value_expr_xss": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The web form value expression.",
 			},
 			"as_value_type_xss": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "The web form value type.",
 			},
 			"comment": schema.StringAttribute{
@@ -70,6 +68,11 @@ func AppfwprofileCrosssitescriptingBindingDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Enabled.",
+			},
+			"ruletype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies rule type of binding.",
 			},
 		},
 	}

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbvserver_videooptimizationpacingpolicy_binding_basic = `
@@ -111,10 +114,12 @@ func testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist(n string, 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		lbvserverName := idSlice[0]
-		policyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		lbvserverName := idMap["name"]
+		policyName := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbvserver_videooptimizationpacingpolicy_binding",
@@ -156,10 +161,12 @@ func testAccCheckLbvserver_videooptimizationpacingpolicy_bindingNotExist(n strin
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		lbvserverName := idSlice[0]
-		policyName := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		lbvserverName := idMap["name"]
+		policyName := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbvserver_videooptimizationpacingpolicy_binding",
@@ -265,6 +272,154 @@ func TestAccLbvserver_videooptimizationpacingpolicy_bindingDataSource_basic(t *t
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding", "gotopriorityexpression", "END"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding", "bindpoint", "REQUEST"),
 				),
+			},
+		},
+	})
+}
+
+// testAccLbvserver_videooptimizationpacingpolicy_binding_upgrade_basic is used by the
+// sdkv2 -> Framework state-upgrade test. It reuses the same config values as the _basic
+// test and MUST be valid under BOTH the SDK v2 2.2.0 schema (step 1) and the current
+// Framework schema (step 2). The resource label is kept identical so the Exist/Destroy
+// helpers and addresses match.
+const testAccLbvserver_videooptimizationpacingpolicy_binding_upgrade_basic = `
+	resource "citrixadc_videooptimizationpacingaction" "tf_action" {
+		name = "tf_action"
+		rate = 10
+	}
+
+	resource "citrixadc_videooptimizationpacingpolicy" "tf_policy" {
+		name   = "tf_policy"
+		rule   = "true"
+		action = citrixadc_videooptimizationpacingaction.tf_action.name
+	}
+
+	resource "citrixadc_lbvserver_videooptimizationpacingpolicy_binding" "tf_lbvserver_videooptimizationpacingpolicy_binding" {
+		bindpoint = "REQUEST"
+		gotopriorityexpression = "END"
+		name = citrixadc_lbvserver.tf_lbvserver.name
+		policyname = citrixadc_videooptimizationpacingpolicy.tf_policy.name
+		priority = 1
+	}
+
+	resource "citrixadc_lbvserver" "tf_lbvserver" {
+		name        = "tf_lbvserver"
+		ipv46       = "10.10.10.33"
+		port        = 80
+		servicetype = "HTTP"
+	}
+`
+
+// TestAccLbvserver_videooptimizationpacingpolicy_binding_sdkv2StateUpgrade verifies that a
+// resource created with the last SDK v2 release (2.2.0), which writes the legacy
+// comma-joined ID (name,policyname), upgrades cleanly when refreshed/planned through the
+// current Framework provider. On the Framework Read the ID is recomputed into the new
+// key:value format (see lbvserver_videooptimizationpacingpolicy_bindingSetAttrFromGet in
+// resource_schema.go).
+func TestAccLbvserver_videooptimizationpacingpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_videooptimizationpacingpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state holds the legacy ID.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccLbvserver_videooptimizationpacingpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist("citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding", "id", "tf_lbvserver,tf_policy"),
+				),
+			},
+			// Step 2: same config through the current Framework provider; Read recomputes
+			// the legacy ID into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbvserver_videooptimizationpacingpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist("citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding", "id", "bindpoint:REQUEST,name:tf_lbvserver,policyname:tf_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_videooptimizationpacingpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_videooptimizationpacingpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_videooptimizationpacingpolicy_binding_basic},
+			{Config: testAccLbvserver_videooptimizationpacingpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccLbvserver_videooptimizationpacingpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccLbvserver_videooptimizationpacingpolicy_binding_selfHealing verifies drift
+// recovery: after the binding is deleted out-of-band, re-applying the same config recreates it.
+func TestAccLbvserver_videooptimizationpacingpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_videooptimizationpacingpolicy_binding.tf_lbvserver_videooptimizationpacingpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_videooptimizationpacingpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_videooptimizationpacingpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_videooptimizationpacingpolicy_binding.Type(), "tf_lbvserver", map[string]string{"bindpoint": "REQUEST", "policyname": "tf_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_videooptimizationpacingpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_videooptimizationpacingpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

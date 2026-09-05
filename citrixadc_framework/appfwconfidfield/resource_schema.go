@@ -8,7 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -37,45 +39,53 @@ func (r *AppfwconfidfieldResource) Schema(ctx context.Context, req resource.Sche
 				Description: "Any comments to preserve information about the form field designation.",
 			},
 			"fieldname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the form field to designate as confidential.",
 			},
 			"isregex": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("NOTREGEX"),
 				Description: "Method of specifying the form field name. Available settings function as follows:\n* REGEX. Form field is a regular expression.\n* NOTREGEX. Form field is a literal string.",
 			},
 			"state": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or disable the confidential field designation.",
 			},
 			"url": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "URL of the web page that contains the web form.",
 			},
 		},
 	}
 }
 
-func appfwconfidfieldGetThePayloadFromtheConfig(ctx context.Context, data *AppfwconfidfieldResourceModel) appfw.Appfwconfidfield {
-	tflog.Debug(ctx, "In appfwconfidfieldGetThePayloadFromtheConfig Function")
+func appfwconfidfieldGetThePayloadFromthePlan(ctx context.Context, data *AppfwconfidfieldResourceModel) appfw.Appfwconfidfield {
+	tflog.Debug(ctx, "In appfwconfidfieldGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwconfidfield := appfw.Appfwconfidfield{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		appfwconfidfield.Comment = data.Comment.ValueString()
 	}
-	if !data.Fieldname.IsNull() {
+	if !data.Fieldname.IsNull() && !data.Fieldname.IsUnknown() {
 		appfwconfidfield.Fieldname = data.Fieldname.ValueString()
 	}
-	if !data.Isregex.IsNull() {
+	if !data.Isregex.IsNull() && !data.Isregex.IsUnknown() {
 		appfwconfidfield.Isregex = data.Isregex.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		appfwconfidfield.State = data.State.ValueString()
 	}
-	if !data.Url.IsNull() {
+	if !data.Url.IsNull() && !data.Url.IsUnknown() {
 		appfwconfidfield.Url = data.Url.ValueString()
 	}
 
@@ -113,7 +123,7 @@ func appfwconfidfieldSetAttrFromGet(ctx context.Context, data *AppfwconfidfieldR
 	}
 
 	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
+	// Case 3: Multiple unique attributes - comma-separated (matches SDK v2 d.SetId)
 	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Fieldname.ValueString(), data.Url.ValueString()))
 
 	return data

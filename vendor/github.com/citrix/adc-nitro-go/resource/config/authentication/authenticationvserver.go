@@ -85,6 +85,10 @@ type Authenticationvserver struct {
 	*/
 	Samesite string `json:"samesite,omitempty"`
 	/**
+	* Name of the WASM module to assign to this virtual server.
+	*/
+	Wasmmodule string `json:"wasmmodule,omitempty"`
+	/**
 	* New name of the authentication virtual server.
 		Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 		The following requirement applies only to the Citrix ADC CLI:

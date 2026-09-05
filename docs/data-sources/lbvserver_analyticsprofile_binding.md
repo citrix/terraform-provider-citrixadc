@@ -11,16 +11,12 @@ The lbvserver_analyticsprofile_binding data source allows you to retrieve inform
 
 ```terraform
 data "citrixadc_lbvserver_analyticsprofile_binding" "tf_binding" {
-  name = "test_server"
+  name             = "test-server"
   analyticsprofile = "ns_analytics_global_profile"
 }
 
-output "name" {
-  value = data.citrixadc_lbvserver_analyticsprofile_binding.tf_binding.name
-}
-
-output "analyticsprofile" {
-  value = data.citrixadc_lbvserver_analyticsprofile_binding.tf_binding.analyticsprofile
+output "order" {
+  value = data.citrixadc_lbvserver_analyticsprofile_binding.tf_binding.order
 }
 ```
 

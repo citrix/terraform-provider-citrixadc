@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -31,10 +30,12 @@ func (r *AppfwxmlcontenttypeResource) Schema(ctx context.Context, req resource.S
 			},
 			"isregex": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("NOTREGEX"),
 				Description: "Is field name a regular expression?",
 			},
 			"xmlcontenttypevalue": schema.StringAttribute{
@@ -48,15 +49,15 @@ func (r *AppfwxmlcontenttypeResource) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func appfwxmlcontenttypeGetThePayloadFromtheConfig(ctx context.Context, data *AppfwxmlcontenttypeResourceModel) appfw.Appfwxmlcontenttype {
-	tflog.Debug(ctx, "In appfwxmlcontenttypeGetThePayloadFromtheConfig Function")
+func appfwxmlcontenttypeGetThePayloadFromthePlan(ctx context.Context, data *AppfwxmlcontenttypeResourceModel) appfw.Appfwxmlcontenttype {
+	tflog.Debug(ctx, "In appfwxmlcontenttypeGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	appfwxmlcontenttype := appfw.Appfwxmlcontenttype{}
-	if !data.Isregex.IsNull() {
+	if !data.Isregex.IsNull() && !data.Isregex.IsUnknown() {
 		appfwxmlcontenttype.Isregex = data.Isregex.ValueString()
 	}
-	if !data.Xmlcontenttypevalue.IsNull() {
+	if !data.Xmlcontenttypevalue.IsNull() && !data.Xmlcontenttypevalue.IsUnknown() {
 		appfwxmlcontenttype.Xmlcontenttypevalue = data.Xmlcontenttypevalue.ValueString()
 	}
 
@@ -79,7 +80,7 @@ func appfwxmlcontenttypeSetAttrFromGet(ctx context.Context, data *Appfwxmlconten
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Xmlcontenttypevalue.ValueString())
 
 	return data

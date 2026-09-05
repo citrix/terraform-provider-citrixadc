@@ -41,3 +41,13 @@ In addition to the argument above, the following attributes are exported:
 * `comment` - Any comments associated with the policy for reference.
 * `logaction` - Where to log information for connections that match this policy.
 * `newname` - New name for the policy, if it has been renamed.
+
+### Read-only appfwpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwpolicy` resource) and are Computed/GET-only. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of Undef hits.
+* `policytype` - Policy type. Possible values: [ Classic Policy, Advanced Policy ]
+* `builtin` - Flag to determine if application firewall policy is built-in or not. A list of strings. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]
+* `feature` - The feature to be checked while applying this config.

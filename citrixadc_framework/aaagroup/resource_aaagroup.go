@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AaagroupResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	tflog.Debug(ctx, "Creating aaagroup resource")
-
-	// aaagroup := aaagroupGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	aaagroup := aaagroupGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaagroup.Type(), &aaagroup)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaagroup, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("aaagroup-config")
+	// Named resource - use AddResource
+	groupname_value := data.Groupname.ValueString()
+	_, err := r.client.AddResource(service.Aaagroup.Type(), groupname_value, &aaagroup)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create aaagroup, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created aaagroup resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Groupname.ValueString()))
+
 	// Read the updated state back
-	r.readAaagroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaagroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaagroup not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AaagroupResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading aaagroup resource")
 
-	r.readAaagroupFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAaagroupFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AaagroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AaagroupResourceModel
+	var data, state AaagroupResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,24 @@ func (r *AaagroupResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating aaagroup resource")
 
-	// Create API request body from the model
-	// aaagroup := aaagroupGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Aaagroup.Type(), &aaagroup)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update aaagroup, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated aaagroup resource")
+	// aaagroup has no NITRO-updatable attributes: groupname, loggedin and weight
+	// are all ForceNew/RequiresReplace (matching the SDK v2 resource, which has no
+	// update path). Any attribute change triggers a replace, so there is nothing to
+	// push here - just refresh the state from the appliance.
+	tflog.Trace(ctx, "No updatable attributes for aaagroup; refreshing state")
 
 	// Read the updated state back
-	r.readAaagroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAaagroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "aaagroup not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +155,36 @@ func (r *AaagroupResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	tflog.Debug(ctx, "Deleting aaagroup resource")
+	// Named resource - delete using DeleteResource
+	groupname_value := data.Groupname.ValueString()
+	err := r.client.DeleteResource(service.Aaagroup.Type(), groupname_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete aaagroup, got error: %s", err))
+		return
+	}
 
-	// For aaagroup, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted aaagroup resource from state")
+	tflog.Trace(ctx, "Deleted aaagroup resource")
 }
 
 // Helper function to read aaagroup data from API
-func (r *AaagroupResource) readAaagroupFromApi(ctx context.Context, data *AaagroupResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Aaagroup.Type(), "")
+func (r *AaagroupResource) readAaagroupFromApi(ctx context.Context, data *AaagroupResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	groupname_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Aaagroup.Type(), groupname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read aaagroup, got error: %s", err))
-		return
+		return false
 	}
 
 	aaagroupSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

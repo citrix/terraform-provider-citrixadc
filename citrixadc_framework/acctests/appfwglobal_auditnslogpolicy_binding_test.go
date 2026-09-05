@@ -20,8 +20,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwglobal_auditnslogpolicy_binding_basic = `
@@ -38,6 +40,11 @@ const testAccAppfwglobal_auditnslogpolicy_binding_basic = `
 	resource "citrixadc_appfwglobal_auditnslogpolicy_binding" "tf_binding" {
 	  policyname = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
 	  priority   = 80
+	  # state/type are Optional+Computed with no ADC echo or default for this binding,
+	  # so set them explicitly to keep them known after apply. type = "" (the only valid
+	  # bindpoint is the implicit "none") makes the computed id round-trip on import.
+	  state      = "ENABLED"
+	  type       = ""
 	}
 `
 
@@ -102,7 +109,11 @@ func testAccCheckAppfwglobal_auditnslogpolicy_bindingExist(n string, id *string)
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwglobal_auditnslogpolicy_binding",
@@ -232,7 +243,129 @@ func TestAccAppfwglobal_auditnslogpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding", "policyname", "my_auditnslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding", "priority", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding", "state", "ENABLED"),
+					// Universal runtime-binding proof (data source id is always set).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAppfwglobal_auditnslogpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+//
+// NOTE: unlike the _basic config, `type` is intentionally OMITTED here. The SDK v2
+// 2.2.0 resource sends `type` in the bind payload, but NITRO rejects any explicit
+// `type` value for an auditnslog binding with errorcode 1097 ("Invalid argument value
+// [NONE]"). Only by omitting `type` (the nitro struct tags it `omitempty`) does the
+// 2.2.0 create in step 1 succeed. The current Framework resource never sends `type`
+// either, so the config remains valid under both providers.
+const testAccAppfwglobal_auditnslogpolicy_binding_upgrade_basic = `
+	resource "citrixadc_auditnslogaction" "tf_auditnslogaction" {
+		name     = "my_auditnslogaction"
+		serverip = "1.1.1.1"
+		loglevel = ["ALERT", "CRITICAL"]
+	}
+	resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+		name   = "my_auditnslogpolicy"
+		rule   = "ns_true"
+		action = citrixadc_auditnslogaction.tf_auditnslogaction.name
+	}
+	resource "citrixadc_appfwglobal_auditnslogpolicy_binding" "tf_binding" {
+	  policyname = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
+	  priority   = 80
+	  state      = "DISABLED"
+	}
+`
+
+// TestAccAppfwglobal_auditnslogpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy ID = the plain policyname) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the legacy
+// id "my_auditnslogpolicy"). Step 2 refreshes/plans/applies the same config through the
+// Framework provider, exercising ParseIdString on the legacy id; because the Framework
+// recomputes the id on Read (SetAttrFromGet), the id upgrades to the new "key:value"
+// form. Because `type` is not set in this config (see the note on the config const),
+// the recomputed id carries an empty type segment: "policyname:my_auditnslogpolicy,type:".
+func TestAccAppfwglobal_auditnslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwglobal_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwglobal_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwglobal_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "my_auditnslogpolicy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwglobal_auditnslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwglobal_auditnslogpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "policyname:my_auditnslogpolicy,type:"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwglobal_auditnslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwglobal_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwglobal_auditnslogpolicy_binding_basic},
+			{Config: testAccAppfwglobal_auditnslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"state", "type"}},
+		},
+	})
+}
+
+// TestAccAppfwglobal_auditnslogpolicy_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band on the ADC, the next refresh's Read must
+// detect it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwglobal_auditnslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwglobal_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwglobal_auditnslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwglobal_auditnslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwglobal_auditnslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwglobal_auditnslogpolicy_binding.Type(), "", map[string]string{"policyname": "my_auditnslogpolicy", "priority": "80"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwglobal_auditnslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwglobal_auditnslogpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

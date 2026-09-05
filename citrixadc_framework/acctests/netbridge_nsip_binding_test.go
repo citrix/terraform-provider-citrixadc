@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNetbridge_nsip_binding_basic = `
@@ -117,10 +120,12 @@ func testAccCheckNetbridge_nsip_bindingExist(n string, id *string) resource.Test
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "ipaddress"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		name := idMap["name"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "netbridge_nsip_binding",
@@ -222,6 +227,113 @@ func testAccCheckNetbridge_nsip_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccNetbridge_nsip_binding_upgrade_basic = `
+
+	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
+		name = "tf_vxlanvlanmp"
+	}
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "my_netbridge"
+		vxlanvlanmap = citrixadc_vxlanvlanmap.tf_vxlanvlanmp.name
+	}
+
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.222.74.128"
+		type      = "VIP"
+		netmask   = "255.255.255.255"
+		icmp      = "ENABLED"
+	}
+	resource "citrixadc_netbridge_nsip_binding" "tf_netbridge_nsip_binding" {
+		name      = citrixadc_netbridge.tf_netbridge.name
+		netmask   = citrixadc_nsip.tf_nsip.netmask
+		ipaddress = citrixadc_nsip.tf_nsip.ipaddress
+	}
+
+`
+
+func TestAccNetbridge_nsip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,ipaddress) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "ipaddress"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetbridge_nsip_binding_basic},
+			{Config: testAccNetbridge_nsip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNetbridge_nsip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccNetbridge_nsip_binding_sdkv2StateUpgrade verifies that a resource created
+// with the last SDK v2 release (which writes a legacy comma-joined id) is refreshed
+// cleanly through the current Framework provider, and that the id is upgraded to the
+// new key:value format on Read (SetAttrFromGet re-derives data.Id).
+func TestAccNetbridge_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetbridge_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNetbridge_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_nsip_bindingExist("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "id", "my_netbridge,10.222.74.128"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current Framework provider.
+			// Read re-derives the id into the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNetbridge_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_nsip_bindingExist("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "id", "ipaddress:10.222.74.128,name:my_netbridge,netmask:255.255.255.255"),
+				),
+			},
+		},
+	})
+}
+
 const testAccNetbridge_nsip_bindingDataSource_basic = `
 
 	resource "citrixadc_vxlanvlanmap" "tf_vxlanvlanmp" {
@@ -264,6 +376,34 @@ func TestAccNetbridge_nsip_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "ipaddress", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding", "netmask", "255.255.255.255"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNetbridge_nsip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_nsip_binding.tf_netbridge_nsip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridge_nsip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Netbridge_nsip_binding.Type(), "my_netbridge", map[string]string{"ipaddress": "10.222.74.128", "netmask": "255.255.255.255"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetbridge_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridge_nsip_bindingExist(resAddr, nil)),
 			},
 		},
 	})

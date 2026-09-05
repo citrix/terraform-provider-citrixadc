@@ -35,7 +35,7 @@ func (d *CsvserverGslbvserverBindingDataSource) Schema(ctx context.Context, req 
 }
 
 func (d *CsvserverGslbvserverBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CsvserverGslbvserverBindingResourceModel
+	var data CsvserverGslbvserverBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *CsvserverGslbvserverBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	csvserver_gslbvserver_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	csvserver_gslbvserver_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -16,35 +15,41 @@ import (
 
 // SslactionResourceModel describes the resource data model.
 type SslactionResourceModel struct {
-	Id                     types.String `tfsdk:"id"`
-	Cacertgrpname          types.String `tfsdk:"cacertgrpname"`
-	Certfingerprintdigest  types.String `tfsdk:"certfingerprintdigest"`
-	Certfingerprintheader  types.String `tfsdk:"certfingerprintheader"`
-	Certhashheader         types.String `tfsdk:"certhashheader"`
-	Certheader             types.String `tfsdk:"certheader"`
-	Certissuerheader       types.String `tfsdk:"certissuerheader"`
-	Certnotafterheader     types.String `tfsdk:"certnotafterheader"`
-	Certnotbeforeheader    types.String `tfsdk:"certnotbeforeheader"`
-	Certserialheader       types.String `tfsdk:"certserialheader"`
-	Certsubjectheader      types.String `tfsdk:"certsubjectheader"`
-	Cipher                 types.String `tfsdk:"cipher"`
-	Cipherheader           types.String `tfsdk:"cipherheader"`
-	Clientauth             types.String `tfsdk:"clientauth"`
-	Clientcert             types.String `tfsdk:"clientcert"`
-	Clientcertfingerprint  types.String `tfsdk:"clientcertfingerprint"`
-	Clientcerthash         types.String `tfsdk:"clientcerthash"`
-	Clientcertissuer       types.String `tfsdk:"clientcertissuer"`
-	Clientcertnotafter     types.String `tfsdk:"clientcertnotafter"`
-	Clientcertnotbefore    types.String `tfsdk:"clientcertnotbefore"`
-	Clientcertserialnumber types.String `tfsdk:"clientcertserialnumber"`
-	Clientcertsubject      types.String `tfsdk:"clientcertsubject"`
-	Clientcertverification types.String `tfsdk:"clientcertverification"`
-	Forward                types.String `tfsdk:"forward"`
-	Name                   types.String `tfsdk:"name"`
-	Owasupport             types.String `tfsdk:"owasupport"`
-	Sessionid              types.String `tfsdk:"sessionid"`
-	Sessionidheader        types.String `tfsdk:"sessionidheader"`
-	Ssllogprofile          types.String `tfsdk:"ssllogprofile"`
+	Id                                types.String `tfsdk:"id"`
+	Alpnhttp2                         types.String `tfsdk:"alpnhttp2"`
+	Cacertgrpname                     types.String `tfsdk:"cacertgrpname"`
+	Certfingerprintdigest             types.String `tfsdk:"certfingerprintdigest"`
+	Certfingerprintheader             types.String `tfsdk:"certfingerprintheader"`
+	Certhashheader                    types.String `tfsdk:"certhashheader"`
+	Certheader                        types.String `tfsdk:"certheader"`
+	Certissuerheader                  types.String `tfsdk:"certissuerheader"`
+	Certnotafterheader                types.String `tfsdk:"certnotafterheader"`
+	Certnotbeforeheader               types.String `tfsdk:"certnotbeforeheader"`
+	Certserialheader                  types.String `tfsdk:"certserialheader"`
+	Certsubjectheader                 types.String `tfsdk:"certsubjectheader"`
+	Cipher                            types.String `tfsdk:"cipher"`
+	Cipherheader                      types.String `tfsdk:"cipherheader"`
+	Clientauth                        types.String `tfsdk:"clientauth"`
+	Clientcert                        types.String `tfsdk:"clientcert"`
+	Clientcertfingerprint             types.String `tfsdk:"clientcertfingerprint"`
+	Clientcerthash                    types.String `tfsdk:"clientcerthash"`
+	Clientcertissuer                  types.String `tfsdk:"clientcertissuer"`
+	Clientcertnotafter                types.String `tfsdk:"clientcertnotafter"`
+	Clientcertnotbefore               types.String `tfsdk:"clientcertnotbefore"`
+	Clientcertserialnumber            types.String `tfsdk:"clientcertserialnumber"`
+	Clientcertsubject                 types.String `tfsdk:"clientcertsubject"`
+	Clientcertverification            types.String `tfsdk:"clientcertverification"`
+	Forward                           types.String `tfsdk:"forward"`
+	Inhandshakeclientauth             types.String `tfsdk:"inhandshakeclientauth"`
+	Inhandshakeclientcertverification types.String `tfsdk:"inhandshakeclientcertverification"`
+	Name                              types.String `tfsdk:"name"`
+	Ocspcache                         types.String `tfsdk:"ocspcache"`
+	Ocspcertvalidation                types.String `tfsdk:"ocspcertvalidation"`
+	Ocspstapling                      types.String `tfsdk:"ocspstapling"`
+	Owasupport                        types.String `tfsdk:"owasupport"`
+	Sessionid                         types.String `tfsdk:"sessionid"`
+	Sessionidheader                   types.String `tfsdk:"sessionidheader"`
+	Ssllogprofile                     types.String `tfsdk:"ssllogprofile"`
 }
 
 func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -55,11 +60,18 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:    true,
 				Description: "The ID of the sslaction resource.",
 			},
+			"alpnhttp2": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to enable or disable the HTTP/2 application protocol based on policy evaluation performed during ClientHello handshake message processing.",
+			},
 			"cacertgrpname": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "This action will allow to pick CA(s) from the specific CA group, to verify the client certificate.",
 			},
@@ -67,7 +79,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Digest algorithm used to compute the fingerprint of the client certificate.",
 			},
@@ -75,7 +89,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate fingerprint.",
 			},
@@ -83,7 +99,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate signature (hash).",
 			},
@@ -91,7 +109,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate.",
 			},
@@ -99,7 +119,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate issuer details.",
 			},
@@ -107,7 +129,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the certificate's expiry date.",
 			},
@@ -115,7 +139,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the date and time from which the certificate is valid.",
 			},
@@ -123,7 +149,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client serial number.",
 			},
@@ -131,7 +159,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the client certificate subject.",
 			},
@@ -139,7 +169,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the cipher suite that the client and the Citrix ADC negotiated for the SSL session into the HTTP header of the request being sent to the web server. The appliance inserts the cipher-suite name, SSL protocol, export or non-export string, and cipher strength bit, depending on the type of browser connecting to the SSL virtual server or service (for example, Cipher-Suite: RC4- MD5 SSLv3 Non-Export 128-bit).",
 			},
@@ -147,7 +179,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the name of the cipher suite.",
 			},
@@ -155,7 +189,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Perform client certificate authentication.",
 			},
@@ -163,7 +199,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the entire client certificate into the HTTP header of the request being sent to the web server. The certificate is inserted in ASCII (PEM) format.",
 			},
@@ -171,7 +209,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the certificate's fingerprint into the HTTP header of the request being sent to the web server. The fingerprint is derived by computing the specified hash value (SHA256, for example) of the DER-encoding of the client certificate.",
 			},
@@ -179,7 +219,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the certificate's signature into the HTTP header of the request being sent to the web server. The signature is the value extracted directly from the X.509 certificate signature field. All X.509 certificates contain a signature field.",
 			},
@@ -187,7 +229,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the certificate issuer details into the HTTP header of the request being sent to the web server.",
 			},
@@ -195,7 +239,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the date of expiry of the certificate into the HTTP header of the request being sent to the web server. Every certificate is configured with the date and time at which the certificate expires.",
 			},
@@ -203,7 +249,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the date from which the certificate is valid into the HTTP header of the request being sent to the web server. Every certificate is configured with the date and time from which it is valid.",
 			},
@@ -211,7 +259,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the entire client serial number into the HTTP header of the request being sent to the web server.",
 			},
@@ -219,25 +269,41 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the client certificate subject, also known as the distinguished name (DN), into the HTTP header of the request being sent to the web server.",
 			},
 			"clientcertverification": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("Mandatory"),
 				Description: "Client certificate verification is mandatory or optional.",
 			},
 			"forward": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "This action takes an argument a vserver name, to this vserver one will be able to forward all the packets.",
+			},
+			"inhandshakeclientauth": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option dynamically enables client authentication for the specific SSL connection based on policy evaluation performed during ClientHello handshake message processing. It overrides the clientAuth setting configured on the SSL virtual server or the SSL frontend profile.",
+			},
+			"inhandshakeclientcertverification": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies the type of client authentication and is applicable only when inHandshakeClientAuth is ENABLED. If set to MANDATORY, the appliance terminates the SSL handshake when the client fails to present a valid certificate. If set to OPTIONAL, the appliance requests a client certificate but continues the SSL transaction even if the certificate is missing or invalid. Default value is MANDATORY.",
 			},
 			"name": schema.StringAttribute{
 				Required: true,
@@ -246,11 +312,28 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Description: "Name for the SSL action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
+			"ocspcache": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable cache of OCSP response. Caching of response received from the OCSP responder enables faster response to the client and reduces the load on the OCSP responder.",
+			},
+			"ocspcertvalidation": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to check the revocation status of client/server certificate in SSL handshake using OCSP.",
+			},
+			"ocspstapling": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "This option is used to enable ocspStapling parameter for the SSL connection.",
+			},
 			"owasupport": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "If the appliance is in front of an Outlook Web Access (OWA) server, insert a special header field, FRONT-END-HTTPS: ON, into the HTTP requests going to the OWA server. This header communicates to the server that the transaction is HTTPS and not HTTP.",
 			},
@@ -258,7 +341,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Insert the SSL session ID into the HTTP header of the request being sent to the web server. Every SSL connection that the client and the Citrix ADC share has a unique ID that identifies the specific connection.",
 			},
@@ -266,7 +351,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Name of the header into which to insert the Session ID.",
 			},
@@ -274,7 +361,9 @@ func (r *SslactionResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The name of the ssllogprofile.",
 			},
@@ -287,6 +376,9 @@ func sslactionGetThePayloadFromtheConfig(ctx context.Context, data *SslactionRes
 
 	// Create API request body from the model
 	sslaction := ssl.Sslaction{}
+	if !data.Alpnhttp2.IsNull() {
+		sslaction.Alpnhttp2 = data.Alpnhttp2.ValueString()
+	}
 	if !data.Cacertgrpname.IsNull() {
 		sslaction.Cacertgrpname = data.Cacertgrpname.ValueString()
 	}
@@ -356,8 +448,23 @@ func sslactionGetThePayloadFromtheConfig(ctx context.Context, data *SslactionRes
 	if !data.Forward.IsNull() {
 		sslaction.Forward = data.Forward.ValueString()
 	}
+	if !data.Inhandshakeclientauth.IsNull() {
+		sslaction.Inhandshakeclientauth = data.Inhandshakeclientauth.ValueString()
+	}
+	if !data.Inhandshakeclientcertverification.IsNull() {
+		sslaction.Inhandshakeclientcertverification = data.Inhandshakeclientcertverification.ValueString()
+	}
 	if !data.Name.IsNull() {
 		sslaction.Name = data.Name.ValueString()
+	}
+	if !data.Ocspcache.IsNull() {
+		sslaction.Ocspcache = data.Ocspcache.ValueString()
+	}
+	if !data.Ocspcertvalidation.IsNull() {
+		sslaction.Ocspcertvalidation = data.Ocspcertvalidation.ValueString()
+	}
+	if !data.Ocspstapling.IsNull() {
+		sslaction.Ocspstapling = data.Ocspstapling.ValueString()
 	}
 	if !data.Owasupport.IsNull() {
 		sslaction.Owasupport = data.Owasupport.ValueString()
@@ -379,6 +486,11 @@ func sslactionSetAttrFromGet(ctx context.Context, data *SslactionResourceModel, 
 	tflog.Debug(ctx, "In sslactionSetAttrFromGet Function")
 
 	// Convert API response to model
+	if val, ok := getResponseData["alpnhttp2"]; ok && val != nil {
+		data.Alpnhttp2 = types.StringValue(val.(string))
+	} else {
+		data.Alpnhttp2 = types.StringNull()
+	}
 	if val, ok := getResponseData["cacertgrpname"]; ok && val != nil {
 		data.Cacertgrpname = types.StringValue(val.(string))
 	} else {
@@ -494,10 +606,35 @@ func sslactionSetAttrFromGet(ctx context.Context, data *SslactionResourceModel, 
 	} else {
 		data.Forward = types.StringNull()
 	}
+	if val, ok := getResponseData["inhandshakeclientauth"]; ok && val != nil {
+		data.Inhandshakeclientauth = types.StringValue(val.(string))
+	} else {
+		data.Inhandshakeclientauth = types.StringNull()
+	}
+	if val, ok := getResponseData["inhandshakeclientcertverification"]; ok && val != nil {
+		data.Inhandshakeclientcertverification = types.StringValue(val.(string))
+	} else {
+		data.Inhandshakeclientcertverification = types.StringNull()
+	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
 	} else {
 		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["ocspcache"]; ok && val != nil {
+		data.Ocspcache = types.StringValue(val.(string))
+	} else {
+		data.Ocspcache = types.StringNull()
+	}
+	if val, ok := getResponseData["ocspcertvalidation"]; ok && val != nil {
+		data.Ocspcertvalidation = types.StringValue(val.(string))
+	} else {
+		data.Ocspcertvalidation = types.StringNull()
+	}
+	if val, ok := getResponseData["ocspstapling"]; ok && val != nil {
+		data.Ocspstapling = types.StringValue(val.(string))
+	} else {
+		data.Ocspstapling = types.StringNull()
 	}
 	if val, ok := getResponseData["owasupport"]; ok && val != nil {
 		data.Owasupport = types.StringValue(val.(string))

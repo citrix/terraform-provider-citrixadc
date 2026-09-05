@@ -1,8 +1,12 @@
 package lldpneighbors
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // LldpneighborsDataSourceModel is the datasource-only model. It intentionally
@@ -190,4 +194,53 @@ func LldpneighborsDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+// lldpneighborsDataSourceSetAttrFromGet projects a NITRO lldpneighbors get(all)
+// record onto the data-source model, including the full read-only LLDP neighbor
+// telemetry. Every telemetry field is a string on the vendored NITRO struct, so
+// they map to types.String. ifnum / nodeid are optional input filters that also
+// appear in the record; the configured value is preserved when the GET record
+// omits them. Absent telemetry fields resolve to Null.
+func lldpneighborsDataSourceSetAttrFromGet(ctx context.Context, data *LldpneighborsDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In lldpneighborsDataSourceSetAttrFromGet Function")
+
+	if v := utils.MapGetString(g, "ifnum"); !v.IsNull() {
+		data.Ifnum = v
+	}
+	if v := utils.MapGetInt64(g, "nodeid"); !v.IsNull() {
+		data.Nodeid = v
+	}
+
+	// Read-only LLDP neighbor telemetry.
+	data.Chassisidsubtype = utils.MapGetString(g, "chassisidsubtype")
+	data.Chassisid = utils.MapGetString(g, "chassisid")
+	data.Portidsubtype = utils.MapGetString(g, "portidsubtype")
+	data.Portid = utils.MapGetString(g, "portid")
+	data.Ttl = utils.MapGetString(g, "ttl")
+	data.Portdescription = utils.MapGetString(g, "portdescription")
+	data.Sys = utils.MapGetString(g, "sys")
+	data.Sysdesc = utils.MapGetString(g, "sysdesc")
+	data.Mgmtaddresssubtype = utils.MapGetString(g, "mgmtaddresssubtype")
+	data.Mgmtaddress = utils.MapGetString(g, "mgmtaddress")
+	data.Iftype = utils.MapGetString(g, "iftype")
+	data.Ifnumber = utils.MapGetString(g, "ifnumber")
+	data.Vlan = utils.MapGetString(g, "vlan")
+	data.Vlanid = utils.MapGetString(g, "vlanid")
+	data.Portprotosupported = utils.MapGetString(g, "portprotosupported")
+	data.Portprotoenabled = utils.MapGetString(g, "portprotoenabled")
+	data.Portprotoid = utils.MapGetString(g, "portprotoid")
+	data.Portvlanid = utils.MapGetString(g, "portvlanid")
+	data.Protocolid = utils.MapGetString(g, "protocolid")
+	data.Linkaggrcapable = utils.MapGetString(g, "linkaggrcapable")
+	data.Linkaggrenabled = utils.MapGetString(g, "linkaggrenabled")
+	data.Linkaggrid = utils.MapGetString(g, "linkaggrid")
+	data.Flag = utils.MapGetString(g, "flag")
+	data.Syscapabilities = utils.MapGetString(g, "syscapabilities")
+	data.Syscapenabled = utils.MapGetString(g, "syscapenabled")
+	data.Autonegsupport = utils.MapGetString(g, "autonegsupport")
+	data.Autonegenabled = utils.MapGetString(g, "autonegenabled")
+	data.Autonegadvertised = utils.MapGetString(g, "autonegadvertised")
+	data.Autonegmautype = utils.MapGetString(g, "autonegmautype")
+	data.Mtu = utils.MapGetString(g, "mtu")
 }

@@ -313,6 +313,12 @@ type Sslprofile struct {
 	*/
 	Allowextendedmastersecret string `json:"allowextendedmastersecret,omitempty"`
 	/**
+	* FIPS 140-3 certification requires all handshakes without EMS be blocked. 
+		Such KDFs are allowed by default. This setting is to allow/disallow such legacy KDFs 
+		when needed. This setting applies to both frontend and backend SSL profiles.
+	*/
+	Allowlegacykdf string `json:"allowlegacykdf,omitempty"`
+	/**
 	* Application protocol supported by the server and used in negotiation of the protocol with the client. Possible values are HTTP1.1, HTTP2 and NONE. Default value is NONE which implies application protocol is not enabled hence remain unknown to the TLS layer. This parameter is relevant only if SSL connection is handled by the virtual server of the type SSL_TCP.
 	*/
 	Alpnprotocol string `json:"alpnprotocol,omitempty"`
@@ -328,6 +334,14 @@ type Sslprofile struct {
 	* When enabled, NetScaler will log the session ID and SNI name during SSL handshakes on both the external and internal interfaces.
 	*/
 	Sslclientlogs string `json:"sslclientlogs,omitempty"`
+	/**
+	* Enable strict EKU extension check during client authentication.
+	*/
+	Strictclientekucheck string `json:"strictclientekucheck,omitempty"`
+	/**
+	* Enable or disable Dynamic Client Certificate Generation for SSL sessions.
+	*/
+	Dynamicclientcert string `json:"dynamicclientcert,omitempty"`
 	/**
 	* The cipher group/alias/individual cipher configuration
 	*/

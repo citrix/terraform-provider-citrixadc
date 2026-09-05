@@ -21,7 +21,7 @@ package cluster
 */
 type Clusterinstancebinding struct {
 	/**
-	* Unique number that identifies the cluster.<br/>Minimum value =  1<br/>Maximum value =  16
+	* Unique number that identifies the cluster.<br/>Minimum value =  1<br/>Maximum value =  128
 	*/
 	Clid *int `json:"clid,omitempty"`
 

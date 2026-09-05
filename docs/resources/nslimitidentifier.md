@@ -32,6 +32,8 @@ resource "citrixadc_nslimitidentifier" "tf_nslimitidentifier" {
 * `selectorname` - (Optional) Name of the rate limit selector. If this argument is NULL, rate limiting will be applied on all traffic received by the virtual server or the Citrix ADC (depending on whether the limit identifier is bound to a virtual server or globally) without any filtering. Minimum length =  1
 * `maxbandwidth` - (Optional) Maximum bandwidth permitted, in kbps. Minimum value =  0 Maximum value =  4294967287
 * `trapsintimeslice` - (Optional) Number of traps to be sent in the timeslice configured. A value of 0 indicates that traps are disabled. Minimum value =  0 Maximum value =  65535
+* `alertsintimeslice` - (Optional) Number of appflow alerts to be sent in the timeslice configured. A value of 0 indicates that alerts are disabled. A value of 65535 indicates no limit on number of appflow alerts.
+* `timealign` - (Optional) Value MINUTE will align the time windows for a configured timeslice to Minute boundary. TimeSlice values should be integrals of 60000ms when value MINUTE is choosen. Default : NONE, timeslice alignments will happen with next 10ms.
 
 
 ## Attribute Reference

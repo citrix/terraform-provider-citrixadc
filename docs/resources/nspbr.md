@@ -55,6 +55,11 @@ resource "citrixadc_nspbr" "tf_nspbr" {
 * `ownergroup` - (Optional) The owner node group in a Cluster for this pbr rule. If ownernode is not specified then the pbr rule is treated as Striped pbr rule. Minimum length =  1
 * `detail` - (Optional) To get a detailed view.
 * `targettd` - (Optional) Integer value that uniquely identifies the traffic domain to which you want to send packet to.
+* `destipdataset` - (Optional) Policy dataset which can have multiple IP ranges bound to it.
+* `destportdataset` - (Optional) Policy dataset which can have multiple port ranges bound to it.
+* `interface` - (Optional) ID of an interface. The Citrix ADC compares the PBR only to the outgoing packets on the specified interface. If you do not specify any value, the appliance compares the PBR to the outgoing packets on all interfaces.
+* `srcipdataset` - (Optional) Policy dataset which can have multiple IP ranges bound to it.
+* `srcportdataset` - (Optional) Policy dataset which can have multiple port ranges bound to it.
 
 
 ## Attribute Reference

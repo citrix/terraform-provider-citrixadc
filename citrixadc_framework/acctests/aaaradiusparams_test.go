@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaaradiusparams_basic = `
@@ -144,6 +145,7 @@ func TestAccAaaradiusparamsDataSource_basic(t *testing.T) {
 				Config: testAccAaaradiusparamsDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					// radkey is not checked as it's returned encrypted/hashed by the API
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "radnasip", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "serverip", "10.222.74.158"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaaradiusparams.tf_aaaradiusparams", "authtimeout", "8"),
@@ -321,9 +323,14 @@ func TestAccAaaradiusparams_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccAaaradiusparams_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})

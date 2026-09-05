@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbvserver_auditsyslogpolicy_binding_basic_step1 = `
@@ -127,10 +130,12 @@ func testAccCheckLbvserver_auditsyslogpolicy_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lbvserver_auditsyslogpolicy_binding",
@@ -278,6 +283,144 @@ func TestAccLbvserver_auditsyslogpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_auditsyslogpolicy_binding.demo", "policyname", "tf_syslogpolicy2"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbvserver_auditsyslogpolicy_binding.demo", "priority", "56"),
 				),
+			},
+		},
+	})
+}
+
+const testAccLbvserver_auditsyslogpolicy_binding_upgrade_basic = `
+resource "citrixadc_lbvserver" "tf_lbvserver3" {
+	name        = "tf_lbvserver3"
+	servicetype = "HTTP"
+}
+
+resource "citrixadc_auditsyslogaction" "tf_syslogaction2" {
+	name = "tf_syslogaction2"
+	serverip = "10.124.67.93"
+	loglevel = [
+		"ERROR",
+		"NOTICE",
+	]
+}
+
+resource "citrixadc_auditsyslogpolicy" "tf_syslogpolicy2" {
+	name = "tf_syslogpolicy2"
+	rule = "true"
+	action = citrixadc_auditsyslogaction.tf_syslogaction2.name
+}
+
+resource "citrixadc_lbvserver_auditsyslogpolicy_binding" "demo" {
+	name = citrixadc_lbvserver.tf_lbvserver3.name
+	policyname = citrixadc_auditsyslogpolicy.tf_syslogpolicy2.name
+	invoke = "false"
+	priority = 56
+}
+`
+
+func TestAccLbvserver_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbvserver_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccLbvserver_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_auditsyslogpolicy_bindingExist("citrixadc_lbvserver_auditsyslogpolicy_binding.demo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_auditsyslogpolicy_binding.demo", "id", "tf_lbvserver3,tf_syslogpolicy2"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbvserver_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbvserver_auditsyslogpolicy_bindingExist("citrixadc_lbvserver_auditsyslogpolicy_binding.demo", nil),
+					resource.TestCheckResourceAttr("citrixadc_lbvserver_auditsyslogpolicy_binding.demo", "id", "name:tf_lbvserver3,policyname:tf_syslogpolicy2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbvserver_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_auditsyslogpolicy_binding.demo"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step1},
+			{Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"invoke"}},
+			{Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"invoke"}},
+		},
+	})
+}
+
+func TestAccLbvserver_auditsyslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbvserver_auditsyslogpolicy_binding.demo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbvserver_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbvserver_auditsyslogpolicy_binding.Type(), "tf_lbvserver3", map[string]string{"policyname": "tf_syslogpolicy2"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbvserver_auditsyslogpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbvserver_auditsyslogpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -25,3 +25,12 @@ resource "citrixadc_appfwxmlcontenttype" "demo_appfwxmlcontenttype" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwxmlcontenttype`. It has the same value as the `xmlcontenttypevalue` attribute.
+
+
+## Import
+
+A appfwxmlcontenttype can be imported using its xmlcontenttypevalue, e.g.
+
+```shell
+terraform import citrixadc_appfwxmlcontenttype.tf_appfwxmlcontenttype <xmlcontenttypevalue>
+```

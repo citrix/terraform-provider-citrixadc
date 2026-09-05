@@ -36,7 +36,7 @@ func (d *DnscaarecDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *DnscaarecDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DnscaarecResourceModel
+	var data DnscaarecDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -83,7 +83,7 @@ func (d *DnscaarecDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	// dnscaarecSetAttrFromGet faithfully copies the GET response and sets the
 	// composite domain,recordid ID.
-	dnscaarecSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	dnscaarecDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

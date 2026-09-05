@@ -2,11 +2,14 @@ package dnspolicy64
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -33,7 +36,10 @@ func (r *Dnspolicy64Resource) Schema(ctx context.Context, req resource.SchemaReq
 				Description: "Name of the DNS64 action to perform when the rule evaluates to TRUE. The built in actions function as follows:\n* A default dns64 action with prefix <default prefix> and mapped and exclude are any\nYou can create custom actions by using the add dns action command in the CLI or the DNS64 > Actions > Create DNS64 Action dialog box in the Citrix ADC configuration utility.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the DNS64 policy.",
 			},
 			"rule": schema.StringAttribute{
@@ -44,18 +50,18 @@ func (r *Dnspolicy64Resource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func dnspolicy64GetThePayloadFromtheConfig(ctx context.Context, data *Dnspolicy64ResourceModel) dns.Dnspolicy64 {
-	tflog.Debug(ctx, "In dnspolicy64GetThePayloadFromtheConfig Function")
+func dnspolicy64GetThePayloadFromthePlan(ctx context.Context, data *Dnspolicy64ResourceModel) dns.Dnspolicy64 {
+	tflog.Debug(ctx, "In dnspolicy64GetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	dnspolicy64 := dns.Dnspolicy64{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		dnspolicy64.Action = data.Action.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		dnspolicy64.Name = data.Name.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		dnspolicy64.Rule = data.Rule.ValueString()
 	}
 
@@ -84,7 +90,7 @@ func dnspolicy64SetAttrFromGet(ctx context.Context, data *Dnspolicy64ResourceMod
 
 	// Set ID for the resource
 	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

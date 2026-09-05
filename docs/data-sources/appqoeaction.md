@@ -60,3 +60,9 @@ In addition to the arguments, the following attributes are available:
 * `retryonreset` - Retry on TCP Reset. Possible values: [ YES, NO ]
 * `retryontimeout` - Retry on request Timeout(in millisec) upon sending request to backend servers.
 * `tcpprofile` - Bind TCP Profile based on L2/L3/L7 parameters.
+
+### Read-only appqoeaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appqoeaction` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `hits` - Number of times the AppQoE action was applied.

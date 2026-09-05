@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -15,11 +16,12 @@ import (
 
 // UserprotocolResourceModel describes the resource data model.
 type UserprotocolResourceModel struct {
-	Id        types.String `tfsdk:"id"`
-	Comment   types.String `tfsdk:"comment"`
-	Extension types.String `tfsdk:"extension"`
-	Name      types.String `tfsdk:"name"`
-	Transport types.String `tfsdk:"transport"`
+	Id         types.String `tfsdk:"id"`
+	Comment    types.String `tfsdk:"comment"`
+	Extension  types.String `tfsdk:"extension"`
+	Name       types.String `tfsdk:"name"`
+	Transport  types.String `tfsdk:"transport"`
+	Wasmmodule types.String `tfsdk:"wasmmodule"`
 }
 
 func (r *UserprotocolResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -31,8 +33,12 @@ func (r *UserprotocolResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "The ID of the userprotocol resource.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is an empty comment. An explicit Default is required
+				// so removing `comment` from config produces a plan diff (else the
+				// Optional+Computed attr is sticky and Update/unset never runs).
+				Default:     stringdefault.StaticString(""),
 				Description: "Any comments associated with the protocol.",
 			},
 			"extension": schema.StringAttribute{
@@ -43,7 +49,10 @@ func (r *UserprotocolResource) Schema(ctx context.Context, req resource.SchemaRe
 				Description: "Name of the extension to add parsing and runtime handling of the protocol packets.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Unique name for the user protocol. Not case sensitive. Must begin with an ASCII letter or underscore (_) character, and must consist only of ASCII alphanumeric or underscore characters.",
 			},
 			"transport": schema.StringAttribute{
@@ -52,6 +61,11 @@ func (r *UserprotocolResource) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description: "Transport layer's protocol.",
+			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Wasm module needs to attach with the user protocol.",
 			},
 		},
 	}
@@ -62,17 +76,40 @@ func userprotocolGetThePayloadFromtheConfig(ctx context.Context, data *Userproto
 
 	// Create API request body from the model
 	userprotocol := user.Userprotocol{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		userprotocol.Comment = data.Comment.ValueString()
 	}
-	if !data.Extension.IsNull() {
+	if !data.Extension.IsNull() && !data.Extension.IsUnknown() {
 		userprotocol.Extension = data.Extension.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		userprotocol.Name = data.Name.ValueString()
 	}
-	if !data.Transport.IsNull() {
+	if !data.Transport.IsNull() && !data.Transport.IsUnknown() {
 		userprotocol.Transport = data.Transport.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		userprotocol.Wasmmodule = data.Wasmmodule.ValueString()
+	}
+
+	return userprotocol
+}
+
+// userprotocolGetTheUpdatablePayloadFromThePlan builds the payload for an update,
+// restricted to the NITRO-updatable fields. In SDK v2 only `comment` was updatable
+// (name/extension/transport are ForceNew); `name` is included to identify the resource.
+func userprotocolGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *UserprotocolResourceModel) user.Userprotocol {
+	tflog.Debug(ctx, "In userprotocolGetTheUpdatablePayloadFromThePlan Function")
+
+	userprotocol := user.Userprotocol{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		userprotocol.Name = data.Name.ValueString()
+	}
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		userprotocol.Comment = data.Comment.ValueString()
+	}
+	if !data.Wasmmodule.IsNull() && !data.Wasmmodule.IsUnknown() {
+		userprotocol.Wasmmodule = data.Wasmmodule.ValueString()
 	}
 
 	return userprotocol
@@ -84,7 +121,9 @@ func userprotocolSetAttrFromGet(ctx context.Context, data *UserprotocolResourceM
 	// Convert API response to model
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
-	} else {
+	} else if data.Comment.IsUnknown() {
+		// omit-on-default guard: only null when unknown; never clobber a
+		// known configured/state value NITRO may omit from GET.
 		data.Comment = types.StringNull()
 	}
 	if val, ok := getResponseData["extension"]; ok && val != nil {
@@ -101,6 +140,13 @@ func userprotocolSetAttrFromGet(ctx context.Context, data *UserprotocolResourceM
 		data.Transport = types.StringValue(val.(string))
 	} else {
 		data.Transport = types.StringNull()
+	}
+	if val, ok := getResponseData["wasmmodule"]; ok && val != nil {
+		data.Wasmmodule = types.StringValue(val.(string))
+	} else if data.Wasmmodule.IsUnknown() {
+		// omit-on-default guard: only null when unknown; never clobber a
+		// known configured/state value NITRO may omit from GET.
+		data.Wasmmodule = types.StringNull()
 	}
 
 	// Set ID for the resource

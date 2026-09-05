@@ -1,7 +1,14 @@
 package authenticationemailaction
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 func AuthenticationemailactionDataSourceSchema() schema.Schema {
@@ -30,18 +37,10 @@ func AuthenticationemailactionDataSourceSchema() schema.Schema {
 				Description: "Name for the new email action. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"password": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password/Clientsecret to use when authenticating to the server.",
-			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password/Clientsecret to use when authenticating to the server.",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
 			},
 			"serverurl": schema.StringAttribute{
 				Optional:    true,
@@ -65,4 +64,70 @@ func AuthenticationemailactionDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+type AuthenticationemailactionDataSourceModel struct {
+	Id                         types.String `tfsdk:"id"`
+	Content                    types.String `tfsdk:"content"`
+	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
+	Emailaddress               types.String `tfsdk:"emailaddress"`
+	Name                       types.String `tfsdk:"name"`
+	Password                   types.String `tfsdk:"password"`
+	Serverurl                  types.String `tfsdk:"serverurl"`
+	Timeout                    types.Int64  `tfsdk:"timeout"`
+	Type                       types.String `tfsdk:"type"`
+	Username                   types.String `tfsdk:"username"`
+}
+
+func authenticationemailactionDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationemailactionDataSourceModel, getResponseData map[string]interface{}) *AuthenticationemailactionDataSourceModel {
+	tflog.Debug(ctx, "In authenticationemailactionDataSourceSetAttrFromGet Function")
+
+	// Convert API response to model
+	if val, ok := getResponseData["content"]; ok && val != nil {
+		data.Content = types.StringValue(val.(string))
+	} else {
+		data.Content = types.StringNull()
+	}
+	if val, ok := getResponseData["defaultauthenticationgroup"]; ok && val != nil {
+		data.Defaultauthenticationgroup = types.StringValue(val.(string))
+	} else {
+		data.Defaultauthenticationgroup = types.StringNull()
+	}
+	if val, ok := getResponseData["emailaddress"]; ok && val != nil {
+		data.Emailaddress = types.StringValue(val.(string))
+	} else {
+		data.Emailaddress = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	if val, ok := getResponseData["serverurl"]; ok && val != nil {
+		data.Serverurl = types.StringValue(val.(string))
+	} else {
+		data.Serverurl = types.StringNull()
+	}
+	if val, ok := getResponseData["timeout"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Timeout = types.Int64Value(intVal)
+		}
+	}
+	if val, ok := getResponseData["type"]; ok && val != nil {
+		data.Type = types.StringValue(val.(string))
+	} else {
+		data.Type = types.StringNull()
+	}
+	if val, ok := getResponseData["username"]; ok && val != nil {
+		data.Username = types.StringValue(val.(string))
+	} else {
+		data.Username = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
+	return data
 }

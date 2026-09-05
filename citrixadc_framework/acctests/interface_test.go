@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccInterface_basic(t *testing.T) {
@@ -107,6 +108,33 @@ resource "citrixadc_interface" "tf_interface" {
 }
 `
 
+func TestAccInterface_sdkv2StateUpgrade(t *testing.T) {
+	if isCpxRun {
+		t.Skip("skipping test CPX has different interface numbering")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccInterface_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfaceExist("citrixadc_interface.tf_interface", nil, "1/1")),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccInterface_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckInterfaceExist("citrixadc_interface.tf_interface", nil, "1/1")),
+			},
+		},
+	})
+}
+
 func TestAccInterfaceDataSource_basic(t *testing.T) {
 	if isCpxRun {
 		t.Skip("skipping test CPX has different interface numbering")
@@ -122,6 +150,12 @@ func TestAccInterfaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "interface_id", "1/1"),
 					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "hamonitor", "OFF"),
 					resource.TestCheckResourceAttr("data.citrixadc_interface.tf_interface", "mtu", "2000"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_interface.tf_interface", "id"),
+					// Read-only interface metadata exposed only by the data source; these
+					// are always populated for a real interface.
+					resource.TestCheckResourceAttrSet("data.citrixadc_interface.tf_interface", "devicename"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_interface.tf_interface", "mac"),
 				),
 			},
 		},
@@ -139,3 +173,25 @@ data "citrixadc_interface" "tf_interface" {
     interface_id = citrixadc_interface.tf_interface.interface_id
 }
 `
+
+func TestAccInterface_import(t *testing.T) {
+	if isCpxRun {
+		t.Skip("skipping test CPX has different interface numbering")
+	}
+	const resAddr = "citrixadc_interface.tf_interface"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccInterface_basic_step1},
+			{
+				Config:                  testAccInterface_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}

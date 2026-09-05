@@ -35,7 +35,7 @@ func (d *SystemuserDataSource) Schema(ctx context.Context, req datasource.Schema
 }
 
 func (d *SystemuserDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SystemuserResourceModel
+	var data SystemuserDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *SystemuserDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	systemuserSetAttrFromGet(ctx, &data, getResponseData)
+	systemuserDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

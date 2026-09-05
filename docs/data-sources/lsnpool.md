@@ -39,12 +39,3 @@ In addition to the arguments, the following attributes are available:
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the lsnpool. It has the same value as the `poolname` attribute.
-
-
-## Import
-
-A lsnpool can be imported using its poolname, e.g.
-
-```shell
-terraform import citrixadc_lsnpool.tf_lsnpool my_lsn_pool
-```

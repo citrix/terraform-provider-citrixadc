@@ -3,8 +3,10 @@ package dnsaaaarec
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,28 @@ func (r *DnsaaaarecResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating dnsaaaarec resource")
 
-	// dnsaaaarec := dnsaaaarecGetThePayloadFromtheConfig(ctx, &data)
+	dnsaaaarec := dnsaaaarecGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsaaaarec.Type(), &dnsaaaarec)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsaaaarec, got error: %s", err))
-	//	 return
-	// }
+	// Named resource keyed on the primary attribute (hostname) - use AddResource
+	hostname := data.Hostname.ValueString()
+	_, err := r.client.AddResource(service.Dnsaaaarec.Type(), hostname, &dnsaaaarec)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsaaaarec, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnsaaaarec-config")
+	// ID matches the SDK v2 resource format (d.SetId(hostname))
+	data.Id = types.StringValue(hostname)
 
 	tflog.Trace(ctx, "Created dnsaaaarec resource")
 
 	// Read the updated state back
-	r.readDnsaaaarecFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsaaaarecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsaaaarec not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *DnsaaaarecResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading dnsaaaarec resource")
 
-	r.readDnsaaaarecFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnsaaaarecFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsaaaarecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsaaaarecResourceModel
+	var data, state DnsaaaarecResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,23 @@ func (r *DnsaaaarecResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnsaaaarec resource")
 
-	// Create API request body from the model
-	// dnsaaaarec := dnsaaaarecGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsaaaarec.Type(), &dnsaaaarec)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsaaaarec, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated dnsaaaarec resource")
+	// dnsaaaarec has no NITRO-updatable attributes; every attribute is ForceNew
+	// (RequiresReplace), so any change triggers a destroy/create rather than an
+	// in-place update. There is nothing to push to the ADC here.
+	tflog.Trace(ctx, "No updatable attributes for dnsaaaarec resource, refreshing state")
 
 	// Read the updated state back
-	r.readDnsaaaarecFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsaaaarecFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsaaaarec not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +155,73 @@ func (r *DnsaaaarecResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting dnsaaaarec resource")
 
-	// For dnsaaaarec, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnsaaaarec resource from state")
-}
+	// Named resource - delete keyed on hostname, disambiguated by ipv6address
+	// (and optionally ecssubnet) exactly as the SDK v2 resource did.
+	argsMap := make(map[string]string)
+	if !data.Ecssubnet.IsNull() && !data.Ecssubnet.IsUnknown() && data.Ecssubnet.ValueString() != "" {
+		argsMap["ecssubnet"] = url.QueryEscape(data.Ecssubnet.ValueString())
+	}
+	argsMap["ipv6address"] = url.QueryEscape(data.Ipv6address.ValueString())
 
-// Helper function to read dnsaaaarec data from API
-func (r *DnsaaaarecResource) readDnsaaaarecFromApi(ctx context.Context, data *DnsaaaarecResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnsaaaarec.Type(), "")
+	err := r.client.DeleteResourceWithArgsMap(service.Dnsaaaarec.Type(), data.Id.ValueString(), argsMap)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsaaaarec, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsaaaarec, got error: %s", err))
 		return
 	}
 
-	dnsaaaarecSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted dnsaaaarec resource")
+}
 
+// Helper function to read dnsaaaarec data from API.
+// Returns false when the record no longer exists on the ADC.
+func (r *DnsaaaarecResource) readDnsaaaarecFromApi(ctx context.Context, data *DnsaaaarecResourceModel, diags *diag.Diagnostics) bool {
+	// hostname is the primary key / ID. On import only the ID is populated.
+	hostname := data.Hostname.ValueString()
+	if hostname == "" {
+		hostname = data.Id.ValueString()
+	}
+	ipv6address := data.Ipv6address.ValueString()
+
+	findParams := service.FindParams{
+		ResourceType: service.Dnsaaaarec.Type(),
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsaaaarec, got error: %s", err))
+		return false
+	}
+
+	if len(dataArr) == 0 {
+		return false
+	}
+
+	// Match on hostname (and ipv6address when known) to select the right record
+	// among possibly many records sharing the same hostname.
+	foundIndex := -1
+	for i, v := range dataArr {
+		hn, _ := v["hostname"].(string)
+		if hn != hostname {
+			continue
+		}
+		if ipv6address == "" {
+			foundIndex = i
+			break
+		}
+		ip, _ := v["ipv6address"].(string)
+		if ip == ipv6address {
+			foundIndex = i
+			break
+		}
+	}
+
+	if foundIndex == -1 {
+		return false
+	}
+
+	dnsaaaarecSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	return true
 }

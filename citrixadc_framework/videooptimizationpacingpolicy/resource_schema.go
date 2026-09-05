@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -38,25 +39,34 @@ func (r *VideooptimizationpacingpolicyResource) Schema(ctx context.Context, req 
 				Description: "Name of the videooptimization pacing action to perform if the request matches this videooptimization pacing policy.",
 			},
 			"comment": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// Default "" makes config-removal produce a plan diff so Update runs
+				// and the attribute can be unset (reverted to the NITRO default of empty).
+				Default:     stringdefault.StaticString(""),
 				Description: "Any type of information about this videooptimization pacing policy.",
 			},
 			"logaction": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Name of the messagelog action to use for requests that match this policy.",
-			},
-			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name for the videooptimization pacing policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.Can be modified, removed or renamed.",
-			},
-			"newname": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				// Default "" makes config-removal produce a plan diff so Update runs
+				// and the attribute can be unset (reverted to the NITRO default of empty).
+				Default:     stringdefault.StaticString(""),
+				Description: "Name of the messagelog action to use for requests that match this policy.",
+			},
+			// SDK v2 had name as Required + ForceNew -> RequiresReplace for backward compatibility.
+			"name": schema.StringAttribute{
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Name for the videooptimization pacing policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters.Can be modified, removed or renamed.",
+			},
+			// newname is rename-only (NITRO ?action=rename). Optional only: not Computed
+			// (never echoed by GET) and not RequiresReplace (a change must reach Update to
+			// drive an in-place rename instead of a destroy/recreate).
+			"newname": schema.StringAttribute{
+				Optional:    true,
 				Description: "New name for the videooptimization pacing policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.",
 			},
 			"rule": schema.StringAttribute{
@@ -77,25 +87,23 @@ func videooptimizationpacingpolicyGetThePayloadFromtheConfig(ctx context.Context
 
 	// Create API request body from the model
 	videooptimizationpacingpolicy := videooptimization.Videooptimizationpacingpolicy{}
-	if !data.Action.IsNull() {
+	if !data.Action.IsNull() && !data.Action.IsUnknown() {
 		videooptimizationpacingpolicy.Action = data.Action.ValueString()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		videooptimizationpacingpolicy.Comment = data.Comment.ValueString()
 	}
-	if !data.Logaction.IsNull() {
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
 		videooptimizationpacingpolicy.Logaction = data.Logaction.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		videooptimizationpacingpolicy.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		videooptimizationpacingpolicy.Newname = data.Newname.ValueString()
-	}
-	if !data.Rule.IsNull() {
+	// newname is rename-only and must NOT be part of the add/update payload.
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		videooptimizationpacingpolicy.Rule = data.Rule.ValueString()
 	}
-	if !data.Undefaction.IsNull() {
+	if !data.Undefaction.IsNull() && !data.Undefaction.IsUnknown() {
 		videooptimizationpacingpolicy.Undefaction = data.Undefaction.ValueString()
 	}
 
@@ -111,26 +119,28 @@ func videooptimizationpacingpolicySetAttrFromGet(ctx context.Context, data *Vide
 	} else {
 		data.Action = types.StringNull()
 	}
+	// comment/logaction have a schema Default of "" (empty). NITRO omits them from
+	// GET once unset, so coalesce absence to "" to match the Default and avoid a
+	// "provider produced inconsistent result after apply" after an unset.
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
-		data.Comment = types.StringNull()
+		data.Comment = types.StringValue("")
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))
 	} else {
-		data.Logaction = types.StringNull()
+		data.Logaction = types.StringValue("")
 	}
-	if val, ok := getResponseData["name"]; ok && val != nil {
-		data.Name = types.StringValue(val.(string))
-	} else {
-		data.Name = types.StringNull()
+	// name: preserve the user-configured value; only adopt it from GET when unset
+	// (import case, where state carries only the ID). This avoids clobbering the
+	// configured key after a rename.
+	if data.Name.IsNull() || data.Name.ValueString() == "" {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
 	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
-	}
+	// newname is rename-only and never returned by GET - leave the model value as-is.
 	if val, ok := getResponseData["rule"]; ok && val != nil {
 		data.Rule = types.StringValue(val.(string))
 	} else {
@@ -142,9 +152,12 @@ func videooptimizationpacingpolicySetAttrFromGet(ctx context.Context, data *Vide
 		data.Undefaction = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Set ID for the resource to the live name returned by GET (tracks renames).
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Id = types.StringValue(val.(string))
+	} else {
+		data.Id = types.StringValue(data.Name.ValueString())
+	}
 
 	return data
 }

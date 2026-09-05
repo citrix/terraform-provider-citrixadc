@@ -23,8 +23,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsip_basic_step1 = `
@@ -322,6 +323,151 @@ func testAccCheckNsipDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsip_import(t *testing.T) {
+	const resAddr = "citrixadc_nsip.tf_test_nsip"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsipDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsip_basic_step1},
+			{
+				Config:                  testAccNsip_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccNsip_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsipDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNsip_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsipExist("citrixadc_nsip.tf_test_nsip", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsip_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsipExist("citrixadc_nsip.tf_test_nsip", nil)),
+			},
+		},
+	})
+}
+
+// nsip unset test: step1 sets a set of type-independent, VIP-applicable
+// attributes to non-default values; step2 removes them from config so the
+// provider must unset them (revert to the documented NITRO defaults).
+const testAccNsip_unset_step1 = `
+resource "citrixadc_nsip" "tf_unset" {
+    ipaddress       = "192.168.3.77"
+    netmask         = "255.255.255.0"
+    type            = "VIP"
+    arp             = "DISABLED"
+    mptcpadvertise  = "YES"
+    decrementttl    = "ENABLED"
+    arpresponse     = "ALL_VSERVERS"
+    icmpresponse    = "ALL_VSERVERS"
+}
+`
+
+const testAccNsip_unset_step2 = `
+resource "citrixadc_nsip" "tf_unset" {
+    ipaddress = "192.168.3.77"
+    netmask   = "255.255.255.0"
+    type      = "VIP"
+    # All unset-eligible attributes removed from config -> provider unsets them.
+}
+`
+
+func TestAccNsip_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsipDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccNsip_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsipExist("citrixadc_nsip.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "arp", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "mptcpadvertise", "YES"),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "decrementttl", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "arpresponse", "ALL_VSERVERS"),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "icmpresponse", "ALL_VSERVERS"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccNsip_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNsipExist("citrixadc_nsip.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "arp", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "mptcpadvertise", "NO"),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "decrementttl", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "arpresponse", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_nsip.tf_unset", "icmpresponse", "NONE"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckNsipADCValue("192.168.3.77", 0, "arp", "ENABLED"),
+					testAccCheckNsipADCValue("192.168.3.77", 0, "arpresponse", "NONE"),
+					testAccCheckNsipADCValue("192.168.3.77", 0, "tag", "0"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckNsipADCValue asserts an attribute's value directly on the
+// appliance (not just Terraform state), proving the unset actually reverted it.
+func testAccCheckNsipADCValue(ipaddress string, td int, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		argsMap := map[string]string{"td": fmt.Sprintf("%d", td)}
+		findParams := service.FindParams{
+			ResourceType:             service.Nsip.Type(),
+			ResourceName:             ipaddress,
+			ResourceMissingErrorCode: 258,
+			ArgsMap:                  argsMap,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		foundIndex := -1
+		for i, v := range dataArr {
+			if addr, ok := v["ipaddress"].(string); ok && addr == ipaddress {
+				foundIndex = i
+				break
+			}
+		}
+		if foundIndex == -1 {
+			return fmt.Errorf("nsip %s not found on appliance", ipaddress)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", dataArr[foundIndex][attr]))
+		if got != want {
+			return fmt.Errorf("nsip %s: appliance attr %q = %q, want %q (unset did not revert it)", ipaddress, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccNsipDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -336,6 +482,8 @@ func TestAccNsipDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "arp", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "icmp", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsip.tf_nsip_ds", "snmp", "ENABLED"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsip.tf_nsip_ds", "id"),
 				),
 			},
 		},

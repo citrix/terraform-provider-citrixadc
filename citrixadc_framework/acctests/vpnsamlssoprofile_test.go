@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnsamlssoprofile_add = `
@@ -159,6 +161,169 @@ func testAccCheckVpnsamlssoprofileDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVpnsamlssoprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnsamlssoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnsamlssoprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsamlssoprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vpnsamlssoprofile.Type(), "tf_vpnsamlssoprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnsamlssoprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsamlssoprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnsamlssoprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnsamlssoprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnsamlssoprofile_add},
+			{
+				Config:                  testAccVpnsamlssoprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"sendpassword"},
+			},
+		},
+	})
+}
+
+func TestAccVpnsamlssoprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnsamlssoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVpnsamlssoprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsamlssoprofileExist("citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnsamlssoprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnsamlssoprofileExist("citrixadc_vpnsamlssoprofile.tf_vpnsamlssoprofile", nil)),
+			},
+		},
+	})
+}
+
+// The vpnsamlssoprofile unset test covers the unset-eligible attributes that
+// carry a documented NITRO server default. Step 1 sets them to valid
+// non-default values; step 2 removes them from config so the provider must
+// unset them (revert to the documented NITRO defaults).
+const testAccVpnsamlssoprofile_unset_step1 = `
+	resource "citrixadc_vpnsamlssoprofile" "tf_unset" {
+		name                        = "tf_test_vpnsamlssoprofile_unset"
+		assertionconsumerserviceurl = "http://www.example.com"
+		digestmethod                = "SHA1"
+		encryptionalgorithm         = "AES128"
+		nameidformat                = "Unspecified"
+		signassertion               = "RESPONSE"
+		signaturealg                = "RSA-SHA1"
+		skewtime                    = 10
+	}
+`
+
+const testAccVpnsamlssoprofile_unset_step2 = `
+	resource "citrixadc_vpnsamlssoprofile" "tf_unset" {
+		name                        = "tf_test_vpnsamlssoprofile_unset"
+		assertionconsumerserviceurl = "http://www.example.com"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to documented NITRO defaults).
+	}
+`
+
+func TestAccVpnsamlssoprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnsamlssoprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVpnsamlssoprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnsamlssoprofileExist("citrixadc_vpnsamlssoprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "digestmethod", "SHA1"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "encryptionalgorithm", "AES128"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "nameidformat", "Unspecified"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "signassertion", "RESPONSE"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "signaturealg", "RSA-SHA1"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "skewtime", "10"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccVpnsamlssoprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnsamlssoprofileExist("citrixadc_vpnsamlssoprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "digestmethod", "SHA256"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "encryptionalgorithm", "AES256"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "nameidformat", "transient"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "signassertion", "ASSERTION"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "signaturealg", "RSA-SHA256"),
+					resource.TestCheckResourceAttr("citrixadc_vpnsamlssoprofile.tf_unset", "skewtime", "5"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVpnsamlssoprofileADCValue("tf_test_vpnsamlssoprofile_unset", "digestmethod", "SHA256"),
+					testAccCheckVpnsamlssoprofileADCValue("tf_test_vpnsamlssoprofile_unset", "signaturealg", "RSA-SHA256"),
+					testAccCheckVpnsamlssoprofileADCValue("tf_test_vpnsamlssoprofile_unset", "skewtime", "5"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVpnsamlssoprofileADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it.
+func testAccCheckVpnsamlssoprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vpnsamlssoprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vpnsamlssoprofile %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vpnsamlssoprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccVpnsamlssoprofileDataSource_basic(t *testing.T) {

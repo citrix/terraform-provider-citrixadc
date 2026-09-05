@@ -10,7 +10,7 @@ func LsnpoolDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"maxportrealloctmq": schema.Int64Attribute{
+			"maxportrealloctmq": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Maximum number of ports for which the port reallocation timeout applies for each NAT IP address. In other words, the maximum deallocated-port queue size for which the reallocation timeout applies for each NAT IP address.\n\nWhen the queue size is full, the next port deallocated is reallocated immediately for a new LSN session.",

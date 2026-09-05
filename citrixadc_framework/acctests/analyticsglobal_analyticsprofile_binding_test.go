@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAnalyticsglobal_analyticsprofile_binding_basic = `
@@ -208,13 +209,118 @@ func TestAccAnalyticsglobal_analyticsprofile_bindingDataSource_basic(t *testing.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		CheckDestroy:             nil,
+		// Verify the binding is unbound/destroyed on teardown so a leftover cannot leave the
+		// analyticsprofile "in use" (errorcode 3940) and poison later analyticsprofile tests.
+		CheckDestroy: testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyticsglobal_analyticsprofile_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_analyticsglobal_analyticsprofile_binding.tf_binding_data", "analyticsprofile", "new"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAnalyticsglobal_analyticsprofile_binding_upgrade_basic reuses the _basic
+// config (binding + its prerequisite analyticsprofile). It is valid under BOTH the
+// SDK v2 2.2.0 schema and the current Framework schema because the migration
+// restored the SDK v2 attribute names.
+const testAccAnalyticsglobal_analyticsprofile_binding_upgrade_basic = `
+
+	resource "citrixadc_analyticsprofile" "tf_analyticsprofile" {
+		name = "new"
+		type = "webinsight"
+	}
+
+	resource "citrixadc_analyticsglobal_analyticsprofile_binding" "tf_binding" {
+		analyticsprofile = citrixadc_analyticsprofile.tf_analyticsprofile.name
+	}
+`
+
+// TestAccAnalyticsglobal_analyticsprofile_binding_sdkv2StateUpgrade verifies that
+// state written by the last SDK v2 release is correctly upgraded when the same
+// config is subsequently managed by the current Framework provider. Step 1 creates
+// the binding with citrix/citrixadc 2.2.0 (writes the legacy id "new"). Step 2
+// refreshes/plans/applies the same config through the Framework provider, exercising
+// ParseIdString on the legacy id; the Framework recomputes the id on Read
+// (SetAttrFromGet). Because this is a single-key binding, the canonical new-format id
+// is the plain value, so the id remains "new".
+func TestAccAnalyticsglobal_analyticsprofile_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_analyticsglobal_analyticsprofile_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAnalyticsglobal_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "new"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed to the new format (plain value for a single-key binding).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAnalyticsglobal_analyticsprofile_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "new"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAnalyticsglobal_analyticsprofile_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_analyticsglobal_analyticsprofile_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAnalyticsglobal_analyticsprofile_binding_basic},
+			{Config: testAccAnalyticsglobal_analyticsprofile_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAnalyticsglobal_analyticsprofile_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_analyticsglobal_analyticsprofile_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyticsglobal_analyticsprofile_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyticsglobal_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Analyticsglobal_analyticsprofile_binding.Type(), "", []string{"analyticsprofile:new"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAnalyticsglobal_analyticsprofile_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAnalyticsglobal_analyticsprofile_bindingExist(resAddr, nil)),
 			},
 		},
 	})

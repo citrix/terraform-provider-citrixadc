@@ -6,7 +6,7 @@ subcategory: "LSN"
 
 The lsngroup_pcpserver_binding data source allows you to retrieve information about LSN group PCP server bindings.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_lsngroup_pcpserver_binding" "tf_lsngroup_pcpserver_binding" {
@@ -32,4 +32,4 @@ output "pcpserver" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lsngroup_pcpserver_binding. It is a system-generated identifier.
+* `id` - The id of the lsngroup_pcpserver_binding. It is the concatenation of `groupname` and `pcpserver` attributes separated by a comma.

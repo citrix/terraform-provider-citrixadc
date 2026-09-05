@@ -10,6 +10,11 @@ func SnmpoptionDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"customtrap": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "By default, Customtrap will be disabled, set to enabled when using the feature.",
+			},
 			"partitionnameintrap": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

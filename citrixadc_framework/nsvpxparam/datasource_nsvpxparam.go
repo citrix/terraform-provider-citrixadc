@@ -35,7 +35,7 @@ func (d *NsvpxparamDataSource) Schema(ctx context.Context, req datasource.Schema
 }
 
 func (d *NsvpxparamDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NsvpxparamResourceModel
+	var data NsvpxparamDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -94,7 +94,7 @@ func (d *NsvpxparamDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	nsvpxparamSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	nsvpxparamDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -59,7 +59,12 @@ func (r *LbrouteResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// td was Optional + ForceNew in SDK v2. It is now
+					// Optional+Computed (the ADC returns 0 when unset), so keep
+					// the computed value stable and only force replacement when
+					// the user actually configures and changes it.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
@@ -72,16 +77,19 @@ func lbrouteGetThePayloadFromtheConfig(ctx context.Context, data *LbrouteResourc
 
 	// Create API request body from the model
 	lbroute := lb.Lbroute{}
-	if !data.Gatewayname.IsNull() {
+	if !data.Gatewayname.IsNull() && !data.Gatewayname.IsUnknown() {
 		lbroute.Gatewayname = data.Gatewayname.ValueString()
 	}
-	if !data.Netmask.IsNull() {
+	if !data.Netmask.IsNull() && !data.Netmask.IsUnknown() {
 		lbroute.Netmask = data.Netmask.ValueString()
 	}
-	if !data.Network.IsNull() {
+	if !data.Network.IsNull() && !data.Network.IsUnknown() {
 		lbroute.Network = data.Network.ValueString()
 	}
-	if !data.Td.IsNull() {
+	// td is only sent when explicitly configured (matches SDK v2, which set td
+	// only when GetRawConfig had a non-null value). When Optional+Computed and
+	// unset, td is Unknown here, so guarding on IsUnknown avoids sending 0.
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		lbroute.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -112,12 +120,16 @@ func lbrouteSetAttrFromGet(ctx context.Context, data *LbrouteResourceModel, getR
 			data.Td = types.Int64Value(intVal)
 		}
 	} else {
-		data.Td = types.Int64Null()
+		// Omit-on-default guard: NITRO may omit td when it is 0. Only null it
+		// when the value is unknown; never clobber a known configured value.
+		if data.Td.IsUnknown() {
+			data.Td = types.Int64Null()
+		}
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s,%s,%d", data.Network.ValueString(), data.Netmask.ValueString(), data.Td.ValueInt64()))
+	// Set ID for the resource.
+	// SDK v2 used "network,netmask,gatewayname" (see resource_id_mapping.json).
+	data.Id = types.StringValue(fmt.Sprintf("%s,%s,%s", data.Network.ValueString(), data.Netmask.ValueString(), data.Gatewayname.ValueString()))
 
 	return data
 }

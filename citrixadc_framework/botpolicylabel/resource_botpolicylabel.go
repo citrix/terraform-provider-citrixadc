@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/bot"
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -54,20 +57,21 @@ func (r *BotpolicylabelResource) Create(ctx context.Context, req resource.Create
 	}
 
 	tflog.Debug(ctx, "Creating botpolicylabel resource")
-
-	// botpolicylabel := botpolicylabelGetThePayloadFromtheConfig(ctx, &data)
+	botpolicylabel := botpolicylabelGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botpolicylabel.Type(), &botpolicylabel)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botpolicylabel, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("botpolicylabel-config")
+	// Named resource - use AddResource
+	labelname_value := data.Labelname.ValueString()
+	_, err := r.client.AddResource(service.Botpolicylabel.Type(), labelname_value, &botpolicylabel)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botpolicylabel, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created botpolicylabel resource")
+
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
 
 	// Read the updated state back
 	r.readBotpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
@@ -90,13 +94,24 @@ func (r *BotpolicylabelResource) Read(ctx context.Context, req resource.ReadRequ
 
 	r.readBotpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
 
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.Id.IsNull() {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *BotpolicylabelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BotpolicylabelResourceModel
+	var data, state BotpolicylabelResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +119,49 @@ func (r *BotpolicylabelResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	tflog.Debug(ctx, "Updating botpolicylabel resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// botpolicylabel := botpolicylabelGetThePayloadFromtheConfig(ctx, &data)
+	// Rename support: botpolicylabel exposes NO set/update endpoint. The only
+	// in-place mutation NITRO offers is the `rename` action. Every other schema
+	// attribute (labelname, comment) uses RequiresReplace, so Terraform recreates the
+	// resource on any of those changes and never reaches here for them. The ONLY
+	// change that lands in Update is `newname`.
+	//
+	// On a newname change, POST {labelname, newname} to ?action=rename, then point the
+	// resource ID at the new name so subsequent reads address the live object.
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		// The rename SOURCE is the CURRENT LIVE name, which is tracked by the ID -
+		// NOT state.Labelname. state.Labelname stays pinned to the originally
+		// configured value, so on a SECOND rename it would point at the wrong (no
+		// longer live) name. The live name is whatever the prior rename set the ID to
+		// (== labelname before any rename, == the prior newname after one).
+		oldName := state.Id.ValueString()
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("Renaming botpolicylabel from %q to %q", oldName, newName))
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botpolicylabel.Type(), &botpolicylabel)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botpolicylabel, got error: %s", err))
-	//	 return
-	// }
+		renamePayload := bot.Botpolicylabel{
+			Labelname: oldName,
+			Newname:   newName,
+		}
+		if err := r.client.ActOnResource(service.Botpolicylabel.Type(), &renamePayload, "rename"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename botpolicylabel, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated botpolicylabel resource")
+		// The live object is now named newName. Point the ID at it so the read
+		// below (and all future reads) address the renamed resource.
+		data.Id = types.StringValue(newName)
+	}
 
-	// Read the updated state back
+	// Read the current state back. Capture the plan values for the user-facing key
+	// and rename trigger and restore them after the read so a rename does not clobber
+	// the configured labelname (belt-and-suspenders; SetAttrFromGet also guards it).
+	planLabelname := data.Labelname
+	planNewname := data.Newname
 	r.readBotpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	data.Labelname = planLabelname
+	data.Newname = planNewname
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,16 +178,35 @@ func (r *BotpolicylabelResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	tflog.Debug(ctx, "Deleting botpolicylabel resource")
+	// Named resource - delete using DeleteResource. The ID holds the CURRENT LIVE
+	// name (== labelname at create, == newname after a rename), so we must delete by
+	// data.Id, NOT data.Labelname (which stays at the originally configured value and
+	// would target a non-existent name after a rename, dangling the object).
+	liveName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Botpolicylabel.Type(), liveName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botpolicylabel, got error: %s", err))
+		return
+	}
 
-	// For botpolicylabel, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted botpolicylabel resource from state")
+	tflog.Trace(ctx, "Deleted botpolicylabel resource")
 }
 
 // Helper function to read botpolicylabel data from API
 func (r *BotpolicylabelResource) readBotpolicylabelFromApi(ctx context.Context, data *BotpolicylabelResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Botpolicylabel.Type(), "")
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	labelname_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Botpolicylabel.Type(), labelname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			data.Id = types.StringNull()
+			return
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botpolicylabel, got error: %s", err))
 		return
 	}

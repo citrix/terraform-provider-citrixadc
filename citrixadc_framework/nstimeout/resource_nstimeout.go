@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -44,10 +45,12 @@ func (r *NstimeoutResource) Configure(ctx context.Context, req resource.Configur
 }
 
 func (r *NstimeoutResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data NstimeoutResourceModel
+	var data, config NstimeoutResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to build the payload only from user-configured values (matches SDK v2 GetRawConfig)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -55,14 +58,15 @@ func (r *NstimeoutResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating nstimeout resource")
 
-	// nstimeout := nstimeoutGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the config (unconfigured attributes are null and skipped)
+	nstimeout := nstimeoutGetThePayloadFromtheConfig(ctx, &config)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstimeout, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - nstimeout is a singleton, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstimeout, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nstimeout-config")
@@ -95,10 +99,14 @@ func (r *NstimeoutResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *NstimeoutResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NstimeoutResourceModel
+	var data, config, state NstimeoutResourceModel
 
+	// Read Terraform prior state
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to build the payload only from user-configured values (matches SDK v2 GetRawConfig)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +114,85 @@ func (r *NstimeoutResource) Update(ctx context.Context, req resource.UpdateReque
 
 	tflog.Debug(ctx, "Updating nstimeout resource")
 
-	// Create API request body from the model
-	// nstimeout := nstimeoutGetThePayloadFromtheConfig(ctx, &data)
+	// Determine attributes removed from config so they can be unset (reverted to
+	// NITRO defaults) after the update.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Anyclient.Equal(state.Anyclient) {
+		if config.Anyclient.IsNull() {
+			attributesToUnset = append(attributesToUnset, "anyclient")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Httpclient.Equal(state.Httpclient) {
+		if config.Httpclient.IsNull() {
+			attributesToUnset = append(attributesToUnset, "httpclient")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Reducedrsttimeout.Equal(state.Reducedrsttimeout) {
+		if config.Reducedrsttimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "reducedrsttimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Server.Equal(state.Server) {
+		if config.Server.IsNull() {
+			attributesToUnset = append(attributesToUnset, "server")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Zombie.Equal(state.Zombie) {
+		if config.Zombie.IsNull() {
+			attributesToUnset = append(attributesToUnset, "zombie")
+		} else {
+			hasChange = true
+		}
+	}
+	// Non-unset-wired attributes: a configured change requires an update call.
+	// (Only when present in config -- otherwise a Computed attr planned as
+	// "known after apply" would spuriously force an empty-payload update.)
+	if (!config.Anyserver.IsNull() && !data.Anyserver.Equal(state.Anyserver)) ||
+		(!config.Anytcpclient.IsNull() && !data.Anytcpclient.Equal(state.Anytcpclient)) ||
+		(!config.Anytcpserver.IsNull() && !data.Anytcpserver.Equal(state.Anytcpserver)) ||
+		(!config.Client.IsNull() && !data.Client.Equal(state.Client)) ||
+		(!config.Halfclose.IsNull() && !data.Halfclose.Equal(state.Halfclose)) ||
+		(!config.Httpserver.IsNull() && !data.Httpserver.Equal(state.Httpserver)) ||
+		(!config.Newconnidletimeout.IsNull() && !data.Newconnidletimeout.Equal(state.Newconnidletimeout)) ||
+		(!config.Nontcpzombie.IsNull() && !data.Nontcpzombie.Equal(state.Nontcpzombie)) ||
+		(!config.Reducedfintimeout.IsNull() && !data.Reducedfintimeout.Equal(state.Reducedfintimeout)) ||
+		(!config.Tcpclient.IsNull() && !data.Tcpclient.Equal(state.Tcpclient)) ||
+		(!config.Tcpserver.IsNull() && !data.Tcpserver.Equal(state.Tcpserver)) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstimeout, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the config (unconfigured attributes are null and skipped)
+		nstimeout := nstimeoutGetThePayloadFromtheConfig(ctx, &config)
 
-	tflog.Trace(ctx, "Updated nstimeout resource")
+		// Make API call - nstimeout is a singleton, use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Nstimeout.Type(), &nstimeout)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstimeout, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nstimeout resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nstimeout resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. nstimeout is a singleton, so the id payload is empty.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nstimeout.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nstimeout attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNstimeoutFromApi(ctx, &data, &resp.Diagnostics)

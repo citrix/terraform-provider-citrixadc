@@ -34,3 +34,12 @@ resource "citrixadc_smppparam" "tf_smppparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the smppparam. It is a unique string prefixed with `tf-smppparam-`.
+
+
+## Import
+
+A smppparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_smppparam.tf_smppparam smppparam-config
+```

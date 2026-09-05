@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_vpnclientlessaccesspolicy_binding_basic = `
@@ -220,6 +221,107 @@ func TestAccVpnglobal_vpnclientlessaccesspolicy_bindingDataSource_basic(t *testi
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "priority", "90"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "globalbindtype", "SYSTEM_GLOBAL"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "type", "REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnglobal_vpnclientlessaccesspolicy_binding_upgrade_basic = `
+	resource "citrixadc_vpnclientlessaccesspolicy" "tf_vpnclientlessaccesspolicy" {
+		name        = "tf_vpnclientlessaccesspolicy"
+		profilename = "ns_cvpn_default_profile"
+		rule        = "true"
+	}
+	resource "citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding" "tf_bind" {
+		policyname     = citrixadc_vpnclientlessaccesspolicy.tf_vpnclientlessaccesspolicy.name
+		priority       = 90
+		globalbindtype = "VPN_GLOBAL"
+		secondary      = "false"
+		type           = "RES_OVERRIDE"
+	}
+`
+
+// TestAccVpnglobal_vpnclientlessaccesspolicy_binding_sdkv2StateUpgrade verifies that a
+// binding created with the last SDK v2 release (legacy plain-policyname id) is refreshed
+// through the current Framework provider (exercising ParseIdString on the legacy id).
+// This is a single-unique-attribute binding, so both the legacy id and the recomputed
+// new id are the plain policyname value.
+func TestAccVpnglobal_vpnclientlessaccesspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release. State is written with the legacy id (policyname).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_vpnclientlessaccesspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingExist("citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "id", "tf_vpnclientlessaccesspolicy"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current (Framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the id (single key -> plain value).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_vpnclientlessaccesspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingExist("citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind", "id", "tf_vpnclientlessaccesspolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnclientlessaccesspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_vpnclientlessaccesspolicy_binding_basic},
+			{Config: testAccVpnglobal_vpnclientlessaccesspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"globalbindtype", "secondary", "type"}},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnclientlessaccesspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnclientlessaccesspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnclientlessaccesspolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpnclientlessaccesspolicy_binding.Type(), "", []string{"policyname:tf_vpnclientlessaccesspolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpnclientlessaccesspolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnclientlessaccesspolicy_bindingExist(resAddr, nil),
 				),
 			},
 		},

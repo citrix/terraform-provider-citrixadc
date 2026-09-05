@@ -1,9 +1,148 @@
 package lbmonitor
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// LbmonitorDataSourceModel is the data-source-specific model, decoupled from
+// LbmonitorResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only lbmonitor metadata attributes that the resource
+// deliberately omits (lrtmconf, dynamicresponsetimeout, dup_state, weight, ...).
+// The Framework's per-attribute model <-> schema reflection requires this model
+// to have exactly the attributes the data-source schema declares, which is why
+// it cannot reuse the resource model.
+type LbmonitorDataSourceModel struct {
+	Id                               types.String `tfsdk:"id"`
+	Snmpoid                          types.String `tfsdk:"snmpoid"`
+	Acctapplicationid                types.List   `tfsdk:"acctapplicationid"`
+	Action                           types.String `tfsdk:"action"`
+	Alertretries                     types.Int64  `tfsdk:"alertretries"`
+	Application                      types.String `tfsdk:"application"`
+	Attribute                        types.String `tfsdk:"attribute"`
+	Authapplicationid                types.List   `tfsdk:"authapplicationid"`
+	Basedn                           types.String `tfsdk:"basedn"`
+	Binddn                           types.String `tfsdk:"binddn"`
+	Customheaders                    types.String `tfsdk:"customheaders"`
+	Database                         types.String `tfsdk:"database"`
+	Destip                           types.String `tfsdk:"destip"`
+	Destport                         types.Int64  `tfsdk:"destport"`
+	Deviation                        types.Int64  `tfsdk:"deviation"`
+	Dispatcherip                     types.String `tfsdk:"dispatcherip"`
+	Dispatcherport                   types.Int64  `tfsdk:"dispatcherport"`
+	Domain                           types.String `tfsdk:"domain"`
+	Downtime                         types.Int64  `tfsdk:"downtime"`
+	Evalrule                         types.String `tfsdk:"evalrule"`
+	Failureretries                   types.Int64  `tfsdk:"failureretries"`
+	Filename                         types.String `tfsdk:"filename"`
+	Filter                           types.String `tfsdk:"filter"`
+	Firmwarerevision                 types.Int64  `tfsdk:"firmwarerevision"`
+	Group                            types.String `tfsdk:"group"`
+	Grpchealthcheck                  types.String `tfsdk:"grpchealthcheck"`
+	Grpcservicename                  types.String `tfsdk:"grpcservicename"`
+	Grpcstatuscode                   types.List   `tfsdk:"grpcstatuscode"`
+	Hostipaddress                    types.String `tfsdk:"hostipaddress"`
+	Hostname                         types.String `tfsdk:"hostname"`
+	Httprequest                      types.String `tfsdk:"httprequest"`
+	Inbandsecurityid                 types.String `tfsdk:"inbandsecurityid"`
+	Interval                         types.Int64  `tfsdk:"interval"`
+	Ipaddress                        types.List   `tfsdk:"ipaddress"`
+	Iptunnel                         types.String `tfsdk:"iptunnel"`
+	Kcdaccount                       types.String `tfsdk:"kcdaccount"`
+	Lasversion                       types.String `tfsdk:"lasversion"`
+	Logonpointname                   types.String `tfsdk:"logonpointname"`
+	Lrtm                             types.String `tfsdk:"lrtm"`
+	Maxforwards                      types.Int64  `tfsdk:"maxforwards"`
+	Metric                           types.String `tfsdk:"metric"`
+	Metrictable                      types.String `tfsdk:"metrictable"`
+	Metricthreshold                  types.Int64  `tfsdk:"metricthreshold"`
+	Metricweight                     types.Int64  `tfsdk:"metricweight"`
+	Monitorname                      types.String `tfsdk:"monitorname"`
+	Mqttclientidentifier             types.String `tfsdk:"mqttclientidentifier"`
+	Mqttversion                      types.Int64  `tfsdk:"mqttversion"`
+	Mssqlprotocolversion             types.String `tfsdk:"mssqlprotocolversion"`
+	Netprofile                       types.String `tfsdk:"netprofile"`
+	Oraclesid                        types.String `tfsdk:"oraclesid"`
+	Originhost                       types.String `tfsdk:"originhost"`
+	Originrealm                      types.String `tfsdk:"originrealm"`
+	Password                         types.String `tfsdk:"password"`
+	Productname                      types.String `tfsdk:"productname"`
+	Query                            types.String `tfsdk:"query"`
+	Querytype                        types.String `tfsdk:"querytype"`
+	Radaccountsession                types.String `tfsdk:"radaccountsession"`
+	Radaccounttype                   types.Int64  `tfsdk:"radaccounttype"`
+	Radapn                           types.String `tfsdk:"radapn"`
+	Radframedip                      types.String `tfsdk:"radframedip"`
+	Radkey                           types.String `tfsdk:"radkey"`
+	Radmsisdn                        types.String `tfsdk:"radmsisdn"`
+	Radnasid                         types.String `tfsdk:"radnasid"`
+	Radnasip                         types.String `tfsdk:"radnasip"`
+	Recv                             types.String `tfsdk:"recv"`
+	Respcode                         types.List   `tfsdk:"respcode"`
+	Resptimeout                      types.Int64  `tfsdk:"resptimeout"`
+	Resptimeoutthresh                types.Int64  `tfsdk:"resptimeoutthresh"`
+	Retries                          types.Int64  `tfsdk:"retries"`
+	Reverse                          types.String `tfsdk:"reverse"`
+	Rtsprequest                      types.String `tfsdk:"rtsprequest"`
+	Scriptargs                       types.String `tfsdk:"scriptargs"`
+	Scriptname                       types.String `tfsdk:"scriptname"`
+	Secondarypassword                types.String `tfsdk:"secondarypassword"`
+	Secure                           types.String `tfsdk:"secure"`
+	Secureargs                       types.String `tfsdk:"secureargs"`
+	Send                             types.String `tfsdk:"send"`
+	Servicegroupname                 types.String `tfsdk:"servicegroupname"`
+	Servicename                      types.String `tfsdk:"servicename"`
+	Sipmethod                        types.String `tfsdk:"sipmethod"`
+	Sipreguri                        types.String `tfsdk:"sipreguri"`
+	Sipuri                           types.String `tfsdk:"sipuri"`
+	Sitepath                         types.String `tfsdk:"sitepath"`
+	Snmpcommunity                    types.String `tfsdk:"snmpcommunity"`
+	Snmpthreshold                    types.String `tfsdk:"snmpthreshold"`
+	Snmpversion                      types.String `tfsdk:"snmpversion"`
+	Sqlquery                         types.String `tfsdk:"sqlquery"`
+	Sslprofile                       types.String `tfsdk:"sslprofile"`
+	State                            types.String `tfsdk:"state"`
+	Storedb                          types.String `tfsdk:"storedb"`
+	Storefrontacctservice            types.String `tfsdk:"storefrontacctservice"`
+	Storefrontcheckbackendservices   types.String `tfsdk:"storefrontcheckbackendservices"`
+	Storename                        types.String `tfsdk:"storename"`
+	Successretries                   types.Int64  `tfsdk:"successretries"`
+	Supportedvendorids               types.List   `tfsdk:"supportedvendorids"`
+	Tos                              types.String `tfsdk:"tos"`
+	Tosid                            types.Int64  `tfsdk:"tosid"`
+	Transparent                      types.String `tfsdk:"transparent"`
+	Trofscode                        types.Int64  `tfsdk:"trofscode"`
+	Trofsstring                      types.String `tfsdk:"trofsstring"`
+	Type                             types.String `tfsdk:"type"`
+	Units1                           types.String `tfsdk:"units1"`
+	Units2                           types.String `tfsdk:"units2"`
+	Units3                           types.String `tfsdk:"units3"`
+	Units4                           types.String `tfsdk:"units4"`
+	Username                         types.String `tfsdk:"username"`
+	Validatecred                     types.String `tfsdk:"validatecred"`
+	Vendorid                         types.Int64  `tfsdk:"vendorid"`
+	Vendorspecificacctapplicationids types.List   `tfsdk:"vendorspecificacctapplicationids"`
+	Vendorspecificauthapplicationids types.List   `tfsdk:"vendorspecificauthapplicationids"`
+	Vendorspecificvendorid           types.Int64  `tfsdk:"vendorspecificvendorid"`
+
+	// Read-only (GET-only) lbmonitor metadata from the NITRO doc read-only set
+	// (zion73x_readonly/lbmonitor.json). Never settable; populated from GET.
+	Lrtmconf               types.Int64  `tfsdk:"lrtmconf"`
+	Lrtmconfstr            types.String `tfsdk:"lrtmconfstr"`
+	Dynamicresponsetimeout types.Int64  `tfsdk:"dynamicresponsetimeout"`
+	Dynamicinterval        types.Int64  `tfsdk:"dynamicinterval"`
+	Multimetrictable       types.List   `tfsdk:"multimetrictable"`
+	DupState               types.String `tfsdk:"dup_state"`
+	DupWeight              types.Int64  `tfsdk:"dup_weight"`
+	Weight                 types.Int64  `tfsdk:"weight"`
+}
 
 func LbmonitorDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -270,18 +409,10 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Description: "Origin-Realm value for the Capabilities-Exchange-Request (CER) message to use for monitoring Diameter servers.",
 			},
 			"password": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password that is required for logging on to the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC-ECV or CITRIX-XDM server. Used in conjunction with the user name specified for the User Name parameter.",
-			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password that is required for logging on to the RADIUS, NNTP, FTP, FTP-EXTENDED, MYSQL, MSSQL, POP3, CITRIX-AG, CITRIX-XD-DDC, CITRIX-WI-EXTENDED, CITRIX-XNC-ECV or CITRIX-XDM server. Used in conjunction with the user name specified for the User Name parameter.",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
 			},
 			"productname": schema.StringAttribute{
 				Optional:    true,
@@ -319,18 +450,10 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Description: "Source ip with which the packet will go out . Applicable to monitors of type RADIUS_ACCOUNTING.",
 			},
 			"radkey": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Authentication key (shared secret text string) for RADIUS clients and servers to exchange. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING.",
-			},
-			"radkey_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Authentication key (shared secret text string) for RADIUS clients and servers to exchange. Applicable to monitors of type RADIUS and RADIUS_ACCOUNTING.",
-			},
-			"radkey_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a radkey_wo update.",
 			},
 			"radmsisdn": schema.StringAttribute{
 				Optional:    true,
@@ -394,18 +517,10 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Description: "Path and name of the script to execute. The script must be available on the Citrix ADC, in the /nsconfig/monitors/ directory.",
 			},
 			"secondarypassword": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Secondary password that users might have to provide to log on to the Access Gateway server. Applicable to CITRIX-AG monitors.",
-			},
-			"secondarypassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Secondary password that users might have to provide to log on to the Access Gateway server. Applicable to CITRIX-AG monitors.",
-			},
-			"secondarypassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a secondarypassword_wo update.",
 			},
 			"secure": schema.StringAttribute{
 				Optional:    true,
@@ -413,18 +528,10 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Description: "Use a secure SSL connection when monitoring a service. Applicable only to TCP based monitors. The secure option cannot be used with a CITRIX-AG monitor, because a CITRIX-AG monitor uses a secure connection by default.",
 			},
 			"secureargs": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "List of arguments for the script which should be secure",
-			},
-			"secureargs_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "List of arguments for the script which should be secure",
-			},
-			"secureargs_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a secureargs_wo update.",
 			},
 			"send": schema.StringAttribute{
 				Optional:    true,
@@ -603,6 +710,194 @@ func LbmonitorDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Vendor-Id to use in the Vendor-Specific-Application-Id grouped attribute-value pair (AVP) in the monitoring CER message. To specify Auth-Application-Id or Acct-Application-Id in Vendor-Specific-Application-Id, use vendorSpecificAuthApplicationIds or vendorSpecificAcctApplicationIds, respectively. Only one Vendor-Id is supported for all the Vendor-Specific-Application-Id AVPs in a CER monitoring message.",
 			},
+
+			// Read-only (GET-only) lbmonitor metadata surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"lrtmconf": schema.Int64Attribute{
+				Computed:    true,
+				Description: "State of LRTM configuration on the monitor.",
+			},
+			"lrtmconfstr": schema.StringAttribute{
+				Computed:    true,
+				Description: "State of LRTM configuration on the monitor as STRING. Possible values: ENABLED, DISABLED.",
+			},
+			"dynamicresponsetimeout": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Response timeout of the DRTM enabled monitor, calculated dynamically based on the history and current response time.",
+			},
+			"dynamicinterval": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Interval between monitoring probes for DRTM enabled monitor, calculated dynamically based on monitor response time.",
+			},
+			"multimetrictable": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Metric table to which to bind metrics, to be used only for output purposes.",
+			},
+			"dup_state": schema.StringAttribute{
+				Computed:    true,
+				Description: "State of the duplicate monitor. Possible values: ENABLED, DISABLED.",
+			},
+			"dup_weight": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Weight of the duplicate monitor.",
+			},
+			"weight": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Weight of the monitor.",
+			},
 		},
 	}
+}
+
+// lbmonitorDataSourceSetAttrFromGet projects a NITRO lbmonitor GET response onto
+// the data-source model. Because a data source has no plan/apply reconciliation,
+// attributes are simply filled from the GET (or left Null when the GET omits
+// them). The shared utils.MapGet* helpers implement that projection.
+func lbmonitorDataSourceSetAttrFromGet(ctx context.Context, data *LbmonitorDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In lbmonitorDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["monitorname"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Monitorname = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Snmpoid = utils.MapGetString(g, "snmpoid")
+	data.Action = utils.MapGetString(g, "action")
+	data.Alertretries = utils.MapGetInt64(g, "alertretries")
+	data.Application = utils.MapGetString(g, "application")
+	data.Attribute = utils.MapGetString(g, "attribute")
+	data.Basedn = utils.MapGetString(g, "basedn")
+	data.Binddn = utils.MapGetString(g, "binddn")
+	data.Customheaders = utils.MapGetString(g, "customheaders")
+	data.Database = utils.MapGetString(g, "database")
+	data.Destip = utils.MapGetString(g, "destip")
+	data.Destport = utils.MapGetInt64(g, "destport")
+	data.Deviation = utils.MapGetInt64(g, "deviation")
+	data.Dispatcherip = utils.MapGetString(g, "dispatcherip")
+	data.Dispatcherport = utils.MapGetInt64(g, "dispatcherport")
+	data.Domain = utils.MapGetString(g, "domain")
+	data.Downtime = utils.MapGetInt64(g, "downtime")
+	data.Evalrule = utils.MapGetString(g, "evalrule")
+	data.Failureretries = utils.MapGetInt64(g, "failureretries")
+	data.Filename = utils.MapGetString(g, "filename")
+	data.Filter = utils.MapGetString(g, "filter")
+	data.Firmwarerevision = utils.MapGetInt64(g, "firmwarerevision")
+	data.Group = utils.MapGetString(g, "group")
+	data.Grpchealthcheck = utils.MapGetString(g, "grpchealthcheck")
+	data.Grpcservicename = utils.MapGetString(g, "grpcservicename")
+	data.Hostipaddress = utils.MapGetString(g, "hostipaddress")
+	data.Hostname = utils.MapGetString(g, "hostname")
+	data.Httprequest = utils.MapGetString(g, "httprequest")
+	data.Inbandsecurityid = utils.MapGetString(g, "inbandsecurityid")
+	data.Interval = utils.MapGetInt64(g, "interval")
+	data.Ipaddress = utils.MapGetStringList(g, "ipaddress")
+	data.Iptunnel = utils.MapGetString(g, "iptunnel")
+	data.Kcdaccount = utils.MapGetString(g, "kcdaccount")
+	data.Lasversion = utils.MapGetString(g, "lasversion")
+	data.Logonpointname = utils.MapGetString(g, "logonpointname")
+	data.Lrtm = utils.MapGetString(g, "lrtm")
+	data.Maxforwards = utils.MapGetInt64(g, "maxforwards")
+	data.Metric = utils.MapGetString(g, "metric")
+	data.Metrictable = utils.MapGetString(g, "metrictable")
+	data.Metricthreshold = utils.MapGetInt64(g, "metricthreshold")
+	data.Metricweight = utils.MapGetInt64(g, "metricweight")
+	data.Mqttclientidentifier = utils.MapGetString(g, "mqttclientidentifier")
+	data.Mqttversion = utils.MapGetInt64(g, "mqttversion")
+	data.Mssqlprotocolversion = utils.MapGetString(g, "mssqlprotocolversion")
+	data.Netprofile = utils.MapGetString(g, "netprofile")
+	data.Oraclesid = utils.MapGetString(g, "oraclesid")
+	data.Originhost = utils.MapGetString(g, "originhost")
+	data.Originrealm = utils.MapGetString(g, "originrealm")
+	data.Productname = utils.MapGetString(g, "productname")
+	data.Query = utils.MapGetString(g, "query")
+	data.Querytype = utils.MapGetString(g, "querytype")
+	data.Radaccountsession = utils.MapGetString(g, "radaccountsession")
+	data.Radaccounttype = utils.MapGetInt64(g, "radaccounttype")
+	data.Radapn = utils.MapGetString(g, "radapn")
+	data.Radframedip = utils.MapGetString(g, "radframedip")
+	data.Radmsisdn = utils.MapGetString(g, "radmsisdn")
+	data.Radnasid = utils.MapGetString(g, "radnasid")
+	data.Radnasip = utils.MapGetString(g, "radnasip")
+	data.Recv = utils.MapGetString(g, "recv")
+	data.Respcode = utils.MapGetStringList(g, "respcode")
+	data.Resptimeout = utils.MapGetInt64(g, "resptimeout")
+	data.Resptimeoutthresh = utils.MapGetInt64(g, "resptimeoutthresh")
+	data.Retries = utils.MapGetInt64(g, "retries")
+	data.Reverse = utils.MapGetString(g, "reverse")
+	data.Rtsprequest = utils.MapGetString(g, "rtsprequest")
+	data.Scriptargs = utils.MapGetString(g, "scriptargs")
+	data.Scriptname = utils.MapGetString(g, "scriptname")
+	data.Secure = utils.MapGetString(g, "secure")
+	data.Send = utils.MapGetString(g, "send")
+	data.Servicegroupname = utils.MapGetString(g, "servicegroupname")
+	data.Servicename = utils.MapGetString(g, "servicename")
+	data.Sipmethod = utils.MapGetString(g, "sipmethod")
+	data.Sipreguri = utils.MapGetString(g, "sipreguri")
+	data.Sipuri = utils.MapGetString(g, "sipuri")
+	data.Sitepath = utils.MapGetString(g, "sitepath")
+	data.Snmpcommunity = utils.MapGetString(g, "snmpcommunity")
+	data.Snmpthreshold = utils.MapGetString(g, "snmpthreshold")
+	data.Snmpversion = utils.MapGetString(g, "snmpversion")
+	data.Sqlquery = utils.MapGetString(g, "sqlquery")
+	data.Sslprofile = utils.MapGetString(g, "sslprofile")
+	data.State = utils.MapGetString(g, "state")
+	data.Storedb = utils.MapGetString(g, "storedb")
+	data.Storefrontacctservice = utils.MapGetString(g, "storefrontacctservice")
+	data.Storefrontcheckbackendservices = utils.MapGetString(g, "storefrontcheckbackendservices")
+	data.Storename = utils.MapGetString(g, "storename")
+	data.Successretries = utils.MapGetInt64(g, "successretries")
+	data.Tos = utils.MapGetString(g, "tos")
+	data.Tosid = utils.MapGetInt64(g, "tosid")
+	data.Transparent = utils.MapGetString(g, "transparent")
+	data.Trofscode = utils.MapGetInt64(g, "trofscode")
+	data.Trofsstring = utils.MapGetString(g, "trofsstring")
+	data.Type = utils.MapGetString(g, "type")
+	data.Units1 = utils.MapGetString(g, "units1")
+	data.Units2 = utils.MapGetString(g, "units2")
+	data.Units3 = utils.MapGetString(g, "units3")
+	data.Units4 = utils.MapGetString(g, "units4")
+	data.Username = utils.MapGetString(g, "username")
+	data.Validatecred = utils.MapGetString(g, "validatecred")
+	data.Vendorid = utils.MapGetInt64(g, "vendorid")
+	data.Vendorspecificvendorid = utils.MapGetInt64(g, "vendorspecificvendorid")
+
+	// Integer-list attributes: keep the Int64 element type declared by the schema.
+	data.Acctapplicationid = lbmonitorDataSourceInt64List(ctx, g, "acctapplicationid")
+	data.Authapplicationid = lbmonitorDataSourceInt64List(ctx, g, "authapplicationid")
+	data.Grpcstatuscode = lbmonitorDataSourceInt64List(ctx, g, "grpcstatuscode")
+	data.Supportedvendorids = lbmonitorDataSourceInt64List(ctx, g, "supportedvendorids")
+	data.Vendorspecificacctapplicationids = lbmonitorDataSourceInt64List(ctx, g, "vendorspecificacctapplicationids")
+	data.Vendorspecificauthapplicationids = lbmonitorDataSourceInt64List(ctx, g, "vendorspecificauthapplicationids")
+
+	// Secrets / write-only / action-only inputs the GET never returns -> Null.
+	data.Password = types.StringNull()
+	data.Radkey = types.StringNull()
+	data.Secondarypassword = types.StringNull()
+	data.Secureargs = types.StringNull()
+
+	// Read-only lbmonitor metadata.
+	data.Lrtmconf = utils.MapGetInt64(g, "lrtmconf")
+	data.Lrtmconfstr = utils.MapGetString(g, "lrtmconfstr")
+	data.Dynamicresponsetimeout = utils.MapGetInt64(g, "dynamicresponsetimeout")
+	data.Dynamicinterval = utils.MapGetInt64(g, "dynamicinterval")
+	data.Multimetrictable = utils.MapGetStringList(g, "multimetrictable")
+	data.DupState = utils.MapGetString(g, "dup_state")
+	data.DupWeight = utils.MapGetInt64(g, "dup_weight")
+	data.Weight = utils.MapGetInt64(g, "weight")
+}
+
+// lbmonitorDataSourceInt64List projects a NITRO array value onto an Int64-element
+// list (matching the schema element type), returning a typed Null when absent.
+func lbmonitorDataSourceInt64List(ctx context.Context, g map[string]interface{}, key string) types.List {
+	if v, ok := g[key]; ok && v != nil {
+		if arr, ok := v.([]interface{}); ok {
+			lv, diags := types.ListValueFrom(ctx, types.Int64Type, utils.StringListToIntList(arr))
+			if !diags.HasError() {
+				return lv
+			}
+		}
+	}
+	return types.ListNull(types.Int64Type)
 }

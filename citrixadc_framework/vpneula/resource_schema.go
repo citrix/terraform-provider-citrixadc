@@ -38,12 +38,12 @@ func (r *VpneulaResource) Schema(ctx context.Context, req resource.SchemaRequest
 	}
 }
 
-func vpneulaGetThePayloadFromtheConfig(ctx context.Context, data *VpneulaResourceModel) vpn.Vpneula {
-	tflog.Debug(ctx, "In vpneulaGetThePayloadFromtheConfig Function")
+func vpneulaGetThePayloadFromthePlan(ctx context.Context, data *VpneulaResourceModel) vpn.Vpneula {
+	tflog.Debug(ctx, "In vpneulaGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpneula := vpn.Vpneula{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpneula.Name = data.Name.ValueString()
 	}
 
@@ -56,12 +56,12 @@ func vpneulaSetAttrFromGet(ctx context.Context, data *VpneulaResourceModel, getR
 	// Convert API response to model
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

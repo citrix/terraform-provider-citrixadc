@@ -117,11 +117,23 @@ type Systemparameter struct {
 	Maxsessionperuser *int `json:"maxsessionperuser,omitempty"`
 	/**
 	* Configure WAF protection for endpoints used by NetScaler management interfaces. The available options are:
-		* DEFAULT - NetScaler determines which endpoints have WAF protection enabled or disabled. In the current release, WAF protection is disabled for all endpoints when this option is used. The behavior of this option may change in future releases.
+		* DEFAULT - NetScaler decides which endpoints have WAF protection enabled.
 		* GUI - Endpoints used by the Management GUI Interface are WAF protected.
-		* DISABLED - WAF protection is disabled for all endpoints.
+		* DISABLED - WAF protection is disabled.
 	*/
 	Wafprotection []string `json:"wafprotection,omitempty"`
+	/**
+	* Enable or disable denylist protection. The available options are:
+		* ON - Denylist feature is enabled.
+		* OFF - Denylist feature is disabled.
+	*/
+	Denylist string `json:"denylist,omitempty"`
+	/**
+	* Enable or disable denylist protection logging. The available options are:
+		* ON - Denylist logging is enabled.
+		* OFF - Denylist logging is disabled.
+	*/
+	Denylistlogging string `json:"denylistlogging,omitempty"`
 	/**
 	* Enables or disable password expiry feature for system users.
 		If the feature is ENABLED, by default the last 6 passwords of users will be maintained and will not be allowed to reuse same.

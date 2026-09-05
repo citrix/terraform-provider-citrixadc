@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwgrpccontenttype_basic_step1 = `
@@ -173,7 +173,40 @@ func TestAccAppfwgrpccontenttypeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwgrpccontenttype.tf_appfwgrpccontenttype", "grpccontenttypevalue", "tf_acc_grpc_test"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwgrpccontenttype.tf_appfwgrpccontenttype", "isregex", "NOTREGEX"),
+					// id is the universal runtime-binding proof (mirrors grpccontenttypevalue).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwgrpccontenttype.tf_appfwgrpccontenttype", "id"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccAppfwgrpccontenttype_selfHealing verifies drift recovery: after the
+// resource is deleted out-of-band on the ADC, the next refresh's Read must detect
+// it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwgrpccontenttype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwgrpccontenttype.tf_appfwgrpccontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwgrpccontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwgrpccontenttype_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwgrpccontenttypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwgrpccontenttype.Type(), "tf_acc_grpc_test"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwgrpccontenttype_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwgrpccontenttypeExist(resAddr, nil)),
 			},
 		},
 	})

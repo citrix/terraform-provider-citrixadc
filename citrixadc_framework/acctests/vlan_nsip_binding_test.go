@@ -18,12 +18,15 @@ package citrixadc
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVlan_nsip_binding_basic_step1 = `
@@ -112,10 +115,12 @@ func testAccCheckVlan_nsip_bindingExist(n string, id *string) resource.TestCheck
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		vlanid := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"vlanid", "ipaddress"}, nil)
+		if err != nil {
+			return err
+		}
+		vlanid := idMap["vlanid"]
+		ipaddress := idMap["ipaddress"]
 
 		log.Printf("[DEBUG] citrixadc-provider: Reading vlan_nsip_bindingName state %s", bindingId)
 		findParams := service.FindParams{
@@ -229,6 +234,63 @@ func testAccCheckVlan_nsip_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVlan_nsip_binding_upgrade_basic = `
+resource "citrixadc_vlan" "tf_vlan" {
+    vlanid 	  = 40
+    aliasname = "Management VLAN"
+}
+
+resource "citrixadc_nsip" "tf_snip" {
+    ipaddress = "10.222.74.145"
+    type 	  = "SNIP"
+    netmask   = "255.255.255.0"
+    icmp 	  = "ENABLED"
+    state 	  = "ENABLED"
+}
+
+resource "citrixadc_vlan_nsip_binding" "tf_bind" {
+    vlanid 	  = citrixadc_vlan.tf_vlan.vlanid
+    ipaddress = citrixadc_nsip.tf_snip.ipaddress
+    netmask   = citrixadc_nsip.tf_snip.netmask
+    td 		  = 0
+}
+`
+
+func TestAccVlan_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVlan_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the resource with the last SDK v2 release (writes legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVlan_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_nsip_bindingExist("citrixadc_vlan_nsip_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_nsip_binding.tf_bind", "id", "40,10.222.74.145"),
+				),
+			},
+			{
+				// Step 2: refresh/plan/apply the legacy-id state through the current framework provider.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVlan_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlan_nsip_bindingExist("citrixadc_vlan_nsip_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan_nsip_binding.tf_bind", "id", "vlanid:40,ipaddress:10.222.74.145,netmask:255.255.255.0,ownergroup:,td:0"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVlan_nsip_bindingDataSource_basic = `
 resource "citrixadc_vlan" "tf_vlan" {
     vlanid 	  = 40
@@ -269,6 +331,77 @@ func TestAccVlan_nsip_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip_binding.tf_bind", "ipaddress", "10.222.74.145"),
 					resource.TestCheckResourceAttr("data.citrixadc_vlan_nsip_binding.tf_bind", "netmask", "255.255.255.0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVlan_nsip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vlan_nsip_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: vlanid,ipaddress) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"vlanid", "ipaddress"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVlan_nsip_binding_basic_step1},
+			{Config: testAccVlan_nsip_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"td"}},
+			{Config: testAccVlan_nsip_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"td"}},
+		},
+	})
+}
+
+func TestAccVlan_nsip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vlan_nsip_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlan_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_nsip_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_nsip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vlan_nsip_binding.Type(), "40", map[string]string{"ipaddress": "10.222.74.145", "netmask": "255.255.255.0", "td": "0"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVlan_nsip_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlan_nsip_bindingExist(resAddr, nil)),
 			},
 		},
 	})

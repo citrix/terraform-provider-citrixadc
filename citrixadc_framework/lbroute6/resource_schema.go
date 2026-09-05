@@ -2,7 +2,6 @@ package lbroute6
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
@@ -33,6 +32,7 @@ func (r *Lbroute6Resource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed:    true,
 				Description: "The ID of the lbroute6 resource.",
 			},
+			// SDK v2: Required + ForceNew
 			"gatewayname": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -40,6 +40,7 @@ func (r *Lbroute6Resource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 				Description: "The name of the route.",
 			},
+			// SDK v2: Required + ForceNew
 			"network": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -47,11 +48,13 @@ func (r *Lbroute6Resource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 				Description: "The destination network.",
 			},
+			// SDK v2: Optional + Computed + ForceNew
 			"td": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
@@ -64,13 +67,15 @@ func lbroute6GetThePayloadFromtheConfig(ctx context.Context, data *Lbroute6Resou
 
 	// Create API request body from the model
 	lbroute6 := lb.Lbroute6{}
-	if !data.Gatewayname.IsNull() {
+	if !data.Gatewayname.IsNull() && !data.Gatewayname.IsUnknown() {
 		lbroute6.Gatewayname = data.Gatewayname.ValueString()
 	}
-	if !data.Network.IsNull() {
+	if !data.Network.IsNull() && !data.Network.IsUnknown() {
 		lbroute6.Network = data.Network.ValueString()
 	}
-	if !data.Td.IsNull() {
+	// td is Optional+Computed: only send it when the user actually configured it
+	// (matches SDK v2 GetRawConfig guard); otherwise let the ADC assign the default.
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		lbroute6.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
 
@@ -94,17 +99,18 @@ func lbroute6SetAttrFromGet(ctx context.Context, data *Lbroute6ResourceModel, ge
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
-		} else {
+		} else if data.Td.IsUnknown() {
 			data.Td = types.Int64Value(0)
 		}
-	} else {
-		// If td is not present in response, default to 0
+	} else if data.Td.IsUnknown() {
+		// td is omitted by NITRO only when unset; never clobber a known
+		// (configured) value with 0 (omit-on-default trap).
 		data.Td = types.Int64Value(0)
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s,%d", data.Network.ValueString(), data.Td.ValueInt64()))
+	// Set ID for the resource.
+	// SDK v2 ID scheme: d.SetId(network) — plain network value (single_unique).
+	data.Id = types.StringValue(data.Network.ValueString())
 
 	return data
 }

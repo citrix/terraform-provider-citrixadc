@@ -35,7 +35,7 @@ func (d *AppfwprofileDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *AppfwprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppfwprofileResourceModel
+	var data AppfwprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *AppfwprofileDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	appfwprofileSetAttrFromGet(ctx, &data, getResponseData)
+	appfwprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

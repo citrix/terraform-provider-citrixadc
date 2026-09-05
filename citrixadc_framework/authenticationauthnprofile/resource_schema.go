@@ -7,6 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -42,41 +45,72 @@ func (r *AuthenticationauthnprofileResource) Schema(ctx context.Context, req res
 				Description: "Hostname of the authentication vserver to which user must be redirected for authentication.",
 			},
 			"authenticationlevel": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO server default is 0; setting it here so removing the
+				// attribute from config produces a plan diff that drives the unset.
+				Default:     int64default.StaticInt64(0),
 				Description: "Authentication weight or level of the vserver to which this will bound. This is used to order TM vservers based on the protection required. A session that is created by authenticating against TM vserver at given level cannot be used to access TM vserver at a higher level.",
 			},
 			"authnvsname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the authentication vserver at which authentication should be done.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the authentication profile.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the RADIUS action is added.",
 			},
 		},
 	}
 }
 
-func authenticationauthnprofileGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationauthnprofileResourceModel) authentication.Authenticationauthnprofile {
-	tflog.Debug(ctx, "In authenticationauthnprofileGetThePayloadFromtheConfig Function")
+func authenticationauthnprofileGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationauthnprofileResourceModel) authentication.Authenticationauthnprofile {
+	tflog.Debug(ctx, "In authenticationauthnprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationauthnprofile := authentication.Authenticationauthnprofile{}
-	if !data.Authenticationdomain.IsNull() {
+	if !data.Authenticationdomain.IsNull() && !data.Authenticationdomain.IsUnknown() {
 		authenticationauthnprofile.Authenticationdomain = data.Authenticationdomain.ValueString()
 	}
-	if !data.Authenticationhost.IsNull() {
+	if !data.Authenticationhost.IsNull() && !data.Authenticationhost.IsUnknown() {
 		authenticationauthnprofile.Authenticationhost = data.Authenticationhost.ValueString()
 	}
-	if !data.Authenticationlevel.IsNull() {
+	if !data.Authenticationlevel.IsNull() && !data.Authenticationlevel.IsUnknown() {
 		authenticationauthnprofile.Authenticationlevel = utils.IntPtr(int(data.Authenticationlevel.ValueInt64()))
 	}
-	if !data.Authnvsname.IsNull() {
+	if !data.Authnvsname.IsNull() && !data.Authnvsname.IsUnknown() {
 		authenticationauthnprofile.Authnvsname = data.Authnvsname.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationauthnprofile.Name = data.Name.ValueString()
+	}
+
+	return authenticationauthnprofile
+}
+
+func authenticationauthnprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AuthenticationauthnprofileResourceModel) authentication.Authenticationauthnprofile {
+	tflog.Debug(ctx, "In authenticationauthnprofileGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// authnvsname is ForceNew/RequiresReplace, so it is not part of the update payload.
+	authenticationauthnprofile := authentication.Authenticationauthnprofile{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		authenticationauthnprofile.Name = data.Name.ValueString()
+	}
+	if !data.Authenticationdomain.IsNull() && !data.Authenticationdomain.IsUnknown() {
+		authenticationauthnprofile.Authenticationdomain = data.Authenticationdomain.ValueString()
+	}
+	if !data.Authenticationhost.IsNull() && !data.Authenticationhost.IsUnknown() {
+		authenticationauthnprofile.Authenticationhost = data.Authenticationhost.ValueString()
+	}
+	if !data.Authenticationlevel.IsNull() && !data.Authenticationlevel.IsUnknown() {
+		authenticationauthnprofile.Authenticationlevel = utils.IntPtr(int(data.Authenticationlevel.ValueInt64()))
 	}
 
 	return authenticationauthnprofile
@@ -115,7 +149,7 @@ func authenticationauthnprofileSetAttrFromGet(ctx context.Context, data *Authent
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

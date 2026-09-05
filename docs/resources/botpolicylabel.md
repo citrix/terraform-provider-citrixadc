@@ -21,6 +21,7 @@ resource "citrixadc_botpolicylabel" "tf_botpolicylabel" {
 
 * `labelname` - (Required) Name for the bot policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after the responder policy label is added. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my responder policy label" or my responder policy label').
 * `comment` - (Optional) Any comments to preserve information about this bot policy label.
+* `newname` - (Optional) New name for the bot policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 
 
 ## Attribute Reference

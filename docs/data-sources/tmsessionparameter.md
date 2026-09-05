@@ -40,3 +40,11 @@ The following attributes are available:
 * `ssocredential` - Use primary or secondary authentication credentials for single sign-on.
 * `ssodomain` - Domain to use for single sign-on.
 * `id` - The id of the tmsessionparameter. It is a system-generated identifier.
+
+### Read-only tmsessionparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_tmsessionparameter` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `name` - Name returned by the appliance for the TM session parameter object.
+* `tmsessionpolicybindtype` - Indicates current bind type (`Classic Policy` / `Advanced Policy`) for TM session policy across all bind entities.
+* `tmsessionpolicycount` - Count of TM session policies across all bind entities.

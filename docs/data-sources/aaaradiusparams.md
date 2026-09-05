@@ -58,3 +58,12 @@ The following attributes are available:
 * `callingstationid` - Send Calling-Station-ID of the client to the RADIUS server. Possible values: [ ENABLED, DISABLED ]
 * `tunnelendpointclientip` - Send Tunnel Endpoint Client IP address to the RADIUS server. Possible values: [ ENABLED, DISABLED ]
 * `id` - The id of the aaaradiusparams. It is a system-generated identifier.
+
+### Read-only aaaradiusparams metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaaradiusparams` resource) and are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `groupauthname` - Attribute name for group extraction from the RADIUS server.
+* `ipaddress` - IP Address.
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.

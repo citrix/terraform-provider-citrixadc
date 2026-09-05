@@ -1,9 +1,76 @@
 package authenticationoauthaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AuthenticationoauthactionDataSourceModel is the data-source-specific model,
+// decoupled from AuthenticationoauthactionResourceModel. A data source is a pure
+// read surface (Read only; no plan/apply lifecycle), so it can expose the FULL
+// GET projection: the read/write attributes (as Computed outputs) AND the
+// read-only attributes the resource deliberately omits. Every non-key attribute
+// is Computed; the Framework's per-attribute model <-> schema reflection requires
+// this model to have exactly the attributes the data-source schema declares.
+type AuthenticationoauthactionDataSourceModel struct {
+	Id                         types.String `tfsdk:"id"`
+	Allowedalgorithms          types.List   `tfsdk:"allowedalgorithms"`
+	Attribute1                 types.String `tfsdk:"attribute1"`
+	Attribute10                types.String `tfsdk:"attribute10"`
+	Attribute11                types.String `tfsdk:"attribute11"`
+	Attribute12                types.String `tfsdk:"attribute12"`
+	Attribute13                types.String `tfsdk:"attribute13"`
+	Attribute14                types.String `tfsdk:"attribute14"`
+	Attribute15                types.String `tfsdk:"attribute15"`
+	Attribute16                types.String `tfsdk:"attribute16"`
+	Attribute2                 types.String `tfsdk:"attribute2"`
+	Attribute3                 types.String `tfsdk:"attribute3"`
+	Attribute4                 types.String `tfsdk:"attribute4"`
+	Attribute5                 types.String `tfsdk:"attribute5"`
+	Attribute6                 types.String `tfsdk:"attribute6"`
+	Attribute7                 types.String `tfsdk:"attribute7"`
+	Attribute8                 types.String `tfsdk:"attribute8"`
+	Attribute9                 types.String `tfsdk:"attribute9"`
+	Attributes                 types.String `tfsdk:"attributes"`
+	Audience                   types.String `tfsdk:"audience"`
+	Authentication             types.String `tfsdk:"authentication"`
+	Authorizationendpoint      types.String `tfsdk:"authorizationendpoint"`
+	Certendpoint               types.String `tfsdk:"certendpoint"`
+	Certfilepath               types.String `tfsdk:"certfilepath"`
+	Clientid                   types.String `tfsdk:"clientid"`
+	Clientsecret               types.String `tfsdk:"clientsecret"`
+	Defaultauthenticationgroup types.String `tfsdk:"defaultauthenticationgroup"`
+	Granttype                  types.String `tfsdk:"granttype"`
+	Graphendpoint              types.String `tfsdk:"graphendpoint"`
+	Idtokendecryptendpoint     types.String `tfsdk:"idtokendecryptendpoint"`
+	Introspecturl              types.String `tfsdk:"introspecturl"`
+	Intunedeviceidexpression   types.String `tfsdk:"intunedeviceidexpression"`
+	Issuer                     types.String `tfsdk:"issuer"`
+	Metadataurl                types.String `tfsdk:"metadataurl"`
+	Name                       types.String `tfsdk:"name"`
+	Oauthmiscflags             types.List   `tfsdk:"oauthmiscflags"`
+	Oauthtype                  types.String `tfsdk:"oauthtype"`
+	Pkce                       types.String `tfsdk:"pkce"`
+	Refreshinterval            types.Int64  `tfsdk:"refreshinterval"`
+	Requestattribute           types.String `tfsdk:"requestattribute"`
+	Resourceuri                types.String `tfsdk:"resourceuri"`
+	Scopes                     types.String `tfsdk:"scopes"`
+	Skewtime                   types.Int64  `tfsdk:"skewtime"`
+	Tenantid                   types.String `tfsdk:"tenantid"`
+	Tokenendpoint              types.String `tfsdk:"tokenendpoint"`
+	Tokenendpointauthmethod    types.String `tfsdk:"tokenendpointauthmethod"`
+	Userinfourl                types.String `tfsdk:"userinfourl"`
+	Usernamefield              types.String `tfsdk:"usernamefield"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/authenticationoauthaction.json). Never settable;
+	// populated from GET.
+	Oauthstatus types.String `tfsdk:"oauthstatus"`
+}
 
 func AuthenticationoauthactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -135,16 +202,8 @@ func AuthenticationoauthactionDataSourceSchema() schema.Schema {
 			"clientsecret": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "Secret string established by user and authorization server",
-			},
-			"clientsecret_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Secret string established by user and authorization server",
-			},
-			"clientsecret_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a clientsecret_wo update.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
 				Optional:    true,
@@ -221,6 +280,11 @@ func AuthenticationoauthactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Resource URL for Oauth configuration.",
 			},
+			"scopes": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "OAuth Scopes expected. Please specify scopes in space separated format as per RFC 6749 (OAuth 2.0). Each scope value can contain any printable ASCII character except double-quote (\") and backslash (\\). Maximum length is 1024.",
+			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
@@ -251,6 +315,80 @@ func AuthenticationoauthactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Attribute in the token from which username should be extracted.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"oauthstatus": schema.StringAttribute{
+				Computed:    true,
+				Description: "Describes status information of oauth server. Possible values = INIT, CERTFETCH, AADFORGRAPH, GRAPH, AADFORMDM, MDMINFO, COMPLETE",
+			},
 		},
 	}
+}
+
+// authenticationoauthactionDataSourceSetAttrFromGet projects a NITRO
+// authenticationoauthaction GET response onto the data-source model. Because a
+// data source has no plan/apply reconciliation, attributes are simply filled from
+// the GET (or left Null when the GET omits them). The shared utils.MapGet*
+// helpers implement that projection.
+func authenticationoauthactionDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationoauthactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In authenticationoauthactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Allowedalgorithms = utils.MapGetStringList(g, "allowedalgorithms")
+	data.Attribute1 = utils.MapGetString(g, "attribute1")
+	data.Attribute10 = utils.MapGetString(g, "attribute10")
+	data.Attribute11 = utils.MapGetString(g, "attribute11")
+	data.Attribute12 = utils.MapGetString(g, "attribute12")
+	data.Attribute13 = utils.MapGetString(g, "attribute13")
+	data.Attribute14 = utils.MapGetString(g, "attribute14")
+	data.Attribute15 = utils.MapGetString(g, "attribute15")
+	data.Attribute16 = utils.MapGetString(g, "attribute16")
+	data.Attribute2 = utils.MapGetString(g, "attribute2")
+	data.Attribute3 = utils.MapGetString(g, "attribute3")
+	data.Attribute4 = utils.MapGetString(g, "attribute4")
+	data.Attribute5 = utils.MapGetString(g, "attribute5")
+	data.Attribute6 = utils.MapGetString(g, "attribute6")
+	data.Attribute7 = utils.MapGetString(g, "attribute7")
+	data.Attribute8 = utils.MapGetString(g, "attribute8")
+	data.Attribute9 = utils.MapGetString(g, "attribute9")
+	data.Attributes = utils.MapGetString(g, "attributes")
+	data.Audience = utils.MapGetString(g, "audience")
+	data.Authentication = utils.MapGetString(g, "authentication")
+	data.Authorizationendpoint = utils.MapGetString(g, "authorizationendpoint")
+	data.Certendpoint = utils.MapGetString(g, "certendpoint")
+	data.Certfilepath = utils.MapGetString(g, "certfilepath")
+	data.Clientid = utils.MapGetString(g, "clientid")
+	data.Defaultauthenticationgroup = utils.MapGetString(g, "defaultauthenticationgroup")
+	data.Granttype = utils.MapGetString(g, "granttype")
+	data.Graphendpoint = utils.MapGetString(g, "graphendpoint")
+	data.Idtokendecryptendpoint = utils.MapGetString(g, "idtokendecryptendpoint")
+	data.Introspecturl = utils.MapGetString(g, "introspecturl")
+	data.Intunedeviceidexpression = utils.MapGetString(g, "intunedeviceidexpression")
+	data.Issuer = utils.MapGetString(g, "issuer")
+	data.Metadataurl = utils.MapGetString(g, "metadataurl")
+	data.Oauthmiscflags = utils.MapGetStringList(g, "oauthmiscflags")
+	data.Oauthtype = utils.MapGetString(g, "oauthtype")
+	data.Pkce = utils.MapGetString(g, "pkce")
+	data.Refreshinterval = utils.MapGetInt64(g, "refreshinterval")
+	data.Requestattribute = utils.MapGetString(g, "requestattribute")
+	data.Resourceuri = utils.MapGetString(g, "resourceuri")
+	data.Scopes = utils.MapGetString(g, "scopes")
+	data.Skewtime = utils.MapGetInt64(g, "skewtime")
+	data.Tenantid = utils.MapGetString(g, "tenantid")
+	data.Tokenendpoint = utils.MapGetString(g, "tokenendpoint")
+	data.Tokenendpointauthmethod = utils.MapGetString(g, "tokenendpointauthmethod")
+	data.Userinfourl = utils.MapGetString(g, "userinfourl")
+	data.Usernamefield = utils.MapGetString(g, "usernamefield")
+
+	// clientsecret is a secret input the GET never returns -> Null.
+	data.Clientsecret = types.StringNull()
+
+	// Read-only attributes.
+	data.Oauthstatus = utils.MapGetString(g, "oauthstatus")
 }

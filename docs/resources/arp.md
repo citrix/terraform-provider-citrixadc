@@ -37,3 +37,12 @@ resource "citrixadc_arp" "tf_arp" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the arp. It has the same value as the `ipaddress` attribute.
+
+
+## Import
+
+A arp can be imported using its ipaddress, e.g.
+
+```shell
+terraform import citrixadc_arp.tf_arp <ipaddress>
+```

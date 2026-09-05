@@ -104,9 +104,11 @@ func (r *AuthenticationradiusactionResource) Schema(ctx context.Context, req res
 				Description: "Vendor ID of the intranet IP attribute in the RADIUS response.\nNOTE: A value of 0 indicates that the attribute is not vendor encoded.",
 			},
 			"messageauthenticator": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("ON"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "ON"},
+				},
 				Description: "Control whether the Message-Authenticator attribute is included in a RADIUS Access-Request packet.",
 			},
 			"name": schema.StringAttribute{

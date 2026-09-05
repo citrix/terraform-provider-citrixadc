@@ -332,6 +332,14 @@ func (r *AuthenticationldapactionResource) Update(ctx context.Context, req resou
 			hasChange = true
 		}
 	}
+	if !data.Passwordlessmgmtaccess.Equal(state.Passwordlessmgmtaccess) {
+		tflog.Debug(ctx, fmt.Sprintf("passwordlessmgmtaccess has changed for authenticationldapaction"))
+		if config.Passwordlessmgmtaccess.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "passwordlessmgmtaccess")
+		} else {
+			hasChange = true
+		}
+	}
 	if !data.Pushservice.Equal(state.Pushservice) {
 		tflog.Debug(ctx, fmt.Sprintf("pushservice has changed for authenticationldapaction"))
 		hasChange = true

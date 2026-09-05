@@ -1,8 +1,32 @@
 package aaagroup_auditsyslogpolicy_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AaagroupAuditsyslogpolicyBindingDataSourceModel is the data-source-specific
+// model, decoupled from the resource model so the data source can expose the
+// FULL GET projection: the existing lookup/config attributes (as Computed
+// outputs) PLUS the read-only attributes the resource intentionally omits.
+type AaagroupAuditsyslogpolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Groupname              types.String `tfsdk:"groupname"` // Required lookup key
+	Policy                 types.String `tfsdk:"policy"`    // Required lookup key
+	Priority               types.Int64  `tfsdk:"priority"`
+	Type                   types.String `tfsdk:"type"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/aaagroup_auditsyslogpolicy_binding.json).
+	Acttype types.Int64 `tfsdk:"acttype"`
+}
 
 func AaagroupAuditsyslogpolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -33,6 +57,38 @@ func AaagroupAuditsyslogpolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Bindpoint to which the policy is bound.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source.
+			"acttype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Bound policy action type.",
+			},
 		},
 	}
+}
+
+// aaagroup_auditsyslogpolicy_bindingDataSourceSetAttrFromGet projects a NITRO GET
+// response onto the data-source model. Attributes are simply filled from the GET
+// (or left Null when the GET omits them) via the shared utils.MapGet* helpers.
+func aaagroup_auditsyslogpolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *AaagroupAuditsyslogpolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In aaagroup_auditsyslogpolicy_bindingDataSourceSetAttrFromGet Function")
+
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	// groupname is the parent lookup key; preserve the config value when the
+	// binding GET response does not echo it back.
+	if v := utils.MapGetString(g, "groupname"); !v.IsNull() {
+		data.Groupname = v
+	}
+	data.Policy = utils.MapGetString(g, "policy")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Type = utils.MapGetString(g, "type")
+
+	// Read-only attributes.
+	data.Acttype = utils.MapGetInt64(g, "acttype")
+
+	// Set ID: comma-separated key:UrlEncode(value) pairs.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("groupname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Groupname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policy:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policy.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

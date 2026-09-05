@@ -38,3 +38,13 @@ In addition to the arguments above, the following attributes are exported:
 * `kvmvirtiomultiqueue` - Multi-queue setting for KVM VPX with virtio NICs. Options: YES (use multiple queues), NO (use single queue).
 * `masterclockcpu1` - (Deprecated) Master clock CPU setting.
 
+### Read-only nsvpxparam metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsvpxparam` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `vpxenvironment` - Shows the VPX running environment (VPX, AWSCLOUD, OPENSTACKCLOUD, AZURECLOUD, GOOGLECLOUD, ALICLOUD, IBMCLOUD).
+* `memorystatus` - Provides the information about memory status (Sufficent, Insufficent).
+* `cloudproductcode` - Cloud Product Code Description.
+* `vpxoemcode` - OEM Distribution Code.
+* `technicalsupportpin` - Technical Support PIN for cloud subscription VMs.
+

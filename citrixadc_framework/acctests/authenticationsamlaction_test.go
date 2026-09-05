@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationsamlaction_add = `
@@ -79,6 +81,193 @@ func TestAccAuthenticationsamlaction_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAuthenticationsamlaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlaction.tf_samlaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsamlaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationsamlaction.Type(), "tf_samlaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationsamlaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationsamlaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsamlaction.tf_samlaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationsamlaction_add},
+			{
+				Config:                  testAccAuthenticationsamlaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationsamlaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationsamlactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationsamlaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlactionExist("citrixadc_authenticationsamlaction.tf_samlaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationsamlaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsamlactionExist("citrixadc_authenticationsamlaction.tf_samlaction", nil)),
+			},
+		},
+	})
+}
+
+// The unset test exercises the type-independent unset-eligible attributes:
+// every attribute wired into attributesToUnset that has a documented NITRO
+// default. Step 1 sets them to valid non-default values; step 2 removes them
+// from config, so the provider must unset them (revert to NITRO defaults).
+const testAccAuthenticationsamlaction_unset_step1 = `
+	resource "citrixadc_authenticationsamlaction" "tf_unset" {
+		name                           = "tf_test_samlaction_unset"
+		metadataurl                    = "http://www.example.com"
+		samltwofactor                  = "ON"
+		signaturealg                   = "RSA-SHA1"
+		digestmethod                   = "SHA1"
+		requestedauthncontext          = "minimum"
+		samlbinding                    = "REDIRECT"
+		sendthumbprint                 = "ON"
+		enforceusername                = "OFF"
+		forceauthn                     = "ON"
+		storesamlresponse              = "ON"
+		logoutbinding                  = "REDIRECT"
+		skewtime                       = 10
+		samlacsindex                   = 100
+		attributeconsumingserviceindex = 100
+		samlrejectunsignedassertion    = "STRICT"
+	}
+`
+
+const testAccAuthenticationsamlaction_unset_step2 = `
+	resource "citrixadc_authenticationsamlaction" "tf_unset" {
+		name        = "tf_test_samlaction_unset"
+		metadataurl = "http://www.example.com"
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccAuthenticationsamlaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsamlactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAuthenticationsamlaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationsamlactionExist("citrixadc_authenticationsamlaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "samltwofactor", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "signaturealg", "RSA-SHA1"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "digestmethod", "SHA1"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "requestedauthncontext", "minimum"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "samlbinding", "REDIRECT"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "sendthumbprint", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "enforceusername", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "forceauthn", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "storesamlresponse", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "logoutbinding", "REDIRECT"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "skewtime", "10"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "samlacsindex", "100"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "attributeconsumingserviceindex", "100"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "samlrejectunsignedassertion", "STRICT"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAuthenticationsamlaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationsamlactionExist("citrixadc_authenticationsamlaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "samltwofactor", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "signaturealg", "RSA-SHA256"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "digestmethod", "SHA256"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "requestedauthncontext", "exact"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "samlbinding", "POST"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "sendthumbprint", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "enforceusername", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "forceauthn", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "storesamlresponse", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "logoutbinding", "POST"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "skewtime", "5"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "samlacsindex", "255"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "attributeconsumingserviceindex", "255"),
+					resource.TestCheckResourceAttr("citrixadc_authenticationsamlaction.tf_unset", "samlrejectunsignedassertion", "ON"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationsamlactionADCValue("tf_test_samlaction_unset", "samltwofactor", "OFF"),
+					testAccCheckAuthenticationsamlactionADCValue("tf_test_samlaction_unset", "samlbinding", "POST"),
+					testAccCheckAuthenticationsamlactionADCValue("tf_test_samlaction_unset", "skewtime", "5"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationsamlactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationsamlactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationsamlaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationsamlaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationsamlaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckAuthenticationsamlactionExist(n string, id *string) resource.TestCheckFunc {
@@ -179,6 +368,12 @@ func TestAccAuthenticationsamlactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "digestmethod", "SHA1"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "signaturealg", "RSA-SHA256"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "statechecks", "false"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "id"),
+					// Read-only metadata exposed only by the data source.
+					// metadataimportstatus is a status field with a documented default
+					// (SUCCESS), always populated.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsamlaction.tf_samlaction_ds", "metadataimportstatus"),
 				),
 			},
 		},

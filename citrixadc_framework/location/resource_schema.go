@@ -33,7 +33,11 @@ func (r *LocationResource) Schema(ctx context.Context, req resource.SchemaReques
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "The ID of the location resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
+			// SDK v2: Required + ForceNew
 			"ipfrom": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -41,6 +45,7 @@ func (r *LocationResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 				Description: "First IP address in the range, in dotted decimal notation.",
 			},
+			// SDK v2: Required + ForceNew
 			"ipto": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -48,22 +53,27 @@ func (r *LocationResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 				Description: "Last IP address in the range, in dotted decimal notation.",
 			},
+			// SDK v2: Optional + Computed + ForceNew
 			"latitude": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Numerical value, in degrees, specifying the latitude of the geographical location of the IP address-range.\nNote: Longitude and latitude parameters are used for selecting a service with the static proximity GSLB method. If they are not specified, selection is based on the qualifiers specified for the location.",
 			},
+			// SDK v2: Optional + Computed + ForceNew
 			"longitude": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Numerical value, in degrees, specifying the longitude of the geographical location of the IP address-range.\nNote: Longitude and latitude parameters are used for selecting a service with the static proximity GSLB method. If they are not specified, selection is based on the qualifiers specified for the location.",
 			},
+			// SDK v2: Required + ForceNew
 			"preferredlocation": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -75,8 +85,8 @@ func (r *LocationResource) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func locationGetThePayloadFromtheConfig(ctx context.Context, data *LocationResourceModel) basic.Location {
-	tflog.Debug(ctx, "In locationGetThePayloadFromtheConfig Function")
+func locationGetThePayloadFromthePlan(ctx context.Context, data *LocationResourceModel) basic.Location {
+	tflog.Debug(ctx, "In locationGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	location := basic.Location{}
@@ -86,10 +96,10 @@ func locationGetThePayloadFromtheConfig(ctx context.Context, data *LocationResou
 	if !data.Ipto.IsNull() {
 		location.Ipto = data.Ipto.ValueString()
 	}
-	if !data.Latitude.IsNull() {
+	if !data.Latitude.IsNull() && !data.Latitude.IsUnknown() {
 		location.Latitude = utils.IntPtr(int(data.Latitude.ValueInt64()))
 	}
-	if !data.Longitude.IsNull() {
+	if !data.Longitude.IsNull() && !data.Longitude.IsUnknown() {
 		location.Longitude = utils.IntPtr(int(data.Longitude.ValueInt64()))
 	}
 	if !data.Preferredlocation.IsNull() {
@@ -99,10 +109,50 @@ func locationGetThePayloadFromtheConfig(ctx context.Context, data *LocationResou
 	return location
 }
 
+// locationSetAttrFromGet is the RESOURCE state setter.
+//
+// It intentionally does NOT overwrite preferredlocation from the GET response:
+// the ADC normalizes preferredlocation (e.g. "city" -> "city.*.*.*.*.*"), and
+// since preferredlocation is a Required (non-Computed) attribute, overwriting it
+// with the normalized value would produce an "inconsistent result after apply"
+// error. This matches the SDK v2 resource, which also skipped reading it back.
+// It also does not touch data.Id (set in Create / preserved from state in Read).
 func locationSetAttrFromGet(ctx context.Context, data *LocationResourceModel, getResponseData map[string]interface{}) *LocationResourceModel {
 	tflog.Debug(ctx, "In locationSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["ipfrom"]; ok && val != nil {
+		data.Ipfrom = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["ipto"]; ok && val != nil {
+		data.Ipto = types.StringValue(val.(string))
+	}
+	if val, ok := getResponseData["latitude"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Latitude = types.Int64Value(intVal)
+		}
+	} else if data.Latitude.IsUnknown() {
+		// Only resolve unknown -> null. Never clobber a configured value that
+		// NITRO omits from GET (omit-on-default trap).
+		data.Latitude = types.Int64Null()
+	}
+	if val, ok := getResponseData["longitude"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Longitude = types.Int64Value(intVal)
+		}
+	} else if data.Longitude.IsUnknown() {
+		data.Longitude = types.Int64Null()
+	}
+	// preferredlocation deliberately preserved (see doc comment above).
+
+	return data
+}
+
+// locationSetAttrFromGetForDatasource is the DATASOURCE state setter.
+// Unlike the resource setter it copies every attribute from the GET response
+// (including the ADC-normalized preferredlocation) and sets the datasource ID.
+func locationSetAttrFromGetForDatasource(ctx context.Context, data *LocationResourceModel, getResponseData map[string]interface{}) *LocationResourceModel {
+	tflog.Debug(ctx, "In locationSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["ipfrom"]; ok && val != nil {
 		data.Ipfrom = types.StringValue(val.(string))
 	} else {
@@ -133,8 +183,7 @@ func locationSetAttrFromGet(ctx context.Context, data *LocationResourceModel, ge
 		data.Preferredlocation = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the datasource (single unique attr: ipfrom)
 	data.Id = types.StringValue(data.Ipfrom.ValueString())
 
 	return data

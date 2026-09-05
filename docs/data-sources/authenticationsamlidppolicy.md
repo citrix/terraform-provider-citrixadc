@@ -40,10 +40,9 @@ In addition to the arguments, the following attributes are available:
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.
 * `id` - The id of the authenticationsamlidppolicy. It has the same value as the `name` attribute.
 
-## Import
+### Read-only authenticationsamlidppolicy metadata
 
-A authenticationsamlidppolicy can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationsamlidppolicy` resource). They are Computed/GET-only and are `null` when the appliance omits them.
 
-```shell
-terraform import citrixadc_authenticationsamlidppolicy.tf_samlidppolicy tf_samlidppolicy
-```
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `hits` - Number of hits.

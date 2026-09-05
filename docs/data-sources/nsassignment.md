@@ -37,3 +37,11 @@ In addition to the argument above, the following attributes are exported:
 * `set` - Right hand side of the assignment. The expression is evaluated and assigned to the left hand variable.
 * `sub` - Right hand side of the assignment. The expression is evaluated and subtracted from the left hand variable.
 * `variable` - Left hand side of the assignment, of the form $variable-name (for a singleton variable) or $variable-name[key-expression], where key-expression is an expression that evaluates to a text string and provides the key to select a map entry.
+
+### Read-only nsassignment metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsassignment` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the action has been taken.
+* `undefhits` - The number of times the action resulted in UNDEF.
+* `referencecount` - The number of references to the action.

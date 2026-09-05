@@ -173,6 +173,10 @@ An `sslpolicybinding` block may contain the following attributes:
 * `tcpprobeport` - (Optional) Port number for external TCP probe. NetScaler provides support for external TCP health check of the vserver status over the selected port. This option is only supported for vservers assigned with an IPAddress or ipset.
 * `timeout` - (Optional) Time period for which a persistence session is in effect.
 * `v6persistmasklen` - (Optional) Persistence mask for IP based persistence types, for IPv6 virtual servers.
+* `aigwprofilename` - (Optional) Name of the AIGW frontend profile. For the content switching vserver to function as AI gateway, this parameter must be set. Once this parameter is set using add cs vserver, it cannot be unset. Minimum length = 1 Maximum length = 255
+* `mcpprofilename` - (Optional) Name of the MCP profile to attach to this cs vserver. Enables MCP protocol processing.
+* `newname` - (Optional) New name for the virtual server. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at sign (@), equal sign (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my name" or 'my name').
+* `wasmmodule` - (Optional) Name of the WASM module to assign to this virtual server.
 
 
 ## Attribute Reference

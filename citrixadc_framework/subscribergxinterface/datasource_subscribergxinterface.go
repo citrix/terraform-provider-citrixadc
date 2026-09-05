@@ -35,7 +35,7 @@ func (d *SubscribergxinterfaceDataSource) Schema(ctx context.Context, req dataso
 }
 
 func (d *SubscribergxinterfaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SubscribergxinterfaceResourceModel
+	var data SubscribergxinterfaceDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *SubscribergxinterfaceDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	subscribergxinterfaceSetAttrFromGet(ctx, &data, getResponseData)
+	subscribergxinterfaceDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

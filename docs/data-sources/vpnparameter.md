@@ -121,3 +121,13 @@ In addition to the arguments, the following attributes are available:
 * `winsip` - WINS server IP address to add to Citrix Gateway for name resolution.
 * `wiportalmode` - Layout on the Access Interface. The COMPACT value indicates the use of small icons.
 * `id` - The id of the vpnparameter resource. It is a system-generated identifier.
+
+### Read-only vpnparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnparameter` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `name` - The VPN name.
+* `clientidletimeoutwarning` - The time after which the client gets a timeout warning, in minutes.
+* `stricturlcheck` - Enables or disables the strict endpoint or URL checking with respect to the configuration. Possible values = ENABLED, DISABLED.
+* `vpnsessionpolicybindtype` - Indicates current bind type (Classic/Advanced) for VPN session policy across all bind entities. Possible values = Classic Policy, Advanced Policy.
+* `vpnsessionpolicycount` - Count of VPN session policies across all bind entities.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,16 +56,17 @@ func (r *NsratecontrolResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating nsratecontrol resource")
 
-	// nsratecontrol := nsratecontrolGetThePayloadFromtheConfig(ctx, &data)
+	nsratecontrol := nsratecontrolGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsratecontrol, got error: %s", err))
-	//	 return
-	// }
+	// Make API call. nsratecontrol is a singleton (unnamed) configuration resource,
+	// so it is configured via UpdateUnnamedResource (matches SDK v2 behavior).
+	err := r.client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsratecontrol, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Static ID for this singleton configuration resource
 	data.Id = types.StringValue("nsratecontrol-config")
 
 	tflog.Trace(ctx, "Created nsratecontrol resource")
@@ -95,10 +97,12 @@ func (r *NsratecontrolResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *NsratecontrolResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NsratecontrolResourceModel
+	var data, config, state NsratecontrolResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan and config into the models
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +110,65 @@ func (r *NsratecontrolResource) Update(ctx context.Context, req resource.UpdateR
 
 	tflog.Debug(ctx, "Updating nsratecontrol resource")
 
-	// Create API request body from the model
-	// nsratecontrol := nsratecontrolGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve ID from prior state
+	data.Id = types.StringValue("nsratecontrol-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsratecontrol, got error: %s", err))
-	//	 return
-	// }
+	// Determine which attributes changed and which were removed from config
+	// (so they should be unset back to the appliance defaults).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Icmpthreshold.Equal(state.Icmpthreshold) {
+		if config.Icmpthreshold.IsNull() {
+			attributesToUnset = append(attributesToUnset, "icmpthreshold")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Tcprstthreshold.Equal(state.Tcprstthreshold) {
+		if config.Tcprstthreshold.IsNull() {
+			attributesToUnset = append(attributesToUnset, "tcprstthreshold")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Tcpthreshold.Equal(state.Tcpthreshold) {
+		if config.Tcpthreshold.IsNull() {
+			attributesToUnset = append(attributesToUnset, "tcpthreshold")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Udpthreshold.Equal(state.Udpthreshold) {
+		if config.Udpthreshold.IsNull() {
+			attributesToUnset = append(attributesToUnset, "udpthreshold")
+		} else {
+			hasChange = true
+		}
+	}
 
-	tflog.Trace(ctx, "Updated nsratecontrol resource")
+	if hasChange {
+		// Create API request body from the model
+		nsratecontrol := nsratecontrolGetThePayloadFromtheConfig(ctx, &data)
+
+		// Make API call (singleton resource -> UpdateUnnamedResource)
+		err := r.client.UpdateUnnamedResource(service.Nsratecontrol.Type(), &nsratecontrol)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsratecontrol, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nsratecontrol resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nsratecontrol resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nsratecontrol.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nsratecontrol attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNsratecontrolFromApi(ctx, &data, &resp.Diagnostics)

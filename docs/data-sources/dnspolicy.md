@@ -31,3 +31,13 @@ In addition to the argument, the following attributes are exported:
 * `preferredloclist` - The location list in priority order used for the given policy.
 * `rule` - Expression against which DNS traffic is evaluated.
 * `viewname` - The view name that must be used for the given policy.
+
+### Read-only dnspolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnspolicy` resource). Any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the policy has been hit.
+* `undefhits` - Number of Undef hits.
+* `description` - Description of the policy.
+* `builtin` - Flag to determine whether DNS policy is default or not. A list of strings. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ].
+* `feature` - The feature to be checked while applying this config.

@@ -140,6 +140,9 @@ A cipherbindings block supports the following:
 
 * `ciphername` - (Required) Cipher name.
 * `cipherpriority` - (Optional) This indicates priority assigned to the particular cipher.
+* `allowlegacykdf` - (Optional) FIPS 140-3 certification requires all handshakes without EMS be blocked. Such KDFs are allowed by default. This setting is to allow/disallow such legacy KDFs when needed. This setting applies to both frontend and backend SSL profiles.
+* `dynamicclientcert` - (Optional) Enable or disable Dynamic Client Certificate Generation for SSL sessions.
+* `strictclientekucheck` - (Optional) Enable strict EKU extension check during client authentication.
 
 
 

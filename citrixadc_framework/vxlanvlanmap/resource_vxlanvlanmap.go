@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *VxlanvlanmapResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating vxlanvlanmap resource")
 
-	// vxlanvlanmap := vxlanvlanmapGetThePayloadFromtheConfig(ctx, &data)
+	vxlanvlanmap := vxlanvlanmapGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vxlanvlanmap.Type(), &vxlanvlanmap)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vxlanvlanmap, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vxlanvlanmap-config")
+	// Named resource - use AddResource
+	vxlanvlanmapName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Vxlanvlanmap.Type(), vxlanvlanmapName, &vxlanvlanmap)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vxlanvlanmap, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vxlanvlanmap resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(vxlanvlanmapName)
+
 	// Read the updated state back
-	r.readVxlanvlanmapFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVxlanvlanmapFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vxlanvlanmap not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *VxlanvlanmapResource) Read(ctx context.Context, req resource.ReadReques
 
 	tflog.Debug(ctx, "Reading vxlanvlanmap resource")
 
-	r.readVxlanvlanmapFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVxlanvlanmapFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VxlanvlanmapResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VxlanvlanmapResourceModel
+	var data, state VxlanvlanmapResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,21 @@ func (r *VxlanvlanmapResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vxlanvlanmap resource")
 
-	// Create API request body from the model
-	// vxlanvlanmap := vxlanvlanmapGetThePayloadFromtheConfig(ctx, &data)
+	// vxlanvlanmap has a single ForceNew attribute (name); any name change triggers
+	// RequiresReplace (destroy/create), so Update is never invoked with a changed
+	// attribute. There is nothing to push to NITRO here; just refresh state.
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vxlanvlanmap.Type(), &vxlanvlanmap)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vxlanvlanmap, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated vxlanvlanmap resource")
-
-	// Read the updated state back
-	r.readVxlanvlanmapFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVxlanvlanmapFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vxlanvlanmap not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +152,34 @@ func (r *VxlanvlanmapResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting vxlanvlanmap resource")
 
-	// For vxlanvlanmap, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vxlanvlanmap resource from state")
+	// Named resource - delete using DeleteResource
+	vxlanvlanmapName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Vxlanvlanmap.Type(), vxlanvlanmapName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vxlanvlanmap, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vxlanvlanmap resource")
 }
 
-// Helper function to read vxlanvlanmap data from API
-func (r *VxlanvlanmapResource) readVxlanvlanmapFromApi(ctx context.Context, data *VxlanvlanmapResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vxlanvlanmap.Type(), "")
+// Helper function to read vxlanvlanmap data from API. Returns false if the
+// resource no longer exists on the ADC (so the caller can drop it from state).
+func (r *VxlanvlanmapResource) readVxlanvlanmapFromApi(ctx context.Context, data *VxlanvlanmapResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	vxlanvlanmapName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vxlanvlanmap.Type(), vxlanvlanmapName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vxlanvlanmap, got error: %s", err))
-		return
+		return false
 	}
 
 	vxlanvlanmapSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

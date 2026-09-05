@@ -1,8 +1,67 @@
 package nsacl
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// NsaclDataSourceModel is the data-source-specific model, decoupled from
+// NsaclResourceModel. A data source is a pure read surface, so it exposes the
+// read/write attributes (as Computed outputs) plus the read-only (GET-only)
+// attributes the resource deliberately omits.
+type NsaclDataSourceModel struct {
+	Id              types.String `tfsdk:"id"`
+	Interface       types.String `tfsdk:"interface"`
+	Aclaction       types.String `tfsdk:"aclaction"`
+	Aclname         types.String `tfsdk:"aclname"`
+	Destip          types.Bool   `tfsdk:"destip"`
+	Destipdataset   types.String `tfsdk:"destipdataset"`
+	Destipop        types.String `tfsdk:"destipop"`
+	Destipval       types.String `tfsdk:"destipval"`
+	Destport        types.Bool   `tfsdk:"destport"`
+	Destportdataset types.String `tfsdk:"destportdataset"`
+	Destportop      types.String `tfsdk:"destportop"`
+	Destportval     types.String `tfsdk:"destportval"`
+	Dfdhash         types.String `tfsdk:"dfdhash"`
+	Established     types.Bool   `tfsdk:"established"`
+	Icmpcode        types.Int64  `tfsdk:"icmpcode"`
+	Icmptype        types.Int64  `tfsdk:"icmptype"`
+	Logstate        types.String `tfsdk:"logstate"`
+	Newname         types.String `tfsdk:"newname"`
+	Nodeid          types.Int64  `tfsdk:"nodeid"`
+	Priority        types.Int64  `tfsdk:"priority"`
+	Protocol        types.String `tfsdk:"protocol"`
+	Protocolnumber  types.Int64  `tfsdk:"protocolnumber"`
+	Ratelimit       types.Int64  `tfsdk:"ratelimit"`
+	Srcip           types.Bool   `tfsdk:"srcip"`
+	Srcipdataset    types.String `tfsdk:"srcipdataset"`
+	Srcipop         types.String `tfsdk:"srcipop"`
+	Srcipval        types.String `tfsdk:"srcipval"`
+	Srcmac          types.String `tfsdk:"srcmac"`
+	Srcmacmask      types.String `tfsdk:"srcmacmask"`
+	Srcport         types.Bool   `tfsdk:"srcport"`
+	Srcportdataset  types.String `tfsdk:"srcportdataset"`
+	Srcportop       types.String `tfsdk:"srcportop"`
+	Srcportval      types.String `tfsdk:"srcportval"`
+	State           types.String `tfsdk:"state"`
+	Stateful        types.String `tfsdk:"stateful"`
+	Td              types.Int64  `tfsdk:"td"`
+	Ttl             types.Int64  `tfsdk:"ttl"`
+	Type            types.String `tfsdk:"type"`
+	Vlan            types.Int64  `tfsdk:"vlan"`
+	Vxlan           types.Int64  `tfsdk:"vxlan"`
+
+	// Read-only (GET-only) attributes from the NITRO read-only set
+	// (zion73x_readonly/nsacl.json). Never settable; populated from GET.
+	Hits          types.Int64  `tfsdk:"hits"`
+	Kernelstate   types.String `tfsdk:"kernelstate"`
+	Aclassociate  types.List   `tfsdk:"aclassociate"`
+	Aclchildcount types.Int64  `tfsdk:"aclchildcount"`
+}
 
 func NsaclDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -203,6 +262,90 @@ func NsaclDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "ID of the VXLAN. The Citrix ADC applies the ACL rule only to the incoming packets of the specified VXLAN. If you do not specify a VXLAN ID, the appliance applies the ACL rule to the incoming packets on all VXLANs.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source.
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The hits of this ACL.",
+			},
+			"kernelstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "The commit status of the ACL (APPLIED, NOTAPPLIED, RE-APPLY, ...).",
+			},
+			"aclassociate": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "ACL linked (NAT, FORWARDINGSESSION, NAT64, LSN).",
+			},
+			"aclchildcount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of childs for this ACL.",
+			},
 		},
+	}
+}
+
+// nsaclDataSourceSetAttrFromGet projects a NITRO nsacl GET response onto the
+// data-source model using the shared utils.MapGet* helpers.
+func nsaclDataSourceSetAttrFromGet(ctx context.Context, data *NsaclDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In nsaclDataSourceSetAttrFromGet Function")
+
+	data.Aclname = utils.MapGetString(g, "aclname")
+	// NITRO echoes the interface field under the capitalized "Interface" key.
+	data.Interface = utils.MapGetString(g, "Interface")
+	data.Aclaction = utils.MapGetString(g, "aclaction")
+	data.Destip = utils.MapGetBool(g, "destip")
+	data.Destipdataset = utils.MapGetString(g, "destipdataset")
+	data.Destipop = utils.MapGetString(g, "destipop")
+	data.Destipval = utils.MapGetString(g, "destipval")
+	data.Destport = utils.MapGetBool(g, "destport")
+	data.Destportdataset = utils.MapGetString(g, "destportdataset")
+	data.Destportop = utils.MapGetString(g, "destportop")
+	data.Destportval = utils.MapGetString(g, "destportval")
+	data.Dfdhash = utils.MapGetString(g, "dfdhash")
+	data.Established = utils.MapGetBool(g, "established")
+	data.Icmpcode = utils.MapGetInt64(g, "icmpcode")
+	data.Icmptype = utils.MapGetInt64(g, "icmptype")
+	data.Logstate = utils.MapGetString(g, "logstate")
+	// newname is rename-only and never echoed by GET.
+	data.Newname = types.StringNull()
+	data.Nodeid = utils.MapGetInt64(g, "nodeid")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Protocol = utils.MapGetString(g, "protocol")
+	data.Protocolnumber = utils.MapGetInt64(g, "protocolnumber")
+	data.Ratelimit = utils.MapGetInt64(g, "ratelimit")
+	data.Srcip = utils.MapGetBool(g, "srcip")
+	data.Srcipdataset = utils.MapGetString(g, "srcipdataset")
+	data.Srcipop = utils.MapGetString(g, "srcipop")
+	data.Srcipval = utils.MapGetString(g, "srcipval")
+	data.Srcmac = utils.MapGetString(g, "srcmac")
+	data.Srcmacmask = utils.MapGetString(g, "srcmacmask")
+	data.Srcport = utils.MapGetBool(g, "srcport")
+	data.Srcportdataset = utils.MapGetString(g, "srcportdataset")
+	data.Srcportop = utils.MapGetString(g, "srcportop")
+	data.Srcportval = utils.MapGetString(g, "srcportval")
+	data.State = utils.MapGetString(g, "state")
+	data.Stateful = utils.MapGetString(g, "stateful")
+	// td is a config-supplied key; NITRO omits it for the default traffic
+	// domain (0), so preserve the configured value instead of nulling it.
+	if tdv, tdok := g["td"]; tdok && tdv != nil {
+		if iv, err := utils.ConvertToInt64(tdv); err == nil {
+			data.Td = types.Int64Value(iv)
+		}
+	}
+	data.Ttl = utils.MapGetInt64(g, "ttl")
+	data.Type = utils.MapGetString(g, "type")
+	data.Vlan = utils.MapGetInt64(g, "vlan")
+	data.Vxlan = utils.MapGetInt64(g, "vxlan")
+
+	// Read-only (GET-only) attributes.
+	data.Hits = utils.MapGetInt64(g, "hits")
+	data.Kernelstate = utils.MapGetString(g, "kernelstate")
+	data.Aclassociate = utils.MapGetStringList(g, "aclassociate")
+	data.Aclchildcount = utils.MapGetInt64(g, "aclchildcount")
+
+	// Set ID from the acl name (matching the resource ID format).
+	if v, ok := g["aclname"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
 	}
 }

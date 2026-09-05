@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNssimpleacl6_basic = `
@@ -50,6 +51,34 @@ func TestAccNssimpleacl6_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_nssimpleacl6.tf_nssimpleacl6", "aclaction", "DENY"),
 					resource.TestCheckResourceAttr("citrixadc_nssimpleacl6.tf_nssimpleacl6", "srcipv6", "3ffe:192:168:215::82"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNssimpleacl6_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nssimpleacl6.tf_nssimpleacl6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNssimpleacl6Destroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNssimpleacl6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNssimpleacl6Exist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nssimpleacl6.Type(), "tf_nssimpleacl6"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNssimpleacl6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNssimpleacl6Exist(resAddr, nil)),
 			},
 		},
 	})
@@ -119,6 +148,49 @@ func testAccCheckNssimpleacl6Destroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNssimpleacl6_import(t *testing.T) {
+	const resAddr = "citrixadc_nssimpleacl6.tf_nssimpleacl6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNssimpleacl6Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNssimpleacl6_basic},
+			{
+				Config:                  testAccNssimpleacl6_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ttl"},
+			},
+		},
+	})
+}
+
+func TestAccNssimpleacl6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNssimpleacl6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNssimpleacl6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNssimpleacl6Exist("citrixadc_nssimpleacl6.tf_nssimpleacl6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNssimpleacl6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNssimpleacl6Exist("citrixadc_nssimpleacl6.tf_nssimpleacl6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNssimpleacl6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -130,6 +202,8 @@ func TestAccNssimpleacl6DataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_nssimpleacl6.tf_simpleacl6_ds", "aclname", "tf_simpleacl6_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nssimpleacl6.tf_simpleacl6_ds", "aclaction", "DENY"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nssimpleacl6.tf_simpleacl6_ds", "id"),
 				),
 			},
 		},

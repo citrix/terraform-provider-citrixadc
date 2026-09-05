@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // The vpnvserver participating-entity HCL is reused from acctests/vpnvserver_test.go
@@ -271,8 +271,41 @@ func TestAccVpnvserver_secureprivateaccessurl_binding_DataSource_basic(t *testin
 			{
 				Config: testAccVpnvserver_secureprivateaccessurl_binding_DataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding", "name", "tf.citrix.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding", "secureprivateaccessurl", "https://app.example.com/"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_secureprivateaccessurl_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_secureprivateaccessurl_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_secureprivateaccessurl_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_secureprivateaccessurl_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_secureprivateaccessurl_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_secureprivateaccessurl_binding.Type(), "tf.citrix.example.com", map[string]string{"secureprivateaccessurl": utils.UrlEncode("https://app.example.com/")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_secureprivateaccessurl_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_secureprivateaccessurl_bindingExist(resAddr, nil),
 				),
 			},
 		},

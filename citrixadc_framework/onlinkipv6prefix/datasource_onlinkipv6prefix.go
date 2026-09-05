@@ -35,7 +35,7 @@ func (d *Onlinkipv6prefixDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *Onlinkipv6prefixDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Onlinkipv6prefixResourceModel
+	var data Onlinkipv6prefixDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *Onlinkipv6prefixDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	onlinkipv6prefixSetAttrFromGet(ctx, &data, getResponseData)
+	onlinkipv6prefixDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

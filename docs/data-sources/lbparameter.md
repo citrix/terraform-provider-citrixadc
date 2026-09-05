@@ -61,3 +61,14 @@ In addition to the above arguments, the following attributes are exported:
 * `useportforhashlb` - Include the port number of the service when creating a hash for hash based load balancing methods. With the NO setting, only the IP address of the service is considered when creating a hash. Possible values: `YES`, `NO`.
 * `usesecuredpersistencecookie` - Encode persistence cookie values using SHA2 hash. Possible values: `ENABLED`, `DISABLED`.
 * `vserverspecificmac` - Allow a MAC-mode virtual server to accept traffic returned by an intermediary device, such as a firewall, to which the traffic was previously forwarded by another MAC-mode virtual server. The second virtual server can then distribute that traffic across the destination server farm. Also useful when load balancing Branch Repeater appliances. Possible values: `ENABLED`, `DISABLED`.
+
+### Read-only lbparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbparameter` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `sessionsthreshold` - Upper-limit on the number of persistent sessions set by the administrator for this system.
+* `builtin` - Flag to determine whether the lb parameter configuration is built-in. Possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.
+* `feature` - The feature to be checked while applying this configuration.
+* `adccookieattributewarningmsg` - Describes any configuration issue with respect to the ns variable configured as part of set lb parameter.
+* `lbhashalgowinsize` - Window size used in the LB hashing algorithm (DEFAULT). Default value: 16.
+* `overridepersistencyfororder` - Whether persistency is overridden when order is configured for services or servicegroups. Possible values: `YES`, `NO`. Default value: NO.

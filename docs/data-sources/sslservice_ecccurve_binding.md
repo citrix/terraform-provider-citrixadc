@@ -32,4 +32,4 @@ output "ecccurvename" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the sslservice_ecccurve_binding. It is a system-generated identifier.
+* `id` - The id of the sslservice_ecccurve_binding. It is the concatenation of the `servicename` and `ecccurvename` attributes separated by a comma.

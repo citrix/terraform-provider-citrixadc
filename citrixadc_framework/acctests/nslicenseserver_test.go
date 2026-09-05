@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccNslicenseserver_basic(t *testing.T) {
@@ -121,6 +122,58 @@ resource "citrixadc_nslicenseserver" "tf_licenseserver" {
 }
 `
 
+func TestAccNslicenseserver_selfHealing(t *testing.T) {
+	t.Skip("Skipping test because this needs changes for LAS")
+	const resAddr = "citrixadc_nslicenseserver.tf_licenseserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslicenseserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNslicenseserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Nslicenseserver.Type(), "", []string{"servername:10.101.132.128"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNslicenseserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseserverExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNslicenseserver_import(t *testing.T) {
+	t.Skip("Skipping test because this needs changes for LAS")
+	if isCpxRun {
+		t.Skip("Feature not supported in CPX")
+	}
+	const resAddr = "citrixadc_nslicenseserver.tf_licenseserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNslicenseserverDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNslicenseserver_basic},
+			{
+				Config:                  testAccNslicenseserver_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 func TestAccNslicenseserverDataSource_basic(t *testing.T) {
 	t.Skip("Skipping test because this needs changes for LAS")
 	if isCpxRun {
@@ -133,9 +186,35 @@ func TestAccNslicenseserverDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNslicenseserverDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_nslicenseserver.tf_licenseserver_datasource", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslicenseserver.tf_licenseserver_datasource", "servername", "10.101.132.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_nslicenseserver.tf_licenseserver_datasource", "port", "27000"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNslicenseserver_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("Skipping test because this needs changes for LAS")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNslicenseserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNslicenseserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseserverExist("citrixadc_nslicenseserver.tf_licenseserver", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNslicenseserver_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNslicenseserverExist("citrixadc_nslicenseserver.tf_licenseserver", nil)),
 			},
 		},
 	})

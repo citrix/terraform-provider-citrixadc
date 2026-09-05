@@ -51,10 +51,10 @@ In addition to the arguments, the following attributes are available:
   * ICAP - Sends ICAP request to the configured ICAP server.
 * `id` - The id of the contentinspectioncallout. It has the same value as the `name` attribute.
 
-## Import
+### Read-only contentinspectioncallout metadata
 
-A contentinspectioncallout can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_contentinspectioncallout` resource) and are Computed / GET-only. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_contentinspectioncallout.tf_contentinspectioncallout my_ci_callout
-```
+* `hits` - Total hits.
+* `undefhits` - Total undefs.
+* `undefreason` - Reason for last undef.

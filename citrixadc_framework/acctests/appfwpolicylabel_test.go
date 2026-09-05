@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwpolicylabel_basic = `
@@ -124,6 +125,77 @@ func testAccCheckAppfwpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwpolicylabel.Type(), "tfAcc_appfwpolicylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwpolicylabel_basic},
+			{
+				Config:                  testAccAppfwpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppfwpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppfwpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabelExist("citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwpolicylabelExist("citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -135,6 +207,8 @@ func TestAccAppfwpolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", "labelname", "tfAcc_appfwpolicylabel"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", "policylabeltype", "http_req"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwpolicylabel.tfAcc_appfwpolicylabel", "id"),
 				),
 			},
 		},

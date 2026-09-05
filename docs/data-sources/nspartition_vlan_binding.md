@@ -35,4 +35,4 @@ output "vlan" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nspartition_vlan_binding. It is the concatenation of `partitionname` and `vlan` attributes separated by comma.
+* `id` - The id of the nspartition_vlan_binding. It is the concatenation of `partitionname` and `vlan` attributes separated by a comma.

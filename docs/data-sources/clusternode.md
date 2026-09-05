@@ -58,6 +58,33 @@ In addition to the argument above, the following attributes are exported:
 
 * `tunnelmode` - To set the tunnel mode.
 
+### Read-only clusternode metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_clusternode` resource). Any attribute the appliance does not return is `null`.
+
+* `clusterhealth` - Node clusterd state.
+* `effectivestate` - Node effective health state. Possible values: `UP`, `NOT UP`, `UNKNOWN`, `INIT`.
+* `operationalsyncstate` - Node Operational Reconciliation state.
+* `syncfailurereason` - Additional information along with cluster sync status.
+* `masterstate` - Node Master state. Possible values: `INACTIVE`, `ACTIVE`, `UNKNOWN`.
+* `health` - Node Health state.
+* `syncstate` - Whether synchronization of cluster configurations on the node is enabled/disabled. Possible values: `ENABLED`, `DISABLED`.
+* `isconfigurationcoordinator` - Whether the node is configuration coordinator (CCO).
+* `islocalnode` - Whether it is the local node.
+* `nodersskeymismatch` - Whether there is an RSS key mismatch at cluster node level.
+* `nodelicensemismatch` - Whether there is a License mismatch at cluster node level.
+* `nodejumbonotsupported` - Whether the Jumbo framework is not supported at cluster node level.
+* `nodelist` - Nodelist for displaying Heartbeat not seen interfaces on a cluster node. A list of strings.
+* `ifaceslist` - Interface list corresponding to `nodelist` for Heartbeat not seen interfaces on a cluster node. A list of strings.
+* `enabledifaces` - Enabled Interfaces on a cluster node.
+* `disabledifaces` - Disabled Interfaces on a cluster node.
+* `partialfailifaces` - Partial Failure Interfaces on a cluster node.
+* `hamonifaces` - Hamon Interfaces on a cluster node.
+* `name` - Name of the state specific nodegroup.
+* `cfgflags` - Flag indicating whether the node is bound to a cluster nodegroup.
+* `routemonitor` - The IP address (IPv4 or IPv6).
+* `netmask` - The netmask.
+
 ## Common Use Cases
 
 ### Retrieve Cluster Node Information

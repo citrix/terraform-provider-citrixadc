@@ -36,12 +36,3 @@ In addition to the arguments, the following attributes are available:
 * `network6` - IPv6 address of the Citrix ADC AFTR device
 * `type` - IPv6 translation type for which to set the LSN IP6 profile parameters.
 * `id` - The id of the lsnip6profile. It has the same value as the `name` attribute.
-
-
-## Import
-
-A lsnip6profile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_lsnip6profile.tf_lsnaip6profile_ds my_lsn_ip6profile_ds
-```

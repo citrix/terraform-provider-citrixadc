@@ -35,7 +35,7 @@ func (d *AuthenticationldapactionDataSource) Schema(ctx context.Context, req dat
 }
 
 func (d *AuthenticationldapactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationldapactionResourceModel
+	var data AuthenticationldapactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *AuthenticationldapactionDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	authenticationldapactionSetAttrFromGet(ctx, &data, getResponseData)
+	authenticationldapactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

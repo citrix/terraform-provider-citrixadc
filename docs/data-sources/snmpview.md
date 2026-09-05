@@ -34,3 +34,10 @@ The following attributes are available:
 * `subtree` - A particular branch (subtree) of the MIB tree that you want to associate with this SNMPv3 view.
 * `type` - Include or exclude the subtree, specified by the subtree parameter, in or from this view. This setting can be useful when you have included a subtree, such as A, in an SNMPv3 view and you want to exclude a specific subtree of A, such as B, from the SNMPv3 view.
 * `id` - The id of the snmpview. It is a system-generated identifier.
+
+### Read-only snmpview metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_snmpview` resource) and are Computed. Any attribute the appliance does not return is `null`.
+
+* `storagetype` - The storage type for this view (for example `volatile`, `nonVolatile`).
+* `status` - The status of this view (for example `active`).

@@ -46,3 +46,9 @@ In addition to the arguments, the following attributes are available:
 * `newname` - New name for the collector. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at(@), equals (=), and hyphen (-) characters.  The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my appflow coll" or 'my appflow coll').
 * `port` - Port on which the collector listens.
 * `transport` - Type of collector: either logstream or ipfix or rest.
+
+### Read-only appflowcollector metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appflowcollector` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `state` - Appflow collector state. Possible values: [ UP, DOWN, UNKNOWN, BUSY, OUT OF SERVICE, GOING OUT OF SERVICE, DOWN WHEN GOING OUT OF SERVICE, NS_EMPTY_STR, Unknown, DISABLED ].

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppqoecustomresp_basic = `
@@ -160,6 +161,77 @@ func testAccCheckAppqoecustomrespDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAppqoecustomresp_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appqoecustomresp.tf_appqoecustomresp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoecustomrespDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppqoecustomresp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appqoecustomresp.Type(), "my_appqoecustomresp"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppqoecustomresp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppqoecustomresp_import(t *testing.T) {
+	const resAddr = "citrixadc_appqoecustomresp.tf_appqoecustomresp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppqoecustomrespDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppqoecustomresp_basic},
+			{
+				Config:                  testAccAppqoecustomresp_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"src"},
+			},
+		},
+	})
+}
+
+func TestAccAppqoecustomresp_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppqoecustomrespDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppqoecustomresp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist("citrixadc_appqoecustomresp.tf_appqoecustomresp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppqoecustomresp_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppqoecustomrespExist("citrixadc_appqoecustomresp.tf_appqoecustomresp", nil)),
+			},
+		},
+	})
 }
 
 func TestAccAppqoecustomrespDataSource_basic(t *testing.T) {

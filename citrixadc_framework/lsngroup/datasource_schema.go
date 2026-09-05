@@ -1,11 +1,47 @@
 package lsngroup
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// LsngroupDataSourceModel is the data-source-specific model, decoupled from
+// LsngroupResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the configurable attributes (as
+// Computed outputs) AND the read-only attributes the resource deliberately
+// omits. Every non-key attribute is Computed.
+type LsngroupDataSourceModel struct {
+	Id             types.String `tfsdk:"id"`
+	Allocpolicy    types.String `tfsdk:"allocpolicy"`
+	Clientname     types.String `tfsdk:"clientname"`
+	Ftp            types.String `tfsdk:"ftp"`
+	Ftpcm          types.String `tfsdk:"ftpcm"`
+	Groupname      types.String `tfsdk:"groupname"` // Required lookup key
+	Ip6profile     types.String `tfsdk:"ip6profile"`
+	Logging        types.String `tfsdk:"logging"`
+	Nattype        types.String `tfsdk:"nattype"`
+	Portblocksize  types.Int64  `tfsdk:"portblocksize"`
+	Pptp           types.String `tfsdk:"pptp"`
+	Rtspalg        types.String `tfsdk:"rtspalg"`
+	Sessionlogging types.String `tfsdk:"sessionlogging"`
+	Sessionsync    types.String `tfsdk:"sessionsync"`
+	Sipalg         types.String `tfsdk:"sipalg"`
+	Snmptraplimit  types.Int64  `tfsdk:"snmptraplimit"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/lsngroup.json). Never settable; populated from GET.
+	Groupid types.Int64 `tfsdk:"groupid"`
+}
 
 func LsngroupDataSourceSchema() schema.Schema {
 	return schema.Schema{
+		Description: "Data source to read LSN (Large Scale NAT) group configuration.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
@@ -84,6 +120,44 @@ func LsngroupDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Maximum number of SNMP Trap messages that can be generated for the LSN group in one minute.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"groupid": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Unique identifier assigned to the LSN group by the appliance.",
+			},
 		},
 	}
+}
+
+// lsngroupDataSourceSetAttrFromGet projects a NITRO lsngroup GET response onto
+// the data-source model. Because a data source has no plan/apply reconciliation,
+// attributes are simply filled from the GET (or left Null when the GET omits
+// them). The shared utils.MapGet* helpers implement that projection.
+func lsngroupDataSourceSetAttrFromGet(ctx context.Context, data *LsngroupDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In lsngroupDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["groupname"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Groupname = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Allocpolicy = utils.MapGetString(g, "allocpolicy")
+	data.Clientname = utils.MapGetString(g, "clientname")
+	data.Ftp = utils.MapGetString(g, "ftp")
+	data.Ftpcm = utils.MapGetString(g, "ftpcm")
+	data.Ip6profile = utils.MapGetString(g, "ip6profile")
+	data.Logging = utils.MapGetString(g, "logging")
+	data.Nattype = utils.MapGetString(g, "nattype")
+	data.Portblocksize = utils.MapGetInt64(g, "portblocksize")
+	data.Pptp = utils.MapGetString(g, "pptp")
+	data.Rtspalg = utils.MapGetString(g, "rtspalg")
+	data.Sessionlogging = utils.MapGetString(g, "sessionlogging")
+	data.Sessionsync = utils.MapGetString(g, "sessionsync")
+	data.Sipalg = utils.MapGetString(g, "sipalg")
+	data.Snmptraplimit = utils.MapGetInt64(g, "snmptraplimit")
+
+	// Read-only attributes.
+	data.Groupid = utils.MapGetInt64(g, "groupid")
 }

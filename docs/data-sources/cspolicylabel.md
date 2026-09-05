@@ -48,10 +48,15 @@ In addition to the arguments, the following attributes are available:
 * `newname` - The new name of the content switching policylabel.
 * `id` - The id of the cspolicylabel. It has the same value as the `labelname` attribute.
 
-## Import
+### Read-only cspolicylabel metadata
 
-A cspolicylabel can be imported using its labelname, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cspolicylabel` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_cspolicylabel.tf_cspolicylabel tf_policylabel
-```
+* `numpol` - Number of policies bound to the label.
+* `hits` - Number of times the policy label was invoked.
+* `policyname` - Name of the content switching policy.
+* `priority` - Specifies the priority of the policy.
+* `targetvserver` - Name of the virtual server to which to forward requests that match the policy.
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `labeltype` - Type of policy label invocation (for example `policylabel`).
+* `invoke_labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.

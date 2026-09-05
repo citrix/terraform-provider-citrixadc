@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *LbmetrictableResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating lbmetrictable resource")
 
-	// lbmetrictable := lbmetrictableGetThePayloadFromtheConfig(ctx, &data)
+	lbmetrictable := lbmetrictableGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbmetrictable.Type(), &lbmetrictable)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbmetrictable, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lbmetrictable-config")
+	// Named resource - use AddResource
+	metrictable_value := data.Metrictable.ValueString()
+	_, err := r.client.AddResource(service.Lbmetrictable.Type(), metrictable_value, &lbmetrictable)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbmetrictable, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lbmetrictable resource")
 
+	// Set ID for the resource before reading state (single unique attribute -> plain value)
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Metrictable.ValueString()))
+
 	// Read the updated state back
-	r.readLbmetrictableFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbmetrictableFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbmetrictable not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *LbmetrictableResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading lbmetrictable resource")
 
-	r.readLbmetrictableFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbmetrictableFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LbmetrictableResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LbmetrictableResourceModel
+	var data, state LbmetrictableResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,21 @@ func (r *LbmetrictableResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lbmetrictable resource")
 
-	// Create API request body from the model
-	// lbmetrictable := lbmetrictableGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbmetrictable.Type(), &lbmetrictable)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbmetrictable, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated lbmetrictable resource")
-
-	// Read the updated state back
-	r.readLbmetrictableFromApi(ctx, &data, &resp.Diagnostics)
+	// lbmetrictable has no NITRO-updatable attributes: "metrictable" is the only
+	// attribute and it is ForceNew (RequiresReplace), so any change recreates the
+	// resource instead of reaching Update. There is nothing to push to NITRO here;
+	// just read the current state back.
+	if !r.readLbmetrictableFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbmetrictable not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +152,33 @@ func (r *LbmetrictableResource) Delete(ctx context.Context, req resource.DeleteR
 
 	tflog.Debug(ctx, "Deleting lbmetrictable resource")
 
-	// For lbmetrictable, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lbmetrictable resource from state")
+	// Named resource - delete using DeleteResource. The ID is the metrictable name.
+	metrictable_value := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Lbmetrictable.Type(), metrictable_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lbmetrictable, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lbmetrictable resource")
 }
 
 // Helper function to read lbmetrictable data from API
-func (r *LbmetrictableResource) readLbmetrictableFromApi(ctx context.Context, data *LbmetrictableResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lbmetrictable.Type(), "")
+func (r *LbmetrictableResource) readLbmetrictableFromApi(ctx context.Context, data *LbmetrictableResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	metrictable_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lbmetrictable.Type(), metrictable_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbmetrictable, got error: %s", err))
-		return
+		return false
 	}
 
 	lbmetrictableSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

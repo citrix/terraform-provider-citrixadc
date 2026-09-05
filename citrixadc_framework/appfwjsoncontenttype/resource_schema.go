@@ -31,8 +31,11 @@ func (r *AppfwjsoncontenttypeResource) Schema(ctx context.Context, req resource.
 			},
 			"isregex": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Default:     stringdefault.StaticString("NOTREGEX"),
 				Description: "Is json content type a regular expression?",
@@ -53,10 +56,10 @@ func appfwjsoncontenttypeGetThePayloadFromtheConfig(ctx context.Context, data *A
 
 	// Create API request body from the model
 	appfwjsoncontenttype := appfw.Appfwjsoncontenttype{}
-	if !data.Isregex.IsNull() {
+	if !data.Isregex.IsNull() && !data.Isregex.IsUnknown() {
 		appfwjsoncontenttype.Isregex = data.Isregex.ValueString()
 	}
-	if !data.Jsoncontenttypevalue.IsNull() {
+	if !data.Jsoncontenttypevalue.IsNull() && !data.Jsoncontenttypevalue.IsUnknown() {
 		appfwjsoncontenttype.Jsoncontenttypevalue = data.Jsoncontenttypevalue.ValueString()
 	}
 

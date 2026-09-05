@@ -1,8 +1,41 @@
 package sslvserver_sslpolicy_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SslvserverSslpolicyBindingDataSourceModel is the data-source-specific model,
+// decoupled from SslvserverSslpolicyBindingResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attribute the resource deliberately omits
+// (polinherit). The Framework's per-attribute model <-> schema reflection
+// requires this model to have exactly the attributes the data-source schema
+// declares.
+type SslvserverSslpolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Invoke                 types.Bool   `tfsdk:"invoke"`
+	Labelname              types.String `tfsdk:"labelname"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Type                   types.String `tfsdk:"type"`
+	Vservername            types.String `tfsdk:"vservername"`
+
+	// Read-only (GET-only) attribute from the NITRO doc read-only set
+	// (zion73x_readonly/sslvserver_sslpolicy_binding.json). Never settable;
+	// populated from GET.
+	Polinherit types.Int64 `tfsdk:"polinherit"`
+}
 
 func SslvserverSslpolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -47,6 +80,43 @@ func SslvserverSslpolicyBindingDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Name of the SSL virtual server.",
 			},
+
+			// Read-only (GET-only) attribute surfaced by the data source (this is
+			// intentionally NOT modeled on the resource). Computed.
+			"polinherit": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Whether the bound policy is a inherited policy or not.",
+			},
 		},
 	}
+}
+
+// sslvserver_sslpolicy_bindingDataSourceSetAttrFromGet projects a NITRO
+// sslvserver_sslpolicy_binding GET response onto the data-source model. A data
+// source has no plan/apply reconciliation, so attributes are simply filled from
+// the GET (or left Null when the GET omits them) via the shared utils.MapGet*
+// helpers, and the composite ID is set.
+func sslvserver_sslpolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *SslvserverSslpolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In sslvserver_sslpolicy_bindingDataSourceSetAttrFromGet Function")
+
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Invoke = utils.MapGetBool(g, "invoke")
+	data.Labelname = utils.MapGetString(g, "labelname")
+	data.Labeltype = utils.MapGetString(g, "labeltype")
+	data.Policyname = utils.MapGetString(g, "policyname")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Type = utils.MapGetString(g, "type")
+	data.Vservername = utils.MapGetString(g, "vservername")
+
+	// Read-only (GET-only) attribute.
+	data.Polinherit = utils.MapGetInt64(g, "polinherit")
+
+	// Set composite ID for the datasource.
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("priority:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Priority.ValueInt64()))))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("vservername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Vservername.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

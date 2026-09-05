@@ -35,7 +35,7 @@ func (d *LbrouteDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 }
 
 func (d *LbrouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LbrouteResourceModel
+	var data LbrouteDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -101,7 +101,7 @@ func (d *LbrouteDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	lbrouteSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbrouteDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

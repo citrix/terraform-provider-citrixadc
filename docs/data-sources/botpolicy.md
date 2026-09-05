@@ -56,3 +56,12 @@ In addition to the argument above, the following attributes are exported:
 * `rule` - Expression that the policy uses to determine whether to apply bot profile on the specified request.
 
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition.
+
+### Read-only botpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_botpolicy` resource) and are always `Computed`. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `builtin` - Flag to determine if bot policy is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

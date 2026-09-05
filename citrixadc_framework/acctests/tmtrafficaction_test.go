@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTmtrafficaction_basic = `
@@ -138,6 +140,160 @@ func testAccCheckTmtrafficactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccTmtrafficaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmtrafficaction.tf_tmtrafficaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmtrafficactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmtrafficaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Tmtrafficaction.Type(), "my_traffic_action"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmtrafficaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTmtrafficaction_import(t *testing.T) {
+	const resAddr = "citrixadc_tmtrafficaction.tf_tmtrafficaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmtrafficactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmtrafficaction_basic},
+			{
+				Config:                  testAccTmtrafficaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccTmtrafficaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmtrafficactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccTmtrafficaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficactionExist("citrixadc_tmtrafficaction.tf_tmtrafficaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTmtrafficaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficactionExist("citrixadc_tmtrafficaction.tf_tmtrafficaction", nil)),
+			},
+		},
+	})
+}
+
+// testAccTmtrafficaction_unset_step1 sets the unset-eligible attributes to
+// valid non-default values; step2 removes them so the provider must unset them
+// (revert to the documented NITRO defaults).
+const testAccTmtrafficaction_unset_step1 = `
+	resource "citrixadc_tmtrafficaction" "tf_unset" {
+		name             = "tf_test_tmtrafficaction_unset"
+		apptimeout       = 5
+		persistentcookie = "ON"
+		userexpression   = "http.req.user.name"
+		passwdexpression = "http.req.user.passwd"
+	}
+`
+
+const testAccTmtrafficaction_unset_step2 = `
+	resource "citrixadc_tmtrafficaction" "tf_unset" {
+		name       = "tf_test_tmtrafficaction_unset"
+		apptimeout = 5
+		# persistentcookie, userexpression and passwdexpression removed from
+		# config -> the provider must unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccTmtrafficaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmtrafficactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccTmtrafficaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmtrafficactionExist("citrixadc_tmtrafficaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmtrafficaction.tf_unset", "persistentcookie", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_tmtrafficaction.tf_unset", "userexpression", "http.req.user.name"),
+					resource.TestCheckResourceAttr("citrixadc_tmtrafficaction.tf_unset", "passwdexpression", "http.req.user.passwd"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults and the
+				// implicit post-apply plan must be empty.
+				Config: testAccTmtrafficaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTmtrafficactionExist("citrixadc_tmtrafficaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_tmtrafficaction.tf_unset", "persistentcookie", "OFF"),
+					// After Option B (unsetOnRemove) these converted attrs read back
+					// NULL: NITRO omits them from GET and there is no Default to inject.
+					resource.TestCheckNoResourceAttr("citrixadc_tmtrafficaction.tf_unset", "userexpression"),
+					resource.TestCheckNoResourceAttr("citrixadc_tmtrafficaction.tf_unset", "passwdexpression"),
+					// Independent appliance-level confirmation the unset took effect
+					// (unset attributes are omitted from the NITRO GET response).
+					testAccCheckTmtrafficactionADCUnset("tf_test_tmtrafficaction_unset", "persistentcookie"),
+					testAccCheckTmtrafficactionADCUnset("tf_test_tmtrafficaction_unset", "userexpression"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckTmtrafficactionADCUnset asserts that an attribute is absent from
+// the appliance's GET response (unset attributes revert to defaults and are
+// omitted), proving the unset actually took effect.
+func testAccCheckTmtrafficactionADCUnset(name, attr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Tmtrafficaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("tmtrafficaction %s not found on appliance", name)
+		}
+		if val, ok := data[attr]; ok && val != nil && strings.TrimSpace(fmt.Sprintf("%v", val)) != "" {
+			return fmt.Errorf("tmtrafficaction %s: appliance attr %q = %q, want unset/absent", name, attr, val)
+		}
+		return nil
+	}
 }
 
 const testAccTmtrafficactionDataSource_basic = `

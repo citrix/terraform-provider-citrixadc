@@ -375,6 +375,14 @@ func (r *AppflowparamResource) Update(ctx context.Context, req resource.UpdateRe
 			hasChange = true
 		}
 	}
+	if !data.Logalljsonfields.Equal(state.Logalljsonfields) {
+		tflog.Debug(ctx, fmt.Sprintf("logalljsonfields has changed for appflowparam"))
+		if config.Logalljsonfields.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "logalljsonfields")
+		} else {
+			hasChange = true
+		}
+	}
 	if !data.Logstreamovernsip.Equal(state.Logstreamovernsip) {
 		tflog.Debug(ctx, fmt.Sprintf("logstreamovernsip has changed for appflowparam"))
 		if config.Logstreamovernsip.IsNull() { // removed from config -> unset it

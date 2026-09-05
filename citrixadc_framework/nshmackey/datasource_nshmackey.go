@@ -35,7 +35,7 @@ func (d *NshmackeyDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *NshmackeyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NshmackeyResourceModel
+	var data NshmackeyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *NshmackeyDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	nshmackeySetAttrFromGet(ctx, &data, getResponseData)
+	nshmackeyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

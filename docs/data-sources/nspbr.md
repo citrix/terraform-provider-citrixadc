@@ -67,3 +67,20 @@ In addition to the arguments, the following attributes are available:
 * `vxlan` - ID of the VXLAN. The Citrix ADC compares the PBR only to the outgoing packets on the specified VXLAN. If you do not specify any interface ID, the appliance compares the PBR to the outgoing packets on all VXLANs.
 * `vxlanvlanmap` - The vlan to vxlan mapping to be applied for incoming packets over this pbr tunnel.
 * `id` - The id of the nspbr. It has the same value as the `name` attribute.
+
+### Read-only nspbr metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nspbr` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `hits` - The hits of this PBR.
+* `kernelstate` - The commit status of the PBR. Possible values: `APPLIED`, `NOTAPPLIED`, `RE-APPLY`, `SFAPPLIED`, `SFNOTAPPLIED`, `SFAPPLIED61`, `SFNOTAPPLIED61`.
+* `curstate` - If this route is UP/DOWN.
+* `totalprobes` - The total number of probes sent.
+* `totalfailedprobes` - The total number of failed probes.
+* `failedprobes` - Number of the current failed monitoring probes.
+* `monstatcode` - The code indicating the monitor response.
+* `monstatparam1` - First parameter for use with message code.
+* `monstatparam2` - Second parameter for use with message code.
+* `monstatparam3` - Third parameter for use with message code.
+* `data` - Internal data of this route.
+* `pbrchildcount` - Number of childs for this PBR, in case of dataset this will be number of ips bound to that dataset.

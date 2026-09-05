@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AppfwxmlcontenttypeResource) Create(ctx context.Context, req resource.C
 	}
 
 	tflog.Debug(ctx, "Creating appfwxmlcontenttype resource")
-
-	// appfwxmlcontenttype := appfwxmlcontenttypeGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appfwxmlcontenttype := appfwxmlcontenttypeGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwxmlcontenttype.Type(), &appfwxmlcontenttype)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwxmlcontenttype, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwxmlcontenttype-config")
+	// Named resource - use AddResource
+	xmlcontenttypevalue_value := data.Xmlcontenttypevalue.ValueString()
+	_, err := r.client.AddResource(service.Appfwxmlcontenttype.Type(), xmlcontenttypevalue_value, &appfwxmlcontenttype)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwxmlcontenttype, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwxmlcontenttype resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Xmlcontenttypevalue.ValueString()))
+
 	// Read the updated state back
-	r.readAppfwxmlcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwxmlcontenttypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwxmlcontenttype not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppfwxmlcontenttypeResource) Read(ctx context.Context, req resource.Rea
 
 	tflog.Debug(ctx, "Reading appfwxmlcontenttype resource")
 
-	r.readAppfwxmlcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwxmlcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwxmlcontenttypeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwxmlcontenttypeResourceModel
+	var data, state AppfwxmlcontenttypeResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,20 @@ func (r *AppfwxmlcontenttypeResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwxmlcontenttype resource")
 
-	// Create API request body from the model
-	// appfwxmlcontenttype := appfwxmlcontenttypeGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwxmlcontenttype.Type(), &appfwxmlcontenttype)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwxmlcontenttype, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated appfwxmlcontenttype resource")
-
-	// Read the updated state back
-	r.readAppfwxmlcontenttypeFromApi(ctx, &data, &resp.Diagnostics)
+	// All configurable attributes (isregex, xmlcontenttypevalue) are ForceNew
+	// (RequiresReplace); there are no in-place updatable NITRO fields, so no
+	// update API call is made. Refresh state from the API.
+	if !r.readAppfwxmlcontenttypeFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwxmlcontenttype not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +151,36 @@ func (r *AppfwxmlcontenttypeResource) Delete(ctx context.Context, req resource.D
 	}
 
 	tflog.Debug(ctx, "Deleting appfwxmlcontenttype resource")
+	// Named resource - delete using DeleteResource
+	xmlcontenttypevalue_value := data.Xmlcontenttypevalue.ValueString()
+	err := r.client.DeleteResource(service.Appfwxmlcontenttype.Type(), xmlcontenttypevalue_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwxmlcontenttype, got error: %s", err))
+		return
+	}
 
-	// For appfwxmlcontenttype, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwxmlcontenttype resource from state")
+	tflog.Trace(ctx, "Deleted appfwxmlcontenttype resource")
 }
 
 // Helper function to read appfwxmlcontenttype data from API
-func (r *AppfwxmlcontenttypeResource) readAppfwxmlcontenttypeFromApi(ctx context.Context, data *AppfwxmlcontenttypeResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwxmlcontenttype.Type(), "")
+func (r *AppfwxmlcontenttypeResource) readAppfwxmlcontenttypeFromApi(ctx context.Context, data *AppfwxmlcontenttypeResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	xmlcontenttypevalue_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Appfwxmlcontenttype.Type(), xmlcontenttypevalue_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwxmlcontenttype, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwxmlcontenttypeSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

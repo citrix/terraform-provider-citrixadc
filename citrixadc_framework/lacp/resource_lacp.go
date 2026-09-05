@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *LacpResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	tflog.Debug(ctx, "Creating lacp resource")
 
-	// lacp := lacpGetThePayloadFromtheConfig(ctx, &data)
+	// Build the NITRO payload from the plan.
+	lacp := lacpGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lacp, got error: %s", err))
-	//	 return
-	// }
+	// lacp is a singleton-style global config (NITRO exposes only update/get):
+	// use UpdateUnnamedResource, matching the SDK v2 resource.
+	err := r.client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lacp, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lacp-config")
+	// ID is the ownernode value (matches SDK v2 d.SetId(strconv.Itoa(ownernode))).
+	data.Id = types.StringValue(fmt.Sprintf("%d", data.Ownernode.ValueInt64()))
 
 	tflog.Trace(ctx, "Created lacp resource")
 
 	// Read the updated state back
-	r.readLacpFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLacpFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lacp not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *LacpResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	tflog.Debug(ctx, "Reading lacp resource")
 
-	r.readLacpFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLacpFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LacpResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LacpResourceModel
+	var data, state LacpResourceModel
 
+	// Read Terraform prior state to detect changes / preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,45 @@ func (r *LacpResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	// Preserve ID from prior state (recomputed below in case ownernode changed).
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lacp resource")
 
-	// Create API request body from the model
-	// lacp := lacpGetThePayloadFromtheConfig(ctx, &data)
+	// Detect changes on the writable attributes (syspriority is the updatable
+	// one in SDK v2; ownernode selects the target node).
+	hasChange := false
+	if !data.Syspriority.Equal(state.Syspriority) {
+		tflog.Debug(ctx, "syspriority has changed for lacp")
+		hasChange = true
+	}
+	if !data.Ownernode.Equal(state.Ownernode) {
+		tflog.Debug(ctx, "ownernode has changed for lacp")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lacp, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		lacp := lacpGetThePayloadFromtheConfig(ctx, &data)
+		err := r.client.UpdateUnnamedResource(service.Lacp.Type(), &lacp)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lacp, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated lacp resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for lacp resource, skipping update")
+	}
 
-	tflog.Trace(ctx, "Updated lacp resource")
+	// Keep the ID in sync with the (possibly changed) ownernode.
+	data.Id = types.StringValue(fmt.Sprintf("%d", data.Ownernode.ValueInt64()))
 
 	// Read the updated state back
-	r.readLacpFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLacpFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lacp not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +177,28 @@ func (r *LacpResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	tflog.Debug(ctx, "Deleting lacp resource")
 
-	// For lacp, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// lacp is a global configuration and NITRO exposes no delete operation
+	// (matches SDK v2). Just remove it from Terraform state.
 	tflog.Trace(ctx, "Deleted lacp resource from state")
 }
 
-// Helper function to read lacp data from API
-func (r *LacpResource) readLacpFromApi(ctx context.Context, data *LacpResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lacp.Type(), "")
+// Helper function to read lacp data from API.
+// Returns false when the resource is not found on the ADC.
+func (r *LacpResource) readLacpFromApi(ctx context.Context, data *LacpResourceModel, diags *diag.Diagnostics) bool {
+	// ID is the ownernode value; read the lacp entry for that node
+	// (matches SDK v2 FindResource(service.Lacp.Type(), strconv.Itoa(ownernode))).
+	ownernode := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lacp.Type(), ownernode)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lacp, got error: %s", err))
-		return
+		return false
 	}
 
 	lacpSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -48,6 +48,12 @@ resource "citrixadc_sslaction" "tf_sslaction" {
 * `owasupport` - (Optional) If the appliance is in front of an Outlook Web Access (OWA) server, insert a special header field, FRONT-END-HTTPS: ON, into the HTTP requests going to the OWA server. This header communicates to the server that the transaction is HTTPS and not HTTP. Possible values: [ ENABLED, DISABLED ]
 * `forward` - (Optional) This action takes an argument a vserver name, to this vserver one will be able to forward all the packets.
 * `cacertgrpname` - (Optional) This action will allow to pick CA(s) from the specific CA group, to verify the client certificate.
+* `alpnhttp2` - (Optional) This option is used to enable or disable the HTTP/2 application protocol based on policy evaluation performed during ClientHello handshake message processing.
+* `inhandshakeclientauth` - (Optional) This option dynamically enables client authentication for the specific SSL connection based on policy evaluation performed during ClientHello handshake message processing. It overrides the clientAuth setting configured on the SSL virtual server or the SSL frontend profile.
+* `inhandshakeclientcertverification` - (Optional) Specifies the type of client authentication and is applicable only when inHandshakeClientAuth is ENABLED. If set to MANDATORY, the appliance terminates the SSL handshake when the client fails to present a valid certificate. If set to OPTIONAL, the appliance requests a client certificate but continues the SSL transaction even if the certificate is missing or invalid. Default value is MANDATORY.
+* `ocspcache` - (Optional) Enable cache of OCSP response. Caching of response received from the OCSP responder enables faster response to the client and reduces the load on the OCSP responder.
+* `ocspcertvalidation` - (Optional) This option is used to check the revocation status of client/server certificate in SSL handshake using OCSP.
+* `ocspstapling` - (Optional) This option is used to enable ocspStapling parameter for the SSL connection.
 
 
 ## Attribute Reference

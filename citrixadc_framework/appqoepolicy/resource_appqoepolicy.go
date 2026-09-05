@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AppqoepolicyResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	tflog.Debug(ctx, "Creating appqoepolicy resource")
-
-	// appqoepolicy := appqoepolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appqoepolicy := appqoepolicyGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appqoepolicy.Type(), &appqoepolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appqoepolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appqoepolicy-config")
+	// Named resource - use AddResource
+	appqoepolicyName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Appqoepolicy.Type(), appqoepolicyName, &appqoepolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appqoepolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appqoepolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readAppqoepolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppqoepolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appqoepolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppqoepolicyResource) Read(ctx context.Context, req resource.ReadReques
 
 	tflog.Debug(ctx, "Reading appqoepolicy resource")
 
-	r.readAppqoepolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppqoepolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppqoepolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppqoepolicyResourceModel
+	var data, state AppqoepolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,45 @@ func (r *AppqoepolicyResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appqoepolicy resource")
 
-	// Create API request body from the model
-	// appqoepolicy := appqoepolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for appqoepolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for appqoepolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appqoepolicy.Type(), &appqoepolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appqoepolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model, restricted to updatable fields
+		appqoepolicy := appqoepolicyGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Make API call
+		// appqoepolicy is updated via an unnamed PUT (name is carried in the payload)
+		err := r.client.UpdateUnnamedResource(service.Appqoepolicy.Type(), &appqoepolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appqoepolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated appqoepolicy resource")
+		tflog.Trace(ctx, "Updated appqoepolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appqoepolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAppqoepolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppqoepolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appqoepolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +176,33 @@ func (r *AppqoepolicyResource) Delete(ctx context.Context, req resource.DeleteRe
 	}
 
 	tflog.Debug(ctx, "Deleting appqoepolicy resource")
+	// Named resource - delete using DeleteResource
+	appqoepolicyName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Appqoepolicy.Type(), appqoepolicyName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appqoepolicy, got error: %s", err))
+		return
+	}
 
-	// For appqoepolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appqoepolicy resource from state")
+	tflog.Trace(ctx, "Deleted appqoepolicy resource")
 }
 
 // Helper function to read appqoepolicy data from API
-func (r *AppqoepolicyResource) readAppqoepolicyFromApi(ctx context.Context, data *AppqoepolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appqoepolicy.Type(), "")
+func (r *AppqoepolicyResource) readAppqoepolicyFromApi(ctx context.Context, data *AppqoepolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	appqoepolicyName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Appqoepolicy.Type(), appqoepolicyName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appqoepolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	appqoepolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

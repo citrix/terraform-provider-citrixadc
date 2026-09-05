@@ -46,3 +46,11 @@ In addition to the arguments, the following attributes are available:
 * `replaywindowsize` - IPSec Replay window size for the data traffic.
 * `retransmissiontime` - The interval in seconds to retry sending the IKE messages to peer, three consecutive attempts are done with doubled interval after every failure.
 * `id` - The id of the ipsecprofile. It has the same value as the `name` attribute.
+
+### Read-only ipsecprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_ipsecprofile` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `responderonly` - Responder Only config for IKED. Possible values: `YES`, `NO`.
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.

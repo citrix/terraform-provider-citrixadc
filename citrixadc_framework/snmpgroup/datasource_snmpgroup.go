@@ -35,7 +35,7 @@ func (d *SnmpgroupDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *SnmpgroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SnmpgroupResourceModel
+	var data SnmpgroupDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -95,7 +95,7 @@ func (d *SnmpgroupDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	snmpgroupSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	snmpgroupDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

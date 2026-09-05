@@ -17,34 +17,132 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternodegroup_gslbvserver_binding_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
 
 	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
 		name        = "my_gslb_vserver_ds"
 		servicetype = "HTTP"
 	}
-	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
-		name   = "my_tf_group"
-		strict = "NO"
-	}
 	resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
-		name = "my_tf_group"
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
 		vserver = citrixadc_gslbvserver.tf_gslbvserver.name
-		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup]
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 `
 
 const testAccClusternodegroup_gslbvserver_binding_basic_step2 = `
 	# Keep the above bound resources without the actual binding to check proper deletion
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+		name        = "my_gslb_vserver_ds"
+		servicetype = "HTTP"
+	}
 `
+
+// testAccClusternodegroup_gslbvserver_binding_upgrade_basic mirrors the _basic
+// config and must be valid under BOTH the SDK v2 2.2.0 schema and the current
+// Framework schema (the migration restored the SDK v2 attribute names).
+const testAccClusternodegroup_gslbvserver_binding_upgrade_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+		name        = "my_gslb_vserver_ds"
+		servicetype = "HTTP"
+	}
+	resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
+		name    = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver = citrixadc_gslbvserver.tf_gslbvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+`
+
+// TestAccClusternodegroup_gslbvserver_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release (legacy comma-separated ID) is correctly
+// upgraded when the same config is subsequently managed by the current Framework
+// provider. Step 1 creates the binding with citrix/citrixadc 2.2.0 (writes the
+// legacy id "my_tf_group,my_gslb_vserver_ds"). Step 2 refreshes/plans/applies the
+// same config through the Framework provider; because the Framework recomputes the
+// id on Read (SetAttrFromGet), the id upgrades to the new "key:value" form.
+func TestAccClusternodegroup_gslbvserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resourceAddr := "citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_gslbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccClusternodegroup_gslbvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_gslbvserver_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "my_tf_group,my_gslb_vserver_ds"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read and the id is recomputed to the new
+			// key:value format by SetAttrFromGet.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternodegroup_gslbvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_gslbvserver_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "name:my_tf_group,vserver:my_gslb_vserver_ds"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccClusternodegroup_gslbvserver_binding_basic(t *testing.T) {
 	if adcTestbed != "CLUSTER" {
@@ -98,10 +196,13 @@ func testAccCheckClusternodegroup_gslbvserver_bindingExist(n string, id *string)
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		vserver := idSlice[1]
+		// ID auto-detects new key:value and legacy comma formats via ParseIdString.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		vserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_gslbvserver_binding",
@@ -205,20 +306,25 @@ func testAccCheckClusternodegroup_gslbvserver_bindingDestroy(s *terraform.State)
 
 const testAccClusternodegroup_gslbvserver_bindingDataSource_basic = `
 
-	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
-		name        = "my_gslb_vserver_ds"
-		servicetype = "HTTP"
-	}
-
 	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
 		name   = "my_tf_group"
 		strict = "NO"
 	}
 
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+		name        = "my_gslb_vserver_ds"
+		servicetype = "HTTP"
+	}
+
 	resource "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
-		name    = "my_tf_group"
+		name    = citrixadc_clusternodegroup.tf_clusternodegroup.name
 		vserver = citrixadc_gslbvserver.tf_gslbvserver.name
-		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup]
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_gslbvserver_binding" "tf_clusternodegroup_gslbvserver_binding" {
@@ -242,6 +348,87 @@ func TestAccclusternodegroup_gslbvserver_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding", "vserver", "my_gslb_vserver_ds"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_gslbvserver_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,vserver) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "vserver"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_gslbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_gslbvserver_binding_basic},
+			{Config: testAccClusternodegroup_gslbvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccClusternodegroup_gslbvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccClusternodegroup_gslbvserver_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_gslbvserver_binding.tf_clusternodegroup_gslbvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_gslbvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_gslbvserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_gslbvserver_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Clusternodegroup_gslbvserver_binding.Type(), "my_tf_group", []string{"vserver:my_gslb_vserver_ds"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternodegroup_gslbvserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_gslbvserver_bindingExist(resAddr, nil),
 				),
 			},
 		},

@@ -20,7 +20,7 @@ resource "citrixadc_vpnvserver_cachepolicy_binding" "tf_bind" {
   name      = citrixadc_vpnvserver.tf_vpnvserver.name
   policy    = "tf_cachepolicy"
   priority  = 5
-  bindpoint = "REQUEST" 
+  bindpoint = "REQUEST"
 }
 ```
 
@@ -40,7 +40,7 @@ resource "citrixadc_vpnvserver_cachepolicy_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_cachepolicy_binding. It is the concatenation of `name` and `policy` attributes seperated by comma.
+* `id` - The id of the vpnvserver_cachepolicy_binding. It is the concatenation of the `name`, `policy` and `bindpoint` attributes separated by a comma.
 
 
 ## Import
@@ -48,5 +48,5 @@ In addition to the arguments, the following attributes are available:
 A vpnvserver_cachepolicy_binding can be imported using its id, e.g.
 
 ```shell
-terraform import citrixadc_vpnvserver_cachepolicy_binding.tf_bind tf_examplecom,tf_cachepolicy
+terraform import citrixadc_vpnvserver_cachepolicy_binding.tf_bind tf_examplecom,tf_cachepolicy,REQUEST
 ```

@@ -33,23 +33,38 @@ func (r *LsnappsattributesResource) Schema(ctx context.Context, req resource.Sch
 				Computed:    true,
 				Description: "The ID of the lsnappsattributes resource.",
 			},
+			// SDK v2: Required + ForceNew -> Required + RequiresReplace.
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN Application Port ATTRIBUTES. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN application profile is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn application profile1\" or 'lsn application profile1').",
 			},
+			// SDK v2: Optional + ForceNew (no Computed). Computed added so a value
+			// returned by the ADC when the attribute is not configured does not cause an
+			// inconsistent-result-after-apply error. RequiresReplaceIfConfigured reproduces
+			// ForceNew only when the user actually configured a change.
 			"port": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "This is used for Displaying Port/Port range in CLI/Nitro.Lowport, Highport values are populated and used for displaying.Port numbers or range of port numbers to match against the destination port of the incoming packet from a subscriber. When the destination port is matched, the LSN application profile is applied for the LSN session. Separate a range of ports with a hyphen. For example, 40-90.",
 			},
+			// SDK v2: Optional + Computed. The only in-place updateable attribute and
+			// the only unsettable one (spec unset operation lists only sessiontimeout).
+			// A schema Default matching the NITRO default (30) is required so that
+			// removing sessiontimeout from config produces a plan diff, allowing the
+			// Update method to fire the NITRO unset.
 			"sessiontimeout": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(30),
 				Description: "Timeout, in seconds, for an idle LSN session. If an LSN session is idle for a time that exceeds this value, the Citrix ADC removes the session.This timeout does not apply for a TCP LSN session when a FIN or RST message is received from either of the endpoints.",
 			},
+			// SDK v2: Required + ForceNew -> Required + RequiresReplace.
 			"transportprotocol": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -61,22 +76,40 @@ func (r *LsnappsattributesResource) Schema(ctx context.Context, req resource.Sch
 	}
 }
 
-func lsnappsattributesGetThePayloadFromtheConfig(ctx context.Context, data *LsnappsattributesResourceModel) lsn.Lsnappsattributes {
-	tflog.Debug(ctx, "In lsnappsattributesGetThePayloadFromtheConfig Function")
+// lsnappsattributesGetThePayloadFromthePlan builds the full create payload.
+func lsnappsattributesGetThePayloadFromthePlan(ctx context.Context, data *LsnappsattributesResourceModel) lsn.Lsnappsattributes {
+	tflog.Debug(ctx, "In lsnappsattributesGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	lsnappsattributes := lsn.Lsnappsattributes{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		lsnappsattributes.Name = data.Name.ValueString()
 	}
-	if !data.Port.IsNull() {
+	if !data.Port.IsNull() && !data.Port.IsUnknown() {
 		lsnappsattributes.Port = data.Port.ValueString()
 	}
-	if !data.Sessiontimeout.IsNull() {
+	if !data.Sessiontimeout.IsNull() && !data.Sessiontimeout.IsUnknown() {
 		lsnappsattributes.Sessiontimeout = utils.IntPtr(int(data.Sessiontimeout.ValueInt64()))
 	}
-	if !data.Transportprotocol.IsNull() {
+	if !data.Transportprotocol.IsNull() && !data.Transportprotocol.IsUnknown() {
 		lsnappsattributes.Transportprotocol = data.Transportprotocol.ValueString()
+	}
+
+	return lsnappsattributes
+}
+
+// lsnappsattributesGetTheUpdatablePayloadFromThePlan builds the minimal update
+// payload. Matches SDK v2: only the name (identity) and the single updateable
+// attribute (sessiontimeout) are sent; port/transportprotocol are ForceNew and
+// never reach Update.
+func lsnappsattributesGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *LsnappsattributesResourceModel) lsn.Lsnappsattributes {
+	tflog.Debug(ctx, "In lsnappsattributesGetTheUpdatablePayloadFromThePlan Function")
+
+	lsnappsattributes := lsn.Lsnappsattributes{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		lsnappsattributes.Name = data.Name.ValueString()
+	}
+	if !data.Sessiontimeout.IsNull() && !data.Sessiontimeout.IsUnknown() {
+		lsnappsattributes.Sessiontimeout = utils.IntPtr(int(data.Sessiontimeout.ValueInt64()))
 	}
 
 	return lsnappsattributes
@@ -85,27 +118,29 @@ func lsnappsattributesGetThePayloadFromtheConfig(ctx context.Context, data *Lsna
 func lsnappsattributesSetAttrFromGet(ctx context.Context, data *LsnappsattributesResourceModel, getResponseData map[string]interface{}) *LsnappsattributesResourceModel {
 	tflog.Debug(ctx, "In lsnappsattributesSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. Guard the else-branch so a value the ADC omits
+	// from GET (omit-on-default) only nulls an Unknown (Computed) value and never
+	// clobbers a known configured value.
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["port"]; ok && val != nil {
 		data.Port = types.StringValue(val.(string))
-	} else {
+	} else if data.Port.IsUnknown() {
 		data.Port = types.StringNull()
 	}
 	if val, ok := getResponseData["sessiontimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Sessiontimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Sessiontimeout.IsUnknown() {
 		data.Sessiontimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["transportprotocol"]; ok && val != nil {
 		data.Transportprotocol = types.StringValue(val.(string))
-	} else {
+	} else if data.Transportprotocol.IsUnknown() {
 		data.Transportprotocol = types.StringNull()
 	}
 

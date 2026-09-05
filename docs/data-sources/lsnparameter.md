@@ -33,3 +33,10 @@ The following attributes are available:
 * `sessionsync` - Synchronize all LSN sessions with the secondary node in a high availability (HA) deployment (global synchronization). After a failover, established TCP connections and UDP packet flows are kept active and resumed on the secondary node (new primary). The global session synchronization parameter and session synchronization parameters (group level) of all LSN groups are enabled by default. For a group, when both the global level and the group level LSN session synchronization parameters are enabled, the primary node synchronizes information of all LSN sessions related to this LSN group with the secondary node.
 * `subscrsessionremoval` - LSN global setting for controlling subscriber aware session removal, when this is enabled, when ever the subscriber info is deleted from subscriber database, sessions corresponding to that subscriber will be removed. if this setting is disabled, subscriber sessions will be timed out as per the idle time out settings.
 * `id` - The id of the lsnparameter. It is a system-generated identifier.
+
+### Read-only lsnparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lsnparameter` resource) and are `Computed`/GET-only. Any attribute the appliance does not return is `null`.
+
+* `memlimitactive` - Amount of actual memory reserved for the LSN feature. The amount of active memory for the LSN feature might be less than the configured memory, because the available memory is shared across features.
+* `maxmemlimit` - Maximum amount of Citrix ADC memory that can be reserved for the LSN feature.

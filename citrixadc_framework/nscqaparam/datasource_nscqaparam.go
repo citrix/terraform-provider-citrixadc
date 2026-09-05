@@ -53,7 +53,7 @@ func (d *NscqaparamDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	nscqaparamSetAttrFromGet(ctx, &data, getResponseData)
+	nscqaparamSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

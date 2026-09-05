@@ -344,6 +344,10 @@ func (r *AnalyticsprofileResource) Update(ctx context.Context, req resource.Upda
 		tflog.Debug(ctx, fmt.Sprintf("managementlog has changed for analyticsprofile"))
 		hasChange = true
 	}
+	if !data.Mcpsummary.Equal(state.Mcpsummary) {
+		tflog.Debug(ctx, fmt.Sprintf("mcpsummary has changed for analyticsprofile"))
+		hasChange = true
+	}
 	if !data.Metrics.Equal(state.Metrics) {
 		tflog.Debug(ctx, fmt.Sprintf("metrics has changed for analyticsprofile"))
 		hasChange = true

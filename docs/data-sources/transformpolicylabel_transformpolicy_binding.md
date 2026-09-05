@@ -38,9 +38,9 @@ In addition to the arguments, the following attributes are available:
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
-* `invoke_labelname` - Name of the policy label.
+* `invokelabelname` - Name of the policy label.
 * `labeltype` - Type of invocation. Available settings function as follows:
   * reqvserver - Forward the request to the specified request virtual server.
   * policylabel - Invoke the specified policy label.
 * `priority` - Specifies the priority of the policy.
-* `id` - The id of the transformpolicylabel_transformpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the transformpolicylabel_transformpolicy_binding. It is the concatenation of the `labelname` and `policyname` attributes separated by a comma.

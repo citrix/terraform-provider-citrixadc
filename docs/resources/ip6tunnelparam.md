@@ -35,3 +35,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the ip6tunnelparam. It is a unique string prefixed with "tf-ip6tunnelparam-"
 
+
+## Import
+
+A ip6tunnelparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_ip6tunnelparam.tf_ip6tunnelparam ip6tunnelparam-config
+```

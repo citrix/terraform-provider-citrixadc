@@ -55,16 +55,16 @@ func (r *NsconsoleloginpromptResource) Create(ctx context.Context, req resource.
 
 	tflog.Debug(ctx, "Creating nsconsoleloginprompt resource")
 
-	// nsconsoleloginprompt := nsconsoleloginpromptGetThePayloadFromtheConfig(ctx, &data)
+	nsconsoleloginprompt := nsconsoleloginpromptGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsconsoleloginprompt.Type(), &nsconsoleloginprompt)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsconsoleloginprompt, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource uses UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nsconsoleloginprompt.Type(), &nsconsoleloginprompt)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsconsoleloginprompt, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Generate static ID for this singleton configuration resource
 	data.Id = types.StringValue("nsconsoleloginprompt-config")
 
 	tflog.Trace(ctx, "Created nsconsoleloginprompt resource")
@@ -107,14 +107,14 @@ func (r *NsconsoleloginpromptResource) Update(ctx context.Context, req resource.
 	tflog.Debug(ctx, "Updating nsconsoleloginprompt resource")
 
 	// Create API request body from the model
-	// nsconsoleloginprompt := nsconsoleloginpromptGetThePayloadFromtheConfig(ctx, &data)
+	nsconsoleloginprompt := nsconsoleloginpromptGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsconsoleloginprompt.Type(), &nsconsoleloginprompt)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsconsoleloginprompt, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource uses UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Nsconsoleloginprompt.Type(), &nsconsoleloginprompt)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsconsoleloginprompt, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nsconsoleloginprompt resource")
 

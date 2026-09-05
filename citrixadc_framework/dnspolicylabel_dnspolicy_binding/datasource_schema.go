@@ -20,7 +20,7 @@ func DnspolicylabelDnspolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Invoke flag.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Name of the label to invoke if the current policy rule evaluates to TRUE.",

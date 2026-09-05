@@ -201,6 +201,10 @@ type Nshttpprofile struct {
 	*/
 	Http2maxrxresetframespermin *int `json:"http2maxrxresetframespermin,omitempty"`
 	/**
+	* Timeout in seconds for HTTP/2 small window stalled streams. Connection is silently closed if a stream remains stalled with zero or small window for this duration. 0 disables the check.
+	*/
+	Http2smallwndtimeout *int `json:"http2smallwndtimeout,omitempty"`
+	/**
 	* Maximum size in bytes allowed to buffer gRPC packets till trailer is received
 	*/
 	Grpcholdlimit *int `json:"grpcholdlimit,omitempty"`
@@ -265,9 +269,13 @@ type Nshttpprofile struct {
 	*/
 	Http2extendedconnect string `json:"http2extendedconnect,omitempty"`
 	/**
-	* Timeout (in seconds) for HTTP/2 small-window stalled streams. Required to mitigate CVE-2026-13474.
+	* Enable or disable RFC 3986 normalization of incoming URL before validation or consumption.
 	*/
-	Http2smallwndtimeout *int `json:"http2smallwndtimeout,omitempty"`
+	Normalizeurl string `json:"normalizeurl,omitempty"`
+	/**
+	* Enable or disable RFC 3986 URL normalization for request sent to the origin server.
+	*/
+	Normalizeurltoorigin string `json:"normalizeurltoorigin,omitempty"`
 
 	//------- Read only Parameter ---------;
 

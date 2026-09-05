@@ -8,12 +8,60 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset — mirroring the
+// SDK v2 unset-on-remove contract. Without it an Optional+Computed attribute is
+// "sticky": the prior value is carried forward and removal is a silent no-op.
+// It intentionally does nothing when the config still carries a value, on create
+// (no prior state), or when the prior value is already empty (avoids churn).
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
+
+// unsetOnRemoveInt64Modifier is the Int64 counterpart of unsetOnRemoveStringModifier.
+type unsetOnRemoveInt64Modifier struct{}
+
+func (m unsetOnRemoveInt64Modifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-zero value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveInt64Modifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveInt64Modifier) PlanModifyInt64(_ context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueInt64() != 0 {
+		resp.PlanValue = types.Int64Unknown()
+	}
+}
 
 // CmpparameterResourceModel describes the resource data model.
 type CmpparameterResourceModel struct {
@@ -44,45 +92,58 @@ func (r *CmpparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "The ID of the cmpparameter resource.",
 			},
+			// NOTE: cmpparameter is a singleton (unnamed) config resource. Matching the
+			// SDK v2 contract, every attribute is Optional+Computed with NO schema Default
+			// (the ADC supplies the effective defaults and always echoes them via GET).
+			// Setting Default without Computed would panic the framework, and hardcoding
+			// defaults here would diverge from the SDK v2 behavior.
 			"addvaryheader": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Control insertion of the Vary header in HTTP responses compressed by Citrix ADC. Intermediate caches store different versions of the response for different values of the headers present in the Vary response header.",
 			},
 			"cmpbypasspct": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(100),
 				Description: "Citrix ADC CPU threshold after which compression is not performed. Range: 0 - 100",
 			},
 			"cmplevel": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("optimal"),
 				Description: "Specify a compression level. Available settings function as follows:\n * Optimal - Corresponds to a gzip GZIP level of 5-7.\n * Best speed - Corresponds to a gzip level of 1.\n * Best compression - Corresponds to a gzip level of 9.",
 			},
 			"cmponpush": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Citrix ADC does not wait for the quantum to be filled before starting to compress data. Upon receipt of a packet with a PUSH flag, the appliance immediately begins compression of the accumulated packets.",
 			},
 			"externalcache": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Enable insertion of  Cache-Control: private response directive to indicate response message is intended for a single user and must not be cached by a shared or proxy cache.",
 			},
 			"heurexpiry": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Heuristic basefile expiry.",
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.String{unsetOnRemoveStringModifier{}},
+				Description:   "Heuristic basefile expiry.",
 			},
 			"heurexpiryhistwt": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(50),
-				Description: "For heuristic basefile expiry, weightage to be given to historical delta compression ratio, specified as percentage.  For example, to give 25% weightage to historical ratio (and therefore 75% weightage to the ratio for current delta compression transaction), specify 25.",
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.Int64{unsetOnRemoveInt64Modifier{}},
+				Description:   "For heuristic basefile expiry, weightage to be given to historical delta compression ratio, specified as percentage.  For example, to give 25% weightage to historical ratio (and therefore 75% weightage to the ratio for current delta compression transaction), specify 25.",
 			},
 			"heurexpirythres": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(100),
-				Description: "Threshold compression ratio for heuristic basefile expiry, multiplied by 100. For example, to set the threshold ratio to 1.25, specify 125.",
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: []planmodifier.Int64{unsetOnRemoveInt64Modifier{}},
+				Description:   "Threshold compression ratio for heuristic basefile expiry, multiplied by 100. For example, to set the threshold ratio to 1.25, specify 125.",
 			},
 			"minressize": schema.Int64Attribute{
 				Optional:    true,
@@ -91,32 +152,43 @@ func (r *CmpparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"policytype": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("ADVANCED"),
+				Computed:    true,
 				Description: "Type of the policy. The only possible value is ADVANCED",
 			},
 			"quantumsize": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(57344),
 				Description: "Minimum quantum of data to be filled before compression begins.",
 			},
 			"randomgzipfilename": schema.StringAttribute{
-				Optional:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "Control the addition of a random filename of random length in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.",
 			},
 			"randomgzipfilenamemaxlength": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(63),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 63},
+				},
 				Description: "Maximum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.",
 			},
 			"randomgzipfilenameminlength": schema.Int64Attribute{
-				Optional:    true,
-				Default:     int64default.StaticInt64(8),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					utils.UnsetOnRemoveOrKeepDefaultInt64{DefaultValue: 8},
+				},
 				Description: "Minimum length of the random filename to be added in the GZIP header to apply the Heal-the-BREACH mitigation for the BREACH attack.",
 			},
 			"servercmp": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Allow the server to send compressed data to the Citrix ADC. With the default setting, the Citrix ADC appliance handles all compression.",
 			},
 			"varyheadervalue": schema.StringAttribute{
@@ -131,54 +203,56 @@ func (r *CmpparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 func cmpparameterGetThePayloadFromtheConfig(ctx context.Context, data *CmpparameterResourceModel) cmp.Cmpparameter {
 	tflog.Debug(ctx, "In cmpparameterGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model. Skip Unknown values so that
+	// Optional+Computed attributes the user did not configure are not forced to
+	// their zero value (matching the SDK v2 GetRawConfig().IsNull() gating).
 	cmpparameter := cmp.Cmpparameter{}
-	if !data.Addvaryheader.IsNull() {
+	if !data.Addvaryheader.IsNull() && !data.Addvaryheader.IsUnknown() {
 		cmpparameter.Addvaryheader = data.Addvaryheader.ValueString()
 	}
-	if !data.Cmpbypasspct.IsNull() {
+	if !data.Cmpbypasspct.IsNull() && !data.Cmpbypasspct.IsUnknown() {
 		cmpparameter.Cmpbypasspct = utils.IntPtr(int(data.Cmpbypasspct.ValueInt64()))
 	}
-	if !data.Cmplevel.IsNull() {
+	if !data.Cmplevel.IsNull() && !data.Cmplevel.IsUnknown() {
 		cmpparameter.Cmplevel = data.Cmplevel.ValueString()
 	}
-	if !data.Cmponpush.IsNull() {
+	if !data.Cmponpush.IsNull() && !data.Cmponpush.IsUnknown() {
 		cmpparameter.Cmponpush = data.Cmponpush.ValueString()
 	}
-	if !data.Externalcache.IsNull() {
+	if !data.Externalcache.IsNull() && !data.Externalcache.IsUnknown() {
 		cmpparameter.Externalcache = data.Externalcache.ValueString()
 	}
-	if !data.Heurexpiry.IsNull() {
+	if !data.Heurexpiry.IsNull() && !data.Heurexpiry.IsUnknown() {
 		cmpparameter.Heurexpiry = data.Heurexpiry.ValueString()
 	}
-	if !data.Heurexpiryhistwt.IsNull() {
+	if !data.Heurexpiryhistwt.IsNull() && !data.Heurexpiryhistwt.IsUnknown() {
 		cmpparameter.Heurexpiryhistwt = utils.IntPtr(int(data.Heurexpiryhistwt.ValueInt64()))
 	}
-	if !data.Heurexpirythres.IsNull() {
+	if !data.Heurexpirythres.IsNull() && !data.Heurexpirythres.IsUnknown() {
 		cmpparameter.Heurexpirythres = utils.IntPtr(int(data.Heurexpirythres.ValueInt64()))
 	}
-	if !data.Minressize.IsNull() {
+	if !data.Minressize.IsNull() && !data.Minressize.IsUnknown() {
 		cmpparameter.Minressize = utils.IntPtr(int(data.Minressize.ValueInt64()))
 	}
-	if !data.Policytype.IsNull() {
+	if !data.Policytype.IsNull() && !data.Policytype.IsUnknown() {
 		cmpparameter.Policytype = data.Policytype.ValueString()
 	}
-	if !data.Quantumsize.IsNull() {
+	if !data.Quantumsize.IsNull() && !data.Quantumsize.IsUnknown() {
 		cmpparameter.Quantumsize = utils.IntPtr(int(data.Quantumsize.ValueInt64()))
 	}
-	if !data.Randomgzipfilename.IsNull() {
+	if !data.Randomgzipfilename.IsNull() && !data.Randomgzipfilename.IsUnknown() {
 		cmpparameter.Randomgzipfilename = data.Randomgzipfilename.ValueString()
 	}
-	if !data.Randomgzipfilenamemaxlength.IsNull() {
+	if !data.Randomgzipfilenamemaxlength.IsNull() && !data.Randomgzipfilenamemaxlength.IsUnknown() {
 		cmpparameter.Randomgzipfilenamemaxlength = utils.IntPtr(int(data.Randomgzipfilenamemaxlength.ValueInt64()))
 	}
-	if !data.Randomgzipfilenameminlength.IsNull() {
+	if !data.Randomgzipfilenameminlength.IsNull() && !data.Randomgzipfilenameminlength.IsUnknown() {
 		cmpparameter.Randomgzipfilenameminlength = utils.IntPtr(int(data.Randomgzipfilenameminlength.ValueInt64()))
 	}
-	if !data.Servercmp.IsNull() {
+	if !data.Servercmp.IsNull() && !data.Servercmp.IsUnknown() {
 		cmpparameter.Servercmp = data.Servercmp.ValueString()
 	}
-	if !data.Varyheadervalue.IsNull() {
+	if !data.Varyheadervalue.IsNull() && !data.Varyheadervalue.IsUnknown() {
 		cmpparameter.Varyheadervalue = data.Varyheadervalue.ValueString()
 	}
 
@@ -188,104 +262,107 @@ func cmpparameterGetThePayloadFromtheConfig(ctx context.Context, data *Cmpparame
 func cmpparameterSetAttrFromGet(ctx context.Context, data *CmpparameterResourceModel, getResponseData map[string]interface{}) *CmpparameterResourceModel {
 	tflog.Debug(ctx, "In cmpparameterSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. When the ADC omits an Optional+Computed
+	// attribute from the GET response, only null it out if the model value is
+	// still Unknown (fresh create with no config). Otherwise preserve the
+	// configured/prior value to avoid "inconsistent result after apply".
 	if val, ok := getResponseData["addvaryheader"]; ok && val != nil {
 		data.Addvaryheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Addvaryheader.IsUnknown() {
 		data.Addvaryheader = types.StringNull()
 	}
 	if val, ok := getResponseData["cmpbypasspct"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cmpbypasspct = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cmpbypasspct.IsUnknown() {
 		data.Cmpbypasspct = types.Int64Null()
 	}
 	if val, ok := getResponseData["cmplevel"]; ok && val != nil {
 		data.Cmplevel = types.StringValue(val.(string))
-	} else {
+	} else if data.Cmplevel.IsUnknown() {
 		data.Cmplevel = types.StringNull()
 	}
 	if val, ok := getResponseData["cmponpush"]; ok && val != nil {
 		data.Cmponpush = types.StringValue(val.(string))
-	} else {
+	} else if data.Cmponpush.IsUnknown() {
 		data.Cmponpush = types.StringNull()
 	}
 	if val, ok := getResponseData["externalcache"]; ok && val != nil {
 		data.Externalcache = types.StringValue(val.(string))
-	} else {
+	} else if data.Externalcache.IsUnknown() {
 		data.Externalcache = types.StringNull()
 	}
 	if val, ok := getResponseData["heurexpiry"]; ok && val != nil {
 		data.Heurexpiry = types.StringValue(val.(string))
-	} else {
+	} else if data.Heurexpiry.IsUnknown() {
 		data.Heurexpiry = types.StringNull()
 	}
 	if val, ok := getResponseData["heurexpiryhistwt"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Heurexpiryhistwt = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Heurexpiryhistwt.IsUnknown() {
 		data.Heurexpiryhistwt = types.Int64Null()
 	}
 	if val, ok := getResponseData["heurexpirythres"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Heurexpirythres = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Heurexpirythres.IsUnknown() {
 		data.Heurexpirythres = types.Int64Null()
 	}
 	if val, ok := getResponseData["minressize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Minressize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Minressize.IsUnknown() {
 		data.Minressize = types.Int64Null()
 	}
 	if val, ok := getResponseData["policytype"]; ok && val != nil {
 		data.Policytype = types.StringValue(val.(string))
-	} else {
+	} else if data.Policytype.IsUnknown() {
 		data.Policytype = types.StringNull()
 	}
 	if val, ok := getResponseData["quantumsize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Quantumsize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Quantumsize.IsUnknown() {
 		data.Quantumsize = types.Int64Null()
 	}
 	if val, ok := getResponseData["randomgzipfilename"]; ok && val != nil {
 		data.Randomgzipfilename = types.StringValue(val.(string))
-	} else {
+	} else if data.Randomgzipfilename.IsUnknown() {
 		data.Randomgzipfilename = types.StringNull()
 	}
 	if val, ok := getResponseData["randomgzipfilenamemaxlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Randomgzipfilenamemaxlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Randomgzipfilenamemaxlength.IsUnknown() {
 		data.Randomgzipfilenamemaxlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["randomgzipfilenameminlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Randomgzipfilenameminlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Randomgzipfilenameminlength.IsUnknown() {
 		data.Randomgzipfilenameminlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["servercmp"]; ok && val != nil {
 		data.Servercmp = types.StringValue(val.(string))
-	} else {
+	} else if data.Servercmp.IsUnknown() {
 		data.Servercmp = types.StringNull()
 	}
 	if val, ok := getResponseData["varyheadervalue"]; ok && val != nil {
 		data.Varyheadervalue = types.StringValue(val.(string))
-	} else {
+	} else if data.Varyheadervalue.IsUnknown() {
 		data.Varyheadervalue = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Case 1: No unique attributes - static singleton ID
 	data.Id = types.StringValue("cmpparameter-config")
 
 	return data

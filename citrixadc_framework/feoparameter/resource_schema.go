@@ -31,23 +31,31 @@ func (r *FeoparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed:    true,
 				Description: "The ID of the feoparameter resource.",
 			},
+			// Optional+Computed with a schema Default matching the documented NITRO
+			// default. The Default is required so that removing the attribute from
+			// config produces a plan diff (revert to default) that drives Update to
+			// unset it; without it an Optional+Computed attr is sticky on removal.
 			"cssinlinethressize": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(1024),
 				Description: "Threshold value of the file size (in bytes) for converting external CSS files to inline CSS files.",
 			},
 			"imginlinethressize": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(1024),
 				Description: "Maximum file size of an image (in bytes), for coverting linked images to inline images.",
 			},
 			"jpegqualitypercent": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(75),
 				Description: "The percentage value of a JPEG image quality to be reduced. Range: 0 - 100",
 			},
 			"jsinlinethressize": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(1024),
 				Description: "Threshold value of the file size (in bytes), for converting external JavaScript files to inline JavaScript files.",
 			},
@@ -55,21 +63,24 @@ func (r *FeoparameterResource) Schema(ctx context.Context, req resource.SchemaRe
 	}
 }
 
-func feoparameterGetThePayloadFromtheConfig(ctx context.Context, data *FeoparameterResourceModel) feo.Feoparameter {
-	tflog.Debug(ctx, "In feoparameterGetThePayloadFromtheConfig Function")
+func feoparameterGetThePayloadFromthePlan(ctx context.Context, data *FeoparameterResourceModel) feo.Feoparameter {
+	tflog.Debug(ctx, "In feoparameterGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
+	// Create API request body from the model. Only send attributes that carry a
+	// concrete, configured value. Unconfigured Optional+Computed attributes are
+	// Unknown (not Null) in the plan, so guard on both to avoid sending a bogus
+	// zero value to the ADC.
 	feoparameter := feo.Feoparameter{}
-	if !data.Cssinlinethressize.IsNull() {
+	if !data.Cssinlinethressize.IsNull() && !data.Cssinlinethressize.IsUnknown() {
 		feoparameter.Cssinlinethressize = utils.IntPtr(int(data.Cssinlinethressize.ValueInt64()))
 	}
-	if !data.Imginlinethressize.IsNull() {
+	if !data.Imginlinethressize.IsNull() && !data.Imginlinethressize.IsUnknown() {
 		feoparameter.Imginlinethressize = utils.IntPtr(int(data.Imginlinethressize.ValueInt64()))
 	}
-	if !data.Jpegqualitypercent.IsNull() {
+	if !data.Jpegqualitypercent.IsNull() && !data.Jpegqualitypercent.IsUnknown() {
 		feoparameter.Jpegqualitypercent = utils.IntPtr(int(data.Jpegqualitypercent.ValueInt64()))
 	}
-	if !data.Jsinlinethressize.IsNull() {
+	if !data.Jsinlinethressize.IsNull() && !data.Jsinlinethressize.IsUnknown() {
 		feoparameter.Jsinlinethressize = utils.IntPtr(int(data.Jsinlinethressize.ValueInt64()))
 	}
 
@@ -79,38 +90,40 @@ func feoparameterGetThePayloadFromtheConfig(ctx context.Context, data *Feoparame
 func feoparameterSetAttrFromGet(ctx context.Context, data *FeoparameterResourceModel, getResponseData map[string]interface{}) *FeoparameterResourceModel {
 	tflog.Debug(ctx, "In feoparameterSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model. When a value is absent from the GET
+	// response, only null it out if it was Unknown (never configured); otherwise
+	// preserve the configured value to avoid "inconsistent result after apply".
 	if val, ok := getResponseData["cssinlinethressize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Cssinlinethressize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Cssinlinethressize.IsUnknown() {
 		data.Cssinlinethressize = types.Int64Null()
 	}
 	if val, ok := getResponseData["imginlinethressize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Imginlinethressize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Imginlinethressize.IsUnknown() {
 		data.Imginlinethressize = types.Int64Null()
 	}
 	if val, ok := getResponseData["jpegqualitypercent"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jpegqualitypercent = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jpegqualitypercent.IsUnknown() {
 		data.Jpegqualitypercent = types.Int64Null()
 	}
 	if val, ok := getResponseData["jsinlinethressize"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Jsinlinethressize = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Jsinlinethressize.IsUnknown() {
 		data.Jsinlinethressize = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Set ID for the resource.
+	// Singleton (unnamed) resource - static ID matching SDK v2 behavior.
 	data.Id = types.StringValue("feoparameter-config")
 
 	return data

@@ -35,10 +35,8 @@ In addition to the arguments, the following attributes are available:
 * `overwrite` - Overwrite any existing HTML error object of the same name.
 * `src` - URL (protocol, host, path, and name) for the location at which to store the imported HTML error object.
 
-## Import
+### Read-only appfwhtmlerrorpage metadata
 
-A appfwhtmlerrorpage can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwhtmlerrorpage` resource). They are Computed/GET-only and are `null` when the appliance omits them.
 
-```shell
-terraform import citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage tf_appfwhtmlerrorpage
-```
+* `response` - Response returned by the appliance for the appfwhtmlerrorpage operation.

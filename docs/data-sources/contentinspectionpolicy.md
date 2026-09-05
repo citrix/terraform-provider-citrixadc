@@ -45,3 +45,12 @@ In addition to the arguments, the following attributes are exported:
 * `newname` - New name for the contentInspection policy. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 * `rule` - Expression that the policy uses to determine whether to execute the specified action.
 * `undefaction` - Action to perform if the result of policy evaluation is undefined (UNDEF). An UNDEF event indicates an internal error condition. Only the above built-in actions can be used.
+
+### Read-only contentinspectionpolicy metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_contentinspectionpolicy` resource) and are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `builtin` - Flag to determine if contentInspection policy is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

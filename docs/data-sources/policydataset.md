@@ -36,3 +36,10 @@ In addition to the arguments, the following attributes are available:
 * `dynamiconly` - Shows only dynamic datasets when set true.
 * `patsetfile` - File which contains list of patterns that needs to be bound to the dataset.
 * `type` - Type of value to bind to the dataset. Possible values: [ ipv4, number, ipv6, ulong, double, mac ]
+
+### Read-only policydataset metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_policydataset` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

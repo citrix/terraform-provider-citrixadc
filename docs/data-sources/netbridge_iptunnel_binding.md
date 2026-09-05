@@ -6,7 +6,7 @@ subcategory: "Network"
 
 The netbridge_iptunnel_binding data source allows you to retrieve information about the binding between a network bridge and an IP tunnel.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_netbridge_iptunnel_binding" "tf_binding" {

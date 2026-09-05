@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *DnsprofileResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating dnsprofile resource")
 
-	// dnsprofile := dnsprofileGetThePayloadFromtheConfig(ctx, &data)
+	dnsprofile := dnsprofileGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsprofile.Type(), &dnsprofile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsprofile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnsprofile-config")
+	// Named resource - use AddResource
+	dnsprofileName := data.Dnsprofilename.ValueString()
+	_, err := r.client.AddResource(service.Dnsprofile.Type(), dnsprofileName, &dnsprofile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsprofile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnsprofile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(dnsprofileName)
+
 	// Read the updated state back
-	r.readDnsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsprofile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,180 @@ func (r *DnsprofileResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading dnsprofile resource")
 
-	r.readDnsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsprofileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsprofileResourceModel
+	var data, config, state DnsprofileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnsprofile resource")
 
-	// Create API request body from the model
-	// dnsprofile := dnsprofileGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Cacheecsresponses.Equal(state.Cacheecsresponses) {
+		tflog.Debug(ctx, "cacheecsresponses has changed for dnsprofile")
+		if config.Cacheecsresponses.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cacheecsresponses")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cachenegativeresponses.Equal(state.Cachenegativeresponses) {
+		tflog.Debug(ctx, "cachenegativeresponses has changed for dnsprofile")
+		if config.Cachenegativeresponses.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cachenegativeresponses")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Cacherecords.Equal(state.Cacherecords) {
+		tflog.Debug(ctx, "cacherecords has changed for dnsprofile")
+		if config.Cacherecords.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cacherecords")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Dnsanswerseclogging.Equal(state.Dnsanswerseclogging) {
+		tflog.Debug(ctx, "dnsanswerseclogging has changed for dnsprofile")
+		if config.Dnsanswerseclogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnsanswerseclogging")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Dnserrorlogging.Equal(state.Dnserrorlogging) {
+		tflog.Debug(ctx, "dnserrorlogging has changed for dnsprofile")
+		if config.Dnserrorlogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnserrorlogging")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Dnsextendedlogging.Equal(state.Dnsextendedlogging) {
+		tflog.Debug(ctx, "dnsextendedlogging has changed for dnsprofile")
+		if config.Dnsextendedlogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnsextendedlogging")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Dnsquerylogging.Equal(state.Dnsquerylogging) {
+		tflog.Debug(ctx, "dnsquerylogging has changed for dnsprofile")
+		if config.Dnsquerylogging.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnsquerylogging")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Dropmultiqueryrequest.Equal(state.Dropmultiqueryrequest) {
+		tflog.Debug(ctx, "dropmultiqueryrequest has changed for dnsprofile")
+		if config.Dropmultiqueryrequest.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dropmultiqueryrequest")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Insertecs.Equal(state.Insertecs) {
+		tflog.Debug(ctx, "insertecs has changed for dnsprofile")
+		if config.Insertecs.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "insertecs")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxcacheableecsprefixlength.Equal(state.Maxcacheableecsprefixlength) {
+		tflog.Debug(ctx, "maxcacheableecsprefixlength has changed for dnsprofile")
+		if config.Maxcacheableecsprefixlength.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxcacheableecsprefixlength")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxcacheableecsprefixlength6.Equal(state.Maxcacheableecsprefixlength6) {
+		tflog.Debug(ctx, "maxcacheableecsprefixlength6 has changed for dnsprofile")
+		if config.Maxcacheableecsprefixlength6.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxcacheableecsprefixlength6")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Recursiveresolution.Equal(state.Recursiveresolution) {
+		tflog.Debug(ctx, "recursiveresolution has changed for dnsprofile")
+		if config.Recursiveresolution.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "recursiveresolution")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Replaceecs.Equal(state.Replaceecs) {
+		tflog.Debug(ctx, "replaceecs has changed for dnsprofile")
+		if config.Replaceecs.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "replaceecs")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsprofile.Type(), &dnsprofile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsprofile, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		dnsprofile := dnsprofileGetThePayloadFromthePlan(ctx, &data)
+		// Named resource - use UpdateResource
+		dnsprofileName := data.Dnsprofilename.ValueString()
+		_, err := r.client.UpdateResource(service.Dnsprofile.Type(), dnsprofileName, &dnsprofile)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsprofile, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated dnsprofile resource")
+		tflog.Trace(ctx, "Updated dnsprofile resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for dnsprofile resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"dnsprofilename": data.Dnsprofilename.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsprofile.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsprofile attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readDnsprofileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsprofileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsprofile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +286,34 @@ func (r *DnsprofileResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	tflog.Debug(ctx, "Deleting dnsprofile resource")
+	// Named resource - delete using DeleteResource
+	dnsprofileName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Dnsprofile.Type(), dnsprofileName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsprofile, got error: %s", err))
+		return
+	}
 
-	// For dnsprofile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnsprofile resource from state")
+	tflog.Trace(ctx, "Deleted dnsprofile resource")
 }
 
-// Helper function to read dnsprofile data from API
-func (r *DnsprofileResource) readDnsprofileFromApi(ctx context.Context, data *DnsprofileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnsprofile.Type(), "")
+// Helper function to read dnsprofile data from API. Returns false when the
+// resource no longer exists on the appliance.
+func (r *DnsprofileResource) readDnsprofileFromApi(ctx context.Context, data *DnsprofileResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	dnsprofileName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Dnsprofile.Type(), dnsprofileName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsprofile, got error: %s", err))
-		return
+		return false
 	}
 
 	dnsprofileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

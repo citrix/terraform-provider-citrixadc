@@ -3,8 +3,10 @@ package arp
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,29 @@ func (r *ArpResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	tflog.Debug(ctx, "Creating arp resource")
 
-	// arp := arpGetThePayloadFromtheConfig(ctx, &data)
+	// Build the NITRO add payload from the plan
+	arp := arpGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Arp.Type(), &arp)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create arp, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("arp-config")
+	// Named resource - use AddResource keyed on ipaddress
+	arpName := data.Ipaddress.ValueString()
+	_, err := r.client.AddResource(service.Arp.Type(), arpName, &arp)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create arp, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created arp resource")
 
+	// Set ID for the resource before reading state (matches SDK v2 d.SetId(arpName))
+	data.Id = types.StringValue(arpName)
+
 	// Read the updated state back
-	r.readArpFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readArpFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "arp not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *ArpResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	tflog.Debug(ctx, "Reading arp resource")
 
-	r.readArpFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readArpFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ArpResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ArpResourceModel
+	var data, state ArpResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,22 @@ func (r *ArpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating arp resource")
 
-	// Create API request body from the model
-	// arp := arpGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Arp.Type(), &arp)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update arp, got error: %s", err))
-	//	 return
-	// }
+	// arp has no NITRO-updatable attributes (all configurable fields are
+	// ForceNew/RequiresReplace); there is nothing to push to the appliance.
+	// Simply refresh state from the API.
+	if !r.readArpFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "arp not found immediately after update")
+		}
+		return
+	}
 
 	tflog.Trace(ctx, "Updated arp resource")
-
-	// Read the updated state back
-	r.readArpFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +155,50 @@ func (r *ArpResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	tflog.Debug(ctx, "Deleting arp resource")
 
-	// For arp, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted arp resource from state")
+	arpName := data.Id.ValueString()
+
+	// Build the delete args exactly as SDK v2 deleteArpFunc did (only non-zero /
+	// true values are appended, matching the old d.GetOk semantics).
+	args := make([]string, 0)
+	if !data.Td.IsNull() && data.Td.ValueInt64() != 0 {
+		args = append(args, fmt.Sprintf("td:%v", data.Td.ValueInt64()))
+	}
+	if !data.All.IsNull() && data.All.ValueBool() {
+		args = append(args, fmt.Sprintf("all:%s", strconv.FormatBool(data.All.ValueBool())))
+	}
+	if !data.Ownernode.IsNull() && data.Ownernode.ValueInt64() != 0 {
+		args = append(args, fmt.Sprintf("ownernode:%v", data.Ownernode.ValueInt64()))
+	}
+
+	var err error
+	if len(args) == 0 {
+		err = r.client.DeleteResource(service.Arp.Type(), arpName)
+	} else {
+		err = r.client.DeleteResourceWithArgs(service.Arp.Type(), arpName, args)
+	}
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete arp, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted arp resource")
 }
 
-// Helper function to read arp data from API
-func (r *ArpResource) readArpFromApi(ctx context.Context, data *ArpResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Arp.Type(), "")
+// Helper function to read arp data from API. Returns false when the resource no
+// longer exists on the appliance.
+func (r *ArpResource) readArpFromApi(ctx context.Context, data *ArpResourceModel, diags *diag.Diagnostics) bool {
+	arpName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Arp.Type(), arpName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read arp, got error: %s", err))
-		return
+		return false
 	}
 
 	arpSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

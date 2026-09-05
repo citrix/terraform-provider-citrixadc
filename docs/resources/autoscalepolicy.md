@@ -25,6 +25,7 @@ resource "citrixadc_autoscalepolicy" "tf_autoscalepolicy" {
 * `rule` - (Required) The rule associated with the policy.
 * `comment` - (Optional) Comments associated with this autoscale policy.
 * `logaction` - (Optional) The log action associated with the autoscale policy
+* `newname` - (Optional) The new name of the autoscale policy.
 
 
 ## Attribute Reference

@@ -46,3 +46,23 @@ In addition to the above arguments, the following attributes are exported:
 * `port` - HTTP port on the Proxy server. This is a mandatory parameter for both IP address and service name based configuration.
 * `hbcustominterval` - Interval (in days) between CallHome heartbeats.
 * `nodeid` - Unique number that identifies the cluster node.
+
+### Read-only callhome metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_callhome` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `sslcardfirstfailure` - First occurrence SSL card failure.
+* `sslcardlatestfailure` - Latest occurrence SSL card failure.
+* `powfirstfail` - First occurrence power supply unit failure.
+* `powlatestfailure` - Latest occurrence power supply unit failure.
+* `hddfirstfail` - First occurrence hard disk drive failure.
+* `hddlatestfailure` - Latest occurrence hard disk drive failure.
+* `flashfirstfail` - First occurrence compact flash failure.
+* `flashlatestfailure` - Latest occurrence compact flush failure.
+* `rlfirsthighdrop` - First occurence of high rate limit drops.
+* `rllatesthighdrop` - Latest occurence of high rate limit drops.
+* `restartlatestfail` - Latest occurrence warm restart failure.
+* `memthrefirstanomaly` - First occurrence of memory anomaly.
+* `memthrelatestanomaly` - Latest occurrence of memory anomaly.
+* `callhomestatus` - Callhome feature enabled/disable, register with upload server successful/failed. A list of strings.
+* `anomalydetection` - Enables or disables anomaly detection.

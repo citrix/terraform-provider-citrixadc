@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *NstrafficdomainVlanBindingResource) Schema(ctx context.Context, req res
 				Description: "The ID of the nstrafficdomain_vlan_binding resource.",
 			},
 			"td": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer value that uniquely identifies a traffic domain.",
 			},
 			"vlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ID of the VLAN to bind to this traffic domain. More than one VLAN can be bound to a traffic domain, but the same VLAN cannot be a part of multiple traffic domains.",
 			},
 		},
 	}
 }
 
-func nstrafficdomain_vlan_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NstrafficdomainVlanBindingResourceModel) ns.Nstrafficdomainvlanbinding {
-	tflog.Debug(ctx, "In nstrafficdomain_vlan_bindingGetThePayloadFromtheConfig Function")
+func nstrafficdomain_vlan_bindingGetThePayloadFromthePlan(ctx context.Context, data *NstrafficdomainVlanBindingResourceModel) ns.Nstrafficdomainvlanbinding {
+	tflog.Debug(ctx, "In nstrafficdomain_vlan_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nstrafficdomain_vlan_binding := ns.Nstrafficdomainvlanbinding{}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		nstrafficdomain_vlan_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Vlan.IsNull() {
+	if !data.Vlan.IsNull() && !data.Vlan.IsUnknown() {
 		nstrafficdomain_vlan_binding.Vlan = utils.IntPtr(int(data.Vlan.ValueInt64()))
 	}
 

@@ -32,3 +32,10 @@ The following attributes are available:
 * `action` - Spillover action. Currently only type SPILLOVER is supported.
 * `newname` - New name for the spillover action. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.
 * `id` - The id of the spilloveraction. It is a system-generated identifier.
+
+### Read-only spilloveraction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_spilloveraction` resource) and are Computed. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine whether the spillover action is default or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this configuration.

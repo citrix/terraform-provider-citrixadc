@@ -114,6 +114,7 @@ type Aaaldapparams struct {
 
 	//------- Read only Parameter ---------;
 
+	Ldapcontimeout string `json:"ldapcontimeout,omitempty"`
 	Groupauthname string `json:"groupauthname,omitempty"`
 	Builtin string `json:"builtin,omitempty"`
 	Feature string `json:"feature,omitempty"`

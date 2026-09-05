@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -46,110 +48,126 @@ func (r *SslactionResource) Configure(ctx context.Context, req resource.Configur
 func (r *SslactionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data SslactionResourceModel
 
-	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Creating sslaction resource")
 
-	// sslaction := sslactionGetThePayloadFromtheConfig(ctx, &data)
+	sslactionName := data.Name.ValueString()
+	sslaction := sslactionGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslaction.Type(), &sslaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslaction, got error: %s", err))
-	//	 return
-	// }
+	// Named resource - NITRO add (HTTP POST). sslaction has no set/update command.
+	_, err := r.client.AddResource(service.Sslaction.Type(), sslactionName, &sslaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslaction, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslaction-config")
+	data.Id = types.StringValue(sslactionName)
 
 	tflog.Trace(ctx, "Created sslaction resource")
 
-	// Read the updated state back
-	r.readSslactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslaction not found immediately after create")
+		}
+		return
+	}
 
-	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslactionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data SslactionResourceModel
 
-	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Reading sslaction resource")
 
-	r.readSslactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
-	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
+// Update: sslaction is immutable on the appliance (all attributes are ForceNew /
+// RequiresReplace and NITRO exposes no set command). Terraform therefore replaces
+// the resource on any change and never actually invokes Update in practice; this
+// implementation simply refreshes state without issuing a NITRO write.
 func (r *SslactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslactionResourceModel
+	var data, state SslactionResourceModel
 
-	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tflog.Debug(ctx, "Updating sslaction resource")
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// sslaction := sslactionGetThePayloadFromtheConfig(ctx, &data)
+	tflog.Debug(ctx, "Updating sslaction resource (no-op: immutable resource)")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslaction.Type(), &sslaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslaction, got error: %s", err))
-	//	 return
-	// }
+	if !r.readSslactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslaction not found during update")
+		}
+		return
+	}
 
-	tflog.Trace(ctx, "Updated sslaction resource")
-
-	// Read the updated state back
-	r.readSslactionFromApi(ctx, &data, &resp.Diagnostics)
-
-	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslactionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data SslactionResourceModel
 
-	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Debug(ctx, "Deleting sslaction resource")
 
-	// For sslaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslaction resource from state")
+	err := r.client.DeleteResource(service.Sslaction.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslaction %s, got error: %s", data.Id.ValueString(), err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted sslaction resource")
 }
 
-// Helper function to read sslaction data from API
-func (r *SslactionResource) readSslactionFromApi(ctx context.Context, data *SslactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslaction.Type(), "")
+// readSslactionFromApi reads the sslaction into the model. Returns false when the
+// resource no longer exists on the appliance.
+func (r *SslactionResource) readSslactionFromApi(ctx context.Context, data *SslactionResourceModel, diags *diag.Diagnostics) bool {
+	sslactionName := data.Id.ValueString()
+	if sslactionName == "" {
+		sslactionName = data.Name.ValueString()
+	}
+
+	getResponseData, err := r.client.FindResource(service.Sslaction.Type(), sslactionName)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslaction, got error: %s", err))
-		return
+		if utils.IsNotFoundError(err) {
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslaction %s, got error: %s", sslactionName, err))
+		return false
+	}
+	if getResponseData == nil {
+		return false
 	}
 
 	sslactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

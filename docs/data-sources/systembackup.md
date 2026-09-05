@@ -37,10 +37,12 @@ In addition to the arguments, the following attributes are available:
 * `uselocaltimezone` - This option will create backup file with local timezone timestamp.
 * `id` - The id of the systembackup. It has the same value as the `filename` attribute.
 
-## Import
+### Read-only systembackup metadata
 
-A systembackup can be imported using its filename, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_systembackup` resource) and are `null` when the appliance omits them.
 
-```shell
-terraform import citrixadc_systembackup.tf_systembackup my_backup.tgz
-```
+* `size` - Size of the backup file(*.tgz) in KB.
+* `creationtime` - Creation time of the backup file(*.tgz).
+* `version` - Build version of the backup file(*.tgz).
+* `createdby` - Name of user who created the backup file(*.tgz).
+* `ipaddress` - Ip of Citrix ADC box where the backup file(*.tgz) was created.

@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -440,21 +442,27 @@ func (r *VpnsamlssoprofileResource) Schema(ctx context.Context, req resource.Sch
 			},
 			"digestmethod": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("SHA256"),
 				Description: "Algorithm to be used to compute/verify digest for SAML transactions",
 			},
 			"encryptassertion": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to encrypt assertion when Citrix ADC sends one.",
 			},
 			"encryptionalgorithm": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("AES256"),
 				Description: "Algorithm to be used to encrypt SAML assertion",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new saml single sign-on profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an SSO action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"nameidexpr": schema.StringAttribute{
@@ -464,6 +472,7 @@ func (r *VpnsamlssoprofileResource) Schema(ctx context.Context, req resource.Sch
 			},
 			"nameidformat": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("transient"),
 				Description: "Format of Name Identifier sent in Assertion.",
 			},
@@ -494,11 +503,13 @@ func (r *VpnsamlssoprofileResource) Schema(ctx context.Context, req resource.Sch
 			},
 			"signassertion": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ASSERTION"),
 				Description: "Option to sign portions of assertion when Citrix ADC IDP sends one. Based on the user selection, either Assertion or Response or Both or none can be signed",
 			},
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("RSA-SHA256"),
 				Description: "Algorithm to be used to sign/verify SAML transactions",
 			},
@@ -509,6 +520,7 @@ func (r *VpnsamlssoprofileResource) Schema(ctx context.Context, req resource.Sch
 			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(5),
 				Description: "This option specifies the number of minutes on either side of current time that the assertion would be valid. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
@@ -761,7 +773,7 @@ func vpnsamlssoprofileGetThePayloadFromtheConfig(ctx context.Context, data *Vpns
 	if !data.Signatureservice.IsNull() {
 		vpnsamlssoprofile.Signatureservice = data.Signatureservice.ValueString()
 	}
-	if !data.Skewtime.IsNull() {
+	if !data.Skewtime.IsNull() && !data.Skewtime.IsUnknown() {
 		vpnsamlssoprofile.Skewtime = utils.IntPtr(int(data.Skewtime.ValueInt64()))
 	}
 
@@ -1152,9 +1164,14 @@ func vpnsamlssoprofileSetAttrFromGet(ctx context.Context, data *Vpnsamlssoprofil
 	} else {
 		data.Samlspcertname = types.StringNull()
 	}
+	// sendpassword is not returned by the NITRO GET call (mirrors SDK v2, which
+	// intentionally skips d.Set for it) - preserve the configured/prior value so
+	// a configured value is not clobbered to null (omit-on-default trap). Only
+	// resolve an unknown (unconfigured Optional+Computed) value to null so the
+	// state is always known after apply.
 	if val, ok := getResponseData["sendpassword"]; ok && val != nil {
 		data.Sendpassword = types.StringValue(val.(string))
-	} else {
+	} else if data.Sendpassword.IsUnknown() {
 		data.Sendpassword = types.StringNull()
 	}
 	if val, ok := getResponseData["signassertion"]; ok && val != nil {

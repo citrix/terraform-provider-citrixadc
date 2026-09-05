@@ -32,8 +32,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCloudtunnelvserver_basic_step1 = `
@@ -194,7 +194,42 @@ func TestAccCloudtunnelvserverDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "servicetype", "TCP"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "listenpolicy", "none"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "listenpriority", "50"),
+					// id is the universal runtime-binding proof; state is a
+					// status field always populated for a created vserver.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver", "state"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccCloudtunnelvserver_selfHealing verifies drift recovery:
+// after the resource is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccCloudtunnelvserver_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudtunnelvserver.tf_cloudtunnelvserver"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudtunnelvserverDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudtunnelvserver_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCloudtunnelvserverExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cloudtunnelvserver.Type(), "tf_cloudtunnelvserver"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCloudtunnelvserver_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCloudtunnelvserverExist(resAddr, nil)),
 			},
 		},
 	})

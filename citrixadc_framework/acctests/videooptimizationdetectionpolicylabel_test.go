@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // videooptimizationdetectionpolicylabel is a named resource whose attributes
@@ -163,7 +163,37 @@ func TestAccVideooptimizationdetectionpolicylabelDataSource_basic(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel", "labelname", "tf_videoopt_detection_pl"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel", "comment", "test_comment"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationdetectionpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationdetectionpolicylabel.tf_videooptimizationdetectionpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationdetectionpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationdetectionpolicylabel_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Videooptimizationdetectionpolicylabel.Type(), "tf_videoopt_detection_pl"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationdetectionpolicylabel_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationdetectionpolicylabelExist(resAddr, nil)),
 			},
 		},
 	})

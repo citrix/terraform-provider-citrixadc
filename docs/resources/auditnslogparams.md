@@ -37,6 +37,7 @@ resource "citrixadc_auditnslogparams" "tf_auditnslogparams" {
 * `urlfiltering` - (Optional) Log URL filtering event information. Possible values: [ ENABLED, DISABLED ]
 * `contentinspectionlog` - (Optional) Log Content Inspection event information. Possible values: [ ENABLED, DISABLED ]
 * `protocolviolations` - (Optional) Log protocol violations
+* `denylistviolations` - (Optional) Log denylist violations
 
 
 ## Attribute Reference
@@ -44,3 +45,12 @@ resource "citrixadc_auditnslogparams" "tf_auditnslogparams" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the auditnslogparams. It is a unique string prefixed with  `tf-auditnslogparams-` attribute.
+
+
+## Import
+
+A auditnslogparams can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_auditnslogparams.tf_auditnslogparams auditnslogparams-config
+```

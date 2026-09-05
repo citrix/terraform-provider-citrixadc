@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -40,6 +41,7 @@ func (r *LocationparameterResource) Schema(ctx context.Context, req resource.Sch
 			"matchwildcardtoany": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("NO"),
 				Description: "Indicates whether wildcard qualifiers should match any other\nqualifier including non-wildcard while evaluating\nlocation based expressions.\nPossible values: Yes, No, Expression.\n    Yes - Wildcard qualifiers match any other qualifiers.\n    No  - Wildcard qualifiers do not match non-wildcard\n          qualifiers, but match other wildcard qualifiers.\n    Expression - Wildcard qualifiers in an expression\n          match any qualifier in an LDNS location,\n          wildcard qualifiers in the LDNS location do not match\n          non-wildcard qualifiers in an expression",
 			},
 			"q1label": schema.StringAttribute{
@@ -113,44 +115,47 @@ func locationparameterSetAttrFromGet(ctx context.Context, data *Locationparamete
 	tflog.Debug(ctx, "In locationparameterSetAttrFromGet Function")
 
 	// Convert API response to model
+	// Guard else-branches: only null a value when it is Unknown (e.g. a Computed
+	// attribute not set in config during create). Never clobber a known configured
+	// value that NITRO merely omits from GET (omit-on-default trap).
 	if val, ok := getResponseData["context"]; ok && val != nil {
 		data.Context = types.StringValue(val.(string))
-	} else {
+	} else if data.Context.IsUnknown() {
 		data.Context = types.StringNull()
 	}
 	if val, ok := getResponseData["matchwildcardtoany"]; ok && val != nil {
 		data.Matchwildcardtoany = types.StringValue(val.(string))
-	} else {
+	} else if data.Matchwildcardtoany.IsUnknown() {
 		data.Matchwildcardtoany = types.StringNull()
 	}
 	if val, ok := getResponseData["q1label"]; ok && val != nil {
 		data.Q1label = types.StringValue(val.(string))
-	} else {
+	} else if data.Q1label.IsUnknown() {
 		data.Q1label = types.StringNull()
 	}
 	if val, ok := getResponseData["q2label"]; ok && val != nil {
 		data.Q2label = types.StringValue(val.(string))
-	} else {
+	} else if data.Q2label.IsUnknown() {
 		data.Q2label = types.StringNull()
 	}
 	if val, ok := getResponseData["q3label"]; ok && val != nil {
 		data.Q3label = types.StringValue(val.(string))
-	} else {
+	} else if data.Q3label.IsUnknown() {
 		data.Q3label = types.StringNull()
 	}
 	if val, ok := getResponseData["q4label"]; ok && val != nil {
 		data.Q4label = types.StringValue(val.(string))
-	} else {
+	} else if data.Q4label.IsUnknown() {
 		data.Q4label = types.StringNull()
 	}
 	if val, ok := getResponseData["q5label"]; ok && val != nil {
 		data.Q5label = types.StringValue(val.(string))
-	} else {
+	} else if data.Q5label.IsUnknown() {
 		data.Q5label = types.StringNull()
 	}
 	if val, ok := getResponseData["q6label"]; ok && val != nil {
 		data.Q6label = types.StringValue(val.(string))
-	} else {
+	} else if data.Q6label.IsUnknown() {
 		data.Q6label = types.StringNull()
 	}
 

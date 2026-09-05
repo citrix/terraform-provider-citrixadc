@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccRnat6_nsip6_binding_basic = `
@@ -108,10 +111,12 @@ func testAccCheckRnat6_nsip6_bindingExist(n string, id *string) resource.TestChe
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		natip6 := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "natip6"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		natip6 := idMap["natip6"]
 
 		findParams := service.FindParams{
 			ResourceType:             "rnat6_nsip6_binding",
@@ -250,7 +255,144 @@ func TestAccRnat6_nsip6_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "name", "my_rnat6"),
 					resource.TestCheckResourceAttr("data.citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "natip6", "2001:db8:85a3::8a2e:370:7334"),
+					// Universal runtime-binding proof; read-only GET-only field (td)
+					// is omitted for the default traffic domain, so not asserted.
+					resource.TestCheckResourceAttrSet("data.citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+const testAccRnat6_nsip6_binding_upgrade_basic = `
+
+	resource "citrixadc_rnat6" "tf_rnat6" {
+		name             = "my_rnat6"
+		network          = "2003::/64"
+		srcippersistency = "ENABLED"
+	}
+	resource "citrixadc_nsip6" "tf_nsip6" {
+		ipv6address = "2001:db8:85a3::8a2e:370:7334/64"
+		type = "VIP"
+	}
+
+	resource "citrixadc_rnat6_nsip6_binding" "tf_rnat6_nsip6_binding" {
+		name 	= citrixadc_rnat6.tf_rnat6.name
+		natip6 	= "2001:db8:85a3::8a2e:370:7334"
+		depends_on = [
+			citrixadc_nsip6.tf_nsip6
+		]
+	}
+`
+
+// TestAccRnat6_nsip6_binding_sdkv2StateUpgrade verifies that state written by the last
+// SDK v2 release (with the legacy comma-joined id) is transparently upgraded to the new
+// key:value id format when refreshed through the current Framework provider.
+func TestAccRnat6_nsip6_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckRnat6_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release; state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccRnat6_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnat6_nsip6_bindingExist("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "id", "my_rnat6,2001:db8:85a3::8a2e:370:7334"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current Framework provider.
+			// Read recomputes the id, upgrading it to the new key:value format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRnat6_nsip6_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRnat6_nsip6_bindingExist("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding", "id", "name:my_rnat6,natip6:2001%3Adb8%3A85a3%3A%3A8a2e%3A370%3A7334"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRnat6_nsip6_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,natip6) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "natip6"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnat6_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccRnat6_nsip6_binding_basic},
+			{Config: testAccRnat6_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccRnat6_nsip6_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccRnat6_nsip6_binding_selfHealing verifies the provider re-creates the binding
+// when it is deleted out-of-band between apply steps (drift recovery). The natip6 delete
+// arg is URL-encoded to match the resource's Delete (IPv6 ':' are NITRO arg delimiters).
+func TestAccRnat6_nsip6_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_rnat6_nsip6_binding.tf_rnat6_nsip6_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckRnat6_nsip6_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRnat6_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat6_nsip6_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Rnat6_nsip6_binding.Type(), "my_rnat6", []string{"natip6:2001%3Adb8%3A85a3%3A%3A8a2e%3A370%3A7334"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccRnat6_nsip6_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRnat6_nsip6_bindingExist(resAddr, nil)),
 			},
 		},
 	})

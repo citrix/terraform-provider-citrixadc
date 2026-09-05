@@ -35,7 +35,7 @@ func (d *VideooptimizationpacingpolicylabelDataSource) Schema(ctx context.Contex
 }
 
 func (d *VideooptimizationpacingpolicylabelDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VideooptimizationpacingpolicylabelResourceModel
+	var data VideooptimizationpacingpolicylabelDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *VideooptimizationpacingpolicylabelDataSource) Read(ctx context.Context,
 		return
 	}
 
-	videooptimizationpacingpolicylabelSetAttrFromGet(ctx, &data, getResponseData)
+	videooptimizationpacingpolicylabelDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

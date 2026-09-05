@@ -2,6 +2,7 @@ package dnssuffix
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
@@ -38,12 +39,12 @@ func (r *DnssuffixResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func dnssuffixGetThePayloadFromtheConfig(ctx context.Context, data *DnssuffixResourceModel) dns.Dnssuffix {
-	tflog.Debug(ctx, "In dnssuffixGetThePayloadFromtheConfig Function")
+func dnssuffixGetThePayloadFromthePlan(ctx context.Context, data *DnssuffixResourceModel) dns.Dnssuffix {
+	tflog.Debug(ctx, "In dnssuffixGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	dnssuffix := dns.Dnssuffix{}
-	if !data.Dnssuffix.IsNull() {
+	if !data.Dnssuffix.IsNull() && !data.Dnssuffix.IsUnknown() {
 		dnssuffix.Dnssuffix = data.Dnssuffix.ValueString()
 	}
 
@@ -61,8 +62,8 @@ func dnssuffixSetAttrFromGet(ctx context.Context, data *DnssuffixResourceModel, 
 	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
-	data.Id = types.StringValue("dnssuffix-config")
+	// Case 2: Single unique attribute - use plain value as ID (matches SDK v2 d.SetId(dnssuffix))
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Dnssuffix.ValueString()))
 
 	return data
 }

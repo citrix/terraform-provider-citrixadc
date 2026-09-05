@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,15 @@ func (r *SubscribergxinterfaceResource) Create(ctx context.Context, req resource
 
 	tflog.Debug(ctx, "Creating subscribergxinterface resource")
 
-	// subscribergxinterface := subscribergxinterfaceGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan
+	subscribergxinterface := subscribergxinterfaceGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscribergxinterface.Type(), &subscribergxinterface)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscribergxinterface, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - singleton resource, use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Subscribergxinterface.Type(), &subscribergxinterface)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create subscribergxinterface, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("subscribergxinterface-config")
@@ -95,10 +97,14 @@ func (r *SubscribergxinterfaceResource) Read(ctx context.Context, req resource.R
 }
 
 func (r *SubscribergxinterfaceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SubscribergxinterfaceResourceModel
+	var data, config, state SubscribergxinterfaceResourceModel
 
+	// Read Terraform prior state to detect changes
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +112,128 @@ func (r *SubscribergxinterfaceResource) Update(ctx context.Context, req resource
 
 	tflog.Debug(ctx, "Updating subscribergxinterface resource")
 
-	// Create API request body from the model
-	// subscribergxinterface := subscribergxinterfaceGetThePayloadFromtheConfig(ctx, &data)
+	// Determine which attributes changed and which were removed from config (unset)
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Cerrequesttimeout.Equal(state.Cerrequesttimeout) {
+		if config.Cerrequesttimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "cerrequesttimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Healthcheck.Equal(state.Healthcheck) {
+		if config.Healthcheck.IsNull() {
+			attributesToUnset = append(attributesToUnset, "healthcheck")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Healthcheckttl.Equal(state.Healthcheckttl) {
+		if config.Healthcheckttl.IsNull() {
+			attributesToUnset = append(attributesToUnset, "healthcheckttl")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Holdonsubscriberabsence.Equal(state.Holdonsubscriberabsence) {
+		if config.Holdonsubscriberabsence.IsNull() {
+			attributesToUnset = append(attributesToUnset, "holdonsubscriberabsence")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Idlettl.Equal(state.Idlettl) {
+		if config.Idlettl.IsNull() {
+			attributesToUnset = append(attributesToUnset, "idlettl")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Negativettl.Equal(state.Negativettl) {
+		if config.Negativettl.IsNull() {
+			attributesToUnset = append(attributesToUnset, "negativettl")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Negativettllimitedsuccess.Equal(state.Negativettllimitedsuccess) {
+		if config.Negativettllimitedsuccess.IsNull() {
+			attributesToUnset = append(attributesToUnset, "negativettllimitedsuccess")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Purgesdbongxfailure.Equal(state.Purgesdbongxfailure) {
+		if config.Purgesdbongxfailure.IsNull() {
+			attributesToUnset = append(attributesToUnset, "purgesdbongxfailure")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Requestretryattempts.Equal(state.Requestretryattempts) {
+		if config.Requestretryattempts.IsNull() {
+			attributesToUnset = append(attributesToUnset, "requestretryattempts")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Requesttimeout.Equal(state.Requesttimeout) {
+		if config.Requesttimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "requesttimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Revalidationtimeout.Equal(state.Revalidationtimeout) {
+		if config.Revalidationtimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "revalidationtimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	// Remaining updateable attributes (no documented unset default) only trigger an update.
+	if !data.Nodeid.Equal(state.Nodeid) {
+		hasChange = true
+	}
+	if !data.Pcrfrealm.Equal(state.Pcrfrealm) {
+		hasChange = true
+	}
+	if !data.Service.Equal(state.Service) {
+		hasChange = true
+	}
+	if !data.Servicepathavp.Equal(state.Servicepathavp) {
+		hasChange = true
+	}
+	if !data.Servicepathvendorid.Equal(state.Servicepathvendorid) {
+		hasChange = true
+	}
+	if !data.Vserver.Equal(state.Vserver) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Subscribergxinterface.Type(), &subscribergxinterface)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscribergxinterface, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Build the payload from the plan
+		subscribergxinterface := subscribergxinterfaceGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated subscribergxinterface resource")
+		// Make API call - singleton resource, use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Subscribergxinterface.Type(), &subscribergxinterface)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update subscribergxinterface, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated subscribergxinterface resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for subscribergxinterface resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts to defaults
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Subscribergxinterface.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset subscribergxinterface attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readSubscribergxinterfaceFromApi(ctx, &data, &resp.Diagnostics)

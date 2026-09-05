@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVxlanvlanmap_add = `
@@ -122,6 +124,77 @@ func testAccCheckVxlanvlanmapDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccVxlanvlanmap_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vxlanvlanmap.tf_vxlanvlanmp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlanvlanmapDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVxlanvlanmap_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanvlanmapExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vxlanvlanmap.Type(), "tf_vxlanvlanmp"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVxlanvlanmap_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanvlanmapExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVxlanvlanmap_import(t *testing.T) {
+	const resAddr = "citrixadc_vxlanvlanmap.tf_vxlanvlanmp"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVxlanvlanmapDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVxlanvlanmap_add},
+			{
+				Config:                  testAccVxlanvlanmap_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccVxlanvlanmap_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVxlanvlanmapDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVxlanvlanmap_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanvlanmapExist("citrixadc_vxlanvlanmap.tf_vxlanvlanmp", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVxlanvlanmap_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVxlanvlanmapExist("citrixadc_vxlanvlanmap.tf_vxlanvlanmp", nil)),
+			},
+		},
+	})
 }
 
 const testAccVxlanvlanmapDataSource_basic = `

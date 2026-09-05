@@ -30,3 +30,9 @@ In addition to the arguments, the following attributes are available:
 
 * `ownernode` - ID of the cluster node for which you are creating the FIS. Can be configured only through the cluster IP address.
 * `id` - The id of the fis. It has the same value as the `name` attribute.
+
+### Read-only fis metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_fis` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
+
+* `ifaces` - Interfaces to be bound to the FIS, in slot/port notation (for example, 1/3).

@@ -39,11 +39,3 @@ In addition to the arguments, the following attributes are available:
 * `logmethod` - HTTP method information is logged if option is enabled.
 * `logurl` - URL information is logged if option is enabled.
 * `logversion` - Version information is logged if option is enabled.
-
-## Import
-
-A lsnhttphdrlogprofile can be imported using its httphdrlogprofilename, e.g.
-
-```shell
-terraform import citrixadc_lsnhttphdrlogprofile.tf_lsnhttphdrlogprofile my_lsn_httphdrlogprofile
-```

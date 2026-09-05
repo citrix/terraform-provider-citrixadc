@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_cmdinjection_binding_basic = `
@@ -130,17 +133,16 @@ func testAccCheckAppfwprofile_cmdinjection_bindingExist(n string, id *string) re
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		appFwName := idSlice[0]
-		cmdinjection := idSlice[1]
-		formactionurl_cmd := idSlice[2]
-		as_scan_location_cmd := idSlice[3]
-		as_value_type_cmd := ""
-		as_value_expr_cmd := ""
-		if len(idSlice) > 4 {
-			as_value_type_cmd = idSlice[4]
-			as_value_expr_cmd = idSlice[5]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "cmdinjection", "formactionurl_cmd", "as_scan_location_cmd", "as_value_type_cmd", "as_value_expr_cmd"}, []string{"as_value_type_cmd", "as_value_expr_cmd"})
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
 		}
+		appFwName := idMap["name"]
+		cmdinjection := idMap["cmdinjection"]
+		formactionurl_cmd := idMap["formactionurl_cmd"]
+		as_scan_location_cmd := idMap["as_scan_location_cmd"]
+		as_value_type_cmd := idMap["as_value_type_cmd"]
+		as_value_expr_cmd := idMap["as_value_expr_cmd"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_cmdinjection_binding",
@@ -312,6 +314,144 @@ func TestAccAppfwprofile_cmdinjection_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "isautodeployed", "NOTAUTODEPLOYED"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "comment", "Testing"),
 				),
+			},
+		},
+	})
+}
+
+const testAccAppfwprofile_cmdinjection_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_cmdinjection_binding" "tf_binding1" {
+		name                 = citrixadc_appfwprofile.tf_appfwprofile.name
+		cmdinjection         = "tf_cmdinjection"
+		formactionurl_cmd    = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		as_scan_location_cmd = "HEADER"
+		as_value_type_cmd    = "Keyword"
+		as_value_expr_cmd    = "[a-z]+grep"
+		alertonly            = "OFF"
+		isvalueregex_cmd     = "REGEX"
+		isautodeployed       = "NOTAUTODEPLOYED"
+		comment              = "Testing"
+	}
+`
+
+func TestAccAppfwprofile_cmdinjection_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_cmdinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_cmdinjection_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cmdinjection_bindingExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "id", `tf_appfwprofile,tf_cmdinjection,^https://sd2\-zgw\.test\.ctxns\.com/api/document/content$,HEADER,Keyword,[a-z]+grep`),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_cmdinjection_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_cmdinjection_bindingExist("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_cmdinjection_binding.tf_binding1", "id", `as_scan_location_cmd:HEADER,as_value_expr_cmd:%5Ba-z%5D%2Bgrep,as_value_type_cmd:Keyword,cmdinjection:tf_cmdinjection,formactionurl_cmd:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fdocument%2Fcontent%24,name:tf_appfwprofile`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_cmdinjection_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_cmdinjection_binding.tf_binding1"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,cmdinjection,formactionurl_cmd,as_scan_location_cmd,as_value_type_cmd,as_value_expr_cmd) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "cmdinjection", "formactionurl_cmd", "as_scan_location_cmd", "as_value_type_cmd", "as_value_expr_cmd"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_cmdinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_cmdinjection_binding_basic},
+			{Config: testAccAppfwprofile_cmdinjection_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppfwprofile_cmdinjection_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccAppfwprofile_cmdinjection_binding_selfHealing verifies drift recovery: after
+// the binding is deleted out-of-band on the ADC, the next refresh's Read must detect
+// it is gone and drop it from state so the same config recreates it. The delete arg
+// values with reserved characters are URL-encoded, mirroring the resource's Delete.
+func TestAccAppfwprofile_cmdinjection_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_cmdinjection_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_cmdinjection_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_cmdinjection_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_cmdinjection_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_cmdinjection_binding.Type(), "tf_appfwprofile", map[string]string{
+						"as_scan_location_cmd": "HEADER",
+						"as_value_expr_cmd":    utils.UrlEncode("[a-z]+grep"),
+						"as_value_type_cmd":    utils.UrlEncode("Keyword"),
+						"cmdinjection":         "tf_cmdinjection",
+						"formactionurl_cmd":    utils.UrlEncode(`^https://sd2\-zgw\.test\.ctxns\.com/api/document/content$`),
+					}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_cmdinjection_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_cmdinjection_bindingExist(resAddr, nil)),
 			},
 		},
 	})

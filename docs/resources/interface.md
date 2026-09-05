@@ -46,6 +46,7 @@ resource "citrixadc_interface" "tf_interface" {
 * `lldpmode` - (Optional) Link Layer Discovery Protocol (LLDP) mode for an interface. The resultant LLDP mode of an interface depends on the LLDP mode configured at the global and the interface levels. Possible values: [ NONE, TRANSMITTER, RECEIVER, TRANSCEIVER ]
 * `lrsetpriority` - (Optional) LRSET port priority, expressed as an integer ranging from 1 to 1024. The highest priority is 1. The Citrix ADC limits the number of interfaces in an LRSET to 8. Within a LRSET the highest LR Priority Interface is considered as the first candidate for the Active interface, if the interface is UP.
 * `state` - (Optional) Link state of the interface (UP/DOWN). Default value: ENABLED Possible values = [ENABLED, DISABLED]
+* `trunkallowedvlan` - (Optional) VLAN ID or range of VLAN IDs will be allowed on this trunk interface. In the command line interface, separate the range with a hyphen. For example: 40-90.
 
 
 ## Attribute Reference

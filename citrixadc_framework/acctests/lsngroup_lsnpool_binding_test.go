@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLsngroup_lsnpool_binding_basic = `
@@ -107,10 +110,12 @@ func testAccCheckLsngroup_lsnpool_bindingExist(n string, id *string) resource.Te
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		groupname := idSlice[0]
-		poolname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"groupname", "poolname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		groupname := idMap["groupname"]
+		poolname := idMap["poolname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsngroup_lsnpool_binding",
@@ -149,13 +154,12 @@ func testAccCheckLsngroup_lsnpool_bindingNotExist(n string, id string) resource.
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"groupname", "poolname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		groupname := idSlice[0]
-		poolname := idSlice[1]
+		groupname := idMap["groupname"]
+		poolname := idMap["poolname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "lsngroup_lsnpool_binding",
@@ -247,6 +251,82 @@ const testAccLsngroup_lsnpool_bindingDataSource_basic = `
   
 `
 
+// testAccLsngroup_lsnpool_binding_upgrade_basic is valid under BOTH the SDK v2
+// 2.2.0 schema and the current framework schema. It reuses the values from
+// testAccLsngroup_lsnpool_binding_basic and keeps the same resource labels so the
+// Exist/Destroy helpers and addresses match.
+const testAccLsngroup_lsnpool_binding_upgrade_basic = `
+
+	resource "citrixadc_lsnclient" "tf_lsnclient" {
+		clientname = "my_lsnclient"
+	}
+
+	resource "citrixadc_lsngroup" "tf_lsngroup" {
+		groupname     = "my_lsngroup"
+		clientname    = resource.citrixadc_lsnclient.tf_lsnclient.clientname
+		logging       = "DISABLED"
+		nattype       = "DYNAMIC"
+		snmptraplimit = 50
+	}
+
+	resource "citrixadc_lsnpool" "tf_lsnpool" {
+		poolname            = "my_lsn_pool"
+		nattype             = "DYNAMIC"
+		portblockallocation = "DISABLED"
+		maxportrealloctmq   = 50
+		portrealloctimeout  = 50
+	}
+
+	resource "citrixadc_lsngroup_lsnpool_binding" "tf_lsngroup_lsnpool_binding" {
+		groupname = citrixadc_lsngroup.tf_lsngroup.groupname
+		poolname  = citrixadc_lsnpool.tf_lsnpool.poolname
+	}
+
+`
+
+// TestAccLsngroup_lsnpool_binding_sdkv2StateUpgrade verifies that a binding created
+// by the last SDK v2 release (which writes the legacy id "my_lsngroup,my_lsn_pool"
+// via d.SetId("groupname,poolname")) is correctly read/refreshed by the current
+// framework provider, which recomputes the id to the new
+// "groupname:...,poolname:..." format on Read (SetAttrFromGet).
+func TestAccLsngroup_lsnpool_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLsngroup_lsnpool_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the LAST SDK v2 release from the registry.
+			// State is written with the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccLsngroup_lsnpool_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnpool_bindingExist("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "id", "my_lsngroup,my_lsn_pool"),
+				),
+			},
+			// Step 2: same config through the CURRENT (framework) provider. Terraform
+			// refreshes the legacy-id state (exercising ParseIdString on the legacy id),
+			// and the framework Read recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLsngroup_lsnpool_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLsngroup_lsnpool_bindingExist("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "id", "groupname:my_lsngroup,poolname:my_lsn_pool"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLsngroup_lsnpool_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -259,6 +339,77 @@ func TestAccLsngroup_lsnpool_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "groupname", "my_lsngroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding", "poolname", "my_lsn_pool"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLsngroup_lsnpool_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: groupname,poolname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"groupname", "poolname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnpool_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLsngroup_lsnpool_binding_basic},
+			{Config: testAccLsngroup_lsnpool_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccLsngroup_lsnpool_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccLsngroup_lsnpool_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lsngroup_lsnpool_binding.tf_lsngroup_lsnpool_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLsngroup_lsnpool_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLsngroup_lsnpool_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroup_lsnpool_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lsngroup_lsnpool_binding.Type(), "my_lsngroup", map[string]string{"poolname": "my_lsn_pool"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLsngroup_lsnpool_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLsngroup_lsnpool_bindingExist(resAddr, nil)),
 			},
 		},
 	})

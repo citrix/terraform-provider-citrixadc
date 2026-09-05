@@ -19,3 +19,12 @@ resource "citrixadc_csparameter" "tf_csparameter" {
 ## Argument Reference
 
 * `stateupdate` - (Optional) Specifies whether the virtual server checks the attached load balancing server for state information. Possible values: [ ENABLED, DISABLED ]
+
+
+## Import
+
+A csparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_csparameter.tf_csparameter csparameter-config
+```

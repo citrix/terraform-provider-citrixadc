@@ -45,3 +45,12 @@ resource "citrixadc_nstimeout" "tf_nstimeout" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nstimeout. It is a unique string prefixed with "tf-nstimeout-
+
+
+## Import
+
+A nstimeout can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_nstimeout.tf_nstimeout nstimeout-config
+```

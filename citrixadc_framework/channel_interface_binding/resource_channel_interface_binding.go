@@ -322,8 +322,7 @@ func (r *ChannelInterfaceBindingResource) readChannelInterfaceBindingFromApi(ctx
 	// (id:<channel>,ifnum:<intf>), so they can always be recovered from the ID and
 	// `terraform import` fully round-trips. The guards below leave the values
 	// untouched in the Create/Read/Update flows (where plan/state already populated
-	// them), so no perpetual diff is introduced. Rebuilding these does NOT change
-	// data.Id (set once in Create / passed through on import).
+	// them), so no perpetual diff is introduced.
 	if data.Channelid.IsNull() || data.Channelid.ValueString() == "" {
 		data.Channelid = types.StringValue(channelid)
 	}
@@ -334,5 +333,9 @@ func (r *ChannelInterfaceBindingResource) readChannelInterfaceBindingFromApi(ctx
 			data.Ifnum = listValue
 		}
 	}
+
+	// Re-derive the canonical id (now that channelid + ifnum identity attrs are known)
+	// so a legacy SDK v2 id is upgraded to the new key:value format on Read.
+	data.Id = types.StringValue(channel_interface_bindingComposeId(data.Channelid.ValueString(), datasourceFirstIfnum(ctx, data)))
 	return true
 }

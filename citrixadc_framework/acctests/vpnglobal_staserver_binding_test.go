@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_staserver_binding_basic = `
@@ -186,6 +188,52 @@ func testAccCheckVpnglobal_staserver_bindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVpnglobal_staserver_binding_upgrade_basic = `
+	resource "citrixadc_vpnglobal_staserver_binding" "tf_bind" {
+		staserver      = "http://www.example.com/"
+		staaddresstype = "IPV4"
+	}
+`
+
+func TestAccVpnglobal_staserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_staserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (plain staserver value).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_staserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_staserver_bindingExist("citrixadc_vpnglobal_staserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_staserver_binding.tf_bind", "id", "http://www.example.com/"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read re-derives the canonical id in
+				// SetAttrFromGet. This is a single-key binding, so the canonical
+				// id is the plain staserver value (same as the legacy id).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_staserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_staserver_bindingExist("citrixadc_vpnglobal_staserver_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_staserver_binding.tf_bind", "id", "http://www.example.com/"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnglobal_staserver_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -196,6 +244,55 @@ func TestAccVpnglobal_staserver_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "staserver", "http://www.example.com/"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "staaddresstype", "IPV4"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "id"),
+					// Read-only (GET-only) state metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnglobal_staserver_binding.tf_bind", "stastate"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_staserver_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_staserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_staserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_staserver_binding_basic},
+			{Config: testAccVpnglobal_staserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnglobal_staserver_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_staserver_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_staserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_staserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_staserver_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_staserver_binding.Type(), "", []string{fmt.Sprintf("staserver:%s", url.QueryEscape("http://www.example.com/"))}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_staserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_staserver_bindingExist(resAddr, nil),
 				),
 			},
 		},

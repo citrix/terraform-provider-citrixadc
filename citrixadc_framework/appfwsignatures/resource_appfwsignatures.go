@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/appfw"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,40 @@ func (r *AppfwsignaturesResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating appfwsignatures resource")
 
-	// appfwsignatures := appfwsignaturesGetThePayloadFromtheConfig(ctx, &data)
+	// appfwsignatures is imported via the "Import" action, then finalized with the
+	// "update" action (name + mergedefault), mirroring the SDK v2 resource.
+	appfwsignatures := appfwsignaturesGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwsignatures.Type(), &appfwsignatures)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwsignatures, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.ActOnResource(service.Appfwsignatures.Type(), &appfwsignatures, "Import")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwsignatures, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwsignatures-config")
+	updateObj := appfw.Appfwsignatures{
+		Name: data.Name.ValueString(),
+	}
+	if !data.Mergedefault.IsNull() && !data.Mergedefault.IsUnknown() {
+		updateObj.Mergedefault = data.Mergedefault.ValueBool()
+	}
+	err = r.client.ActOnResource(service.Appfwsignatures.Type(), &updateObj, "update")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwsignatures, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwsignatures resource")
 
+	// Set ID for the resource before reading state (matches SDK v2 d.SetId(name)).
+	data.Id = types.StringValue(data.Name.ValueString())
+
 	// Read the updated state back
-	r.readAppfwsignaturesFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwsignaturesFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwsignatures not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +108,24 @@ func (r *AppfwsignaturesResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading appfwsignatures resource")
 
-	r.readAppfwsignaturesFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwsignaturesFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwsignaturesResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwsignaturesResourceModel
+	var data, state AppfwsignaturesResourceModel
 
+	// Read Terraform prior state to detect changes and preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +133,106 @@ func (r *AppfwsignaturesResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwsignatures resource")
 
-	// Create API request body from the model
-	// appfwsignatures := appfwsignaturesGetThePayloadFromtheConfig(ctx, &data)
+	// Base import payload always carries the key + src + overwrite, mirroring SDK v2.
+	importPayload := appfw.Appfwsignatures{
+		Name: data.Name.ValueString(),
+		Src:  data.Src.ValueString(),
+	}
+	if !data.Overwrite.IsNull() && !data.Overwrite.IsUnknown() {
+		importPayload.Overwrite = data.Overwrite.ValueBool()
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwsignatures.Type(), &appfwsignatures)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwsignatures, got error: %s", err))
-	//	 return
-	// }
+	updateObj := appfw.Appfwsignatures{
+		Name: data.Name.ValueString(),
+	}
+	if !data.Mergedefault.IsNull() && !data.Mergedefault.IsUnknown() {
+		updateObj.Mergedefault = data.Mergedefault.ValueBool()
+	}
 
-	tflog.Trace(ctx, "Updated appfwsignatures resource")
+	hasChange := false
+	if !data.Comment.Equal(state.Comment) {
+		importPayload.Comment = data.Comment.ValueString()
+		hasChange = true
+	}
+	if !data.Merge.Equal(state.Merge) {
+		importPayload.Merge = data.Merge.ValueBool()
+		hasChange = true
+	}
+	if !data.Mergedefault.Equal(state.Mergedefault) {
+		importPayload.Mergedefault = data.Mergedefault.ValueBool()
+		hasChange = true
+	}
+	if !data.Preservedefactions.Equal(state.Preservedefactions) {
+		importPayload.Preservedefactions = data.Preservedefactions.ValueBool()
+		hasChange = true
+	}
+	if !data.Sha1.Equal(state.Sha1) {
+		importPayload.Sha1 = data.Sha1.ValueString()
+		hasChange = true
+	}
+	if !data.Vendortype.Equal(state.Vendortype) {
+		importPayload.Vendortype = data.Vendortype.ValueString()
+		hasChange = true
+	}
+	if !data.Xslt.Equal(state.Xslt) {
+		importPayload.Xslt = data.Xslt.ValueString()
+		hasChange = true
+	}
+	if !data.Autoenablenewsignatures.Equal(state.Autoenablenewsignatures) {
+		importPayload.Autoenablenewsignatures = data.Autoenablenewsignatures.ValueString()
+		hasChange = true
+	}
+	if !data.Ruleid.Equal(state.Ruleid) {
+		var ruleidList []int
+		data.Ruleid.ElementsAs(ctx, &ruleidList, false)
+		importPayload.Ruleid = ruleidList
+		hasChange = true
+	}
+	if !data.Category.Equal(state.Category) {
+		importPayload.Category = data.Category.ValueString()
+		hasChange = true
+	}
+	if !data.Enabled.Equal(state.Enabled) {
+		importPayload.Enabled = data.Enabled.ValueString()
+		hasChange = true
+	}
+	if !data.Action.Equal(state.Action) {
+		var actionList []string
+		data.Action.ElementsAs(ctx, &actionList, false)
+		importPayload.Action = actionList
+		hasChange = true
+	}
+
+	if hasChange {
+		err := r.client.ActOnResource(service.Appfwsignatures.Type(), &importPayload, "Import")
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwsignatures, got error: %s", err))
+			return
+		}
+
+		err = r.client.ActOnResource(service.Appfwsignatures.Type(), &updateObj, "update")
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwsignatures, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated appfwsignatures resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appfwsignatures resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readAppfwsignaturesFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwsignaturesFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwsignatures not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +249,33 @@ func (r *AppfwsignaturesResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	tflog.Debug(ctx, "Deleting appfwsignatures resource")
+	// Named resource - delete using DeleteResource (matches SDK v2).
+	appfwsignaturesName := data.Name.ValueString()
+	err := r.client.DeleteResource(service.Appfwsignatures.Type(), appfwsignaturesName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwsignatures, got error: %s", err))
+		return
+	}
 
-	// For appfwsignatures, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwsignatures resource from state")
+	tflog.Trace(ctx, "Deleted appfwsignatures resource")
 }
 
 // Helper function to read appfwsignatures data from API
-func (r *AppfwsignaturesResource) readAppfwsignaturesFromApi(ctx context.Context, data *AppfwsignaturesResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwsignatures.Type(), "")
+func (r *AppfwsignaturesResource) readAppfwsignaturesFromApi(ctx context.Context, data *AppfwsignaturesResourceModel, diags *diag.Diagnostics) bool {
+
+	// Single ID attribute - ID is the plain name value.
+	appfwsignaturesName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Appfwsignatures.Type(), appfwsignaturesName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwsignatures, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwsignaturesSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

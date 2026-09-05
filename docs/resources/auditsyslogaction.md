@@ -103,6 +103,8 @@ resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 * `transport` - (Optional) Transport type used to send auditlogs to syslog server. Default type is UDP. Possible values: [ TCP, UDP, HTTP ]. Changing this attribute forces a new resource to be created.
 * `urlfiltering` - (Optional) Log URL filtering event information. Possible values: [ ENABLED, DISABLED ]
 * `userdefinedauditlog` - (Optional) Log user-configurable log messages to syslog. Setting this parameter to NO causes auditing to ignore all user-configured message actions. Setting this parameter to YES causes auditing to log user-configured message actions that meet the other logging criteria. Possible values: [ YES, NO ]
+* `denylistviolations` - (Optional) Log denylist violations.
+* `httpschemafile` - (Optional) HTTP Schema file to input tokens to be sent in log message to log server.
 
 
 ## Attribute Reference

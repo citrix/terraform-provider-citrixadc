@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccBotpolicylabel_botpolicy_binding_basic = `
@@ -127,10 +130,12 @@ func testAccCheckBotpolicylabel_botpolicy_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		labelname := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"labelname", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		labelname := idMap["labelname"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botpolicylabel_botpolicy_binding",
@@ -169,13 +174,12 @@ func testAccCheckBotpolicylabel_botpolicy_bindingNotExist(n string, id string) r
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"labelname", "policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		labelname := idSlice[0]
-		policyname := idSlice[1]
+		labelname := idMap["labelname"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botpolicylabel_botpolicy_binding",
@@ -232,6 +236,61 @@ func testAccCheckBotpolicylabel_botpolicy_bindingDestroy(s *terraform.State) err
 	return nil
 }
 
+const testAccBotpolicylabel_botpolicy_binding_upgrade_basic = `
+	resource "citrixadc_botpolicylabel" "tf_botpolicylabel" {
+		labelname = "tf_botpolicylabel"
+	}
+	resource "citrixadc_botpolicy" "tf_botpolicy" {
+		name        = "tf_botpolicy"
+		profilename = "BOT_BYPASS"
+		rule        = "true"
+		comment     = "COMMENT FOR BOTPOLICY"
+	}
+	resource "citrixadc_botpolicylabel_botpolicy_binding" "tf_binding" {
+		labelname  = citrixadc_botpolicylabel.tf_botpolicylabel.labelname
+		policyname = citrixadc_botpolicy.tf_botpolicy.name
+		priority   = 50
+	}
+`
+
+func TestAccBotpolicylabel_botpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotpolicylabel_botpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccBotpolicylabel_botpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotpolicylabel_botpolicy_bindingExist("citrixadc_botpolicylabel_botpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botpolicylabel_botpolicy_binding.tf_binding", "id", "tf_botpolicylabel,tf_botpolicy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBotpolicylabel_botpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotpolicylabel_botpolicy_bindingExist("citrixadc_botpolicylabel_botpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botpolicylabel_botpolicy_binding.tf_binding", "id", "labelname:tf_botpolicylabel,policyname:tf_botpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBotpolicylabelBotpolicyBindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -244,6 +303,77 @@ func TestAccBotpolicylabelBotpolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel_botpolicy_binding.tf_binding", "policyname", "tf_botpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_botpolicylabel_botpolicy_binding.tf_binding", "priority", "50"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBotpolicylabel_botpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botpolicylabel_botpolicy_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: labelname,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"labelname", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotpolicylabel_botpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotpolicylabel_botpolicy_binding_basic},
+			{Config: testAccBotpolicylabel_botpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccBotpolicylabel_botpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccBotpolicylabel_botpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botpolicylabel_botpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotpolicylabel_botpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotpolicylabel_botpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicylabel_botpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Botpolicylabel_botpolicy_binding.Type(), "tf_botpolicylabel", map[string]string{"policyname": "tf_botpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotpolicylabel_botpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotpolicylabel_botpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

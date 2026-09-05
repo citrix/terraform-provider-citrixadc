@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Participating entities reused from existing acceptance tests:
@@ -333,6 +333,34 @@ func TestAccMetricsprofile_servicegroup_binding_DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile_servicegroup_binding.tf_metricsprofile_servicegroup_binding", "entityname", "tf_servicegroup"),
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile_servicegroup_binding.tf_metricsprofile_servicegroup_binding", "entitytype", "servicegroup"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccMetricsprofile_servicegroup_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile_servicegroup_binding.tf_metricsprofile_servicegroup_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofile_servicegroup_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_servicegroup_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_servicegroup_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Metricsprofile_servicegroup_binding.Type(), "tf_metricsprofile", map[string]string{"entityname": "tf_servicegroup", "entitytype": "servicegroup"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMetricsprofile_servicegroup_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofile_servicegroup_bindingExist(resAddr, nil)),
 			},
 		},
 	})

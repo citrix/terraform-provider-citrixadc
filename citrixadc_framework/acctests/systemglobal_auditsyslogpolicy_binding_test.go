@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/audit"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // NOTE on participating entities:
@@ -56,7 +56,7 @@ func setupAuditsyslogpolicyBindingParticipants(t *testing.T) {
 	port := 514
 	action := audit.Auditsyslogaction{
 		Name:       tfAuditsyslogpolicyBindingActionName,
-		Serverip:   "10.78.60.33",
+		Serverip:   "10.78.60.55",
 		Serverport: &port,
 		Loglevel:   []string{"ERROR", "NOTICE"},
 	}
@@ -309,6 +309,38 @@ func TestAccSystemglobal_auditsyslogpolicy_bindingDataSource_basic(t *testing.T)
 					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_auditsyslogpolicy_binding.tf_systemglobal_auditsyslogpolicy_binding", "policyname", tfAuditsyslogpolicyBindingPolicyName),
 					resource.TestCheckResourceAttr("data.citrixadc_systemglobal_auditsyslogpolicy_binding.tf_systemglobal_auditsyslogpolicy_binding", "priority", "50"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSystemglobal_auditsyslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_systemglobal_auditsyslogpolicy_binding.tf_systemglobal_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t); setupAuditsyslogpolicyBindingParticipants(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy: func(s *terraform.State) error {
+			err := testAccCheckSystemglobal_auditsyslogpolicy_bindingDestroy(s)
+			teardownAuditsyslogpolicyBindingParticipants(t)
+			return err
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystemglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Systemglobal_auditsyslogpolicy_binding.Type(), "", []string{"policyname:" + tfAuditsyslogpolicyBindingPolicyName}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystemglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

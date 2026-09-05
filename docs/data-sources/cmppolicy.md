@@ -37,10 +37,19 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Expression that determines which HTTP requests or responses match the compression policy.
 * `id` - The id of the cmppolicy. It has the same value as the `name` attribute.
 
-## Import
+### Read-only cmppolicy metadata
 
-A cmppolicy can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cmppolicy` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_cmppolicy.tf_cmppolicy my_cmppolicy
-```
+* `reqaction` - The compression action to be performed on requests.
+* `hits` - Number of hits.
+* `txbytes` - Number of bytes transferred.
+* `rxbytes` - Number of bytes received.
+* `clientttlb` - Total client TTLB value.
+* `clienttransactions` - Number of client transactions.
+* `serverttlb` - Total server TTLB value.
+* `servertransactions` - Number of server transactions.
+* `description` - Description of the policy.
+* `builtin` - Flag to determine if compression policy is builtin or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+* `isdefault` - A value of true is returned if it is a default policy.

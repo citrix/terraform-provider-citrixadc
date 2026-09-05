@@ -1,9 +1,54 @@
 package appfwsettings
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AppfwsettingsDataSourceModel is the data-source-specific model, decoupled from
+// AppfwsettingsResourceModel. appfwsettings is a singleton (no lookup key), so a
+// data source is a pure read surface: the configurable attributes are surfaced
+// as Computed outputs AND the read-only attributes the resource deliberately
+// omits (learning, builtin, feature) are exposed. Every non-key attribute is
+// Computed.
+type AppfwsettingsDataSourceModel struct {
+	Id                       types.String `tfsdk:"id"`
+	Ceflogging               types.String `tfsdk:"ceflogging"`
+	Centralizedlearning      types.String `tfsdk:"centralizedlearning"`
+	Clientiploggingheader    types.String `tfsdk:"clientiploggingheader"`
+	Cookieflags              types.String `tfsdk:"cookieflags"`
+	Cookiepostencryptprefix  types.String `tfsdk:"cookiepostencryptprefix"`
+	Defaultprofile           types.String `tfsdk:"defaultprofile"`
+	Entitydecoding           types.String `tfsdk:"entitydecoding"`
+	Geolocationlogging       types.String `tfsdk:"geolocationlogging"`
+	Importsizelimit          types.Int64  `tfsdk:"importsizelimit"`
+	Learnratelimit           types.Int64  `tfsdk:"learnratelimit"`
+	Logmalformedreq          types.String `tfsdk:"logmalformedreq"`
+	Malformedreqaction       types.List   `tfsdk:"malformedreqaction"`
+	Proxypassword            types.String `tfsdk:"proxypassword"`
+	Proxyport                types.Int64  `tfsdk:"proxyport"`
+	Proxyserver              types.String `tfsdk:"proxyserver"`
+	Proxyusername            types.String `tfsdk:"proxyusername"`
+	Sessioncookiename        types.String `tfsdk:"sessioncookiename"`
+	Sessionlifetime          types.Int64  `tfsdk:"sessionlifetime"`
+	Sessionlimit             types.Int64  `tfsdk:"sessionlimit"`
+	Sessiontimeout           types.Int64  `tfsdk:"sessiontimeout"`
+	Signatureautoupdate      types.String `tfsdk:"signatureautoupdate"`
+	Signatureurl             types.String `tfsdk:"signatureurl"`
+	Undefaction              types.String `tfsdk:"undefaction"`
+	Useconfigurablesecretkey types.String `tfsdk:"useconfigurablesecretkey"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/appfwsettings.json). Never settable; populated from
+	// GET, Null when the appliance omits them.
+	Learning types.String `tfsdk:"learning"`
+	Builtin  types.List   `tfsdk:"builtin"`
+	Feature  types.String `tfsdk:"feature"`
+}
 
 func AppfwsettingsDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -73,18 +118,10 @@ func AppfwsettingsDataSourceSchema() schema.Schema {
 				Description: "flag to define action on malformed requests that application firewall cannot parse",
 			},
 			"proxypassword": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password with which proxy user logs on.",
-			},
-			"proxypassword_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password with which proxy user logs on.",
-			},
-			"proxypassword_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a proxypassword_wo update.",
 			},
 			"proxyport": schema.Int64Attribute{
 				Optional:    true,
@@ -141,6 +178,62 @@ func AppfwsettingsDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Use configurable secret key in AppFw operations",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source.
+			"learning": schema.StringAttribute{
+				Computed:    true,
+				Description: "Global learning option that overrides the profile level learning. Possible values: ON, OFF.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine if application firewall settings is built-in or not. Possible values: MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// appfwsettingsDataSourceSetAttrFromGet projects a NITRO appfwsettings GET
+// response onto the data-source model via the shared utils.MapGet* helpers.
+// appfwsettings is a singleton, so the ID is a fixed synthetic value.
+func appfwsettingsDataSourceSetAttrFromGet(ctx context.Context, data *AppfwsettingsDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In appfwsettingsDataSourceSetAttrFromGet Function")
+
+	data.Id = types.StringValue("appfwsettings-config")
+
+	data.Ceflogging = utils.MapGetString(g, "ceflogging")
+	data.Centralizedlearning = utils.MapGetString(g, "centralizedlearning")
+	data.Clientiploggingheader = utils.MapGetString(g, "clientiploggingheader")
+	data.Cookieflags = utils.MapGetString(g, "cookieflags")
+	data.Cookiepostencryptprefix = utils.MapGetString(g, "cookiepostencryptprefix")
+	data.Defaultprofile = utils.MapGetString(g, "defaultprofile")
+	data.Entitydecoding = utils.MapGetString(g, "entitydecoding")
+	data.Geolocationlogging = utils.MapGetString(g, "geolocationlogging")
+	data.Importsizelimit = utils.MapGetInt64(g, "importsizelimit")
+	data.Learnratelimit = utils.MapGetInt64(g, "learnratelimit")
+	data.Logmalformedreq = utils.MapGetString(g, "logmalformedreq")
+	data.Malformedreqaction = utils.MapGetStringList(g, "malformedreqaction")
+	data.Proxyport = utils.MapGetInt64(g, "proxyport")
+	data.Proxyserver = utils.MapGetString(g, "proxyserver")
+	data.Proxyusername = utils.MapGetString(g, "proxyusername")
+	data.Sessioncookiename = utils.MapGetString(g, "sessioncookiename")
+	data.Sessionlifetime = utils.MapGetInt64(g, "sessionlifetime")
+	data.Sessionlimit = utils.MapGetInt64(g, "sessionlimit")
+	data.Sessiontimeout = utils.MapGetInt64(g, "sessiontimeout")
+	data.Signatureautoupdate = utils.MapGetString(g, "signatureautoupdate")
+	data.Signatureurl = utils.MapGetString(g, "signatureurl")
+	data.Undefaction = utils.MapGetString(g, "undefaction")
+	data.Useconfigurablesecretkey = utils.MapGetString(g, "useconfigurablesecretkey")
+
+	// proxypassword is a secret input the GET never returns -> Null.
+	data.Proxypassword = types.StringNull()
+
+	// Read-only attributes.
+	data.Learning = utils.MapGetString(g, "learning")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

@@ -33,3 +33,9 @@ In addition to the arguments, the following attributes are available:
 * `bundlefile` - Name of and, optionally, path to the X509 certificate bundle file that is used to form the certificate-key bundle.
 
 Note: The `passplain` pass phrase is a secret and is never returned by the NITRO API, so it is not available through this data source.
+
+### Read-only sslcertkeybundle metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslcertkeybundle` resource). They are Computed / GET-only. Any attribute the appliance does not return is `null`.
+
+* `certkeybundledigest` - Stores the digest of the certificate and key bundle file.

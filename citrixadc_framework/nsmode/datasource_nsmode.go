@@ -35,7 +35,7 @@ func (d *NsmodeDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 }
 
 func (d *NsmodeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NsmodeResourceModel
+	var data NsmodeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -59,7 +59,7 @@ func (d *NsmodeDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	getResponseData := dataArr[0]
-	nsmodeSetAttrFromGet(ctx, &data, getResponseData)
+	nsmodeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

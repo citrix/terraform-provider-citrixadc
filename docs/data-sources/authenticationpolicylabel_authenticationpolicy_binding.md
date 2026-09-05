@@ -6,7 +6,7 @@ subcategory: "Authentication"
 
 The authenticationpolicylabel_authenticationpolicy_binding data source allows you to retrieve information about a binding between an authentication policy label and an authentication policy.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_authenticationpolicylabel_authenticationpolicy_binding" "tf_bind" {

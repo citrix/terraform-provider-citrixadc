@@ -93,7 +93,7 @@ func (d *CrvserverAppflowpolicyBindingDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	crvserver_appflowpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	crvserver_appflowpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

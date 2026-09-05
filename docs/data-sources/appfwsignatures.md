@@ -53,10 +53,9 @@ In addition to the argument above, the following attributes are exported:
 * `ruleid` - Signature rule IDs to be Enabled/Disabled.
 * `action` - Signature action.
 
-## Import
+### Read-only appfwsignatures metadata
 
-Application Firewall signatures can be imported using the signature object name:
+These attributes are GET-only (Computed) and are returned by the appliance on a read; they are not configurable on the `citrixadc_appfwsignatures` resource. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_appfwsignatures.example my_signature_object
-```
+* `response` - Signature response returned by the appliance.
+* `encryptedversion` - Encrypted signature version.

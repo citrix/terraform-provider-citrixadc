@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +57,28 @@ func (r *LbactionResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating lbaction resource")
 
-	// lbaction := lbactionGetThePayloadFromtheConfig(ctx, &data)
+	lbaction := lbactionGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbaction.Type(), &lbaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lbaction-config")
+	// Named resource - use AddResource (NITRO add is POST)
+	lbactionName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Lbaction.Type(), lbactionName, &lbaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lbaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lbaction resource")
 
+	// Set ID for the resource before reading state (single unique attribute - plain value)
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readLbactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLbactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lbaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,110 @@ func (r *LbactionResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading lbaction resource")
 
-	r.readLbactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLbactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LbactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LbactionResourceModel
+	var data, config, state LbactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lbaction resource")
 
-	// Create API request body from the model
-	// lbaction := lbactionGetThePayloadFromtheConfig(ctx, &data)
+	// Rename support: NITRO exposes a `rename` action for lbaction. name and type are
+	// ForceNew (RequiresReplace), so the only key change that reaches Update is
+	// `newname`. On a newname change, POST {name, newname} to ?action=rename, then
+	// point the resource ID at the new name so subsequent reads/updates/deletes address
+	// the live object.
+	if !data.Newname.Equal(state.Newname) && !data.Newname.IsNull() && data.Newname.ValueString() != "" {
+		// The rename SOURCE is the CURRENT LIVE name, tracked by the ID - NOT
+		// state.Name (which stays pinned to the originally configured value).
+		oldName := state.Id.ValueString()
+		newName := data.Newname.ValueString()
+		tflog.Debug(ctx, fmt.Sprintf("Renaming lbaction from %q to %q", oldName, newName))
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lbaction.Type(), &lbaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbaction, got error: %s", err))
-	//	 return
-	// }
+		renamePayload := lb.Lbaction{
+			Name:    oldName,
+			Newname: newName,
+		}
+		if err := r.client.ActOnResource(service.Lbaction.Type(), &renamePayload, "rename"); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to rename lbaction, got error: %s", err))
+			return
+		}
+		// The live object is now named newName.
+		data.Id = types.StringValue(newName)
+	}
 
-	tflog.Trace(ctx, "Updated lbaction resource")
+	// Regular update (comment/value) via NITRO PUT.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Comment.Equal(state.Comment) {
+		tflog.Debug(ctx, "comment has changed for lbaction")
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Value.Equal(state.Value) {
+		tflog.Debug(ctx, "value has changed for lbaction")
+		hasChange = true
+	}
 
-	// Read the updated state back
+	if hasChange {
+		lbaction := lbactionGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		// Address the current live name (== newname after a rename, else name).
+		liveName := data.Id.ValueString()
+		lbaction.Name = liveName
+		_, err := r.client.UpdateResource(service.Lbaction.Type(), liveName, &lbaction)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lbaction, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated lbaction resource")
+	} else {
+		tflog.Debug(ctx, "No updatable changes detected for lbaction resource")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to their
+	// defaults. Address the current live name (== newname after a rename, else name).
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Id.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Lbaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset lbaction attributes, got error: %s", err))
+		return
+	}
+
+	// Read the current state back, preserving the user-facing key/rename inputs so a
+	// rename does not clobber the configured name and trigger an inconsistent result.
+	planName := data.Name
+	planNewname := data.Newname
 	r.readLbactionFromApi(ctx, &data, &resp.Diagnostics)
+	data.Name = planName
+	data.Newname = planNewname
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +216,34 @@ func (r *LbactionResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	tflog.Debug(ctx, "Deleting lbaction resource")
+	// Named resource - delete using DeleteResource. The ID holds the CURRENT LIVE
+	// name (== name at create, == newname after a rename), so delete by data.Id.
+	liveName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Lbaction.Type(), liveName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lbaction, got error: %s", err))
+		return
+	}
 
-	// For lbaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lbaction resource from state")
+	tflog.Trace(ctx, "Deleted lbaction resource")
 }
 
 // Helper function to read lbaction data from API
-func (r *LbactionResource) readLbactionFromApi(ctx context.Context, data *LbactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lbaction.Type(), "")
+func (r *LbactionResource) readLbactionFromApi(ctx context.Context, data *LbactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value (the live name)
+	lbactionName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lbaction.Type(), lbactionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lbaction, got error: %s", err))
-		return
+		return false
 	}
 
 	lbactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslcacertgroup_basic = `
@@ -64,7 +66,82 @@ func TestAccSslcacertgroupDataSource_basic(t *testing.T) {
 				Config: testAccSslcacertgroupDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslcacertgroup.foo", "cacertgroupname", "foo_ds"),
+					// id is the universal runtime-binding proof; read-only
+					// metadata attrs are instance/config-dependent and Null
+					// when the appliance omits them.
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcacertgroup.foo", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslcacertgroup_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcacertgroup.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcacertgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcacertgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertgroupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcacertgroup.Type(), "foo"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcacertgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertgroupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSslcacertgroup_import(t *testing.T) {
+	const resAddr = "citrixadc_sslcacertgroup.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcacertgroupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslcacertgroup_basic},
+			{
+				Config:                  testAccSslcacertgroup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccSslcacertgroup_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSslcacertgroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSslcacertgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertgroupExist("citrixadc_sslcacertgroup.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslcacertgroup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertgroupExist("citrixadc_sslcacertgroup.foo", nil)),
 			},
 		},
 	})

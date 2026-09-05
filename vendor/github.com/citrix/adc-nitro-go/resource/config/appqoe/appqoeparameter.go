@@ -27,7 +27,7 @@ type Appqoeparameter struct {
 	/**
 	* average number of client connections, that can sit in service waiting queue
 	*/
-	Avgwaitingclient *int `json:"avgwaitingclient"` // Zero is a valid value
+	Avgwaitingclient *int `json:"avgwaitingclient,omitempty"`
 	/**
 	* maximum bandwidth which will determine whether to send alternate content response
 	*/
@@ -35,7 +35,7 @@ type Appqoeparameter struct {
 	/**
 	* average number of client connection that can queue up on vserver level without triggering DoS mitigation module
 	*/
-	Dosattackthresh *int `json:"dosattackthresh"` // Zero is a valid value
+	Dosattackthresh *int `json:"dosattackthresh,omitempty"`
 
 	//------- Read only Parameter ---------;
 

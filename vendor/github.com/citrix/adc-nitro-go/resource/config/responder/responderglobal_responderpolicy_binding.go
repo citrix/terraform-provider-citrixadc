@@ -40,6 +40,8 @@ type Responderglobalresponderpolicybinding struct {
 		* MYSQL_REQ_DEFAULT - Binds the policy to the MySQL default response queue.
 		* HTTPQUIC_REQ_OVERRIDE - Binds the policy to the HTTP_QUIC override response queue.
 		* HTTPQUIC_REQ_DEFAULT - Binds the policy to the HTTP_QUIC default response queue.
+		* UDP_REQ_OVERRIDE - Binds the policy to the UDP request override queue.
+		* UDP_REQ_DEFAULT - Binds the policy to the UDP request default queue.
 	*/
 	Type string `json:"type,omitempty"`
 	/**

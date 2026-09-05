@@ -8,17 +8,40 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
+
+// unsetOnRemoveStringModifier forces the planned value to unknown when the user
+// removes a previously-set attribute from configuration while a non-empty value
+// still exists in prior state. This makes Terraform detect a change (unknown !=
+// prior) and call Update, which issues the NITRO ?action=unset. Without it an
+// Optional+Computed attribute is "sticky": the prior value is carried forward and
+// removal is a silent no-op. It does nothing when the config still carries a
+// value, on create (no prior state), or when the prior value is already empty.
+type unsetOnRemoveStringModifier struct{}
+
+func (m unsetOnRemoveStringModifier) Description(_ context.Context) string {
+	return "Marks the value unknown when removed from config while a prior non-empty value exists, so it is unset on the appliance."
+}
+
+func (m unsetOnRemoveStringModifier) MarkdownDescription(ctx context.Context) string {
+	return m.Description(ctx)
+}
+
+func (m unsetOnRemoveStringModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.StateValue.IsNull() {
+		return
+	}
+	if req.ConfigValue.IsNull() && req.StateValue.ValueString() != "" {
+		resp.PlanValue = types.StringUnknown()
+	}
+}
 
 // ServerResourceModel describes the resource data model.
 type ServerResourceModel struct {
@@ -49,107 +72,119 @@ func (r *ServerResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Computed:    true,
 				Description: "The ID of the server resource.",
 			},
+			// SDK v2: Optional+Computed, NOT ForceNew.
 			"internal": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
-				Description: "Display names of the servers that have been created for internal use.",
-			},
-			"comment": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Any information about the server.",
+				Description: "Display names of the servers that have been created for internal use.",
 			},
-			"delay": schema.Int64Attribute{
+			// SDK v2: Optional+Computed, NOT ForceNew.
+			"comment": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					unsetOnRemoveStringModifier{},
 				},
+				Description: "Any information about the server.",
+			},
+			// SDK v2: Optional+Computed, NOT ForceNew. Used only by the disable action.
+			"delay": schema.Int64Attribute{
+				Optional:    true,
+				Computed:    true,
 				Description: "Time, in seconds, after which all the services configured on the server are disabled.",
 			},
+			// SDK v2: Optional+Computed+ForceNew -> RequiresReplaceIfConfigured.
 			"domain": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Domain name of the server. For a domain based configuration, you must create the server first.",
 			},
+			// SDK v2: Optional+Computed, NOT ForceNew.
 			"domainresolvenow": schema.BoolAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Immediately send a DNS query to resolve the server's domain name.",
 			},
+			// SDK v2: Optional+Computed (no default), NOT ForceNew.
 			"domainresolveretry": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(5),
+				Computed:    true,
 				Description: "Time, in seconds, for which the NetScaler must wait, after DNS resolution fails, before sending the next DNS query to resolve the domain name.",
 			},
+			// SDK v2: Optional+Computed, NOT ForceNew. Used only by the disable action.
 			"graceful": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Optional:    true,
+				Computed:    true,
 				Description: "Shut down gracefully, without accepting any new connections, and disabling each service when all of its connections are closed.",
 			},
+			// SDK v2: Optional+Computed, NOT ForceNew.
 			"ipaddress": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "IPv4 or IPv6 address of the server. If you create an IP address based server, you can specify the name of the server, instead of its IP address, when creating a service. Note: If you do not create a server entry, the server IP address that you enter when you create a service becomes the name of the server.",
 			},
+			// SDK v2: Optional+Computed+ForceNew -> RequiresReplaceIfConfigured.
 			"ipv6address": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Support IPv6 addressing mode. If you configure a server with the IPv6 addressing mode, you cannot use the server in the IPv4 addressing mode.",
 			},
+			// SDK v2: Optional+Computed+ForceNew (auto-generated when omitted) ->
+			// RequiresReplaceIfConfigured so an auto-generated name never forces replace.
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name for the server.\nMust begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\nCan be changed after the name is created.",
-			},
-			"newname": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
+				Description: "Name for the server.\nMust begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\nCan be changed after the name is created.",
+			},
+			// SDK v2 has no newname / rename support (name is ForceNew). Kept as a
+			// harmless Optional-only input; excluded from the add payload and never
+			// read back so it does not churn.
+			"newname": schema.StringAttribute{
+				Optional:    true,
 				Description: "New name for the server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.",
 			},
+			// SDK v2: Optional+Computed (no default), NOT ForceNew, updateable.
 			"querytype": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("A"),
+				Optional:    true,
+				Computed:    true,
 				Description: "Specify the type of DNS resolution to be done on the configured domain to get the backend services. Valid query types are A, AAAA and SRV with A being the default querytype. The type of DNS resolution done on the domains in SRV records is inherited from ipv6 argument.",
 			},
+			// SDK v2: Optional+Computed (no default), NOT ForceNew. Drives the
+			// enable/disable action in Update.
 			"state": schema.StringAttribute{
-				Optional: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Default:     stringdefault.StaticString("ENABLED"),
+				Optional:    true,
+				Computed:    true,
 				Description: "Initial state of the server.",
 			},
+			// SDK v2: Optional+Computed+ForceNew -> RequiresReplaceIfConfigured.
 			"td": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.",
 			},
+			// SDK v2: Optional+Computed, NOT ForceNew.
 			"translationip": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "IP address used to transform the server's DNS-resolved IP address.",
 			},
+			// SDK v2: Optional+Computed, NOT ForceNew.
 			"translationmask": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -159,67 +194,159 @@ func (r *ServerResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func serverGetThePayloadFromtheConfig(ctx context.Context, data *ServerResourceModel) basic.Server {
-	tflog.Debug(ctx, "In serverGetThePayloadFromtheConfig Function")
+// serverGetThePayloadFromthePlan builds the CREATE payload. It mirrors the SDK v2
+// createServerFunc: delay, graceful and newname are excluded (delay/graceful are
+// disable-action-only; newname is rename-only and unsupported here).
+func serverGetThePayloadFromthePlan(ctx context.Context, data *ServerResourceModel) basic.Server {
+	tflog.Debug(ctx, "In serverGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	server := basic.Server{}
-	if !data.Internal.IsNull() {
+	if !data.Internal.IsNull() && !data.Internal.IsUnknown() {
 		server.Internal = data.Internal.ValueBool()
 	}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		server.Comment = data.Comment.ValueString()
 	}
-	if !data.Delay.IsNull() {
-		server.Delay = utils.IntPtr(int(data.Delay.ValueInt64()))
-	}
-	if !data.Domain.IsNull() {
+	// delay is disable-action-only; excluded from the add payload (matches SDK v2).
+	if !data.Domain.IsNull() && !data.Domain.IsUnknown() {
 		server.Domain = data.Domain.ValueString()
 	}
-	if !data.Domainresolvenow.IsNull() {
+	if !data.Domainresolvenow.IsNull() && !data.Domainresolvenow.IsUnknown() {
 		server.Domainresolvenow = data.Domainresolvenow.ValueBool()
 	}
-	if !data.Domainresolveretry.IsNull() {
+	if !data.Domainresolveretry.IsNull() && !data.Domainresolveretry.IsUnknown() {
 		server.Domainresolveretry = utils.IntPtr(int(data.Domainresolveretry.ValueInt64()))
 	}
-	if !data.Graceful.IsNull() {
-		server.Graceful = data.Graceful.ValueString()
-	}
-	if !data.Ipaddress.IsNull() {
+	// graceful is disable-action-only; excluded from the add payload (matches SDK v2).
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		server.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Ipv6address.IsNull() {
+	if !data.Ipv6address.IsNull() && !data.Ipv6address.IsUnknown() {
 		server.Ipv6address = data.Ipv6address.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		server.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		server.Newname = data.Newname.ValueString()
-	}
-	if !data.Querytype.IsNull() {
+	// newname is rename-only; excluded from the add payload.
+	if !data.Querytype.IsNull() && !data.Querytype.IsUnknown() {
 		server.Querytype = data.Querytype.ValueString()
 	}
-	if !data.State.IsNull() {
+	if !data.State.IsNull() && !data.State.IsUnknown() {
 		server.State = data.State.ValueString()
 	}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		server.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Translationip.IsNull() {
+	if !data.Translationip.IsNull() && !data.Translationip.IsUnknown() {
 		server.Translationip = data.Translationip.ValueString()
 	}
-	if !data.Translationmask.IsNull() {
+	if !data.Translationmask.IsNull() && !data.Translationmask.IsUnknown() {
 		server.Translationmask = data.Translationmask.ValueString()
 	}
 
 	return server
 }
 
+// serverSetAttrFromGet is the RESOURCE state setter. It preserves configured/known
+// values that NITRO omits from GET (the omit-on-default trap): an absent attribute
+// is nulled only when the current model value is Unknown, never when it is a known
+// (configured or prior-state) value. delay/graceful are not returned by GET (SDK v2
+// never read them) so they are only resolved from Unknown -> Null and otherwise
+// preserved. newname is never read back.
 func serverSetAttrFromGet(ctx context.Context, data *ServerResourceModel, getResponseData map[string]interface{}) *ServerResourceModel {
 	tflog.Debug(ctx, "In serverSetAttrFromGet Function")
 
-	// Convert API response to model
+	if val, ok := getResponseData["Internal"]; ok && val != nil {
+		data.Internal = types.BoolValue(val.(bool))
+	} else if data.Internal.IsUnknown() {
+		data.Internal = types.BoolNull()
+	}
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else if data.Comment.IsUnknown() {
+		data.Comment = types.StringNull()
+	}
+	// delay is not returned by GET; preserve known value, resolve unknown -> null.
+	if data.Delay.IsUnknown() {
+		data.Delay = types.Int64Null()
+	}
+	if val, ok := getResponseData["domain"]; ok && val != nil {
+		data.Domain = types.StringValue(val.(string))
+	} else if data.Domain.IsUnknown() {
+		data.Domain = types.StringNull()
+	}
+	if val, ok := getResponseData["domainresolvenow"]; ok && val != nil {
+		data.Domainresolvenow = types.BoolValue(val.(bool))
+	} else if data.Domainresolvenow.IsUnknown() {
+		data.Domainresolvenow = types.BoolNull()
+	}
+	if val, ok := getResponseData["domainresolveretry"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Domainresolveretry = types.Int64Value(intVal)
+		}
+	} else if data.Domainresolveretry.IsUnknown() {
+		data.Domainresolveretry = types.Int64Null()
+	}
+	// graceful is not returned by GET; preserve known value, resolve unknown -> null.
+	if data.Graceful.IsUnknown() {
+		data.Graceful = types.StringNull()
+	}
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		data.Ipaddress = types.StringValue(val.(string))
+	} else if data.Ipaddress.IsUnknown() {
+		data.Ipaddress = types.StringNull()
+	}
+	if val, ok := getResponseData["ipv6address"]; ok && val != nil {
+		data.Ipv6address = types.StringValue(val.(string))
+	} else if data.Ipv6address.IsUnknown() {
+		data.Ipv6address = types.StringNull()
+	}
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else if data.Name.IsUnknown() {
+		data.Name = types.StringNull()
+	}
+	// newname is rename-only and never returned by GET; leave the model value as-is.
+	if val, ok := getResponseData["querytype"]; ok && val != nil {
+		data.Querytype = types.StringValue(val.(string))
+	} else if data.Querytype.IsUnknown() {
+		data.Querytype = types.StringNull()
+	}
+	if val, ok := getResponseData["state"]; ok && val != nil {
+		data.State = types.StringValue(val.(string))
+	} else if data.State.IsUnknown() {
+		data.State = types.StringNull()
+	}
+	if val, ok := getResponseData["td"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Td = types.Int64Value(intVal)
+		}
+	} else if data.Td.IsUnknown() {
+		data.Td = types.Int64Null()
+	}
+	if val, ok := getResponseData["translationip"]; ok && val != nil {
+		data.Translationip = types.StringValue(val.(string))
+	} else if data.Translationip.IsUnknown() {
+		data.Translationip = types.StringNull()
+	}
+	if val, ok := getResponseData["translationmask"]; ok && val != nil {
+		data.Translationmask = types.StringValue(val.(string))
+	} else if data.Translationmask.IsUnknown() {
+		data.Translationmask = types.StringNull()
+	}
+
+	// ID is the plain server name (SDK v2: d.SetId(serverName)).
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
+	return data
+}
+
+// serverSetAttrFromGetForDatasource is the DATASOURCE state setter. It populates
+// every attribute directly from the GET response (config carries only the lookup
+// key) and always sets the ID.
+func serverSetAttrFromGetForDatasource(ctx context.Context, data *ServerResourceModel, getResponseData map[string]interface{}) *ServerResourceModel {
+	tflog.Debug(ctx, "In serverSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["Internal"]; ok && val != nil {
 		data.Internal = types.BoolValue(val.(bool))
 	} else {
@@ -233,6 +360,8 @@ func serverSetAttrFromGet(ctx context.Context, data *ServerResourceModel, getRes
 	if val, ok := getResponseData["delay"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Delay = types.Int64Value(intVal)
+		} else {
+			data.Delay = types.Int64Null()
 		}
 	} else {
 		data.Delay = types.Int64Null()
@@ -250,6 +379,8 @@ func serverSetAttrFromGet(ctx context.Context, data *ServerResourceModel, getRes
 	if val, ok := getResponseData["domainresolveretry"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Domainresolveretry = types.Int64Value(intVal)
+		} else {
+			data.Domainresolveretry = types.Int64Null()
 		}
 	} else {
 		data.Domainresolveretry = types.Int64Null()
@@ -274,11 +405,7 @@ func serverSetAttrFromGet(ctx context.Context, data *ServerResourceModel, getRes
 	} else {
 		data.Name = types.StringNull()
 	}
-	if val, ok := getResponseData["newname"]; ok && val != nil {
-		data.Newname = types.StringValue(val.(string))
-	} else {
-		data.Newname = types.StringNull()
-	}
+	data.Newname = types.StringNull()
 	if val, ok := getResponseData["querytype"]; ok && val != nil {
 		data.Querytype = types.StringValue(val.(string))
 	} else {
@@ -292,6 +419,8 @@ func serverSetAttrFromGet(ctx context.Context, data *ServerResourceModel, getRes
 	if val, ok := getResponseData["td"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Td = types.Int64Value(intVal)
+		} else {
+			data.Td = types.Int64Null()
 		}
 	} else {
 		data.Td = types.Int64Null()
@@ -307,9 +436,7 @@ func serverSetAttrFromGet(ctx context.Context, data *ServerResourceModel, getRes
 		data.Translationmask = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
-	data.Id = types.StringValue(fmt.Sprintf("%s", data.Name.ValueString()))
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

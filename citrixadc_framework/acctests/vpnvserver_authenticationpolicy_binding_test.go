@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Participating entities reused from existing acceptance tests:
@@ -375,11 +375,41 @@ func TestAccVpnvserverAuthenticationpolicyBindingDataSource_basic(t *testing.T) 
 			{
 				Config: testAccVpnvserverAuthenticationpolicyBindingDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "name", "tf_vpnvserver_authpol"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "policy", "tf_vpnvserver_authpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "bindpoint", "REQUEST"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding", "priority", "90"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserverAuthenticationpolicyBinding_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_vpnvserver_authenticationpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserverAuthenticationpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserverAuthenticationpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserverAuthenticationpolicyBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_authenticationpolicy_binding.Type(), "tf_vpnvserver_authpol", map[string]string{"bindpoint": "REQUEST", "policy": "tf_vpnvserver_authpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserverAuthenticationpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserverAuthenticationpolicyBindingExist(resAddr, nil)),
 			},
 		},
 	})

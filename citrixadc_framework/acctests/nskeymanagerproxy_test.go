@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // nskeymanagerproxy is a create+delete (no-update) resource. All schema attributes
@@ -154,7 +154,39 @@ func TestAccNskeymanagerproxyDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_nskeymanagerproxy.tf_nskeymanagerproxy", "serverip", "192.0.2.50"),
 					resource.TestCheckResourceAttr("data.citrixadc_nskeymanagerproxy.tf_nskeymanagerproxy", "port", "1443"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nskeymanagerproxy.tf_nskeymanagerproxy", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNskeymanagerproxy_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_nskeymanagerproxy.tf_nskeymanagerproxy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNskeymanagerproxyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNskeymanagerproxy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNskeymanagerproxyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					// DELETE /nskeymanagerproxy/<serverip>; no servername arg is set in the basic config.
+					if err := client.DeleteResourceWithArgs(service.Nskeymanagerproxy.Type(), "192.0.2.50", []string{}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNskeymanagerproxy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNskeymanagerproxyExist(resAddr, nil)),
 			},
 		},
 	})

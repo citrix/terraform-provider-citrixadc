@@ -160,7 +160,7 @@ type Analyticsprofile struct {
 	*/
 	Analyticsendpointmetadata string `json:"analyticsendpointmetadata,omitempty"`
 	/**
-	* This option is for configuring the file containing the data format and metadata required by the analytics endpoint.
+	* This option is for configuring the file containing the data format and metadata required by the analytics endpoint. Note that the fields to be exported will be honoured only if the option logAllJsonFields is disabled under appflow param.
 	*/
 	Dataformatfile string `json:"dataformatfile,omitempty"`
 	/**
@@ -171,6 +171,10 @@ type Analyticsprofile struct {
 	* Specify the list of custom headers to be exported in web transaction records.
 	*/
 	Httpcustomheaders []string `json:"httpcustomheaders,omitempty"`
+	/**
+	* Enable/disable appflow logging for MCP (Model Context Protocol) traffic.
+	*/
+	Mcpsummary string `json:"mcpsummary,omitempty"`
 	/**
 	* This option indicates the whether managementlog should be sent to the REST collector.
 	*/

@@ -1,8 +1,50 @@
 package iptunnel
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// IptunnelDataSourceModel is the data-source-specific model, decoupled from
+// IptunnelResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits
+// (type, encapip, channel, tunneltype, ipsectunnelstatus, refcnt, ...). Every
+// non-key attribute is Computed; the Framework's per-attribute model <-> schema
+// reflection requires this model to have exactly the attributes the data-source
+// schema declares, which is why it cannot reuse the resource model.
+type IptunnelDataSourceModel struct {
+	Id               types.String `tfsdk:"id"`
+	Destport         types.Int64  `tfsdk:"destport"`
+	Grepayload       types.String `tfsdk:"grepayload"`
+	Ipsecprofilename types.String `tfsdk:"ipsecprofilename"`
+	Local            types.String `tfsdk:"local"`
+	Name             types.String `tfsdk:"name"`
+	Ownergroup       types.String `tfsdk:"ownergroup"`
+	Protocol         types.String `tfsdk:"protocol"`
+	Remote           types.String `tfsdk:"remote"`
+	Remotesubnetmask types.String `tfsdk:"remotesubnetmask"`
+	Tosinherit       types.String `tfsdk:"tosinherit"`
+	Vlan             types.Int64  `tfsdk:"vlan"`
+	Vlantagging      types.String `tfsdk:"vlantagging"`
+	Vnid             types.Int64  `tfsdk:"vnid"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/iptunnel.json). Never settable; populated from GET.
+	Sysname           types.String `tfsdk:"sysname"`
+	Type              types.Int64  `tfsdk:"type"`
+	Encapip           types.String `tfsdk:"encapip"`
+	Channel           types.Int64  `tfsdk:"channel"`
+	Tunneltype        types.List   `tfsdk:"tunneltype"`
+	Ipsectunnelstatus types.String `tfsdk:"ipsectunnelstatus"`
+	Refcnt            types.Int64  `tfsdk:"refcnt"`
+}
 
 func IptunnelDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -72,6 +114,78 @@ func IptunnelDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Virtual network identifier (VNID) is the value that identifies a specific virtual network in the data plane.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"sysname": schema.StringAttribute{
+				Computed:    true,
+				Description: "The name of the ip tunnel.",
+			},
+			"type": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The type of this tunnel.",
+			},
+			"encapip": schema.StringAttribute{
+				Computed:    true,
+				Description: "The effective local IP address of the tunnel. Used as the source of the encapsulated packets.",
+			},
+			"channel": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The tunnel that is bound to a netbridge.",
+			},
+			"tunneltype": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Indicates that a tunnel is User-Configured, Internal or DELETE-IN-PROGRESS.",
+			},
+			"ipsectunnelstatus": schema.StringAttribute{
+				Computed:    true,
+				Description: "Whether the ipsec on this tunnel is up or down.",
+			},
+			"refcnt": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of PBRs to bound to this iptunnel.",
+			},
 		},
 	}
+}
+
+// iptunnelDataSourceSetAttrFromGet projects a NITRO iptunnel GET response onto
+// the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func iptunnelDataSourceSetAttrFromGet(ctx context.Context, data *IptunnelDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In iptunnelDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+	// iptunnel is read via an array filter matched on remote/remotesubnetmask; the
+	// returned rows do not echo "name", so derive the id from the config-supplied
+	// name (already populated) instead of from the GET row.
+	data.Id = types.StringValue(data.Name.ValueString())
+
+	// Read/write attributes as read-back outputs.
+	data.Destport = utils.MapGetInt64(g, "destport")
+	data.Grepayload = utils.MapGetString(g, "grepayload")
+	data.Ipsecprofilename = utils.MapGetString(g, "ipsecprofilename")
+	data.Local = utils.MapGetString(g, "local")
+	data.Ownergroup = utils.MapGetString(g, "ownergroup")
+	data.Protocol = utils.MapGetString(g, "protocol")
+	data.Remote = utils.MapGetString(g, "remote")
+	data.Remotesubnetmask = utils.MapGetString(g, "remotesubnetmask")
+	data.Tosinherit = utils.MapGetString(g, "tosinherit")
+	data.Vlan = utils.MapGetInt64(g, "vlan")
+	data.Vlantagging = utils.MapGetString(g, "vlantagging")
+	data.Vnid = utils.MapGetInt64(g, "vnid")
+
+	// Read-only metadata.
+	data.Sysname = utils.MapGetString(g, "sysname")
+	data.Type = utils.MapGetInt64(g, "type")
+	data.Encapip = utils.MapGetString(g, "encapip")
+	data.Channel = utils.MapGetInt64(g, "channel")
+	data.Tunneltype = utils.MapGetStringList(g, "tunneltype")
+	data.Ipsectunnelstatus = utils.MapGetString(g, "ipsectunnelstatus")
+	data.Refcnt = utils.MapGetInt64(g, "refcnt")
 }

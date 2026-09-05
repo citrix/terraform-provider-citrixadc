@@ -35,7 +35,7 @@ func (d *VpnclientlessaccessprofileDataSource) Schema(ctx context.Context, req d
 }
 
 func (d *VpnclientlessaccessprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VpnclientlessaccessprofileResourceModel
+	var data VpnclientlessaccessprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *VpnclientlessaccessprofileDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	vpnclientlessaccessprofileSetAttrFromGet(ctx, &data, getResponseData)
+	vpnclientlessaccessprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

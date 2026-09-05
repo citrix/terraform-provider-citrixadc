@@ -82,7 +82,7 @@ func (d *Vrid6InterfaceBindingDataSource) Read(ctx context.Context, req datasour
 		return
 	}
 
-	vrid6_interface_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	vrid6_interface_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

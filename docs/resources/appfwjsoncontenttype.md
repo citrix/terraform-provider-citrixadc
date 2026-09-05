@@ -25,3 +25,12 @@ resource "citrixadc_appfwjsoncontenttype" "demo_appfwjsoncontenttype" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwjsoncontenttype`. It has the same value as the `jsoncontenttypevalue` attribute.
+
+
+## Import
+
+A appfwjsoncontenttype can be imported using its jsoncontenttypevalue, e.g.
+
+```shell
+terraform import citrixadc_appfwjsoncontenttype.tf_appfwjsoncontenttype <jsoncontenttypevalue>
+```

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,15 @@ func (r *SmppparamResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating smppparam resource")
 
-	// smppparam := smppparamGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	smppparam := smppparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Smppparam.Type(), &smppparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create smppparam, got error: %s", err))
-	//	 return
-	// }
+	// smppparam is a singleton (unnamed) configuration resource
+	err := r.client.UpdateUnnamedResource(service.Smppparam.Type(), &smppparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create smppparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("smppparam-config")
@@ -95,10 +97,12 @@ func (r *SmppparamResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *SmppparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SmppparamResourceModel
+	var data, config, state SmppparamResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan, and config into the models
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +110,79 @@ func (r *SmppparamResource) Update(ctx context.Context, req resource.UpdateReque
 
 	tflog.Debug(ctx, "Updating smppparam resource")
 
-	// Create API request body from the model
-	// smppparam := smppparamGetThePayloadFromtheConfig(ctx, &data)
+	// Preserve ID across the update (singleton static ID)
+	data.Id = types.StringValue("smppparam-config")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Smppparam.Type(), &smppparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update smppparam, got error: %s", err))
-	//	 return
-	// }
+	// Determine which attributes changed and which were removed from config
+	// (removed -> unset so the appliance reverts them to their defaults).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Addrnpi.Equal(state.Addrnpi) {
+		if config.Addrnpi.IsNull() {
+			attributesToUnset = append(attributesToUnset, "addrnpi")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Addrrange.Equal(state.Addrrange) {
+		if config.Addrrange.IsNull() {
+			attributesToUnset = append(attributesToUnset, "addrrange")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Addrton.Equal(state.Addrton) {
+		if config.Addrton.IsNull() {
+			attributesToUnset = append(attributesToUnset, "addrton")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Clientmode.Equal(state.Clientmode) {
+		if config.Clientmode.IsNull() {
+			attributesToUnset = append(attributesToUnset, "clientmode")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Msgqueue.Equal(state.Msgqueue) {
+		if config.Msgqueue.IsNull() {
+			attributesToUnset = append(attributesToUnset, "msgqueue")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Msgqueuesize.Equal(state.Msgqueuesize) {
+		if config.Msgqueuesize.IsNull() {
+			attributesToUnset = append(attributesToUnset, "msgqueuesize")
+		} else {
+			hasChange = true
+		}
+	}
 
-	tflog.Trace(ctx, "Updated smppparam resource")
+	if hasChange {
+		// Create API request body from the plan
+		smppparam := smppparamGetThePayloadFromtheConfig(ctx, &data)
+
+		// smppparam is a singleton (unnamed) configuration resource
+		err := r.client.UpdateUnnamedResource(service.Smppparam.Type(), &smppparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update smppparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated smppparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for smppparam resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. smppparam is a singleton, so no id fields.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Smppparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset smppparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readSmppparamFromApi(ctx, &data, &resp.Diagnostics)

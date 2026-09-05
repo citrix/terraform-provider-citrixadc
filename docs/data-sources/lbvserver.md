@@ -141,3 +141,44 @@ In addition to the argument above, the following attributes are exported:
 * `weight` - Weight to assign to the specified service.
 * `servicename` - Service to bind to the virtual server.
 * `newname` - New name for the virtual server.
+
+### Read-only lbvserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbvserver` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `value` - SSL status.
+* `ipmapping` - The permanent mapping for the V6 address.
+* `ngname` - Nodegroup name to which this lb vserver belongs.
+* `type` - Type of LB vserver (for example `CONTENT`, `ADDRESS`).
+* `curstate` - Current LB vserver state (for example `UP`, `DOWN`, `OUT OF SERVICE`).
+* `effectivestate` - Effective state of the LB vserver, based on the state of backup vservers.
+* `status` - Current status of the lb vserver.
+* `lbrrreason` - Reason why a vserver is in round robin.
+* `redirect` - Cache redirect type (`CACHE`, `POLICY`, `ORIGIN`).
+* `precedence` - Precedence (`RULE`, `URL`).
+* `homepage` - Home page.
+* `dnsvservername` - DNS vserver name.
+* `domain` - Domain.
+* `cachevserver` - Cache virtual server.
+* `health` - Health of the vserver based on percentage of weights of active services.
+* `ruletype` - Rule type.
+* `groupname` - LB group to which the lb vserver is bound.
+* `cookiedomain` - Domain name used in the set-cookie header for cookie persistence.
+* `map` - Map (`ON`, `OFF`).
+* `gt2gb` - Whether transactions greater than 2 GB are allowed on this vserver.
+* `consolidatedlconn` - Whether consolidated stats are used for LeastConnection.
+* `consolidatedlconngbl` - Global setting for consolidated LeastConnection stats.
+* `thresholdvalue` - Whether the threshold is exceeded for a service participating in CUSTOMLB.
+* `bindpoint` - The bindpoint to which the policy is bound.
+* `version` - Cookie version.
+* `totalservices` - Total number of services bound to the vserver.
+* `activeservices` - Total number of active services bound to the vserver.
+* `statechangetimesec` - Time when the last state change happened (seconds part, string).
+* `statechangetimeseconds` - Time when the last state change happened (seconds part).
+* `statechangetimemsec` - Time at which the last state change happened (milliseconds part).
+* `tickssincelaststatechange` - Time in 10 millisecond ticks since the last state change.
+* `isgslb` - Set to true if it is a GSLB vserver.
+* `vsvrdynconnsothreshold` - Spillover threshold for dynamic connections.
+* `backupvserverstatus` - Status of the backup vserver.
+* `nodefaultbindings` - Whether the configuration will have default SSL CIPHER and ECC curve bindings.
+* `currentactiveorder` - Current order that takes the traffic when a service or servicegroup is bound with order.

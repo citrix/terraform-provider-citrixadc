@@ -35,7 +35,7 @@ func (d *AuthenticationloginschemapolicyDataSource) Schema(ctx context.Context, 
 }
 
 func (d *AuthenticationloginschemapolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationloginschemapolicyResourceModel
+	var data AuthenticationloginschemapolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *AuthenticationloginschemapolicyDataSource) Read(ctx context.Context, re
 		return
 	}
 
-	authenticationloginschemapolicySetAttrFromGet(ctx, &data, getResponseData)
+	authenticationloginschemapolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -39,20 +40,25 @@ func (r *LinksetResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"interfacebinding": schema.SetAttribute{
 				ElementType: types.StringType,
+				Optional:    true,
 				Computed:    true,
-				Description: "Set of interface bindings associated with the linkset.",
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+					setplanmodifier.RequiresReplaceIfConfigured(),
+				},
+				Description: "Set of interfaces to be bound to the linkset. Changing this forces recreation of the linkset (matches SDK v2 ForceNew behavior).",
 			},
 		},
 	}
 }
 
-func linksetGetThePayloadFromtheConfig(ctx context.Context, data *LinksetResourceModel) network.Linkset {
-	tflog.Debug(ctx, "In linksetGetThePayloadFromtheConfig Function")
+func linksetGetThePayloadFromthePlan(ctx context.Context, data *LinksetResourceModel) network.Linkset {
+	tflog.Debug(ctx, "In linksetGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	linkset := network.Linkset{}
-	if !data.Id.IsNull() {
-		linkset.Id = data.Id.ValueString()
+	if !data.Linksetid.IsNull() && !data.Linksetid.IsUnknown() {
+		linkset.Id = data.Linksetid.ValueString()
 	}
 
 	return linkset
@@ -64,21 +70,26 @@ func linksetSetAttrFromGet(ctx context.Context, data *LinksetResourceModel, getR
 	// Convert API response to model
 	if val, ok := getResponseData["id"]; ok && val != nil {
 		data.Linksetid = types.StringValue(val.(string))
-	} else {
-		data.Linksetid = types.StringNull()
+		// Set ID for the resource
+		// Case 2: Single unique attribute - use plain value as ID
+		data.Id = types.StringValue(val.(string))
 	}
-
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Linksetid.ValueString())
 
 	return data
 }
 
-func (d *LinksetDataSource) readLinksetInterfaceBindings(ctx context.Context, data *LinksetResourceModel, linksetName string) error {
-	bindings, err := d.client.FindResourceArray(service.Linkset_interface_binding.Type(), linksetName)
+// linksetReadInterfaceBindings reads the interface bindings for the linkset and
+// populates the interfacebinding set on the model. It is shared by the resource
+// and datasource Read paths. Matching the SDK v2 behavior, a "not found" / error
+// while listing bindings is treated as "no bindings" (empty set) rather than a
+// hard failure, so a linkset with zero interface bindings reads back cleanly.
+func linksetReadInterfaceBindings(ctx context.Context, client *service.NitroClient, data *LinksetResourceModel, linksetName string) error {
+	tflog.Debug(ctx, "In linksetReadInterfaceBindings Function")
+
+	bindings, err := client.FindResourceArray(service.Linkset_interface_binding.Type(), linksetName)
 	if err != nil {
-		return fmt.Errorf("unable to read linkset interface bindings: %w", err)
+		// SDK v2 ignores this error and treats it as an empty binding set.
+		bindings = []map[string]interface{}{}
 	}
 
 	processedBindings := make([]string, 0, len(bindings))
@@ -88,8 +99,6 @@ func (d *LinksetDataSource) readLinksetInterfaceBindings(ctx context.Context, da
 		}
 	}
 
-	// Convert to appropriate Framework type (adjust based on your LinksetResourceModel schema)
-	// Example if interfacebinding is types.List or types.Set:
 	interfaceSet, diags := types.SetValueFrom(ctx, types.StringType, processedBindings)
 	if diags.HasError() {
 		return fmt.Errorf("error converting interface bindings to set")

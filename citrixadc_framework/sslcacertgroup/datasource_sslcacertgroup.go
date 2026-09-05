@@ -35,7 +35,7 @@ func (d *SslcacertgroupDataSource) Schema(ctx context.Context, req datasource.Sc
 }
 
 func (d *SslcacertgroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SslcacertgroupResourceModel
+	var data SslcacertgroupDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *SslcacertgroupDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	sslcacertgroupSetAttrFromGet(ctx, &data, getResponseData)
+	sslcacertgroupDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

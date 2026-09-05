@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTmsessionpolicy_basic = `
@@ -77,6 +78,58 @@ func TestAccTmsessionpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "rule", "false"),
 					resource.TestCheckResourceAttr("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "action", "tf_tmsessaction"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccTmsessionpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionpolicy.tf_tmsessionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmsessionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Tmsessionpolicy.Type(), "my_tmsession_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmsessionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTmsessionpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccTmsessionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionpolicyExist("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTmsessionpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmsessionpolicyExist("citrixadc_tmsessionpolicy.tf_tmsessionpolicy", nil)),
 			},
 		},
 	})
@@ -146,6 +199,25 @@ func testAccCheckTmsessionpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTmsessionpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_tmsessionpolicy.tf_tmsessionpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmsessionpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmsessionpolicy_basic},
+			{
+				Config:                  testAccTmsessionpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccTmsessionpolicyDataSource_basic = `
 
 	resource "citrixadc_tmsessionaction" "tf_tmsessionaction" {
@@ -173,6 +245,8 @@ func TestAccTmsessionpolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTmsessionpolicyDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// "id" is the universal runtime-binding proof (equals name).
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "name", "my_tmsession_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "rule", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmsessionpolicy.tf_tmsessionpolicy", "action", "tf_tmsessaction"),

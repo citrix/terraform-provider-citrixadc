@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaapreauthenticationaction_basic = `
@@ -64,6 +66,85 @@ func TestAccAaapreauthenticationaction_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// The unset test covers the spec-unsettable, mutable string attributes:
+// defaultepagroup, deletefiles, killprocess. step1 sets them to non-default
+// values; step2 removes them from config -> the provider must issue the NITRO
+// ?action=unset so the appliance reverts them (they become absent -> null).
+const testAccAaapreauthenticationaction_unset_step1 = `
+	resource "citrixadc_aaapreauthenticationaction" "tf_unset" {
+		name                    = "tf_test_aaapreauthaction_unset"
+		preauthenticationaction = "ALLOW"
+		defaultepagroup         = "tf_epa_grp"
+		deletefiles             = "/var/tmp/unset/hello.txt"
+		killprocess             = "badproc.exe"
+	}
+`
+
+const testAccAaapreauthenticationaction_unset_step2 = `
+	resource "citrixadc_aaapreauthenticationaction" "tf_unset" {
+		name                    = "tf_test_aaapreauthaction_unset"
+		preauthenticationaction = "ALLOW"
+		# defaultepagroup, deletefiles, killprocess removed from config -> unset.
+	}
+`
+
+func TestAccAaapreauthenticationaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccAaapreauthenticationaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaapreauthenticationactionExist("citrixadc_aaapreauthenticationaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationaction.tf_unset", "defaultepagroup", "tf_epa_grp"),
+					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationaction.tf_unset", "deletefiles", "/var/tmp/unset/hello.txt"),
+					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationaction.tf_unset", "killprocess", "badproc.exe"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance reverts
+				// them (absent), and the implicit post-apply plan must be empty.
+				Config: testAccAaapreauthenticationaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaapreauthenticationactionExist("citrixadc_aaapreauthenticationaction.tf_unset", nil),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAaapreauthenticationactionADCUnset("tf_test_aaapreauthaction_unset", "defaultepagroup"),
+					testAccCheckAaapreauthenticationactionADCUnset("tf_test_aaapreauthaction_unset", "deletefiles"),
+					testAccCheckAaapreauthenticationactionADCUnset("tf_test_aaapreauthaction_unset", "killprocess"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAaapreauthenticationactionADCUnset asserts an attribute is absent
+// (or empty) directly on the appliance, proving the unset actually reverted it.
+func testAccCheckAaapreauthenticationactionADCUnset(name, attr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Aaapreauthenticationaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("aaapreauthenticationaction %s not found on appliance", name)
+		}
+		if v, ok := data[attr]; ok {
+			got := strings.TrimSpace(fmt.Sprintf("%v", v))
+			if got != "" {
+				return fmt.Errorf("aaapreauthenticationaction %s: appliance attr %q = %q, want absent/empty (unset did not revert it)", name, attr, got)
+			}
+		}
+		return nil
+	}
 }
 
 func testAccCheckAaapreauthenticationactionExist(n string, id *string) resource.TestCheckFunc {
@@ -130,6 +211,77 @@ func testAccCheckAaapreauthenticationactionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAaapreauthenticationaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaapreauthenticationaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Aaapreauthenticationaction.Type(), "tf_aaapreauthenticationaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaapreauthenticationaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAaapreauthenticationaction_import(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaapreauthenticationaction_basic},
+			{
+				Config:                  testAccAaapreauthenticationaction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAaapreauthenticationaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaapreauthenticationactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAaapreauthenticationaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationactionExist("citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaapreauthenticationaction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationactionExist("citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccAaapreauthenticationactionDataSource_basic = `
 
 	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
@@ -155,6 +307,8 @@ func TestAccAaapreauthenticationactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "name", "tf_aaapreauthenticationaction"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "preauthenticationaction", "ALLOW"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "deletefiles", "/var/tmp/new/hello.txt"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaapreauthenticationaction.tf_aaapreauthenticationaction", "id"),
 				),
 			},
 		},

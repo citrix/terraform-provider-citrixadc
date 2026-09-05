@@ -1,8 +1,47 @@
 package rewriteaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// RewriteactionDataSourceModel is the data-source-specific model, decoupled from
+// RewriteactionResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits
+// (hits, undefhits, referencecount, description, isdefault, builtin, feature).
+// Every non-key attribute is Computed; the Framework's per-attribute model <->
+// schema reflection requires this model to have exactly the attributes the
+// data-source schema declares, which is why it cannot reuse the resource model.
+type RewriteactionDataSourceModel struct {
+	Id   types.String `tfsdk:"id"`
+	Name types.String `tfsdk:"name"` // Required lookup key
+
+	// Read/write attributes, surfaced here as Computed outputs.
+	Comment           types.String `tfsdk:"comment"`
+	Newname           types.String `tfsdk:"newname"`
+	Refinesearch      types.String `tfsdk:"refinesearch"`
+	Search            types.String `tfsdk:"search"`
+	Stringbuilderexpr types.String `tfsdk:"stringbuilderexpr"`
+	Target            types.String `tfsdk:"target"`
+	Type              types.String `tfsdk:"type"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/rewriteaction.json). Never settable; from GET.
+	Hits           types.Int64  `tfsdk:"hits"`
+	Undefhits      types.Int64  `tfsdk:"undefhits"`
+	Referencecount types.Int64  `tfsdk:"referencecount"`
+	Description    types.String `tfsdk:"description"`
+	Isdefault      types.Bool   `tfsdk:"isdefault"`
+	Builtin        types.List   `tfsdk:"builtin"`
+	Feature        types.String `tfsdk:"feature"`
+}
 
 func RewriteactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -32,7 +71,7 @@ func RewriteactionDataSourceSchema() schema.Schema {
 			"search": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Search facility that is used to match multiple strings in the request or response. Used in the INSERT_BEFORE_ALL, INSERT_AFTER_ALL, REPLACE_ALL, and DELETE_ALL action types. The following search types are supported:\n* Text (\"text(string)\") - A literal string. Example: -search text(\"hello\")\n* Regular expression (\"regex(re<delimiter>regular exp<delimiter>)\") - Pattern that is used to match multiple strings in the request or response. The pattern may be a PCRE-format regular expression with a delimiter that consists of any printable ASCII non-alphanumeric character except for the underscore (_) and space ( ) that is not otherwise used in the expression. Example: -search regex(re~^hello*~) The preceding regular expression can use the tilde (~) as the delimiter because that character does not appear in the regular expression itself.\n* XPath (\"xpath(xp<delimiter>xpath expression<delimiter>)\") - An XPath expression to search XML. The delimiter has the same rules as for regex. Example: -search xpath(xp%/a/b%)\n* JSON (\"xpath_json(xp<delimiter>xpath expression<delimiter>)\") - An XPath expression to search JSON. The delimiter has the same rules as for regex. Example: -search xpath_json(xp%/a/b%)\nNOTE: JSON searches use the same syntax as XPath searches, but operate on JSON files instead of standard XML files.\n* HTML (\"xpath_html(xp<delimiter>xpath expression<delimiter>)\") - An XPath expression to search HTML. The delimiter has the same rules as for regex. Example: -search xpath_html(xp%/html/body%)\nNOTE: HTML searches use the same syntax as XPath searches, but operate on HTML files instead of standard XML files; HTML 5 rules for the file syntax are used; HTML 4 and later are supported.\n* Patset (\"patset(patset)\") - A predefined pattern set. Example: -search patset(\"patset1\").\n* Datset (\"dataset(dataset)\") - A predefined dataset. Example: -search dataset(\"dataset1\").\n* AVP (\"avp(avp number)\") - AVP number that is used to match multiple AVPs in a Diameter/Radius Message. Example: -search avp(999)\n\nNote: for all these the TARGET prefix can be used in the replacement expression to specify the text that was selected by the -search parameter, optionally adjusted by the -refineSearch parameter.\nExample: TARGET.BEFORE_STR(\",\")",
+				Description: "Search facility that is used to match multiple strings in the request or response. Used in the INSERT_BEFORE_ALL, INSERT_AFTER_ALL, REPLACE_ALL, and DELETE_ALL action types.",
 			},
 			"stringbuilderexpr": schema.StringAttribute{
 				Optional:    true,
@@ -47,8 +86,74 @@ func RewriteactionDataSourceSchema() schema.Schema {
 			"type": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Type of user-defined rewrite action. The information that you provide for, and the effect of, each type are as follows:: \n* REPLACE <target> <string_builder_expr>. Replaces the string with the string-builder expression.\n* REPLACE_ALL <target> <string_builder_expr> -search <search_expr>. In the request or response specified by <target>, replaces all occurrences of the string defined by <string_builder_expr> with the string defined by <search_expr>.\n* REPLACE_HTTP_RES <string_builder_expr>. Replaces the complete HTTP response with the string defined by the string-builder expression.\n* REPLACE_SIP_RES <target> - Replaces the complete SIP response with the string specified by <target>.\n* INSERT_HTTP_HEADER <header_string_builder_expr> <contents_string_builder_expr>. Inserts the HTTP header specified by <header_string_builder_expr> and header contents specified by <contents_string_builder_expr>.\n* DELETE_HTTP_HEADER <target>. Deletes the HTTP header specified by <target>.\n* CORRUPT_HTTP_HEADER <target>. Replaces the header name of all occurrences of the HTTP header specified by <target> with a corrupted name, so that it will not be recognized by the receiver  Example: MY_HEADER is changed to MHEY_ADER.\n* INSERT_BEFORE <target_expr> <string_builder_expr>. Finds the string specified in <target_expr> and inserts the string in <string_builder_expr> before it.\n* INSERT_BEFORE_ALL <target> <string_builder_expr> -search <search_expr>. In the request or response specified by <target>, locates all occurrences of the string specified in <string_builder_expr> and inserts the string specified in <search_expr> before each.\n* INSERT_AFTER <target_expr> <string_builder_expr>. Finds the string specified in <target_expr>, and inserts the string specified in <string_builder_expr> after it.\n* INSERT_AFTER_ALL <target> <string_builder_expr> -search <search_expr>. In the request or response specified by <target>, locates all occurrences of the string specified by <string_builder_expr> and inserts the string specified by <search_expr> after each.\n* DELETE <target>. Finds and deletes the specified target.\n* DELETE_ALL <target> -search <string_builder_expr>. In the request or response specified by <target>, locates and deletes all occurrences of the string specified by <string_builder_expr>.\n* REPLACE_DIAMETER_HEADER_FIELD <target> <field value>. In the request or response modify the header field specified by <target>. Use Diameter.req.flags.SET(<flag>) or Diameter.req.flags.UNSET<flag> as 'stringbuilderexpression' to set or unset flags.\n* REPLACE_DNS_HEADER_FIELD <target>. In the request or response modify the header field specified by <target>. \n* REPLACE_DNS_ANSWER_SECTION <target>. Replace the DNS answer section in the response. This is currently applicable for A and AAAA records only. Use DNS.NEW_RRSET_A & DNS.NEW_RRSET_AAAA expressions to configure the new answer section.\n* REPLACE_MQTT <target> <string_builder_expr> : Replace MQTT message fields specified in <target_expr> to the value specified in <string_builder_expr>\n* INSERT_MQTT <string_builder_expr> : Insert the string_builder_expr to an appropriate packet field in the MQTT message.\n* INSERT_AFTER_MQTT <target_expr> <string_builder_expr> : Insert a topic specified in <string_builder_expr> in the MQTT Subscribe or Unsubscribe message after the specified target_expr.\n* INSERT_BEFORE_MQTT <target_expr> <string_builder_expr> : Insert a topic specified in <string_builder_expr> in the MQTT Subscribe or Unsubscribe message before the specified target_expr.\n* DELETE_MQTT <target> : Deletes the specified target in the MQTT message.",
+				Description: "Type of user-defined rewrite action.",
+			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"hits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of times the action has been taken.",
+			},
+			"undefhits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of times the action resulted in UNDEF.",
+			},
+			"referencecount": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of references to the action.",
+			},
+			"description": schema.StringAttribute{
+				Computed:    true,
+				Description: "Description of the action.",
+			},
+			"isdefault": schema.BoolAttribute{
+				Computed:    true,
+				Description: "A value of true is returned if it is a default rewriteaction.",
+			},
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine whether rewrite action is built-in or not.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
 			},
 		},
 	}
+}
+
+// rewriteactionDataSourceSetAttrFromGet projects a NITRO rewriteaction GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func rewriteactionDataSourceSetAttrFromGet(ctx context.Context, data *RewriteactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In rewriteactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Refinesearch = utils.MapGetString(g, "refinesearch")
+	data.Search = utils.MapGetString(g, "search")
+	data.Stringbuilderexpr = utils.MapGetString(g, "stringbuilderexpr")
+	data.Target = utils.MapGetString(g, "target")
+	data.Type = utils.MapGetString(g, "type")
+
+	// newname is a rename-only (?action=rename) input the GET never returns -> Null.
+	data.Newname = types.StringNull()
+
+	// Read-only attributes.
+	data.Hits = utils.MapGetInt64(g, "hits")
+	data.Undefhits = utils.MapGetInt64(g, "undefhits")
+	data.Referencecount = utils.MapGetInt64(g, "referencecount")
+	data.Description = utils.MapGetString(g, "description")
+	data.Isdefault = utils.MapGetBool(g, "isdefault")
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

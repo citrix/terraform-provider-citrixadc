@@ -10,10 +10,20 @@ func SslprofileSslcertkeyBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"certkeyname": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The certkey (CA certificate + private key) to be bound with profile.",
+			},
 			"cipherpriority": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Priority of the cipher binding",
+			},
+			"forgingcacertkey": schema.BoolAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The certkey (CA certificate + private key) to be used for signing Forged Client Certificate.",
 			},
 			"name": schema.StringAttribute{
 				Required:    true,

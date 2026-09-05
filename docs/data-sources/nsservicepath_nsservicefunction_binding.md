@@ -6,7 +6,7 @@ subcategory: "NS"
 
 The nsservicepath_nsservicefunction_binding data source allows you to retrieve information about the binding between nsservice function and nsservice path.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_nsservicepath_nsservicefunction_binding" "tf_binding" {
@@ -32,5 +32,5 @@ output "id" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nsservicepath_nsservicefunction_binding. It is a system-generated identifier.
+* `id` - The id of the nsservicepath_nsservicefunction_binding. It is the concatenation of `servicepathname` and `servicefunction` attributes separated by a comma.
 * `index` - The serviceindex of each servicefunction in path.

@@ -38,3 +38,11 @@ In addition to the arguments, the following attributes are available:
 * `skipvalidation` - Indicates whether openapi spec validation was skipped while adding the spec.
 * `type` - Input format of the spec file. One of `PROTO`, `OAS/Swagger`, or `GRAPHQL`.
 * `id` - The id of the apispec. It has the same value as the `name` attribute.
+
+### Read-only apispec metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_apispec` resource) and are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `ready` - Indicates whether the api spec is ready, that is whether the internal registry is created or not (`YES` or `NO`).
+* `nsappversion` - NS App Version of the api spec file.

@@ -26,3 +26,12 @@ undefaction = "RESET"
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the contentinspectionparameter. It is a unique string prefixed with  `tf-contentinspectionparameter-`.
+
+
+## Import
+
+A contentinspectionparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_contentinspectionparameter.tf_contentinspectionparameter contentinspectionparameter-config
+```

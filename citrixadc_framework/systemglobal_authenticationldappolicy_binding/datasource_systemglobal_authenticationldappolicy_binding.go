@@ -92,7 +92,7 @@ func (d *SystemglobalAuthenticationldappolicyBindingDataSource) Read(ctx context
 		return
 	}
 
-	systemglobal_authenticationldappolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	systemglobal_authenticationldappolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

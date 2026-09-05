@@ -35,7 +35,7 @@ func (d *LacpDataSource) Schema(ctx context.Context, req datasource.SchemaReques
 }
 
 func (d *LacpDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LacpResourceModel
+	var data LacpDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *LacpDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	lacpSetAttrFromGet(ctx, &data, getResponseData)
+	lacpDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

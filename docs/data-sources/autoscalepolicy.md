@@ -39,10 +39,10 @@ In addition to the arguments, the following attributes are available:
 * `rule` - The rule associated with the policy.
 * `id` - The id of the autoscalepolicy. It has the same value as the `name` attribute.
 
-## Import
+### Read-only autoscalepolicy metadata
 
-An autoscalepolicy can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_autoscalepolicy` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_autoscalepolicy.tf_autoscalepolicy my_autoscalepolicy
-```
+* `hits` - Number of hits.
+* `undefhits` - Number of Undef hits.
+* `priority` - Specifies the priority of the policy.

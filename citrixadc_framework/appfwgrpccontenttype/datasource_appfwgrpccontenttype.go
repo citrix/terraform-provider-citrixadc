@@ -7,7 +7,6 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*AppfwgrpccontenttypeDataSource)(nil)
@@ -36,7 +35,7 @@ func (d *AppfwgrpccontenttypeDataSource) Schema(ctx context.Context, req datasou
 }
 
 func (d *AppfwgrpccontenttypeDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppfwgrpccontenttypeResourceModel
+	var data AppfwgrpccontenttypeDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -55,10 +54,7 @@ func (d *AppfwgrpccontenttypeDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	appfwgrpccontenttypeSetAttrFromGet(ctx, &data, getResponseData)
-
-	// Datasource never calls Create — set ID explicitly here (single-key resource)
-	data.Id = types.StringValue(fmt.Sprintf("%v", data.Grpccontenttypevalue.ValueString()))
+	appfwgrpccontenttypeDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

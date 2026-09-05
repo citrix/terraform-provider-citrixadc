@@ -81,3 +81,11 @@ data "citrixadc_authenticationldapaction" "example" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+### Read-only authenticationldapaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationldapaction` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+- `ldapcontimeout` (Number) Number of seconds the Citrix ADC waits for the LDAP connection (TCP connection and SSL/TLS handshake) to be established with the LDAP server.
+- `success` (Number) Number of successful authentications through this LDAP action.
+- `failure` (Number) Number of failed authentications through this LDAP action.

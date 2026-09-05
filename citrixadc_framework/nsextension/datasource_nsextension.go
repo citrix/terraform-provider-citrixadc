@@ -35,7 +35,7 @@ func (d *NsextensionDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *NsextensionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NsextensionResourceModel
+	var data NsextensionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *NsextensionDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	nsextensionSetAttrFromGetForDatasource(ctx, &data, getResponseData)
+	nsextensionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -43,3 +43,10 @@ In addition to the arguments, the following attributes are available:
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `priority` - Specifies the priority of the policy.
 * `state` - Current state of the binding. If the binding is enabled, the policy is active.
+
+### Read-only tunnelglobal_tunneltrafficpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_tunnelglobal_tunneltrafficpolicy_binding` resource). They are Computed and are `null` when the appliance does not return them.
+
+* `policytype` - Policy type (Classic/Advanced) to be bound. Used for display. Possible values: `Classic Policy`, `Advanced Policy`.
+* `numpol` - The number of policies bound to the bindpoint.

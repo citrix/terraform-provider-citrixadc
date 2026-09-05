@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -34,29 +33,37 @@ func (r *SnmpmibResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed:    true,
 				Description: "The ID of the snmpmib resource.",
 			},
+			// SDK v2 parity: Optional+Computed, NO Default, NO ForceNew.
+			// The ADC supplies its own defaults; we read them back into state.
 			"contact": schema.StringAttribute{
-				Optional:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO server default; declaring it here makes config-removal
+				// produce a plan diff so Update runs and can fire the unset.
 				Default:     stringdefault.StaticString("WebMaster (default)"),
 				Description: "Name of the administrator for this Citrix ADC. Along with the name, you can include information on how to contact this person, such as a phone number or an email address. Can consist of 1 to 127 characters that include uppercase and  lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the information includes one or more spaces, enclose it in double or single quotation marks (for example, \"my contact\" or 'my contact').",
 			},
 			"customid": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("Default"),
 				Description: "Custom identification number for the Citrix ADC. Can consist of 1 to 127 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters. You should choose a custom identification that helps identify the Citrix ADC appliance.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the ID includes one or more spaces, enclose it in double or single quotation marks (for example, \"my ID\" or 'my ID').",
 			},
 			"location": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("POP (default)"),
 				Description: "Physical location of the Citrix ADC. For example, you can specify building name, lab number, and rack number. Can consist of 1 to 127 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the location includes one or more spaces, enclose it in double or single quotation marks (for example, \"my location\" or 'my location').",
 			},
 			"name": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("NetScaler"),
 				Description: "Name for this Citrix ADC. Can consist of 1 to 127 characters that include uppercase and lowercase letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore (_) characters.  You should choose a name that helps identify the Citrix ADC appliance.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose it in double or single quotation marks (for example, \"my name\" or 'my name').",
 			},
 			"ownernode": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(-1),
+				Computed:    true,
 				Description: "ID of the cluster node for which we are setting the mib. This is a mandatory argument to set snmp mib on CLIP.",
 			},
 		},
@@ -68,19 +75,20 @@ func snmpmibGetThePayloadFromtheConfig(ctx context.Context, data *SnmpmibResourc
 
 	// Create API request body from the model
 	snmpmib := snmp.Snmpmib{}
-	if !data.Contact.IsNull() {
+	if !data.Contact.IsNull() && !data.Contact.IsUnknown() {
 		snmpmib.Contact = data.Contact.ValueString()
 	}
-	if !data.Customid.IsNull() {
+	if !data.Customid.IsNull() && !data.Customid.IsUnknown() {
 		snmpmib.Customid = data.Customid.ValueString()
 	}
-	if !data.Location.IsNull() {
+	if !data.Location.IsNull() && !data.Location.IsUnknown() {
 		snmpmib.Location = data.Location.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		snmpmib.Name = data.Name.ValueString()
 	}
-	if !data.Ownernode.IsNull() {
+	// SDK v2 parity: only send ownernode when it was explicitly configured.
+	if !data.Ownernode.IsNull() && !data.Ownernode.IsUnknown() {
 		snmpmib.Ownernode = utils.IntPtr(int(data.Ownernode.ValueInt64()))
 	}
 
@@ -90,37 +98,40 @@ func snmpmibGetThePayloadFromtheConfig(ctx context.Context, data *SnmpmibResourc
 func snmpmibSetAttrFromGet(ctx context.Context, data *SnmpmibResourceModel, getResponseData map[string]interface{}) *SnmpmibResourceModel {
 	tflog.Debug(ctx, "In snmpmibSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// omit-on-default guard: never clobber a known configured value that NITRO
+	// omitted from the GET response; only resolve an as-yet-unknown value to null.
 	if val, ok := getResponseData["contact"]; ok && val != nil {
 		data.Contact = types.StringValue(val.(string))
-	} else {
+	} else if data.Contact.IsUnknown() {
 		data.Contact = types.StringNull()
 	}
 	if val, ok := getResponseData["customid"]; ok && val != nil {
 		data.Customid = types.StringValue(val.(string))
-	} else {
+	} else if data.Customid.IsUnknown() {
 		data.Customid = types.StringNull()
 	}
 	if val, ok := getResponseData["location"]; ok && val != nil {
 		data.Location = types.StringValue(val.(string))
-	} else {
+	} else if data.Location.IsUnknown() {
 		data.Location = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["ownernode"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ownernode = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ownernode.IsUnknown() {
 		data.Ownernode = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Set ID for the resource.
+	// snmpmib is a singleton (unnamed) resource; the ownernode is its unique
+	// addressing attribute, so use it as the stable state ID.
 	data.Id = types.StringValue(fmt.Sprintf("%d", data.Ownernode.ValueInt64()))
 
 	return data

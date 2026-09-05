@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // kafkacluster is a CREATE-ONLY, immutable named resource. Its only attribute,
@@ -174,7 +174,39 @@ func TestAccKafkacluster_DataSource_basic(t *testing.T) {
 				Config: testAccKafkacluster_DataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_kafkacluster.tf_kafkacluster_data", "name", "tf_kafkacluster"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_kafkacluster.tf_kafkacluster_data", "id"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccKafkacluster_selfHealing verifies drift recovery: after the resource is
+// created, it is deleted out-of-band on the ADC; the next apply of the same config
+// must detect the missing resource and recreate it.
+func TestAccKafkacluster_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_kafkacluster.tf_kafkacluster"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckKafkaclusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKafkacluster_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckKafkaclusterExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Kafkacluster.Type(), "tf_kafkacluster"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccKafkacluster_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckKafkaclusterExist(resAddr, nil)),
 			},
 		},
 	})

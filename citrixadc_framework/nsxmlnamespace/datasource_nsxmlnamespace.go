@@ -55,7 +55,7 @@ func (d *NsxmlnamespaceDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	nsxmlnamespaceSetAttrFromGet(ctx, &data, getResponseData)
+	nsxmlnamespaceSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

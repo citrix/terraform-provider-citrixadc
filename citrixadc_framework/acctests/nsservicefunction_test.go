@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsservicefunction_add = `
@@ -143,6 +144,53 @@ func testAccCheckNsservicefunctionDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNsservicefunction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsservicefunction.tf_servicefunc"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicefunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsservicefunction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicefunctionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsservicefunction.Type(), "tf_servicefunc"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsservicefunction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicefunctionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsservicefunction_import(t *testing.T) {
+	const resAddr = "citrixadc_nsservicefunction.tf_servicefunc"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicefunctionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsservicefunction_add},
+			{
+				Config:                  testAccNsservicefunction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNsservicefunctionDataSource_basic = `
 	resource "citrixadc_vlan" "tf_vlan" {
 		vlanid    = 25
@@ -157,6 +205,30 @@ const testAccNsservicefunctionDataSource_basic = `
 		servicefunctionname = citrixadc_nsservicefunction.tf_servicefunc.servicefunctionname
 	}
 `
+
+func TestAccNsservicefunction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsservicefunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNsservicefunction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicefunctionExist("citrixadc_nsservicefunction.tf_servicefunc", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsservicefunction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicefunctionExist("citrixadc_nsservicefunction.tf_servicefunc", nil)),
+			},
+		},
+	})
+}
 
 func TestAccNsservicefunctionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

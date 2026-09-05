@@ -105,3 +105,9 @@ Similar patterns apply for `attribute2` through `attribute16` with their respect
 * `sendpassword` - Option to send password in assertion.
 * `signatureservice` - Name of the service in cloud used to sign the data.
 
+### Read-only authenticationsamlidpprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationsamlidpprofile` resource). They are Computed/GET-only and are `null` when the appliance omits them.
+
+* `metadataimportstatus` - Describes metadata import status. Possible values = INIT, SUCCESS, FAIL.
+

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_vpnurlpolicy_binding_basic = `
@@ -245,6 +246,114 @@ func TestAccVpnglobal_vpnurlpolicy_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", "policyname", "new_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", "priority", "20"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnglobal_vpnurlpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_vpnurlaction" "tf_vpnurlaction" {
+		name             = "tf_vpnurlaction"
+		linkname         = "new_link"
+		actualurl        = "http://www.citrix.com"
+		applicationtype  = "CVPN"
+		clientlessaccess = "OFF"
+		comment          = "Testing"
+		ssotype          = "unifiedgateway"
+		vservername      = "vserver1"
+	}
+	resource "citrixadc_vpnurlpolicy" "citrixadc_vpnurlpolicy" {
+		name   = "new_policy"
+		rule   = "true"
+		action = citrixadc_vpnurlaction.tf_vpnurlaction.name
+	}
+	resource "citrixadc_vpnglobal_vpnurlpolicy_binding" "tf_bind" {
+		policyname = citrixadc_vpnurlpolicy.citrixadc_vpnurlpolicy.name
+		priority = "20"
+	}
+`
+
+func TestAccVpnglobal_vpnurlpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy id (policyname).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_vpnurlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnurlpolicy_bindingExist("citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", "id", "new_policy"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id. This is a single-key binding,
+				// so the canonical framework id is the plain policyname value, which
+				// matches the legacy id.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_vpnurlpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnurlpolicy_bindingExist("citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind", "id", "new_policy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnurlpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_vpnurlpolicy_binding_basic},
+			{Config: testAccVpnglobal_vpnurlpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnglobal_vpnurlpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_vpnurlpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_vpnurlpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_vpnurlpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnurlpolicy_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_vpnurlpolicy_binding.Type(), "", []string{"policyname:new_policy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_vpnurlpolicy_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_vpnurlpolicy_bindingExist(resAddr, nil),
 				),
 			},
 		},
