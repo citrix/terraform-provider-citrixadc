@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/ssl"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslcertkey_basic = `
@@ -610,9 +611,14 @@ func TestAccSslcertkey_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccSslcertkey_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
@@ -632,7 +638,45 @@ func TestAccSslcertkeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "key", "/nsconfig/ssl/servercert1.key"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "notificationperiod", "40"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslcertkey.foo", "expirymonitor", "ENABLED"),
+					// Read-only cert metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "serial"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "subject"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "issuer"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "daystoexpiration"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "status"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "signaturealg"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "publickeysize"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcertkey.foo", "certificatetype.#"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslcertkey_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcertkey.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcertkeyPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcertkeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcertkey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertkeyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcertkey.Type(), "sample_ssl_cert"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcertkey_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcertkeyExist(resAddr, nil)),
 			},
 		},
 	})

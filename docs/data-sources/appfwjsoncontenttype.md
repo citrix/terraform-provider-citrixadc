@@ -33,10 +33,9 @@ In addition to the arguments, the following attributes are available:
 * `id` - The id of the appfwjsoncontenttype. It has the same value as the `jsoncontenttypevalue` attribute.
 * `isregex` - Is json content type a regular expression?. Possible values: [ REGEX, NOTREGEX ]
 
-## Import
+### Read-only appfwjsoncontenttype metadata
 
-A appfwjsoncontenttype can be imported using its jsoncontenttypevalue, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwjsoncontenttype` resource) and are Computed/GET-only. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_appfwjsoncontenttype.tf_appfwjsoncontenttype application/json
-```
+* `builtin` - Flag to determine if jsoncontenttype is built-in or not. A list of strings. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ]
+* `feature` - The feature to be checked while applying this config.

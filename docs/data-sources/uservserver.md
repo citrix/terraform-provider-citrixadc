@@ -42,3 +42,14 @@ In addition to the argument, the following attributes are exported:
 * `port` - Port number for the virtual server.
 * `state` - Initial state of the user vserver. Possible values: ENABLED, DISABLED.
 * `userprotocol` - User protocol used by the service.
+
+### Read-only uservserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_uservserver` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `curstate` - Current user vserver state (for example `UP`, `DOWN`, `OUT OF SERVICE`).
+* `value` - SSL status.
+* `statechangetimesec` - Time when the last state change happened (seconds part).
+* `statechangetimemsec` - Time at which the last state change happened (milliseconds part).
+* `tickssincelaststatechange` - Time in 10 millisecond ticks since the last state change.
+* `nodefaultbindings` - Determines if the configuration will have default ssl CIPHER and ECC curve bindings.

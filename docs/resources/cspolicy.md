@@ -50,6 +50,7 @@ resource "citrixadc_csvserver_cspolicy_binding" "tf_csvscspolbind" {
     Its main intent is to force the rebinding with the Content switching vserver defined in `csvserver` should it be deleted and recreated.
 
     The same applies for the LB vserver defined in `targetlbvserver`.
+* `newname` - (Optional) The new name of the content switching policy.
 
 ## Attribute Reference
 

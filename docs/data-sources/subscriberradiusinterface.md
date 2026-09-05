@@ -32,3 +32,9 @@ The following attributes are available:
 * `listeningservice` - Name of RADIUS LISTENING service that will process RADIUS accounting requests.
 * `radiusinterimasstart` - Treat radius interim message as start radius messages.
 * `id` - The id of the subscriberradiusinterface. It is a system-generated identifier.
+
+### Read-only subscriberradiusinterface metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_subscriberradiusinterface` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `svrstate` - The state of the radius service.

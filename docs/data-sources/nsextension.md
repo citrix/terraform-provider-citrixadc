@@ -35,3 +35,12 @@ In addition to the arguments, the following attributes are available:
 * `tracefunctions` - Comma-separated list of extension functions being traced.
 * `tracevariables` - Comma-separated list of variables being traced.
 * `id` - The id of the nsextension. It has the same value as the `name` attribute.
+
+### Read-only nsextension metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsextension` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `type` - Type of the extension object.
+* `functionhits` - Number of time function evaluates successfully.
+* `functionundefhits` - Number of times error occured in evaluating extension function.
+* `functionhaltcount` - Number of time function evaluation is halted.

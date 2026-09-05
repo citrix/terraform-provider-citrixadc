@@ -79,10 +79,17 @@ In addition to the arguments, the following attributes are available:
 * `tls13sessionticketsperauthcontext` - Number of tickets the SSL Virtual Server will issue anytime TLS 1.3 is negotiated, ticket-based resumption is enabled, and either (1) a handshake completes or (2) post-handhsake client auth completes. This value can be increased to enable clients to open multiple parallel connections using a fresh ticket for each connection. No tickets are sent if resumption is disabled.
 * `zerorttearlydata` - State of TLS 1.3 0-RTT early data support for the SSL Virtual Server. This setting only has an effect if resumption is enabled, as early data cannot be sent along with an initial handshake. Early application data has significantly different security properties - in particular there is no guarantee that the data cannot be replayed.
 
-## Import
+### Read-only sslvserver metadata
 
-A sslvserver can be imported using its vservername, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslvserver` resource). Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_sslvserver.tf_sslvserver tf_vserver
-```
+* `crlcheck` - The state of the CRL check parameter (Mandatory/Optional).
+* `nonfipsciphers` - The state of usage of non FIPS approved ciphers.
+* `service` - Service.
+* `ocspcheck` - The state of the OCSP check parameter (Mandatory/Optional).
+* `ca` - CA certificate.
+* `snicert` - Whether a CertKey is bound for SNI processing.
+* `skipcaname` - Whether this particular CA certificate's CA_Name is sent to the SSL client while requesting a client certificate in an SSL handshake.
+* `dtlsflag` - Whether DTLS is set or not.
+* `quicflag` - Whether the QUIC transport protocol is used by an SSL virtual server or service.
+* `skipcacertbundle` - Whether this particular CA certificate's CA_Name is sent to the SSL client while requesting a client certificate in an SSL handshake.

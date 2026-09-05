@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // sslcacertbundle is create-only (AddResource), no update (all attrs RequiresReplace),
@@ -161,7 +161,38 @@ func TestAccSslcacertbundleDataSource_basic(t *testing.T) {
 				Config: testAccSslcacertbundleDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_sslcacertbundle.tf_sslcacertbundle", "cacertbundlename", "tf_sslcacertbundle"),
+					// Universal runtime-binding proof (read-only servername/
+					// cacertbundledigest are config-dependent and may be omitted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslcacertbundle.tf_sslcacertbundle", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSslcacertbundle_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslcacertbundle.tf_sslcacertbundle"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslcacertbundlePreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslcacertbundleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslcacertbundle_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertbundleExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Sslcacertbundle.Type(), "tf_sslcacertbundle"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslcacertbundle_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslcacertbundleExist(resAddr, nil)),
 			},
 		},
 	})

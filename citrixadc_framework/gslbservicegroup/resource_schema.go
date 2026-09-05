@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -61,24 +62,41 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The ID of the gslbservicegroup resource.",
 			},
 			"appflowlog": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is ENABLED. Declaring the Default makes a
+				// config-removal produce a plan diff (default) so the Update
+				// method runs and issues the unset. The default equals the
+				// appliance default, so basic/upgrade stay green.
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable logging of AppFlow information for the specified GSLB service group.",
 			},
 			"autodelayedtrofs": schema.StringAttribute{
 				// NITRO does not echo this field in a bare GET, so it cannot be
 				// Computed (it would stay unknown-after-apply). Optional only.
 				Optional: true,
+				// SDK v2 declared this Optional+Computed+ForceNew, so a legacy
+				// state carries a computed value that the current config (which
+				// leaves it unset) does not. Plain RequiresReplace would then see
+				// value->null and force a spurious replace of the parent on a
+				// state upgrade. RequiresReplaceIfConfigured only forces a replace
+				// when the user actually sets the field, preserving ForceNew
+				// semantics for real changes while tolerating the legacy upgrade.
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Indicates graceful movement of the service to TROFS. System will wait for monitor response time out before moving to TROFS",
 			},
 			"autoscale": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				// SDK v2 did NOT mark autoscale ForceNew, so it must stay
+				// in-place updatable for backward compatibility (the generated
+				// RequiresReplace was a defect that forced a spurious replace of
+				// the parent on a legacy state upgrade). UseStateForUnknown keeps
+				// the computed value stable across plans.
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Auto scale option for a GSLB servicegroup",
 			},
@@ -109,8 +127,11 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The time allowed (in seconds) for a graceful shutdown. During this period, new connections or requests will continue to be sent to this service for clients who already have a persistent session on the system. Connections or requests from fresh or new clients who do not yet have a persistence sessions on the system will not be sent to the service. Instead, they will be load balanced among other available services. After the delay time expires, no new requests or connections will be sent to the service.",
 			},
 			"downstateflush": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is ENABLED; declared so config-removal triggers
+				// unset without regressing basic/upgrade.
+				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Flush all active transactions associated with all the services in the GSLB service group whose state transitions from UP to DOWN. Do not enable this option for applications that must complete their transactions.",
 			},
 			"dup_weight": schema.Int64Attribute{
@@ -126,8 +147,11 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 				Description: "The hash identifier for the service. This must be unique for each service. This parameter is used by hash based load balancing methods.",
 			},
 			"healthmonitor": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is YES; declared so config-removal triggers
+				// unset without regressing basic/upgrade.
+				Default:     stringdefault.StaticString("YES"),
 				Description: "Monitor the health of this GSLB service.Available settings function are as follows:\nYES - Send probes to check the health of the GSLB service.\nNO - Do not send probes to check the health of the GSLB service. With the NO option, the appliance shows the service as UP at all times.",
 			},
 			"includemembers": schema.BoolAttribute{
@@ -213,8 +237,12 @@ func (r *GslbservicegroupResource) Schema(ctx context.Context, req resource.Sche
 			"state": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				// SDK v2 did NOT mark state ForceNew (it is toggled via
+				// enable/disable), so it must stay in-place updatable for
+				// backward compatibility. The generated RequiresReplace forced a
+				// spurious replace of the parent on a legacy state upgrade.
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: "Initial state of the GSLB service group.",
 			},
@@ -437,8 +465,15 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 	if val, ok := getResponseData["appflowlog"]; ok && val != nil {
 		data.Appflowlog = types.StringValue(val.(string))
 	}
-	if val, ok := getResponseData["autodelayedtrofs"]; ok && val != nil {
-		data.Autodelayedtrofs = types.StringValue(val.(string))
+	// autodelayedtrofs is Optional-only (not Computed) and create-only
+	// (RequiresReplace). NITRO echoes it in GET with its default ("NO"). Adopting
+	// that value when the user did not configure the attribute (plan/state null)
+	// would violate the plan and raise "inconsistent result after apply". Only
+	// adopt the GET value when the user configured it; otherwise preserve state.
+	if !data.Autodelayedtrofs.IsNull() && !data.Autodelayedtrofs.IsUnknown() {
+		if val, ok := getResponseData["autodelayedtrofs"]; ok && val != nil {
+			data.Autodelayedtrofs = types.StringValue(val.(string))
+		}
 	}
 	if val, ok := getResponseData["autoscale"]; ok && val != nil {
 		data.Autoscale = types.StringValue(val.(string))
@@ -460,8 +495,14 @@ func gslbservicegroupSetAttrFromGet(ctx context.Context, data *GslbservicegroupR
 			data.Clttimeout = types.Int64Value(intVal)
 		}
 	}
-	if val, ok := getResponseData["comment"]; ok && val != nil {
-		data.Comment = types.StringValue(val.(string))
+	// comment is Optional-only (not Computed). If NITRO echoes an empty/default
+	// comment in GET, adopting it when the user did not configure the attribute
+	// (plan/state null) would raise "inconsistent result after apply". Only adopt
+	// the GET value when the user configured it; otherwise preserve state.
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
+		if val, ok := getResponseData["comment"]; ok && val != nil {
+			data.Comment = types.StringValue(val.(string))
+		}
 	}
 	if val, ok := getResponseData["downstateflush"]; ok && val != nil {
 		data.Downstateflush = types.StringValue(val.(string))

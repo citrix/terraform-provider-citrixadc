@@ -30,3 +30,12 @@ resource "citrixadc_appfwfieldtype" "demo_appfwfieldtype" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the `appfwfieldtype`. It has the same value as the `name` attribute.
+
+
+## Import
+
+A appfwfieldtype can be imported using its name, e.g.
+
+```shell
+terraform import citrixadc_appfwfieldtype.tf_appfwfieldtype <name>
+```

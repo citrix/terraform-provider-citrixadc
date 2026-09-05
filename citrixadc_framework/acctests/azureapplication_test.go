@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func testAccCheckAzureapplicationExist(n string, id *string) resource.TestCheckFunc {
@@ -276,6 +276,36 @@ func TestAccAzureapplicationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_azureapplication.tf_azureapplication", "clientid", "<clientid>"),
 					resource.TestCheckResourceAttr("data.citrixadc_azureapplication.tf_azureapplication", "tenantid", "<tenantid>"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAzureapplication_selfHealing(t *testing.T) {
+	t.Skip("Requires valid Azure credentials")
+	t.Setenv("TF_VAR_azureapplication_clientsecret", "<clientsecret>")
+	const resAddr = "citrixadc_azureapplication.tf_azureapplication"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAzureapplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureapplication_clientsecret_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAzureapplicationExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Azureapplication.Type(), "tf_azureapplication"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAzureapplication_clientsecret_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAzureapplicationExist(resAddr, nil)),
 			},
 		},
 	})

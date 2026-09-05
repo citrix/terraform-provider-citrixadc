@@ -46,3 +46,10 @@ In addition to the arguments, the following attributes are available:
 * `sendrouteradv` - whether the router sends periodic RAs and responds to Router Solicitations.
 * `srclinklayeraddroption` - Include source link layer address option in RA messages.
 * `id` - The id of the nd6ravariables. It has the same value as the `vlan` attribute.
+
+### Read-only nd6ravariables metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nd6ravariables` resource); they are Computed/GET-only. Any attribute the appliance does not return is `null`.
+
+* `lastrtadvtime` - Last RA sent timestamp.
+* `nextrtadvdelay` - Next RA delay.

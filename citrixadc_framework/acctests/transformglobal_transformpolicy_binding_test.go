@@ -20,8 +20,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTransformglobal_transformpolicy_binding_basic = `
@@ -78,6 +80,19 @@ func TestAccTransformglobal_transformpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccTransformglobal_transformpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformglobal_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTransformglobal_transformpolicy_binding_basic},
+			{Config: testAccTransformglobal_transformpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckTransformglobal_transformpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -103,8 +118,15 @@ func testAccCheckTransformglobal_transformpolicy_bindingExist(n string, id *stri
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
-		typename := rs.Primary.Attributes["type"]
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		policyname := idMap["policyname"]
+		typename := idMap["type"]
+		if typename == "" {
+			typename = rs.Primary.Attributes["type"]
+		}
 		findParams := service.FindParams{
 			ResourceType:             "transformglobal_transformpolicy_binding",
 			ArgsMap:                  map[string]string{"type": typename},
@@ -187,14 +209,86 @@ func testAccCheckTransformglobal_transformpolicy_bindingDestroy(s *terraform.Sta
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Transformglobal_transformpolicy_binding.Type(), rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("transformglobal_transformpolicy_binding %s still exists", rs.Primary.ID)
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		policyname := idMap["policyname"]
+		typename := idMap["type"]
+		if typename == "" {
+			typename = rs.Primary.Attributes["type"]
+		}
+		findParams := service.FindParams{
+			ResourceType:             service.Transformglobal_transformpolicy_binding.Type(),
+			ArgsMap:                  map[string]string{"type": typename},
+			ResourceMissingErrorCode: 258,
+		}
+		dataArr, err := client.FindResourceArrayWithParams(findParams)
+		if err != nil {
+			return err
+		}
+		for _, v := range dataArr {
+			if v["policyname"].(string) == policyname {
+				return fmt.Errorf("transformglobal_transformpolicy_binding %s still exists", rs.Primary.ID)
+			}
 		}
 
 	}
 
 	return nil
+}
+
+const testAccTransformglobal_transformpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_transformprofile" "tf_trans_profile" {
+	name = "tf_trans_profile"
+	comment = "Some comment"
+	}
+resource "citrixadc_transformpolicy" "tf_trans_policy" {
+	name        = "tf_trans_policy"
+	profilename = citrixadc_transformprofile.tf_trans_profile.name
+	rule        = "http.REQ.URL.CONTAINS(\"test_url\")"
+	}
+  resource "citrixadc_transformglobal_transformpolicy_binding" "transformglobal_transformpolicy_binding" {
+	policyname = citrixadc_transformpolicy.tf_trans_policy.name
+	priority   = 2
+	type       = "REQ_DEFAULT"
+	}
+`
+
+func TestAccTransformglobal_transformpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTransformglobal_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: Create the resource with the last SDK v2 release (writes legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccTransformglobal_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformglobal_transformpolicy_bindingExist("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "id", "tf_trans_policy"),
+				),
+			},
+			{
+				// Step 2: Refresh the legacy-id state through the current (framework) provider.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTransformglobal_transformpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTransformglobal_transformpolicy_bindingExist("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "id", "policyname:tf_trans_policy,type:REQ_DEFAULT"),
+				),
+			},
+		},
+	})
 }
 
 const testAccTransformglobal_transformpolicy_bindingDataSource_basic = `
@@ -231,7 +325,39 @@ func TestAccTransformglobal_transformpolicy_bindingDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "policyname", "tf_trans_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "priority", "2"),
 					resource.TestCheckResourceAttr("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "type", "REQ_DEFAULT"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "id"),
+					// Read-only (GET-only) counter metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding", "numpol"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccTransformglobal_transformpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_transformglobal_transformpolicy_binding.transformglobal_transformpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTransformglobal_transformpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransformglobal_transformpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformglobal_transformpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Transformglobal_transformpolicy_binding.Type(), "", map[string]string{"policyname": "tf_trans_policy", "type": "REQ_DEFAULT", "priority": "2"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTransformglobal_transformpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTransformglobal_transformpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

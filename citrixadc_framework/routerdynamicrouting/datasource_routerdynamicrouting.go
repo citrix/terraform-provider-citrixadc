@@ -35,7 +35,7 @@ func (d *RouterdynamicroutingDataSource) Schema(ctx context.Context, req datasou
 }
 
 func (d *RouterdynamicroutingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RouterdynamicroutingResourceModel
+	var data RouterdynamicroutingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -44,7 +44,6 @@ func (d *RouterdynamicroutingDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	// Case 3: Array filter without parent ID
-
 	commandstring_Name := data.Commandstring.ValueString()
 
 	var dataArr []map[string]interface{}
@@ -69,12 +68,10 @@ func (d *RouterdynamicroutingDataSource) Read(ctx context.Context, req datasourc
 	// Iterate through results to find the one with the right id
 	foundIndex := -1
 	for i, v := range dataArr {
-
-		if v["commandstring"].(string) == commandstring_Name {
+		if cs, ok := v["commandstring"].(string); ok && cs == commandstring_Name {
 			foundIndex = i
 			break
 		}
-
 	}
 
 	// Resource is missing
@@ -83,7 +80,7 @@ func (d *RouterdynamicroutingDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	routerdynamicroutingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	routerdynamicroutingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

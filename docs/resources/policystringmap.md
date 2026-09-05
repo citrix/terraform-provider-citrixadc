@@ -34,3 +34,12 @@ resource "citrixadc_policystringmap_pattern_binding" "tf_bind1" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the policystringmap. It has the same value as the `name` attribute.
+
+
+## Import
+
+A policystringmap can be imported using its name, e.g.
+
+```shell
+terraform import citrixadc_policystringmap.tf_policystringmap <name>
+```

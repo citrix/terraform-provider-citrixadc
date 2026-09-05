@@ -18,8 +18,9 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"testing"
 )
 
@@ -57,6 +58,34 @@ func TestAccSystemcollectionparam_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemcollectionparamExist("citrixadc_systemcollectionparam.tf_systemcollectionparam", nil),
 					resource.TestCheckResourceAttr("citrixadc_systemcollectionparam.tf_systemcollectionparam", "loglevel", "INFO"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSystemcollectionparam_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSystemcollectionparam_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemcollectionparamExist("citrixadc_systemcollectionparam.tf_systemcollectionparam", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemcollectionparam_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSystemcollectionparamExist("citrixadc_systemcollectionparam.tf_systemcollectionparam", nil),
 				),
 			},
 		},

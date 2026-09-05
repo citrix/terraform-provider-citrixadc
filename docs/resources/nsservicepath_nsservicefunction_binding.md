@@ -40,7 +40,7 @@ resource "citrixadc_nsservicepath_nsservicefunction_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the nsservicepath_nsservicefunction_binding. It is the concatenation of `servicepathname` and `servicefunction` attributes separated by comma.
+* `id` - The id of the nsservicepath_nsservicefunction_binding. It is the concatenation of `servicepathname` and `servicefunction` attributes separated by a comma.
 
 
 ## Import

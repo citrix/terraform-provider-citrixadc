@@ -39,3 +39,12 @@ resource "citrixadc_tmsessionparameter" "tf_tmsessionparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the tmsessionparameter. It is a unique string prefixed with `tf-tmsessionparameter-` attribute.
+
+
+## Import
+
+A tmsessionparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_tmsessionparameter.tf_tmsessionparameter tmsessionparameter-config
+```

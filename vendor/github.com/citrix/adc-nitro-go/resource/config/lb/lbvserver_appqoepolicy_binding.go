@@ -49,6 +49,7 @@ type Lbvserverappqoepolicybinding struct {
 	* Type of policy label to invoke. Applicable only to rewrite, videooptimization and cache policies. Available settings function as follows:
 		* reqvserver - Evaluate the request against the request-based policies bound to the specified virtual server.
 		* resvserver - Evaluate the response against the response-based policies bound to the specified virtual server.
+		* resHttpEventVserver - Evaluate the response against the HTTP event response based policies bound to the specified virtual server.
 		* policylabel - invoke the request or response against the specified user-defined policy label.
 	*/
 	Labeltype string `json:"labeltype,omitempty"`

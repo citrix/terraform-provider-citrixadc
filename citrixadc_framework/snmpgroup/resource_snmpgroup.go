@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *SnmpgroupResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating snmpgroup resource")
 
-	// snmpgroup := snmpgroupGetThePayloadFromtheConfig(ctx, &data)
+	snmpgroup := snmpgroupGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpgroup.Type(), &snmpgroup)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpgroup, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("snmpgroup-config")
+	// Named resource - use AddResource
+	snmpgroupName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Snmpgroup.Type(), snmpgroupName, &snmpgroup)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create snmpgroup, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created snmpgroup resource")
 
+	// Set ID for the resource before reading state (single key - name)
+	data.Id = types.StringValue(snmpgroupName)
+
 	// Read the updated state back
-	r.readSnmpgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpgroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpgroup not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *SnmpgroupResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading snmpgroup resource")
 
-	r.readSnmpgroupFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSnmpgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SnmpgroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SnmpgroupResourceModel
+	var data, state SnmpgroupResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,39 @@ func (r *SnmpgroupResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating snmpgroup resource")
 
-	// Create API request body from the model
-	// snmpgroup := snmpgroupGetThePayloadFromtheConfig(ctx, &data)
+	// Only readviewname is NITRO-updatable; name and securitylevel are ForceNew.
+	hasChange := false
+	if !data.Readviewname.Equal(state.Readviewname) {
+		tflog.Debug(ctx, "readviewname has changed for snmpgroup, starting update")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Snmpgroup.Type(), &snmpgroup)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpgroup, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated snmpgroup resource")
+	if hasChange {
+		snmpgroup := snmpgroupGetThePayloadFromtheConfig(ctx, &data)
+		// SDK v2 parity: snmpgroup was updated via UpdateUnnamedResource
+		// (the name key travels in the request body).
+		err := r.client.UpdateUnnamedResource(service.Snmpgroup.Type(), &snmpgroup)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update snmpgroup, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated snmpgroup resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for snmpgroup resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readSnmpgroupFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSnmpgroupFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "snmpgroup not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +170,58 @@ func (r *SnmpgroupResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting snmpgroup resource")
 
-	// For snmpgroup, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted snmpgroup resource from state")
-}
+	// SDK v2 parity: delete requires the securitylevel disambiguating arg.
+	snmpgroupName := data.Id.ValueString()
+	args := make([]string, 0)
+	args = append(args, fmt.Sprintf("securitylevel:%s", data.Securitylevel.ValueString()))
 
-// Helper function to read snmpgroup data from API
-func (r *SnmpgroupResource) readSnmpgroupFromApi(ctx context.Context, data *SnmpgroupResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Snmpgroup.Type(), "")
+	err := r.client.DeleteResourceWithArgs(service.Snmpgroup.Type(), snmpgroupName, args)
 	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmpgroup, got error: %s", err))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete snmpgroup, got error: %s", err))
 		return
 	}
 
-	snmpgroupSetAttrFromGet(ctx, data, getResponseData)
+	tflog.Trace(ctx, "Deleted snmpgroup resource")
+}
 
+// Helper function to read snmpgroup data from API.
+// Returns false when the resource is absent so the caller can clear state.
+func (r *SnmpgroupResource) readSnmpgroupFromApi(ctx context.Context, data *SnmpgroupResourceModel, diags *diag.Diagnostics) bool {
+	// ID is the plain name value (single key).
+	snmpgroupName := data.Id.ValueString()
+
+	// SDK v2 parity: snmpgroup is read via a GET-all + filter by name
+	// (name is the resource key; securitylevel is only needed for delete).
+	findParams := service.FindParams{
+		ResourceType:             service.Snmpgroup.Type(),
+		ResourceMissingErrorCode: 258,
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read snmpgroup, got error: %s", err))
+		return false
+	}
+
+	if len(dataArr) == 0 {
+		return false
+	}
+
+	foundIndex := -1
+	for i, v := range dataArr {
+		if v["name"] != nil && v["name"].(string) == snmpgroupName {
+			foundIndex = i
+			break
+		}
+	}
+
+	if foundIndex == -1 {
+		return false
+	}
+
+	snmpgroupSetAttrFromGet(ctx, data, dataArr[foundIndex])
+
+	return true
 }

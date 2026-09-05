@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccCspolicy_basic(t *testing.T) {
@@ -141,6 +143,124 @@ resource "citrixadc_cspolicy" "foo_cspolicy" {
 }
 `
 
+func TestAccCspolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccCspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicyExist("citrixadc_cspolicy.foo_cspolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicyExist("citrixadc_cspolicy.foo_cspolicy", nil)),
+			},
+		},
+	})
+}
+
+// The cspolicy unset test covers the mutable, spec-unsettable attribute
+// logaction (the one attribute the NITRO cspolicy unset operation documents).
+// action is NOT unsettable (NITRO rejects it with errorcode 278 "Invalid
+// argument"), so it is excluded. Step 1 sets logaction to a valid non-default
+// value (a real auditmessageaction); step 2 removes it from config, so the
+// provider must issue the NITRO ?action=unset and the appliance reverts it to
+// its empty default.
+const testAccCspolicy_unset_step1 = `
+resource "citrixadc_auditmessageaction" "tf_unset_msg" {
+  name              = "tf_cspol_unset_msg"
+  loglevel          = "NOTICE"
+  stringbuilderexpr = "\"hello\""
+}
+
+resource "citrixadc_cspolicy" "tf_unset" {
+  policyname = "tf_cspol_unset"
+  rule       = "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"
+  logaction  = citrixadc_auditmessageaction.tf_unset_msg.name
+
+  depends_on = [citrixadc_auditmessageaction.tf_unset_msg]
+}
+`
+
+const testAccCspolicy_unset_step2 = `
+resource "citrixadc_auditmessageaction" "tf_unset_msg" {
+  name              = "tf_cspol_unset_msg"
+  loglevel          = "NOTICE"
+  stringbuilderexpr = "\"hello\""
+}
+
+resource "citrixadc_cspolicy" "tf_unset" {
+  policyname = "tf_cspol_unset"
+  rule       = "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"
+  # logaction removed from config -> the provider must unset it.
+}
+`
+
+func TestAccCspolicy_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccCspolicy_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCspolicyExist("citrixadc_cspolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cspolicy.tf_unset", "logaction", "tf_cspol_unset_msg"),
+					testAccCheckCspolicyADCValue("tf_cspol_unset", "logaction", "tf_cspol_unset_msg"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance reverts to
+				// the empty defaults and the implicit post-apply plan must be empty.
+				Config: testAccCspolicy_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCspolicyExist("citrixadc_cspolicy.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_cspolicy.tf_unset", "rule", "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.84.0)"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckCspolicyADCValue("tf_cspol_unset", "logaction", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckCspolicyADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it. A missing/empty attribute reads as "".
+func testAccCheckCspolicyADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Cspolicy.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("cspolicy %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("cspolicy %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccCspolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -152,7 +272,59 @@ func TestAccCspolicyDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cspolicy.tf_cspolicy_ds", "policyname", "tf_test_policy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cspolicy.tf_cspolicy_ds", "rule", "CLIENT.IP.SRC.SUBNET(24).EQ(10.217.85.0)"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cspolicy.tf_cspolicy_ds", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCspolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cspolicy.foo_cspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.UnbindResource(service.Csvserver.Type(), "tst_policy_cs", service.Cspolicy.Type(), "test_policy", "policyname"); err != nil {
+						t.Fatalf("self-healing: out-of-band unbind failed: %v", err)
+					}
+					if err := client.DeleteResource(service.Cspolicy.Type(), "test_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCspolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCspolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCspolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_cspolicy.foo_cspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCspolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCspolicy_basic},
+			{
+				Config:                  testAccCspolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"csvserver", "priority", "targetlbvserver"},
 			},
 		},
 	})

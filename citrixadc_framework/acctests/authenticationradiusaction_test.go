@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationradiusaction_add = `
@@ -319,9 +320,14 @@ func TestAccAuthenticationradiusaction_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccAuthenticationradiusaction_add,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
@@ -462,7 +468,40 @@ func TestAccAuthenticationradiusactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "passencoding", "chap"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "transport", "UDP"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "messageauthenticator", "OFF"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "id"),
+					// Read-only metadata exposed only by the data source. success is a
+					// counter-style field always populated for a fresh action.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationradiusaction.tf_radiusaction_ds", "success"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationradiusaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationradiusaction.tf_radiusaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationradiusactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationradiusaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationradiusactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationradiusaction.Type(), "tf_radiusaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationradiusaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationradiusactionExist(resAddr, nil)),
 			},
 		},
 	})

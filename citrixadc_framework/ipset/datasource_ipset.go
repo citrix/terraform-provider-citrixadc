@@ -57,6 +57,10 @@ func (d *IpsetDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 
 	ipsetSetAttrFromGet(ctx, &data, getResponseData)
 
+	// Populate the binding convenience blocks from the ADC
+	readIpsetNsipBindings(ctx, d.client, &data)
+	readIpsetNsip6Bindings(ctx, d.client, &data)
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

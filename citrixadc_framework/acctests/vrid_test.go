@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVrid_add = `
@@ -70,6 +72,25 @@ func TestAccVrid_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_vrid.tf_vrid", "priority", "20"),
 					resource.TestCheckResourceAttr("citrixadc_vrid.tf_vrid", "preemption", "ENABLED"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVrid_import(t *testing.T) {
+	const resAddr = "citrixadc_vrid.tf_vrid"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVridDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVrid_add},
+			{
+				Config:                  testAccVrid_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"preemptiondelaytimer", "trackifnumpriority"},
 			},
 		},
 	})
@@ -139,6 +160,34 @@ func testAccCheckVridDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVrid_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vrid.tf_vrid"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVridDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVrid_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVridExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vrid.Type(), "3"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVrid_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVridExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 const testAccVridDataSource_basic = `
 	resource "citrixadc_vrid" "tf_vrid" {
 		vrid_id              = 3
@@ -152,6 +201,119 @@ data "citrixadc_vrid" "tf_vrid" {
 	vrid_id = citrixadc_vrid.tf_vrid.vrid_id
 }
 `
+
+func TestAccVrid_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVridDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVrid_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVridExist("citrixadc_vrid.tf_vrid", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVrid_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVridExist("citrixadc_vrid.tf_vrid", nil)),
+			},
+		},
+	})
+}
+
+// testAccVrid_unset_step1 sets every unset-eligible attribute to a valid
+// non-default value; step2 removes them so the provider must unset them and the
+// appliance reverts to the documented NITRO defaults.
+const testAccVrid_unset_step1 = `
+	resource "citrixadc_vrid" "tf_unset" {
+		vrid_id              = 5
+		priority             = 100
+		preemption           = "DISABLED"
+		sharing              = "ENABLED"
+		tracking             = "ALL"
+		trackifnumpriority   = 50
+		preemptiondelaytimer = 100
+	}
+`
+
+const testAccVrid_unset_step2 = `
+	resource "citrixadc_vrid" "tf_unset" {
+		vrid_id = 5
+		# All unset-eligible attributes removed from config -> the provider must
+		# unset them (revert to NITRO defaults).
+	}
+`
+
+func TestAccVrid_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVridDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVrid_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVridExist("citrixadc_vrid.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "priority", "100"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "preemption", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "sharing", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "tracking", "ALL"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "trackifnumpriority", "50"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "preemptiondelaytimer", "100"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccVrid_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVridExist("citrixadc_vrid.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "priority", "255"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "preemption", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "sharing", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "tracking", "NONE"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "trackifnumpriority", "0"),
+					resource.TestCheckResourceAttr("citrixadc_vrid.tf_unset", "preemptiondelaytimer", "0"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVridADCValue("5", "priority", "255"),
+					testAccCheckVridADCValue("5", "preemption", "ENABLED"),
+					testAccCheckVridADCValue("5", "sharing", "DISABLED"),
+					testAccCheckVridADCValue("5", "tracking", "NONE"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVridADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckVridADCValue(id, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vrid.Type(), id)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vrid %s not found on appliance", id)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vrid %s: appliance attr %q = %q, want %q (unset did not revert it)", id, attr, got, want)
+		}
+		return nil
+	}
+}
 
 func TestAccVridDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -167,6 +329,9 @@ func TestAccVridDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "preemption", "DISABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "sharing", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_vrid.tf_vrid", "tracking", "NONE"),
+					// Runtime-binding proof + read-only priority metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vrid.tf_vrid", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_vrid.tf_vrid", "effectivepriority"),
 				),
 			},
 		},

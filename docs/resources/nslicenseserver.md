@@ -35,3 +35,12 @@ resource "citrixadc_nslicenseserver" "tf_licenseserver" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the nslicenseserver. It has the same value as the `servername` attribute.
+
+
+## Import
+
+A nslicenseserver can be imported using its servername, e.g.
+
+```shell
+terraform import citrixadc_nslicenseserver.tf_nslicenseserver <servername>
+```

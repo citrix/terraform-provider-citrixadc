@@ -26,3 +26,9 @@ In addition to the arguments, the following attributes are exported:
 
 * `id` - The ID of the LB route6.
 * `gatewayname` - The name of the route (gateway name).
+
+### Read-only lbroute6 metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbroute6` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `flags` - State of the configured gateway (for example `UP`, `DOWN`, `OUT OF SERVICE`, `DISABLED`).

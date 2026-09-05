@@ -35,12 +35,3 @@ In addition to the arguments, the following attributes are available:
 * `ipaddress` - The IPv4 address of the AppFlow collector.
 * `port` - The UDP port on which the AppFlow collector is listening.
 * `id` - The id of the nsappflowcollector. It has the same value as the `name` attribute.
-
-
-## Import
-
-An nsappflowcollector can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_nsappflowcollector.tf_appflowcollector my_appflowcollector
-```

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserver_authenticationradiuspolicy_binding_basic = `
@@ -126,10 +129,12 @@ func testAccCheckVpnvserver_authenticationradiuspolicy_bindingExist(n string, id
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policy"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_authenticationradiuspolicy_binding",
@@ -171,10 +176,12 @@ func testAccCheckVpnvserver_authenticationradiuspolicy_bindingNotExist(n string,
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		policy := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "policy"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		}
+		name := idMap["name"]
+		policy := idMap["policy"]
 
 		findParams := service.FindParams{
 			ResourceType:             "vpnvserver_authenticationradiuspolicy_binding",
@@ -231,6 +238,71 @@ func testAccCheckVpnvserver_authenticationradiuspolicy_bindingDestroy(s *terrafo
 	return nil
 }
 
+const testAccVpnvserver_authenticationradiuspolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
+		name         = "tf_radiusaction"
+		radkey       = "WareTheLorax"
+		serverip     = "2.3.2.1"
+		serverport   = 8080
+		authtimeout  = 2
+		radnasip     = "DISABLED"
+		passencoding = "chap"
+	}
+	resource "citrixadc_authenticationradiuspolicy" "tf_radiuspolicy" {
+		name      = "tf_radiuspolicy"
+		rule      = "NS_TRUE"
+		reqaction = citrixadc_authenticationradiusaction.tf_radiusaction.name
+	}
+
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+	}
+	resource "citrixadc_vpnvserver_authenticationradiuspolicy_binding" "tf_bind" {
+		name      = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy    = citrixadc_authenticationradiuspolicy.tf_radiuspolicy.name
+		priority  = 20
+	}
+`
+
+func TestAccVpnvserver_authenticationradiuspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserver_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnvserver_authenticationradiuspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationradiuspolicy_bindingExist("citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_radiuspolicy"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// The framework Read recomputes the id to the new "key:value" format (SetAttrFromGet),
+			// so after the upgrade the canonical id becomes "name:<name>,policy:<policy>".
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_authenticationradiuspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserver_authenticationradiuspolicy_bindingExist("citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "id", "name:tf_vpnvserver,policy:tf_radiuspolicy"),
+				),
+			},
+		},
+	})
+}
+
 const testAccVpnvserver_authenticationradiuspolicy_bindingDataSource_basic = `
 
 	resource "citrixadc_authenticationradiusaction" "tf_radiusaction" {
@@ -275,7 +347,81 @@ func TestAccVpnvserver_authenticationradiuspolicy_bindingDataSource_basic(t *tes
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "name", "tf_vpnvserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "policy", "tf_radiuspolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "priority", "20"),
+					// Universal runtime-binding proof; read-only acttype is instance/config
+					// dependent and may be null, so only id is asserted as always-set.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationradiuspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnvserver_authenticationradiuspolicy_binding_basic},
+			{Config: testAccVpnvserver_authenticationradiuspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccVpnvserver_authenticationradiuspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccVpnvserver_authenticationradiuspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_authenticationradiuspolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserver_authenticationradiuspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserver_authenticationradiuspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_authenticationradiuspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Vpnvserver_authenticationradiuspolicy_binding.Type(), "tf_vpnvserver", map[string]string{"policy": "tf_radiuspolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserver_authenticationradiuspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserver_authenticationradiuspolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

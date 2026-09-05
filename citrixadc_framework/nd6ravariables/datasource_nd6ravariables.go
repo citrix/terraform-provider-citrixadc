@@ -35,7 +35,7 @@ func (d *Nd6ravariablesDataSource) Schema(ctx context.Context, req datasource.Sc
 }
 
 func (d *Nd6ravariablesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Nd6ravariablesResourceModel
+	var data Nd6ravariablesDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *Nd6ravariablesDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	nd6ravariablesSetAttrFromGet(ctx, &data, getResponseData)
+	nd6ravariablesDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *IptunnelResource) Create(ctx context.Context, req resource.CreateReques
 
 	tflog.Debug(ctx, "Creating iptunnel resource")
 
-	// iptunnel := iptunnelGetThePayloadFromtheConfig(ctx, &data)
+	iptunnel := iptunnelGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Iptunnel.Type(), &iptunnel)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create iptunnel, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("iptunnel-config")
+	// Named resource - use AddResource
+	iptunnelName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Iptunnel.Type(), iptunnelName, &iptunnel)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create iptunnel, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created iptunnel resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(iptunnelName)
+
 	// Read the updated state back
-	r.readIptunnelFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readIptunnelFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "iptunnel not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *IptunnelResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	tflog.Debug(ctx, "Reading iptunnel resource")
 
-	r.readIptunnelFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readIptunnelFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *IptunnelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data IptunnelResourceModel
+	var data, state IptunnelResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,58 @@ func (r *IptunnelResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating iptunnel resource")
 
-	// Create API request body from the model
-	// iptunnel := iptunnelGetThePayloadFromtheConfig(ctx, &data)
+	// Only destport, tosinherit and vlantagging are updatable in place (SDK v2 parity).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Destport.Equal(state.Destport) {
+		tflog.Debug(ctx, "destport has changed for iptunnel")
+		hasChange = true
+	}
+	if !data.Tosinherit.Equal(state.Tosinherit) {
+		tflog.Debug(ctx, "tosinherit has changed for iptunnel")
+		hasChange = true
+	}
+	if !data.Vlantagging.Equal(state.Vlantagging) {
+		tflog.Debug(ctx, "vlantagging has changed for iptunnel")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Iptunnel.Type(), &iptunnel)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update iptunnel, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		iptunnel := iptunnelGetTheUpdatablePayloadFromThePlan(ctx, &data)
+		iptunnelName := data.Name.ValueString()
+		_, err := r.client.UpdateResource(service.Iptunnel.Type(), iptunnelName, &iptunnel)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update iptunnel, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Updated iptunnel resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for iptunnel resource, skipping update")
+	}
 
-	tflog.Trace(ctx, "Updated iptunnel resource")
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults. Done after the update so any default value the
+	// update payload carried for a removed attribute is superseded by the unset.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Iptunnel.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset iptunnel attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readIptunnelFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readIptunnelFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "iptunnel not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +189,32 @@ func (r *IptunnelResource) Delete(ctx context.Context, req resource.DeleteReques
 
 	tflog.Debug(ctx, "Deleting iptunnel resource")
 
-	// For iptunnel, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted iptunnel resource from state")
+	// Named resource - delete using DeleteResource
+	iptunnelName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Iptunnel.Type(), iptunnelName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete iptunnel, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted iptunnel resource")
 }
 
 // Helper function to read iptunnel data from API
-func (r *IptunnelResource) readIptunnelFromApi(ctx context.Context, data *IptunnelResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Iptunnel.Type(), "")
+func (r *IptunnelResource) readIptunnelFromApi(ctx context.Context, data *IptunnelResourceModel, diags *diag.Diagnostics) bool {
+	// Single ID attribute (name) - ID is the plain value
+	iptunnelName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Iptunnel.Type(), iptunnelName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read iptunnel, got error: %s", err))
-		return
+		return false
 	}
 
 	iptunnelSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

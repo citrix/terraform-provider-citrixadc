@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSslprofile_ecccurve_binding_basic = `
@@ -234,6 +235,122 @@ func TestAccSslprofile_ecccurve_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "name", "tf_sslprofile_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "ecccurvename", "P_256"),
 				),
+			},
+		},
+	})
+}
+
+// testAccSslprofile_ecccurve_binding_upgrade_basic reuses the _basic config values
+// (same resource labels, same profile name and ecccurve list) so it is valid under
+// BOTH the last SDK v2 release (2.2.0) schema and the current Framework schema.
+const testAccSslprofile_ecccurve_binding_upgrade_basic = `
+	resource "citrixadc_sslprofile" "tf_sslprofile" {
+		name = "tf_sslprofile"
+	}
+
+	resource "citrixadc_sslprofile_ecccurve_binding" "tf_sslprofile_ecccurve_binding" {
+		name                             = citrixadc_sslprofile.tf_sslprofile.name
+		ecccurvename                     = ["X_25519", "P_521", "P_384"]
+		remove_existing_ecccurve_binding = true
+	}
+`
+
+// TestAccSslprofile_ecccurve_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (with the legacy comma-composite id) upgrades cleanly through the
+// current Framework provider, which recomputes the id to the new canonical form on Read.
+func TestAccSslprofile_ecccurve_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the _basic/_import/_selfHealing gate).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
+		CheckDestroy: testAccCheckSslprofile_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (2.2.0). State carries the
+			// legacy id: fmt.Sprintf("%s,%s", name, ecccurvename) => "tf_sslprofile,[X_25519 P_521 P_384]".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccSslprofile_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_ecccurve_bindingExist("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "id", "tf_sslprofile,[X_25519 P_521 P_384]"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework provider.
+			// Read (readSslprofileEcccurveBindingFromApi) recomputes data.Id to the new canonical
+			// form (the plain SSL profile name), so the id upgrades from legacy to "tf_sslprofile".
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslprofile_ecccurve_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslprofile_ecccurve_bindingExist("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding", "id", "tf_sslprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslprofile_ecccurve_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			// sslprofile_* bindings require the default SSL profile enabled; skip unless the
+			// run is labelled for that testbed (matches the sibling _basic gate).
+			if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+				t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+			}
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslprofile_ecccurve_binding_basic},
+			{Config: testAccSslprofile_ecccurve_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"remove_existing_ecccurve_binding"}},
+		},
+	})
+}
+
+func TestAccSslprofile_ecccurve_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "STANDALONE_DEFAULT_SSL_PROFILE" {
+		t.Skipf("ADC testbed is %s. Expected STANDALONE_DEFAULT_SSL_PROFILE.", adcTestbed)
+	}
+	const resAddr = "citrixadc_sslprofile_ecccurve_binding.tf_sslprofile_ecccurve_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslprofile_ecccurve_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslprofile_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofile_ecccurve_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					for _, curve := range []string{"X_25519", "P_521", "P_384"} {
+						if err := client.DeleteResourceWithArgs(service.Sslprofile_ecccurve_binding.Type(), "tf_sslprofile", []string{"ecccurvename:" + curve}); err != nil {
+							t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+						}
+					}
+				},
+				Config: testAccSslprofile_ecccurve_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslprofile_ecccurve_bindingExist(resAddr, nil)),
 			},
 		},
 	})

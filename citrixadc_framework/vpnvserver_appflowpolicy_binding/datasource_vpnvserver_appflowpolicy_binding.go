@@ -44,6 +44,7 @@ func (d *VpnvserverAppflowpolicyBindingDataSource) Read(ctx context.Context, req
 
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
+	bindpoint_Name := data.Bindpoint
 	policy_Name := data.Policy
 
 	var dataArr []map[string]interface{}
@@ -66,21 +67,27 @@ func (d *VpnvserverAppflowpolicyBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the supplied filter attrs.
+	// bindpoint and policy are optional filters: only apply them when the caller
+	// supplied a (known, non-null) value, otherwise match on the remaining attrs.
 	foundIndex := -1
 	for i, v := range dataArr {
 		match := true
 
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
+		// Check bindpoint (optional filter)
+		if !bindpoint_Name.IsNull() && !bindpoint_Name.IsUnknown() {
+			if val, ok := v["bindpoint"].(string); !ok || val != bindpoint_Name.ValueString() {
 				match = false
-				continue
 			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
 		}
+
+		// Check policy (optional filter)
+		if match && !policy_Name.IsNull() && !policy_Name.IsUnknown() {
+			if val, ok := v["policy"].(string); !ok || val != policy_Name.ValueString() {
+				match = false
+			}
+		}
+
 		if match {
 			foundIndex = i
 			break
@@ -89,11 +96,11 @@ func (d *VpnvserverAppflowpolicyBindingDataSource) Read(ctx context.Context, req
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_appflowpolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_appflowpolicy_binding with bindpoint %s not found", bindpoint_Name))
 		return
 	}
 
-	vpnvserver_appflowpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_appflowpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -41,8 +42,11 @@ func (r *ContentinspectionprofileResource) Schema(ctx context.Context, req resou
 				Description: "Egress interface for CI profile.It is a mandatory argument while creating an ContentInspection profile of type INLINEINSPECTION or MIRROR.",
 			},
 			"egressvlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is 0; a schema Default is required so removing the
+				// attribute from config produces a plan diff that drives the unset.
+				Default:     int64default.StaticInt64(0),
 				Description: "Egress Vlan for CI",
 			},
 			"ingressinterface": schema.StringAttribute{
@@ -51,8 +55,11 @@ func (r *ContentinspectionprofileResource) Schema(ctx context.Context, req resou
 				Description: "Ingress interface for CI profile.It is a mandatory argument while creating an ContentInspection profile of IPS type.",
 			},
 			"ingressvlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Optional: true,
+				Computed: true,
+				// NITRO default is 0; a schema Default is required so removing the
+				// attribute from config produces a plan diff that drives the unset.
+				Default:     int64default.StaticInt64(0),
 				Description: "Ingress Vlan for CI",
 			},
 			"iptunnel": schema.StringAttribute{
@@ -61,7 +68,10 @@ func (r *ContentinspectionprofileResource) Schema(ctx context.Context, req resou
 				Description: "IP Tunnel for CI profile. It is used while creating a ContentInspection profile of type MIRROR when the IDS device is in a different network",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of a ContentInspection profile. Must begin with a letter, number, or the underscore \\(_\\) character. Other characters allowed, after the first character, are the hyphen \\(-\\), period \\(.\\), hash \\(\\#\\), space \\( \\), at \\(@\\), colon \\(:\\), and equal \\(=\\) characters. The name of a IPS profile cannot be changed after it is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks \\(for example, \"my ips profile\" or 'my ips profile'\\).",
 			},
 			"type": schema.StringAttribute{
@@ -75,31 +85,60 @@ func (r *ContentinspectionprofileResource) Schema(ctx context.Context, req resou
 	}
 }
 
-func contentinspectionprofileGetThePayloadFromtheConfig(ctx context.Context, data *ContentinspectionprofileResourceModel) contentinspection.Contentinspectionprofile {
-	tflog.Debug(ctx, "In contentinspectionprofileGetThePayloadFromtheConfig Function")
+func contentinspectionprofileGetThePayloadFromthePlan(ctx context.Context, data *ContentinspectionprofileResourceModel) contentinspection.Contentinspectionprofile {
+	tflog.Debug(ctx, "In contentinspectionprofileGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	contentinspectionprofile := contentinspection.Contentinspectionprofile{}
-	if !data.Egressinterface.IsNull() {
+	if !data.Egressinterface.IsNull() && !data.Egressinterface.IsUnknown() {
 		contentinspectionprofile.Egressinterface = data.Egressinterface.ValueString()
 	}
-	if !data.Egressvlan.IsNull() {
+	if !data.Egressvlan.IsNull() && !data.Egressvlan.IsUnknown() {
 		contentinspectionprofile.Egressvlan = utils.IntPtr(int(data.Egressvlan.ValueInt64()))
 	}
-	if !data.Ingressinterface.IsNull() {
+	if !data.Ingressinterface.IsNull() && !data.Ingressinterface.IsUnknown() {
 		contentinspectionprofile.Ingressinterface = data.Ingressinterface.ValueString()
 	}
-	if !data.Ingressvlan.IsNull() {
+	if !data.Ingressvlan.IsNull() && !data.Ingressvlan.IsUnknown() {
 		contentinspectionprofile.Ingressvlan = utils.IntPtr(int(data.Ingressvlan.ValueInt64()))
 	}
-	if !data.Iptunnel.IsNull() {
+	if !data.Iptunnel.IsNull() && !data.Iptunnel.IsUnknown() {
 		contentinspectionprofile.Iptunnel = data.Iptunnel.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		contentinspectionprofile.Name = data.Name.ValueString()
 	}
-	if !data.Type.IsNull() {
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
 		contentinspectionprofile.Type = data.Type.ValueString()
+	}
+
+	return contentinspectionprofile
+}
+
+func contentinspectionprofileGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *ContentinspectionprofileResourceModel) contentinspection.Contentinspectionprofile {
+	tflog.Debug(ctx, "In contentinspectionprofileGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields.
+	// The primary key (name) identifies the resource in the unnamed PUT payload.
+	// type is create-only (RequiresReplace) and is intentionally excluded from updates.
+	contentinspectionprofile := contentinspection.Contentinspectionprofile{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		contentinspectionprofile.Name = data.Name.ValueString()
+	}
+	if !data.Egressinterface.IsNull() && !data.Egressinterface.IsUnknown() {
+		contentinspectionprofile.Egressinterface = data.Egressinterface.ValueString()
+	}
+	if !data.Egressvlan.IsNull() && !data.Egressvlan.IsUnknown() {
+		contentinspectionprofile.Egressvlan = utils.IntPtr(int(data.Egressvlan.ValueInt64()))
+	}
+	if !data.Ingressinterface.IsNull() && !data.Ingressinterface.IsUnknown() {
+		contentinspectionprofile.Ingressinterface = data.Ingressinterface.ValueString()
+	}
+	if !data.Ingressvlan.IsNull() && !data.Ingressvlan.IsUnknown() {
+		contentinspectionprofile.Ingressvlan = utils.IntPtr(int(data.Ingressvlan.ValueInt64()))
+	}
+	if !data.Iptunnel.IsNull() && !data.Iptunnel.IsUnknown() {
+		contentinspectionprofile.Iptunnel = data.Iptunnel.ValueString()
 	}
 
 	return contentinspectionprofile
@@ -118,7 +157,8 @@ func contentinspectionprofileSetAttrFromGet(ctx context.Context, data *Contentin
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Egressvlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Egressvlan.IsUnknown() {
+		// Preserve a configured value; only null the vlan when it was never set.
 		data.Egressvlan = types.Int64Null()
 	}
 	if val, ok := getResponseData["ingressinterface"]; ok && val != nil {
@@ -130,7 +170,8 @@ func contentinspectionprofileSetAttrFromGet(ctx context.Context, data *Contentin
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ingressvlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ingressvlan.IsUnknown() {
+		// Preserve a configured value; only null the vlan when it was never set.
 		data.Ingressvlan = types.Int64Null()
 	}
 	if val, ok := getResponseData["iptunnel"]; ok && val != nil {
@@ -150,7 +191,7 @@ func contentinspectionprofileSetAttrFromGet(ctx context.Context, data *Contentin
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

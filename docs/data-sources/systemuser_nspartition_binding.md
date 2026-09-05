@@ -1,5 +1,5 @@
 ---
-subcategory: "AAA"
+subcategory: "System"
 ---
 
 # Data Source: systemuser_nspartition_binding

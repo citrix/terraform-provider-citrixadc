@@ -67,3 +67,19 @@ In addition to the arguments, the following attributes are available:
 * `vxlan` - VXLAN ID of the IPv6 packet that has to match with the PBR6.
 * `vxlanvlanmap` - The vlan to vxlan mapping to be applied for incoming packets over this pbr tunnel.
 * `id` - The id of the nspbr6. It has the same value as the `name` attribute.
+
+### Read-only nspbr6 metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nspbr6` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `kernelstate` - Commit status of the PBR6. Possible values: `APPLIED`, `NOTAPPLIED`, `RE-APPLY`, `SFAPPLIED`, `SFNOTAPPLIED`.
+* `hits` - Number of hits of this PBR6.
+* `curstate` - If this route is UP/DOWN.
+* `totalprobes` - The total number of probes sent.
+* `totalfailedprobes` - The total number of failed probes.
+* `failedprobes` - Number of the current failed monitoring probes.
+* `monstatcode` - The code indicating the monitor response.
+* `monstatparam1` - First parameter for use with message code.
+* `monstatparam2` - Second parameter for use with message code.
+* `monstatparam3` - Third parameter for use with message code.
+* `data` - Internal data of this route.

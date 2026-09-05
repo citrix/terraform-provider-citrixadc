@@ -83,10 +83,31 @@ In addition to the arguments, the following attributes are available:
 * `via` - Insert a via header in each HTTP request. In the case of a cache miss, the request is redirected from the cache server to the origin server.
 * `id` - The id of the crvserver. It has the same value as the `name` attribute.
 
-## Import
+### Read-only crvserver metadata
 
-A crvserver can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_crvserver` resource) and are Computed / GET-only. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_crvserver.tf_crvserver my_vserver
-```
+* `ip` - IP address of the cache redirection virtual server.
+* `value` - The ssl card status for the transparent ssl cr vserver (for example `Certkey/Certkeybundle/Vault not bound/Cert-store not usable`, `SSL feature disabled`).
+* `ngname` - Nodegroup devno to which this crvserver belongs to.
+* `type` - Virtual server type (for example `CONTENT`, `ADDRESS`).
+* `curstate` - The state of the cr vserver (for example `UP`, `DOWN`, `OUT OF SERVICE`, `DISABLED`).
+* `status` - Status.
+* `authentication` - Authentication (for example `ON`, `OFF`).
+* `homepage` - Home page.
+* `rule` - Rule.
+* `policyname` - Policies bound to this vserver.
+* `pipolicyhits` - Number of hits.
+* `servicename` - Service name.
+* `weight` - Weight for this service.
+* `targetvserver` - The CSW target server names.
+* `priority` - The priority for the policy.
+* `somethod` - The spillover factor (for example `CONNECTION`, `DYNAMICCONNECTION`, `BANDWIDTH`, `HEALTH`, `LLMQUOTA`, `NONE`).
+* `sopersistence` - The state of spillover persistence (for example `ENABLED`, `DISABLED`).
+* `lbvserver` - The Default target server name.
+* `bindpoint` - The bindpoint to which the policy is bound (for example `REQUEST`, `RESPONSE`, `ICA_REQUEST`).
+* `invoke` - Invoke flag.
+* `labeltype` - The invocation type (for example `reqvserver`, `resvserver`, `policylabel`).
+* `labelname` - Name of the label invoked.
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `nodefaultbindings` - Whether the configuration will have default ssl CIPHER and ECC curve bindings (for example `YES`, `NO`).

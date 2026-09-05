@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNstimer_add = `
@@ -133,6 +134,77 @@ func testAccCheckNstimerDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNstimer_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nstimer.tf_nstimer"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstimerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstimer_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimerExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nstimer.Type(), "tf_nstimer"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNstimer_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimerExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNstimer_import(t *testing.T) {
+	const resAddr = "citrixadc_nstimer.tf_nstimer"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstimerDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNstimer_add},
+			{
+				Config:                  testAccNstimer_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccNstimer_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNstimerDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNstimer_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimerExist("citrixadc_nstimer.tf_nstimer", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNstimer_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstimerExist("citrixadc_nstimer.tf_nstimer", nil)),
+			},
+		},
+	})
 }
 
 const testAccNstimerDataSource_basic = `

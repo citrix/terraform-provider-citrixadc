@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func doSslservice_sslcertkey_bindingPreChecks(t *testing.T) {
@@ -347,18 +350,16 @@ func testAccCheckSslservice_sslcertkey_bindingExist(n string, id *string) resour
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.Split(bindingId, ",")
-
-		servicename := idSlice[0]
-		certkeyname := idSlice[1]
-		snicert := false
-		ca := false
-		if val, ok := rs.Primary.Attributes["snicert"]; ok {
-			snicert = val == "true"
+		// ID-parse helper: handle both the new key:value ID format and the
+		// legacy SDK v2 comma format via ParseIdString.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"servicename", "certkeyname", "snicert", "ca"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
 		}
-		if val, ok := rs.Primary.Attributes["ca"]; ok {
-			ca = val == "true"
-		}
+		servicename := idMap["servicename"]
+		certkeyname := idMap["certkeyname"]
+		snicert := idMap["snicert"] == "true"
+		ca := idMap["ca"] == "true"
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservice_sslcertkey_binding",
@@ -403,11 +404,16 @@ func testAccCheckSslservice_sslcertkey_bindingNotExist(n string, id string) reso
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
 
-		idSlice := strings.Split(id, ",")
-		servicename := idSlice[0]
-		certkeyname := idSlice[1]
-		snicert := idSlice[2] == "true"
-		ca := idSlice[3] == "true"
+		// ID-parse helper: handle both the new key:value ID format and the
+		// legacy SDK v2 comma format via ParseIdString.
+		idMap, _, err := utils.ParseIdString(id, []string{"servicename", "certkeyname", "snicert", "ca"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", id, err)
+		}
+		servicename := idMap["servicename"]
+		certkeyname := idMap["certkeyname"]
+		snicert := idMap["snicert"] == "true"
+		ca := idMap["ca"] == "true"
 
 		findParams := service.FindParams{
 			ResourceType:             "sslservice_sslcertkey_binding",
@@ -541,12 +547,162 @@ func TestAccSslservice_sslcertkey_bindingDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSslservice_sslcertkey_bindingDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "servicename", "tf_service"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "certkeyname", "tf_certkey"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "ca", "true"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "snicert", "false"),
 					resource.TestCheckResourceAttr("data.citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "crlcheck", "Mandatory"),
 				),
+			},
+		},
+	})
+}
+
+// testAccSslservice_sslcertkey_binding_upgrade_basic reuses the _basic config
+// values (certkey/lbvserver/service + the binding). It is valid under BOTH the
+// last SDK v2 release (2.2.0) schema and the current Framework schema. crlcheck
+// is set explicitly so the API echoes it back, making the recomputed new-format
+// id fully deterministic.
+const testAccSslservice_sslcertkey_binding_upgrade_basic = `
+resource "citrixadc_sslcertkey" "tf_certkey" {
+	certkey = "tf_certkey"
+	cert = "/nsconfig/ssl/ns-root.cert"
+	key = "/nsconfig/ssl/ns-root.key"
+	notificationperiod = 40
+	expirymonitor = "ENABLED"
+}
+
+resource "citrixadc_lbvserver" "tf_lbvserver" {
+	ipv46       = "10.10.10.44"
+	name        = "tf_lbvserver"
+	port        = 443
+	servicetype = "SSL"
+	sslprofile  = "ns_default_ssl_profile_frontend"
+}
+
+resource "citrixadc_service" "tf_service" {
+	name = "tf_service"
+	servicetype = "SSL"
+	port = 443
+	lbvserver = citrixadc_lbvserver.tf_lbvserver.name
+	ip = "10.77.33.22"
+	depends_on = [citrixadc_sslcertkey.tf_certkey]
+}
+
+resource "citrixadc_sslservice_sslcertkey_binding" "tf_sslservice_sslcertkey_binding" {
+	certkeyname = citrixadc_sslcertkey.tf_certkey.certkey
+	servicename = citrixadc_service.tf_service.name
+	ca = true
+	crlcheck = "Mandatory"
+}
+`
+
+func TestAccSslservice_sslcertkey_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doSslservice_sslcertkey_bindingPreChecks(t) },
+		CheckDestroy: testAccCheckSslservice_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id
+				// (servicename,certkeyname,snicert,ca).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccSslservice_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservice_sslcertkey_bindingExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "id", "tf_service,tf_certkey,false,true"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSslservice_sslcertkey_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSslservice_sslcertkey_bindingExist("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding", "id", "ca:true,certkeyname:tf_certkey,crlcheck:Mandatory,servicename:tf_service,snicert:false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSslservice_sslcertkey_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: servicename,certkeyname,snicert,ca) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"servicename", "certkeyname", "snicert", "ca"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslservice_sslcertkey_bindingPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservice_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSslservice_sslcertkey_binding_basic_step1},
+			{Config: testAccSslservice_sslcertkey_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccSslservice_sslcertkey_binding_basic_step1, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccSslservice_sslcertkey_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_sslservice_sslcertkey_binding.tf_sslservice_sslcertkey_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doSslservice_sslcertkey_bindingPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSslservice_sslcertkey_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSslservice_sslcertkey_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservice_sslcertkey_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Sslservice_sslcertkey_binding.Type(), "tf_service", map[string]string{"certkeyname": "tf_certkey", "ca": "true"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSslservice_sslcertkey_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSslservice_sslcertkey_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -72,15 +72,30 @@ func (d *BotprofileBlacklistBindingDataSource) Read(ctx context.Context, req dat
 	for i, v := range dataArr {
 		match := true
 
-		// Check bot_blacklist_value
-		if val, ok := v["bot_blacklist_value"].(string); ok {
-			if botblacklistvalue_Name.IsNull() || val != botblacklistvalue_Name.ValueString() {
+		// Check bot_blacklist only when the caller supplied it as a filter
+		if !botblacklist_Name.IsNull() {
+			if val, ok := v["bot_blacklist"].(bool); ok {
+				if val != botblacklist_Name.ValueBool() {
+					match = false
+					continue
+				}
+			} else {
 				match = false
 				continue
 			}
-		} else if !botblacklistvalue_Name.IsNull() {
-			match = false
-			continue
+		}
+
+		// Check bot_blacklist_value only when the caller supplied it as a filter
+		if !botblacklistvalue_Name.IsNull() {
+			if val, ok := v["bot_blacklist_value"].(string); ok {
+				if val != botblacklistvalue_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
 		}
 		if match {
 			foundIndex = i
@@ -94,7 +109,7 @@ func (d *BotprofileBlacklistBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	botprofile_blacklist_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	botprofile_blacklist_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

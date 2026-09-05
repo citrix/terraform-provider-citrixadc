@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccSystemfile_basic(t *testing.T) {
@@ -64,6 +65,25 @@ func TestAccSystemfile_base64(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystemfileExist("citrixadc_systemfile.tf_file_encoded", nil, []string{"/var/tmp", "encoded.txt"}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSystemfile_import(t *testing.T) {
+	const resAddr = "citrixadc_systemfile.tf_file"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystemfileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystemfile_basic_step1},
+			{
+				Config:                  testAccSystemfile_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -192,6 +212,30 @@ data "citrixadc_systemfile" "tf_file_datasource" {
 }
 `
 
+func TestAccSystemfile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystemfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSystemfile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemfileExist("citrixadc_systemfile.tf_file", nil, []string{"/var/tmp", "hello.txt"})),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystemfile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystemfileExist("citrixadc_systemfile.tf_file", nil, []string{"/var/tmp", "hello.txt"})),
+			},
+		},
+	})
+}
+
 func TestAccSystemfileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -205,6 +249,8 @@ func TestAccSystemfileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_systemfile.tf_file_datasource", "fileencoding", "BASE64"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_systemfile.tf_file_datasource", "filecontent"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_systemfile.tf_file_datasource", "id"),
+					// Read-only file metadata that is always populated for an existing file.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systemfile.tf_file_datasource", "filesize"),
 				),
 			},
 		},

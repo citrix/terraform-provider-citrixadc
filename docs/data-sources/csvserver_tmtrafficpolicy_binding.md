@@ -32,10 +32,11 @@ output "binding_priority" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The ID of the binding.
+* `id` - The id of the binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
 * `priority` - Priority for the policy.
 * `gotopriorityexpression` - Expression or other value specifying the next policy to be evaluated if the current policy evaluates to TRUE.
+* `bindpoint` - Bind point at which the policy needs to be bound.
 * `invoke` - Invoke a policy label if this policy's rule evaluates to TRUE.
-* `labelname` - Name of the label to be invoked.
 * `labeltype` - Type of label to be invoked.
-* `targetlbvserver` - Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE.
+* `labelname` - Name of the label to be invoked.
+* `targetlbvserver` - Name of the Load Balancing virtual server to which the content is switched, if the policy rule is evaluated to be TRUE.

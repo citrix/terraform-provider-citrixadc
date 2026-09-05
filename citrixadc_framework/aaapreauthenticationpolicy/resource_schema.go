@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -28,7 +30,10 @@ func (r *AaapreauthenticationpolicyResource) Schema(ctx context.Context, req res
 				Description: "The ID of the aaapreauthenticationpolicy resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the preauthentication policy. Must begin with a letter, number, or the underscore character (_), and must consist only of letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at sign (@), equals (=), colon (:), and underscore characters. Cannot be changed after the preauthentication policy is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my policy\" or 'my policy').",
 			},
 			"reqaction": schema.StringAttribute{
@@ -44,18 +49,36 @@ func (r *AaapreauthenticationpolicyResource) Schema(ctx context.Context, req res
 	}
 }
 
-func aaapreauthenticationpolicyGetThePayloadFromtheConfig(ctx context.Context, data *AaapreauthenticationpolicyResourceModel) aaa.Aaapreauthenticationpolicy {
-	tflog.Debug(ctx, "In aaapreauthenticationpolicyGetThePayloadFromtheConfig Function")
+func aaapreauthenticationpolicyGetThePayloadFromthePlan(ctx context.Context, data *AaapreauthenticationpolicyResourceModel) aaa.Aaapreauthenticationpolicy {
+	tflog.Debug(ctx, "In aaapreauthenticationpolicyGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	aaapreauthenticationpolicy := aaa.Aaapreauthenticationpolicy{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		aaapreauthenticationpolicy.Name = data.Name.ValueString()
 	}
-	if !data.Reqaction.IsNull() {
+	if !data.Reqaction.IsNull() && !data.Reqaction.IsUnknown() {
 		aaapreauthenticationpolicy.Reqaction = data.Reqaction.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
+		aaapreauthenticationpolicy.Rule = data.Rule.ValueString()
+	}
+
+	return aaapreauthenticationpolicy
+}
+
+func aaapreauthenticationpolicyGetTheUpdatablePayloadFromThePlan(ctx context.Context, data *AaapreauthenticationpolicyResourceModel) aaa.Aaapreauthenticationpolicy {
+	tflog.Debug(ctx, "In aaapreauthenticationpolicyGetTheUpdatablePayloadFromThePlan Function")
+
+	// Create API request body from the model, restricted to NITRO-updatable fields
+	aaapreauthenticationpolicy := aaa.Aaapreauthenticationpolicy{}
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
+		aaapreauthenticationpolicy.Name = data.Name.ValueString()
+	}
+	if !data.Reqaction.IsNull() && !data.Reqaction.IsUnknown() {
+		aaapreauthenticationpolicy.Reqaction = data.Reqaction.ValueString()
+	}
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		aaapreauthenticationpolicy.Rule = data.Rule.ValueString()
 	}
 
@@ -83,7 +106,7 @@ func aaapreauthenticationpolicySetAttrFromGet(ctx context.Context, data *Aaaprea
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

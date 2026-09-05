@@ -35,7 +35,7 @@ func (d *Ipv6DataSource) Schema(ctx context.Context, req datasource.SchemaReques
 }
 
 func (d *Ipv6DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Ipv6ResourceModel
+	var data Ipv6DataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *Ipv6DataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	ipv6SetAttrFromGet(ctx, &data, getResponseData)
+	ipv6DataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

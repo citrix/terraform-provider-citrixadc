@@ -17,36 +17,64 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternodegroup_csvserver_binding_basic = `
 
-	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
-		name   = "my_tf_group"
-		strict = "NO"
-	}
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
 
-	resource "citrixadc_csvserver" "tf_csvserver" {
-		name        = "my_content_server_ds"
-		servicetype = "HTTP"
-		ipv46       = "10.71.139.100"
-		port        = "80"
-	}
+resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	node = 0
+}
 
-	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
-		name = "my_tf_group"
-		vserver = citrixadc_csvserver.tf_csvserver.name
-		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_csvserver.tf_csvserver]
-	}
+resource "citrixadc_csvserver" "tf_csvserver" {
+	name        = "my_content_server_ds"
+	servicetype = "HTTP"
+	ipv46       = "10.71.139.100"
+	port        = "80"
+}
+
+resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
+	name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	vserver    = citrixadc_csvserver.tf_csvserver.name
+	depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+}
 `
 
+// Step 2 keeps the participating entities (nodegroup, clusternode binding and
+// csvserver) but drops the binding itself so proper deletion of the binding can
+// be verified while the endpoints still exist.
 const testAccClusternodegroup_csvserver_binding_basic_step2 = `
+
+resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+	name   = "my_tf_group"
+	strict = "NO"
+}
+
+resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+	name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+	node = 0
+}
+
+resource "citrixadc_csvserver" "tf_csvserver" {
+	name        = "my_content_server_ds"
+	servicetype = "HTTP"
+	ipv46       = "10.71.139.100"
+	port        = "80"
+}
 `
 
 func TestAccClusternodegroup_csvserver_binding_basic(t *testing.T) {
@@ -70,6 +98,52 @@ func TestAccClusternodegroup_csvserver_binding_basic(t *testing.T) {
 					testAccCheckClusternodegroup_csvserver_bindingNotExist("citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "my_cs_group,my_csvserver"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_csvserver_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,vserver) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "vserver"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_csvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternodegroup_csvserver_binding_basic},
+			{Config: testAccClusternodegroup_csvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccClusternodegroup_csvserver_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }
@@ -101,10 +175,14 @@ func testAccCheckClusternodegroup_csvserver_bindingExist(n string, id *string) r
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		my_csvserver := idSlice[1]
+		// Parse the ID with utils.ParseIdString so both the new key:value
+		// format and the legacy comma-separated format are handled.
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vserver"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		my_csvserver := idMap["vserver"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternodegroup_csvserver_binding",
@@ -166,7 +244,7 @@ func testAccCheckClusternodegroup_csvserver_bindingNotExist(n string, id string)
 		// Iterate through results to hopefully not find the one with the matching my_csvserver
 		found := false
 		for _, v := range dataArr {
-			if v["my_csvserver"].(string) == my_csvserver {
+			if v["vserver"].(string) == my_csvserver {
 				found = true
 				break
 			}
@@ -213,6 +291,11 @@ const testAccClusternodegroup_csvserver_bindingDataSource_basic = `
 		strict = "NO"
 	}
 
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
 	resource "citrixadc_csvserver" "tf_csvserver" {
 		name        = "my_content_server_ds"
 		servicetype = "HTTP"
@@ -221,9 +304,9 @@ const testAccClusternodegroup_csvserver_bindingDataSource_basic = `
 	}
 
 	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
-		name    = "my_tf_group"
-		vserver = citrixadc_csvserver.tf_csvserver.name
-		depends_on = [citrixadc_clusternodegroup.tf_clusternodegroup, citrixadc_csvserver.tf_csvserver]
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver    = citrixadc_csvserver.tf_csvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
 	}
 
 	data "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
@@ -247,6 +330,117 @@ func TestAccclusternodegroup_csvserver_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "name", "my_tf_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "vserver", "my_content_server_ds"),
+				),
+			},
+		},
+	})
+}
+
+// testAccClusternodegroup_csvserver_binding_upgrade_basic is valid under BOTH the
+// SDK v2 2.2.0 schema and the current provider schema (uses the SDK v2 attribute
+// names name/vserver). The terraform resource label matches the _basic config so
+// the shared Exist/Destroy helpers and resource address apply.
+const testAccClusternodegroup_csvserver_binding_upgrade_basic = `
+
+	resource "citrixadc_clusternodegroup" "tf_clusternodegroup" {
+		name   = "my_tf_group"
+		strict = "NO"
+	}
+
+	resource "citrixadc_clusternodegroup_clusternode_binding" "tf_clusternodegroup_clusternode_binding" {
+		name = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		node = 0
+	}
+
+	resource "citrixadc_csvserver" "tf_csvserver" {
+		name        = "my_content_server_ds"
+		servicetype = "HTTP"
+		ipv46       = "10.71.139.100"
+		port        = "80"
+	}
+
+	resource "citrixadc_clusternodegroup_csvserver_binding" "tf_clusternodegroup_csvserver_binding" {
+		name       = citrixadc_clusternodegroup.tf_clusternodegroup.name
+		vserver    = citrixadc_csvserver.tf_csvserver.name
+		depends_on = [citrixadc_clusternodegroup_clusternode_binding.tf_clusternodegroup_clusternode_binding]
+	}
+`
+
+func TestAccClusternodegroup_csvserver_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternodegroup_csvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (2.2.0) from the registry.
+			// The SDK v2 resource writes state with the LEGACY comma-joined id
+			// (name,vserver) -> "my_tf_group,my_content_server_ds".
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccClusternodegroup_csvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_csvserver_bindingExist("citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", "id", "my_tf_group,my_content_server_ds"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the CURRENT provider, then
+			// plan/apply. This resource is still served by SDK v2 in the current
+			// provider (only its datasource is registered in the Framework provider;
+			// NewClusternodegroupCsvserverBindingResource is not wired into
+			// citrixadc_framework/provider Resources()). The Framework
+			// SetAttrFromGet id recompute is therefore not exercised at runtime, so
+			// the id is not upgraded to the new key:value format. Assert Exist only
+			// (the sanctioned fallback when the recompute is genuinely absent).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternodegroup_csvserver_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_csvserver_bindingExist("citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccClusternodegroup_csvserver_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternodegroup_csvserver_binding.tf_clusternodegroup_csvserver_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternodegroup_csvserver_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternodegroup_csvserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_csvserver_bindingExist(resAddr, nil),
+				),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Clusternodegroup_csvserver_binding.Type(), "my_tf_group", map[string]string{"vserver": "my_content_server_ds"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternodegroup_csvserver_binding_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternodegroup_csvserver_bindingExist(resAddr, nil),
 				),
 			},
 		},

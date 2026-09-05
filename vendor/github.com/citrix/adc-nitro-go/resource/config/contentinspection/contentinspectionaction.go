@@ -50,6 +50,10 @@ type Contentinspectionaction struct {
 	*/
 	Icapprofilename string `json:"icapprofilename,omitempty"`
 	/**
+	* Name of the CI WASM profile to be attached to the contentInspection action.
+	*/
+	Wasmprofilename string `json:"wasmprofilename,omitempty"`
+	/**
 	* Name of the action to perform if the Vserver representing the remote service is not UP. This is not supported for NOINSPECTION Type. The Supported actions are:
 		* RESET - Reset the client connection by closing it. The client program, such as a browser, will handle this and may inform the user. The client may then resend the request if desired.
 		* DROP - Drop the request without sending a response to the user.

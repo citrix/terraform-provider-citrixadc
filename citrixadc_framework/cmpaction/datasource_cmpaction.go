@@ -35,7 +35,7 @@ func (d *CmpactionDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *CmpactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CmpactionResourceModel
+	var data CmpactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *CmpactionDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	cmpactionSetAttrFromGet(ctx, &data, getResponseData)
+	cmpactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

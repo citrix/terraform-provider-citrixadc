@@ -34,12 +34,3 @@ In addition to the arguments, the following attributes are available:
 
 * `mapdmrname` - Default Mapping rule name.
 * `id` - The id of the mapdomain. It has the same value as the `name` attribute.
-
-
-## Import
-
-A mapdomain can be imported using its `name`, e.g.
-
-```
-terraform import citrixadc_mapdomain.tf_mapdomain domain1
-```

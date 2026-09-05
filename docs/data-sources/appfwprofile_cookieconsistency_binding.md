@@ -6,7 +6,7 @@ subcategory: "Application Firewall"
 
 The appfwprofile_cookieconsistency_binding data source allows you to retrieve information about the bindings between appfwprofile and cookieconsistency relaxation rules.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_appfwprofile_cookieconsistency_binding" "demo_binding" {
@@ -38,4 +38,5 @@ In addition to the arguments, the following attributes are available:
 * `isautodeployed` - Is the rule auto deployed by dynamic profile ?
 * `isregex` - Is the cookie name a regular expression?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

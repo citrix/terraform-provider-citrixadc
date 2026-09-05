@@ -32,7 +32,7 @@ output "jsonmaxdocumentlength" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_jsondosurl_binding. It is a system-generated identifier.
+* `id` - The id of the appfwprofile_jsondosurl_binding. It is the concatenation of `name` and `jsondosurl` attributes separated by comma.
 * `alertonly` - Send SNMP alert?
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - Is the rule auto deployed by dynamic profile?
@@ -49,4 +49,5 @@ In addition to the arguments, the following attributes are available:
 * `jsonmaxstringlength` - Maximum string length in the JSON. This check protects against strings that have large length.
 * `jsonmaxstringlengthcheck` - State if JSON Max string value count check is ON or OFF.
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

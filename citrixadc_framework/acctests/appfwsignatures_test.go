@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwsignatures_basic = `
@@ -112,6 +113,53 @@ func testAccCheckAppfwsignaturesDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwsignatures_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwsignatures.tf_appfwsignatures"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwsignaturesDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwsignatures_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwsignaturesExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwsignatures.Type(), "tf_appfwsignatures"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwsignatures_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwsignaturesExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwsignatures_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwsignatures.tf_appfwsignatures"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwsignaturesDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwsignatures_basic},
+			{
+				Config:                  testAccAppfwsignatures_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
+}
+
 const testAccAppfwsignaturesDataSource_basic = `
 	resource "citrixadc_appfwsignatures" "tf_appfwsignatures_ds" {
 		name       = "tf_appfwsignatures_ds"
@@ -124,6 +172,30 @@ const testAccAppfwsignaturesDataSource_basic = `
 		depends_on = [citrixadc_appfwsignatures.tf_appfwsignatures_ds]
 	}
 `
+
+func TestAccAppfwsignatures_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwsignaturesDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppfwsignatures_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwsignaturesExist("citrixadc_appfwsignatures.tf_appfwsignatures", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwsignatures_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwsignaturesExist("citrixadc_appfwsignatures.tf_appfwsignatures", nil)),
+			},
+		},
+	})
+}
 
 func TestAccAppfwsignaturesDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

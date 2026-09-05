@@ -1,7 +1,12 @@
 package azureapplication
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func AzureapplicationDataSourceSchema() schema.Schema {
@@ -16,18 +21,10 @@ func AzureapplicationDataSourceSchema() schema.Schema {
 				Description: "Application ID that is generated when an application is created in Azure Active Directory using either the Azure CLI or the Azure portal (GUI)",
 			},
 			"clientsecret": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password for the application configured in Azure Active Directory. The password is specified in the Azure CLI or generated in the Azure portal (GUI).",
-			},
-			"clientsecret_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password for the application configured in Azure Active Directory. The password is specified in the Azure CLI or generated in the Azure portal (GUI).",
-			},
-			"clientsecret_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a clientsecret_wo update.",
 			},
 			"name": schema.StringAttribute{
 				Required:    true,
@@ -50,4 +47,52 @@ func AzureapplicationDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+type AzureapplicationDataSourceModel struct {
+	Id            types.String `tfsdk:"id"`
+	Clientid      types.String `tfsdk:"clientid"`
+	Clientsecret  types.String `tfsdk:"clientsecret"`
+	Name          types.String `tfsdk:"name"`
+	Tenantid      types.String `tfsdk:"tenantid"`
+	Tokenendpoint types.String `tfsdk:"tokenendpoint"`
+	Vaultresource types.String `tfsdk:"vaultresource"`
+}
+
+func azureapplicationDataSourceSetAttrFromGet(ctx context.Context, data *AzureapplicationDataSourceModel, getResponseData map[string]interface{}) *AzureapplicationDataSourceModel {
+	tflog.Debug(ctx, "In azureapplicationDataSourceSetAttrFromGet Function")
+
+	// Convert API response to model
+	if val, ok := getResponseData["clientid"]; ok && val != nil {
+		data.Clientid = types.StringValue(val.(string))
+	} else {
+		data.Clientid = types.StringNull()
+	}
+	// clientsecret is not returned by NITRO API (secret/ephemeral) - retain from config
+	if val, ok := getResponseData["name"]; ok && val != nil {
+		data.Name = types.StringValue(val.(string))
+	} else {
+		data.Name = types.StringNull()
+	}
+	if val, ok := getResponseData["tenantid"]; ok && val != nil {
+		data.Tenantid = types.StringValue(val.(string))
+	} else {
+		data.Tenantid = types.StringNull()
+	}
+	if val, ok := getResponseData["tokenendpoint"]; ok && val != nil {
+		data.Tokenendpoint = types.StringValue(val.(string))
+	} else {
+		data.Tokenendpoint = types.StringNull()
+	}
+	if val, ok := getResponseData["vaultresource"]; ok && val != nil {
+		data.Vaultresource = types.StringValue(val.(string))
+	} else {
+		data.Vaultresource = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
+	return data
 }

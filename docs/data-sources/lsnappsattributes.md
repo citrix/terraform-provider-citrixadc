@@ -40,12 +40,3 @@ In addition to the arguments, the following attributes are available:
 * `sessiontimeout` - Timeout, in seconds, for an idle LSN session. If an LSN session is idle for a time that exceeds this value, the Citrix ADC removes the session. This timeout does not apply for a TCP LSN session when a FIN or RST message is received from either of the endpoints.
 * `transportprotocol` - Name of the protocol (TCP, UDP) for which the parameters of this LSN application port ATTRIBUTES applies.
 * `id` - The id of the lsnappsattributes. It has the same value as the `name` attribute.
-
-
-## Import
-
-A lsnappsattributes can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_lsnappsattributes.tf_lsnappsattributes my_lsn_appattributes
-```

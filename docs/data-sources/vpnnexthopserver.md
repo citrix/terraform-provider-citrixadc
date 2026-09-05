@@ -38,12 +38,3 @@ In addition to the arguments, the following attributes are available:
 * `resaddresstype` - Address Type (IPV4/IPv6) of DNS name of nextHopServer FQDN.
 * `secure` - Use of a secure port, such as 443, for the double-hop configuration.
 * `id` - The id of the vpnnexthopserver. It has the same value as the `name` attribute.
-
-
-## Import
-
-A vpnnexthopserver can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_vpnnexthopserver.tf_vpnnexthopserver tf_vpnnexthopserver
-```

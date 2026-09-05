@@ -52,7 +52,7 @@ func (d *SslvserverSslciphersuiteBindingDataSource) Read(ctx context.Context, re
 	findParams := service.FindParams{
 		ResourceType:             service.Sslvserver_sslciphersuite_binding.Type(),
 		ResourceName:             vservername_Name,
-		ResourceMissingErrorCode: 258,
+		ResourceMissingErrorCode: 461,
 	}
 	dataArr, err = d.client.FindResourceArrayWithParams(findParams)
 	if err != nil {

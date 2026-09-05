@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -32,16 +34,19 @@ func (r *VridparamResource) Schema(ctx context.Context, req resource.SchemaReque
 			"deadinterval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(3),
 				Description: "Number of seconds after which a peer node in active-active mode is marked down if vrrp advertisements are not received from the peer node.",
 			},
 			"hellointerval": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(1000),
 				Description: "Interval, in milliseconds, between vrrp advertisement messages sent to the peer node in active-active mode.",
 			},
 			"sendtomaster": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Forward packets to the master node, in an active-active mode configuration, if the virtual server is in the backup state and sharing is disabled.",
 			},
 		},

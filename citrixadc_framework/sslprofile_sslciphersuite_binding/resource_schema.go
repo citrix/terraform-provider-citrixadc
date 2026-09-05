@@ -115,7 +115,11 @@ func sslprofile_sslciphersuite_bindingSetAttrFromGet(ctx context.Context, data *
 		data.Name = types.StringNull()
 	}
 
-	// Pattern 6: ID is set exactly once in Create; do not recompute it here.
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("ciphername:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Ciphername.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return data
 }
 

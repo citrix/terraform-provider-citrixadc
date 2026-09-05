@@ -181,8 +181,20 @@ func (r *NstimerAutoscalepolicyBindingResource) Delete(ctx context.Context, req 
 
 	err = r.client.DeleteResourceWithArgs(service.Nstimer_autoscalepolicy_binding.Type(), name_value, args)
 	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nstimer_autoscalepolicy_binding, got error: %s", err))
-		return
+		// Make Delete idempotent: on this firmware the typed binding GET returns an empty
+		// body, so the nitro client's pre-delete existence guard is bypassed and DELETE is
+		// issued even when the binding is already gone. NITRO then reports "Cannot unbind a
+		// policy that is not bound" (errorcode 3093) / "No such resource" (258). Treat an
+		// already-absent binding as a successful delete instead of failing the apply.
+		errStr := err.Error()
+		if !strings.Contains(errStr, "Cannot unbind a policy that is not bound") &&
+			!strings.Contains(errStr, "errorcode 3093") &&
+			!strings.Contains(errStr, "errorcode 258") &&
+			!strings.Contains(errStr, "No such resource") {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nstimer_autoscalepolicy_binding, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "nstimer_autoscalepolicy_binding already absent on delete; treating as success")
 	}
 
 	tflog.Trace(ctx, "Deleted nstimer_autoscalepolicy_binding binding")
@@ -218,6 +230,16 @@ func (r *NstimerAutoscalepolicyBindingResource) readNstimerAutoscalepolicyBindin
 	if (data.Policyname.IsNull() || data.Policyname.ValueString() == "") && policyname_Name != "" {
 		data.Policyname = types.StringValue(policyname_Name)
 	}
+
+	// Re-derive the canonical id (now that name + policyname identity attrs are known)
+	// so a legacy SDK v2 id is upgraded to the new key:value format on Read. This must
+	// run BEFORE the empty-body early return below: on this firmware the typed GET is
+	// empty, so SetAttrFromGet (which would otherwise re-derive) is never reached, and
+	// a legacy comma-joined import id would survive un-normalized without this.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	// Primary read: by-name typed binding endpoint, narrowed by policyname via the
 	// documented ?filter= query parameter. On firmwares that echo the bound row this

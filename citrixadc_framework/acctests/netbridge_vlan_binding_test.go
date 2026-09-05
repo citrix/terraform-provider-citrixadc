@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNetbridge_vlan_binding_basic = `
@@ -72,6 +75,49 @@ func TestAccNetbridge_vlan_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccNetbridge_vlan_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_vlan_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,vlan) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "vlan"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetbridge_vlan_binding_basic},
+			{Config: testAccNetbridge_vlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNetbridge_vlan_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckNetbridge_vlan_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -99,10 +145,12 @@ func testAccCheckNetbridge_vlan_bindingExist(n string, id *string) resource.Test
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		vlan := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "vlan"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		vlan := idMap["vlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "netbridge_vlan_binding",
@@ -141,13 +189,12 @@ func testAccCheckNetbridge_vlan_bindingNotExist(n string, id string) resource.Te
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "vlan"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		vlan := idSlice[1]
+		name := idMap["name"]
+		vlan := idMap["vlan"]
 
 		findParams := service.FindParams{
 			ResourceType:             "netbridge_vlan_binding",
@@ -235,6 +282,96 @@ func TestAccNetbridge_vlan_bindingDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_netbridge_vlan_binding.tf_binding", "name", "tf_netbridge"),
 					resource.TestCheckResourceAttr("data.citrixadc_netbridge_vlan_binding.tf_binding", "vlan", "20"),
 				),
+			},
+		},
+	})
+}
+
+// Config for the SDK v2 -> Framework state-upgrade test. Reuses the _basic
+// config values (same terraform resource labels) so the Exist/Destroy helpers
+// and resource addresses match. It is valid under both the SDK v2 2.2.0 schema
+// and the current Framework schema.
+const testAccNetbridge_vlan_binding_upgrade_basic = `
+	resource "citrixadc_netbridge" "tf_netbridge" {
+		name         = "tf_netbridge"
+	}
+	resource "citrixadc_vlan" "tf_vlan" {
+		vlanid    = 20
+		aliasname = "Management VLAN"
+	}
+	resource "citrixadc_netbridge_vlan_binding" "tf_binding" {
+		name = citrixadc_netbridge.tf_netbridge.name
+		vlan = citrixadc_vlan.tf_vlan.vlanid
+	}
+`
+
+// TestAccNetbridge_vlan_binding_sdkv2StateUpgrade verifies that state written by
+// the last SDK v2 release (legacy comma-joined id "name,vlan") is transparently
+// upgraded by the current Framework provider. Step 1 creates the binding with
+// citrix/citrixadc 2.2.0 (legacy id "tf_netbridge,20"); step 2 refreshes/plans
+// the same config through the current Framework provider, whose Read parses the
+// legacy id and recomputes it to the new "name:<v>,vlan:<v>" canonical format
+// (SetAttrFromGet).
+func TestAccNetbridge_vlan_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetbridge_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release, writing the legacy id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNetbridge_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_vlan_bindingExist("citrixadc_netbridge_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_vlan_binding.tf_binding", "id", "tf_netbridge,20"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework
+				// provider. Read exercises ParseIdString on the legacy id, then
+				// recomputes the id to the new key:value canonical format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNetbridge_vlan_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetbridge_vlan_bindingExist("citrixadc_netbridge_vlan_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netbridge_vlan_binding.tf_binding", "id", "name:tf_netbridge,vlan:20"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetbridge_vlan_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netbridge_vlan_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetbridge_vlan_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetbridge_vlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridge_vlan_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Netbridge_vlan_binding.Type(), "tf_netbridge", map[string]string{"vlan": "20"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetbridge_vlan_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetbridge_vlan_bindingExist(resAddr, nil)),
 			},
 		},
 	})

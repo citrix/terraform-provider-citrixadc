@@ -34,10 +34,12 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Expression, against which traffic is evaluated. Both classic and advance expressions are supported in default partition but only advance expressions in non-default partition.
 * `id` - The id of the tmsessionpolicy. It has the same value as the `name` attribute.
 
-## Import
+### Read-only tmsessionpolicy metadata
 
-A tmsessionpolicy can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_tmsessionpolicy` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_tmsessionpolicy.tf_tmsessionpolicy my_tmsession_policy
-```
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this configuration.
+* `expressiontype` - Type of policy (`Classic Policy` / `Advanced Policy`).
+* `hits` - Number of hits.
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.

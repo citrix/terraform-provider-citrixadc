@@ -30,13 +30,13 @@ output "priority" {
 ## Argument Reference
 
 * `policyname` - (Required) Name of the policy.
-* `type` - (Required) Bind point to which to policy is bound.
+* `type` - (Required) Bind point to which the policy is bound. Possible values: [ REQ_OVERRIDE, REQ_DEFAULT, HTTPQUIC_REQ_OVERRIDE, HTTPQUIC_REQ_DEFAULT, NONE ].
 
 ## Attribute Reference
 
 In addition to the arguments, the following attributes are available:
 
-* `globalbindtype` - Global bind type.
+* `globalbindtype` - Global bind type. Possible values: [ SYSTEM_GLOBAL, VPN_GLOBAL, RNAT_GLOBAL, APPFW_GLOBAL, TM_GLOBAL ].
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `id` - The id of the appfwglobal_appfwpolicy_binding. It is a system-generated identifier.
 * `invoke` - If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
@@ -44,3 +44,11 @@ In addition to the arguments, the following attributes are available:
 * `labeltype` - Type of policy label invocation.
 * `priority` - The priority of the policy.
 * `state` - Enable or disable the binding to activate or deactivate the policy. This is applicable to classic policies only.
+
+### Read-only appfwglobal_appfwpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwglobal_appfwpolicy_binding` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `flowtype` - flowtype of the bound application firewall policy.
+* `numpol` - The number of policies bound to the bindpoint.
+* `policytype` - Policy type. Possible values: [ Classic Policy, Advanced Policy ].

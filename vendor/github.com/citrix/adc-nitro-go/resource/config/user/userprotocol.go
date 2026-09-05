@@ -33,6 +33,10 @@ type Userprotocol struct {
 	*/
 	Extension string `json:"extension,omitempty"`
 	/**
+	* Wasm module needs to attach with the user protocol
+	*/
+	Wasmmodule string `json:"wasmmodule,omitempty"`
+	/**
 	* Any comments associated with the protocol.
 	*/
 	Comment string `json:"comment,omitempty"`

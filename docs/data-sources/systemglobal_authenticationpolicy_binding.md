@@ -4,7 +4,7 @@ subcategory: "System"
 
 # Data Source: systemglobal_authenticationpolicy_binding
 
-The `citrixadc_systemglobal_authenticationpolicy_binding` data source allows you to retrieve information about a specific binding between the system global configuration and an authentication policy.
+The systemglobal_authenticationpolicy_binding data source allows you to retrieve information about a specific binding between the system global configuration and an authentication policy.
 
 ## Example usage
 
@@ -30,8 +30,9 @@ output "feature" {
 
 In addition to the arguments, the following attributes are available:
 
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. This is a list of strings.
 * `feature` - The feature to be checked while applying this config.
-* `globalbindtype` - The global bind type for the binding.
+* `globalbindtype` - The global bind point at which the policy is bound.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE. Applicable only for advanced authentication policies.
 * `id` - The id of the systemglobal_authenticationpolicy_binding. It has the same value as the `policyname` attribute.
 * `nextfactor` - On success invoke label. Applicable for advanced authentication policy binding.

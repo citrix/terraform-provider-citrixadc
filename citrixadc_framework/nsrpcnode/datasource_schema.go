@@ -1,7 +1,12 @@
 package nsrpcnode
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func NsrpcnodeDataSourceSchema() schema.Schema {
@@ -15,18 +20,10 @@ func NsrpcnodeDataSourceSchema() schema.Schema {
 				Description: "IP address of the node. This has to be in the same subnet as the NSIP address.",
 			},
 			"password": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Password to be used in authentication with the peer system node.",
-			},
-			"password_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Password to be used in authentication with the peer system node.",
-			},
-			"password_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a password_wo update.",
 			},
 			"secure": schema.StringAttribute{
 				Optional:    true,
@@ -45,4 +42,46 @@ func NsrpcnodeDataSourceSchema() schema.Schema {
 			},
 		},
 	}
+}
+
+type NsrpcnodeDataSourceModel struct {
+	Id           types.String `tfsdk:"id"`
+	Ipaddress    types.String `tfsdk:"ipaddress"`
+	Password     types.String `tfsdk:"password"`
+	Secure       types.String `tfsdk:"secure"`
+	Srcip        types.String `tfsdk:"srcip"`
+	Validatecert types.String `tfsdk:"validatecert"`
+}
+
+func nsrpcnodeDataSourceSetAttrFromGet(ctx context.Context, data *NsrpcnodeDataSourceModel, getResponseData map[string]interface{}) *NsrpcnodeDataSourceModel {
+	tflog.Debug(ctx, "In nsrpcnodeDataSourceSetAttrFromGet Function")
+
+	// Convert API response to model
+	if val, ok := getResponseData["ipaddress"]; ok && val != nil {
+		data.Ipaddress = types.StringValue(val.(string))
+	} else {
+		data.Ipaddress = types.StringNull()
+	}
+	// password is not returned by NITRO API (secret/ephemeral) - retain from config
+	if val, ok := getResponseData["secure"]; ok && val != nil {
+		data.Secure = types.StringValue(val.(string))
+	} else {
+		data.Secure = types.StringNull()
+	}
+	if val, ok := getResponseData["srcip"]; ok && val != nil {
+		data.Srcip = types.StringValue(val.(string))
+	} else {
+		data.Srcip = types.StringNull()
+	}
+	if val, ok := getResponseData["validatecert"]; ok && val != nil {
+		data.Validatecert = types.StringValue(val.(string))
+	} else {
+		data.Validatecert = types.StringNull()
+	}
+
+	// Set ID for the resource
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Ipaddress.ValueString()))
+
+	return data
 }

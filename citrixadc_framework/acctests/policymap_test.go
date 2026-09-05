@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccPolicymap_basic = `
@@ -114,6 +115,53 @@ func testAccCheckPolicymapDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccPolicymap_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policymap.tf_policymap"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicymapDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicymap_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicymapExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policymap.Type(), "tf_policymap"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicymap_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicymapExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPolicymap_import(t *testing.T) {
+	const resAddr = "citrixadc_policymap.tf_policymap"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicymapDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicymap_basic},
+			{
+				Config:                  testAccPolicymap_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccPolicymapDataSource_basic = `
 	resource "citrixadc_policymap" "tf_policymap_ds" {
 		mappolicyname = "tf_policymap_ds"
@@ -128,6 +176,30 @@ const testAccPolicymapDataSource_basic = `
 	}
 `
 
+func TestAccPolicymap_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicymapDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccPolicymap_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicymapExist("citrixadc_policymap.tf_policymap", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccPolicymap_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicymapExist("citrixadc_policymap.tf_policymap", nil)),
+			},
+		},
+	})
+}
+
 func TestAccPolicymapDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -141,6 +213,9 @@ func TestAccPolicymapDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "td", "www.google.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "su", "/www.citrix.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_policymap.tf_policymap_ds", "tu", "/www.google.com"),
+					// Universal runtime-binding proof. targetname is not asserted
+					// because it may be omitted for a basic object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policymap.tf_policymap_ds", "id"),
 				),
 			},
 		},

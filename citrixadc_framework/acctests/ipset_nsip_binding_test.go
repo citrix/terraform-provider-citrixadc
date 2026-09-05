@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccIpset_nsip_binding_basic = `
@@ -131,10 +134,12 @@ func testAccCheckIpset_nsip_bindingExist(n string, id *string) resource.TestChec
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		ipaddress := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "ipaddress"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %v: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		ipaddress := idMap["ipaddress"]
 
 		findParams := service.FindParams{
 			ResourceType:             "ipset_nsip_binding",
@@ -248,6 +253,145 @@ func TestAccIpset_nsip_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", "name", "tf_test_ipset"),
 					resource.TestCheckResourceAttr("data.citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", "ipaddress", "10.1.1.1"),
 				),
+			},
+		},
+	})
+}
+
+const testAccIpset_nsip_binding_upgrade_basic = `
+
+	resource "citrixadc_ipset_nsip_binding" "tf_ipset_nsip_binding" {
+		name    = citrixadc_ipset.tf_ipset.name
+		ipaddress = citrixadc_nsip.tf_nsip.ipaddress
+	}
+
+
+	resource "citrixadc_ipset" "tf_ipset" {
+		name = "tf_test_ipset"
+	}
+
+	resource "citrixadc_nsip" "tf_nsip" {
+		ipaddress = "10.1.1.1"
+		type      = "VIP"
+		netmask   = "255.255.255.0"
+	}
+`
+
+func TestAccIpset_nsip_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpset_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccIpset_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpset_nsip_bindingExist("citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", "id", "tf_test_ipset,10.1.1.1"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIpset_nsip_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIpset_nsip_bindingExist("citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding", "id", "name:tf_test_ipset,ipaddress:10.1.1.1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIpset_nsip_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,ipaddress) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "ipaddress"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpset_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpset_nsip_binding_basic,
+			},
+			{
+				Config:                  testAccIpset_nsip_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{Config: testAccIpset_nsip_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+// TestAccIpset_nsip_binding_selfHealing verifies drift recovery: after the binding is
+// created, it is deleted out-of-band on the ADC; the next apply of the same config must
+// detect the missing binding and recreate it.
+func TestAccIpset_nsip_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipset_nsip_binding.tf_ipset_nsip_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpset_nsip_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpset_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpset_nsip_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Ipset_nsip_binding.Type(), "tf_test_ipset", []string{"ipaddress:" + utils.UrlEncode("10.1.1.1")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpset_nsip_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpset_nsip_bindingExist(resAddr, nil)),
 			},
 		},
 	})

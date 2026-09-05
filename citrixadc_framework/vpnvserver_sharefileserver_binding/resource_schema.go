@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *VpnvserverSharefileserverBindingResource) Schema(ctx context.Context, r
 				Description: "The ID of the vpnvserver_sharefileserver_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 			"sharefile": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Configured ShareFile server in XenMobile deployment. Format IP:PORT / FQDN:PORT",
 			},
 		},
 	}
 }
 
-func vpnvserver_sharefileserver_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverSharefileserverBindingResourceModel) vpn.Vpnvserversharefileserverbinding {
-	tflog.Debug(ctx, "In vpnvserver_sharefileserver_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_sharefileserver_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverSharefileserverBindingResourceModel) vpn.Vpnvserversharefileserverbinding {
+	tflog.Debug(ctx, "In vpnvserver_sharefileserver_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_sharefileserver_binding := vpn.Vpnvserversharefileserverbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_sharefileserver_binding.Name = data.Name.ValueString()
 	}
-	if !data.Sharefile.IsNull() {
+	if !data.Sharefile.IsNull() && !data.Sharefile.IsUnknown() {
 		vpnvserver_sharefileserver_binding.Sharefile = data.Sharefile.ValueString()
 	}
 

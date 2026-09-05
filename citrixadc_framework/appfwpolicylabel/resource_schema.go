@@ -40,14 +40,19 @@ func (r *AppfwpolicylabelResource) Schema(ctx context.Context, req resource.Sche
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "The new name of the application firewall policylabel.",
 			},
 			"policylabeltype": schema.StringAttribute{
-				Required: true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Type of transformations allowed by the policies bound to the label. Always http_req for application firewall policy labels.",
 			},
@@ -60,13 +65,13 @@ func appfwpolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *Appfw
 
 	// Create API request body from the model
 	appfwpolicylabel := appfw.Appfwpolicylabel{}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		appfwpolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
+	if !data.Newname.IsNull() && !data.Newname.IsUnknown() {
 		appfwpolicylabel.Newname = data.Newname.ValueString()
 	}
-	if !data.Policylabeltype.IsNull() {
+	if !data.Policylabeltype.IsNull() && !data.Policylabeltype.IsUnknown() {
 		appfwpolicylabel.Policylabeltype = data.Policylabeltype.ValueString()
 	}
 

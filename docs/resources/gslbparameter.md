@@ -37,6 +37,8 @@ resource "citrixadc_gslbparameter" "tf_gslbparameter" {
 * `v6ldnsmasklen` - (Optional) Mask for creating LDNS entries for IPv6 source addresses. The mask is defined as the number of leading bits to consider, in the source IP address, when creating an LDNS entry.
 * `gslbsyncsaveconfigcommand` - (Optional) If enabled, 'save ns config' command will be treated as other GSLB commands and synced to GSLB nodes when auto gslb sync option is enabled.
 * `undefaction` - (Optional) Action to perform when policy evaluation creates an UNDEF condition. Available settings function as follows: * NOLBACTION - Does not consider LB action in making LB decision. * RESET - Reset the request and notify the user, so that the user can resend the request. * DROP - Drop the request without sending a response to the user.
+* `sourceipwhitelisting` - (Optional) If enabled, local gslb site private IP would be used as the source IP while initiating MEP/GSLB sync connection if srcIP is not configured for GSLB site.
+* `usekrpcchannelforsync` - (Optional) This option is to use Krpc channel for GSLB sync.
 
 
 ## Attribute Reference
@@ -45,3 +47,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the gslbparameter. It is a unique string prefixed with "tf-gslbparameter-"
 
+
+## Import
+
+A gslbparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_gslbparameter.tf_gslbparameter gslbparameter-config
+```

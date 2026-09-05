@@ -51,10 +51,8 @@ In addition to the arguments, the following attributes are available:
 * `trackackonlypackets` - Track ack only packets as well. This setting is applicable only when packet rate limiting is being used.
 * `tracktransactions` - Track transactions exceeding configured threshold. Transaction tracking can be enabled for following metric: ResponseTime. By default transaction tracking is disabled
 
-## Import
+### Read-only streamidentifier metadata
 
-A streamidentifier can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_streamidentifier` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_streamidentifier.tf_streamidentifier my_streamidentifier
-```
+* `rule` - Rule. A list of strings.

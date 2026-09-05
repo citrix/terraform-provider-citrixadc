@@ -20,8 +20,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppflowglobal_appflowpolicy_binding_basic = `
@@ -123,7 +125,12 @@ func testAccCheckAppflowglobal_appflowpolicy_bindingExist(n string, id *string) 
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
+		// ID is the composite policyname:<v>,type:<v>; parse the policyname out of it.
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %q: %v", rs.Primary.ID, err)
+		}
+		policyname := idMap["policyname"]
 		typename := rs.Primary.Attributes["type"]
 
 		findParams := service.FindParams{
@@ -265,7 +272,129 @@ func TestAccAppflowglobal_appflowpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "type", "REQ_OVERRIDE"),
 					resource.TestCheckResourceAttr("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "priority", "55"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAppflowglobal_appflowpolicy_binding_upgrade_basic reuses the _basic config
+// (binding + all prerequisite resources). It is valid under BOTH the SDK v2 2.2.0
+// schema and the current Framework schema because the migration restored the SDK v2
+// attribute names.
+const testAccAppflowglobal_appflowpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_appflowglobal_appflowpolicy_binding" "tf_appflowglobal_appflowpolicy_binding" {
+		policyname     = citrixadc_appflowpolicy.tf_appflowpolicy.name
+		globalbindtype = "SYSTEM_GLOBAL"
+		type           = "REQ_OVERRIDE"
+		priority       = 55
+	}
+
+	resource "citrixadc_appflowpolicy" "tf_appflowpolicy" {
+	  name   = "test_policy"
+	  action = citrixadc_appflowaction.tf_appflowaction.name
+	  rule   = "client.TCP.DSTPORT.EQ(22)"
+	}
+	resource "citrixadc_appflowaction" "tf_appflowaction" {
+	  name            = "test_action"
+	  collectors      = [citrixadc_appflowcollector.tf_appflowcollector.name]
+	  securityinsight = "ENABLED"
+	  botinsight      = "ENABLED"
+	  videoanalytics  = "ENABLED"
+	}
+	resource "citrixadc_appflowcollector" "tf_appflowcollector" {
+	  name      = "tf_collector"
+	  ipaddress = "192.168.2.2"
+	  port      = 80
+	}
+`
+
+// TestAccAppflowglobal_appflowpolicy_binding_sdkv2StateUpgrade verifies that state
+// written by the last SDK v2 release is correctly upgraded when the same config is
+// subsequently managed by the current Framework provider. Step 1 creates the binding
+// with citrix/citrixadc 2.2.0 (writes the legacy id "test_policy" — the SDK v2
+// d.SetId(policyname)). Step 2 refreshes/plans/applies the same config through the
+// Framework provider, exercising ParseIdString on the legacy id; the Framework
+// recomputes the id on Read (SetAttrFromGet) into the composite key:value form. A single
+// appflowpolicy can be bound at multiple bind points (type), so the id is upgraded from the
+// legacy plain "test_policy" to "policyname:test_policy,type:REQ_OVERRIDE".
+func TestAccAppflowglobal_appflowpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resourceAddr := "citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppflowglobal_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release -> state carries the legacy id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppflowglobal_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowglobal_appflowpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "test_policy"),
+				),
+			},
+			// Step 2: refresh/plan/apply the SAME config through the current Framework
+			// provider. The legacy-id state is read via ParseIdString and the id is
+			// recomputed on Read into the composite form (policyname:...,type:...).
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppflowglobal_appflowpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppflowglobal_appflowpolicy_bindingExist(resourceAddr, nil),
+					resource.TestCheckResourceAttr(resourceAddr, "id", "policyname:test_policy,type:REQ_OVERRIDE"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppflowglobal_appflowpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowglobal_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppflowglobal_appflowpolicy_binding_basic},
+			{Config: testAccAppflowglobal_appflowpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAppflowglobal_appflowpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appflowglobal_appflowpolicy_binding.tf_appflowglobal_appflowpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppflowglobal_appflowpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppflowglobal_appflowpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowglobal_appflowpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appflowglobal_appflowpolicy_binding.Type(), "", map[string]string{"policyname": "test_policy", "type": "REQ_OVERRIDE", "priority": "55"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppflowglobal_appflowpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppflowglobal_appflowpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -43,11 +43,11 @@ In addition to the arguments, the following attributes are available:
   * RESET - Reset the request and notify the user, so that the user can resend the request.
   * DROP - Drop the request without sending a response to the user.
 
+### Read-only lbpolicy metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbpolicy` resource). They are GET-only/Computed and are `null` when the appliance omits them.
 
-A lbpolicy can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_lbpolicy.tf_lbpolicy my_lbpolicy
-```
+* `hits` - Number of hits.
+* `undefhits` - Number of policy UNDEF hits.
+* `feature` - The feature to be checked while applying this configuration.
+* `builtin` - Flag to determine whether the LB policy is built-in. Possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.

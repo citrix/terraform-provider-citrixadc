@@ -133,6 +133,10 @@ type Lbparameter struct {
 	* Use the ADC location instead of client IP for static proximity LB or GSLB decision.
 	*/
 	Proximityfromself string `json:"proximityfromself,omitempty"`
+	/**
+	* If enabled, NetScaler will verify the message authenticator and also generate message authenticator if not present.
+	*/
+	Radiusmessageauthenticator string `json:"radiusmessageauthenticator,omitempty"`
 
 	//------- Read only Parameter ---------;
 

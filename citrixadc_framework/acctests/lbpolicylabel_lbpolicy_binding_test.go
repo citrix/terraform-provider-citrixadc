@@ -21,8 +21,8 @@ import (
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // lbpolicylabel_lbpolicy_binding is a binding_with_parent resource: parent
@@ -323,6 +323,34 @@ func TestAccLbpolicylabel_lbpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbpolicylabel_lbpolicy_binding.tf_lbpolicylabel_lbpolicy_binding", "policyname", "tf_pol"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbpolicylabel_lbpolicy_binding.tf_lbpolicylabel_lbpolicy_binding", "priority", "100"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLbpolicylabel_lbpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbpolicylabel_lbpolicy_binding.tf_lbpolicylabel_lbpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbpolicylabel_lbpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbpolicylabel_lbpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbpolicylabel_lbpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbpolicylabel_lbpolicy_binding.Type(), "tf_lbpolicylabel", map[string]string{"policyname": "tf_pol"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbpolicylabel_lbpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbpolicylabel_lbpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

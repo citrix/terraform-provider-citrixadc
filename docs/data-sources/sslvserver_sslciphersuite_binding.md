@@ -29,4 +29,4 @@ output "description" {
 In addition to the arguments, the following attributes are available:
 
 * `description` - The cipher suite description.
-* `id` - The id of the sslvserver_sslciphersuite_binding. It is a system-generated identifier.
+* `id` - The id of the sslvserver_sslciphersuite_binding. It is the concatenation of the `vservername` and `ciphername` attributes separated by a comma.

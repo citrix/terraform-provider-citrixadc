@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthorizationpolicylabel_basic = `
@@ -113,6 +114,53 @@ func testAccCheckAuthorizationpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthorizationpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicylabel.authorizationpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthorizationpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authorizationpolicylabel.Type(), "trans_http_url"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthorizationpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthorizationpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_authorizationpolicylabel.authorizationpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthorizationpolicylabel_basic},
+			{
+				Config:                  testAccAuthorizationpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthorizationpolicylabelDataSource_basic = `
 
 resource "citrixadc_authorizationpolicylabel" "tf_authorizationpolicylabel" {
@@ -124,6 +172,30 @@ data "citrixadc_authorizationpolicylabel" "tf_authorizationpolicylabel_ds" {
 }
 `
 
+func TestAccAuthorizationpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthorizationpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthorizationpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicylabelExist("citrixadc_authorizationpolicylabel.authorizationpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthorizationpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthorizationpolicylabelExist("citrixadc_authorizationpolicylabel.authorizationpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAuthorizationpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -134,6 +206,10 @@ func TestAccAuthorizationpolicylabelDataSource_basic(t *testing.T) {
 				Config: testAccAuthorizationpolicylabelDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel_ds", "labelname", "tf_authorizationpolicylabel_ds"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel_ds", "id"),
+					// Read-only counter-style attribute always populated by the appliance.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authorizationpolicylabel.tf_authorizationpolicylabel_ds", "hits"),
 				),
 			},
 		},

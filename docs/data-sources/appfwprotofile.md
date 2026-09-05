@@ -42,3 +42,9 @@ In addition to the argument above, the following attributes are exported:
 * `src` - Source path of the gRPC schema file that was imported.
 * `comment` - Comments associated with this gRPC schema file. Not returned by the NITRO API; present in the schema for symmetry with the resource but typically empty when read.
 * `overwrite` - Whether to overwrite any existing gRPC schema object of the same name. Not returned by the NITRO API; present in the schema for symmetry with the resource but typically empty when read.
+
+### Read-only appfwprotofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwprotofile` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
+
+* `response` - gRPC import object response contents.

@@ -6,7 +6,7 @@ subcategory: "Integrated Caching"
 
 The cacheglobal_cachepolicy_binding data source allows you to retrieve information about a specific cachepolicy binding to cacheglobal configuration.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_cacheglobal_cachepolicy_binding" "tf_cacheglobal_cachepolicy_binding" {
@@ -38,9 +38,16 @@ In addition to the arguments, the following attributes are available:
 
 * `globalbindtype` - Global bind type.
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `id` - The id of the cacheglobal_cachepolicy_binding. It is a system-generated identifier.
+* `id` - The id of the cacheglobal_cachepolicy_binding. It is the concatenation of the `policy` and `type` attributes separated by a comma.
 * `priority` - Specifies the priority of the policy.
 * `invoke` - Invoke policies bound to a virtual server or a user-defined policy label. After the invoked policies are evaluated, the flow returns to the policy with the next priority. Applicable only to default-syntax policies.
 * `labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE. (To invoke a label associated with a virtual server, specify the name of the virtual server.)
 * `labeltype` - Type of policy label to invoke.
 * `precededefrules` - Specify whether this policy should be evaluated.
+
+### Read-only cacheglobal_cachepolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cacheglobal_cachepolicy_binding` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `flowtype` - flowtype of the bound cache policy.
+* `numpol` - The number of policies bound to the bindpoint.

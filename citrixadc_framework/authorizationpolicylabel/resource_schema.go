@@ -2,6 +2,7 @@ package authorizationpolicylabel
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/authorization"
 
@@ -30,6 +31,9 @@ func (r *AuthorizationpolicylabelResource) Schema(ctx context.Context, req resou
 			},
 			"labelname": schema.StringAttribute{
 				Required: true,
+				// SDK v2 marked labelname ForceNew -> RequiresReplace. The primary key
+				// cannot be changed in place (an in-place name change is expressed via
+				// the separate newname / rename action, not by editing labelname).
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -37,27 +41,26 @@ func (r *AuthorizationpolicylabelResource) Schema(ctx context.Context, req resou
 			},
 			"newname": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// newname is the rename trigger (NITRO ?action=rename). Changing it
+				// must NOT force replacement - it drives an in-place rename via Update.
+				// Not Computed: it is a pure user input, never echoed back by GET, so
+				// making it Computed would leave it unknown after apply.
 				Description: "The new name of the auth policy label",
 			},
 		},
 	}
 }
 
-func authorizationpolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *AuthorizationpolicylabelResourceModel) authorization.Authorizationpolicylabel {
-	tflog.Debug(ctx, "In authorizationpolicylabelGetThePayloadFromtheConfig Function")
+func authorizationpolicylabelGetThePayloadFromthePlan(ctx context.Context, data *AuthorizationpolicylabelResourceModel) authorization.Authorizationpolicylabel {
+	tflog.Debug(ctx, "In authorizationpolicylabelGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authorizationpolicylabel := authorization.Authorizationpolicylabel{}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		authorizationpolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		authorizationpolicylabel.Newname = data.Newname.ValueString()
-	}
+	// newname is a rename-only argument (NITRO ?action=rename). It is NOT part of
+	// the add payload, so it is deliberately excluded from the create POST body.
 
 	return authorizationpolicylabel
 }
@@ -65,7 +68,28 @@ func authorizationpolicylabelGetThePayloadFromtheConfig(ctx context.Context, dat
 func authorizationpolicylabelSetAttrFromGet(ctx context.Context, data *AuthorizationpolicylabelResourceModel, getResponseData map[string]interface{}) *AuthorizationpolicylabelResourceModel {
 	tflog.Debug(ctx, "In authorizationpolicylabelSetAttrFromGet Function")
 
-	// Convert API response to model
+	// labelname is the user-facing key. Once a rename has happened (via newname),
+	// the live object name (tracked by data.Id) diverges from the configured
+	// labelname, and GET returns the live (new) name. Overwriting labelname from
+	// GET would clobber the user's configured value and trigger a spurious
+	// RequiresReplace diff. So only adopt the GET value when we don't already have
+	// one (e.g. on import, where state carries only the ID); otherwise preserve.
+	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
+		if val, ok := getResponseData["labelname"]; ok && val != nil {
+			data.Labelname = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve plan/state value.
+
+	return data
+}
+
+// authorizationpolicylabelSetAttrFromGetForDatasource faithfully copies every field
+// from the GET response. The datasource has no prior plan/state to preserve, so it
+// must populate the model directly from the API response and set the ID itself.
+func authorizationpolicylabelSetAttrFromGetForDatasource(ctx context.Context, data *AuthorizationpolicylabelResourceModel, getResponseData map[string]interface{}) *AuthorizationpolicylabelResourceModel {
+	tflog.Debug(ctx, "In authorizationpolicylabelSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
 	} else {
@@ -77,9 +101,8 @@ func authorizationpolicylabelSetAttrFromGet(ctx context.Context, data *Authoriza
 		data.Newname = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Labelname.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
 
 	return data
 }

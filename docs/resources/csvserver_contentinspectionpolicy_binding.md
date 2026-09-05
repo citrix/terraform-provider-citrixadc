@@ -10,12 +10,19 @@ The csvserver_contentinspectionpolicy_binding resource is used to bind a content
 ## Example usage
 
 ```hcl
-resource "citrixadc_csvserver_contentinspectionpolicy_binding" "tf_csvserver_contentinspectionpolicy_binding" {
-	name = "tf_csvserver"
-	policyname = "tf_contentinspectionpolicy"
-	bindpoint = "REQUEST"
-	gotopriorityexpression = "END"
-	priority = 1    
+resource "citrixadc_csvserver" "tf_csvserver" {
+  name        = "tf_csvserver"
+  ipv46       = "10.10.10.33"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_csvserver_contentinspectionpolicy_binding" "tf_bind" {
+  name                   = citrixadc_csvserver.tf_csvserver.name
+  policyname             = "tf_contentinspectionpolicy"
+  bindpoint              = "REQUEST"
+  gotopriorityexpression = "END"
+  priority               = 1
 }
 ```
 

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *ClusternodegroupGslbsiteBindingResource) Schema(ctx context.Context, re
 				Description: "The ID of the clusternodegroup_gslbsite_binding resource.",
 			},
 			"gslbsite": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "vserver that need to be bound to this nodegroup.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the nodegroup. The name uniquely identifies the nodegroup on the cluster.",
 			},
 		},
 	}
 }
 
-func clusternodegroup_gslbsite_bindingGetThePayloadFromtheConfig(ctx context.Context, data *ClusternodegroupGslbsiteBindingResourceModel) cluster.Clusternodegroupgslbsitebinding {
-	tflog.Debug(ctx, "In clusternodegroup_gslbsite_bindingGetThePayloadFromtheConfig Function")
+func clusternodegroup_gslbsite_bindingGetThePayloadFromthePlan(ctx context.Context, data *ClusternodegroupGslbsiteBindingResourceModel) cluster.Clusternodegroupgslbsitebinding {
+	tflog.Debug(ctx, "In clusternodegroup_gslbsite_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	clusternodegroup_gslbsite_binding := cluster.Clusternodegroupgslbsitebinding{}
-	if !data.Gslbsite.IsNull() {
+	if !data.Gslbsite.IsNull() && !data.Gslbsite.IsUnknown() {
 		clusternodegroup_gslbsite_binding.Gslbsite = data.Gslbsite.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		clusternodegroup_gslbsite_binding.Name = data.Name.ValueString()
 	}
 
@@ -75,9 +82,10 @@ func clusternodegroup_gslbsite_bindingSetAttrFromGet(ctx context.Context, data *
 
 	// Set ID for the resource
 	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs
+	// (legacy SDK v2 order: name,gslbsite)
 	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("gslbsite:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Gslbsite.ValueString()))))
 	idParts = append(idParts, fmt.Sprintf("name:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Name.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("gslbsite:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Gslbsite.ValueString()))))
 	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data

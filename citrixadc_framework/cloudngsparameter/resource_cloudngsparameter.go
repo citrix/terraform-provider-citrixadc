@@ -149,6 +149,14 @@ func (r *CloudngsparameterResource) Update(ctx context.Context, req resource.Upd
 			hasChange = true
 		}
 	}
+	if !data.Wafprotection.Equal(state.Wafprotection) {
+		tflog.Debug(ctx, fmt.Sprintf("wafprotection has changed for cloudngsparameter"))
+		if config.Wafprotection.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "wafprotection")
+		} else {
+			hasChange = true
+		}
+	}
 
 	if hasChange {
 		// Create API request body from the model

@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationsmartaccesspolicy_basic_step1 = `
@@ -199,7 +199,38 @@ func TestAccAuthenticationsmartaccesspolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "action", "tf_authenticationsmartaccessprofile"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "rule", "TRUE"),
 					resource.TestCheckResourceAttr("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "comment", "test_comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy", "hits"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationsmartaccesspolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationsmartaccesspolicy.tf_authenticationsmartaccesspolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationsmartaccesspolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationsmartaccesspolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsmartaccesspolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationsmartaccesspolicy.Type(), "tf_authenticationsmartaccesspolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationsmartaccesspolicy_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationsmartaccesspolicyExist(resAddr, nil)),
 			},
 		},
 	})

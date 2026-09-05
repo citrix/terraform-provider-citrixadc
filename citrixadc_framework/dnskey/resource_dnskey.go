@@ -202,11 +202,12 @@ func (r *DnskeyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if hasChange {
-		// Create API request body from the model
-		// Get payload from plan (regular attributes)
+		// Build the SET (update/PUT) payload, which EXCLUDES the create-only params
+		// (publickey, privatekey, password) per nitro_rest/dns/dnskey.html. password
+		// is create-only, so the write-only password_wo is intentionally NOT injected
+		// here: a password_wo / password_wo_version change forces a resource replace
+		// (RequiresReplaceIfConfigured) and is handled by Create, never by this PUT.
 		dnskey := dnskeyGetTheUpdatePayloadFromthePlan(ctx, &data)
-		// Add write-only attributes from config to the payload
-		dnskeyGetThePayloadFromtheConfig(ctx, &config, &dnskey)
 		// Make API call
 		// Named resource - use UpdateResource
 		keyname_value := data.Keyname.ValueString()

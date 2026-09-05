@@ -10,7 +10,7 @@ func PcpprofileDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"announcemulticount": schema.Int64Attribute{
+			"announcemulticount": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Integer value that identify the number announce message to be send.",

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *LsngroupPcpserverBindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the lsngroup_pcpserver_binding resource.",
 			},
 			"groupname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the LSN group. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after the LSN group is created. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"lsn group1\" or 'lsn group1').",
 			},
 			"pcpserver": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the PCP server to be associated with lsn group.",
 			},
 		},
 	}
 }
 
-func lsngroup_pcpserver_bindingGetThePayloadFromtheConfig(ctx context.Context, data *LsngroupPcpserverBindingResourceModel) lsn.Lsngrouppcpserverbinding {
-	tflog.Debug(ctx, "In lsngroup_pcpserver_bindingGetThePayloadFromtheConfig Function")
+func lsngroup_pcpserver_bindingGetThePayloadFromthePlan(ctx context.Context, data *LsngroupPcpserverBindingResourceModel) lsn.Lsngrouppcpserverbinding {
+	tflog.Debug(ctx, "In lsngroup_pcpserver_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lsngroup_pcpserver_binding := lsn.Lsngrouppcpserverbinding{}
-	if !data.Groupname.IsNull() {
+	if !data.Groupname.IsNull() && !data.Groupname.IsUnknown() {
 		lsngroup_pcpserver_binding.Groupname = data.Groupname.ValueString()
 	}
-	if !data.Pcpserver.IsNull() {
+	if !data.Pcpserver.IsNull() && !data.Pcpserver.IsUnknown() {
 		lsngroup_pcpserver_binding.Pcpserver = data.Pcpserver.ValueString()
 	}
 

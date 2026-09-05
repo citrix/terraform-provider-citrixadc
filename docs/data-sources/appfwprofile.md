@@ -153,3 +153,12 @@ In addition to the argument above, the following attributes are exported:
 * `xmlerrorstatusmessage` - Response status message associated with XML error page.
 * `as_prof_bypass_list_enable` - Enable bypass list for the profile.
 * `as_prof_deny_list_enable` - Enable deny list for the profile.
+
+### Read-only appfwprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appfwprofile` resource). They are GET-only/Computed and are `null` when the appliance does not return them.
+
+* `state` - Enabled state of the profile (for example `ENABLED`, `DISABLED`).
+* `learning` - Profile level learning option that overrides the protection level learning (for example `ON`, `OFF`).
+* `csrftag` - The web form originating URL.
+* `builtin` - Indicates that a profile is a built-in entity.

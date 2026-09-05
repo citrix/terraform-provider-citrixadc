@@ -20,7 +20,7 @@ func BotpolicylabelBotpolicyBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "If the current policy evaluates to TRUE, terminate evaluation of policies bound to the current policy label and evaluate the specified policy label.",
 			},
-			"invoke_labelname": schema.StringAttribute{
+			"invokelabelname": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "* If labelType is policylabel, name of the policy label to invoke. \n* If labelType is vserver, name of the virtual server.",

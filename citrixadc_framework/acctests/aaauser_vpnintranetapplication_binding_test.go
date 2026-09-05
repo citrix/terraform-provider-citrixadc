@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaauser_vpnintranetapplication_binding_basic = `
@@ -134,10 +137,12 @@ func testAccCheckAaauser_vpnintranetapplication_bindingExist(n string, id *strin
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		username := idSlice[0]
-		intranetapplication := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"username", "intranetapplication"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		username := idMap["username"]
+		intranetapplication := idMap["intranetapplication"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaauser_vpnintranetapplication_binding",
@@ -176,13 +181,12 @@ func testAccCheckAaauser_vpnintranetapplication_bindingNotExist(n string, id str
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"username", "intranetapplication"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		username := idSlice[0]
-		intranetapplication := idSlice[1]
+		username := idMap["username"]
+		intranetapplication := idMap["intranetapplication"]
 
 		findParams := service.FindParams{
 			ResourceType:             "aaauser_vpnintranetapplication_binding",
@@ -249,7 +253,136 @@ func TestAccAaauser_vpnintranetapplication_bindingDataSource_basic(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "username", "user1"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "intranetapplication", "tf_vpnintranetapplication"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+const testAccAaauser_vpnintranetapplication_binding_upgrade_basic = `
+
+	resource "citrixadc_aaauser" "tf_aaauser" {
+		username = "user1"
+		password = "my_pass"
+	}
+	resource "citrixadc_vpnintranetapplication" "tf_vpnintranetapplication" {
+		intranetapplication = "tf_vpnintranetapplication"
+		protocol            = "UDP"
+		destip              = "2.3.6.5"
+		interception        = "TRANSPARENT"
+	}
+
+	resource "citrixadc_aaauser_vpnintranetapplication_binding" "tf_aaauser_vpnintranetapplication_binding" {
+		username            = citrixadc_aaauser.tf_aaauser.username
+		intranetapplication = citrixadc_vpnintranetapplication.tf_vpnintranetapplication.intranetapplication
+	}
+`
+
+func TestAccAaauser_vpnintranetapplication_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaauser_vpnintranetapplication_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAaauser_vpnintranetapplication_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_vpnintranetapplication_bindingExist("citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "id", "user1,tf_vpnintranetapplication"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaauser_vpnintranetapplication_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAaauser_vpnintranetapplication_bindingExist("citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding", "id", "intranetapplication:tf_vpnintranetapplication,username:user1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAaauser_vpnintranetapplication_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: username,intranetapplication) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"username", "intranetapplication"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_vpnintranetapplication_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaauser_vpnintranetapplication_binding_basic},
+			{Config: testAccAaauser_vpnintranetapplication_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAaauser_vpnintranetapplication_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAaauser_vpnintranetapplication_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaauser_vpnintranetapplication_binding.tf_aaauser_vpnintranetapplication_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaauser_vpnintranetapplication_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaauser_vpnintranetapplication_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_vpnintranetapplication_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Aaauser_vpnintranetapplication_binding.Type(), "user1", map[string]string{"intranetapplication": "tf_vpnintranetapplication"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaauser_vpnintranetapplication_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaauser_vpnintranetapplication_bindingExist(resAddr, nil)),
 			},
 		},
 	})

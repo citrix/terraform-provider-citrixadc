@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,15 @@ func (r *CacheparameterResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating cacheparameter resource")
 
-	// cacheparameter := cacheparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the plan
+	cacheparameter := cacheparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cacheparameter, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource to configure the ADC
+	err := r.client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create cacheparameter, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("cacheparameter-config")
@@ -95,10 +97,12 @@ func (r *CacheparameterResource) Read(ctx context.Context, req resource.ReadRequ
 }
 
 func (r *CacheparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data CacheparameterResourceModel
+	var data, config, state CacheparameterResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan and config into the models
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +110,69 @@ func (r *CacheparameterResource) Update(ctx context.Context, req resource.Update
 
 	tflog.Debug(ctx, "Updating cacheparameter resource")
 
-	// Create API request body from the model
-	// cacheparameter := cacheparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Determine changed attributes and which were removed from config (-> unset).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Cacheevictionpolicy.Equal(state.Cacheevictionpolicy) {
+		if config.Cacheevictionpolicy.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "cacheevictionpolicy")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Enablehaobjpersist.Equal(state.Enablehaobjpersist) {
+		hasChange = true
+	}
+	if !data.Maxpostlen.Equal(state.Maxpostlen) {
+		if config.Maxpostlen.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "maxpostlen")
+		} else {
+			hasChange = true
+		}
+	}
+	// Remaining attributes have no documented unset default; any change is a plain update.
+	if !data.Enablebypass.Equal(state.Enablebypass) {
+		hasChange = true
+	}
+	if !data.Memlimit.Equal(state.Memlimit) {
+		hasChange = true
+	}
+	if !data.Prefetchmaxpending.Equal(state.Prefetchmaxpending) {
+		hasChange = true
+	}
+	if !data.Undefaction.Equal(state.Undefaction) {
+		hasChange = true
+	}
+	if !data.Verifyusing.Equal(state.Verifyusing) {
+		hasChange = true
+	}
+	if !data.Via.Equal(state.Via) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cacheparameter, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the plan
+		cacheparameter := cacheparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated cacheparameter resource")
+		// Singleton resource - use UpdateUnnamedResource to configure the ADC
+		err := r.client.UpdateUnnamedResource(service.Cacheparameter.Type(), &cacheparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update cacheparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated cacheparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for cacheparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Cacheparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset cacheparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readCacheparameterFromApi(ctx, &data, &resp.Diagnostics)

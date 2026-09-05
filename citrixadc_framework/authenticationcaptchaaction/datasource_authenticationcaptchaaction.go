@@ -35,7 +35,7 @@ func (d *AuthenticationcaptchaactionDataSource) Schema(ctx context.Context, req 
 }
 
 func (d *AuthenticationcaptchaactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationcaptchaactionResourceModel
+	var data AuthenticationcaptchaactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *AuthenticationcaptchaactionDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	authenticationcaptchaactionSetAttrFromGet(ctx, &data, getResponseData)
+	authenticationcaptchaactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

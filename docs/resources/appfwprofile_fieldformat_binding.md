@@ -66,7 +66,7 @@ resource "citrixadc_appfwprofile_fieldformat_binding" "tf_binding" {
 * `fieldformatmaxlength` - (Optional) The maximum allowed length for data in this form field.
 * `fieldformatminlength` - (Optional) The minimum allowed length for data in this form field.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?
-* `isregex_ff` - (Optional) Is the form field name a regular expression?
+* `isregexff` - (Optional) Is the form field name a regular expression?
 * `resourceid` - (Optional) A "id" that identifies the rule.
 * `ruletype` - (Optional) Specifies rule type of binding
 * `state` - (Optional) Enabled.

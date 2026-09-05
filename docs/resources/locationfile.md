@@ -21,6 +21,7 @@ resource "citrixadc_locationfile" "tf_locationfile" {
 
 * `locationfile` - (Required) Name of the location file, with or without absolute path. If the path is not included, the default path (/var/netscaler/locdb) is assumed. In a high availability setup, the static database must be stored in the same location on both Citrix ADCs.
 * `format` - (Required) Format of the location file. Required for the Citrix ADC to identify how to read the location file.
+* `src` - (Optional) URL \\(protocol, host, path, and file name\\) from where the location file will be imported. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
 
 
 ## Attribute Reference

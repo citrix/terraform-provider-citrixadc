@@ -93,7 +93,7 @@ func (d *AppfwprofileExcluderescontenttypeBindingDataSource) Read(ctx context.Co
 		return
 	}
 
-	appfwprofile_excluderescontenttype_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_excluderescontenttype_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

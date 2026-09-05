@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnspolicylabel_add = `
@@ -128,6 +129,77 @@ func testAccCheckDnspolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccDnspolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnspolicylabel.dnspolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnspolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnspolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dnspolicylabel.Type(), "label1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDnspolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccDnspolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_dnspolicylabel.dnspolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnspolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnspolicylabel_add},
+			{
+				Config:                  testAccDnspolicylabel_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccDnspolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnspolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnspolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabelExist("citrixadc_dnspolicylabel.dnspolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnspolicylabel_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnspolicylabelExist("citrixadc_dnspolicylabel.dnspolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccDnspolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -139,6 +211,8 @@ func TestAccDnspolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel.dnspolicylabel", "labelname", "label1"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnspolicylabel.dnspolicylabel", "transform", "dns_req"),
+					// id is the universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnspolicylabel.dnspolicylabel", "id"),
 				),
 			},
 		},

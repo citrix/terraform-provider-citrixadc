@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_creditcardnumber_binding_basic = `
@@ -123,11 +126,13 @@ func testAccCheckAppfwprofile_creditcardnumber_bindingExist(n string, id *string
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 3)
-
-		name := idSlice[0]
-		creditcardnumber := idSlice[1]
-		creditcardnumberurl := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "creditcardnumber", "creditcardnumberurl"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		creditcardnumber := idMap["creditcardnumber"]
+		creditcardnumberurl := idMap["creditcardnumberurl"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_creditcardnumber_binding",
@@ -274,6 +279,131 @@ func TestAccAppfwprofile_creditcardnumber_bindingDataSource_basic(t *testing.T) 
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "state", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1_datasource", "comment", "Testing"),
 				),
+			},
+		},
+	})
+}
+
+const testAccAppfwprofile_creditcardnumber_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_creditcardnumber_binding" "tf_binding1" {
+		name                = citrixadc_appfwprofile.tf_appfwprofile.name
+		creditcardnumber    = "123456789"
+		creditcardnumberurl = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"
+		isautodeployed      = "AUTODEPLOYED"
+		alertonly           = "ON"
+		state               = "ENABLED"
+		comment             = "Testing"
+	}
+`
+
+func TestAccAppfwprofile_creditcardnumber_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_creditcardnumber_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_creditcardnumber_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_creditcardnumber_bindingExist("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1", "id", "tf_appfwprofile,123456789,^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_creditcardnumber_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_creditcardnumber_bindingExist("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1", "id", "creditcardnumber:123456789,creditcardnumberurl:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fdocument%2Fcontent%24,name:tf_appfwprofile"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_creditcardnumber_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,creditcardnumber,creditcardnumberurl) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "creditcardnumber", "creditcardnumberurl"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_creditcardnumber_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_creditcardnumber_binding_basic},
+			{Config: testAccAppfwprofile_creditcardnumber_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"alertonly", "isautodeployed"}},
+			{Config: testAccAppfwprofile_creditcardnumber_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"alertonly", "isautodeployed"}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_creditcardnumber_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_creditcardnumber_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_creditcardnumber_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_creditcardnumber_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_creditcardnumber_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Appfwprofile_creditcardnumber_binding.Type(), "tf_appfwprofile", []string{"creditcardnumber:123456789", "creditcardnumberurl:" + utils.UrlEncode("^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$")}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_creditcardnumber_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_creditcardnumber_bindingExist(resAddr, nil)),
 			},
 		},
 	})

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCacheforwardproxy_basic = `
@@ -60,6 +63,83 @@ func TestAccCacheforwardproxy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cacheforwardproxy.tf_cacheforwardproxy", "port", "5500"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccCacheforwardproxy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cacheforwardproxy.tf_cacheforwardproxy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheforwardproxyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCacheforwardproxy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheforwardproxyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Cacheforwardproxy.Type(), "10.222.74.185", []string{"port:5000"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCacheforwardproxy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheforwardproxyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCacheforwardproxy_import(t *testing.T) {
+	const resAddr = "citrixadc_cacheforwardproxy.tf_cacheforwardproxy"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: ipaddress,port) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"ipaddress", "port"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCacheforwardproxyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCacheforwardproxy_basic},
+			{
+				Config:                  testAccCacheforwardproxy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{Config: testAccCacheforwardproxy_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }
@@ -147,6 +227,30 @@ func testAccCheckCacheforwardproxyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccCacheforwardproxy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCacheforwardproxyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccCacheforwardproxy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheforwardproxyExist("citrixadc_cacheforwardproxy.tf_cacheforwardproxy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCacheforwardproxy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCacheforwardproxyExist("citrixadc_cacheforwardproxy.tf_cacheforwardproxy", nil)),
+			},
+		},
+	})
 }
 
 func TestAccCacheforwardproxyDataSource_basic(t *testing.T) {

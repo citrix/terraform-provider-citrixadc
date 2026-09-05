@@ -1,8 +1,118 @@
 package authenticationsamlidpprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AuthenticationsamlidpprofileDataSourceModel is the data-source-specific model,
+// decoupled from AuthenticationsamlidpprofileResourceModel. Every non-key
+// attribute is Computed, and it additionally exposes read-only (GET-only)
+// attributes the resource deliberately omits (metadataimportstatus).
+type AuthenticationsamlidpprofileDataSourceModel struct {
+	Id                          types.String `tfsdk:"id"`
+	Acsurlrule                  types.String `tfsdk:"acsurlrule"`
+	Assertionconsumerserviceurl types.String `tfsdk:"assertionconsumerserviceurl"`
+	Attribute1                  types.String `tfsdk:"attribute1"`
+	Attribute10                 types.String `tfsdk:"attribute10"`
+	Attribute10expr             types.String `tfsdk:"attribute10expr"`
+	Attribute10format           types.String `tfsdk:"attribute10format"`
+	Attribute10friendlyname     types.String `tfsdk:"attribute10friendlyname"`
+	Attribute11                 types.String `tfsdk:"attribute11"`
+	Attribute11expr             types.String `tfsdk:"attribute11expr"`
+	Attribute11format           types.String `tfsdk:"attribute11format"`
+	Attribute11friendlyname     types.String `tfsdk:"attribute11friendlyname"`
+	Attribute12                 types.String `tfsdk:"attribute12"`
+	Attribute12expr             types.String `tfsdk:"attribute12expr"`
+	Attribute12format           types.String `tfsdk:"attribute12format"`
+	Attribute12friendlyname     types.String `tfsdk:"attribute12friendlyname"`
+	Attribute13                 types.String `tfsdk:"attribute13"`
+	Attribute13expr             types.String `tfsdk:"attribute13expr"`
+	Attribute13format           types.String `tfsdk:"attribute13format"`
+	Attribute13friendlyname     types.String `tfsdk:"attribute13friendlyname"`
+	Attribute14                 types.String `tfsdk:"attribute14"`
+	Attribute14expr             types.String `tfsdk:"attribute14expr"`
+	Attribute14format           types.String `tfsdk:"attribute14format"`
+	Attribute14friendlyname     types.String `tfsdk:"attribute14friendlyname"`
+	Attribute15                 types.String `tfsdk:"attribute15"`
+	Attribute15expr             types.String `tfsdk:"attribute15expr"`
+	Attribute15format           types.String `tfsdk:"attribute15format"`
+	Attribute15friendlyname     types.String `tfsdk:"attribute15friendlyname"`
+	Attribute16                 types.String `tfsdk:"attribute16"`
+	Attribute16expr             types.String `tfsdk:"attribute16expr"`
+	Attribute16format           types.String `tfsdk:"attribute16format"`
+	Attribute16friendlyname     types.String `tfsdk:"attribute16friendlyname"`
+	Attribute1expr              types.String `tfsdk:"attribute1expr"`
+	Attribute1format            types.String `tfsdk:"attribute1format"`
+	Attribute1friendlyname      types.String `tfsdk:"attribute1friendlyname"`
+	Attribute2                  types.String `tfsdk:"attribute2"`
+	Attribute2expr              types.String `tfsdk:"attribute2expr"`
+	Attribute2format            types.String `tfsdk:"attribute2format"`
+	Attribute2friendlyname      types.String `tfsdk:"attribute2friendlyname"`
+	Attribute3                  types.String `tfsdk:"attribute3"`
+	Attribute3expr              types.String `tfsdk:"attribute3expr"`
+	Attribute3format            types.String `tfsdk:"attribute3format"`
+	Attribute3friendlyname      types.String `tfsdk:"attribute3friendlyname"`
+	Attribute4                  types.String `tfsdk:"attribute4"`
+	Attribute4expr              types.String `tfsdk:"attribute4expr"`
+	Attribute4format            types.String `tfsdk:"attribute4format"`
+	Attribute4friendlyname      types.String `tfsdk:"attribute4friendlyname"`
+	Attribute5                  types.String `tfsdk:"attribute5"`
+	Attribute5expr              types.String `tfsdk:"attribute5expr"`
+	Attribute5format            types.String `tfsdk:"attribute5format"`
+	Attribute5friendlyname      types.String `tfsdk:"attribute5friendlyname"`
+	Attribute6                  types.String `tfsdk:"attribute6"`
+	Attribute6expr              types.String `tfsdk:"attribute6expr"`
+	Attribute6format            types.String `tfsdk:"attribute6format"`
+	Attribute6friendlyname      types.String `tfsdk:"attribute6friendlyname"`
+	Attribute7                  types.String `tfsdk:"attribute7"`
+	Attribute7expr              types.String `tfsdk:"attribute7expr"`
+	Attribute7format            types.String `tfsdk:"attribute7format"`
+	Attribute7friendlyname      types.String `tfsdk:"attribute7friendlyname"`
+	Attribute8                  types.String `tfsdk:"attribute8"`
+	Attribute8expr              types.String `tfsdk:"attribute8expr"`
+	Attribute8format            types.String `tfsdk:"attribute8format"`
+	Attribute8friendlyname      types.String `tfsdk:"attribute8friendlyname"`
+	Attribute9                  types.String `tfsdk:"attribute9"`
+	Attribute9expr              types.String `tfsdk:"attribute9expr"`
+	Attribute9format            types.String `tfsdk:"attribute9format"`
+	Attribute9friendlyname      types.String `tfsdk:"attribute9friendlyname"`
+	Audience                    types.String `tfsdk:"audience"`
+	Defaultauthenticationgroup  types.String `tfsdk:"defaultauthenticationgroup"`
+	Digestmethod                types.String `tfsdk:"digestmethod"`
+	Encryptassertion            types.String `tfsdk:"encryptassertion"`
+	Encryptionalgorithm         types.String `tfsdk:"encryptionalgorithm"`
+	Keytransportalg             types.String `tfsdk:"keytransportalg"`
+	Logoutbinding               types.String `tfsdk:"logoutbinding"`
+	Metadatarefreshinterval     types.Int64  `tfsdk:"metadatarefreshinterval"`
+	Metadataurl                 types.String `tfsdk:"metadataurl"`
+	Name                        types.String `tfsdk:"name"`
+	Nameidexpr                  types.String `tfsdk:"nameidexpr"`
+	Nameidformat                types.String `tfsdk:"nameidformat"`
+	Rejectunsignedrequests      types.String `tfsdk:"rejectunsignedrequests"`
+	Samlbinding                 types.String `tfsdk:"samlbinding"`
+	Samlidpcertname             types.String `tfsdk:"samlidpcertname"`
+	Samlissuername              types.String `tfsdk:"samlissuername"`
+	Samlsigningcertversion      types.String `tfsdk:"samlsigningcertversion"`
+	Samlspcertname              types.String `tfsdk:"samlspcertname"`
+	Samlspcertversion           types.String `tfsdk:"samlspcertversion"`
+	Sendpassword                types.String `tfsdk:"sendpassword"`
+	Serviceproviderid           types.String `tfsdk:"serviceproviderid"`
+	Signassertion               types.String `tfsdk:"signassertion"`
+	Signaturealg                types.String `tfsdk:"signaturealg"`
+	Signatureservice            types.String `tfsdk:"signatureservice"`
+	Skewtime                    types.Int64  `tfsdk:"skewtime"`
+	Splogouturl                 types.String `tfsdk:"splogouturl"`
+
+	// Read-only (GET-only) attribute from the NITRO doc read-only set
+	// (zion73x_readonly/authenticationsamlidpprofile.json). Never settable;
+	// populated from GET.
+	Metadataimportstatus types.String `tfsdk:"metadataimportstatus"`
+}
 
 func AuthenticationsamlidpprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -469,6 +579,119 @@ func AuthenticationsamlidpprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Endpoint on the ServiceProvider (SP) to which logout messages are to be sent",
 			},
+			"metadataimportstatus": schema.StringAttribute{
+				Computed:    true,
+				Description: "Describes metadata import status. Possible values = INIT, SUCCESS, FAIL.",
+			},
 		},
 	}
+}
+
+// authenticationsamlidpprofileDataSourceSetAttrFromGet projects a NITRO
+// authenticationsamlidpprofile GET response onto the data-source model. Because
+// a data source has no plan/apply reconciliation, attributes are simply filled
+// from the GET (or left Null when the GET omits them). The shared utils.MapGet*
+// helpers implement that projection.
+func authenticationsamlidpprofileDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationsamlidpprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In authenticationsamlidpprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Acsurlrule = utils.MapGetString(g, "acsurlrule")
+	data.Assertionconsumerserviceurl = utils.MapGetString(g, "assertionconsumerserviceurl")
+	data.Attribute1 = utils.MapGetString(g, "attribute1")
+	data.Attribute10 = utils.MapGetString(g, "attribute10")
+	data.Attribute10expr = utils.MapGetString(g, "attribute10expr")
+	data.Attribute10format = utils.MapGetString(g, "attribute10format")
+	data.Attribute10friendlyname = utils.MapGetString(g, "attribute10friendlyname")
+	data.Attribute11 = utils.MapGetString(g, "attribute11")
+	data.Attribute11expr = utils.MapGetString(g, "attribute11expr")
+	data.Attribute11format = utils.MapGetString(g, "attribute11format")
+	data.Attribute11friendlyname = utils.MapGetString(g, "attribute11friendlyname")
+	data.Attribute12 = utils.MapGetString(g, "attribute12")
+	data.Attribute12expr = utils.MapGetString(g, "attribute12expr")
+	data.Attribute12format = utils.MapGetString(g, "attribute12format")
+	data.Attribute12friendlyname = utils.MapGetString(g, "attribute12friendlyname")
+	data.Attribute13 = utils.MapGetString(g, "attribute13")
+	data.Attribute13expr = utils.MapGetString(g, "attribute13expr")
+	data.Attribute13format = utils.MapGetString(g, "attribute13format")
+	data.Attribute13friendlyname = utils.MapGetString(g, "attribute13friendlyname")
+	data.Attribute14 = utils.MapGetString(g, "attribute14")
+	data.Attribute14expr = utils.MapGetString(g, "attribute14expr")
+	data.Attribute14format = utils.MapGetString(g, "attribute14format")
+	data.Attribute14friendlyname = utils.MapGetString(g, "attribute14friendlyname")
+	data.Attribute15 = utils.MapGetString(g, "attribute15")
+	data.Attribute15expr = utils.MapGetString(g, "attribute15expr")
+	data.Attribute15format = utils.MapGetString(g, "attribute15format")
+	data.Attribute15friendlyname = utils.MapGetString(g, "attribute15friendlyname")
+	data.Attribute16 = utils.MapGetString(g, "attribute16")
+	data.Attribute16expr = utils.MapGetString(g, "attribute16expr")
+	data.Attribute16format = utils.MapGetString(g, "attribute16format")
+	data.Attribute16friendlyname = utils.MapGetString(g, "attribute16friendlyname")
+	data.Attribute1expr = utils.MapGetString(g, "attribute1expr")
+	data.Attribute1format = utils.MapGetString(g, "attribute1format")
+	data.Attribute1friendlyname = utils.MapGetString(g, "attribute1friendlyname")
+	data.Attribute2 = utils.MapGetString(g, "attribute2")
+	data.Attribute2expr = utils.MapGetString(g, "attribute2expr")
+	data.Attribute2format = utils.MapGetString(g, "attribute2format")
+	data.Attribute2friendlyname = utils.MapGetString(g, "attribute2friendlyname")
+	data.Attribute3 = utils.MapGetString(g, "attribute3")
+	data.Attribute3expr = utils.MapGetString(g, "attribute3expr")
+	data.Attribute3format = utils.MapGetString(g, "attribute3format")
+	data.Attribute3friendlyname = utils.MapGetString(g, "attribute3friendlyname")
+	data.Attribute4 = utils.MapGetString(g, "attribute4")
+	data.Attribute4expr = utils.MapGetString(g, "attribute4expr")
+	data.Attribute4format = utils.MapGetString(g, "attribute4format")
+	data.Attribute4friendlyname = utils.MapGetString(g, "attribute4friendlyname")
+	data.Attribute5 = utils.MapGetString(g, "attribute5")
+	data.Attribute5expr = utils.MapGetString(g, "attribute5expr")
+	data.Attribute5format = utils.MapGetString(g, "attribute5format")
+	data.Attribute5friendlyname = utils.MapGetString(g, "attribute5friendlyname")
+	data.Attribute6 = utils.MapGetString(g, "attribute6")
+	data.Attribute6expr = utils.MapGetString(g, "attribute6expr")
+	data.Attribute6format = utils.MapGetString(g, "attribute6format")
+	data.Attribute6friendlyname = utils.MapGetString(g, "attribute6friendlyname")
+	data.Attribute7 = utils.MapGetString(g, "attribute7")
+	data.Attribute7expr = utils.MapGetString(g, "attribute7expr")
+	data.Attribute7format = utils.MapGetString(g, "attribute7format")
+	data.Attribute7friendlyname = utils.MapGetString(g, "attribute7friendlyname")
+	data.Attribute8 = utils.MapGetString(g, "attribute8")
+	data.Attribute8expr = utils.MapGetString(g, "attribute8expr")
+	data.Attribute8format = utils.MapGetString(g, "attribute8format")
+	data.Attribute8friendlyname = utils.MapGetString(g, "attribute8friendlyname")
+	data.Attribute9 = utils.MapGetString(g, "attribute9")
+	data.Attribute9expr = utils.MapGetString(g, "attribute9expr")
+	data.Attribute9format = utils.MapGetString(g, "attribute9format")
+	data.Attribute9friendlyname = utils.MapGetString(g, "attribute9friendlyname")
+	data.Audience = utils.MapGetString(g, "audience")
+	data.Defaultauthenticationgroup = utils.MapGetString(g, "defaultauthenticationgroup")
+	data.Digestmethod = utils.MapGetString(g, "digestmethod")
+	data.Encryptassertion = utils.MapGetString(g, "encryptassertion")
+	data.Encryptionalgorithm = utils.MapGetString(g, "encryptionalgorithm")
+	data.Keytransportalg = utils.MapGetString(g, "keytransportalg")
+	data.Logoutbinding = utils.MapGetString(g, "logoutbinding")
+	data.Metadatarefreshinterval = utils.MapGetInt64(g, "metadatarefreshinterval")
+	data.Metadataurl = utils.MapGetString(g, "metadataurl")
+	data.Nameidexpr = utils.MapGetString(g, "nameidexpr")
+	data.Nameidformat = utils.MapGetString(g, "nameidformat")
+	data.Rejectunsignedrequests = utils.MapGetString(g, "rejectunsignedrequests")
+	data.Samlbinding = utils.MapGetString(g, "samlbinding")
+	data.Samlidpcertname = utils.MapGetString(g, "samlidpcertname")
+	data.Samlissuername = utils.MapGetString(g, "samlissuername")
+	data.Samlsigningcertversion = utils.MapGetString(g, "samlsigningcertversion")
+	data.Samlspcertname = utils.MapGetString(g, "samlspcertname")
+	data.Samlspcertversion = utils.MapGetString(g, "samlspcertversion")
+	data.Sendpassword = utils.MapGetString(g, "sendpassword")
+	data.Serviceproviderid = utils.MapGetString(g, "serviceproviderid")
+	data.Signassertion = utils.MapGetString(g, "signassertion")
+	data.Signaturealg = utils.MapGetString(g, "signaturealg")
+	data.Signatureservice = utils.MapGetString(g, "signatureservice")
+	data.Skewtime = utils.MapGetInt64(g, "skewtime")
+	data.Splogouturl = utils.MapGetString(g, "splogouturl")
+
+	// Read-only attribute.
+	data.Metadataimportstatus = utils.MapGetString(g, "metadataimportstatus")
 }

@@ -35,7 +35,7 @@ func (d *AuthenticationvserverVpnportalthemeBindingDataSource) Schema(ctx contex
 }
 
 func (d *AuthenticationvserverVpnportalthemeBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationvserverVpnportalthemeBindingResourceModel
+	var data AuthenticationvserverVpnportalthemeBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *AuthenticationvserverVpnportalthemeBindingDataSource) Read(ctx context.
 		return
 	}
 
-	authenticationvserver_vpnportaltheme_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	authenticationvserver_vpnportaltheme_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -33,5 +33,5 @@ output "gotopriorityexpression" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnglobal_vpnurl_binding. It is a system-generated identifier.
+* `id` - The id of the vpnglobal_vpnurl_binding. It has the same value as the `urlname` attribute.
 * `gotopriorityexpression` - Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.

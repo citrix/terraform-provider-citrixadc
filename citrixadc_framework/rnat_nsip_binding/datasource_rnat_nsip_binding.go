@@ -35,7 +35,7 @@ func (d *RnatNsipBindingDataSource) Schema(ctx context.Context, req datasource.S
 }
 
 func (d *RnatNsipBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RnatNsipBindingResourceModel
+	var data RnatNsipBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -93,7 +93,7 @@ func (d *RnatNsipBindingDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	rnat_nsip_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	rnat_nsip_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

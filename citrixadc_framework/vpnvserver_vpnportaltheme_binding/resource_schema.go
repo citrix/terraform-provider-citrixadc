@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *VpnvserverVpnportalthemeBindingResource) Schema(ctx context.Context, re
 				Description: "The ID of the vpnvserver_vpnportaltheme_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the virtual server.",
 			},
 			"portaltheme": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the portal theme bound to VPN vserver",
 			},
 		},
 	}
 }
 
-func vpnvserver_vpnportaltheme_bindingGetThePayloadFromtheConfig(ctx context.Context, data *VpnvserverVpnportalthemeBindingResourceModel) vpn.Vpnvservervpnportalthemebinding {
-	tflog.Debug(ctx, "In vpnvserver_vpnportaltheme_bindingGetThePayloadFromtheConfig Function")
+func vpnvserver_vpnportaltheme_bindingGetThePayloadFromthePlan(ctx context.Context, data *VpnvserverVpnportalthemeBindingResourceModel) vpn.Vpnvservervpnportalthemebinding {
+	tflog.Debug(ctx, "In vpnvserver_vpnportaltheme_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	vpnvserver_vpnportaltheme_binding := vpn.Vpnvservervpnportalthemebinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnvserver_vpnportaltheme_binding.Name = data.Name.ValueString()
 	}
-	if !data.Portaltheme.IsNull() {
+	if !data.Portaltheme.IsNull() && !data.Portaltheme.IsUnknown() {
 		vpnvserver_vpnportaltheme_binding.Portaltheme = data.Portaltheme.ValueString()
 	}
 

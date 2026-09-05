@@ -39,3 +39,9 @@ In addition to the arguments, the following attributes are available:
 * `invoke` - Invoke flag. This attribute is relevant only for ADVANCED policies.
 * `labelname` - Name of the label to invoke if the current policy rule evaluates to TRUE.
 * `labeltype` - Type of policy label invocation.
+
+### Read-only sslservice_sslpolicy_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslservice_sslpolicy_binding` resource). They are GET-only/Computed and any attribute the appliance does not return is `null`.
+
+* `polinherit` - Whether the bound policy is an inherited policy or not.

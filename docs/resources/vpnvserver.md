@@ -70,6 +70,9 @@ resource "citrixadc_vpnvserver" "tf_vpnvserver" {
 * `deviceposture` - (Optional) Enable device posture
 * `quicprofilename` - (Optional) Name of the QUIC profile to assign to this virtual server.
 * `secureprivateaccess` - (Optional) Configure secure private access
+* `gslbsitefqdn` - (Optional) Fully qualified domain name of the SPA site. This is used for Secure Private Access configuration.
+* `newname` - (Optional) New name for the Citrix Gateway virtual server. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. The following requirement applies only to the Citrix ADC CLI: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, "my server" or 'my server').
+* `wasmmodule` - (Optional) Name of the WASM module to assign to this virtual server.
 
 
 ## Attribute Reference

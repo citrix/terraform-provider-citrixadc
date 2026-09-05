@@ -35,7 +35,7 @@ func (d *AuditnslogactionDataSource) Schema(ctx context.Context, req datasource.
 }
 
 func (d *AuditnslogactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuditnslogactionResourceModel
+	var data AuditnslogactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *AuditnslogactionDataSource) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	auditnslogactionSetAttrFromGet(ctx, &data, getResponseData)
+	auditnslogactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

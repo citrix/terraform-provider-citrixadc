@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccAuditmessageaction_basic(t *testing.T) {
@@ -149,6 +151,156 @@ resource "citrixadc_auditmessageaction" "tf_msgaction" {
 
 `
 
+func TestAccAuditmessageaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_auditmessageaction.tf_msgaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditmessageactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditmessageaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditmessageactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Auditmessageaction.Type(), "tf_msgaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuditmessageaction_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditmessageactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuditmessageaction_import(t *testing.T) {
+	const resAddr = "citrixadc_auditmessageaction.tf_msgaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditmessageactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuditmessageaction_basic_step1},
+			{
+				Config:                  testAccAuditmessageaction_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAuditmessageaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuditmessageactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuditmessageaction_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditmessageactionExist("citrixadc_auditmessageaction.tf_msgaction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuditmessageaction_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditmessageactionExist("citrixadc_auditmessageaction.tf_msgaction", nil),
+				),
+			},
+		},
+	})
+}
+
+// The auditmessageaction unset test covers logtonewnslog, the only
+// spec-unsettable attribute that round-trips through GET. bypasssafetycheck is
+// also listed in the NITRO unset payload but is never echoed back by GET (even
+// when set), so it cannot be asserted or safely defaulted and is excluded.
+const testAccAuditmessageaction_unset_step1 = `
+resource "citrixadc_auditmessageaction" "tf_unset" {
+    name              = "tf_test_amsgaction_unset"
+    loglevel          = "NOTICE"
+    stringbuilderexpr = "\"hello\""
+    logtonewnslog     = "YES"
+}
+`
+
+const testAccAuditmessageaction_unset_step2 = `
+resource "citrixadc_auditmessageaction" "tf_unset" {
+    name              = "tf_test_amsgaction_unset"
+    loglevel          = "NOTICE"
+    stringbuilderexpr = "\"hello\""
+    # logtonewnslog removed from config -> provider must unset it (revert to "NO").
+}
+`
+
+func TestAccAuditmessageaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditmessageactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value applied and persisted.
+				Config: testAccAuditmessageaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditmessageactionExist("citrixadc_auditmessageaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_auditmessageaction.tf_unset", "logtonewnslog", "YES"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the NITRO default "NO", and the implicit
+				// post-apply plan must be empty.
+				Config: testAccAuditmessageaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditmessageactionExist("citrixadc_auditmessageaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_auditmessageaction.tf_unset", "logtonewnslog", "NO"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuditmessageactionADCValue("tf_test_amsgaction_unset", "logtonewnslog", "NO"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuditmessageactionADCValue asserts an attribute's value directly
+// on the appliance (not just in Terraform state), proving the unset reverted it.
+func testAccCheckAuditmessageactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Auditmessageaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("auditmessageaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("auditmessageaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccAuditmessageactionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -158,6 +310,7 @@ func TestAccAuditmessageactionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuditmessageactionDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditmessageaction.tf_msgaction", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "name", "tf_msgaction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "loglevel", "NOTICE"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditmessageaction.tf_msgaction", "stringbuilderexpr", "\"hello from datasource\""),

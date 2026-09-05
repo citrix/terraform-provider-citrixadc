@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnsaaaarec_basic = `
@@ -82,7 +83,53 @@ func TestAccDnsaaaarecDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "hostname", "www.adfihrwpi.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "ipv6address", "2001:db8:85a3::8a2e:370:7334"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnsaaaarec.dnsaaaarec", "ttl", "3600"),
+					// Universal runtime-binding proof (read-only vservername/authtype
+					// are config-dependent and may be omitted by the appliance).
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnsaaaarec.dnsaaaarec", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDnsaaaarec_import(t *testing.T) {
+	const resAddr = "citrixadc_dnsaaaarec.dnsaaaarec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnsaaaarecDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccDnsaaaarec_basic},
+			{
+				Config:                  testAccDnsaaaarec_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccDnsaaaarec_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckDnsaaaarecDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccDnsaaaarec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsaaaarecExist("citrixadc_dnsaaaarec.dnsaaaarec", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccDnsaaaarec_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnsaaaarecExist("citrixadc_dnsaaaarec.dnsaaaarec", nil)),
 			},
 		},
 	})

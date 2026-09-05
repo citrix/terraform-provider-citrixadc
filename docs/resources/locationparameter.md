@@ -35,3 +35,12 @@ resource "citrixadc_locationparameter" "tf_locationpara" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the locationparameter. It is a unique string prefixed with "tf-locationparameter-"
+
+
+## Import
+
+A locationparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_locationparameter.tf_locationparameter locationparameter-config
+```

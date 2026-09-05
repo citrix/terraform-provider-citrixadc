@@ -45,3 +45,21 @@ In addition to the argument, the following attributes are exported:
 * `jsminify` - Remove comments and whitespaces from JavaScript.
 * `jsmovetoend` - Move any JavaScript present in the body tag to the end of the body tag.
 * `pageextendcache` - Extend the time period during which the browser can use the cached resource.
+
+### Read-only feoaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_feoaction` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `imgadddimensions` - Add dimension attributes to images, if not specified within the `<img>` tag.
+* `imgshrinkformobile` - Serve smaller images for mobile users.
+* `imgweaken` - Reduce the image quality.
+* `jpgprogressive` - Convert JPEG image formats to progressive formats.
+* `cssflattenimports` - Replace CSS import statements with the file content.
+* `jscombine` - Combine one or more JavaScript files into one file.
+* `htmlrmdefaultattribs` - Remove default redundant attributes from an HTML file.
+* `htmlrmattribquotes` - Remove unnecessary quotes present within the HTML attributes.
+* `htmltrimurls` - Trim URLs.
+* `hits` - The number of times the action has been taken.
+* `undefhits` - Total number of undefined policy hits.
+* `builtin` - Flag to determine if front end optimization action is built-in or not. A list of strings (possible values `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`).
+* `feature` - The feature to be checked while applying this config.

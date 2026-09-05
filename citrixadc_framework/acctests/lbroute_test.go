@@ -22,8 +22,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbroute_basic = `
@@ -113,6 +114,34 @@ func TestAccLbroute_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckLbrouteDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccLbroute_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbrouteExist("citrixadc_lbroute.tf_lbroute", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLbroute_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbrouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLbroute_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLbrouteExist("citrixadc_lbroute.tf_lbroute", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 				Config: testAccLbroute_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLbrouteExist("citrixadc_lbroute.tf_lbroute", nil),
@@ -215,7 +244,34 @@ func TestAccLbrouteDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbroute.tf_lbroute", "netmask", "255.0.0.0"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbroute.tf_lbroute", "td", "0"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute.tf_lbroute", "gatewayname"),
+					// Runtime-binding proof plus the read-only gateway state field the
+					// appliance always returns.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute.tf_lbroute", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute.tf_lbroute", "flags"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccLbroute_import verifies import via the composite ID
+// "network,netmask,gatewayname". Pre-fix, ImportStatePassthroughID populated only
+// id, so readLbrouteFromApi (which matches on network/netmask/gatewayname) found no
+// row and dropped the resource -> import always failed.
+func TestAccLbroute_import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbrouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbroute_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbrouteExist("citrixadc_lbroute.tf_lbroute", nil)),
+			},
+			{
+				ResourceName:      "citrixadc_lbroute.tf_lbroute",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

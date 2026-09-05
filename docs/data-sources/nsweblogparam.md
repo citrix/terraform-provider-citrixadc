@@ -39,3 +39,10 @@ The following attributes are exported:
 * `customreqhdrs` - List of HTTP request header names whose values should be exported by the Web Logging feature.
 * `customrsphdrs` - List of HTTP response header names whose values should be exported by the Web Logging feature.
 
+### Read-only nsweblogparam metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsweblogparam` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if log bufs is built-in or not (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.
+

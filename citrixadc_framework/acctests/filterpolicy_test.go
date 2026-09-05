@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccFilterpolicy_basic_step1 = `
@@ -59,6 +60,35 @@ func TestAccFilterpolicy_basic(t *testing.T) {
 			},
 			{
 				Config: testAccFilterpolicy_basic_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterpolicyExist("citrixadc_filterpolicy.tf_filterpolicy", nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFilterpolicy_sdkv2StateUpgrade(t *testing.T) {
+	t.Skipf("filterpolicy is not supported in 13.1")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFilterpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccFilterpolicy_basic_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilterpolicyExist("citrixadc_filterpolicy.tf_filterpolicy", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccFilterpolicy_basic_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterpolicyExist("citrixadc_filterpolicy.tf_filterpolicy", nil),
 				),

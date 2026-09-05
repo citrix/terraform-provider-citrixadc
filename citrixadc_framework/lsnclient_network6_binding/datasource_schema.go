@@ -30,7 +30,6 @@ func LsnclientNetwork6BindingDataSourceSchema() schema.Schema {
 			},
 			"td": schema.Int64Attribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "ID of the traffic domain on which this subscriber or the subscriber network (as specified by the network parameter) belongs. \nIf you do not specify an ID, the subscriber or the subscriber network becomes part of the default traffic domain.",
 			},
 		},

@@ -6,7 +6,7 @@ subcategory: "Application Firewall"
 
 The appfwprofile_excluderescontenttype_binding data source allows you to retrieve information about Application Firewall Profile to Exclude Response Content-Type binding.
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_appfwprofile_excluderescontenttype_binding" "tf_binding" {
@@ -32,9 +32,10 @@ output "state" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_excluderescontenttype_binding. It is a system-generated identifier.
 * `alertonly` - Send SNMP alert?
 * `comment` - Any comments about the purpose of profile, or other useful information about the profile.
-* `isautodeployed` - Is the rule auto deployed by dynamic profile ?
+* `id` - The id of the appfwprofile_excluderescontenttype_binding. It is a system-generated identifier.
+* `isautodeployed` - Is the rule auto deployed by dynamic profile?
 * `resourceid` - A "id" that identifies the rule.
+* `ruletype` - Specifies rule type of binding.
 * `state` - Enabled.

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *NetbridgeIptunnelBindingResource) Schema(ctx context.Context, req resou
 				Description: "The ID of the netbridge_iptunnel_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the network bridge.",
 			},
 			"tunnel": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "The name of the tunnel that is a part of this bridge.",
 			},
 		},
 	}
 }
 
-func netbridge_iptunnel_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NetbridgeIptunnelBindingResourceModel) network.Netbridgeiptunnelbinding {
-	tflog.Debug(ctx, "In netbridge_iptunnel_bindingGetThePayloadFromtheConfig Function")
+func netbridge_iptunnel_bindingGetThePayloadFromthePlan(ctx context.Context, data *NetbridgeIptunnelBindingResourceModel) network.Netbridgeiptunnelbinding {
+	tflog.Debug(ctx, "In netbridge_iptunnel_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	netbridge_iptunnel_binding := network.Netbridgeiptunnelbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		netbridge_iptunnel_binding.Name = data.Name.ValueString()
 	}
-	if !data.Tunnel.IsNull() {
+	if !data.Tunnel.IsNull() && !data.Tunnel.IsUnknown() {
 		netbridge_iptunnel_binding.Tunnel = data.Tunnel.ValueString()
 	}
 

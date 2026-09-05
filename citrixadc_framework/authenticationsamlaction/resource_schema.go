@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -164,6 +166,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			},
 			"attributeconsumingserviceindex": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(255),
 				Description: "Index/ID of the attribute specification at Identity Provider (IdP). IdP will locate attributes requested by SP using this index and send those attributes in Assertion",
 			},
@@ -195,17 +198,20 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			},
 			"digestmethod": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("SHA256"),
 				Description: "Algorithm to be used to compute/verify digest for SAML transactions",
 			},
 			"enforceusername": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Option to choose whether the username that is extracted from SAML assertion can be edited in login page while doing second factor",
 			},
 			"forceauthn": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option that forces authentication at the Identity Provider (IdP) that receives Citrix ADC's request",
 			},
 			"groupnamefield": schema.StringAttribute{
@@ -215,6 +221,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			},
 			"logoutbinding": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("POST"),
 				Description: "This element specifies the transport mechanism of saml logout messages.",
 			},
@@ -225,7 +232,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			},
 			"metadatarefreshinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3600),
+				Computed:    true,
 				Description: "Interval in minutes for fetching metadata from specified metadata URL",
 			},
 			"metadataurl": schema.StringAttribute{
@@ -234,7 +241,10 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 				Description: "This URL is used for obtaining saml metadata. Note that it fills samlIdPCertName and samlredirectUrl fields so those fields should not be updated when metadataUrl present",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the SAML server profile (action).\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) pound (#), space ( ), at (@), equals (=), colon (:), and underscore characters. Cannot be changed after SAML profile is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my authentication action\" or 'my authentication action').",
 			},
 			"preferredbindtype": schema.ListAttribute{
@@ -250,16 +260,19 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			},
 			"requestedauthncontext": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("exact"),
 				Description: "This element specifies the authentication context requirements of authentication statements returned in the response.",
 			},
 			"samlacsindex": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(255),
 				Description: "Index/ID of the metadata entry corresponding to this configuration.",
 			},
 			"samlbinding": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("POST"),
 				Description: "This element specifies the transport mechanism of saml messages.",
 			},
@@ -280,7 +293,8 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			},
 			"samlrejectunsignedassertion": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Reject unsigned SAML assertions. ON option results in rejection of Assertion that is received without signature. STRICT option ensures that both Response and Assertion are signed.",
 			},
 			"samlsigningcertname": schema.StringAttribute{
@@ -291,6 +305,7 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"samltwofactor": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to enable second factor after SAML",
 			},
 			"samluserfield": schema.StringAttribute{
@@ -301,15 +316,18 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"sendthumbprint": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to send thumbprint instead of x509 certificate in SAML request",
 			},
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("RSA-SHA256"),
 				Description: "Algorithm to be used to sign/verify SAML transactions",
 			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(5),
 				Description: "This option specifies the allowed clock skew in number of minutes that Citrix ADC ServiceProvider allows on an incoming assertion. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
@@ -321,156 +339,167 @@ func (r *AuthenticationsamlactionResource) Schema(ctx context.Context, req resou
 			"storesamlresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString("OFF"),
 				Description: "Option to store entire SAML Response through the life of user session.",
 			},
 		},
 	}
 }
 
-func authenticationsamlactionGetThePayloadFromtheConfig(ctx context.Context, data *AuthenticationsamlactionResourceModel) authentication.Authenticationsamlaction {
-	tflog.Debug(ctx, "In authenticationsamlactionGetThePayloadFromtheConfig Function")
+func authenticationsamlactionGetThePayloadFromthePlan(ctx context.Context, data *AuthenticationsamlactionResourceModel) authentication.Authenticationsamlaction {
+	tflog.Debug(ctx, "In authenticationsamlactionGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	authenticationsamlaction := authentication.Authenticationsamlaction{}
-	if !data.Artifactresolutionserviceurl.IsNull() {
+	if !data.Artifactresolutionserviceurl.IsNull() && !data.Artifactresolutionserviceurl.IsUnknown() {
 		authenticationsamlaction.Artifactresolutionserviceurl = data.Artifactresolutionserviceurl.ValueString()
 	}
-	if !data.Attribute1.IsNull() {
+	if !data.Attribute1.IsNull() && !data.Attribute1.IsUnknown() {
 		authenticationsamlaction.Attribute1 = data.Attribute1.ValueString()
 	}
-	if !data.Attribute10.IsNull() {
+	if !data.Attribute10.IsNull() && !data.Attribute10.IsUnknown() {
 		authenticationsamlaction.Attribute10 = data.Attribute10.ValueString()
 	}
-	if !data.Attribute11.IsNull() {
+	if !data.Attribute11.IsNull() && !data.Attribute11.IsUnknown() {
 		authenticationsamlaction.Attribute11 = data.Attribute11.ValueString()
 	}
-	if !data.Attribute12.IsNull() {
+	if !data.Attribute12.IsNull() && !data.Attribute12.IsUnknown() {
 		authenticationsamlaction.Attribute12 = data.Attribute12.ValueString()
 	}
-	if !data.Attribute13.IsNull() {
+	if !data.Attribute13.IsNull() && !data.Attribute13.IsUnknown() {
 		authenticationsamlaction.Attribute13 = data.Attribute13.ValueString()
 	}
-	if !data.Attribute14.IsNull() {
+	if !data.Attribute14.IsNull() && !data.Attribute14.IsUnknown() {
 		authenticationsamlaction.Attribute14 = data.Attribute14.ValueString()
 	}
-	if !data.Attribute15.IsNull() {
+	if !data.Attribute15.IsNull() && !data.Attribute15.IsUnknown() {
 		authenticationsamlaction.Attribute15 = data.Attribute15.ValueString()
 	}
-	if !data.Attribute16.IsNull() {
+	if !data.Attribute16.IsNull() && !data.Attribute16.IsUnknown() {
 		authenticationsamlaction.Attribute16 = data.Attribute16.ValueString()
 	}
-	if !data.Attribute2.IsNull() {
+	if !data.Attribute2.IsNull() && !data.Attribute2.IsUnknown() {
 		authenticationsamlaction.Attribute2 = data.Attribute2.ValueString()
 	}
-	if !data.Attribute3.IsNull() {
+	if !data.Attribute3.IsNull() && !data.Attribute3.IsUnknown() {
 		authenticationsamlaction.Attribute3 = data.Attribute3.ValueString()
 	}
-	if !data.Attribute4.IsNull() {
+	if !data.Attribute4.IsNull() && !data.Attribute4.IsUnknown() {
 		authenticationsamlaction.Attribute4 = data.Attribute4.ValueString()
 	}
-	if !data.Attribute5.IsNull() {
+	if !data.Attribute5.IsNull() && !data.Attribute5.IsUnknown() {
 		authenticationsamlaction.Attribute5 = data.Attribute5.ValueString()
 	}
-	if !data.Attribute6.IsNull() {
+	if !data.Attribute6.IsNull() && !data.Attribute6.IsUnknown() {
 		authenticationsamlaction.Attribute6 = data.Attribute6.ValueString()
 	}
-	if !data.Attribute7.IsNull() {
+	if !data.Attribute7.IsNull() && !data.Attribute7.IsUnknown() {
 		authenticationsamlaction.Attribute7 = data.Attribute7.ValueString()
 	}
-	if !data.Attribute8.IsNull() {
+	if !data.Attribute8.IsNull() && !data.Attribute8.IsUnknown() {
 		authenticationsamlaction.Attribute8 = data.Attribute8.ValueString()
 	}
-	if !data.Attribute9.IsNull() {
+	if !data.Attribute9.IsNull() && !data.Attribute9.IsUnknown() {
 		authenticationsamlaction.Attribute9 = data.Attribute9.ValueString()
 	}
-	if !data.Attributeconsumingserviceindex.IsNull() {
+	if !data.Attributeconsumingserviceindex.IsNull() && !data.Attributeconsumingserviceindex.IsUnknown() {
 		authenticationsamlaction.Attributeconsumingserviceindex = utils.IntPtr(int(data.Attributeconsumingserviceindex.ValueInt64()))
 	}
-	if !data.Attributes.IsNull() {
+	if !data.Attributes.IsNull() && !data.Attributes.IsUnknown() {
 		authenticationsamlaction.Attributes = data.Attributes.ValueString()
 	}
-	if !data.Audience.IsNull() {
+	if !data.Audience.IsNull() && !data.Audience.IsUnknown() {
 		authenticationsamlaction.Audience = data.Audience.ValueString()
 	}
-	if !data.Customauthnctxclassref.IsNull() {
+	if !data.Authnctxclassref.IsNull() && !data.Authnctxclassref.IsUnknown() {
+		var authnctxclassrefList []string
+		data.Authnctxclassref.ElementsAs(ctx, &authnctxclassrefList, false)
+		authenticationsamlaction.Authnctxclassref = authnctxclassrefList
+	}
+	if !data.Customauthnctxclassref.IsNull() && !data.Customauthnctxclassref.IsUnknown() {
 		authenticationsamlaction.Customauthnctxclassref = data.Customauthnctxclassref.ValueString()
 	}
-	if !data.Defaultauthenticationgroup.IsNull() {
+	if !data.Defaultauthenticationgroup.IsNull() && !data.Defaultauthenticationgroup.IsUnknown() {
 		authenticationsamlaction.Defaultauthenticationgroup = data.Defaultauthenticationgroup.ValueString()
 	}
-	if !data.Digestmethod.IsNull() {
+	if !data.Digestmethod.IsNull() && !data.Digestmethod.IsUnknown() {
 		authenticationsamlaction.Digestmethod = data.Digestmethod.ValueString()
 	}
-	if !data.Enforceusername.IsNull() {
+	if !data.Enforceusername.IsNull() && !data.Enforceusername.IsUnknown() {
 		authenticationsamlaction.Enforceusername = data.Enforceusername.ValueString()
 	}
-	if !data.Forceauthn.IsNull() {
+	if !data.Forceauthn.IsNull() && !data.Forceauthn.IsUnknown() {
 		authenticationsamlaction.Forceauthn = data.Forceauthn.ValueString()
 	}
-	if !data.Groupnamefield.IsNull() {
+	if !data.Groupnamefield.IsNull() && !data.Groupnamefield.IsUnknown() {
 		authenticationsamlaction.Groupnamefield = data.Groupnamefield.ValueString()
 	}
-	if !data.Logoutbinding.IsNull() {
+	if !data.Logoutbinding.IsNull() && !data.Logoutbinding.IsUnknown() {
 		authenticationsamlaction.Logoutbinding = data.Logoutbinding.ValueString()
 	}
-	if !data.Logouturl.IsNull() {
+	if !data.Logouturl.IsNull() && !data.Logouturl.IsUnknown() {
 		authenticationsamlaction.Logouturl = data.Logouturl.ValueString()
 	}
-	if !data.Metadatarefreshinterval.IsNull() {
+	if !data.Metadatarefreshinterval.IsNull() && !data.Metadatarefreshinterval.IsUnknown() {
 		authenticationsamlaction.Metadatarefreshinterval = utils.IntPtr(int(data.Metadatarefreshinterval.ValueInt64()))
 	}
-	if !data.Metadataurl.IsNull() {
+	if !data.Metadataurl.IsNull() && !data.Metadataurl.IsUnknown() {
 		authenticationsamlaction.Metadataurl = data.Metadataurl.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		authenticationsamlaction.Name = data.Name.ValueString()
 	}
-	if !data.Relaystaterule.IsNull() {
+	if !data.Preferredbindtype.IsNull() && !data.Preferredbindtype.IsUnknown() {
+		var preferredbindtypeList []string
+		data.Preferredbindtype.ElementsAs(ctx, &preferredbindtypeList, false)
+		authenticationsamlaction.Preferredbindtype = preferredbindtypeList
+	}
+	if !data.Relaystaterule.IsNull() && !data.Relaystaterule.IsUnknown() {
 		authenticationsamlaction.Relaystaterule = data.Relaystaterule.ValueString()
 	}
-	if !data.Requestedauthncontext.IsNull() {
+	if !data.Requestedauthncontext.IsNull() && !data.Requestedauthncontext.IsUnknown() {
 		authenticationsamlaction.Requestedauthncontext = data.Requestedauthncontext.ValueString()
 	}
-	if !data.Samlacsindex.IsNull() {
+	if !data.Samlacsindex.IsNull() && !data.Samlacsindex.IsUnknown() {
 		authenticationsamlaction.Samlacsindex = utils.IntPtr(int(data.Samlacsindex.ValueInt64()))
 	}
-	if !data.Samlbinding.IsNull() {
+	if !data.Samlbinding.IsNull() && !data.Samlbinding.IsUnknown() {
 		authenticationsamlaction.Samlbinding = data.Samlbinding.ValueString()
 	}
-	if !data.Samlidpcertname.IsNull() {
+	if !data.Samlidpcertname.IsNull() && !data.Samlidpcertname.IsUnknown() {
 		authenticationsamlaction.Samlidpcertname = data.Samlidpcertname.ValueString()
 	}
-	if !data.Samlissuername.IsNull() {
+	if !data.Samlissuername.IsNull() && !data.Samlissuername.IsUnknown() {
 		authenticationsamlaction.Samlissuername = data.Samlissuername.ValueString()
 	}
-	if !data.Samlredirecturl.IsNull() {
+	if !data.Samlredirecturl.IsNull() && !data.Samlredirecturl.IsUnknown() {
 		authenticationsamlaction.Samlredirecturl = data.Samlredirecturl.ValueString()
 	}
-	if !data.Samlrejectunsignedassertion.IsNull() {
+	if !data.Samlrejectunsignedassertion.IsNull() && !data.Samlrejectunsignedassertion.IsUnknown() {
 		authenticationsamlaction.Samlrejectunsignedassertion = data.Samlrejectunsignedassertion.ValueString()
 	}
-	if !data.Samlsigningcertname.IsNull() {
+	if !data.Samlsigningcertname.IsNull() && !data.Samlsigningcertname.IsUnknown() {
 		authenticationsamlaction.Samlsigningcertname = data.Samlsigningcertname.ValueString()
 	}
-	if !data.Samltwofactor.IsNull() {
+	if !data.Samltwofactor.IsNull() && !data.Samltwofactor.IsUnknown() {
 		authenticationsamlaction.Samltwofactor = data.Samltwofactor.ValueString()
 	}
-	if !data.Samluserfield.IsNull() {
+	if !data.Samluserfield.IsNull() && !data.Samluserfield.IsUnknown() {
 		authenticationsamlaction.Samluserfield = data.Samluserfield.ValueString()
 	}
-	if !data.Sendthumbprint.IsNull() {
+	if !data.Sendthumbprint.IsNull() && !data.Sendthumbprint.IsUnknown() {
 		authenticationsamlaction.Sendthumbprint = data.Sendthumbprint.ValueString()
 	}
-	if !data.Signaturealg.IsNull() {
+	if !data.Signaturealg.IsNull() && !data.Signaturealg.IsUnknown() {
 		authenticationsamlaction.Signaturealg = data.Signaturealg.ValueString()
 	}
-	if !data.Skewtime.IsNull() {
+	if !data.Skewtime.IsNull() && !data.Skewtime.IsUnknown() {
 		authenticationsamlaction.Skewtime = utils.IntPtr(int(data.Skewtime.ValueInt64()))
 	}
-	if !data.Statechecks.IsNull() {
+	if !data.Statechecks.IsNull() && !data.Statechecks.IsUnknown() {
 		authenticationsamlaction.Statechecks = data.Statechecks.ValueString()
 	}
-	if !data.Storesamlresponse.IsNull() {
+	if !data.Storesamlresponse.IsNull() && !data.Storesamlresponse.IsUnknown() {
 		authenticationsamlaction.Storesamlresponse = data.Storesamlresponse.ValueString()
 	}
 
@@ -570,7 +599,7 @@ func authenticationsamlactionSetAttrFromGet(ctx context.Context, data *Authentic
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Attributeconsumingserviceindex = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Attributeconsumingserviceindex.IsUnknown() {
 		data.Attributeconsumingserviceindex = types.Int64Null()
 	}
 	if val, ok := getResponseData["attributes"]; ok && val != nil {
@@ -627,7 +656,7 @@ func authenticationsamlactionSetAttrFromGet(ctx context.Context, data *Authentic
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Metadatarefreshinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Metadatarefreshinterval.IsUnknown() {
 		data.Metadatarefreshinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["metadataurl"]; ok && val != nil {
@@ -654,7 +683,7 @@ func authenticationsamlactionSetAttrFromGet(ctx context.Context, data *Authentic
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Samlacsindex = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Samlacsindex.IsUnknown() {
 		data.Samlacsindex = types.Int64Null()
 	}
 	if val, ok := getResponseData["samlbinding"]; ok && val != nil {
@@ -711,7 +740,7 @@ func authenticationsamlactionSetAttrFromGet(ctx context.Context, data *Authentic
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Skewtime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Skewtime.IsUnknown() {
 		data.Skewtime = types.Int64Null()
 	}
 	if val, ok := getResponseData["statechecks"]; ok && val != nil {
@@ -723,6 +752,36 @@ func authenticationsamlactionSetAttrFromGet(ctx context.Context, data *Authentic
 		data.Storesamlresponse = types.StringValue(val.(string))
 	} else {
 		data.Storesamlresponse = types.StringNull()
+	}
+	if val, ok := getResponseData["authnctxclassref"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Authnctxclassref = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Authnctxclassref = listValue
+		default:
+			data.Authnctxclassref = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Authnctxclassref = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["preferredbindtype"]; ok && val != nil {
+		switch v := val.(type) {
+		case []interface{}:
+			stringList := utils.ToStringList(v)
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, stringList)
+			data.Preferredbindtype = listValue
+		case string:
+			listValue, _ := types.ListValueFrom(ctx, types.StringType, []string{v})
+			data.Preferredbindtype = listValue
+		default:
+			data.Preferredbindtype = types.ListNull(types.StringType)
+		}
+	} else {
+		data.Preferredbindtype = types.ListNull(types.StringType)
 	}
 
 	// Set ID for the resource

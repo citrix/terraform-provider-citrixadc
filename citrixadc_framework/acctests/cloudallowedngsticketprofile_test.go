@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCloudallowedngsticketprofile_basic_step1 = `
@@ -177,6 +177,37 @@ func TestAccCloudallowedngsticketprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cloudallowedngsticketprofile.tf_cloudallowedngsticketprofile_data", "name", "tf_allowedticket"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudallowedngsticketprofile.tf_cloudallowedngsticketprofile_data", "creator", "test_creator"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccCloudallowedngsticketprofile_selfHealing verifies drift recovery:
+// after the resource is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccCloudallowedngsticketprofile_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_cloudallowedngsticketprofile.tf_cloudallowedngsticketprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudallowedngsticketprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudallowedngsticketprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCloudallowedngsticketprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cloudallowedngsticketprofile.Type(), "tf_allowedticket"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCloudallowedngsticketprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCloudallowedngsticketprofileExist(resAddr, nil)),
 			},
 		},
 	})

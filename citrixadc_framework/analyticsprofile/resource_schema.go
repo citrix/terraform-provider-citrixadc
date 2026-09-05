@@ -54,6 +54,7 @@ type AnalyticsprofileResourceModel struct {
 	Httpxforwardedforheader      types.String `tfsdk:"httpxforwardedforheader"`
 	Integratedcache              types.String `tfsdk:"integratedcache"`
 	Managementlog                types.List   `tfsdk:"managementlog"`
+	Mcpsummary                   types.String `tfsdk:"mcpsummary"`
 	Metrics                      types.String `tfsdk:"metrics"`
 	Metricsexportfrequency       types.Int64  `tfsdk:"metricsexportfrequency"`
 	Name                         types.String `tfsdk:"name"`
@@ -263,6 +264,11 @@ func (r *AnalyticsprofileResource) Schema(ctx context.Context, req resource.Sche
 				Computed:    true,
 				Description: "This option indicates the whether managementlog should be sent to the REST collector.",
 			},
+			"mcpsummary": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable/disable appflow logging for MCP (Model Context Protocol) traffic.",
+			},
 			"metrics": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -428,6 +434,9 @@ func analyticsprofileGetThePayloadFromthePlan(ctx context.Context, data *Analyti
 		data.Managementlog.ElementsAs(ctx, &managementlogList, false)
 		analyticsprofile.Managementlog = managementlogList
 	}
+	if !data.Mcpsummary.IsNull() && !data.Mcpsummary.IsUnknown() {
+		analyticsprofile.Mcpsummary = data.Mcpsummary.ValueString()
+	}
 	if !data.Metrics.IsNull() && !data.Metrics.IsUnknown() {
 		analyticsprofile.Metrics = data.Metrics.ValueString()
 	}
@@ -472,6 +481,85 @@ func analyticsprofileGetThePayloadFromtheConfig(ctx context.Context, data *Analy
 		if analyticsauthtokenWo != "" {
 			payload.Analyticsauthtoken = analyticsauthtokenWo
 		}
+	}
+
+	// Web-insight-only attributes: send only when the user actually set them.
+	//
+	// Each attribute below is Optional+Computed with a static Default of
+	// "DISABLED". That default makes an OMITTED attribute resolve to a known
+	// value in the plan, so the plan payload builder would include it on every
+	// create/update. NITRO accepts these attributes only when type==webinsight
+	// and rejects them for any other type with errorcode 1093 ("Argument
+	// pre-requisite missing [<attr>, type==webinsight]").
+	//
+	// `data` here is the CONFIG (nullified for anything the user did not write),
+	// so IsNull() distinguishes a user-supplied value from the schema default.
+	// Clearing the payload field (a `,omitempty` string) drops it from the wire.
+	// The schema default is retained so plan output stays stable, and the unset
+	// flow (driven separately by ExecuteUnset in Update) still reverts these to
+	// "DISABLED" when they are removed from a webinsight profile.
+	if data.Allhttpheaders.IsNull() {
+		payload.Allhttpheaders = ""
+	}
+	if data.Grpcstatus.IsNull() {
+		payload.Grpcstatus = ""
+	}
+	if data.Httpauthentication.IsNull() {
+		payload.Httpauthentication = ""
+	}
+	if data.Httpclientsidemeasurements.IsNull() {
+		payload.Httpclientsidemeasurements = ""
+	}
+	if data.Httpcontenttype.IsNull() {
+		payload.Httpcontenttype = ""
+	}
+	if data.Httpcookie.IsNull() {
+		payload.Httpcookie = ""
+	}
+	if data.Httpdomainname.IsNull() {
+		payload.Httpdomainname = ""
+	}
+	if data.Httphost.IsNull() {
+		payload.Httphost = ""
+	}
+	if data.Httplocation.IsNull() {
+		payload.Httplocation = ""
+	}
+	if data.Httpmethod.IsNull() {
+		payload.Httpmethod = ""
+	}
+	if data.Httppagetracking.IsNull() {
+		payload.Httppagetracking = ""
+	}
+	if data.Httpreferer.IsNull() {
+		payload.Httpreferer = ""
+	}
+	if data.Httpsetcookie.IsNull() {
+		payload.Httpsetcookie = ""
+	}
+	if data.Httpsetcookie2.IsNull() {
+		payload.Httpsetcookie2 = ""
+	}
+	if data.Httpurl.IsNull() {
+		payload.Httpurl = ""
+	}
+	if data.Httpurlquery.IsNull() {
+		payload.Httpurlquery = ""
+	}
+	if data.Httpuseragent.IsNull() {
+		payload.Httpuseragent = ""
+	}
+	if data.Httpvia.IsNull() {
+		payload.Httpvia = ""
+	}
+	if data.Httpxforwardedforheader.IsNull() {
+		payload.Httpxforwardedforheader = ""
+	}
+	if data.Integratedcache.IsNull() {
+		payload.Integratedcache = ""
+	}
+	if data.Urlcategory.IsNull() {
+		payload.Urlcategory = ""
 	}
 }
 
@@ -643,6 +731,11 @@ func analyticsprofileSetAttrFromGet(ctx context.Context, data *AnalyticsprofileR
 		}
 	} else {
 		data.Managementlog = types.ListNull(types.StringType)
+	}
+	if val, ok := getResponseData["mcpsummary"]; ok && val != nil {
+		data.Mcpsummary = types.StringValue(val.(string))
+	} else {
+		data.Mcpsummary = types.StringNull()
 	}
 	if val, ok := getResponseData["metrics"]; ok && val != nil {
 		data.Metrics = types.StringValue(val.(string))

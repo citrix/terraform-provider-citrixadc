@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccPolicyexpression_advanced(t *testing.T) {
@@ -78,6 +80,155 @@ func TestAccPolicyexpression_classic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccPolicyexpression_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policyexpression.tf_advanced_policyexpression"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyexpressionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyexpression_advanced_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyexpressionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policyexpression.Type(), "tf_advanced_policyexrpession"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicyexpression_advanced_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyexpressionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccPolicyexpression_import(t *testing.T) {
+	const resAddr = "citrixadc_policyexpression.tf_advanced_policyexpression"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyexpressionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccPolicyexpression_advanced_step1},
+			{
+				Config:                  testAccPolicyexpression_advanced_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccPolicyexpression_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckPolicyexpressionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccPolicyexpression_advanced_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_advanced_policyexpression", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccPolicyexpression_advanced_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_advanced_policyexpression", nil)),
+			},
+		},
+	})
+}
+
+// testAccPolicyexpression_unset covers the unset-eligible attributes comment and
+// clientsecuritymessage. clientsecuritymessage is only allowed on classic
+// end-point-check expressions, so a classic value is used. Removing both from
+// config must unset them on the appliance (revert to absent/empty).
+const testAccPolicyexpression_unset_step1 = `
+resource "citrixadc_policyexpression" "tf_unset" {
+    name                  = "tf_policyexpression_unset"
+    value                 = "HEADER Cookie EXISTS"
+    comment               = "unset test comment"
+    clientsecuritymessage = "unset test security message"
+}
+`
+
+const testAccPolicyexpression_unset_step2 = `
+resource "citrixadc_policyexpression" "tf_unset" {
+    name  = "tf_policyexpression_unset"
+    value = "HEADER Cookie EXISTS"
+    # comment and clientsecuritymessage removed from config -> provider must
+    # unset them on the appliance.
+}
+`
+
+func TestAccPolicyexpression_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyexpressionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccPolicyexpression_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_policyexpression.tf_unset", "comment", "unset test comment"),
+					resource.TestCheckResourceAttr("citrixadc_policyexpression.tf_unset", "clientsecuritymessage", "unset test security message"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance reverts
+				// them to empty/absent and the implicit post-apply plan is empty.
+				Config: testAccPolicyexpression_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyexpressionExist("citrixadc_policyexpression.tf_unset", nil),
+					testAccCheckPolicyexpressionADCValue("tf_policyexpression_unset", "comment", ""),
+					testAccCheckPolicyexpressionADCValue("tf_policyexpression_unset", "clientsecuritymessage", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckPolicyexpressionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. An absent/nil value is treated as the empty string.
+func testAccCheckPolicyexpressionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Policyexpression.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("policyexpression %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("policyexpression %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func testAccCheckPolicyexpressionExist(n string, id *string) resource.TestCheckFunc {
@@ -221,6 +372,11 @@ func TestAccPolicyexpressionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "name", "tf_policyexpression_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "value", "HTTP.REQ.HOSTNAME.EQ(\"example.com\")"),
 					resource.TestCheckResourceAttr("data.citrixadc_policyexpression.tf_policyexpression_ds", "comment", "Test datasource expression"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyexpression.tf_policyexpression_ds", "id"),
+					// Read-only metadata exposed only by the data source. hits is a
+					// counter-style field always populated for a freshly-created object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyexpression.tf_policyexpression_ds", "hits"),
 				),
 			},
 		},

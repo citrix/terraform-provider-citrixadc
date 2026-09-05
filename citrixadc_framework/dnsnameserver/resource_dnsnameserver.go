@@ -3,8 +3,12 @@ package dnsnameserver
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
+	"github.com/citrix/adc-nitro-go/resource/config/dns"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +59,39 @@ func (r *DnsnameserverResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating dnsnameserver resource")
 
-	// dnsnameserver := dnsnameserverGetThePayloadFromtheConfig(ctx, &data)
+	dnsnameserver := dnsnameserverGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsnameserver.Type(), &dnsnameserver)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsnameserver, got error: %s", err))
-	//	 return
-	// }
+	// The primary identifier is the IP address, or the DNS vserver name when no IP is given.
+	var primaryId string
+	if !data.Ip.IsNull() && !data.Ip.IsUnknown() && data.Ip.ValueString() != "" {
+		primaryId = data.Ip.ValueString()
+	} else if !data.Dnsvservername.IsNull() && !data.Dnsvservername.IsUnknown() && data.Dnsvservername.ValueString() != "" {
+		primaryId = data.Dnsvservername.ValueString()
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("dnsnameserver-config")
+	// Named resource - use AddResource
+	_, err := r.client.AddResource(service.Dnsnameserver.Type(), primaryId, &dnsnameserver)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create dnsnameserver, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created dnsnameserver resource")
 
+	// Build the composite ID "<name>,<type>" to match the SDK v2 format.
+	typeForId := "UDP"
+	if !data.Type.IsNull() && !data.Type.IsUnknown() && data.Type.ValueString() != "" {
+		typeForId = data.Type.ValueString()
+	}
+	data.Id = types.StringValue(primaryId + "," + typeForId)
+
 	// Read the updated state back
-	r.readDnsnameserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsnameserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsnameserver not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +109,97 @@ func (r *DnsnameserverResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading dnsnameserver resource")
 
-	r.readDnsnameserverFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readDnsnameserverFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *DnsnameserverResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DnsnameserverResourceModel
+	var data, config, state DnsnameserverResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (to unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating dnsnameserver resource")
 
-	// Create API request body from the model
-	// dnsnameserver := dnsnameserverGetThePayloadFromtheConfig(ctx, &data)
+	// Only dnsprofilename is updateable in place; all other attributes are
+	// RequiresReplace (matching SDK v2 ForceNew) and therefore never reach Update.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Dnsprofilename.Equal(state.Dnsprofilename) {
+		tflog.Debug(ctx, "dnsprofilename has changed for dnsnameserver, starting update")
+		if config.Dnsprofilename.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "dnsprofilename")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Dnsnameserver.Type(), &dnsnameserver)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsnameserver, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		idSlice := strings.SplitN(data.Id.ValueString(), ",", 2)
+		name := idSlice[0]
 
-	tflog.Trace(ctx, "Updated dnsnameserver resource")
+		// dnsvservername is a create-only (ForceNew) parameter and is not accepted
+		// by the NITRO update (PUT) call, so it is intentionally omitted here.
+		dnsnameserver := dns.Dnsnameserver{
+			Ip:             data.Ip.ValueString(),
+			Dnsprofilename: data.Dnsprofilename.ValueString(),
+		}
+
+		_, err := r.client.UpdateResource(service.Dnsnameserver.Type(), name, &dnsnameserver)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update dnsnameserver, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated dnsnameserver resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for dnsnameserver resource, skipping update")
+	}
+
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults. The name server is keyed on ip (or dnsvservername) plus
+	// the protocol type, both of which the unset call requires.
+	unsetIdPayload := map[string]interface{}{}
+	if !data.Ip.IsNull() && data.Ip.ValueString() != "" {
+		unsetIdPayload["ip"] = data.Ip.ValueString()
+	} else if !data.Dnsvservername.IsNull() && data.Dnsvservername.ValueString() != "" {
+		unsetIdPayload["dnsvservername"] = data.Dnsvservername.ValueString()
+	}
+	if !data.Type.IsNull() && data.Type.ValueString() != "" {
+		unsetIdPayload["type"] = data.Type.ValueString()
+	}
+	if err := utils.ExecuteUnset(r.client, service.Dnsnameserver.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset dnsnameserver attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readDnsnameserverFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readDnsnameserverFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "dnsnameserver not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +217,121 @@ func (r *DnsnameserverResource) Delete(ctx context.Context, req resource.DeleteR
 
 	tflog.Debug(ctx, "Deleting dnsnameserver resource")
 
-	// For dnsnameserver, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted dnsnameserver resource from state")
-}
+	primaryId := data.Id.ValueString()
+	idSlice := strings.SplitN(primaryId, ",", 2)
+	name := idSlice[0]
+	dnsType := ""
+	if len(idSlice) > 1 {
+		dnsType = idSlice[1]
+	}
 
-// Helper function to read dnsnameserver data from API
-func (r *DnsnameserverResource) readDnsnameserverFromApi(ctx context.Context, data *DnsnameserverResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Dnsnameserver.Type(), "")
-	if err != nil {
-		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsnameserver, got error: %s", err))
+	// If the resource is keyed on a DNS vserver name, delete it directly.
+	if !data.Dnsvservername.IsNull() && data.Dnsvservername.ValueString() == name {
+		err := r.client.DeleteResource(service.Dnsnameserver.Type(), name)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsnameserver, got error: %s", err))
+			return
+		}
+		tflog.Trace(ctx, "Deleted dnsnameserver resource")
 		return
 	}
 
-	dnsnameserverSetAttrFromGet(ctx, data, getResponseData)
+	// IP-based name server: delete keyed on ip with the protocol as a delete arg.
+	// UDP_TCP is stored as two entries (UDP and TCP) and must both be removed.
+	var typesToDelete []string
+	if dnsType == "UDP_TCP" {
+		typesToDelete = []string{"UDP", "TCP"}
+	} else {
+		typesToDelete = []string{dnsType}
+	}
 
+	for _, deleteType := range typesToDelete {
+		argsMap := make(map[string]string)
+		argsMap["type"] = url.QueryEscape(deleteType)
+		err := r.client.DeleteResourceWithArgsMap(service.Dnsnameserver.Type(), name, argsMap)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete dnsnameserver, got error: %s", err))
+			return
+		}
+	}
+
+	tflog.Trace(ctx, "Deleted dnsnameserver resource")
+}
+
+// Helper function to read dnsnameserver data from API. Returns false when the
+// resource no longer exists on the ADC.
+func (r *DnsnameserverResource) readDnsnameserverFromApi(ctx context.Context, data *DnsnameserverResourceModel, diags *diag.Diagnostics) bool {
+	primaryId := data.Id.ValueString()
+
+	// Backward compatibility: SDK v2 state prior to the composite-ID change stored
+	// only the name. Append the protocol (config value or the UDP default) so the
+	// filter below can locate the entry.
+	oldIdSlice := strings.Split(primaryId, ",")
+	if len(oldIdSlice) == 1 {
+		typeVal := "UDP"
+		if !data.Type.IsNull() && !data.Type.IsUnknown() && data.Type.ValueString() != "" {
+			typeVal = data.Type.ValueString()
+		}
+		primaryId = primaryId + "," + typeVal
+		data.Id = types.StringValue(primaryId)
+	}
+
+	idSlice := strings.SplitN(primaryId, ",", 2)
+	name := idSlice[0]
+	dnsType := ""
+	if len(idSlice) > 1 {
+		dnsType = idSlice[1]
+	}
+
+	findParams := service.FindParams{
+		ResourceType: service.Dnsnameserver.Type(),
+	}
+	dataArray, err := r.client.FindResourceArrayWithParams(findParams)
+	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
+		diags.AddError("Client Error", fmt.Sprintf("Unable to read dnsnameserver, got error: %s", err))
+		return false
+	}
+	if len(dataArray) == 0 {
+		return false
+	}
+
+	// When type is UDP_TCP, the ADC creates two separate entries (UDP and TCP);
+	// match either.
+	var typesToCheck []string
+	if dnsType == "UDP_TCP" {
+		typesToCheck = []string{"UDP", "TCP"}
+	} else {
+		typesToCheck = []string{dnsType}
+	}
+
+	foundIndex := -1
+	for _, checkType := range typesToCheck {
+		for i, ns := range dataArray {
+			match := false
+			if ns["ip"] == name || ns["dnsvservername"] == name {
+				match = true
+			}
+			if match && checkType != "" && ns["type"] != checkType {
+				match = false
+			}
+			if match {
+				foundIndex = i
+				break
+			}
+		}
+		if foundIndex != -1 {
+			break
+		}
+	}
+
+	if foundIndex == -1 {
+		return false
+	}
+
+	dnsnameserverSetAttrFromGet(ctx, data, dataArray[foundIndex], name, dnsType)
+
+	return true
 }

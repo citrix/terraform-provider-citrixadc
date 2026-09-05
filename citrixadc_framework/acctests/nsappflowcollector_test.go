@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsappflowcollector_basic = `
@@ -126,6 +127,77 @@ func testAccCheckNsappflowcollectorDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccNsappflowcollector_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsappflowcollector.tf_appflowcollector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsappflowcollectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsappflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsappflowcollectorExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsappflowcollector.Type(), "tf_appflowcollector"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsappflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsappflowcollectorExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsappflowcollector_import(t *testing.T) {
+	const resAddr = "citrixadc_nsappflowcollector.tf_appflowcollector"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsappflowcollectorDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsappflowcollector_basic},
+			{
+				Config:                  testAccNsappflowcollector_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccNsappflowcollector_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsappflowcollectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNsappflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsappflowcollectorExist("citrixadc_nsappflowcollector.tf_appflowcollector", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsappflowcollector_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsappflowcollectorExist("citrixadc_nsappflowcollector.tf_appflowcollector", nil)),
+			},
+		},
+	})
 }
 
 func TestAccNsappflowcollectorDataSource_basic(t *testing.T) {

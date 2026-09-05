@@ -43,11 +43,10 @@ func (d *DnssuffixDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	// Case 1: Simple find without ID
-	var getResponseData map[string]interface{}
-	var err error
+	// Case 2: Find with single ID attribute (named resource) - look up by the dnssuffix value
+	dnssuffixName := data.Dnssuffix.ValueString()
 
-	getResponseData, err = d.client.FindResource(service.Dnssuffix.Type(), "")
+	getResponseData, err := d.client.FindResource(service.Dnssuffix.Type(), dnssuffixName)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read dnssuffix, got error: %s", err))
 		return

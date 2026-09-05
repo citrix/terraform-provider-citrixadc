@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *BotsignatureResource) Create(ctx context.Context, req resource.CreateRe
 
 	tflog.Debug(ctx, "Creating botsignature resource")
 
-	// botsignature := botsignatureGetThePayloadFromtheConfig(ctx, &data)
+	botsignature := botsignatureGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botsignature.Type(), &botsignature)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botsignature, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("botsignature-config")
+	// Named resource imported via the NITRO "Import" action (POST ?action=Import).
+	// This mirrors the SDK v2 resource which called ActOnResource(..., "Import").
+	err := r.client.ActOnResource(service.Botsignature.Type(), &botsignature, "Import")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create botsignature, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created botsignature resource")
 
+	// Set ID for the resource before reading state.
+	// Case 2: Single unique attribute - use plain name value as ID.
+	data.Id = types.StringValue(data.Name.ValueString())
+
 	// Read the updated state back
-	r.readBotsignatureFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotsignatureFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botsignature not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *BotsignatureResource) Read(ctx context.Context, req resource.ReadReques
 
 	tflog.Debug(ctx, "Reading botsignature resource")
 
-	r.readBotsignatureFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readBotsignatureFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *BotsignatureResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data BotsignatureResourceModel
+	var data, state BotsignatureResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,22 @@ func (r *BotsignatureResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	tflog.Debug(ctx, "Updating botsignature resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// botsignature := botsignatureGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Botsignature.Type(), &botsignature)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update botsignature, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated botsignature resource")
+	// botsignature has no NITRO-updatable attributes: every configurable attribute
+	// (name, comment, overwrite, src) is ForceNew/RequiresReplace, exactly as in the
+	// SDK v2 resource which defined no update. Terraform therefore recreates on any
+	// change, so this path only refreshes state.
+	tflog.Debug(ctx, "Updating botsignature resource - no updatable attributes, refreshing state")
 
 	// Read the updated state back
-	r.readBotsignatureFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readBotsignatureFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "botsignature not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +154,34 @@ func (r *BotsignatureResource) Delete(ctx context.Context, req resource.DeleteRe
 
 	tflog.Debug(ctx, "Deleting botsignature resource")
 
-	// For botsignature, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted botsignature resource from state")
+	// Named resource - delete using DeleteResource keyed on the name (ID).
+	name := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Botsignature.Type(), name)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete botsignature, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted botsignature resource")
 }
 
-// Helper function to read botsignature data from API
-func (r *BotsignatureResource) readBotsignatureFromApi(ctx context.Context, data *BotsignatureResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Botsignature.Type(), "")
+// Helper function to read botsignature data from API.
+// Returns false when the resource no longer exists on the ADC.
+func (r *BotsignatureResource) readBotsignatureFromApi(ctx context.Context, data *BotsignatureResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Botsignature.Type(), name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read botsignature, got error: %s", err))
-		return
+		return false
 	}
 
 	botsignatureSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

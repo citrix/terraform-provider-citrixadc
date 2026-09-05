@@ -105,7 +105,7 @@ func (d *LbvserverCachepolicyBindingDataSource) Read(ctx context.Context, req da
 		return
 	}
 
-	lbvserver_cachepolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_cachepolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -35,7 +35,7 @@ func (d *ChannelInterfaceBindingDataSource) Schema(ctx context.Context, req data
 }
 
 func (d *ChannelInterfaceBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ChannelInterfaceBindingResourceModel
+	var data ChannelInterfaceBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -43,7 +43,7 @@ func (d *ChannelInterfaceBindingDataSource) Read(ctx context.Context, req dataso
 	}
 
 	channelid := data.Channelid.ValueString()
-	wantIfnum := datasourceFirstIfnum(ctx, &data)
+	wantIfnum := channelInterfaceDatasourceFirstIfnum(ctx, &data)
 
 	// The direct channel_interface_binding endpoint returns a keyless empty body on
 	// this firmware; read the bound interfaces from the aggregate parent endpoint.
@@ -76,7 +76,7 @@ func (d *ChannelInterfaceBindingDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	channel_interface_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+	channel_interface_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

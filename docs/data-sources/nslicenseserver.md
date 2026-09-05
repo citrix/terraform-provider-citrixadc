@@ -46,3 +46,12 @@ In addition to the arguments above, the following attributes are exported:
 * `username` - Username to authenticate with ADM Agent for LAS licensing.
 * `password` - Password to use when authenticating with ADM Agent for LAS licensing.
 * `forceupdateip` - Flag indicating if existing config will be overwritten while adding the licenseserver.
+
+### Read-only nslicenseserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nslicenseserver` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `status` - Status of the license server.
+* `grace` - Grace status of the server.
+* `gptimeleft` - Grace time left.
+* `type` - License server type (`ADM` or `CLA`).

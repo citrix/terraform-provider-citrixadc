@@ -11,8 +11,8 @@ The csvserver_vpnvserver_binding resource is used to bind a vpnvserver to csvser
 
 ```hcl
 resource "citrixadc_csvserver_vpnvserver_binding" "tf_csvserver_vpnvserver_binding" {
-	name = "tf_csvserver"
-	vserver = "tf_vpnvserver"
+  name    = "tf_csvserver"
+  vserver = "tf_vpnvserver"
 }
 ```
 

@@ -11,8 +11,14 @@ The tmglobal_auditnslogpolicy_binding resource is used to create tmglobal_auditn
 
 ```hcl
 resource "citrixadc_tmglobal_auditnslogpolicy_binding" "tf_tmglobal_auditnslogpolicy_binding" {
-  policyname = "tf_auditnslogpolicy"
+  policyname = citrixadc_auditnslogpolicy.tf_auditnslogpolicy.name
   priority   = 100
+}
+
+resource "citrixadc_auditnslogpolicy" "tf_auditnslogpolicy" {
+  name   = "tf_auditnslogpolicy"
+  rule   = "ns_true"
+  action = "tf_nslogaction"
 }
 ```
 

@@ -35,7 +35,7 @@ func (d *DnsaaaarecDataSource) Schema(ctx context.Context, req datasource.Schema
 }
 
 func (d *DnsaaaarecDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data DnsaaaarecResourceModel
+	var data DnsaaaarecDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -74,11 +74,11 @@ func (d *DnsaaaarecDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 		match := true
 
-		if v["hostname"].(string) != hostname_Name {
+		if hn, _ := v["hostname"].(string); hn != hostname_Name {
 			match = false
 		}
 
-		if v["ipv6address"].(string) != ipv6address_Name {
+		if ip, _ := v["ipv6address"].(string); ip != ipv6address_Name {
 			match = false
 		}
 
@@ -95,7 +95,7 @@ func (d *DnsaaaarecDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	dnsaaaarecSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	dnsaaaarecDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

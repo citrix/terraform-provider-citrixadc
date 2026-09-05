@@ -105,7 +105,7 @@ func (d *AppfwprofileCsrftagBindingDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	appfwprofile_csrftag_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	appfwprofile_csrftag_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

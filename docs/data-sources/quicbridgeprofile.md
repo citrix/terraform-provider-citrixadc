@@ -25,3 +25,9 @@ In addition to the argument, the following attributes are exported:
 * `id` - The ID of the QUIC bridge profile.
 * `routingalgorithm` - Routing algorithm to generate routable connection IDs.
 * `serveridlength` - Length of serverid to encode/decode server information.
+
+### Read-only quicbridgeprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_quicbridgeprofile` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `refcnt` - Number of entities using this profile.

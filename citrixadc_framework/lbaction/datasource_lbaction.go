@@ -35,7 +35,7 @@ func (d *LbactionDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 }
 
 func (d *LbactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LbactionResourceModel
+	var data LbactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *LbactionDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	lbactionSetAttrFromGet(ctx, &data, getResponseData)
+	lbactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *RnatNsipBindingResource) Schema(ctx context.Context, req resource.Schem
 				Description: "The ID of the rnat_nsip_binding resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the RNAT rule to which to bind NAT IPs.",
 			},
 			"natip": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Any NetScaler-owned IPv4 address except the NSIP address. The NetScaler appliance replaces the source IP addresses of server-generated packets with the IP address specified. The IP address must be a public NetScaler-owned IP address. If you specify multiple addresses for this field, NATIP selection uses the round robin algorithm for each session. By specifying a range of IP addresses, you can specify all NetScaler-owned IP addresses, except the NSIP, that fall within the specified range.",
 			},
 		},
 	}
 }
 
-func rnat_nsip_bindingGetThePayloadFromtheConfig(ctx context.Context, data *RnatNsipBindingResourceModel) network.Rnatnsipbinding {
-	tflog.Debug(ctx, "In rnat_nsip_bindingGetThePayloadFromtheConfig Function")
+func rnat_nsip_bindingGetThePayloadFromthePlan(ctx context.Context, data *RnatNsipBindingResourceModel) network.Rnatnsipbinding {
+	tflog.Debug(ctx, "In rnat_nsip_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	rnat_nsip_binding := network.Rnatnsipbinding{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		rnat_nsip_binding.Name = data.Name.ValueString()
 	}
-	if !data.Natip.IsNull() {
+	if !data.Natip.IsNull() && !data.Natip.IsUnknown() {
 		rnat_nsip_binding.Natip = data.Natip.ValueString()
 	}
 

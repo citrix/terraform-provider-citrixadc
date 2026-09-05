@@ -39,8 +39,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // All policyurlset configurable attributes are RequiresReplace, and Update is a
@@ -233,6 +233,11 @@ func TestAccPolicyurlsetDataSource_basic(t *testing.T) {
 				Config: testAccPolicyurlsetDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_policyurlset.tf_policyurlset", "name", "tf_policyurlset_ds"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyurlset.tf_policyurlset", "id"),
+					// Read-only metadata exposed only by the data source. patterncount
+					// is a counter-style field always populated for an imported urlset.
+					resource.TestCheckResourceAttrSet("data.citrixadc_policyurlset.tf_policyurlset", "patterncount"),
 				),
 			},
 		},
@@ -307,6 +312,38 @@ func TestAccPolicyurlset_url_wo_ephemeral(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_policyurlset.tf_policyurlset", "name", "tf_policyurlset_wo"),
 					resource.TestCheckResourceAttr("citrixadc_policyurlset.tf_policyurlset", "url_wo_version", "2"),
 				),
+			},
+		},
+	})
+}
+
+// TestAccPolicyurlset_selfHealing verifies the provider re-imports the urlset when it
+// is deleted out-of-band between apply steps (drift recovery). policyurlset is an
+// import-as-create resource, so re-apply re-issues the NITRO Import action; the
+// doPolicyUrlSetPreChecks PreCheck uploads the local: source the import needs.
+func TestAccPolicyurlset_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_policyurlset.tf_policyurlset"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doPolicyUrlSetPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyurlsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyurlset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyurlsetExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Policyurlset.Type(), "tf_policyurlset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccPolicyurlset_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckPolicyurlsetExist(resAddr, nil)),
 			},
 		},
 	})

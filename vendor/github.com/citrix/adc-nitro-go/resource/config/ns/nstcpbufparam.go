@@ -27,7 +27,7 @@ type Nstcpbufparam struct {
 	/**
 	* Maximum memory, in megabytes, that can be used for buffering.
 	*/
-	Memlimit *int `json:"memlimit"` // Zero is a valid value
+	Memlimit *int `json:"memlimit,omitempty"`
 
 	//------- Read only Parameter ---------;
 

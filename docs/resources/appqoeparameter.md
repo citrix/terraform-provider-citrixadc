@@ -32,3 +32,12 @@ resource "citrixadc_appqoeparameter" "tf_appqoeparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the appqoeparameter. It is a unique string prefixed with `tf-appqoeparameter-`.
+
+
+## Import
+
+A appqoeparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appqoeparameter.tf_appqoeparameter appqoeparameter-config
+```

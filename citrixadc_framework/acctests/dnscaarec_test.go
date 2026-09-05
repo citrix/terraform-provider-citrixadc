@@ -30,8 +30,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDnscaarec_basic_step1 = `
@@ -232,11 +232,57 @@ func TestAccDnscaarecDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDnscaarecDataSource_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_dnscaarec.tf_dnscaarec", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscaarec.tf_dnscaarec", "domain", "tf-caa-ds.example.com"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscaarec.tf_dnscaarec", "valuestring", "letsencrypt.org"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscaarec.tf_dnscaarec", "tag", "issue"),
 					resource.TestCheckResourceAttr("data.citrixadc_dnscaarec.tf_dnscaarec", "ttl", "3600"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDnscaarec_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dnscaarec.tf_dnscaarec"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDnscaarecDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDnscaarec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnscaarecExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					// recordid is server-assigned, so look up the CAA record(s) for the
+					// domain and delete each by (domain, recordid) exactly as the
+					// resource's own Delete does.
+					findParams := service.FindParams{
+						ResourceType:             service.Dnscaarec.Type(),
+						ResourceName:             "tf-caa.example.com",
+						ResourceMissingErrorCode: 258,
+					}
+					dataArr, err := client.FindResourceArrayWithParams(findParams)
+					if err != nil {
+						t.Fatalf("self-healing: find dnscaarec failed: %v", err)
+					}
+					for _, v := range dataArr {
+						if val, ok := v["recordid"]; ok && val != nil {
+							delArgs := []string{fmt.Sprintf("recordid:%v", val)}
+							if err := client.DeleteResourceWithArgs(service.Dnscaarec.Type(), "tf-caa.example.com", delArgs); err != nil {
+								t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+							}
+						}
+					}
+				},
+				Config: testAccDnscaarec_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDnscaarecExist(resAddr, nil)),
 			},
 		},
 	})

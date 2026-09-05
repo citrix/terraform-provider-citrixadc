@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSnmpview_basic = `
@@ -95,6 +97,11 @@ func TestAccSnmpviewDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "name", "test_name_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "subtree", "1.2.4.7"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpview.tf_snmpview", "type", "excluded"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpview.tf_snmpview", "id"),
+					// Read-only metadata exposed only by the data source; status is
+					// always populated for a freshly-created view.
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpview.tf_snmpview", "status"),
 				),
 			},
 		},
@@ -127,7 +134,9 @@ func testAccCheckSnmpviewExist(n string, id *string) resource.TestCheckFunc {
 		}
 		dataArr, err := client.FindAllResources(service.Snmpview.Type())
 
-		snmpviewName := rs.Primary.ID
+		// The resource ID is the composite "name,subtree"; the NITRO name is the
+		// first component.
+		snmpviewName := strings.SplitN(rs.Primary.ID, ",", 2)[0]
 		// Unexpected error
 		if err != nil {
 			return err
@@ -166,7 +175,8 @@ func testAccCheckSnmpviewDestroy(s *terraform.State) error {
 			return fmt.Errorf("No name is set")
 		}
 
-		_, err := client.FindResource(service.Snmpview.Type(), rs.Primary.ID)
+		snmpviewName := strings.SplitN(rs.Primary.ID, ",", 2)[0]
+		_, err := client.FindResource(service.Snmpview.Type(), snmpviewName)
 		if err == nil {
 			return fmt.Errorf("snmpview %s still exists", rs.Primary.ID)
 		}
@@ -174,4 +184,79 @@ func testAccCheckSnmpviewDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccSnmpview_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_snmpview.tf_snmpview"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Snmpview.Type(), "test_name", []string{"subtree:1.2.4.7"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+// TestAccSnmpview_import verifies import via the composite ID "name,subtree".
+// Pre-fix, ImportStatePassthroughID populated only id, so readSnmpviewFromApi
+// (which matches on name/subtree) found no row and dropped the resource -> import
+// always failed.
+func TestAccSnmpview_import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil)),
+			},
+			{
+				ResourceName:      "citrixadc_snmpview.tf_snmpview",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSnmpview_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSnmpviewDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSnmpview_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpviewExist("citrixadc_snmpview.tf_snmpview", nil)),
+			},
+		},
+	})
 }

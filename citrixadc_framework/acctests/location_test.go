@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLocation_basic = `
@@ -113,6 +114,53 @@ func testAccCheckLocationDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLocation_import(t *testing.T) {
+	const resAddr = "citrixadc_location.tf_location"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLocationDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLocation_basic},
+			{
+				Config:                  testAccLocation_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"preferredlocation"},
+			},
+		},
+	})
+}
+
+func TestAccLocation_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLocation_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationExist("citrixadc_location.tf_location", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLocation_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLocationExist("citrixadc_location.tf_location", nil),
+				),
+			},
+		},
+	})
+}
+
 const testAccLocationDataSource_basic = `
 
 	resource "citrixadc_location" "tf_location" {
@@ -138,6 +186,8 @@ func TestAccLocationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "ipfrom", "8.8.8.8"),
 					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "ipto", "9.9.9.9"),
 					resource.TestCheckResourceAttr("data.citrixadc_location.tf_location", "preferredlocation", "datasource_city.*.*.*.*.*"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_location.tf_location", "id"),
 				),
 			},
 		},

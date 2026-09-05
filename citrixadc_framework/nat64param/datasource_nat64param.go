@@ -7,6 +7,7 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*Nat64paramDataSource)(nil)
@@ -43,19 +44,22 @@ func (d *Nat64paramDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	// Case 2: Find with single ID attribute
-	td_Name := fmt.Sprintf("%d", data.Td.ValueInt64())
-
+	// nat64param is a singleton: read it with an empty name (matches the SDK v2
+	// read and the resource read). The td input from config is echoed back from
+	// the GET response by nat64paramSetAttrFromGet.
 	var getResponseData map[string]interface{}
 	var err error
 
-	getResponseData, err = d.client.FindResource(service.Nat64param.Type(), td_Name)
+	getResponseData, err = d.client.FindResource(service.Nat64param.Type(), "")
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read nat64param, got error: %s", err))
 		return
 	}
 
 	nat64paramSetAttrFromGet(ctx, &data, getResponseData)
+
+	// The shared setter does not assign an ID; the datasource sets its own.
+	data.Id = types.StringValue(fmt.Sprintf("%d", data.Td.ValueInt64()))
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

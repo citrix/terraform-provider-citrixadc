@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSpilloveraction_basic = `
@@ -72,7 +73,81 @@ func TestAccSpilloveractionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_spilloveraction.tf_spilloveraction", "name", "my_spilloveraction_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_spilloveraction.tf_spilloveraction", "action", "SPILLOVER"),
+					// Universal runtime-binding proof (read-only builtin/feature are
+					// config-dependent and may be omitted for a basic object).
+					resource.TestCheckResourceAttrSet("data.citrixadc_spilloveraction.tf_spilloveraction", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSpilloveraction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_spilloveraction.tf_spilloveraction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSpilloveractionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpilloveraction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloveractionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Spilloveraction.Type(), "my_spilloveraction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSpilloveraction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloveractionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSpilloveraction_import(t *testing.T) {
+	const resAddr = "citrixadc_spilloveraction.tf_spilloveraction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSpilloveractionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSpilloveraction_basic},
+			{
+				Config:                  testAccSpilloveraction_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccSpilloveraction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSpilloveractionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSpilloveraction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloveractionExist("citrixadc_spilloveraction.tf_spilloveraction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSpilloveraction_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSpilloveractionExist("citrixadc_spilloveraction.tf_spilloveraction", nil)),
 			},
 		},
 	})

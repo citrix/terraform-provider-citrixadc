@@ -38,7 +38,7 @@ In addition to the arguments, the following attributes are available:
 
 * `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `priority` - Specifies the priority of the policy.
-* `id` - The id of the contentinspectionpolicylabel_contentinspectionpolicy_binding. It is a system-generated identifier.
+* `id` - The id of the contentinspectionpolicylabel_contentinspectionpolicy_binding. It is the concatenation of `labelname` and `policyname` attributes separated by a comma.
 * `invoke` - Suspend evaluation of policies bound to the current policy label, and then forward the request to the specified virtual server or evaluate the specified policy label.
-* `invoke_labelname` - If labelType is policylabel, name of the policy label to invoke. If labelType is reqvserver or resvserver, name of the virtual server to which to forward the request or response.
-* `labeltype` - Type of invocation. Available settings function as follows: reqvserver - Forward the request to the specified request virtual server. resvserver - Forward the response to the specified response virtual server. policylabel - Invoke the specified policy label.
+* `invokelabelname` - If labelType is policylabel, name of the policy label to invoke. If labelType is reqvserver or resvserver, name of the virtual server to which to forward the request or response.
+* `labeltype` - Type of invocation. Available settings function as follows: reqvserver - Forward the request to the specified request virtual server. resvserver - Forward the response to the specified response virtual server. policylabel - Invoke the specified policy label. Possible values: [ reqvserver, resvserver, policylabel ]

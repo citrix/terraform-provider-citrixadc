@@ -36,11 +36,10 @@ In addition to the arguments, the following attributes are available:
 * `snmpoid` - New SNMP OID of the metric.
 * `id` - The id of the lbmetrictable. It has the same value as the `metrictable` attribute.
 
+### Read-only lbmetrictable metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_lbmetrictable` resource). They are GET-only/Computed and are `null` when the appliance omits them.
 
-A lbmetrictable can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_lbmetrictable.tf_lbmetrictable my_lbmetrictable
-```
+* `metrictype` - Indication if it is a configured or internal metric table. Possible values: `INTERNAL`, `CONFIGURED`.
+* `builtin` - Flag to determine whether the metric table is built-in. Possible values: `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`. A list of strings.
+* `feature` - The feature to be checked while applying this configuration.

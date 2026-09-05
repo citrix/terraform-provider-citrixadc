@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccCluster_basic(t *testing.T) {
@@ -129,16 +130,16 @@ const testAccCluster_step1 = `
 
 resource "citrixadc_cluster" "tf_cluster" {
     clid = 1
-    clip = "10.101.132.151"
+    clip = "10.101.132.161"
 	hellointerval = 200
 
     clusternode { 
         nodeid = 0
         delay = 0
         priority = 30
-        endpoint = "http://10.101.132.152"
+        endpoint = "http://10.101.132.151"
         backplane = "0/1/1"
-        ipaddress = "10.101.132.152"
+        ipaddress = "10.101.132.151"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
 
@@ -149,8 +150,8 @@ resource "citrixadc_cluster" "tf_cluster" {
         nodeid = 1
         delay = 0
         priority = 31
-        endpoint = "http://10.101.132.153"
-        ipaddress = "10.101.132.153"
+        endpoint = "http://10.101.132.152"
+        ipaddress = "10.101.132.152"
         backplane = "1/1/1"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
@@ -164,16 +165,16 @@ const testAccCluster_step2 = `
 
 resource "citrixadc_cluster" "tf_cluster" {
     clid = 1
-    clip = "10.101.132.151"
+    clip = "10.101.132.161"
 	hellointerval = 400
 
     clusternode { 
         nodeid = 0
         delay = 0
         priority = 30
-        endpoint = "http://10.101.132.152"
+        endpoint = "http://10.101.132.151"
         backplane = "0/1/1"
-        ipaddress = "10.101.132.152"
+        ipaddress = "10.101.132.151"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
 
@@ -184,8 +185,8 @@ resource "citrixadc_cluster" "tf_cluster" {
         nodeid = 1
         delay = 0
         priority = 20
-        endpoint = "http://10.101.132.153"
-        ipaddress = "10.101.132.153"
+        endpoint = "http://10.101.132.152"
+        ipaddress = "10.101.132.152"
         backplane = "1/1/1"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
@@ -199,15 +200,15 @@ const testAccCluster_step3 = `
 
 resource "citrixadc_cluster" "tf_cluster" {
     clid = 1
-    clip = "10.101.132.151"
+    clip = "10.101.132.161"
 	hellointerval = 400
 
     clusternode { 
         nodeid = 1
         delay = 0
         priority = 20
-        endpoint = "http://10.101.132.153"
-        ipaddress = "10.101.132.153"
+        endpoint = "http://10.101.132.152"
+        ipaddress = "10.101.132.152"
         backplane = "1/1/1"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
@@ -221,16 +222,16 @@ const testAccCluster_step4 = `
 
 resource "citrixadc_cluster" "tf_cluster" {
     clid = 1
-    clip = "10.101.132.151"
+    clip = "10.101.132.161"
 	hellointerval = 400
 
     clusternode { 
         nodeid = 0
         delay = 0
         priority = 30
-        endpoint = "http://10.101.132.152"
+        endpoint = "http://10.101.132.151"
         backplane = "0/1/1"
-        ipaddress = "10.101.132.152"
+        ipaddress = "10.101.132.151"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
 
@@ -241,8 +242,8 @@ resource "citrixadc_cluster" "tf_cluster" {
         nodeid = 1
         delay = 0
         priority = 31
-        endpoint = "http://10.101.132.153"
-        ipaddress = "10.101.132.153"
+        endpoint = "http://10.101.132.152"
+        ipaddress = "10.101.132.152"
         backplane = "1/1/1"
         tunnelmode = "NONE"
         nodegroup = "DEFAULT_NG"
@@ -251,6 +252,34 @@ resource "citrixadc_cluster" "tf_cluster" {
 	}
 }
 `
+
+func TestAccCluster_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_cluster.tf_cluster"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCluster_step1},
+			{
+				Config:            testAccCluster_step1,
+				ResourceName:      resAddr,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// cluster is a high-level bootstrap orchestrator whose import is a bare
+				// clid passthrough; Read refreshes only the cluster instance. The CLIP,
+				// the clusternode blocks (which include config-only endpoint/username/
+				// password fields not stored on the ADC) and the client-side timeout
+				// knobs cannot be reconstructed from NITRO on import, so they are
+				// ignored (prefix match). The cluster instance attributes still verify.
+				ImportStateVerifyIgnore: []string{"clip", "clusternode", "bootstrap_", "node_add_"},
+			},
+		},
+	})
+}
 
 func TestAccCluster_sdkv2StateUpgrade(t *testing.T) {
 	if adcTestbed != "CLUSTER" {
@@ -262,7 +291,7 @@ func TestAccCluster_sdkv2StateUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.2.0"},
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
 				Config: testAccCluster_step1,
 				Check: resource.ComposeTestCheckFunc(
@@ -271,7 +300,10 @@ func TestAccCluster_sdkv2StateUpgrade(t *testing.T) {
 			},
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Config:                   testAccCluster_step1,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCluster_step1,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExist("citrixadc_cluster.tf_cluster", nil),
 				),

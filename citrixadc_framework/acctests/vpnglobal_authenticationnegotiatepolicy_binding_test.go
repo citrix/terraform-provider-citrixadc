@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnglobal_authenticationnegotiatepolicy_binding_basic = `
@@ -79,6 +80,63 @@ func TestAccVpnglobal_authenticationnegotiatepolicy_binding_basic(t *testing.T) 
 				Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingNotExist("citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", "tf_negotiatepolicy"),
+				),
+			},
+		},
+	})
+}
+
+const testAccVpnglobal_authenticationnegotiatepolicy_binding_upgrade_basic = `
+	resource "citrixadc_authenticationnegotiateaction" "tf_negotiateaction" {
+		name                       = "tf_negotiateaction"
+		domain                     = "DomainName"
+		domainuser                 = "usersame"
+		domainuserpasswd           = "password"
+		ntlmpath                   = "http://www.example.com/"
+		defaultauthenticationgroup = "new_grpname"
+	}
+	resource "citrixadc_authenticationnegotiatepolicy" "tf_negotiatepolicy" {
+		name      = "tf_negotiatepolicy"
+		rule      = "ns_true"
+		reqaction = citrixadc_authenticationnegotiateaction.tf_negotiateaction.name
+	}
+	resource "citrixadc_vpnglobal_authenticationnegotiatepolicy_binding" "tf_binding" {
+		policyname             = citrixadc_authenticationnegotiatepolicy.tf_negotiatepolicy.name
+		secondary              = "false"
+		priority               = 10
+		gotopriorityexpression = "END"
+	}
+`
+
+func TestAccVpnglobal_authenticationnegotiatepolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (writes the legacy id)
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingExist("citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", "id", "tf_negotiatepolicy"),
+				),
+			},
+			// Step 2: refresh/apply through the current framework provider (exercises ParseIdString on the legacy id)
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingExist("citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", "id", "tf_negotiatepolicy"),
 				),
 			},
 		},
@@ -241,6 +299,47 @@ func TestAccVpnglobal_authenticationnegotiatepolicy_bindingDataSource_basic(t *t
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding", "priority", "10"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccVpnglobal_authenticationnegotiatepolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_authenticationnegotiatepolicy_binding.Type(), "", []string{"policyname:tf_negotiatepolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobal_authenticationnegotiatepolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_authenticationnegotiatepolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobal_authenticationnegotiatepolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_basic},
+			{Config: testAccVpnglobal_authenticationnegotiatepolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"gotopriorityexpression"}},
 		},
 	})
 }

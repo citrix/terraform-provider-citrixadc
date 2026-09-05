@@ -3,10 +3,13 @@ package lsnclient_network_binding
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/citrix/adc-nitro-go/service"
 
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ datasource.DataSource = (*LsnclientNetworkBindingDataSource)(nil)
@@ -66,23 +69,11 @@ func (d *LsnclientNetworkBindingDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the binding for this network.
+	// Match only on `network` (the GET response does not echo `td`).
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check network
-		if val, ok := v["network"].(string); ok {
-			if network_Name.IsNull() || val != network_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !network_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		if match {
+		if val, ok := v["network"].(string); ok && !network_Name.IsNull() && val == network_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -94,7 +85,14 @@ func (d *LsnclientNetworkBindingDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	lsnclient_network_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lsnclient_network_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
+
+	// Set the ID (the datasource has no Create); use the legacy identity keys.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("clientname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Clientname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("network:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Network.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

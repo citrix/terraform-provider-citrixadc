@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // NOTE on ifnum value below:
@@ -43,7 +43,7 @@ resource "citrixadc_fis" "tf_fis" {
 
 resource "citrixadc_fis_channel_binding" "tf_fis_channel_binding" {
 	name  = citrixadc_fis.tf_fis.name
-	ifnum = "1/2" // free physical interface; a real channel id (e.g. "LA/1") also works
+	ifnum = "1/1" // free physical interface (1/1 confirmed present on the VPX; siblings bind it)
 
 	depends_on = [citrixadc_fis.tf_fis]
 }
@@ -68,7 +68,7 @@ func TestAccFis_channel_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFis_channel_bindingExist("citrixadc_fis_channel_binding.tf_fis_channel_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_fis_channel_binding.tf_fis_channel_binding", "name", "tf_fis"),
-					resource.TestCheckResourceAttr("citrixadc_fis_channel_binding.tf_fis_channel_binding", "ifnum", "1/2"),
+					resource.TestCheckResourceAttr("citrixadc_fis_channel_binding.tf_fis_channel_binding", "ifnum", "1/1"),
 				),
 			},
 			{

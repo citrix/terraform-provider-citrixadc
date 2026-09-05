@@ -27,7 +27,7 @@ resource "citrixadc_lsngroup_lsnappsprofile_binding" "tf_lsngroup_lsnappsprofile
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the lsngroup_lsnappsprofile_binding. It is the concatenation of  `groupname` and `appsprofilename` attributes separated by a comma.
+* `id` - The id of the lsngroup_lsnappsprofile_binding. It is the concatenation of `groupname` and `appsprofilename` attributes separated by a comma.
 
 
 ## Import

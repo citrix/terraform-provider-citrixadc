@@ -35,7 +35,7 @@ func (d *AuthenticationoauthidpprofileDataSource) Schema(ctx context.Context, re
 }
 
 func (d *AuthenticationoauthidpprofileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AuthenticationoauthidpprofileResourceModel
+	var data AuthenticationoauthidpprofileDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *AuthenticationoauthidpprofileDataSource) Read(ctx context.Context, req 
 		return
 	}
 
-	authenticationoauthidpprofileSetAttrFromGet(ctx, &data, getResponseData)
+	authenticationoauthidpprofileDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -54,3 +54,9 @@ In addition to the arguments above, the following attributes are exported:
 * `bridgebpdus` - Bridge BPDUs mode. When enabled, bridges Bridge Protocol Data Units.
 * `ulfd` - Use Link Failure Detection mode. When enabled, detects link failures.
 
+### Read-only nsmode metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsmode` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `single_ip` - Single IP mode.
+

@@ -38,3 +38,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the csvserver_lbvserver_binding. It is a system-generated identifier in the format `name,lbvserver`.
 * `targetvserver` - The virtual server name (created with the add lb vserver command) to which content will be switched.
+
+### Read-only csvserver_lbvserver_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_csvserver_lbvserver_binding` resource). Each is Computed and is `null` when the appliance does not return it.
+
+* `vserverid` - Vserver Id of vserver.
+* `hits` - Number of hits.
+* `cookieipport` - Vserver id of the lb vserver that is inserted into the set-cookie HTTP header.

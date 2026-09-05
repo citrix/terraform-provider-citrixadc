@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationwebauthpolicy_add = `
@@ -147,6 +148,53 @@ func testAccCheckAuthenticationwebauthpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAuthenticationwebauthpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationwebauthpolicy.tf_webauthpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationwebauthpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationwebauthpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationwebauthpolicy.Type(), "tf_webauthpolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationwebauthpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationwebauthpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationwebauthpolicy.tf_webauthpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationwebauthpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationwebauthpolicy_add},
+			{
+				Config:                  testAccAuthenticationwebauthpolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccAuthenticationwebauthpolicyDataSource_basic = `
 	resource "citrixadc_authenticationwebauthaction" "tf_webauthaction" {
 		name                       = "tf_webauthaction"
@@ -167,6 +215,30 @@ const testAccAuthenticationwebauthpolicyDataSource_basic = `
 		name = citrixadc_authenticationwebauthpolicy.tf_webauthpolicy.name
 	}
 `
+
+func TestAccAuthenticationwebauthpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationwebauthpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationwebauthpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthpolicyExist("citrixadc_authenticationwebauthpolicy.tf_webauthpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationwebauthpolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationwebauthpolicyExist("citrixadc_authenticationwebauthpolicy.tf_webauthpolicy", nil)),
+			},
+		},
+	})
+}
 
 func TestAccAuthenticationwebauthpolicyDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

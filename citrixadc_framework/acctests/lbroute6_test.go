@@ -21,8 +21,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccLbroute6_basic = `
@@ -213,6 +214,25 @@ func testAccCheckLbroute6Destroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccLbroute6_import(t *testing.T) {
+	const resAddr = "citrixadc_lbroute6.demo_route6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbroute6Destroy,
+		Steps: []resource.TestStep{
+			{Config: testAccLbroute6_basic},
+			{
+				Config:                  testAccLbroute6_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"td"},
+			},
+		},
+	})
+}
+
 const testAccLbroute6DataSource_basic = `
 resource "citrixadc_nsip6" "tf1_nsip6" {
     ipv6address = "22::1/64"
@@ -295,6 +315,30 @@ data "citrixadc_lbroute6" "demo_route6" {
 }
 `
 
+func TestAccLbroute6_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckLbroute6Destroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccLbroute6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbroute6Exist("citrixadc_lbroute6.demo_route6", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccLbroute6_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbroute6Exist("citrixadc_lbroute6.demo_route6", nil)),
+			},
+		},
+	})
+}
+
 func TestAccLbroute6DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -307,6 +351,10 @@ func TestAccLbroute6DataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbroute6.demo_route6", "network", "66::/64"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbroute6.demo_route6", "gatewayname", "llb6"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute6.demo_route6", "td"),
+					// Runtime-binding proof plus the read-only gateway state field the
+					// appliance always returns.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute6.demo_route6", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbroute6.demo_route6", "flags"),
 				),
 			},
 		},

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCrvserver_cspolicy_binding_basic = `
@@ -145,10 +148,12 @@ func testAccCheckCrvserver_cspolicy_bindingExist(n string, id *string) resource.
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		policyname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "policyname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "crvserver_cspolicy_binding",
@@ -311,8 +316,164 @@ func TestAcccrvserver_cspolicy_bindingDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "name", "my_vserver_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "policyname", "tf_cspolicy_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "id"),
 				),
 			},
+		},
+	})
+}
+
+// testAcccrvserver_cspolicy_binding_upgrade_basic is the config used by the
+// sdkv2 -> framework state-upgrade test. It reuses the same values and resource
+// labels as testAccCrvserver_cspolicy_binding_basic so it is valid under BOTH
+// the SDK v2 2.2.0 schema and the current framework schema.
+const testAcccrvserver_cspolicy_binding_upgrade_basic = `
+
+resource "citrixadc_crvserver" "crvserver" {
+	name        = "my_vserver"
+	servicetype = "HTTP"
+	arp         = "OFF"
+	}
+  resource "citrixadc_lbvserver" "foo_lbvserver" {
+	name        = "test_policy_lbv"
+	servicetype = "HTTP"
+	ipv46       = "192.122.3.30"
+	port        = 8000
+	comment     = "hello"
+	}
+  resource "citrixadc_csaction" "tf_csaction" {
+	name            = "test_csaction"
+	targetlbvserver = citrixadc_lbvserver.foo_lbvserver.name
+	}
+  resource "citrixadc_cspolicy" "foo_cspolicy" {
+	policyname = "test_cspolicy"
+	rule       = "TRUE"
+	action     = citrixadc_csaction.tf_csaction.name
+	}
+  resource "citrixadc_service" "tf_service" {
+	lbvserver = citrixadc_lbvserver.foo_lbvserver.name
+	name = "tf_service1"
+	port = 8080
+	ip = "10.202.22.111"
+	servicetype = "HTTP"
+	cachetype = "TRANSPARENT"
+	}
+  resource "citrixadc_crvserver_cspolicy_binding" "crvserver_cspolicy_binding" {
+	name       = citrixadc_crvserver.crvserver.name
+	policyname = citrixadc_cspolicy.foo_cspolicy.policyname
+	priority   = 90
+	}
+`
+
+// TestAccCrvserver_cspolicy_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0, legacy comma-separated ID) is
+// correctly refreshed/planned/applied by the current framework provider.
+func TestAccCrvserver_cspolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCrvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create the binding with the last SDK v2 release.
+			// State is written with the LEGACY comma-separated id.
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAcccrvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_cspolicy_bindingExist("citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "id", "my_vserver,test_cspolicy"),
+				),
+			},
+			// Step 2: same config, current (framework) provider. Terraform
+			// refreshes the legacy-id state through the framework Read
+			// (exercising ParseIdString on the legacy id) then plans/applies.
+			// The framework recomputes the id on read to the new key:value form.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAcccrvserver_cspolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCrvserver_cspolicy_bindingExist("citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding", "id", "name:my_vserver,policyname:test_cspolicy"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_cspolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCrvserver_cspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_cspolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Crvserver_cspolicy_binding.Type(), "my_vserver", []string{"policyname:test_cspolicy", "priority:90"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCrvserver_cspolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCrvserver_cspolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCrvserver_cspolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_crvserver_cspolicy_binding.crvserver_cspolicy_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policyname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policyname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCrvserver_cspolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCrvserver_cspolicy_binding_basic},
+			{Config: testAccCrvserver_cspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccCrvserver_cspolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }

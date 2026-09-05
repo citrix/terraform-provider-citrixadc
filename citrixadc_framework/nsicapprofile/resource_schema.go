@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -23,6 +25,7 @@ type NsicapprofileResourceModel struct {
 	Hostheader          types.String `tfsdk:"hostheader"`
 	Inserthttprequest   types.String `tfsdk:"inserthttprequest"`
 	Inserticapheaders   types.String `tfsdk:"inserticapheaders"`
+	Inspecthttp2        types.String `tfsdk:"inspecthttp2"`
 	Logaction           types.String `tfsdk:"logaction"`
 	Mode                types.String `tfsdk:"mode"`
 	Name                types.String `tfsdk:"name"`
@@ -45,11 +48,13 @@ func (r *NsicapprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"allow204": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "Enable or Disable sending Allow: 204 header in ICAP request.",
 			},
 			"connectionkeepalive": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ENABLED"),
 				Description: "If enabled, Citrix ADC keeps the ICAP connection alive after a transaction to reuse it to send next ICAP request.",
 			},
@@ -68,6 +73,11 @@ func (r *NsicapprofileResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:    true,
 				Description: "Insert custom ICAP headers in the ICAP request to send to ICAP server. The headers can be static or can be dynamically constructed using PI Policy Expression. For example, to send static user agent and Client's IP address, the expression can be specified as \"User-Agent: NS-ICAP-Client/V1.0\\r\\nX-Client-IP: \"+CLIENT.IP.SRC+\"\\r\\n\".\nThe Citrix ADC does not check the validity of the specified header name-value. You must manually validate the specified header syntax.",
 			},
+			"inspecthttp2": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or Disable ICAP inspection for HTTP/2 traffic.",
+			},
 			"logaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -78,16 +88,21 @@ func (r *NsicapprofileResource) Schema(ctx context.Context, req resource.SchemaR
 				Description: "ICAP Mode of operation. It is a mandatory argument while creating an icapprofile.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for an ICAP profile. Must begin with a letter, number, or the underscore \\(_\\) character. Other characters allowed, after the first character, are the hyphen \\(-\\), period \\(.\\), hash \\(\\#\\), space \\( \\), at \\(@\\), colon \\(:\\), and equal \\(=\\) characters. The name of a ICAP profile cannot be changed after it is created.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks \\(for example, \"my icap profile\" or 'my icap profile'\\).",
 			},
 			"preview": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("DISABLED"),
 				Description: "Enable or Disable preview header with ICAP request. This feature allows an ICAP server to see the beginning of a transaction, then decide if it wants to opt-out of the transaction early instead of receiving the remainder of the request message.",
 			},
 			"previewlength": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(4096),
 				Description: "Value of Preview Header field. Citrix ADC uses the minimum of this set value and the preview size received on OPTIONS response.",
 			},
@@ -99,10 +114,12 @@ func (r *NsicapprofileResource) Schema(ctx context.Context, req resource.SchemaR
 			"reqtimeout": schema.Int64Attribute{
 				Optional:    true,
 				Computed:    true,
+				Default:     int64default.StaticInt64(0),
 				Description: "Time, in seconds, within which the remote server should respond to the ICAP-request. If the Netscaler does not receive full response with this time, the specified request timeout action is performed. Zero value disables this timeout functionality.",
 			},
 			"reqtimeoutaction": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("RESET"),
 				Description: "Name of the action to perform if the Vserver/Server representing the remote service does not respond with any response within the timeout value configured. The Supported actions are\n* BYPASS - This Ignores the remote server response and sends the request/response to Client/Server.\n           * If the ICAP response with Encapsulated headers is not received within the request-timeout value configured, this Ignores the remote ICAP server response and sends the Full request/response to Server/Client.\n* RESET - Reset the client connection by closing it. The client program, such as a browser, will handle this and may inform the user. The client may then resend the request if desired.\n* DROP - Drop the request without sending a response to the user.",
 			},
@@ -124,49 +141,52 @@ func nsicapprofileGetThePayloadFromtheConfig(ctx context.Context, data *Nsicappr
 
 	// Create API request body from the model
 	nsicapprofile := ns.Nsicapprofile{}
-	if !data.Allow204.IsNull() {
+	if !data.Allow204.IsNull() && !data.Allow204.IsUnknown() {
 		nsicapprofile.Allow204 = data.Allow204.ValueString()
 	}
-	if !data.Connectionkeepalive.IsNull() {
+	if !data.Connectionkeepalive.IsNull() && !data.Connectionkeepalive.IsUnknown() {
 		nsicapprofile.Connectionkeepalive = data.Connectionkeepalive.ValueString()
 	}
-	if !data.Hostheader.IsNull() {
+	if !data.Hostheader.IsNull() && !data.Hostheader.IsUnknown() {
 		nsicapprofile.Hostheader = data.Hostheader.ValueString()
 	}
-	if !data.Inserthttprequest.IsNull() {
+	if !data.Inserthttprequest.IsNull() && !data.Inserthttprequest.IsUnknown() {
 		nsicapprofile.Inserthttprequest = data.Inserthttprequest.ValueString()
 	}
-	if !data.Inserticapheaders.IsNull() {
+	if !data.Inserticapheaders.IsNull() && !data.Inserticapheaders.IsUnknown() {
 		nsicapprofile.Inserticapheaders = data.Inserticapheaders.ValueString()
 	}
-	if !data.Logaction.IsNull() {
+	if !data.Inspecthttp2.IsNull() && !data.Inspecthttp2.IsUnknown() {
+		nsicapprofile.Inspecthttp2 = data.Inspecthttp2.ValueString()
+	}
+	if !data.Logaction.IsNull() && !data.Logaction.IsUnknown() {
 		nsicapprofile.Logaction = data.Logaction.ValueString()
 	}
-	if !data.Mode.IsNull() {
+	if !data.Mode.IsNull() && !data.Mode.IsUnknown() {
 		nsicapprofile.Mode = data.Mode.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		nsicapprofile.Name = data.Name.ValueString()
 	}
-	if !data.Preview.IsNull() {
+	if !data.Preview.IsNull() && !data.Preview.IsUnknown() {
 		nsicapprofile.Preview = data.Preview.ValueString()
 	}
-	if !data.Previewlength.IsNull() {
+	if !data.Previewlength.IsNull() && !data.Previewlength.IsUnknown() {
 		nsicapprofile.Previewlength = utils.IntPtr(int(data.Previewlength.ValueInt64()))
 	}
-	if !data.Queryparams.IsNull() {
+	if !data.Queryparams.IsNull() && !data.Queryparams.IsUnknown() {
 		nsicapprofile.Queryparams = data.Queryparams.ValueString()
 	}
-	if !data.Reqtimeout.IsNull() {
+	if !data.Reqtimeout.IsNull() && !data.Reqtimeout.IsUnknown() {
 		nsicapprofile.Reqtimeout = utils.IntPtr(int(data.Reqtimeout.ValueInt64()))
 	}
-	if !data.Reqtimeoutaction.IsNull() {
+	if !data.Reqtimeoutaction.IsNull() && !data.Reqtimeoutaction.IsUnknown() {
 		nsicapprofile.Reqtimeoutaction = data.Reqtimeoutaction.ValueString()
 	}
-	if !data.Uri.IsNull() {
+	if !data.Uri.IsNull() && !data.Uri.IsUnknown() {
 		nsicapprofile.Uri = data.Uri.ValueString()
 	}
-	if !data.Useragent.IsNull() {
+	if !data.Useragent.IsNull() && !data.Useragent.IsUnknown() {
 		nsicapprofile.Useragent = data.Useragent.ValueString()
 	}
 
@@ -176,89 +196,96 @@ func nsicapprofileGetThePayloadFromtheConfig(ctx context.Context, data *Nsicappr
 func nsicapprofileSetAttrFromGet(ctx context.Context, data *NsicapprofileResourceModel, getResponseData map[string]interface{}) *NsicapprofileResourceModel {
 	tflog.Debug(ctx, "In nsicapprofileSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// else-branches only null the value when it is unknown, so a known configured
+	// value that NITRO omits from GET (omit-on-default) is preserved, never clobbered.
 	if val, ok := getResponseData["allow204"]; ok && val != nil {
 		data.Allow204 = types.StringValue(val.(string))
-	} else {
+	} else if data.Allow204.IsUnknown() {
 		data.Allow204 = types.StringNull()
 	}
 	if val, ok := getResponseData["connectionkeepalive"]; ok && val != nil {
 		data.Connectionkeepalive = types.StringValue(val.(string))
-	} else {
+	} else if data.Connectionkeepalive.IsUnknown() {
 		data.Connectionkeepalive = types.StringNull()
 	}
 	if val, ok := getResponseData["hostheader"]; ok && val != nil {
 		data.Hostheader = types.StringValue(val.(string))
-	} else {
+	} else if data.Hostheader.IsUnknown() {
 		data.Hostheader = types.StringNull()
 	}
 	if val, ok := getResponseData["inserthttprequest"]; ok && val != nil {
 		data.Inserthttprequest = types.StringValue(val.(string))
-	} else {
+	} else if data.Inserthttprequest.IsUnknown() {
 		data.Inserthttprequest = types.StringNull()
 	}
 	if val, ok := getResponseData["inserticapheaders"]; ok && val != nil {
 		data.Inserticapheaders = types.StringValue(val.(string))
-	} else {
+	} else if data.Inserticapheaders.IsUnknown() {
 		data.Inserticapheaders = types.StringNull()
+	}
+	if val, ok := getResponseData["inspecthttp2"]; ok && val != nil {
+		data.Inspecthttp2 = types.StringValue(val.(string))
+	} else if data.Inspecthttp2.IsUnknown() {
+		data.Inspecthttp2 = types.StringNull()
 	}
 	if val, ok := getResponseData["logaction"]; ok && val != nil {
 		data.Logaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Logaction.IsUnknown() {
 		data.Logaction = types.StringNull()
 	}
 	if val, ok := getResponseData["mode"]; ok && val != nil {
 		data.Mode = types.StringValue(val.(string))
-	} else {
+	} else if data.Mode.IsUnknown() {
 		data.Mode = types.StringNull()
 	}
 	if val, ok := getResponseData["name"]; ok && val != nil {
 		data.Name = types.StringValue(val.(string))
-	} else {
+	} else if data.Name.IsUnknown() {
 		data.Name = types.StringNull()
 	}
 	if val, ok := getResponseData["preview"]; ok && val != nil {
 		data.Preview = types.StringValue(val.(string))
-	} else {
+	} else if data.Preview.IsUnknown() {
 		data.Preview = types.StringNull()
 	}
 	if val, ok := getResponseData["previewlength"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Previewlength = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Previewlength.IsUnknown() {
 		data.Previewlength = types.Int64Null()
 	}
 	if val, ok := getResponseData["queryparams"]; ok && val != nil {
 		data.Queryparams = types.StringValue(val.(string))
-	} else {
+	} else if data.Queryparams.IsUnknown() {
 		data.Queryparams = types.StringNull()
 	}
 	if val, ok := getResponseData["reqtimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Reqtimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Reqtimeout.IsUnknown() {
 		data.Reqtimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["reqtimeoutaction"]; ok && val != nil {
 		data.Reqtimeoutaction = types.StringValue(val.(string))
-	} else {
+	} else if data.Reqtimeoutaction.IsUnknown() {
 		data.Reqtimeoutaction = types.StringNull()
 	}
 	if val, ok := getResponseData["uri"]; ok && val != nil {
 		data.Uri = types.StringValue(val.(string))
-	} else {
+	} else if data.Uri.IsUnknown() {
 		data.Uri = types.StringNull()
 	}
 	if val, ok := getResponseData["useragent"]; ok && val != nil {
 		data.Useragent = types.StringValue(val.(string))
-	} else {
+	} else if data.Useragent.IsUnknown() {
 		data.Useragent = types.StringNull()
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value as ID
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

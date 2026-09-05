@@ -70,3 +70,27 @@ In addition to the arguments, the following attributes are available:
 * `state` - Initial state of the GSLB service group.
 * `svrtimeout` - Time, in seconds, after which to terminate an idle server connection.
 * `weight` - Weight to assign to the servers in the service group. Specifies the capacity of the servers relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
+
+### Read-only gslbservicegroup metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_gslbservicegroup` resource). They are Computed / GET-only and are `null` when the appliance does not return them.
+
+* `numofconnections` - This will tell the number of client side connections that are still open.
+* `serviceconftype` - The configuration type of the GSLB service group.
+* `value` - SSL Status (for example `Certkey/Certkeybundle/Vault not bound`, `Cert-store not usable`, `SSL feature disabled`).
+* `svrstate` - The state of the GSLB service (for example `UP`, `DOWN`, `OUT OF SERVICE`, `DISABLED`).
+* `ip` - IP Address.
+* `monstatcode` - The code indicating the monitor response.
+* `monstatparam1` - First parameter for use with message code.
+* `monstatparam2` - Second parameter for use with message code.
+* `monstatparam3` - Third parameter for use with message code.
+* `statechangetimemsec` - Time when last state change occurred. Milliseconds part.
+* `stateupdatereason` - Checks state update reason on the secondary node.
+* `clmonowner` - Tells the mon owner of the service.
+* `clmonview` - Tells the view id of the monitoring owner.
+* `groupcount` - Servicegroup Count.
+* `serviceipstr` - The dbs services ip.
+* `servicegroupeffectivestate` - Indicates the effective GSLB servicegroup state based on the state of the bound service items (`UP`, `DOWN`, `OUT OF SERVICE`, `PARTIAL-UP`, `PARTIAL-DOWN`).
+* `gslb` - GSLB service scope (`REMOTE`, `LOCAL`).
+* `svreffgslbstate` - Effective state of the gslb svc.
+* `nodefaultbindings` - To determine if the configuration is from stylebooks (`YES`, `NO`).

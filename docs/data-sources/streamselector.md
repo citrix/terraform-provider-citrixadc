@@ -33,11 +33,3 @@ In addition to the arguments, the following attributes are available:
 * `rule` - Set of up to five expressions. Maximum length: 7499 characters. Each expression must identify a specific request characteristic, such as the client's IP address (with CLIENT.IP.SRC) or requested server resource (with HTTP.REQ.URL). Note: If two or more selectors contain the same expressions in different order, a separate set of records is created for each selector.
 
 * `id` - The id of the streamselector. It has the same value as the `name` attribute.
-
-## Import
-
-A streamselector can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_streamselector.tf_streamselector my_streamselector
-```

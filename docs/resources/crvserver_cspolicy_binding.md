@@ -55,7 +55,7 @@ resource "citrixadc_crvserver_cspolicy_binding" "crvserver_cspolicy_binding" {
 * `invoke` - (Optional) Invoke flag.
 * `labelname` - (Optional) Name of the label invoked.
 * `labeltype` - (Optional) The invocation type.
-* `policyname` - (Optional) Policies bound to this vserver.
+* `policyname` - (Required) Policies bound to this vserver.
 * `priority` - (Optional) The priority for the policy.
 * `targetvserver` - (Optional) The CSW target server names.
 
@@ -64,7 +64,7 @@ resource "citrixadc_crvserver_cspolicy_binding" "crvserver_cspolicy_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the crvserver_cspolicy_binding. It has the same value as the `name` attribute.
+* `id` - The id of the crvserver_cspolicy_binding. It is the concatenation of the `name` and `policyname` attributes separated by a comma.
 
 
 ## Import

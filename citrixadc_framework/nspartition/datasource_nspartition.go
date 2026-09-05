@@ -35,7 +35,7 @@ func (d *NspartitionDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *NspartitionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NspartitionResourceModel
+	var data NspartitionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *NspartitionDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	nspartitionSetAttrFromGet(ctx, &data, getResponseData)
+	nspartitionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

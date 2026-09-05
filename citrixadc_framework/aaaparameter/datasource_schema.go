@@ -1,9 +1,58 @@
 package aaaparameter
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AaaparameterDataSourceModel is the data-source-specific model, decoupled from
+// AaaparameterResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits. Every
+// non-key attribute is Computed; the Framework's per-attribute model <-> schema
+// reflection requires this model to have exactly the attributes the data-source
+// schema declares, which is why it cannot reuse the resource model.
+type AaaparameterDataSourceModel struct {
+	Id                         types.String `tfsdk:"id"`
+	Aaadloglevel               types.String `tfsdk:"aaadloglevel"`
+	Aaadnatip                  types.String `tfsdk:"aaadnatip"`
+	Aaasessionloglevel         types.String `tfsdk:"aaasessionloglevel"`
+	Apitokencache              types.String `tfsdk:"apitokencache"`
+	Classicendpoints           types.String `tfsdk:"classicendpoints"`
+	Defaultauthtype            types.String `tfsdk:"defaultauthtype"`
+	Defaultcspheader           types.String `tfsdk:"defaultcspheader"`
+	Dynaddr                    types.String `tfsdk:"dynaddr"`
+	Enableenhancedauthfeedback types.String `tfsdk:"enableenhancedauthfeedback"`
+	Enablesessionstickiness    types.String `tfsdk:"enablesessionstickiness"`
+	Enablestaticpagecaching    types.String `tfsdk:"enablestaticpagecaching"`
+	Enhancedepa                types.String `tfsdk:"enhancedepa"`
+	Failedlogintimeout         types.Int64  `tfsdk:"failedlogintimeout"`
+	Ftmode                     types.String `tfsdk:"ftmode"`
+	Httponlycookie             types.String `tfsdk:"httponlycookie"`
+	Loginencryption            types.String `tfsdk:"loginencryption"`
+	Maxaaausers                types.Int64  `tfsdk:"maxaaausers"`
+	Maxkbquestions             types.Int64  `tfsdk:"maxkbquestions"`
+	Maxloginattempts           types.Int64  `tfsdk:"maxloginattempts"`
+	Maxsamldeflatesize         types.Int64  `tfsdk:"maxsamldeflatesize"`
+	Persistentloginattempts    types.String `tfsdk:"persistentloginattempts"`
+	Pwdexpirynotificationdays  types.Int64  `tfsdk:"pwdexpirynotificationdays"`
+	Samesite                   types.String `tfsdk:"samesite"`
+	Securityinsights           types.String `tfsdk:"securityinsights"`
+	Tokenintrospectioninterval types.Int64  `tfsdk:"tokenintrospectioninterval"`
+	Wafprotection              types.List   `tfsdk:"wafprotection"`
+	Webviewendpoints           types.String `tfsdk:"webviewendpoints"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/aaaparameter.json). Never settable; populated from GET.
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func AaaparameterDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -30,6 +79,11 @@ func AaaparameterDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Option to enable/disable API cache feature.",
+			},
+			"classicendpoints": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Parameter to enable/disable classic endpoints.",
 			},
 			"defaultauthtype": schema.StringAttribute{
 				Optional:    true,
@@ -137,6 +191,67 @@ func AaaparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Entities for which WAF Protection need to be applied.\nAvailable settings function as follows:\n* DEFAULT - No Endpoint WAF protection.\n* AUTH - Endpoints used for Authentication applicable for both AAATM, IDP, GATEWAY use cases.\n* VPN - Endpoints used for Gateway use cases.\n* PORTAL - Endpoints related to web portal.\n* DISABLED - No Endpoint WAF protection.\nCurrently supported only in default partition",
 			},
+			"webviewendpoints": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Parameter to enable/disable webview endpoints.",
+			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Flag to determine if aaa param is built-in or not.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this config.",
+			},
 		},
 	}
+}
+
+// aaaparameterDataSourceSetAttrFromGet projects a NITRO aaaparameter GET response
+// onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that projection.
+func aaaparameterDataSourceSetAttrFromGet(ctx context.Context, data *AaaparameterDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In aaaparameterDataSourceSetAttrFromGet Function")
+
+	// aaaparameter is a singleton; use a static ID.
+	data.Id = types.StringValue("aaaparameter-config")
+
+	// Read/write attributes as read-back outputs.
+	data.Aaadloglevel = utils.MapGetString(g, "aaadloglevel")
+	data.Aaadnatip = utils.MapGetString(g, "aaadnatip")
+	data.Aaasessionloglevel = utils.MapGetString(g, "aaasessionloglevel")
+	data.Apitokencache = utils.MapGetString(g, "apitokencache")
+	data.Classicendpoints = utils.MapGetString(g, "classicendpoints")
+	data.Defaultauthtype = utils.MapGetString(g, "defaultauthtype")
+	data.Defaultcspheader = utils.MapGetString(g, "defaultcspheader")
+	data.Dynaddr = utils.MapGetString(g, "dynaddr")
+	data.Enableenhancedauthfeedback = utils.MapGetString(g, "enableenhancedauthfeedback")
+	data.Enablesessionstickiness = utils.MapGetString(g, "enablesessionstickiness")
+	data.Enablestaticpagecaching = utils.MapGetString(g, "enablestaticpagecaching")
+	data.Enhancedepa = utils.MapGetString(g, "enhancedepa")
+	data.Failedlogintimeout = utils.MapGetInt64(g, "failedlogintimeout")
+	data.Ftmode = utils.MapGetString(g, "ftmode")
+	data.Httponlycookie = utils.MapGetString(g, "httponlycookie")
+	data.Loginencryption = utils.MapGetString(g, "loginencryption")
+	data.Maxaaausers = utils.MapGetInt64(g, "maxaaausers")
+	data.Maxkbquestions = utils.MapGetInt64(g, "maxkbquestions")
+	data.Maxloginattempts = utils.MapGetInt64(g, "maxloginattempts")
+	data.Maxsamldeflatesize = utils.MapGetInt64(g, "maxsamldeflatesize")
+	data.Persistentloginattempts = utils.MapGetString(g, "persistentloginattempts")
+	data.Pwdexpirynotificationdays = utils.MapGetInt64(g, "pwdexpirynotificationdays")
+	data.Samesite = utils.MapGetString(g, "samesite")
+	data.Securityinsights = utils.MapGetString(g, "securityinsights")
+	data.Tokenintrospectioninterval = utils.MapGetInt64(g, "tokenintrospectioninterval")
+	data.Wafprotection = utils.MapGetStringList(g, "wafprotection")
+	data.Webviewendpoints = utils.MapGetString(g, "webviewendpoints")
+
+	// Read-only attributes.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

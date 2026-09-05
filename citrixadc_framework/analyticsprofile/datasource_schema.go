@@ -1,9 +1,73 @@
 package analyticsprofile
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AnalyticsprofileDataSourceModel is the data-source-specific model, decoupled
+// from AnalyticsprofileResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits
+// (e.g. refcnt). Every non-key attribute is Computed; the Framework's
+// per-attribute model <-> schema reflection requires this model to have exactly
+// the attributes the data-source schema declares, which is why it cannot reuse
+// the resource model.
+type AnalyticsprofileDataSourceModel struct {
+	Id                           types.String `tfsdk:"id"`
+	Allhttpheaders               types.String `tfsdk:"allhttpheaders"`
+	Analyticsauthtoken           types.String `tfsdk:"analyticsauthtoken"`
+	Analyticsendpointcontenttype types.String `tfsdk:"analyticsendpointcontenttype"`
+	Analyticsendpointmetadata    types.String `tfsdk:"analyticsendpointmetadata"`
+	Analyticsendpointurl         types.String `tfsdk:"analyticsendpointurl"`
+	Auditlogs                    types.String `tfsdk:"auditlogs"`
+	Collectors                   types.String `tfsdk:"collectors"`
+	Cqareporting                 types.String `tfsdk:"cqareporting"`
+	Dataformatfile               types.String `tfsdk:"dataformatfile"`
+	Events                       types.String `tfsdk:"events"`
+	Grpcstatus                   types.String `tfsdk:"grpcstatus"`
+	Httpauthentication           types.String `tfsdk:"httpauthentication"`
+	Httpclientsidemeasurements   types.String `tfsdk:"httpclientsidemeasurements"`
+	Httpcontenttype              types.String `tfsdk:"httpcontenttype"`
+	Httpcookie                   types.String `tfsdk:"httpcookie"`
+	Httpcustomheaders            types.List   `tfsdk:"httpcustomheaders"`
+	Httpdomainname               types.String `tfsdk:"httpdomainname"`
+	Httphost                     types.String `tfsdk:"httphost"`
+	Httplocation                 types.String `tfsdk:"httplocation"`
+	Httpmethod                   types.String `tfsdk:"httpmethod"`
+	Httppagetracking             types.String `tfsdk:"httppagetracking"`
+	Httpreferer                  types.String `tfsdk:"httpreferer"`
+	Httpsetcookie                types.String `tfsdk:"httpsetcookie"`
+	Httpsetcookie2               types.String `tfsdk:"httpsetcookie2"`
+	Httpurl                      types.String `tfsdk:"httpurl"`
+	Httpurlquery                 types.String `tfsdk:"httpurlquery"`
+	Httpuseragent                types.String `tfsdk:"httpuseragent"`
+	Httpvia                      types.String `tfsdk:"httpvia"`
+	Httpxforwardedforheader      types.String `tfsdk:"httpxforwardedforheader"`
+	Integratedcache              types.String `tfsdk:"integratedcache"`
+	Managementlog                types.List   `tfsdk:"managementlog"`
+	Mcpsummary                   types.String `tfsdk:"mcpsummary"`
+	Metrics                      types.String `tfsdk:"metrics"`
+	Metricsexportfrequency       types.Int64  `tfsdk:"metricsexportfrequency"`
+	Name                         types.String `tfsdk:"name"`
+	Outputmode                   types.String `tfsdk:"outputmode"`
+	Schemafile                   types.String `tfsdk:"schemafile"`
+	Servemode                    types.String `tfsdk:"servemode"`
+	Tcpburstreporting            types.String `tfsdk:"tcpburstreporting"`
+	Topn                         types.String `tfsdk:"topn"`
+	Type                         types.String `tfsdk:"type"`
+	Urlcategory                  types.String `tfsdk:"urlcategory"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/analyticsprofile.json). Never settable; populated from GET.
+	Refcnt types.Int64 `tfsdk:"refcnt"`
+}
 
 func AnalyticsprofileDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -17,18 +81,10 @@ func AnalyticsprofileDataSourceSchema() schema.Schema {
 				Description: "On enabling this option, the Citrix ADC will log all the request and response headers.",
 			},
 			"analyticsauthtoken": schema.StringAttribute{
+				Sensitive:   true,
 				Optional:    true,
 				Computed:    true,
 				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
-			},
-			"analyticsauthtoken_wo": schema.StringAttribute{
-				Optional:    true,
-				Description: "Token for authenticating with the endpoint. If the endpoint requires the Authorization header in a particular format, specify the complete format as the value to this parameter. For eg., in case of splunk, the Authorizaiton header is required to be of the form - Splunk <auth-token>.",
-			},
-			"analyticsauthtoken_wo_version": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Increment this version to signal a analyticsauthtoken_wo update.",
 			},
 			"analyticsendpointcontenttype": schema.StringAttribute{
 				Optional:    true,
@@ -177,6 +233,11 @@ func AnalyticsprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "This option indicates the whether managementlog should be sent to the REST collector.",
 			},
+			"mcpsummary": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable/disable appflow logging for MCP (Model Context Protocol) traffic.",
+			},
 			"metrics": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
@@ -226,6 +287,75 @@ func AnalyticsprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "On enabling this option, the Citrix ADC will send the URL category record.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"refcnt": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of references to the profile.",
+			},
 		},
 	}
+}
+
+// analyticsprofileDataSourceSetAttrFromGet projects a NITRO analyticsprofile GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them) - no unknown->null resolution or plan preservation is
+// required. The shared utils.MapGet* helpers implement that projection.
+func analyticsprofileDataSourceSetAttrFromGet(ctx context.Context, data *AnalyticsprofileDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In analyticsprofileDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Allhttpheaders = utils.MapGetString(g, "allhttpheaders")
+	data.Analyticsendpointcontenttype = utils.MapGetString(g, "analyticsendpointcontenttype")
+	data.Analyticsendpointmetadata = utils.MapGetString(g, "analyticsendpointmetadata")
+	data.Analyticsendpointurl = utils.MapGetString(g, "analyticsendpointurl")
+	data.Auditlogs = utils.MapGetString(g, "auditlogs")
+	data.Collectors = utils.MapGetString(g, "collectors")
+	data.Cqareporting = utils.MapGetString(g, "cqareporting")
+	data.Dataformatfile = utils.MapGetString(g, "dataformatfile")
+	data.Events = utils.MapGetString(g, "events")
+	data.Grpcstatus = utils.MapGetString(g, "grpcstatus")
+	data.Httpauthentication = utils.MapGetString(g, "httpauthentication")
+	data.Httpclientsidemeasurements = utils.MapGetString(g, "httpclientsidemeasurements")
+	data.Httpcontenttype = utils.MapGetString(g, "httpcontenttype")
+	data.Httpcookie = utils.MapGetString(g, "httpcookie")
+	data.Httpcustomheaders = utils.MapGetStringList(g, "httpcustomheaders")
+	data.Httpdomainname = utils.MapGetString(g, "httpdomainname")
+	data.Httphost = utils.MapGetString(g, "httphost")
+	data.Httplocation = utils.MapGetString(g, "httplocation")
+	data.Httpmethod = utils.MapGetString(g, "httpmethod")
+	data.Httppagetracking = utils.MapGetString(g, "httppagetracking")
+	data.Httpreferer = utils.MapGetString(g, "httpreferer")
+	data.Httpsetcookie = utils.MapGetString(g, "httpsetcookie")
+	data.Httpsetcookie2 = utils.MapGetString(g, "httpsetcookie2")
+	data.Httpurl = utils.MapGetString(g, "httpurl")
+	data.Httpurlquery = utils.MapGetString(g, "httpurlquery")
+	data.Httpuseragent = utils.MapGetString(g, "httpuseragent")
+	data.Httpvia = utils.MapGetString(g, "httpvia")
+	data.Httpxforwardedforheader = utils.MapGetString(g, "httpxforwardedforheader")
+	data.Integratedcache = utils.MapGetString(g, "integratedcache")
+	data.Managementlog = utils.MapGetStringList(g, "managementlog")
+	data.Mcpsummary = utils.MapGetString(g, "mcpsummary")
+	data.Metrics = utils.MapGetString(g, "metrics")
+	data.Metricsexportfrequency = utils.MapGetInt64(g, "metricsexportfrequency")
+	data.Outputmode = utils.MapGetString(g, "outputmode")
+	data.Schemafile = utils.MapGetString(g, "schemafile")
+	data.Servemode = utils.MapGetString(g, "servemode")
+	data.Tcpburstreporting = utils.MapGetString(g, "tcpburstreporting")
+	data.Topn = utils.MapGetString(g, "topn")
+	data.Type = utils.MapGetString(g, "type")
+	data.Urlcategory = utils.MapGetString(g, "urlcategory")
+
+	// Read-only metadata.
+	data.Refcnt = utils.MapGetInt64(g, "refcnt")
+
+	// analyticsauthtoken is a secret input the GET never returns -> Null.
+	data.Analyticsauthtoken = types.StringNull()
 }

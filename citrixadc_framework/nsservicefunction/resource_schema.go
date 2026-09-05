@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -33,7 +35,11 @@ func (r *NsservicefunctionResource) Schema(ctx context.Context, req resource.Sch
 				Description: "VLAN ID on which the traffic from service function reaches Citrix ADC.",
 			},
 			"servicefunctionname": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 ForceNew: true on the name/key attribute -> RequiresReplace.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the service function to be created. Leading character must be a number or letter. Other characters allowed, after the first character, are @ _ - . (period) : (colon) # and space ( ).",
 			},
 		},
@@ -45,10 +51,10 @@ func nsservicefunctionGetThePayloadFromtheConfig(ctx context.Context, data *Nsse
 
 	// Create API request body from the model
 	nsservicefunction := ns.Nsservicefunction{}
-	if !data.Ingressvlan.IsNull() {
+	if !data.Ingressvlan.IsNull() && !data.Ingressvlan.IsUnknown() {
 		nsservicefunction.Ingressvlan = utils.IntPtr(int(data.Ingressvlan.ValueInt64()))
 	}
-	if !data.Servicefunctionname.IsNull() {
+	if !data.Servicefunctionname.IsNull() && !data.Servicefunctionname.IsUnknown() {
 		nsservicefunction.Servicefunctionname = data.Servicefunctionname.ValueString()
 	}
 
@@ -63,7 +69,9 @@ func nsservicefunctionSetAttrFromGet(ctx context.Context, data *Nsservicefunctio
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ingressvlan = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ingressvlan.IsUnknown() {
+		// Only null when unknown; never clobber a known configured value that
+		// NITRO may omit from GET (omit-on-default trap). ingressvlan is Required.
 		data.Ingressvlan = types.Int64Null()
 	}
 	if val, ok := getResponseData["servicefunctionname"]; ok && val != nil {

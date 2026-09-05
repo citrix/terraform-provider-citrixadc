@@ -1,8 +1,42 @@
 package dnsglobal_dnspolicy_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// DnsglobalDnspolicyBindingDataSourceModel is the data-source-specific model,
+// decoupled from DnsglobalDnspolicyBindingResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits. Every
+// non-key attribute is Computed; the Framework's per-attribute model <-> schema
+// reflection requires this model to have exactly the attributes the data-source
+// schema declares.
+type DnsglobalDnspolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Globalbindtype         types.String `tfsdk:"globalbindtype"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Invoke                 types.Bool   `tfsdk:"invoke"`
+	Labelname              types.String `tfsdk:"labelname"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Type                   types.String `tfsdk:"type"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/dnsglobal_dnspolicy_binding.json). Never settable;
+	// populated from GET.
+	Numpol   types.Int64 `tfsdk:"numpol"`
+	Flowtype types.Int64 `tfsdk:"flowtype"`
+}
 
 func DnsglobalDnspolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -48,6 +82,46 @@ func DnsglobalDnspolicyBindingDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Type of global bind point for which to show bound policies.",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"numpol": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The number of policies bound to the bindpoint.",
+			},
+			"flowtype": schema.Int64Attribute{
+				Computed:    true,
+				Description: "flowtype of the bound rewrite policy.",
+			},
 		},
 	}
+}
+
+// dnsglobal_dnspolicy_bindingDataSourceSetAttrFromGet projects a NITRO
+// dnsglobal_dnspolicy_binding GET response onto the data-source model. Because a
+// data source has no plan/apply reconciliation, attributes are simply filled
+// from the GET (or left Null when the GET omits them). The shared utils.MapGet*
+// helpers implement that projection.
+func dnsglobal_dnspolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *DnsglobalDnspolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In dnsglobal_dnspolicy_bindingDataSourceSetAttrFromGet Function")
+
+	// Read/write attributes as read-back outputs.
+	data.Globalbindtype = utils.MapGetString(g, "globalbindtype")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Invoke = utils.MapGetBool(g, "invoke")
+	data.Labelname = utils.MapGetString(g, "labelname")
+	data.Labeltype = utils.MapGetString(g, "labeltype")
+	data.Policyname = utils.MapGetString(g, "policyname")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Type = utils.MapGetString(g, "type")
+
+	// Read-only attributes.
+	data.Numpol = utils.MapGetInt64(g, "numpol")
+	data.Flowtype = utils.MapGetInt64(g, "flowtype")
+
+	// Composite binding ID: comma-separated key:UrlEncode(value) pairs.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(data.Policyname.ValueString())))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(data.Type.ValueString())))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AppflowpolicylabelResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	tflog.Debug(ctx, "Creating appflowpolicylabel resource")
-
-	// appflowpolicylabel := appflowpolicylabelGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appflowpolicylabel := appflowpolicylabelGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appflowpolicylabel.Type(), &appflowpolicylabel)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appflowpolicylabel, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appflowpolicylabel-config")
+	// Named resource - use AddResource
+	labelname_value := data.Labelname.ValueString()
+	_, err := r.client.AddResource(service.Appflowpolicylabel.Type(), labelname_value, &appflowpolicylabel)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appflowpolicylabel, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appflowpolicylabel resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
+
 	// Read the updated state back
-	r.readAppflowpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppflowpolicylabelFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appflowpolicylabel not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppflowpolicylabelResource) Read(ctx context.Context, req resource.Read
 
 	tflog.Debug(ctx, "Reading appflowpolicylabel resource")
 
-	r.readAppflowpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppflowpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppflowpolicylabelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppflowpolicylabelResourceModel
+	var data, state AppflowpolicylabelResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,22 @@ func (r *AppflowpolicylabelResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	tflog.Debug(ctx, "Updating appflowpolicylabel resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// appflowpolicylabel := appflowpolicylabelGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appflowpolicylabel.Type(), &appflowpolicylabel)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appflowpolicylabel, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated appflowpolicylabel resource")
+	// appflowpolicylabel has no NITRO-updatable attributes (labelname and
+	// policylabeltype are both ForceNew/RequiresReplace, and NITRO exposes no
+	// update operation for this resource). Any configuration change triggers a
+	// replace instead of an update, so here we simply re-read current state.
+	tflog.Debug(ctx, "Updating appflowpolicylabel resource - no updatable attributes, re-reading state")
 
 	// Read the updated state back
-	r.readAppflowpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppflowpolicylabelFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appflowpolicylabel not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +153,36 @@ func (r *AppflowpolicylabelResource) Delete(ctx context.Context, req resource.De
 	}
 
 	tflog.Debug(ctx, "Deleting appflowpolicylabel resource")
+	// Named resource - delete using DeleteResource
+	labelname_value := data.Labelname.ValueString()
+	err := r.client.DeleteResource(service.Appflowpolicylabel.Type(), labelname_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appflowpolicylabel, got error: %s", err))
+		return
+	}
 
-	// For appflowpolicylabel, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appflowpolicylabel resource from state")
+	tflog.Trace(ctx, "Deleted appflowpolicylabel resource")
 }
 
 // Helper function to read appflowpolicylabel data from API
-func (r *AppflowpolicylabelResource) readAppflowpolicylabelFromApi(ctx context.Context, data *AppflowpolicylabelResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appflowpolicylabel.Type(), "")
+func (r *AppflowpolicylabelResource) readAppflowpolicylabelFromApi(ctx context.Context, data *AppflowpolicylabelResourceModel, diags *diag.Diagnostics) bool {
+
+	// Find with single ID attribute - ID is the plain value
+	labelname_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Appflowpolicylabel.Type(), labelname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appflowpolicylabel, got error: %s", err))
-		return
+		return false
 	}
 
 	appflowpolicylabelSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

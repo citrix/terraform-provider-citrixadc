@@ -45,11 +45,8 @@ In addition to the arguments, the following attributes are available:
 * `srcport` - Source port for the application for which the Citrix Gateway virtual server proxies the traffic. If users are connecting from a device that uses the Citrix Gateway Plug-in for Java, applications must be configured manually by using the source IP address and TCP port values specified in the intranet application profile. If a port value is not set, the destination port value is used.
 * `id` - The id of the vpnintranetapplication. It has the same value as the `intranetapplication` attribute.
 
+### Read-only vpnintranetapplication metadata
 
-## Import
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vpnintranetapplication` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
 
-A vpnintranetapplication can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_vpnintranetapplication.tf_vpnintranetapplication tf_vpnintranetapplication
-```
+* `ipaddress` - The IP address for the application. This address is the real application server IP address.

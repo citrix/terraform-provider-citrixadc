@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // cloudparameter is a SINGLETON set-get resource (fixed id "cloudparameter-config").
@@ -174,6 +174,8 @@ func TestAccCloudparameterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_cloudparameter.tf_cloudparameter", "controllerport", "443"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudparameter.tf_cloudparameter", "deployment", "Production"),
 					resource.TestCheckResourceAttr("data.citrixadc_cloudparameter.tf_cloudparameter", "connectorresidence", "Aws"),
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cloudparameter.tf_cloudparameter", "id"),
 				),
 			},
 		},

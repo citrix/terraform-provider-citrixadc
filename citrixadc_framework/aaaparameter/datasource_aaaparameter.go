@@ -35,7 +35,7 @@ func (d *AaaparameterDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *AaaparameterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AaaparameterResourceModel
+	var data AaaparameterDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *AaaparameterDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	aaaparameterSetAttrFromGet(ctx, &data, getResponseData)
+	aaaparameterDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -3,8 +3,6 @@ package nsfeature
 import (
 	"context"
 
-	"github.com/citrix/adc-nitro-go/resource/config/ns"
-
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -332,13 +330,56 @@ func (r *NsfeatureResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func nsfeatureGetThePayloadFromtheConfig(ctx context.Context, data *NsfeatureResourceModel) ns.Nsfeature {
-	tflog.Debug(ctx, "In nsfeatureGetThePayloadFromtheConfig Function")
-
-	// Create API request body from the model
-	nsfeature := ns.Nsfeature{}
-
-	return nsfeature
+// nsfeatureModelToMap returns a map keyed by the NITRO feature token pointing at
+// the corresponding types.Bool value from the model. Used by Create/Update to
+// decide which features the practitioner explicitly configured (known values)
+// vs. which were omitted (null/unknown) and must be left untouched on the ADC.
+func nsfeatureModelToMap(data *NsfeatureResourceModel) map[string]types.Bool {
+	return map[string]types.Bool{
+		"wl":                 data.Wl,
+		"sp":                 data.Sp,
+		"lb":                 data.Lb,
+		"cs":                 data.Cs,
+		"cr":                 data.Cr,
+		"cmp":                data.Cmp,
+		"pq":                 data.Pq,
+		"ssl":                data.Ssl,
+		"gslb":               data.Gslb,
+		"hdosp":              data.Hdosp,
+		"cf":                 data.Cf,
+		"ic":                 data.Ic,
+		"sslvpn":             data.Sslvpn,
+		"aaa":                data.Aaa,
+		"ospf":               data.Ospf,
+		"rip":                data.Rip,
+		"bgp":                data.Bgp,
+		"rewrite":            data.Rewrite,
+		"ipv6pt":             data.Ipv6pt,
+		"appfw":              data.Appfw,
+		"responder":          data.Responder,
+		"htmlinjection":      data.Htmlinjection,
+		"push":               data.Push,
+		"appflow":            data.Appflow,
+		"cloudbridge":        data.Cloudbridge,
+		"isis":               data.Isis,
+		"ch":                 data.Ch,
+		"appqoe":             data.Appqoe,
+		"contentaccelerator": data.Contentaccelerator,
+		"rise":               data.Rise,
+		"feo":                data.Feo,
+		"lsn":                data.Lsn,
+		"rdpproxy":           data.Rdpproxy,
+		"rep":                data.Rep,
+		"urlfiltering":       data.Urlfiltering,
+		"videooptimization":  data.Videooptimization,
+		"forwardproxy":       data.Forwardproxy,
+		"sslinterception":    data.Sslinterception,
+		"adaptivetcp":        data.Adaptivetcp,
+		"cqa":                data.Cqa,
+		"ci":                 data.Ci,
+		"bot":                data.Bot,
+		"apigateway":         data.Apigateway,
+	}
 }
 
 func nsfeatureSetAttrFromGet(ctx context.Context, data *NsfeatureResourceModel, enabledFeatures []string) *NsfeatureResourceModel {

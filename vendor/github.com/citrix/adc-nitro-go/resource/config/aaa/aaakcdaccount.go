@@ -60,6 +60,12 @@ type Aaakcdaccount struct {
 	* Service SPN. When specified, this will be used to fetch kerberos tickets. If not specified, Citrix ADC will construct SPN using service fqdn
 	*/
 	Servicespn string `json:"servicespn,omitempty"`
+	/**
+	* Salt expression used by Kerberos impersonation. When configured, this expression will be used for key
+		derivation with AES-128 or AES-256 encryption types. For RC4 encryption, the salt is not used.
+		If the salt expression is not set, the default behavior is to derive the salt value from the Kerberos principal.
+	*/
+	Saltexpression string `json:"saltexpression,omitempty"`
 
 	//------- Read only Parameter ---------;
 

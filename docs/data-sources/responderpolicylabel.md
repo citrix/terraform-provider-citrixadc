@@ -38,3 +38,14 @@ In addition to the arguments, the following attributes are exported:
   * `DIAMETER` - DIAMETER responses.
   * `RADIUS` - RADIUS responses.
   * `DNS` - DNS responses.
+
+### Read-only responderpolicylabel metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_responderpolicylabel` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `numpol` - Number of policies bound to the label.
+* `hits` - Number of times the policy label was invoked.
+* `priority` - Specifies the priority of the policy.
+* `gotopriorityexpression` - Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `labeltype` - Type of policy label to invoke (`vserver` or `policylabel`).
+* `invoke_labelname` - If labelType is policylabel, name of the policy label to invoke; if labelType is reqvserver or resvserver, name of the virtual server.

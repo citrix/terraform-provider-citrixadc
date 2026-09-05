@@ -1,8 +1,41 @@
 package appfwglobal_auditsyslogpolicy_binding
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AppfwglobalAuditsyslogpolicyBindingDataSourceModel is the data-source-specific
+// model, decoupled from AppfwglobalAuditsyslogpolicyBindingResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attribute the resource deliberately omits
+// (policytype). The Framework's per-attribute model <-> schema reflection
+// requires this model to have exactly the attributes the data-source schema
+// declares.
+type AppfwglobalAuditsyslogpolicyBindingDataSourceModel struct {
+	Id                     types.String `tfsdk:"id"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Invoke                 types.Bool   `tfsdk:"invoke"`
+	Labelname              types.String `tfsdk:"labelname"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	State                  types.String `tfsdk:"state"`
+	Type                   types.String `tfsdk:"type"`
+
+	// Read-only (GET-only) attribute from the NITRO doc read-only set
+	// (zion73x_readonly/appfwglobal_auditsyslogpolicy_binding.json). Never
+	// settable; populated from GET.
+	Policytype types.String `tfsdk:"policytype"`
+}
 
 func AppfwglobalAuditsyslogpolicyBindingDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -48,6 +81,44 @@ func AppfwglobalAuditsyslogpolicyBindingDataSourceSchema() schema.Schema {
 				Required:    true,
 				Description: "Bind point to which to policy is bound.",
 			},
+
+			// Read-only (GET-only) attribute surfaced by the data source (this is
+			// intentionally NOT modeled on the resource). Computed.
+			"policytype": schema.StringAttribute{
+				Computed:    true,
+				Description: "Policy type. Possible values: [ Classic Policy, Advanced Policy ]",
+			},
 		},
 	}
+}
+
+// appfwglobal_auditsyslogpolicy_bindingDataSourceSetAttrFromGet projects a NITRO
+// appfwglobal_auditsyslogpolicy_binding GET response onto the data-source model.
+// A data source has no plan/apply reconciliation, so attributes are simply
+// filled from the GET (or left Null when the GET omits them) via the shared
+// utils.MapGet* helpers. It faithfully copies every field (including 'state')
+// and sets the composite ID.
+func appfwglobal_auditsyslogpolicy_bindingDataSourceSetAttrFromGet(ctx context.Context, data *AppfwglobalAuditsyslogpolicyBindingDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In appfwglobal_auditsyslogpolicy_bindingDataSourceSetAttrFromGet Function")
+
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Invoke = utils.MapGetBool(g, "invoke")
+	data.Labelname = utils.MapGetString(g, "labelname")
+	data.Labeltype = utils.MapGetString(g, "labeltype")
+	data.Policyname = utils.MapGetString(g, "policyname")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.State = utils.MapGetString(g, "state")
+	// NOTE: 'type' is a Required config-side key that this binding's GET never
+	// echoes (it surfaces 'bindpolicytype' instead). Preserve the configured
+	// value already present in data rather than nulling it from the GET.
+
+	// Read-only (GET-only) attributes.
+	data.Policytype = utils.MapGetString(g, "policytype")
+
+	// Set composite ID for the datasource.
+	// Case 3: Multiple unique attributes - comma-separated key:UrlEncode(value) pairs.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("policyname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Policyname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("type:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Type.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 }

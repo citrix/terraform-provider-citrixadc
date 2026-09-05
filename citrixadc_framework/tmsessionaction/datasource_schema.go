@@ -1,8 +1,40 @@
 package tmsessionaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// TmsessionactionDataSourceModel is the data-source-specific model, decoupled from
+// TmsessionactionResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the configurable attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits. Every
+// non-key attribute is Computed.
+type TmsessionactionDataSourceModel struct {
+	Id                         types.String `tfsdk:"id"`
+	Defaultauthorizationaction types.String `tfsdk:"defaultauthorizationaction"`
+	Homepage                   types.String `tfsdk:"homepage"`
+	Httponlycookie             types.String `tfsdk:"httponlycookie"`
+	Kcdaccount                 types.String `tfsdk:"kcdaccount"`
+	Name                       types.String `tfsdk:"name"` // Required lookup key
+	Persistentcookie           types.String `tfsdk:"persistentcookie"`
+	Persistentcookievalidity   types.Int64  `tfsdk:"persistentcookievalidity"`
+	Sesstimeout                types.Int64  `tfsdk:"sesstimeout"`
+	Sso                        types.String `tfsdk:"sso"`
+	Ssocredential              types.String `tfsdk:"ssocredential"`
+	Ssodomain                  types.String `tfsdk:"ssodomain"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/tmsessionaction.json). Never settable; populated from GET.
+	Builtin types.List   `tfsdk:"builtin"`
+	Feature types.String `tfsdk:"feature"`
+}
 
 func TmsessionactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -64,6 +96,47 @@ func TmsessionactionDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Domain to use for single sign-on (SSO).",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (these are intentionally NOT modeled on the resource). All Computed.
+			"builtin": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Indicates that a variable is a built-in (SYSTEM INTERNAL) type (MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL). A list of strings.",
+			},
+			"feature": schema.StringAttribute{
+				Computed:    true,
+				Description: "The feature to be checked while applying this configuration.",
+			},
 		},
 	}
+}
+
+// tmsessionactionDataSourceSetAttrFromGet projects a NITRO tmsessionaction GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when the
+// GET omits them). The shared utils.MapGet* helpers implement that projection.
+func tmsessionactionDataSourceSetAttrFromGet(ctx context.Context, data *TmsessionactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In tmsessionactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Defaultauthorizationaction = utils.MapGetString(g, "defaultauthorizationaction")
+	data.Homepage = utils.MapGetString(g, "homepage")
+	data.Httponlycookie = utils.MapGetString(g, "httponlycookie")
+	data.Kcdaccount = utils.MapGetString(g, "kcdaccount")
+	data.Persistentcookie = utils.MapGetString(g, "persistentcookie")
+	data.Persistentcookievalidity = utils.MapGetInt64(g, "persistentcookievalidity")
+	data.Sesstimeout = utils.MapGetInt64(g, "sesstimeout")
+	data.Sso = utils.MapGetString(g, "sso")
+	data.Ssocredential = utils.MapGetString(g, "ssocredential")
+	data.Ssodomain = utils.MapGetString(g, "ssodomain")
+
+	// Read-only (GET-only) attributes.
+	data.Builtin = utils.MapGetStringList(g, "builtin")
+	data.Feature = utils.MapGetString(g, "feature")
 }

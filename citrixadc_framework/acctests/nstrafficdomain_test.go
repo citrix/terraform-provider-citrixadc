@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNstrafficdomain_basic = `
@@ -115,6 +116,53 @@ func testAccCheckNstrafficdomainDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccNstrafficdomain_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain.tf_trafficdomain"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNstrafficdomain_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomainExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nstrafficdomain.Type(), "2"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNstrafficdomain_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomainExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccNstrafficdomain_import(t *testing.T) {
+	const resAddr = "citrixadc_nstrafficdomain.tf_trafficdomain"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNstrafficdomainDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNstrafficdomain_basic},
+			{
+				Config:                  testAccNstrafficdomain_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccNstrafficdomainDataSource_basic = `
 
 	resource "citrixadc_nstrafficdomain" "tf_trafficdomain" {
@@ -128,6 +176,30 @@ const testAccNstrafficdomainDataSource_basic = `
 	}
 `
 
+func TestAccNstrafficdomain_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNstrafficdomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNstrafficdomain_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomainExist("citrixadc_nstrafficdomain.tf_trafficdomain", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNstrafficdomain_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNstrafficdomainExist("citrixadc_nstrafficdomain.tf_trafficdomain", nil)),
+			},
+		},
+	})
+}
+
 func TestAccNstrafficdomainDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -137,9 +209,14 @@ func TestAccNstrafficdomainDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNstrafficdomainDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "td", "3"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "aliasname", "tf_trafficdomain_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "vmac", "ENABLED"),
+					// state is a status read-only field the appliance always returns
+					// for an existing traffic domain (default ENABLED).
+					resource.TestCheckResourceAttrSet("data.citrixadc_nstrafficdomain.tf_trafficdomain_data", "state"),
 				),
 			},
 		},

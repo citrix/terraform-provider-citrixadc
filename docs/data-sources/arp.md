@@ -44,3 +44,14 @@ In addition to the arguments, the following attributes are available:
 * `vlan` - The VLAN ID through which packets are to be sent after matching the ARP entry. This is a numeric value.
 * `vtep` - IP address of the VXLAN tunnel endpoint (VTEP) through which the IP address of this ARP entry is reachable.
 * `vxlan` - ID of the VXLAN on which the IP address of this ARP entry is reachable.
+
+### Read-only arp metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_arp` resource). They are Computed/GET-only and are `null` when the appliance does not return them.
+
+* `timeout` - The time, in seconds, after which the entry times out.
+* `state` - The state of the ARP entry.
+* `flags` - The flags for the entry.
+* `type` - Indicates whether this ARP entry was added manually or dynamically. Possible values: `STATIC`, `PERMANENT`, `DYNAMIC`.
+* `channel` - The tunnel, channel, or physical interface through which the ARP entry is identified.
+* `controlplane` - Whether this ARP entry is populated by a control plane protocol.

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSystembackup_basic = `
@@ -44,6 +45,80 @@ func TestAccSystembackup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSystembackup_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckSystembackupDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccSystembackup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccSystembackup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystembackupExist("citrixadc_systembackup.tf_systembackup", nil)),
+			},
+		},
+	})
+}
+
+func TestAccSystembackup_selfHealing(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_systembackup.tf_systembackup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystembackupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSystembackup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystembackupExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Systembackup.Type(), "new.tgz"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSystembackup_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSystembackupExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccSystembackup_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	const resAddr = "citrixadc_systembackup.tf_systembackup"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSystembackupDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccSystembackup_basic},
+			{
+				Config:                  testAccSystembackup_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -137,6 +212,12 @@ func TestAccSystembackupDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_systembackup.tf_systembackup", "filename", "my_backup_file.tgz"),
 					resource.TestCheckResourceAttr("data.citrixadc_systembackup.tf_systembackup", "level", "basic"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systembackup.tf_systembackup", "id"),
+					// Read-only metadata that is always populated for a freshly-created backup file.
+					resource.TestCheckResourceAttrSet("data.citrixadc_systembackup.tf_systembackup", "size"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systembackup.tf_systembackup", "creationtime"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_systembackup.tf_systembackup", "version"),
 				),
 			},
 		},

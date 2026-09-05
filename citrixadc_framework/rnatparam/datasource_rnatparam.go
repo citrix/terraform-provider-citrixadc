@@ -52,7 +52,7 @@ func (d *RnatparamDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	rnatparamSetAttrFromGet(ctx, &data, getResponseData)
+	rnatparamSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

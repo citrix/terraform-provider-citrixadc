@@ -31,11 +31,13 @@ func (r *NstcpbufparamResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"memlimit": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(64),
 				Description: "Maximum memory, in megabytes, that can be used for buffering.",
 			},
 			"size": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(64),
 				Description: "TCP buffering size per connection, in kilobytes.",
 			},
@@ -46,12 +48,15 @@ func (r *NstcpbufparamResource) Schema(ctx context.Context, req resource.SchemaR
 func nstcpbufparamGetThePayloadFromtheConfig(ctx context.Context, data *NstcpbufparamResourceModel) ns.Nstcpbufparam {
 	tflog.Debug(ctx, "In nstcpbufparamGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// Build the payload from configured values only (mirrors SDK v2 d.GetRawConfig()).
+	// Guard against Unknown as well as Null so a Computed-but-unconfigured value
+	// (which is Unknown in the plan) is never pushed as 0.
 	nstcpbufparam := ns.Nstcpbufparam{}
-	if !data.Memlimit.IsNull() {
+	if !data.Memlimit.IsNull() && !data.Memlimit.IsUnknown() {
 		nstcpbufparam.Memlimit = utils.IntPtr(int(data.Memlimit.ValueInt64()))
 	}
-	if !data.Size.IsNull() {
+	if !data.Size.IsNull() && !data.Size.IsUnknown() {
 		nstcpbufparam.Size = utils.IntPtr(int(data.Size.ValueInt64()))
 	}
 
@@ -61,19 +66,22 @@ func nstcpbufparamGetThePayloadFromtheConfig(ctx context.Context, data *Nstcpbuf
 func nstcpbufparamSetAttrFromGet(ctx context.Context, data *NstcpbufparamResourceModel, getResponseData map[string]interface{}) *NstcpbufparamResourceModel {
 	tflog.Debug(ctx, "In nstcpbufparamSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// Only null the attribute in the else-branch when the current value is Unknown;
+	// never clobber a known configured value that NITRO omits on default
+	// (omit-on-default trap).
 	if val, ok := getResponseData["memlimit"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Memlimit = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Memlimit.IsUnknown() {
 		data.Memlimit = types.Int64Null()
 	}
 	if val, ok := getResponseData["size"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Size = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Size.IsUnknown() {
 		data.Size = types.Int64Null()
 	}
 

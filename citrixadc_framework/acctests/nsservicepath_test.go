@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNsservicepath_basic = `
@@ -42,6 +43,77 @@ func TestAccNsservicepath_basic(t *testing.T) {
 					testAccCheckNsservicepathExist("citrixadc_nsservicepath.tf_servicepath", nil),
 					resource.TestCheckResourceAttr("citrixadc_nsservicepath.tf_servicepath", "servicepathname", "tf_servicepath"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNsservicepath_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNsservicepathDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccNsservicepath_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicepathExist("citrixadc_nsservicepath.tf_servicepath", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNsservicepath_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicepathExist("citrixadc_nsservicepath.tf_servicepath", nil)),
+			},
+		},
+	})
+}
+
+func TestAccNsservicepath_import(t *testing.T) {
+	const resAddr = "citrixadc_nsservicepath.tf_servicepath"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicepathDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNsservicepath_basic},
+			{
+				Config:                  testAccNsservicepath_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccNsservicepath_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_nsservicepath.tf_servicepath"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsservicepathDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsservicepath_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicepathExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsservicepath.Type(), "tf_servicepath"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsservicepath_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsservicepathExist(resAddr, nil)),
 			},
 		},
 	})

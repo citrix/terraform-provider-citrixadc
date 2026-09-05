@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccRouterdynamicrouting_basic(t *testing.T) {
@@ -37,6 +38,57 @@ func TestAccRouterdynamicrouting_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouterdynamicroutingExist("citrixadc_routerdynamicrouting.tf_dynamicrouting", nil),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRouterdynamicrouting_import(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	if isCpxRun {
+		t.Skip("Feature not supported on CPX")
+	}
+	const resAddr = "citrixadc_routerdynamicrouting.tf_dynamicrouting"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{Config: testAccRouterdynamicrouting_basic},
+			{
+				Config:                  testAccRouterdynamicrouting_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccRouterdynamicrouting_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Need to find a way to test this resource!")
+	if isCpxRun {
+		t.Skip("Feature not supported on CPX")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccRouterdynamicrouting_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRouterdynamicroutingExist("citrixadc_routerdynamicrouting.tf_dynamicrouting", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccRouterdynamicrouting_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckRouterdynamicroutingExist("citrixadc_routerdynamicrouting.tf_dynamicrouting", nil)),
 			},
 		},
 	})

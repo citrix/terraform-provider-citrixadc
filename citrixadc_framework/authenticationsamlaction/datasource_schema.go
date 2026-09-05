@@ -1,9 +1,78 @@
 package authenticationsamlaction
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// AuthenticationsamlactionDataSourceModel is the data-source-specific model,
+// decoupled from AuthenticationsamlactionResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits
+// (metadataimportstatus). Every non-key attribute is Computed.
+type AuthenticationsamlactionDataSourceModel struct {
+	Id                             types.String `tfsdk:"id"`
+	Artifactresolutionserviceurl   types.String `tfsdk:"artifactresolutionserviceurl"`
+	Attribute1                     types.String `tfsdk:"attribute1"`
+	Attribute10                    types.String `tfsdk:"attribute10"`
+	Attribute11                    types.String `tfsdk:"attribute11"`
+	Attribute12                    types.String `tfsdk:"attribute12"`
+	Attribute13                    types.String `tfsdk:"attribute13"`
+	Attribute14                    types.String `tfsdk:"attribute14"`
+	Attribute15                    types.String `tfsdk:"attribute15"`
+	Attribute16                    types.String `tfsdk:"attribute16"`
+	Attribute2                     types.String `tfsdk:"attribute2"`
+	Attribute3                     types.String `tfsdk:"attribute3"`
+	Attribute4                     types.String `tfsdk:"attribute4"`
+	Attribute5                     types.String `tfsdk:"attribute5"`
+	Attribute6                     types.String `tfsdk:"attribute6"`
+	Attribute7                     types.String `tfsdk:"attribute7"`
+	Attribute8                     types.String `tfsdk:"attribute8"`
+	Attribute9                     types.String `tfsdk:"attribute9"`
+	Attributeconsumingserviceindex types.Int64  `tfsdk:"attributeconsumingserviceindex"`
+	Attributes                     types.String `tfsdk:"attributes"`
+	Audience                       types.String `tfsdk:"audience"`
+	Authnctxclassref               types.List   `tfsdk:"authnctxclassref"`
+	Customauthnctxclassref         types.String `tfsdk:"customauthnctxclassref"`
+	Defaultauthenticationgroup     types.String `tfsdk:"defaultauthenticationgroup"`
+	Digestmethod                   types.String `tfsdk:"digestmethod"`
+	Enforceusername                types.String `tfsdk:"enforceusername"`
+	Forceauthn                     types.String `tfsdk:"forceauthn"`
+	Groupnamefield                 types.String `tfsdk:"groupnamefield"`
+	Logoutbinding                  types.String `tfsdk:"logoutbinding"`
+	Logouturl                      types.String `tfsdk:"logouturl"`
+	Metadatarefreshinterval        types.Int64  `tfsdk:"metadatarefreshinterval"`
+	Metadataurl                    types.String `tfsdk:"metadataurl"`
+	Name                           types.String `tfsdk:"name"`
+	Preferredbindtype              types.List   `tfsdk:"preferredbindtype"`
+	Relaystaterule                 types.String `tfsdk:"relaystaterule"`
+	Requestedauthncontext          types.String `tfsdk:"requestedauthncontext"`
+	Samlacsindex                   types.Int64  `tfsdk:"samlacsindex"`
+	Samlbinding                    types.String `tfsdk:"samlbinding"`
+	Samlidpcertname                types.String `tfsdk:"samlidpcertname"`
+	Samlissuername                 types.String `tfsdk:"samlissuername"`
+	Samlredirecturl                types.String `tfsdk:"samlredirecturl"`
+	Samlrejectunsignedassertion    types.String `tfsdk:"samlrejectunsignedassertion"`
+	Samlsigningcertname            types.String `tfsdk:"samlsigningcertname"`
+	Samltwofactor                  types.String `tfsdk:"samltwofactor"`
+	Samluserfield                  types.String `tfsdk:"samluserfield"`
+	Sendthumbprint                 types.String `tfsdk:"sendthumbprint"`
+	Signaturealg                   types.String `tfsdk:"signaturealg"`
+	Skewtime                       types.Int64  `tfsdk:"skewtime"`
+	Statechecks                    types.String `tfsdk:"statechecks"`
+	Storesamlresponse              types.String `tfsdk:"storesamlresponse"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/authenticationsamlaction.json). Never settable;
+	// populated from GET.
+	Metadataimportstatus types.String `tfsdk:"metadataimportstatus"`
+}
 
 func AuthenticationsamlactionDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -115,12 +184,12 @@ func AuthenticationsamlactionDataSourceSchema() schema.Schema {
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				Description: "This element specifies the authentication class types that are requested from IdP (IdentityProvider).\nInternetProtocol: This is applicable when a principal is authenticated through the use of a provided IP address.\nInternetProtocolPassword: This is applicable when a principal is authenticated through the use of a provided IP address, in addition to a username/password.\nKerberos: This is applicable when the principal has authenticated using a password to a local authentication authority, in order to acquire a Kerberos ticket.\nMobileOneFactorUnregistered: This indicates authentication of the mobile device without requiring explicit end-user interaction.\nMobileTwoFactorUnregistered: This indicates two-factor based authentication during mobile customer registration process, such as secure device and user PIN.\nMobileOneFactorContract: Reflects mobile contract customer registration procedures and a single factor authentication.\nMobileTwoFactorContract: Reflects mobile contract customer registration procedures and a two-factor based authentication.\nPassword: This class is applicable when a principal authenticates using password over unprotected http session.\nPasswordProtectedTransport: This class is applicable when a principal authenticates to an authentication authority through the presentation of a password over a protected session.\nPreviousSession: This class is applicable when a principal had authenticated to an authentication authority at some point in the past using any authentication context.\nX509: This indicates that the principal authenticated by means of a digital signature where the key was validated as part of an X.509 Public Key Infrastructure.\nPGP: This indicates that the principal authenticated by means of a digital signature where the key was validated as part of a PGP Public Key Infrastructure.\nSPKI: This indicates that the principal authenticated by means of a digital signature where the key was validated via an SPKI Infrastructure.\nXMLDSig: This indicates that the principal authenticated by means of a digital signature according to the processing rules specified in the XML Digital Signature specification.\nSmartcard: This indicates that the principal has authenticated using smartcard.\nSmartcardPKI: This class is applicable when a principal authenticates to an authentication authority through a two-factor authentication mechanism using a smartcard with enclosed private key and a PIN.\nSoftwarePKI: This class is applicable when a principal uses an X.509 certificate stored in software to authenticate to the authentication authority.\nTelephony: This class is used to indicate that the principal authenticated via the provision of a fixed-line telephone number, transported via a telephony protocol such as ADSL.\nNomadTelephony: Indicates that the principal is \"roaming\" and authenticates via the means of the line number, a user suffix, and a password element.\nPersonalTelephony: This class is used to indicate that the principal authenticated via the provision of a fixed-line telephone.\nAuthenticatedTelephony: Indicates that the principal authenticated via the means of the line number, a user suffix, and a password element.\nSecureRemotePassword: This class is applicable when the authentication was performed by means of Secure Remote Password.\nTLSClient: This class indicates that the principal authenticated by means of a client certificate, secured with the SSL/TLS transport.\nTimeSyncToken: This is applicable when a principal authenticates through a time synchronization token.\nUnspecified: This indicates that the authentication was performed by unspecified means.\nWindows: This indicates that Windows integrated authentication is utilized for authentication.",
+				Description: "This element specifies the authentication class types that are requested from IdP (IdentityProvider).",
 			},
 			"customauthnctxclassref": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "This element specifies the custom authentication class reference to be sent as a part of the Authentication Request that is sent by the SP to SAML IDP. The input string must be the body of the authentication class being requested.\nInput format: Alphanumeric string or URL specifying the body of the Request.If more than one string has to be provided, then the same can be done by specifying the classes as a string of comma separated values.\nExample input: set authentication samlaction samlact1 -customAuthnCtxClassRef http://www.class1.com/LoA1,http://www.class2.com/LoA2",
+				Description: "This element specifies the custom authentication class reference to be sent as a part of the Authentication Request that is sent by the SP to SAML IDP.",
 			},
 			"defaultauthenticationgroup": schema.StringAttribute{
 				Optional:    true,
@@ -180,7 +249,7 @@ func AuthenticationsamlactionDataSourceSchema() schema.Schema {
 			"relaystaterule": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Boolean expression that will be evaluated to validate the SAML Response.\nExamples:\nset authentication samlaction <actionname> -relaystateRule 'AAA.LOGIN.RELAYSTATE.EQ(\"https://fqdn.com/\")'\nset authentication samlaction <actionname> -relaystateRule 'AAA.LOGIN.RELAYSTATE.CONTAINS(\"https://fqdn.com/\")'\nset authentication samlaction <actionname> -relaystateRule 'AAA.LOGIN.RELAYSTATE.CONTAINS_ANY(\"patset_name\")'\nset authentication samlAction samlsp -relaystateRule 'AAA.LOGIN.RELAYSTATE.REGEX_MATCH(re#http://<regex>.com/#)'.",
+				Description: "Boolean expression that will be evaluated to validate the SAML Response.",
 			},
 			"requestedauthncontext": schema.StringAttribute{
 				Optional:    true,
@@ -250,13 +319,86 @@ func AuthenticationsamlactionDataSourceSchema() schema.Schema {
 			"statechecks": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
-				Description: "Boolean expression that will be evaluated to validate HTTP requests on SAML endpoints.\nExamples:\nset authentication samlaction <actionname> -stateChecks 'HTTP.REQ.HOSTNAME.EQ(\"https://fqdn.com/\")'",
+				Description: "Boolean expression that will be evaluated to validate HTTP requests on SAML endpoints.",
 			},
 			"storesamlresponse": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,
 				Description: "Option to store entire SAML Response through the life of user session.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"metadataimportstatus": schema.StringAttribute{
+				Computed:    true,
+				Description: "Describes metadata import status. Possible values: INIT, SUCCESS, FAIL.",
+			},
 		},
 	}
+}
+
+// authenticationsamlactionDataSourceSetAttrFromGet projects a NITRO
+// authenticationsamlaction GET response onto the data-source model. Because a
+// data source has no plan/apply reconciliation, attributes are simply filled
+// from the GET (or left Null when the GET omits them). The shared utils.MapGet*
+// helpers implement that projection.
+func authenticationsamlactionDataSourceSetAttrFromGet(ctx context.Context, data *AuthenticationsamlactionDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In authenticationsamlactionDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Artifactresolutionserviceurl = utils.MapGetString(g, "artifactresolutionserviceurl")
+	data.Attribute1 = utils.MapGetString(g, "attribute1")
+	data.Attribute10 = utils.MapGetString(g, "attribute10")
+	data.Attribute11 = utils.MapGetString(g, "attribute11")
+	data.Attribute12 = utils.MapGetString(g, "attribute12")
+	data.Attribute13 = utils.MapGetString(g, "attribute13")
+	data.Attribute14 = utils.MapGetString(g, "attribute14")
+	data.Attribute15 = utils.MapGetString(g, "attribute15")
+	data.Attribute16 = utils.MapGetString(g, "attribute16")
+	data.Attribute2 = utils.MapGetString(g, "attribute2")
+	data.Attribute3 = utils.MapGetString(g, "attribute3")
+	data.Attribute4 = utils.MapGetString(g, "attribute4")
+	data.Attribute5 = utils.MapGetString(g, "attribute5")
+	data.Attribute6 = utils.MapGetString(g, "attribute6")
+	data.Attribute7 = utils.MapGetString(g, "attribute7")
+	data.Attribute8 = utils.MapGetString(g, "attribute8")
+	data.Attribute9 = utils.MapGetString(g, "attribute9")
+	data.Attributeconsumingserviceindex = utils.MapGetInt64(g, "attributeconsumingserviceindex")
+	data.Attributes = utils.MapGetString(g, "attributes")
+	data.Audience = utils.MapGetString(g, "audience")
+	data.Authnctxclassref = utils.MapGetStringList(g, "authnctxclassref")
+	data.Customauthnctxclassref = utils.MapGetString(g, "customauthnctxclassref")
+	data.Defaultauthenticationgroup = utils.MapGetString(g, "defaultauthenticationgroup")
+	data.Digestmethod = utils.MapGetString(g, "digestmethod")
+	data.Enforceusername = utils.MapGetString(g, "enforceusername")
+	data.Forceauthn = utils.MapGetString(g, "forceauthn")
+	data.Groupnamefield = utils.MapGetString(g, "groupnamefield")
+	data.Logoutbinding = utils.MapGetString(g, "logoutbinding")
+	data.Logouturl = utils.MapGetString(g, "logouturl")
+	data.Metadatarefreshinterval = utils.MapGetInt64(g, "metadatarefreshinterval")
+	data.Metadataurl = utils.MapGetString(g, "metadataurl")
+	data.Preferredbindtype = utils.MapGetStringList(g, "preferredbindtype")
+	data.Relaystaterule = utils.MapGetString(g, "relaystaterule")
+	data.Requestedauthncontext = utils.MapGetString(g, "requestedauthncontext")
+	data.Samlacsindex = utils.MapGetInt64(g, "samlacsindex")
+	data.Samlbinding = utils.MapGetString(g, "samlbinding")
+	data.Samlidpcertname = utils.MapGetString(g, "samlidpcertname")
+	data.Samlissuername = utils.MapGetString(g, "samlissuername")
+	data.Samlredirecturl = utils.MapGetString(g, "samlredirecturl")
+	data.Samlrejectunsignedassertion = utils.MapGetString(g, "samlrejectunsignedassertion")
+	data.Samlsigningcertname = utils.MapGetString(g, "samlsigningcertname")
+	data.Samltwofactor = utils.MapGetString(g, "samltwofactor")
+	data.Samluserfield = utils.MapGetString(g, "samluserfield")
+	data.Sendthumbprint = utils.MapGetString(g, "sendthumbprint")
+	data.Signaturealg = utils.MapGetString(g, "signaturealg")
+	data.Skewtime = utils.MapGetInt64(g, "skewtime")
+	data.Statechecks = utils.MapGetString(g, "statechecks")
+	data.Storesamlresponse = utils.MapGetString(g, "storesamlresponse")
+
+	// Read-only metadata.
+	data.Metadataimportstatus = utils.MapGetString(g, "metadataimportstatus")
 }

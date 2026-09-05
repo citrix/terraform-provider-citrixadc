@@ -46,3 +46,18 @@ In addition to the arguments, the following attributes are available:
 * `siteprefix` - The site's prefix string. When the GSLB service group is bound to a GSLB virtual server, a GSLB site domain is generated internally for each bound serviceitem-domain pair by concatenating the site prefix of the service item and the name of the domain. If the special string `NONE` is specified, the site-prefix string is unset. When implementing HTTP redirect site persistence, the Citrix ADC redirects GSLB requests to GSLB services by using their site domains.
 * `state` - Initial state of the member.
 * `weight` - Weight assigned to the member. Specifies the capacity of the server relative to the other servers in the load balancing configuration. The higher the weight, the higher the percentage of requests sent to the service.
+
+### Read-only gslbservicegroup_gslbservicegroupmember_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_gslbservicegroup_gslbservicegroupmember_binding` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `statechangetimesec` - Time when the last state change occurred (seconds part).
+* `preferredlocation` - Preferred location.
+* `trofsdelay` - Delay before moving to TROFS.
+* `delay` - The time allowed (in seconds) for a graceful shutdown.
+* `gslbthreshold` - Indicates whether the GSLB service has reached its threshold.
+* `orderstr` - Order number in string form assigned to the GSLB service group member.
+* `graceful` - Whether to wait for all existing connections to the service to terminate before shutting it down.
+* `threshold` - Threshold indicator (`ABOVE`, `BELOW`).
+* `svrstate` - The state of the GSLB service (for example `UP`, `DOWN`, `OUT OF SERVICE`).
+* `tickssincelaststatechange` - Time, in 10-millisecond ticks, since the last state change.

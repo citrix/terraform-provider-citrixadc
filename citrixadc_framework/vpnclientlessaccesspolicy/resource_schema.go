@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -28,15 +30,23 @@ func (r *VpnclientlessaccesspolicyResource) Schema(ctx context.Context, req reso
 				Description: "The ID of the vpnclientlessaccesspolicy resource.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 had ForceNew on name -> RequiresReplace
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name of the new clientless access policy.",
 			},
 			"profilename": schema.StringAttribute{
-				Required:    true,
+				// SDK v2: Optional + Computed (no Default)
+				Optional:    true,
+				Computed:    true,
 				Description: "Name of the profile to invoke for the clientless access.",
 			},
 			"rule": schema.StringAttribute{
-				Required:    true,
+				// SDK v2: Optional + Computed (no Default)
+				Optional:    true,
+				Computed:    true,
 				Description: "Expression, or name of a named expression, specifying the traffic that matches the policy.\n\nThe following requirements apply only to the Citrix ADC CLI:\n* If the expression includes one or more spaces, enclose the entire expression in double quotation marks.\n* If the expression itself includes double quotation marks, escape the quotations by using the \\ character.\n* Alternatively, you can use single quotation marks to enclose the rule, in which case you do not have to escape the double quotation marks.",
 			},
 		},
@@ -48,13 +58,13 @@ func vpnclientlessaccesspolicyGetThePayloadFromtheConfig(ctx context.Context, da
 
 	// Create API request body from the model
 	vpnclientlessaccesspolicy := vpn.Vpnclientlessaccesspolicy{}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		vpnclientlessaccesspolicy.Name = data.Name.ValueString()
 	}
-	if !data.Profilename.IsNull() {
+	if !data.Profilename.IsNull() && !data.Profilename.IsUnknown() {
 		vpnclientlessaccesspolicy.Profilename = data.Profilename.ValueString()
 	}
-	if !data.Rule.IsNull() {
+	if !data.Rule.IsNull() && !data.Rule.IsUnknown() {
 		vpnclientlessaccesspolicy.Rule = data.Rule.ValueString()
 	}
 
@@ -82,7 +92,7 @@ func vpnclientlessaccesspolicySetAttrFromGet(ctx context.Context, data *Vpnclien
 	}
 
 	// Set ID for the resource
-	// Case 2: Single unique attribute
+	// Case 2: Single unique attribute - use plain value (name) as ID (matches SDK v2 d.SetId(name))
 	data.Id = types.StringValue(data.Name.ValueString())
 
 	return data

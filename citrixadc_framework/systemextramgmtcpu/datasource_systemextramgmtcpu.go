@@ -35,7 +35,7 @@ func (d *SystemextramgmtcpuDataSource) Schema(ctx context.Context, req datasourc
 }
 
 func (d *SystemextramgmtcpuDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SystemextramgmtcpuResourceModel
+	var data SystemextramgmtcpuDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *SystemextramgmtcpuDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	systemextramgmtcpuSetAttrFromGet(ctx, &data, getResponseData)
+	systemextramgmtcpuDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

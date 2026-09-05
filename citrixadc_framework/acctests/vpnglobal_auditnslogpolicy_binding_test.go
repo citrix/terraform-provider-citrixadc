@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // vpnglobal is a singleton on the ADC, so there is no parent resource to create.
@@ -295,6 +295,34 @@ func TestAccVpnglobalAuditnslogpolicyBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_auditnslogpolicy_binding.tf_binding", "policyname", "tf_auditnslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnglobal_auditnslogpolicy_binding.tf_binding", "priority", "90"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnglobalAuditnslogpolicyBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnglobal_auditnslogpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnglobalAuditnslogpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnglobalAuditnslogpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobalAuditnslogpolicyBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnglobal_auditnslogpolicy_binding.Type(), "", []string{"policyname:tf_auditnslogpolicy", "secondary:false"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnglobalAuditnslogpolicyBinding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnglobalAuditnslogpolicyBindingExist(resAddr, nil)),
 			},
 		},
 	})

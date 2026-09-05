@@ -57,7 +57,7 @@ resource "citrixadc_appfwprofile_xmlxss_binding" "tf_binding" {
 
 * `name` - (Required) Name of the profile to which to bind an exemption or rule.
 * `xmlxss` - (Required) Exempt the specified URL from the XML cross-site scripting (XSS) check. An XML cross-site scripting exemption (relaxation) consists of the following items: * URL. URL to exempt, as a string or a PCRE-format regular expression. * ISREGEX flag. REGEX if URL is a regular expression, NOTREGEX if URL is a fixed string. * Location. ELEMENT if the attachment is located in an XML element, ATTRIBUTE if located in an XML attribute.
-* `as_scan_location_xmlxss` - (Required) Location of XSS injection exception - XML Element or Attribute.
+* `as_scan_location_xmlxss` - (Optional) Location of XSS injection exception - XML Element or Attribute. Defaults to `"ELEMENT"`.
 * `alertonly` - (Optional) Send SNMP alert?
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?
@@ -71,7 +71,7 @@ resource "citrixadc_appfwprofile_xmlxss_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_xmlxss_binding. It is the concatenation `name` ,`xmlxss` and `as_scan_location_xmlxss` attributes separated by comma.
+* `id` - The id of the `appfwprofile_xmlxss_binding`. It is the concatenation of the `name`, `xmlxss` and `as_scan_location_xmlxss` attributes separated by a comma.
 
 
 ## Import

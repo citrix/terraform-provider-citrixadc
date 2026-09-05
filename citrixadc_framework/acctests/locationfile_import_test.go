@@ -18,22 +18,36 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"testing"
 )
 
+// testAccLocationfileImport_basic exercises a genuine locationfile import.
+//
+// The import action (POST locationfile?action=import) needs a real source file
+// reachable via `src`. We provide one without any external download by first
+// uploading a small netscaler-format location DB into /var/tmp using the
+// (SDK v2, muxed) citrixadc_systemfile resource, then importing it via the
+// local:// scheme (which resolves to /var/tmp on the appliance). depends_on
+// guarantees the source file exists before the import runs.
 const testAccLocationfileImport_basic = `
 
+resource "citrixadc_systemfile" "tf_locationfile_src" {
+	filename     = "tf_locationfile_src"
+	filelocation = "/var/tmp"
+	filecontent  = "\"1.0.0.0-1.0.0.255\",\"North America.United States.California.San Jose\"\n\"2.0.0.0-2.0.0.255\",\"Europe.United Kingdom.England.London\"\n"
+}
+
 resource "citrixadc_locationfile_import" "tf_locationfile_import" {
-	locationfile = "location_file"
-	src          = "local://my_location_file"
-	}
-  
+	locationfile = "tf_locationfile_import"
+	src          = "local://tf_locationfile_src"
+	format       = "netscaler"
+	depends_on   = [citrixadc_systemfile.tf_locationfile_src]
+}
 `
 
 func TestAccLocationfileImport_basic(t *testing.T) {
-	t.Skip("TODO: Need to find a way to test this resource!")
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -43,8 +57,9 @@ func TestAccLocationfileImport_basic(t *testing.T) {
 				Config: testAccLocationfileImport_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationfileImportExist("citrixadc_locationfile_import.tf_locationfile_import", nil),
-					resource.TestCheckResourceAttr("citrixadc_locationfile_import.tf_locationfile_import", "locationfile", "location_file"),
-					resource.TestCheckResourceAttr("citrixadc_locationfile_import.tf_locationfile_import", "src", "local://my_location_file"),
+					resource.TestCheckResourceAttr("citrixadc_locationfile_import.tf_locationfile_import", "locationfile", "tf_locationfile_import"),
+					resource.TestCheckResourceAttr("citrixadc_locationfile_import.tf_locationfile_import", "src", "local://tf_locationfile_src"),
+					resource.TestCheckResourceAttr("citrixadc_locationfile_import.tf_locationfile_import", "format", "netscaler"),
 				),
 			},
 		},

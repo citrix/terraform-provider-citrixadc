@@ -71,3 +71,13 @@ In addition to the arguments, the following attributes are available:
 * `td` - Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 * `ttl` - Number of seconds, in multiples of four, after which the extended ACL rule expires. If you do not want the extended ACL rule to expire, do not specify a TTL value.
 * `vlan` - ID of the VLAN. The Citrix ADC applies the ACL rule only to the incoming packets of the specified VLAN. If you do not specify a VLAN ID, the appliance applies the ACL rule to the incoming packets on all VLANs.
+* `vxlan` - ID of the VXLAN. The Citrix ADC applies the ACL rule only to the incoming packets of the specified VXLAN. If you do not specify a VXLAN ID, the appliance applies the ACL rule to the incoming packets on all VXLANs.
+
+### Read-only nsacl metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsacl` resource); they are Computed/GET-only. Any attribute the appliance does not return is `null`.
+
+* `hits` - The hits of this ACL.
+* `kernelstate` - The commit status of the ACL (for example `APPLIED`, `NOTAPPLIED`, `RE-APPLY`).
+* `aclassociate` - ACL linked (for example `NAT`, `FORWARDINGSESSION`, `NAT64`, `LSN`). A list of strings.
+* `aclchildcount` - Number of childs for this ACL.

@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVlan_basic_step1 = `
@@ -124,6 +126,53 @@ func testAccCheckVlanDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccVlan_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vlan.tf_vlan"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVlan_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlanExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Vlan.Type(), "40"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVlan_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlanExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccVlan_import(t *testing.T) {
+	const resAddr = "citrixadc_vlan.tf_vlan"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlanDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccVlan_basic_step1},
+			{
+				Config:                  testAccVlan_basic_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccVlanDataSource_basic = `
 resource "citrixadc_vlan" "tf_vlan" {
     vlanid = 40
@@ -135,6 +184,107 @@ data "citrixadc_vlan" "tf_vlan" {
 }
 `
 
+func TestAccVlan_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccVlan_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlanExist("citrixadc_vlan.tf_vlan", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVlan_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVlanExist("citrixadc_vlan.tf_vlan", nil)),
+			},
+		},
+	})
+}
+
+const testAccVlan_unset_step1 = `
+resource "citrixadc_vlan" "tf_unset" {
+    vlanid             = 55
+    dynamicrouting     = "ENABLED"
+    ipv6dynamicrouting = "ENABLED"
+    sharing            = "ENABLED"
+}
+`
+
+const testAccVlan_unset_step2 = `
+resource "citrixadc_vlan" "tf_unset" {
+    vlanid = 55
+    # All unset-eligible attributes removed from config -> the provider must
+    # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccVlan_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccVlan_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlanExist("citrixadc_vlan.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan.tf_unset", "dynamicrouting", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vlan.tf_unset", "ipv6dynamicrouting", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vlan.tf_unset", "sharing", "ENABLED"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccVlan_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVlanExist("citrixadc_vlan.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_vlan.tf_unset", "dynamicrouting", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vlan.tf_unset", "ipv6dynamicrouting", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_vlan.tf_unset", "sharing", "DISABLED"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckVlanADCValue("55", "dynamicrouting", "DISABLED"),
+					testAccCheckVlanADCValue("55", "ipv6dynamicrouting", "DISABLED"),
+					testAccCheckVlanADCValue("55", "sharing", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckVlanADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted
+// it.
+func testAccCheckVlanADCValue(id, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Vlan.Type(), id)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("vlan %s not found on appliance", id)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("vlan %s: appliance attr %q = %q, want %q (unset did not revert it)", id, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccVlanDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -145,6 +295,10 @@ func TestAccVlanDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_vlan.tf_vlan", "vlanid", "40"),
 					resource.TestCheckResourceAttr("data.citrixadc_vlan.tf_vlan", "aliasname", "Test alias name"),
+					// Universal runtime-binding proof. The read-only membership/bitmap
+					// fields are config-dependent and may be omitted for a bare VLAN,
+					// so only id is asserted as always-set.
+					resource.TestCheckResourceAttrSet("data.citrixadc_vlan.tf_vlan", "id"),
 				),
 			},
 		},

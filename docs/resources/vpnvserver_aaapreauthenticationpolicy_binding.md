@@ -4,7 +4,7 @@ subcategory: "VPN"
 
 # Resource: vpnvserver_aaapreauthenticationpolicy_binding
 
-The vpnvserver_aaapreauthenticationpolicy_binding resource is used to to bind aaapreauthenticationpolicy to vpnvserver resource.
+The vpnvserver_aaapreauthenticationpolicy_binding resource is used to bind aaapreauthenticationpolicy to vpnvserver resource.
 
 
 ## Example usage
@@ -41,7 +41,7 @@ resource "citrixadc_vpnvserver_aaapreauthenticationpolicy_binding" "tf_binding" 
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_aaapreauthenticationpolicy_binding. It is the concatenation of both `name` and `policy` attributes seperated by comma.
+* `id` - The id of the vpnvserver_aaapreauthenticationpolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.
 
 
 ## Import

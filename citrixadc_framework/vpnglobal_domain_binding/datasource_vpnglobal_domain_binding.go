@@ -92,7 +92,7 @@ func (d *VpnglobalDomainBindingDataSource) Read(ctx context.Context, req datasou
 		return
 	}
 
-	vpnglobal_domain_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnglobal_domain_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

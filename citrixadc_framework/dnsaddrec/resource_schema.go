@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -36,11 +35,13 @@ func (r *DnsaddrecResource) Schema(ctx context.Context, req resource.SchemaReque
 				Computed:    true,
 				Description: "The ID of the dnsaddrec resource.",
 			},
+			// SDK v2: Optional + ForceNew (not Computed). ecssubnet is an add/delete
+			// query parameter that NITRO never echoes back on GET, so it is preserved
+			// (never nulled) by SetAttrFromGet instead of being marked Computed.
 			"ecssubnet": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Subnet for which the cached address records need to be removed.",
 			},
@@ -62,16 +63,31 @@ func (r *DnsaddrecResource) Schema(ctx context.Context, req resource.SchemaReque
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op) whose planned
+					// Unknown drifts null->value on v2->Framework upgrade. USFU first
+					// keeps the state value on refresh so bare RequiresReplace does not
+					// force a spurious destroy+recreate; RequiresReplaceIfConfigured
+					// preserves ForceNew when the user actually changes it.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Unique number that identifies the cluster node.",
 			},
+			// SDK v2: Optional + ForceNew, no Default. Marked Computed (not Default)
+			// so the ADC-supplied TTL (default 3600) can populate when omitted without
+			// producing an "inconsistent result after apply".
 			"ttl": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+					// GH #1436: create-only attr (no NITRO update op) whose planned
+					// Unknown drifts null->value on v2->Framework upgrade. USFU first
+					// keeps the state value on refresh so bare RequiresReplace does not
+					// force a spurious destroy+recreate; RequiresReplaceIfConfigured
+					// preserves ForceNew when the user actually changes it.
+					int64planmodifier.UseStateForUnknown(),
+					int64planmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     int64default.StaticInt64(3600),
 				Description: "Time to Live (TTL), in seconds, for the record. TTL is the time for which the record must be cached by DNS proxies. The specified TTL is applied to all the resource records that are of the same record type and belong to the specified domain name. For example, if you add an address record, with a TTL of 36000, to the domain name example.com, the TTLs of all the address records of example.com are changed to 36000. If the TTL is not specified, the Citrix ADC uses either the DNS zone's minimum TTL or, if the SOA record is not available on the appliance, the default value of 3600.",
 			},
 		},
@@ -83,19 +99,19 @@ func dnsaddrecGetThePayloadFromtheConfig(ctx context.Context, data *DnsaddrecRes
 
 	// Create API request body from the model
 	dnsaddrec := dns.Dnsaddrec{}
-	if !data.Ecssubnet.IsNull() {
+	if !data.Ecssubnet.IsNull() && !data.Ecssubnet.IsUnknown() {
 		dnsaddrec.Ecssubnet = data.Ecssubnet.ValueString()
 	}
-	if !data.Hostname.IsNull() {
+	if !data.Hostname.IsNull() && !data.Hostname.IsUnknown() {
 		dnsaddrec.Hostname = data.Hostname.ValueString()
 	}
-	if !data.Ipaddress.IsNull() {
+	if !data.Ipaddress.IsNull() && !data.Ipaddress.IsUnknown() {
 		dnsaddrec.Ipaddress = data.Ipaddress.ValueString()
 	}
-	if !data.Nodeid.IsNull() {
+	if !data.Nodeid.IsNull() && !data.Nodeid.IsUnknown() {
 		dnsaddrec.Nodeid = utils.IntPtr(int(data.Nodeid.ValueInt64()))
 	}
-	if !data.Ttl.IsNull() {
+	if !data.Ttl.IsNull() && !data.Ttl.IsUnknown() {
 		dnsaddrec.Ttl = utils.IntPtr(int(data.Ttl.ValueInt64()))
 	}
 
@@ -105,10 +121,13 @@ func dnsaddrecGetThePayloadFromtheConfig(ctx context.Context, data *DnsaddrecRes
 func dnsaddrecSetAttrFromGet(ctx context.Context, data *DnsaddrecResourceModel, getResponseData map[string]interface{}) *DnsaddrecResourceModel {
 	tflog.Debug(ctx, "In dnsaddrecSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// ecssubnet is an add/delete-only query parameter and is not returned by GET,
+	// so preserve the configured value; only null it if it was unknown (never, since
+	// it is Optional-only). This prevents "inconsistent result after apply".
 	if val, ok := getResponseData["ecssubnet"]; ok && val != nil {
 		data.Ecssubnet = types.StringValue(val.(string))
-	} else {
+	} else if data.Ecssubnet.IsUnknown() {
 		data.Ecssubnet = types.StringNull()
 	}
 	if val, ok := getResponseData["hostname"]; ok && val != nil {
@@ -121,23 +140,27 @@ func dnsaddrecSetAttrFromGet(ctx context.Context, data *DnsaddrecResourceModel, 
 	} else {
 		data.Ipaddress = types.StringNull()
 	}
+	// nodeid: NITRO omits the zero/default value from GET. Only null it when the
+	// planned value was unknown (omitted by the user); otherwise preserve a
+	// user-configured value (e.g. 0) to avoid "inconsistent result after apply".
 	if val, ok := getResponseData["nodeid"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Nodeid = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Nodeid.IsUnknown() {
 		data.Nodeid = types.Int64Null()
 	}
+	// ttl: same guard as nodeid.
 	if val, ok := getResponseData["ttl"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Ttl = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Ttl.IsUnknown() {
 		data.Ttl = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 3: Multiple unique attributes - comma-separated
+	// Set ID for the resource.
+	// Backward-compatible SDK v2 ID format: "hostname,ipaddress".
 	data.Id = types.StringValue(fmt.Sprintf("%s,%s", data.Hostname.ValueString(), data.Ipaddress.ValueString()))
 	return data
 }

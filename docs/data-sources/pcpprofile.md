@@ -39,13 +39,3 @@ In addition to the arguments, the following attributes are available:
 * `peer` - This argument is for enabling/disabling the PEER opcode of current PCP Profile
 * `thirdparty` - This argument is for enabling/disabling the THIRD PARTY opcode of current PCP Profile
 * `id` - The id of the pcpprofile. It has the same value as the `name` attribute.
-
-
-## Import
-
-A pcpprofile can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_pcpprofile.tf_pcpprofile my_pcpprofile
-```
-

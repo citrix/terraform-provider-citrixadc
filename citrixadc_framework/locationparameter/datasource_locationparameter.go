@@ -35,7 +35,7 @@ func (d *LocationparameterDataSource) Schema(ctx context.Context, req datasource
 }
 
 func (d *LocationparameterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data LocationparameterResourceModel
+	var data LocationparameterDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *LocationparameterDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	locationparameterSetAttrFromGet(ctx, &data, getResponseData)
+	locationparameterDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

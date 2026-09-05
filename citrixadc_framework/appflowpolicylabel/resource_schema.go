@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -41,16 +40,20 @@ func (r *AppflowpolicylabelResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "New name for the policy label. Must begin with an ASCII alphabetic or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\n\n                    The following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my appflow policylabel\" or 'my appflow policylabel')",
 			},
 			"policylabeltype": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default:     stringdefault.StaticString("HTTP"),
 				Description: "Type of traffic evaluated by the policies bound to the policy label.",
 			},
 		},
@@ -62,13 +65,13 @@ func appflowpolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *App
 
 	// Create API request body from the model
 	appflowpolicylabel := appflow.Appflowpolicylabel{}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		appflowpolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
+	if !data.Newname.IsNull() && !data.Newname.IsUnknown() {
 		appflowpolicylabel.Newname = data.Newname.ValueString()
 	}
-	if !data.Policylabeltype.IsNull() {
+	if !data.Policylabeltype.IsNull() && !data.Policylabeltype.IsUnknown() {
 		appflowpolicylabel.Policylabeltype = data.Policylabeltype.ValueString()
 	}
 

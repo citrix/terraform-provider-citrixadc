@@ -35,7 +35,7 @@ func (d *SystemcmdpolicyDataSource) Schema(ctx context.Context, req datasource.S
 }
 
 func (d *SystemcmdpolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data SystemcmdpolicyResourceModel
+	var data SystemcmdpolicyDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *SystemcmdpolicyDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	systemcmdpolicySetAttrFromGet(ctx, &data, getResponseData)
+	systemcmdpolicyDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

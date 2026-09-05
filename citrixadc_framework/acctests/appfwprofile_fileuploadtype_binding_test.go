@@ -17,13 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwprofile_fileuploadtype_binding_basic = `
@@ -120,12 +122,14 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingExist(n string, id *string) 
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 4)
-
-		name := idSlice[0]
-		fileuploadtype := idSlice[1]
-		as_fileuploadtypes_url := idSlice[2]
-		filetype := idSlice[3]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "fileuploadtype", "as_fileuploadtypes_url", "filetype"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", bindingId, err)
+		}
+		name := idMap["name"]
+		fileuploadtype := idMap["fileuploadtype"]
+		as_fileuploadtypes_url := idMap["as_fileuploadtypes_url"]
+		filetype := idMap["filetype"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fileuploadtype_binding",
@@ -178,12 +182,14 @@ func testAccCheckAppfwprofile_fileuploadtype_bindingNotExist(n string, id string
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 4)
-
-		name := idSlice[0]
-		fileuploadtype := idSlice[1]
-		as_fileuploadtypes_url := idSlice[2]
-		filetype := idSlice[3]
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "fileuploadtype", "as_fileuploadtypes_url", "filetype"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID %s: %v", id, err)
+		}
+		name := idMap["name"]
+		fileuploadtype := idMap["fileuploadtype"]
+		as_fileuploadtypes_url := idMap["as_fileuploadtypes_url"]
+		filetype := idMap["filetype"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwprofile_fileuploadtype_binding",
@@ -285,6 +291,139 @@ func TestAccAppfwprofile_fileuploadtype_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "filetype.0", "pdf"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "filetype.1", "text"),
 				),
+			},
+		},
+	})
+}
+
+// testAccAppfwprofile_fileuploadtype_binding_upgrade_basic reuses the (single-filetype)
+// tf_binding3 values from the _basic config. A single-element filetype list keeps both
+// the legacy composite ID and the recomputed new-format ID deterministic (no list-order
+// ambiguity). The attribute names are the SDK v2 names (restored by the migration), so
+// this config is valid under BOTH the 2.2.0 SDK v2 schema and the current Framework schema.
+const testAccAppfwprofile_fileuploadtype_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwprofile_fileuploadtype_binding" "tf_binding1" {
+		name                   = citrixadc_appfwprofile.tf_appfwprofile.name
+		fileuploadtype         = "tf_uploadtype"
+		as_fileuploadtypes_url = "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/v1/resource/temp$"
+		filetype               = ["text"]
+	}
+`
+
+// TestAccAppfwprofile_fileuploadtype_binding_sdkv2StateUpgrade verifies that a binding
+// created with the last SDK v2 release (2.2.0), which writes the legacy comma-composite
+// ID, is refreshed cleanly by the current Framework provider and its ID is upgraded to
+// the new key:value format on Read (see SetAttrFromGet -> ComposeId).
+func TestAccAppfwprofile_fileuploadtype_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofile_fileuploadtype_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release (legacy ID written to state).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwprofile_fileuploadtype_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_fileuploadtype_bindingExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "id", `tf_appfwprofile,tf_uploadtype,^https://sd2\-zgw\.test\.ctxns\.com/api/v1/resource/temp$,text`),
+				),
+			},
+			// Step 2: same config through the current (Framework) provider. Refresh exercises
+			// ParseIdString on the legacy ID and Read recomputes the ID to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_fileuploadtype_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofile_fileuploadtype_bindingExist("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1", "id", `as_fileuploadtypes_url:%5Ehttps%3A%2F%2Fsd2%5C-zgw%5C.test%5C.ctxns%5C.com%2Fapi%2Fv1%2Fresource%2Ftemp%24,filetype:text,fileuploadtype:tf_uploadtype,name:tf_appfwprofile`),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_fileuploadtype_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,fileuploadtype,as_fileuploadtypes_url,filetype) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "fileuploadtype", "as_fileuploadtypes_url", "filetype"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_fileuploadtype_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_fileuploadtype_binding_basic},
+			{Config: testAccAppfwprofile_fileuploadtype_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccAppfwprofile_fileuploadtype_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAppfwprofile_fileuploadtype_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile_fileuploadtype_binding.tf_binding1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofile_fileuploadtype_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_fileuploadtype_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_fileuploadtype_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwprofile_fileuploadtype_binding.Type(), "tf_appfwprofile", map[string]string{
+						"as_fileuploadtypes_url": "^https://sd2\\-zgw\\.test\\.ctxns\\.com/api/document/content$",
+						"filetype":               "pdf;text",
+						"fileuploadtype":         "tf_uploadtype",
+					}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_fileuploadtype_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofile_fileuploadtype_bindingExist(resAddr, nil)),
 			},
 		},
 	})

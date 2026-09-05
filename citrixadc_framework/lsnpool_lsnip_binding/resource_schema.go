@@ -96,6 +96,11 @@ func lsnpool_lsnip_bindingSetAttrFromGet(ctx context.Context, data *LsnpoolLsnip
 		data.Poolname = types.StringValue(val.(string))
 	}
 
+	// Re-derive the canonical id so a legacy SDK v2 id is upgraded to the new key:value format on Read.
+	idParts := []string{}
+	idParts = append(idParts, fmt.Sprintf("poolname:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Poolname.ValueString()))))
+	idParts = append(idParts, fmt.Sprintf("lsnip:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Lsnip.ValueString()))))
+	data.Id = types.StringValue(strings.Join(idParts, ","))
 	return data
 }
 

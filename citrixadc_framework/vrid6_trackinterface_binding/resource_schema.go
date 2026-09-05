@@ -2,8 +2,6 @@ package vrid6_trackinterface_binding
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/citrix/adc-nitro-go/resource/config/network"
 
@@ -83,44 +81,6 @@ func vrid6_trackinterface_bindingSetAttrFromGet(ctx context.Context, data *Vrid6
 	if val, ok := getResponseData["trackifnum"]; ok && val != nil {
 		data.Trackifnum = types.StringValue(val.(string))
 	}
-
-	return data
-}
-
-// vrid6_trackinterface_bindingSetAttrFromGetForDatasource faithfully copies every
-// field from the GET response (including the read-only flags) and composes the ID,
-// since the datasource has no Create to seed those values. Note: trackinterface
-// bindings have no vlan field.
-func vrid6_trackinterface_bindingSetAttrFromGetForDatasource(ctx context.Context, data *Vrid6TrackinterfaceBindingDataSourceModel, getResponseData map[string]interface{}) *Vrid6TrackinterfaceBindingDataSourceModel {
-	tflog.Debug(ctx, "In vrid6_trackinterface_bindingSetAttrFromGetForDatasource Function")
-
-	// Convert API response to model
-	if val, ok := getResponseData["id"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.VridId = types.Int64Value(intVal)
-		}
-	} else {
-		data.VridId = types.Int64Null()
-	}
-	if val, ok := getResponseData["trackifnum"]; ok && val != nil {
-		data.Trackifnum = types.StringValue(val.(string))
-	} else {
-		data.Trackifnum = types.StringNull()
-	}
-	if val, ok := getResponseData["flags"]; ok && val != nil {
-		if intVal, err := utils.ConvertToInt64(val); err == nil {
-			data.Flags = types.Int64Value(intVal)
-		}
-	} else {
-		data.Flags = types.Int64Null()
-	}
-
-	// Set ID for the datasource
-	// Composite key: id,trackifnum (key:UrlEncode(value) pairs)
-	idParts := []string{}
-	idParts = append(idParts, fmt.Sprintf("id:%s", utils.UrlEncode(fmt.Sprintf("%v", data.VridId.ValueInt64()))))
-	idParts = append(idParts, fmt.Sprintf("trackifnum:%s", utils.UrlEncode(fmt.Sprintf("%v", data.Trackifnum.ValueString()))))
-	data.Id = types.StringValue(strings.Join(idParts, ","))
 
 	return data
 }

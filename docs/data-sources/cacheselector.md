@@ -34,3 +34,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the cacheselector. It has the same value as the `selectorname` attribute.
 * `rule` - One or multiple PIXL expressions for evaluating an HTTP request or response.
+
+### Read-only cacheselector metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cacheselector` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
+
+* `flags` - Flags.
+* `builtin` - Flag to determine whether the cache selector is built-in. A list of strings.
+* `feature` - The feature to be checked while applying this config.

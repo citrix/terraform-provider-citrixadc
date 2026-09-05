@@ -28,9 +28,14 @@ type Aaaotpparameter struct {
 	* Maximum number of otp devices user can register. Default value is 4. Max value is 255
 	*/
 	Maxotpdevices *int `json:"maxotpdevices,omitempty"`
+	/**
+	* Input flag to generate OTP for the given type.
+	*/
+	Otptype string `json:"otptype,omitempty"`
 
 	//------- Read only Parameter ---------;
 
 	Nextgenapiresource string `json:"_nextgenapiresource,omitempty"`
+	Gwtestchallenge string `json:"gwtestchallenge,omitempty"`
 
 }

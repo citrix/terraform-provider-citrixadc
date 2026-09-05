@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccResponderpolicylabel_basic(t *testing.T) {
@@ -125,6 +126,77 @@ data "citrixadc_responderpolicylabel" "responder_policylabel_ds" {
 }
 `
 
+func TestAccResponderpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicylabel.responder_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Responderpolicylabel.Type(), "tf_responder_policylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccResponderpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_responderpolicylabel.responder_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderpolicylabel_basic},
+			{
+				Config:                  testAccResponderpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccResponderpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccResponderpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicylabelExist("citrixadc_responderpolicylabel.responder_policylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderpolicylabelExist("citrixadc_responderpolicylabel.responder_policylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccResponderpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -136,6 +208,7 @@ func TestAccResponderpolicylabelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "labelname", "tf_responder_policylabel_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "policylabeltype", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "comment", "datasource test comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderpolicylabel.responder_policylabel_ds", "id"),
 				),
 			},
 		},

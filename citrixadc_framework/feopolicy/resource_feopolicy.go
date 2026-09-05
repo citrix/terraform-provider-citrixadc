@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *FeopolicyResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating feopolicy resource")
 
-	// feopolicy := feopolicyGetThePayloadFromtheConfig(ctx, &data)
+	feopolicy := feopolicyGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Feopolicy.Type(), &feopolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feopolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("feopolicy-config")
+	// Named resource - use AddResource
+	feopolicyName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Feopolicy.Type(), feopolicyName, &feopolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create feopolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created feopolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", feopolicyName))
+
 	// Read the updated state back
-	r.readFeopolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readFeopolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "feopolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *FeopolicyResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading feopolicy resource")
 
-	r.readFeopolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readFeopolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *FeopolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data FeopolicyResourceModel
+	var data, state FeopolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,44 @@ func (r *FeopolicyResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating feopolicy resource")
 
-	// Create API request body from the model
-	// feopolicy := feopolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for feopolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for feopolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Feopolicy.Type(), &feopolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feopolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model.
+		// NITRO update for feopolicy is an unnamed PUT (name is carried in the payload).
+		feopolicy := feopolicyGetThePayloadFromthePlan(ctx, &data)
+		err := r.client.UpdateUnnamedResource(service.Feopolicy.Type(), &feopolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update feopolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated feopolicy resource")
+		tflog.Trace(ctx, "Updated feopolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for feopolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readFeopolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readFeopolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "feopolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +175,33 @@ func (r *FeopolicyResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	tflog.Debug(ctx, "Deleting feopolicy resource")
+	// Named resource - delete using DeleteResource
+	feopolicyName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Feopolicy.Type(), feopolicyName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete feopolicy, got error: %s", err))
+		return
+	}
 
-	// For feopolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted feopolicy resource from state")
+	tflog.Trace(ctx, "Deleted feopolicy resource")
 }
 
 // Helper function to read feopolicy data from API
-func (r *FeopolicyResource) readFeopolicyFromApi(ctx context.Context, data *FeopolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Feopolicy.Type(), "")
+func (r *FeopolicyResource) readFeopolicyFromApi(ctx context.Context, data *FeopolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	feopolicyName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Feopolicy.Type(), feopolicyName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read feopolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	feopolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

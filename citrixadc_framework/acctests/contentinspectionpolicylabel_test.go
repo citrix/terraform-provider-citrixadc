@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/adc-nitro-go/service"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccContentinspectionpolicylabel_basic = `
@@ -144,6 +146,77 @@ func testAccCheckContentinspectionpolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccContentinspectionpolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContentinspectionpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Contentinspectionpolicylabel.Type(), "my_ci_policylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccContentinspectionpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionpolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckContentinspectionpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccContentinspectionpolicylabel_basic},
+			{
+				Config:                  testAccContentinspectionpolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccContentinspectionpolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckContentinspectionpolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccContentinspectionpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicylabelExist("citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccContentinspectionpolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckContentinspectionpolicylabelExist("citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccContentinspectionpolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -155,6 +228,9 @@ func TestAccContentinspectionpolicylabelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "labelname", "citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel", "labelname"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "type", "REQ"),
 					resource.TestCheckResourceAttr("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "comment", "Test datasource comment"),
+					// Runtime-binding proof; read-only metadata (numpol/hits/priority/
+					// labeltype/isdefault/...) is exposed but may be omitted for a fresh object.
+					resource.TestCheckResourceAttrSet("data.citrixadc_contentinspectionpolicylabel.tf_contentinspectionpolicylabel_ds", "id"),
 				),
 			},
 		},

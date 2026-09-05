@@ -28,6 +28,7 @@ type CipherbindingModel struct {
 type SslprofileResourceModel struct {
 	Id                                types.String `tfsdk:"id"`
 	Allowextendedmastersecret         types.String `tfsdk:"allowextendedmastersecret"`
+	Allowlegacykdf                    types.String `tfsdk:"allowlegacykdf"`
 	Allowunknownsni                   types.String `tfsdk:"allowunknownsni"`
 	Alpnprotocol                      types.String `tfsdk:"alpnprotocol"`
 	Ciphername                        types.String `tfsdk:"ciphername"`
@@ -47,6 +48,7 @@ type SslprofileResourceModel struct {
 	Dhfile                            types.String `tfsdk:"dhfile"`
 	Dhkeyexpsizelimit                 types.String `tfsdk:"dhkeyexpsizelimit"`
 	Dropreqwithnohostheader           types.String `tfsdk:"dropreqwithnohostheader"`
+	Dynamicclientcert                 types.String `tfsdk:"dynamicclientcert"`
 	Ecccurvebindings                  types.Set    `tfsdk:"ecccurvebindings"`
 	Encryptedclienthello              types.String `tfsdk:"encryptedclienthello"`
 	Encrypttriggerpktcount            types.Int64  `tfsdk:"encrypttriggerpktcount"`
@@ -94,6 +96,7 @@ type SslprofileResourceModel struct {
 	Sslredirect                       types.String `tfsdk:"sslredirect"`
 	Ssltriggertimeout                 types.Int64  `tfsdk:"ssltriggertimeout"`
 	Strictcachecks                    types.String `tfsdk:"strictcachecks"`
+	Strictclientekucheck              types.String `tfsdk:"strictclientekucheck"`
 	Strictsigdigestcheck              types.String `tfsdk:"strictsigdigestcheck"`
 	Tls1                              types.String `tfsdk:"tls1"`
 	Tls11                             types.String `tfsdk:"tls11"`
@@ -117,6 +120,11 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 				Default:     stringdefault.StaticString("NO"),
 				Description: "When set to YES, attempt to use the TLS Extended Master Secret (EMS, as\ndescribed in RFC 7627) when negotiating TLS 1.0, TLS 1.1 and TLS 1.2\nconnection parameters. EMS must be supported by both the TLS client and server\nin order to be enabled during a handshake. This setting applies to both\nfrontend and backend SSL profiles.",
+			},
+			"allowlegacykdf": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "FIPS 140-3 certification requires all handshakes without EMS be blocked. Such KDFs are allowed by default. This setting is to allow/disallow such legacy KDFs when needed. This setting applies to both frontend and backend SSL profiles.",
 			},
 			"allowunknownsni": schema.StringAttribute{
 				Optional:    true,
@@ -221,15 +229,22 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Default:     stringdefault.StaticString("NO"),
 				Description: "Host header check for SNI enabled sessions. If this check is enabled and the HTTP request does not contain the host header for SNI enabled sessions(i.e vserver or profile bound to vserver has SNI enabled and 'Client Hello' arrived with SNI extension), the request is dropped.",
 			},
+			"dynamicclientcert": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable Dynamic Client Certificate Generation for SSL sessions.",
+			},
 			"ecccurvebindings": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Description: "Named ECC curves bound to the SSL profile.",
 			},
 			"encryptedclienthello": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "State of TLS 1.3 Encrypted Client Hello Support",
 			},
 			"encrypttriggerpktcount": schema.Int64Attribute{
@@ -432,9 +447,11 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "State of SSLv3 protocol support for the SSL profile.\nNote: On platforms with SSL acceleration chips, if the SSL chip does not support SSLv3, this parameter cannot be set to ENABLED.",
 			},
 			"sslclientlogs": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Default:     stringdefault.StaticString("DISABLED"),
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					utils.UnsetOnRemoveOrKeepDefaultString{DefaultValue: "DISABLED"},
+				},
 				Description: "When enabled, NetScaler will log the session ID and SNI name during SSL handshakes on both the external and internal interfaces.",
 			},
 			"sslimaxsessperserver": schema.Int64Attribute{
@@ -493,6 +510,11 @@ func (r *SslprofileResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Computed:    true,
 				Default:     stringdefault.StaticString("NO"),
 				Description: "Enable strict CA certificate checks on the appliance.",
+			},
+			"strictclientekucheck": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable strict EKU extension check during client authentication.",
 			},
 			"strictsigdigestcheck": schema.StringAttribute{
 				Optional:    true,
@@ -560,6 +582,9 @@ func sslprofileGetThePayloadFromthePlan(ctx context.Context, data *SslprofileRes
 	if !data.Allowextendedmastersecret.IsNull() && !data.Allowextendedmastersecret.IsUnknown() {
 		sslprofile.Allowextendedmastersecret = data.Allowextendedmastersecret.ValueString()
 	}
+	if !data.Allowlegacykdf.IsNull() && !data.Allowlegacykdf.IsUnknown() {
+		sslprofile.Allowlegacykdf = data.Allowlegacykdf.ValueString()
+	}
 	if !data.Allowunknownsni.IsNull() && !data.Allowunknownsni.IsUnknown() {
 		sslprofile.Allowunknownsni = data.Allowunknownsni.ValueString()
 	}
@@ -616,6 +641,9 @@ func sslprofileGetThePayloadFromthePlan(ctx context.Context, data *SslprofileRes
 	}
 	if !data.Dropreqwithnohostheader.IsNull() && !data.Dropreqwithnohostheader.IsUnknown() {
 		sslprofile.Dropreqwithnohostheader = data.Dropreqwithnohostheader.ValueString()
+	}
+	if !data.Dynamicclientcert.IsNull() && !data.Dynamicclientcert.IsUnknown() {
+		sslprofile.Dynamicclientcert = data.Dynamicclientcert.ValueString()
 	}
 	if !data.Encryptedclienthello.IsNull() && !data.Encryptedclienthello.IsUnknown() {
 		sslprofile.Encryptedclienthello = data.Encryptedclienthello.ValueString()
@@ -745,6 +773,9 @@ func sslprofileGetThePayloadFromthePlan(ctx context.Context, data *SslprofileRes
 	if !data.Strictcachecks.IsNull() && !data.Strictcachecks.IsUnknown() {
 		sslprofile.Strictcachecks = data.Strictcachecks.ValueString()
 	}
+	if !data.Strictclientekucheck.IsNull() && !data.Strictclientekucheck.IsUnknown() {
+		sslprofile.Strictclientekucheck = data.Strictclientekucheck.ValueString()
+	}
 	if !data.Strictsigdigestcheck.IsNull() && !data.Strictsigdigestcheck.IsUnknown() {
 		sslprofile.Strictsigdigestcheck = data.Strictsigdigestcheck.ValueString()
 	}
@@ -789,6 +820,9 @@ func sslprofileGetTheUpdatePayloadFromthePlan(ctx context.Context, data *Sslprof
 	}
 	if !data.Allowextendedmastersecret.IsNull() && !data.Allowextendedmastersecret.IsUnknown() {
 		sslprofile.Allowextendedmastersecret = data.Allowextendedmastersecret.ValueString()
+	}
+	if !data.Allowlegacykdf.IsNull() && !data.Allowlegacykdf.IsUnknown() {
+		sslprofile.Allowlegacykdf = data.Allowlegacykdf.ValueString()
 	}
 	if !data.Allowunknownsni.IsNull() && !data.Allowunknownsni.IsUnknown() {
 		sslprofile.Allowunknownsni = data.Allowunknownsni.ValueString()
@@ -846,6 +880,9 @@ func sslprofileGetTheUpdatePayloadFromthePlan(ctx context.Context, data *Sslprof
 	}
 	if !data.Dropreqwithnohostheader.IsNull() && !data.Dropreqwithnohostheader.IsUnknown() {
 		sslprofile.Dropreqwithnohostheader = data.Dropreqwithnohostheader.ValueString()
+	}
+	if !data.Dynamicclientcert.IsNull() && !data.Dynamicclientcert.IsUnknown() {
+		sslprofile.Dynamicclientcert = data.Dynamicclientcert.ValueString()
 	}
 	if !data.Encryptedclienthello.IsNull() && !data.Encryptedclienthello.IsUnknown() {
 		sslprofile.Encryptedclienthello = data.Encryptedclienthello.ValueString()
@@ -971,6 +1008,9 @@ func sslprofileGetTheUpdatePayloadFromthePlan(ctx context.Context, data *Sslprof
 	if !data.Strictcachecks.IsNull() && !data.Strictcachecks.IsUnknown() {
 		sslprofile.Strictcachecks = data.Strictcachecks.ValueString()
 	}
+	if !data.Strictclientekucheck.IsNull() && !data.Strictclientekucheck.IsUnknown() {
+		sslprofile.Strictclientekucheck = data.Strictclientekucheck.ValueString()
+	}
 	if !data.Strictsigdigestcheck.IsNull() && !data.Strictsigdigestcheck.IsUnknown() {
 		sslprofile.Strictsigdigestcheck = data.Strictsigdigestcheck.ValueString()
 	}
@@ -1017,6 +1057,11 @@ func sslprofileSetAttrFromGet(ctx context.Context, data *SslprofileResourceModel
 		data.Allowextendedmastersecret = types.StringValue(val.(string))
 	} else {
 		data.Allowextendedmastersecret = types.StringNull()
+	}
+	if val, ok := getResponseData["allowlegacykdf"]; ok && val != nil {
+		data.Allowlegacykdf = types.StringValue(val.(string))
+	} else {
+		data.Allowlegacykdf = types.StringNull()
 	}
 	if val, ok := getResponseData["allowunknownsni"]; ok && val != nil {
 		data.Allowunknownsni = types.StringValue(val.(string))
@@ -1118,6 +1163,11 @@ func sslprofileSetAttrFromGet(ctx context.Context, data *SslprofileResourceModel
 		data.Dropreqwithnohostheader = types.StringValue(val.(string))
 	} else {
 		data.Dropreqwithnohostheader = types.StringNull()
+	}
+	if val, ok := getResponseData["dynamicclientcert"]; ok && val != nil {
+		data.Dynamicclientcert = types.StringValue(val.(string))
+	} else {
+		data.Dynamicclientcert = types.StringNull()
 	}
 	if val, ok := getResponseData["encryptedclienthello"]; ok && val != nil {
 		data.Encryptedclienthello = types.StringValue(val.(string))
@@ -1346,6 +1396,11 @@ func sslprofileSetAttrFromGet(ctx context.Context, data *SslprofileResourceModel
 		data.Strictcachecks = types.StringValue(val.(string))
 	} else {
 		data.Strictcachecks = types.StringNull()
+	}
+	if val, ok := getResponseData["strictclientekucheck"]; ok && val != nil {
+		data.Strictclientekucheck = types.StringValue(val.(string))
+	} else {
+		data.Strictclientekucheck = types.StringNull()
 	}
 	if val, ok := getResponseData["strictsigdigestcheck"]; ok && val != nil {
 		data.Strictsigdigestcheck = types.StringValue(val.(string))

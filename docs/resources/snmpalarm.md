@@ -31,6 +31,7 @@ resource "citrixadc_snmpalarm" "tf_snmpalarm" {
 * `thresholdvalue` - (Optional) Value for the high threshold. The Citrix ADC generates an SNMP trap message when the value of the attribute associated with the alarm is greater than or equal to the specified high threshold value.
 * `time` - (Optional) Interval, in seconds, at which the Citrix ADC generates SNMP trap messages when the conditions specified in the SNMP alarm are met.Can be specified for the following alarms: SYNFLOOD, HA-VERSION-MISMATCH, HA-SYNC-FAILURE, HA-NO-HEARTBEATS,HA-BAD-SECONDARY-STATE, CLUSTER-NODE-HEALTH, CLUSTER-NODE-QUORUM, CLUSTER-VERSION-MISMATCH, CLUSTER-BKHB-FAILED, PORT-ALLOC-FAILED, COMPACT-FLASH-ERRORS, HARD-DISK-DRIVE-ERRORS and APPFW traps. Default trap time intervals: SYNFLOOD and APPFW traps = 1sec, PORT-ALLOC-FAILED = 3600sec(1 hour), Other Traps = 86400sec(1 day)
 * `trapname` - (Optional) Name of the SNMP alarm. This parameter is required for identifying the SNMP alarm and cannot be modified.
+* `holdtime` - (Optional) Hold time Interval, in seconds, at which the Citrix ADC generates SNMP trap messages when the conditions specified in the SNMP alarm are met recursively for a given period of time. It is recommended to have the hold time interval period in multiple of 7 seconds as the ADC tries to validate the alarms every 7 seconds. Can only be specified for the MGMT-CPU-USAGE alarm.
 
 
 ## Attribute Reference
@@ -38,3 +39,12 @@ resource "citrixadc_snmpalarm" "tf_snmpalarm" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the snmpalarm. It is a unique string prefixed with "tf-snmpalarm-".
+
+
+## Import
+
+A snmpalarm can be imported using its trapname, e.g.
+
+```shell
+terraform import citrixadc_snmpalarm.tf_snmpalarm <trapname>
+```

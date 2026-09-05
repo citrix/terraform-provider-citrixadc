@@ -41,10 +41,10 @@ In addition to the arguments, the following attributes are available:
 * `newname` - The new name of the author policy.
 * `id` - The id of the authorizationpolicy. It has the same value as the `name` attribute.
 
-## Import
+### Read-only authorizationpolicy metadata
 
-A authorizationpolicy can be imported using its name, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authorizationpolicy` resource). They are GET-only / Computed, and any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_authorizationpolicy.tf_authorizationpolicy my_authorization_policy
-```
+* `activepolicy` - Indicates whether policy is bound or not.
+* `expressiontype` - Type of policy (Classic/Advanced).
+* `hits` - Number of hits.

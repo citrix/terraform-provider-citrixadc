@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwfieldtype_add = `
@@ -155,7 +156,80 @@ func TestAccAppfwfieldtypeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "regex", "test_.*regex_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "comment", "Test datasource comment"),
+					// id is the universal runtime-binding proof (mirrors name).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwfieldtype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwfieldtype.tfAcc_appfwfieldtype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwfieldtypeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwfieldtype_add},
+			{
+				Config:                  testAccAppfwfieldtype_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppfwfieldtype_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwfieldtypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppfwfieldtype_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwfieldtypeExist("citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwfieldtype_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwfieldtypeExist("citrixadc_appfwfieldtype.tfAcc_appfwfieldtype", nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwfieldtype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwfieldtype.tfAcc_appfwfieldtype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwfieldtypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwfieldtype_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwfieldtypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwfieldtype.Type(), "tfAcc_appfwfieldtype"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwfieldtype_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwfieldtypeExist(resAddr, nil)),
 			},
 		},
 	})

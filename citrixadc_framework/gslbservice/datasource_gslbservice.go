@@ -7,7 +7,32 @@ import (
 	"github.com/citrix/adc-nitro-go/service"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
+
+// gslbserviceLbmonitorbindingDSAttrs returns the nested attributes for the
+// inline lbmonitorbinding block on the data source. It is defined here (not in
+// datasource_schema.go) so the merged schema file stays a flat top-level
+// attribute/block map matching the GslbserviceDataSourceModel.
+func gslbserviceLbmonitorbindingDSAttrs() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"weight": schema.Int64Attribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Weight to assign to the monitor-service binding.",
+		},
+		"monitor_name": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Name of the monitor bound to the GSLB service.",
+		},
+		"monstate": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "State of the monitor bound to the GSLB service.",
+		},
+	}
+}
 
 var _ datasource.DataSource = (*GslbserviceDataSource)(nil)
 
@@ -35,7 +60,7 @@ func (d *GslbserviceDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *GslbserviceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data GslbserviceResourceModel
+	var data GslbserviceDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +80,7 @@ func (d *GslbserviceDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	gslbserviceSetAttrFromGet(ctx, &data, getResponseData)
+	gslbserviceDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

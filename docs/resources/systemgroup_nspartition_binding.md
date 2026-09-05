@@ -41,12 +41,12 @@ resource "citrixadc_nspartition" "tf_nspartition" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the systemgroup_nspartition_binding. It has the same value as the `groupname` and `partitionname` attribute.
+* `id` - The id of the systemgroup_nspartition_binding. It is the concatenation of the `groupname` and `partitionname` attributes separated by a comma.
 
 
 ## Import
 
-A systemgroup_nspartition_binding can be imported using its name, e.g.
+A systemgroup_nspartition_binding can be imported using its id, e.g.
 
 ```shell
 terraform import citrixadc_systemgroup_nspartition_binding.tf_systemgroup_nspartition_binding tf_systemgroup,tf_nspartition

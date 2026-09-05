@@ -19,8 +19,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCachepolicylabel_basic = `
@@ -57,6 +58,53 @@ func TestAccCachepolicylabel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cachepolicylabel.tf_policylabel", "labelname", "my_cachepolicylabel"),
 					resource.TestCheckResourceAttr("citrixadc_cachepolicylabel.tf_policylabel", "evaluates", "RES"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCachepolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cachepolicylabel.tf_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCachepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cachepolicylabel.Type(), "my_cachepolicylabel"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCachepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCachepolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_cachepolicylabel.tf_policylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCachepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCachepolicylabel_basic},
+			{
+				Config:                  testAccCachepolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -126,6 +174,30 @@ func testAccCheckCachepolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCachepolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCachepolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccCachepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabelExist("citrixadc_cachepolicylabel.tf_policylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCachepolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCachepolicylabelExist("citrixadc_cachepolicylabel.tf_policylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCachepolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -137,6 +209,8 @@ func TestAccCachepolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel.tf_cachepolicylabel_ds", "labelname", "tf_cachepolicylabel_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cachepolicylabel.tf_cachepolicylabel_ds", "evaluates", "REQ"),
+					// Universal runtime-binding proof that the data source read succeeded.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cachepolicylabel.tf_cachepolicylabel_ds", "id"),
 				),
 			},
 		},

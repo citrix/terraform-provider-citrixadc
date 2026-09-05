@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwglobal_appfwpolicy_binding_basic = `
@@ -121,10 +124,13 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 		}
 
 		bindingId := rs.Primary.ID
-		idSlice := strings.Split(bindingId, ",")
-		policyname := idSlice[0]
-		bindpoint_type := idSlice[1]
-		globalbindtype := idSlice[2]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"policyname", "type", "globalbindtype"}, []string{"globalbindtype"})
+		if err != nil {
+			return err
+		}
+		policyname := idMap["policyname"]
+		bindpoint_type := idMap["type"]
+		globalbindtype := idMap["globalbindtype"]
 
 		findParams := service.FindParams{
 			ResourceType:             "appfwglobal_appfwpolicy_binding",
@@ -141,7 +147,7 @@ func testAccCheckAppfwglobal_appfwpolicy_bindingExist(n string, id *string) reso
 		// Iterate through results to find the one with the matching secondIdComponent
 		found := false
 		for _, v := range dataArr {
-			if v["policyname"].(string) == policyname && v["globalbindtype"].(string) == globalbindtype {
+			if v["policyname"].(string) == policyname && (globalbindtype == "" || v["globalbindtype"].(string) == globalbindtype) {
 				found = true
 				break
 			}
@@ -253,7 +259,141 @@ func TestAccAppfwglobal_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "priority", "30"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "type", "REQ_DEFAULT"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// numpol is a counter (policies bound to the bindpoint) always populated when a binding exists.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "numpol"),
 				),
+			},
+		},
+	})
+}
+
+const testAccAppfwglobal_appfwpolicy_binding_upgrade_basic = `
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name                     = "tf_appfwprofile"
+		type                     = ["HTML"]
+	}
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
+		name        = "tf_appfwpolicy"
+		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
+		rule        = "true"
+	}
+	resource "citrixadc_appfwglobal_appfwpolicy_binding" "tf_binding" {
+		policyname = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority   = 30
+		state      = "ENABLED"
+	}
+`
+
+func TestAccAppfwglobal_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwglobal_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the binding with the last SDK v2 release (2.2.0),
+				// which writes state using the legacy comma-joined id.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAppfwglobal_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwglobal_appfwpolicy_bindingExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "id", "tf_appfwpolicy,REQ_DEFAULT,SYSTEM_GLOBAL"),
+				),
+			},
+			{
+				// Step 2: refresh/plan the legacy-id state through the current
+				// framework provider. Read exercises ParseIdString on the legacy id
+				// and SetAttrFromGet recomputes the id into the new key:value form.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwglobal_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwglobal_appfwpolicy_bindingExist("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwglobal_appfwpolicy_binding.tf_binding", "id", "policyname:tf_appfwpolicy,type:REQ_DEFAULT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwglobal_appfwpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwglobal_appfwpolicy_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: policyname,type,globalbindtype) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"policyname", "type", "globalbindtype"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwglobal_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwglobal_appfwpolicy_binding_basic},
+			{Config: testAccAppfwglobal_appfwpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"state"}},
+			{Config: testAccAppfwglobal_appfwpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"state"}},
+		},
+	})
+}
+
+// TestAccAppfwglobal_appfwpolicy_binding_selfHealing verifies drift recovery: after
+// the binding is deleted out-of-band on the ADC, the next refresh's Read must detect
+// it is gone and drop it from state so the same config recreates it.
+func TestAccAppfwglobal_appfwpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwglobal_appfwpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwglobal_appfwpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwglobal_appfwpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwglobal_appfwpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Appfwglobal_appfwpolicy_binding.Type(), "", map[string]string{"policyname": "tf_appfwpolicy", "type": "REQ_DEFAULT", "priority": "30", "globalbindtype": "SYSTEM_GLOBAL"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwglobal_appfwpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwglobal_appfwpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

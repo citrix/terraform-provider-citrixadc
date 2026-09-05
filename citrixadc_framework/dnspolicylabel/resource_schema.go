@@ -2,6 +2,7 @@ package dnspolicylabel
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/dns"
 
@@ -30,6 +31,7 @@ func (r *DnspolicylabelResource) Schema(ctx context.Context, req resource.Schema
 				Description: "The ID of the dnspolicylabel resource.",
 			},
 			"labelname": schema.StringAttribute{
+				// SDK v2 parity: Required + ForceNew (primary key).
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -37,14 +39,14 @@ func (r *DnspolicylabelResource) Schema(ctx context.Context, req resource.Schema
 				Description: "Name of the dns policy label.",
 			},
 			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// newname is the rename trigger (NITRO ?action=rename). Changing it must
+				// NOT force replacement - it drives an in-place rename via Update. Not
+				// Computed: it is a pure user input, never echoed back by GET.
+				Optional:    true,
 				Description: "The new name of the dns policylabel.",
 			},
 			"transform": schema.StringAttribute{
+				// SDK v2 parity: Required + ForceNew.
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -60,13 +62,12 @@ func dnspolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *Dnspoli
 
 	// Create API request body from the model
 	dnspolicylabel := dns.Dnspolicylabel{}
-	if !data.Labelname.IsNull() {
+	if !data.Labelname.IsNull() && !data.Labelname.IsUnknown() {
 		dnspolicylabel.Labelname = data.Labelname.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		dnspolicylabel.Newname = data.Newname.ValueString()
-	}
-	if !data.Transform.IsNull() {
+	// newname is a rename-only argument (NITRO ?action=rename). It is NOT part of
+	// the add payload, so it is deliberately excluded from the create POST body.
+	if !data.Transform.IsNull() && !data.Transform.IsUnknown() {
 		dnspolicylabel.Transform = data.Transform.ValueString()
 	}
 
@@ -76,7 +77,33 @@ func dnspolicylabelGetThePayloadFromtheConfig(ctx context.Context, data *Dnspoli
 func dnspolicylabelSetAttrFromGet(ctx context.Context, data *DnspolicylabelResourceModel, getResponseData map[string]interface{}) *DnspolicylabelResourceModel {
 	tflog.Debug(ctx, "In dnspolicylabelSetAttrFromGet Function")
 
-	// Convert API response to model
+	// labelname is the user-facing key. Once a rename has happened (via newname),
+	// the live object name (tracked by data.Id) diverges from the configured
+	// labelname, and GET returns the live (new) name. Overwriting labelname from
+	// GET would clobber the user's configured value and trigger a spurious
+	// RequiresReplace diff. So only adopt the GET value when we don't already have
+	// one (e.g. on import, where state carries only the ID); otherwise preserve.
+	if data.Labelname.IsNull() || data.Labelname.IsUnknown() || data.Labelname.ValueString() == "" {
+		if val, ok := getResponseData["labelname"]; ok && val != nil {
+			data.Labelname = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve plan/state value.
+	if val, ok := getResponseData["transform"]; ok && val != nil {
+		data.Transform = types.StringValue(val.(string))
+	} else {
+		data.Transform = types.StringNull()
+	}
+
+	return data
+}
+
+// dnspolicylabelSetAttrFromGetForDatasource faithfully copies every field from the
+// GET response. The datasource has no prior plan/state to preserve, so it must
+// populate the model directly from the API response and set the ID itself.
+func dnspolicylabelSetAttrFromGetForDatasource(ctx context.Context, data *DnspolicylabelResourceModel, getResponseData map[string]interface{}) *DnspolicylabelResourceModel {
+	tflog.Debug(ctx, "In dnspolicylabelSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["labelname"]; ok && val != nil {
 		data.Labelname = types.StringValue(val.(string))
 	} else {
@@ -93,9 +120,8 @@ func dnspolicylabelSetAttrFromGet(ctx context.Context, data *DnspolicylabelResou
 		data.Transform = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Labelname.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
 
 	return data
 }

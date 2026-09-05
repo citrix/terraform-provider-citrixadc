@@ -93,7 +93,7 @@ func (d *LbvserverBotpolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	lbvserver_botpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	lbvserver_botpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

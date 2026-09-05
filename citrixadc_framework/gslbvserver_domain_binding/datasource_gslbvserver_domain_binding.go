@@ -42,10 +42,8 @@ func (d *GslbvserverDomainBindingDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Array filter under the parent vserver name; the per-record key is domainname.
 	name_Name := data.Name.ValueString()
-	backupipflag_Name := data.Backupipflag
-	cookiedomainflag_Name := data.CookieDomainflag
 	domainname_Name := data.Domainname
 
 	var dataArr []map[string]interface{}
@@ -68,44 +66,10 @@ func (d *GslbvserverDomainBindingDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching domainname
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check backupipflag
-		if val, ok := v["backupipflag"].(bool); ok {
-			if backupipflag_Name.IsNull() || val != backupipflag_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !backupipflag_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check cookie_domainflag
-		if val, ok := v["cookie_domainflag"].(bool); ok {
-			if cookiedomainflag_Name.IsNull() || val != cookiedomainflag_Name.ValueBool() {
-				match = false
-				continue
-			}
-		} else if !cookiedomainflag_Name.IsNull() {
-			match = false
-			continue
-		}
-
-		// Check domainname
-		if val, ok := v["domainname"].(string); ok {
-			if domainname_Name.IsNull() || val != domainname_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !domainname_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["domainname"].(string); ok && val == domainname_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -113,11 +77,11 @@ func (d *GslbvserverDomainBindingDataSource) Read(ctx context.Context, req datas
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("gslbvserver_domain_binding with backupipflag %s not found", backupipflag_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("gslbvserver_domain_binding with domainname %s not found", domainname_Name.ValueString()))
 		return
 	}
 
-	gslbvserver_domain_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	gslbvserver_domain_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

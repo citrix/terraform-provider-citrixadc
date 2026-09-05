@@ -43,12 +43,3 @@ In addition to the arguments, the following attributes are available:
 * `type` - The type of action.
 * `vmdestroygraceperiod` - Time in minutes a VM is kept in inactive state before destroying.
 * `vserver` - Name of the vserver on which autoscale action has to be taken.
-
-
-## Import
-
-A autoscaleaction can be imported using its name, e.g.
-
-```shell
-terraform import citrixadc_autoscaleaction.tf_autoscaleaction my_autoscaleaction
-```

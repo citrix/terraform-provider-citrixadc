@@ -35,7 +35,7 @@ func (d *AaakcdaccountDataSource) Schema(ctx context.Context, req datasource.Sch
 }
 
 func (d *AaakcdaccountDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AaakcdaccountResourceModel
+	var data AaakcdaccountDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -54,7 +54,7 @@ func (d *AaakcdaccountDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	aaakcdaccountSetAttrFromGet(ctx, &data, getResponseData)
+	aaakcdaccountDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

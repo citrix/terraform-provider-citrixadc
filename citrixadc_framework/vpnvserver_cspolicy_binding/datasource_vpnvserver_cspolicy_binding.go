@@ -42,7 +42,8 @@ func (d *VpnvserverCspolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	// Case 4: Array filter with parent ID
+	// Lookup keys: name (parent) + policy. bindpoint is not a lookup key and is
+	// not echoed by GET.
 	name_Name := data.Name.ValueString()
 	policy_Name := data.Policy
 
@@ -66,22 +67,10 @@ func (d *VpnvserverCspolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	// Iterate through results to find the one with the right id
+	// Iterate through results to find the one matching the policy
 	foundIndex := -1
 	for i, v := range dataArr {
-		match := true
-
-		// Check policy
-		if val, ok := v["policy"].(string); ok {
-			if policy_Name.IsNull() || val != policy_Name.ValueString() {
-				match = false
-				continue
-			}
-		} else if !policy_Name.IsNull() {
-			match = false
-			continue
-		}
-		if match {
+		if val, ok := v["policy"].(string); ok && !policy_Name.IsNull() && val == policy_Name.ValueString() {
 			foundIndex = i
 			break
 		}
@@ -89,11 +78,11 @@ func (d *VpnvserverCspolicyBindingDataSource) Read(ctx context.Context, req data
 
 	// Resource is missing
 	if foundIndex == -1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_cspolicy_binding with policy %s not found", policy_Name))
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("vpnvserver_cspolicy_binding with policy %s not found", policy_Name.ValueString()))
 		return
 	}
 
-	vpnvserver_cspolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	vpnvserver_cspolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -92,3 +92,10 @@ This datasource does not require any arguments.
 - `strictcachecks` (String) Enable strict CA certificate checks on the appliance.
 - `undefactioncontrol` (String) Name of the undefined built-in control action: CLIENTAUTH, NOCLIENTAUTH, NOOP, RESET, or DROP.
 - `undefactiondata` (String) Name of the undefined built-in data action: NOOP, RESET or DROP.
+
+### Read-only sslparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslparameter` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+- `svctls1112disable` (String) Disable TLS 1.1 and 1.2 for dynamic and VPN created services. Possible values = YES, NO.
+- `montls1112disable` (String) Disable TLS 1.1 and 1.2 for secure (https) monitors bound to SSL_BRIDGE services. Possible values = YES, NO.

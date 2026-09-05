@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *NssimpleaclResource) Create(ctx context.Context, req resource.CreateReq
 
 	tflog.Debug(ctx, "Creating nssimpleacl resource")
 
-	// nssimpleacl := nssimpleaclGetThePayloadFromtheConfig(ctx, &data)
+	nssimpleacl := nssimpleaclGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nssimpleacl.Type(), &nssimpleacl)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nssimpleacl, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nssimpleacl-config")
+	// Named resource - use AddResource (NITRO add is HTTP POST)
+	aclnameValue := data.Aclname.ValueString()
+	_, err := r.client.AddResource(service.Nssimpleacl.Type(), aclnameValue, &nssimpleacl)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nssimpleacl, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nssimpleacl resource")
 
+	// Set ID for the resource before reading state (single unique attribute)
+	data.Id = types.StringValue(aclnameValue)
+
 	// Read the updated state back
-	r.readNssimpleaclFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNssimpleaclFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nssimpleacl not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *NssimpleaclResource) Read(ctx context.Context, req resource.ReadRequest
 
 	tflog.Debug(ctx, "Reading nssimpleacl resource")
 
-	r.readNssimpleaclFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNssimpleaclFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NssimpleaclResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NssimpleaclResourceModel
+	var data, state NssimpleaclResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,21 +120,15 @@ func (r *NssimpleaclResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	tflog.Debug(ctx, "Updating nssimpleacl resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// nssimpleacl := nssimpleaclGetThePayloadFromtheConfig(ctx, &data)
+	// nssimpleacl exposes no NITRO update endpoint and every attribute is
+	// ForceNew/RequiresReplace (matching the SDK v2 resource, which had no
+	// UpdateContext). Any attribute change forces recreation, so Update is a
+	// documented no-op that simply reads the current state back.
+	tflog.Debug(ctx, "Update is a no-op for nssimpleacl; all attributes are RequiresReplace")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nssimpleacl.Type(), &nssimpleacl)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nssimpleacl, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated nssimpleacl resource")
-
-	// Read the updated state back
 	r.readNssimpleaclFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -137,19 +147,33 @@ func (r *NssimpleaclResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	tflog.Debug(ctx, "Deleting nssimpleacl resource")
 
-	// For nssimpleacl, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nssimpleacl resource from state")
+	// Named resource - delete using DeleteResource (NITRO exposes DELETE /nssimpleacl/{aclname})
+	aclnameValue := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Nssimpleacl.Type(), aclnameValue)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nssimpleacl, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nssimpleacl resource")
 }
 
-// Helper function to read nssimpleacl data from API
-func (r *NssimpleaclResource) readNssimpleaclFromApi(ctx context.Context, data *NssimpleaclResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nssimpleacl.Type(), "")
+// Helper function to read nssimpleacl data from API.
+// Returns false when the resource no longer exists on the ADC.
+func (r *NssimpleaclResource) readNssimpleaclFromApi(ctx context.Context, data *NssimpleaclResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (aclname)
+	aclnameName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Nssimpleacl.Type(), aclnameName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nssimpleacl, got error: %s", err))
-		return
+		return false
 	}
 
 	nssimpleaclSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

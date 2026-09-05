@@ -20,8 +20,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccLbprofile_basic(t *testing.T) {
@@ -215,6 +216,10 @@ func TestAccLbprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "lbhashalgorithm", "PRAC"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "storemqttclientidandusername", "YES"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbprofile.tf_lbprofile_ds", "proximityfromself", "NO"),
+					// Runtime-binding proof plus a read-only counter-style field the
+					// appliance always returns for a freshly-created profile.
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbprofile.tf_lbprofile_ds", "id"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbprofile.tf_lbprofile_ds", "vsvrcount"),
 				),
 			},
 		},
@@ -350,9 +355,14 @@ func TestAccLbprofile_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccLbprofile_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
@@ -452,4 +462,32 @@ func testAccCheckLbprofileADCValue(name, attr, want string) resource.TestCheckFu
 		}
 		return nil
 	}
+}
+
+func TestAccLbprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbprofile.tf_lbprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource("lbprofile", "tf_lbprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbprofile_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbprofileExist(resAddr, nil)),
+			},
+		},
+	})
 }

@@ -72,3 +72,15 @@ In addition to the arguments, the following attributes are available:
 * `vserverrhilevel` - Advertise or do not advertise the route for the Virtual IP (VIP6) address on the basis of the state of the virtual servers associated with that VIP6.
 * `id` - The id of the nsip6. It is a comma-separated value of `ipv6address` and `td`.
 
+### Read-only nsip6 metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nsip6` resource). They are Computed/GET-only runtime and status values, and any attribute the appliance does not return is `null`.
+
+* `iptype` - The type of the IPv6 address. A list of strings (possible values: `NSIP`, `VIP`, `SNIP`, `GSLBsiteIP`, `ADNSsvcIP`, `RADIUSListenersvcIP`, `CLIP`).
+* `curstate` - Current state of this IP (possible values: `DISABLED`, `ENABLED`).
+* `viprtadv2bsd` - Whether this route is advertised to FreeBSD.
+* `vipvsercount` - Number of vservers bound to this VIP.
+* `vipvserdowncount` - Number of vservers bound to this VIP, which are down.
+* `systemtype` - The type of the system, used for display purposes (possible values: `Stand-alone`, `HA`, `Cluster`).
+* `operationalndowner` - Operational ND6 owner.
+

@@ -9,6 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,27 +33,32 @@ func (r *NstrafficdomainVxlanBindingResource) Schema(ctx context.Context, req re
 				Description: "The ID of the nstrafficdomain_vxlan_binding resource.",
 			},
 			"td": schema.Int64Attribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "Integer value that uniquely identifies a traffic domain.",
 			},
 			"vxlan": schema.Int64Attribute{
-				Optional:    true,
-				Computed:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 				Description: "ID of the VXLAN to bind to this traffic domain. More than one VXLAN can be bound to a traffic domain, but the same VXLAN cannot be a part of multiple traffic domains.",
 			},
 		},
 	}
 }
 
-func nstrafficdomain_vxlan_bindingGetThePayloadFromtheConfig(ctx context.Context, data *NstrafficdomainVxlanBindingResourceModel) ns.Nstrafficdomainvxlanbinding {
-	tflog.Debug(ctx, "In nstrafficdomain_vxlan_bindingGetThePayloadFromtheConfig Function")
+func nstrafficdomain_vxlan_bindingGetThePayloadFromthePlan(ctx context.Context, data *NstrafficdomainVxlanBindingResourceModel) ns.Nstrafficdomainvxlanbinding {
+	tflog.Debug(ctx, "In nstrafficdomain_vxlan_bindingGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	nstrafficdomain_vxlan_binding := ns.Nstrafficdomainvxlanbinding{}
-	if !data.Td.IsNull() {
+	if !data.Td.IsNull() && !data.Td.IsUnknown() {
 		nstrafficdomain_vxlan_binding.Td = utils.IntPtr(int(data.Td.ValueInt64()))
 	}
-	if !data.Vxlan.IsNull() {
+	if !data.Vxlan.IsNull() && !data.Vxlan.IsUnknown() {
 		nstrafficdomain_vxlan_binding.Vxlan = utils.IntPtr(int(data.Vxlan.ValueInt64()))
 	}
 

@@ -48,12 +48,3 @@ In addition to the arguments, the following attributes are available:
 * `synidletimeout` - SYN Idle timeout.
 * `transportprotocol` - Protocol for which to set the LSN transport profile parameters.
 * `id` - The id of the lsntransportprofile. It has the same value as the `transportprofilename` attribute.
-
-
-## Import
-
-A lsntransportprofile can be imported using its transportprofilename, e.g.
-
-```shell
-terraform import citrixadc_lsntransportprofile.tf_lsntransportprofile my_lsn_transportprofile
-```

@@ -32,6 +32,10 @@ type Nslaslicense struct {
 	* apply fixed bandwidth license on ADC
 	*/
 	Fixedbandwidth bool `json:"fixedbandwidth,omitempty"`
+	/**
+	* Unique number that identifies the cluster node.
+	*/
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

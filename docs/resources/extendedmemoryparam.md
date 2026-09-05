@@ -28,3 +28,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the extendedmemoryparam. It is a unique string prefixed with "tf-extendedmemoryparam-"
 
+
+## Import
+
+A extendedmemoryparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_extendedmemoryparam.tf_extendedmemoryparam extendedmemoryparam-config
+```

@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // No attributes are updateable (all have RequiresReplace), so step1 and step2
@@ -225,7 +225,41 @@ func TestAccAzurekeyvaultDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_azurekeyvault.tf_azurekeyvault", "name", "tf_azurekeyvault"),
 					resource.TestCheckResourceAttr("data.citrixadc_azurekeyvault.tf_azurekeyvault", "azureapplication", "tf_azureapplication"),
 					resource.TestCheckResourceAttr("data.citrixadc_azurekeyvault.tf_azurekeyvault", "azurevaultname", "tfadcnew.vault.azure.net"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_azurekeyvault.tf_azurekeyvault", "id"),
+					// Read-only state attribute always populated for a live keyvault.
+					resource.TestCheckResourceAttrSet("data.citrixadc_azurekeyvault.tf_azurekeyvault", "state"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAzurekeyvault_selfHealing(t *testing.T) {
+	t.Skip("Requires valid Azure credentials")
+	t.Setenv("TF_VAR_azureapplication_clientsecret", "<clientsecret>")
+	const resAddr = "citrixadc_azurekeyvault.tf_azurekeyvault"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAzurekeyvaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzurekeyvault_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAzurekeyvaultExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Azurekeyvault.Type(), "tf_azurekeyvault"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAzurekeyvault_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAzurekeyvaultExist(resAddr, nil)),
 			},
 		},
 	})

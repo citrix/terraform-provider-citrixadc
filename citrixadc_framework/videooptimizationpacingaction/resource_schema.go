@@ -2,13 +2,14 @@ package videooptimizationpacingaction
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/videooptimization"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -34,56 +35,106 @@ func (r *VideooptimizationpacingactionResource) Schema(ctx context.Context, req 
 				Description: "The ID of the videooptimizationpacingaction resource.",
 			},
 			"comment": schema.StringAttribute{
+				// SDK v2 parity: Optional + Computed. A schema Default of "" is required
+				// so that removing comment from config produces a plan diff (Optional +
+				// Computed with no Default is sticky on removal and Update never runs),
+				// which is what drives the NITRO unset. NITRO has no documented default
+				// for comment - unsetting reverts it to empty, matching "".
 				Optional:    true,
 				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 				Description: "Comment. Any type of information about this video optimization detection action.",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name for the video optimization pacing action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.",
-			},
-			"newname": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				// SDK v2 parity: Required + ForceNew -> Required + RequiresReplace.
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Description: "Name for the video optimization pacing action. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.",
+			},
+			"newname": schema.StringAttribute{
+				// newname is the rename trigger (NITRO ?action=rename). Changing it
+				// must NOT force replacement - it drives an in-place rename via Update.
+				// Not Computed: it is a pure user input, never echoed back by GET.
+				Optional:    true,
 				Description: "New name for the videooptimization pacing action.\nMust begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.",
 			},
 			"rate": schema.Int64Attribute{
+				// SDK v2 parity: Required, not Computed, NO Default (a Default is invalid
+				// without Computed, and SDK v2 declared none - user must supply rate).
 				Required:    true,
-				Default:     int64default.StaticInt64(1000),
 				Description: "ABR Video Optimization Pacing Rate (in Kbps)",
 			},
 		},
 	}
 }
 
-func videooptimizationpacingactionGetThePayloadFromtheConfig(ctx context.Context, data *VideooptimizationpacingactionResourceModel) videooptimization.Videooptimizationpacingaction {
-	tflog.Debug(ctx, "In videooptimizationpacingactionGetThePayloadFromtheConfig Function")
+// videooptimizationpacingactionGetThePayloadFromthePlan builds the NITRO body for
+// create/update. newname is deliberately excluded (rename-only argument).
+func videooptimizationpacingactionGetThePayloadFromthePlan(ctx context.Context, data *VideooptimizationpacingactionResourceModel) videooptimization.Videooptimizationpacingaction {
+	tflog.Debug(ctx, "In videooptimizationpacingactionGetThePayloadFromthePlan Function")
 
-	// Create API request body from the model
 	videooptimizationpacingaction := videooptimization.Videooptimizationpacingaction{}
-	if !data.Comment.IsNull() {
+	if !data.Comment.IsNull() && !data.Comment.IsUnknown() {
 		videooptimizationpacingaction.Comment = data.Comment.ValueString()
 	}
-	if !data.Name.IsNull() {
+	if !data.Name.IsNull() && !data.Name.IsUnknown() {
 		videooptimizationpacingaction.Name = data.Name.ValueString()
 	}
-	if !data.Newname.IsNull() {
-		videooptimizationpacingaction.Newname = data.Newname.ValueString()
-	}
-	if !data.Rate.IsNull() {
+	// newname is a rename-only argument (NITRO ?action=rename). It is NOT part of
+	// the add/update payload, so it is deliberately excluded from the body.
+	if !data.Rate.IsNull() && !data.Rate.IsUnknown() {
 		videooptimizationpacingaction.Rate = utils.IntPtr(int(data.Rate.ValueInt64()))
 	}
 
 	return videooptimizationpacingaction
 }
 
+// videooptimizationpacingactionSetAttrFromGet updates a resource model from a GET
+// response while preserving user-facing/plan values (Pattern 7). It does NOT set
+// data.Id - the ID (== the current live name) is owned by Create/Update/Read.
 func videooptimizationpacingactionSetAttrFromGet(ctx context.Context, data *VideooptimizationpacingactionResourceModel, getResponseData map[string]interface{}) *VideooptimizationpacingactionResourceModel {
 	tflog.Debug(ctx, "In videooptimizationpacingactionSetAttrFromGet Function")
 
-	// Convert API response to model
+	// comment: Optional+Computed. NITRO echoes a configured comment; when empty it is
+	// omitted, in which case null resolves the Computed value (no lingering unknown).
+	if val, ok := getResponseData["comment"]; ok && val != nil {
+		data.Comment = types.StringValue(val.(string))
+	} else {
+		// comment is Optional+Computed with a "" Default. When NITRO omits it (never
+		// set, or after an unset) resolve to "" - not null - so the read-back value
+		// matches the planned default and no inconsistent-result / spurious-diff arises.
+		data.Comment = types.StringValue("")
+	}
+	// name is the user-facing key. After a rename (via newname) the live object name
+	// (tracked by data.Id) diverges from the configured name, and GET returns the live
+	// (new) name. Overwriting name from GET would clobber the user's configured value
+	// and trigger a spurious RequiresReplace diff. Only adopt the GET value when we do
+	// not already have one (e.g. on import, where state carries only the ID).
+	if data.Name.IsNull() || data.Name.IsUnknown() || data.Name.ValueString() == "" {
+		if val, ok := getResponseData["name"]; ok && val != nil {
+			data.Name = types.StringValue(val.(string))
+		}
+	}
+	// newname is rename-only and never echoed by GET; preserve plan/state value.
+	// rate is Required and always returned; only overwrite when present so a value
+	// NITRO might omit is never clobbered (omit-on-default guard).
+	if val, ok := getResponseData["rate"]; ok && val != nil {
+		if intVal, err := utils.ConvertToInt64(val); err == nil {
+			data.Rate = types.Int64Value(intVal)
+		}
+	}
+
+	return data
+}
+
+// videooptimizationpacingactionSetAttrFromGetForDatasource faithfully copies every
+// field from the GET response. The datasource has no prior plan/state to preserve,
+// so it populates the model directly from the API response and sets the ID itself.
+func videooptimizationpacingactionSetAttrFromGetForDatasource(ctx context.Context, data *VideooptimizationpacingactionResourceModel, getResponseData map[string]interface{}) *VideooptimizationpacingactionResourceModel {
+	tflog.Debug(ctx, "In videooptimizationpacingactionSetAttrFromGetForDatasource Function")
+
 	if val, ok := getResponseData["comment"]; ok && val != nil {
 		data.Comment = types.StringValue(val.(string))
 	} else {
@@ -102,14 +153,15 @@ func videooptimizationpacingactionSetAttrFromGet(ctx context.Context, data *Vide
 	if val, ok := getResponseData["rate"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Rate = types.Int64Value(intVal)
+		} else {
+			data.Rate = types.Int64Null()
 		}
 	} else {
 		data.Rate = types.Int64Null()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Name.ValueString())
+	// Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
 
 	return data
 }

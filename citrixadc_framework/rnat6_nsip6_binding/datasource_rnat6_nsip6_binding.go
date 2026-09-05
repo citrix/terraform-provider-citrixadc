@@ -35,7 +35,7 @@ func (d *Rnat6Nsip6BindingDataSource) Schema(ctx context.Context, req datasource
 }
 
 func (d *Rnat6Nsip6BindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data Rnat6Nsip6BindingResourceModel
+	var data Rnat6Nsip6BindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -45,6 +45,7 @@ func (d *Rnat6Nsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 	// Case 4: Array filter with parent ID
 	name_Name := data.Name.ValueString()
 	natip6_Name := data.Natip6
+	ownergroup_Name := data.Ownergroup
 
 	var dataArr []map[string]interface{}
 	var err error
@@ -82,6 +83,18 @@ func (d *Rnat6Nsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 			continue
 		}
 
+		// Check ownergroup only when the user supplied it as an additional filter.
+		if !ownergroup_Name.IsNull() && !ownergroup_Name.IsUnknown() {
+			if val, ok := v["ownergroup"].(string); ok {
+				if val != ownergroup_Name.ValueString() {
+					match = false
+					continue
+				}
+			} else {
+				match = false
+				continue
+			}
+		}
 		if match {
 			foundIndex = i
 			break
@@ -94,7 +107,7 @@ func (d *Rnat6Nsip6BindingDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	rnat6_nsip6_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	rnat6_nsip6_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

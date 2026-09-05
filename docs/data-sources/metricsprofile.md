@@ -39,3 +39,9 @@ In addition to the arguments, the following attributes are available:
 * `metricsendpointurl` - The URL at which the metrics data is uploaded on the endpoint.
 
 Note: The `metricsauthtoken` token is a secret and is not returned by the NITRO API, so it is not populated by this data source.
+
+### Read-only metricsprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_metricsprofile` resource) and are `Computed`/GET-only. Any attribute the appliance does not return is `null`.
+
+* `refcnt` - The number of references to the profile.

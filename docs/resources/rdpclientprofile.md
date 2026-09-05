@@ -85,6 +85,8 @@ resource "citrixadc_rdpclientprofile" "tf_rdpclientprofile" {
 * `redirectprinters` - (Optional) This setting corresponds to the selection in the Printers check box on the Local Resources tab under Options in RDC.
 * `videoplaybackmode` - (Optional) This setting determines if Remote Desktop Connection (RDC) will use RDP efficient multimedia streaming for video playback.
 * `rdpvalidateclientip` - (Optional) This setting determines whether RDC launch is initiated by the valid client IP
+* `rdpurlmaxlen` - (Optional) Indicates the permissible max length of the RDP URL. Set to 256 by default.
+* `rdpurlmaxlencheck` - (Optional) This setting determines whether the RDP URL max length check is enforced during RDP file generation.
 
 
 ## Attribute Reference

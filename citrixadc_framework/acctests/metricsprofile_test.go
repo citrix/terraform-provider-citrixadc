@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccMetricsprofile_basic_step1 = `
@@ -185,6 +185,10 @@ func TestAccMetricsprofileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile.tf_metricsprofile", "metrics", "ENABLED"),
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile.tf_metricsprofile", "servemode", "Push"),
 					resource.TestCheckResourceAttr("data.citrixadc_metricsprofile.tf_metricsprofile", "metricsexportfrequency", "30"),
+					// Universal runtime-binding proof that the data source read
+					// resolved (read-only metadata fields such as refcnt are
+					// instance dependent and may be null, so only id is asserted).
+					resource.TestCheckResourceAttrSet("data.citrixadc_metricsprofile.tf_metricsprofile", "id"),
 				),
 			},
 		},
@@ -396,6 +400,34 @@ func TestAccMetricsprofile_metricsauthtoken_wo_ephemeral(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_metricsprofile", "servemode", "Push"),
 					resource.TestCheckResourceAttr("citrixadc_metricsprofile.tf_metricsprofile", "metricsexportfrequency", "30"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccMetricsprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_metricsprofile.tf_metricsprofile"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckMetricsprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricsprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Metricsprofile.Type(), "tf_metricsprofile"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccMetricsprofile_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckMetricsprofileExist(resAddr, nil)),
 			},
 		},
 	})

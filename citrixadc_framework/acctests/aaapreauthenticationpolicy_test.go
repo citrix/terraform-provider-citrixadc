@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAaapreauthenticationpolicy_basic = `
@@ -74,6 +75,34 @@ func TestAccAaapreauthenticationpolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "rule", "REQ.VLANID == 10"),
 					resource.TestCheckResourceAttr("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "reqaction", "my_action"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAaapreauthenticationpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAaapreauthenticationpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Aaapreauthenticationpolicy.Type(), "my_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAaapreauthenticationpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationpolicyExist(resAddr, nil)),
 			},
 		},
 	})
@@ -143,6 +172,49 @@ func testAccCheckAaapreauthenticationpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAaapreauthenticationpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAaapreauthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAaapreauthenticationpolicy_basic},
+			{
+				Config:                  testAccAaapreauthenticationpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAaapreauthenticationpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAaapreauthenticationpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAaapreauthenticationpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationpolicyExist("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAaapreauthenticationpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAaapreauthenticationpolicyExist("citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", nil)),
+			},
+		},
+	})
+}
+
 const testAccAaapreauthenticationpolicyDataSource_basic = `
 
 	resource "citrixadc_aaapreauthenticationaction" "tf_aaapreauthenticationaction" {
@@ -173,6 +245,8 @@ func TestAccAaapreauthenticationpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "name", "my_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "rule", "REQ.VLANID == 5"),
 					resource.TestCheckResourceAttr("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "reqaction", "my_action"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_aaapreauthenticationpolicy.tf_aaapreauthenticationpolicy", "id"),
 				),
 			},
 		},

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,31 @@ func (r *LsnclientResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Debug(ctx, "Creating lsnclient resource")
 
-	// lsnclient := lsnclientGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	lsnclient := lsnclientGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnclient.Type(), &lsnclient)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnclient, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsnclient-config")
+	// Named resource - use AddResource
+	clientname := data.Clientname.ValueString()
+	_, err := r.client.AddResource(service.Lsnclient.Type(), clientname, &lsnclient)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnclient, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lsnclient resource")
 
+	// Set ID for the resource before reading state
+	// Case 2: Single unique attribute - use plain value as ID
+	data.Id = types.StringValue(fmt.Sprintf("%v", clientname))
+
 	// Read the updated state back
-	r.readLsnclientFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnclientFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnclient not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +98,24 @@ func (r *LsnclientResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading lsnclient resource")
 
-	r.readLsnclientFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLsnclientFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *LsnclientResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data LsnclientResourceModel
+	var data, state LsnclientResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +123,22 @@ func (r *LsnclientResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating lsnclient resource")
 
-	// Create API request body from the model
-	// lsnclient := lsnclientGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnclient.Type(), &lsnclient)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnclient, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated lsnclient resource")
+	// lsnclient has only the ForceNew "clientname" attribute; there are no
+	// NITRO-updatable attributes, so no update API call is required. Any change to
+	// clientname triggers RequiresReplace (destroy/recreate) instead of Update.
 
 	// Read the updated state back
-	r.readLsnclientFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnclientFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnclient not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +156,33 @@ func (r *LsnclientResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting lsnclient resource")
 
-	// For lsnclient, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsnclient resource from state")
+	// Named resource - delete using DeleteResource
+	clientname := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Lsnclient.Type(), clientname)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnclient, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsnclient resource")
 }
 
 // Helper function to read lsnclient data from API
-func (r *LsnclientResource) readLsnclientFromApi(ctx context.Context, data *LsnclientResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsnclient.Type(), "")
+func (r *LsnclientResource) readLsnclientFromApi(ctx context.Context, data *LsnclientResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	clientnameName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lsnclient.Type(), clientnameName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsnclient, got error: %s", err))
-		return
+		return false
 	}
 
 	lsnclientSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

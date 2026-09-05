@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwProfile_uber_payload = `
@@ -533,6 +534,159 @@ func testAccCheckAppfwprofileDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwprofile_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile.test_appfw"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwprofile.Type(), "test_appfw"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwprofile.test_appfw"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwprofile_add},
+			{
+				Config:                  testAccAppfwprofile_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppfwprofile_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppfwprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileExist("citrixadc_appfwprofile.test_appfw", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwprofile_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwprofileExist("citrixadc_appfwprofile.test_appfw", nil)),
+			},
+		},
+	})
+}
+
+// The appfwprofile unset test covers type-independent, no-prerequisite string
+// toggles whose NITRO default is "OFF". Step 1 sets them to the non-default
+// "ON"; step 2 removes them from config, which must unset them (revert to
+// "OFF"). The implicit post-apply empty-plan check plus appliance-level
+// assertions confirm the unset took effect.
+const testAccAppfwprofile_unset_step1 = `
+resource citrixadc_appfwprofile tf_unset {
+  name                        = "tf_test_appfwprofile_unset"
+  checkrequestheaders         = "ON"
+  semicolonfieldseparator     = "ON"
+  sessionlessfieldconsistency = "ON"
+  streaming                   = "ON"
+  trace                       = "ON"
+}
+`
+
+const testAccAppfwprofile_unset_step2 = `
+resource citrixadc_appfwprofile tf_unset {
+  name = "tf_test_appfwprofile_unset"
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults, "OFF").
+}
+`
+
+func TestAccAppfwprofile_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwprofileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwprofile_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofileExist("citrixadc_appfwprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "checkrequestheaders", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "semicolonfieldseparator", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "sessionlessfieldconsistency", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "streaming", "ON"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "trace", "ON"),
+				),
+			},
+			{
+				Config: testAccAppfwprofile_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppfwprofileExist("citrixadc_appfwprofile.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "checkrequestheaders", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "semicolonfieldseparator", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "sessionlessfieldconsistency", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "streaming", "OFF"),
+					resource.TestCheckResourceAttr("citrixadc_appfwprofile.tf_unset", "trace", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAppfwprofileADCValue("tf_test_appfwprofile_unset", "streaming", "OFF"),
+					testAccCheckAppfwprofileADCValue("tf_test_appfwprofile_unset", "trace", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAppfwprofileADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckAppfwprofileADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Appfwprofile.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("appfwprofile %s not found on appliance", name)
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("appfwprofile %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
 func TestAccAppfwprofileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -543,6 +697,8 @@ func TestAccAppfwprofileDataSource_basic(t *testing.T) {
 				Config: testAccAppfwprofileDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwprofile.test_appfw", "name", "test_appfw"),
+					// Universal runtime-binding proof for the data source read.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwprofile.test_appfw", "id"),
 				),
 			},
 		},

@@ -33,3 +33,12 @@ resource "citrixadc_feoparameter" "tf_feoparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the feoparameter. It is a unique string prefixed with  `tf-feoparameter-` attribute.
+
+
+## Import
+
+A feoparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_feoparameter.tf_feoparameter feoparameter-config
+```

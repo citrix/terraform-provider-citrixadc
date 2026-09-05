@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *Lsnip6profileResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating lsnip6profile resource")
 
-	// lsnip6profile := lsnip6profileGetThePayloadFromtheConfig(ctx, &data)
+	lsnip6profile := lsnip6profileGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnip6profile.Type(), &lsnip6profile)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnip6profile, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("lsnip6profile-config")
+	// Named resource - use AddResource
+	name := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Lsnip6profile.Type(), name, &lsnip6profile)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create lsnip6profile, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created lsnip6profile resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readLsnip6profileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnip6profileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnip6profile not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *Lsnip6profileResource) Read(ctx context.Context, req resource.ReadReque
 
 	tflog.Debug(ctx, "Reading lsnip6profile resource")
 
-	r.readLsnip6profileFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readLsnip6profileFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *Lsnip6profileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data Lsnip6profileResourceModel
+	var data, state Lsnip6profileResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,20 @@ func (r *Lsnip6profileResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	tflog.Debug(ctx, "Updating lsnip6profile resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// lsnip6profile := lsnip6profileGetThePayloadFromtheConfig(ctx, &data)
+	// lsnip6profile has no NITRO-updatable attributes; every attribute is ForceNew
+	// (RequiresReplace / RequiresReplaceIfConfigured), so any meaningful change forces a
+	// replace and Update is never invoked with real changes. Just refresh state from the ADC.
+	tflog.Debug(ctx, "Updating lsnip6profile resource (refresh only - no updatable attributes)")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Lsnip6profile.Type(), &lsnip6profile)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update lsnip6profile, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated lsnip6profile resource")
-
-	// Read the updated state back
-	r.readLsnip6profileFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readLsnip6profileFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "lsnip6profile not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +151,33 @@ func (r *Lsnip6profileResource) Delete(ctx context.Context, req resource.DeleteR
 
 	tflog.Debug(ctx, "Deleting lsnip6profile resource")
 
-	// For lsnip6profile, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted lsnip6profile resource from state")
+	// Named resource - delete using DeleteResource (ID is the plain name value)
+	name := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Lsnip6profile.Type(), name)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete lsnip6profile, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted lsnip6profile resource")
 }
 
-// Helper function to read lsnip6profile data from API
-func (r *Lsnip6profileResource) readLsnip6profileFromApi(ctx context.Context, data *Lsnip6profileResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Lsnip6profile.Type(), "")
+// Helper function to read lsnip6profile data from API.
+// Returns false when the resource no longer exists on the ADC.
+func (r *Lsnip6profileResource) readLsnip6profileFromApi(ctx context.Context, data *Lsnip6profileResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain value (name)
+	name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Lsnip6profile.Type(), name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read lsnip6profile, got error: %s", err))
-		return
+		return false
 	}
 
 	lsnip6profileSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -32,28 +32,35 @@ func (r *NslicenseparametersResource) Schema(ctx context.Context, req resource.S
 				Computed:    true,
 				Description: "The ID of the nslicenseparameters resource.",
 			},
+			// SDK v2 parity: all attrs are Optional+Computed with NO Default.
+			// Value is read back from the ADC when not configured.
 			"alert1gracetimeout": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(6),
 				Description: "If ADC remains in grace for the configured hours then first grace alert will be raised",
 			},
 			"alert2gracetimeout": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(240),
 				Description: "If ADC remains in grace for the configured hours then major grace alert will be raised",
 			},
 			"heartbeatinterval": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(280),
 				Description: "Heartbeat between ADC and Licenseserver is configurable and applicable in case of pooled licensing",
 			},
 			"inventoryrefreshinterval": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(360),
 				Description: "Inventory refresh interval between ADC and Licenseserver is configurable and applicable in case of pooled licensing",
 			},
 			"licenseexpiryalerttime": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(30),
 				Description: "If ADC license contract expiry date is nearer then GUI/SNMP license expiry alert will be raised",
 			},
@@ -64,21 +71,23 @@ func (r *NslicenseparametersResource) Schema(ctx context.Context, req resource.S
 func nslicenseparametersGetThePayloadFromtheConfig(ctx context.Context, data *NslicenseparametersResourceModel) ns.Nslicenseparameters {
 	tflog.Debug(ctx, "In nslicenseparametersGetThePayloadFromtheConfig Function")
 
-	// Create API request body from the model
+	// Create API request body from the model.
+	// Skip null AND unknown values: Optional+Computed attrs that the user did not
+	// configure arrive as Unknown in the plan; pushing them would send a spurious 0.
 	nslicenseparameters := ns.Nslicenseparameters{}
-	if !data.Alert1gracetimeout.IsNull() {
+	if !data.Alert1gracetimeout.IsNull() && !data.Alert1gracetimeout.IsUnknown() {
 		nslicenseparameters.Alert1gracetimeout = utils.IntPtr(int(data.Alert1gracetimeout.ValueInt64()))
 	}
-	if !data.Alert2gracetimeout.IsNull() {
+	if !data.Alert2gracetimeout.IsNull() && !data.Alert2gracetimeout.IsUnknown() {
 		nslicenseparameters.Alert2gracetimeout = utils.IntPtr(int(data.Alert2gracetimeout.ValueInt64()))
 	}
-	if !data.Heartbeatinterval.IsNull() {
+	if !data.Heartbeatinterval.IsNull() && !data.Heartbeatinterval.IsUnknown() {
 		nslicenseparameters.Heartbeatinterval = utils.IntPtr(int(data.Heartbeatinterval.ValueInt64()))
 	}
-	if !data.Inventoryrefreshinterval.IsNull() {
+	if !data.Inventoryrefreshinterval.IsNull() && !data.Inventoryrefreshinterval.IsUnknown() {
 		nslicenseparameters.Inventoryrefreshinterval = utils.IntPtr(int(data.Inventoryrefreshinterval.ValueInt64()))
 	}
-	if !data.Licenseexpiryalerttime.IsNull() {
+	if !data.Licenseexpiryalerttime.IsNull() && !data.Licenseexpiryalerttime.IsUnknown() {
 		nslicenseparameters.Licenseexpiryalerttime = utils.IntPtr(int(data.Licenseexpiryalerttime.ValueInt64()))
 	}
 
@@ -88,45 +97,47 @@ func nslicenseparametersGetThePayloadFromtheConfig(ctx context.Context, data *Ns
 func nslicenseparametersSetAttrFromGet(ctx context.Context, data *NslicenseparametersResourceModel, getResponseData map[string]interface{}) *NslicenseparametersResourceModel {
 	tflog.Debug(ctx, "In nslicenseparametersSetAttrFromGet Function")
 
-	// Convert API response to model
+	// Convert API response to model.
+	// omit-on-default guard: only null an attr when its current value is Unknown;
+	// never clobber a known/configured value that NITRO omits from the GET.
 	if val, ok := getResponseData["alert1gracetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Alert1gracetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Alert1gracetimeout.IsUnknown() {
 		data.Alert1gracetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["alert2gracetimeout"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Alert2gracetimeout = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Alert2gracetimeout.IsUnknown() {
 		data.Alert2gracetimeout = types.Int64Null()
 	}
 	if val, ok := getResponseData["heartbeatinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Heartbeatinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Heartbeatinterval.IsUnknown() {
 		data.Heartbeatinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["inventoryrefreshinterval"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Inventoryrefreshinterval = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Inventoryrefreshinterval.IsUnknown() {
 		data.Inventoryrefreshinterval = types.Int64Null()
 	}
 	if val, ok := getResponseData["licenseexpiryalerttime"]; ok && val != nil {
 		if intVal, err := utils.ConvertToInt64(val); err == nil {
 			data.Licenseexpiryalerttime = types.Int64Value(intVal)
 		}
-	} else {
+	} else if data.Licenseexpiryalerttime.IsUnknown() {
 		data.Licenseexpiryalerttime = types.Int64Null()
 	}
 
 	// Set ID for the resource
-	// Case 1: No unique attributes - static ID
+	// Case 1: No unique attributes (singleton) - static ID
 	data.Id = types.StringValue("nslicenseparameters-config")
 
 	return data

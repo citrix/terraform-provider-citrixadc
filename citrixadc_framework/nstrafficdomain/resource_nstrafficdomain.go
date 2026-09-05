@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *NstrafficdomainResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating nstrafficdomain resource")
 
-	// nstrafficdomain := nstrafficdomainGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	nstrafficdomain := nstrafficdomainGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstrafficdomain.Type(), &nstrafficdomain)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstrafficdomain, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nstrafficdomain-config")
+	// Named resource keyed by td - use AddResource (matches SDK v2)
+	td_value := fmt.Sprintf("%d", data.Td.ValueInt64())
+	_, err := r.client.AddResource(service.Nstrafficdomain.Type(), td_value, &nstrafficdomain)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nstrafficdomain, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created nstrafficdomain resource")
 
+	// Set ID for the resource before reading state (plain td value, matches SDK v2)
+	data.Id = types.StringValue(td_value)
+
 	// Read the updated state back
-	r.readNstrafficdomainFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readNstrafficdomainFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nstrafficdomain not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *NstrafficdomainResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading nstrafficdomain resource")
 
-	r.readNstrafficdomainFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readNstrafficdomainFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *NstrafficdomainResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NstrafficdomainResourceModel
+	var data, state NstrafficdomainResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,22 @@ func (r *NstrafficdomainResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nstrafficdomain resource")
 
-	// Create API request body from the model
-	// nstrafficdomain := nstrafficdomainGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nstrafficdomain.Type(), &nstrafficdomain)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nstrafficdomain, got error: %s", err))
-	//	 return
-	// }
+	// All attributes (td, aliasname, vmac) are ForceNew in SDK v2 and carry
+	// RequiresReplace/RequiresReplaceIfConfigured plan modifiers, so there is no
+	// in-place update path. Simply refresh state from the ADC.
+	if !r.readNstrafficdomainFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "nstrafficdomain not found immediately after update")
+		}
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nstrafficdomain resource")
-
-	// Read the updated state back
-	r.readNstrafficdomainFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +155,36 @@ func (r *NstrafficdomainResource) Delete(ctx context.Context, req resource.Delet
 
 	tflog.Debug(ctx, "Deleting nstrafficdomain resource")
 
-	// For nstrafficdomain, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nstrafficdomain resource from state")
+	// Named resource - delete using DeleteResource keyed by td (matches SDK v2)
+	td_value := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Nstrafficdomain.Type(), td_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete nstrafficdomain, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nstrafficdomain resource")
 }
 
 // Helper function to read nstrafficdomain data from API
-func (r *NstrafficdomainResource) readNstrafficdomainFromApi(ctx context.Context, data *NstrafficdomainResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nstrafficdomain.Type(), "")
+func (r *NstrafficdomainResource) readNstrafficdomainFromApi(ctx context.Context, data *NstrafficdomainResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain td value
+	td_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Nstrafficdomain.Type(), td_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nstrafficdomain, got error: %s", err))
-		return
+		return false
 	}
 
 	nstrafficdomainSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -205,6 +205,10 @@ type Sslvserver struct {
 	* This parameter is used to enable or disable the logging of additional information, such as the Session ID and SNI names, from SSL handshakes to the audit logs.
 	*/
 	Sslclientlogs string `json:"sslclientlogs,omitempty"`
+	/**
+	* Enable strict EKU extension check during client authentication.
+	*/
+	Strictclientekucheck string `json:"strictclientekucheck,omitempty"`
 
 	//------- Read only Parameter ---------;
 

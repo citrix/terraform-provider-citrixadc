@@ -1,9 +1,54 @@
 package systemparameter
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// SystemparameterDataSourceModel is the data-source-specific model, decoupled
+// from SystemparameterResourceModel. systemparameter is a singleton (keyless)
+// config object. A data source is a pure read surface, so it can expose the FULL
+// GET projection: the configurable attributes (as Computed outputs) AND the
+// read-only metadata the appliance returns on GET (allowdefaultpartition) that
+// the resource omits.
+type SystemparameterDataSourceModel struct {
+	Id                      types.String `tfsdk:"id"`
+	Basicauth               types.String `tfsdk:"basicauth"`
+	Cliloglevel             types.String `tfsdk:"cliloglevel"`
+	Daystoexpire            types.Int64  `tfsdk:"daystoexpire"`
+	Denylist                types.String `tfsdk:"denylist"`
+	Denylistlogging         types.String `tfsdk:"denylistlogging"`
+	Doppler                 types.String `tfsdk:"doppler"`
+	Fipsusermode            types.String `tfsdk:"fipsusermode"`
+	Forcepasswordchange     types.String `tfsdk:"forcepasswordchange"`
+	Googleanalytics         types.String `tfsdk:"googleanalytics"`
+	Localauth               types.String `tfsdk:"localauth"`
+	Maxclient               types.String `tfsdk:"maxclient"`
+	Maxsessionperuser       types.Int64  `tfsdk:"maxsessionperuser"`
+	Minpasswordlen          types.Int64  `tfsdk:"minpasswordlen"`
+	Natpcbforceflushlimit   types.Int64  `tfsdk:"natpcbforceflushlimit"`
+	Natpcbrstontimeout      types.String `tfsdk:"natpcbrstontimeout"`
+	Passwordhistorycontrol  types.String `tfsdk:"passwordhistorycontrol"`
+	Promptstring            types.String `tfsdk:"promptstring"`
+	Pwdhistorycount         types.Int64  `tfsdk:"pwdhistorycount"`
+	Rbaonresponse           types.String `tfsdk:"rbaonresponse"`
+	Reauthonauthparamchange types.String `tfsdk:"reauthonauthparamchange"`
+	Removesensitivefiles    types.String `tfsdk:"removesensitivefiles"`
+	Restrictedtimeout       types.String `tfsdk:"restrictedtimeout"`
+	Strongpassword          types.String `tfsdk:"strongpassword"`
+	Timeout                 types.Int64  `tfsdk:"timeout"`
+	Totalauthtimeout        types.Int64  `tfsdk:"totalauthtimeout"`
+	Wafprotection           types.List   `tfsdk:"wafprotection"`
+	Warnpriorndays          types.Int64  `tfsdk:"warnpriorndays"`
+
+	// Read-only (GET-only) metadata from the NITRO read-only set
+	// (zion73x_readonly/systemparameter.json). Never settable; populated from GET.
+	Allowdefaultpartition types.String `tfsdk:"allowdefaultpartition"`
+}
 
 func SystemparameterDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -25,6 +70,16 @@ func SystemparameterDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "Password expiry days for all the system users. The daystoexpire value ranges from 30 to 255.",
+			},
+			"denylist": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable denylist protection.",
+			},
+			"denylistlogging": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or disable denylist protection logging.",
 			},
 			"doppler": schema.StringAttribute{
 				Optional:    true,
@@ -50,6 +105,11 @@ func SystemparameterDataSourceSchema() schema.Schema {
 				Optional:    true,
 				Computed:    true,
 				Description: "When enabled, local users can access Citrix ADC even when external authentication is configured. When disabled, local users are not allowed to access the Citrix ADC, Local users can access the Citrix ADC only when the configured external authentication servers are unavailable. This parameter is not applicable to SSH Key-based authentication",
+			},
+			"maxclient": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Maximum number of client connection allowed per user. Exposed for backward compatibility with the SDK v2 resource; this is a read-only NITRO parameter.",
 			},
 			"maxsessionperuser": schema.Int64Attribute{
 				Optional:    true,
@@ -132,6 +192,55 @@ func SystemparameterDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source (this is
+			// intentionally NOT modeled on the resource). Computed.
+			"allowdefaultpartition": schema.StringAttribute{
+				Computed:    true,
+				Description: "Enable/Disable the allowing partition users to access default partition. Possible values: YES, NO.",
+			},
 		},
 	}
+}
+
+// systemparameterDataSourceSetAttrFromGet projects a NITRO systemparameter GET
+// response onto the data-source model. Attributes are filled from the GET (or
+// left Null when the GET omits them) via the shared utils.MapGet* helpers.
+func systemparameterDataSourceSetAttrFromGet(ctx context.Context, data *SystemparameterDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In systemparameterDataSourceSetAttrFromGet Function")
+
+	// Configurable attributes as read-back outputs.
+	data.Basicauth = utils.MapGetString(g, "basicauth")
+	data.Cliloglevel = utils.MapGetString(g, "cliloglevel")
+	data.Daystoexpire = utils.MapGetInt64(g, "daystoexpire")
+	data.Denylist = utils.MapGetString(g, "denylist")
+	data.Denylistlogging = utils.MapGetString(g, "denylistlogging")
+	data.Doppler = utils.MapGetString(g, "doppler")
+	data.Fipsusermode = utils.MapGetString(g, "fipsusermode")
+	data.Forcepasswordchange = utils.MapGetString(g, "forcepasswordchange")
+	data.Googleanalytics = utils.MapGetString(g, "googleanalytics")
+	data.Localauth = utils.MapGetString(g, "localauth")
+	data.Maxclient = utils.MapGetString(g, "maxclient")
+	data.Maxsessionperuser = utils.MapGetInt64(g, "maxsessionperuser")
+	data.Minpasswordlen = utils.MapGetInt64(g, "minpasswordlen")
+	data.Natpcbforceflushlimit = utils.MapGetInt64(g, "natpcbforceflushlimit")
+	data.Natpcbrstontimeout = utils.MapGetString(g, "natpcbrstontimeout")
+	data.Passwordhistorycontrol = utils.MapGetString(g, "passwordhistorycontrol")
+	data.Promptstring = utils.MapGetString(g, "promptstring")
+	data.Pwdhistorycount = utils.MapGetInt64(g, "pwdhistorycount")
+	data.Rbaonresponse = utils.MapGetString(g, "rbaonresponse")
+	data.Reauthonauthparamchange = utils.MapGetString(g, "reauthonauthparamchange")
+	data.Removesensitivefiles = utils.MapGetString(g, "removesensitivefiles")
+	data.Restrictedtimeout = utils.MapGetString(g, "restrictedtimeout")
+	data.Strongpassword = utils.MapGetString(g, "strongpassword")
+	data.Timeout = utils.MapGetInt64(g, "timeout")
+	data.Totalauthtimeout = utils.MapGetInt64(g, "totalauthtimeout")
+	data.Wafprotection = utils.MapGetStringList(g, "wafprotection")
+	data.Warnpriorndays = utils.MapGetInt64(g, "warnpriorndays")
+
+	// Read-only metadata.
+	data.Allowdefaultpartition = utils.MapGetString(g, "allowdefaultpartition")
+
+	// Singleton resource -> static ID (matches the resource/datasource contract).
+	data.Id = types.StringValue("systemparameter-config")
 }

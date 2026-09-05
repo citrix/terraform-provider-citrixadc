@@ -93,7 +93,7 @@ func (d *CsvserverAuditsyslogpolicyBindingDataSource) Read(ctx context.Context, 
 		return
 	}
 
-	csvserver_auditsyslogpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	csvserver_auditsyslogpolicy_bindingSetAttrFromGetForDatasource(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

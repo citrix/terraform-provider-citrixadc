@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,23 +55,30 @@ func (r *AppfwpolicylabelResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	tflog.Debug(ctx, "Creating appfwpolicylabel resource")
-
-	// appfwpolicylabel := appfwpolicylabelGetThePayloadFromtheConfig(ctx, &data)
+	// Get payload from plan
+	appfwpolicylabel := appfwpolicylabelGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwpolicylabel.Type(), &appfwpolicylabel)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwpolicylabel, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("appfwpolicylabel-config")
+	// Named resource - use AddResource
+	labelname_value := data.Labelname.ValueString()
+	_, err := r.client.AddResource(service.Appfwpolicylabel.Type(), labelname_value, &appfwpolicylabel)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appfwpolicylabel, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created appfwpolicylabel resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Labelname.ValueString()))
+
 	// Read the updated state back
-	r.readAppfwpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwpolicylabelFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwpolicylabel not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +96,24 @@ func (r *AppfwpolicylabelResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading appfwpolicylabel resource")
 
-	r.readAppfwpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readAppfwpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *AppfwpolicylabelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppfwpolicylabelResourceModel
+	var data, state AppfwpolicylabelResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +121,21 @@ func (r *AppfwpolicylabelResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appfwpolicylabel resource")
 
-	// Create API request body from the model
-	// appfwpolicylabel := appfwpolicylabelGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appfwpolicylabel.Type(), &appfwpolicylabel)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appfwpolicylabel, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated appfwpolicylabel resource")
+	// appfwpolicylabel has no NITRO update operation (add/delete/get/rename only) and all
+	// configurable attributes carry RequiresReplace, so no in-place update call is issued.
 
 	// Read the updated state back
-	r.readAppfwpolicylabelFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readAppfwpolicylabelFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "appfwpolicylabel not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +152,36 @@ func (r *AppfwpolicylabelResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	tflog.Debug(ctx, "Deleting appfwpolicylabel resource")
+	// Named resource - delete using DeleteResource
+	labelname_value := data.Labelname.ValueString()
+	err := r.client.DeleteResource(service.Appfwpolicylabel.Type(), labelname_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete appfwpolicylabel, got error: %s", err))
+		return
+	}
 
-	// For appfwpolicylabel, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted appfwpolicylabel resource from state")
+	tflog.Trace(ctx, "Deleted appfwpolicylabel resource")
 }
 
 // Helper function to read appfwpolicylabel data from API
-func (r *AppfwpolicylabelResource) readAppfwpolicylabelFromApi(ctx context.Context, data *AppfwpolicylabelResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Appfwpolicylabel.Type(), "")
+func (r *AppfwpolicylabelResource) readAppfwpolicylabelFromApi(ctx context.Context, data *AppfwpolicylabelResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	labelname_Name := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Appfwpolicylabel.Type(), labelname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read appfwpolicylabel, got error: %s", err))
-		return
+		return false
 	}
 
 	appfwpolicylabelSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

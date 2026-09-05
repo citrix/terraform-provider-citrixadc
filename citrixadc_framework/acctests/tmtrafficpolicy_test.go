@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccTmtrafficpolicy_basic = `
@@ -146,6 +147,77 @@ func testAccCheckTmtrafficpolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccTmtrafficpolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmtrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTmtrafficpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficpolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Tmtrafficpolicy.Type(), "my_tmtraffic_policy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccTmtrafficpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficpolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccTmtrafficpolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckTmtrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccTmtrafficpolicy_basic},
+			{
+				Config:                  testAccTmtrafficpolicy_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccTmtrafficpolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckTmtrafficpolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccTmtrafficpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficpolicyExist("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccTmtrafficpolicy_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckTmtrafficpolicyExist("citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", nil)),
+			},
+		},
+	})
+}
+
 const testAccTmtrafficpolicyDataSource_basic = `
 
 	resource "citrixadc_tmtrafficaction" "tf_tmtrafficaction" {
@@ -177,6 +249,9 @@ func TestAccTmtrafficpolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "name", "my_tmtraffic_policy"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "action", "my_tmtraffic_action"),
 					resource.TestCheckResourceAttr("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "rule", "true"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "id"),
+					// Read-only metadata exposed only by the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_tmtrafficpolicy.tf_tmtrafficpolicy", "hits"),
 				),
 			},
 		},

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccGslbvserver_domain_binding_basic = `
@@ -116,10 +119,12 @@ func testAccCheckGslbvserver_domain_bindingExist(n string, id *string) resource.
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		domainname := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "domainname"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		domainname := idMap["domainname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "gslbvserver_domain_binding",
@@ -158,13 +163,12 @@ func testAccCheckGslbvserver_domain_bindingNotExist(n string, id string) resourc
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		if !strings.Contains(id, ",") {
-			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
+		idMap, _, err := utils.ParseIdString(id, []string{"name", "domainname"}, nil)
+		if err != nil {
+			return err
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		name := idSlice[0]
-		domainname := idSlice[1]
+		name := idMap["name"]
+		domainname := idMap["domainname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "gslbvserver_domain_binding",
@@ -232,6 +236,151 @@ func TestAccGslbvserver_domain_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", "name", "GSLB-East-Coast-Vserver"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", "domainname", "www.exampledomain.com"),
 				),
+			},
+		},
+	})
+}
+
+// testAccgslbvserver_domain_binding_upgrade_basic mirrors testAccGslbvserver_domain_binding_basic
+// using only SDK v2 attribute names, so it is valid under BOTH the last SDK v2 release (2.2.0)
+// schema and the current framework schema. The resource label is kept identical so the Exist /
+// Destroy helpers and the state address match.
+const testAccgslbvserver_domain_binding_upgrade_basic = `
+
+resource "citrixadc_gslbvserver_domain_binding" "tf_gslbvserver_domain_binding"{
+	name = citrixadc_gslbvserver.tf_gslbvserver.name
+	domainname = "www.exampledomain.com"
+	backupipflag = false
+	}
+  resource "citrixadc_gslbvserver" "tf_gslbvserver" {
+	dnsrecordtype = "A"
+	name          = "GSLB-East-Coast-Vserver"
+	servicetype   = "HTTP"
+	}
+`
+
+// TestAccGslbvserver_domain_binding_sdkv2StateUpgrade verifies that state written by the last
+// SDK v2 release (with the legacy comma-joined ID) is refreshed and re-applied cleanly by the
+// current framework provider.
+//
+//	Step 1: create the binding with citrix/citrixadc 2.2.0 (SDK v2). State carries the legacy
+//	        ID "name,domainname".
+//	Step 2: the SAME config served by the current framework provider. Terraform refreshes the
+//	        legacy-id state through the framework Read (exercising utils.ParseIdString on the
+//	        legacy id) then plans/applies. The framework Read does NOT recompute the ID
+//	        (gslbvserver_domain_bindingSetAttrFromGet leaves data.Id untouched), so the legacy
+//	        ID is retained after the upgrade.
+func TestAccGslbvserver_domain_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbvserver_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Create with the last SDK v2 release from the registry.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccgslbvserver_domain_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_domain_bindingExist("citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", "id", "GSLB-East-Coast-Vserver,www.exampledomain.com"),
+				),
+			},
+			{
+				// Refresh/plan/apply the legacy-id state through the current framework provider.
+				// The framework Read re-derives the canonical new-format id from name+domainname,
+				// so after the upgrade the id is the key:value form (legacy->new-format only).
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccgslbvserver_domain_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbvserver_domain_bindingExist("citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding", "id", "name:GSLB-East-Coast-Vserver,domainname:www.exampledomain.com"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccGslbvserver_domain_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,domainname) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "domainname"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_domain_binding_basic,
+			},
+			{
+				Config:                  testAccGslbvserver_domain_binding_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"backupipflag"},
+			},
+			{Config: testAccGslbvserver_domain_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{"backupipflag"}},
+		},
+	})
+}
+
+func TestAccGslbvserver_domain_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbvserver_domain_binding.tf_gslbvserver_domain_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbvserver_domain_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbvserver_domain_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserver_domain_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Gslbvserver_domain_binding.Type(), "GSLB-East-Coast-Vserver", []string{"domainname:www.exampledomain.com"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbvserver_domain_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbvserver_domain_bindingExist(resAddr, nil)),
 			},
 		},
 	})

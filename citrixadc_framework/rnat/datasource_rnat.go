@@ -55,7 +55,7 @@ func (d *RnatDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		return
 	}
 
-	rnatSetAttrFromGet(ctx, &data, getResponseData)
+	rnatSetAttrFromGetForDatasource(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

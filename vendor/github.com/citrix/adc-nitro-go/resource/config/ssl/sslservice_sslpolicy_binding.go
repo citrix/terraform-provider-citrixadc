@@ -29,6 +29,11 @@ type Sslservicesslpolicybinding struct {
 	*/
 	Priority *int `json:"priority,omitempty"`
 	/**
+	* The phase of the SSL connection in which the policy rule is evaluated. Possible Value: SERVER_AUTH_VAL_REQ. The bindpoint means::
+		1. SERVER_AUTH_VAL_REQ: Policy evaluation will be performed during the verification of the server certificate. Action allowed with this type is: OCSPCERTVALIDATION.
+	*/
+	Type string `json:"type,omitempty"`
+	/**
 	* Whether the bound policy is a inherited policy or not
 	*/
 	Polinherit *int `json:"polinherit,omitempty"`

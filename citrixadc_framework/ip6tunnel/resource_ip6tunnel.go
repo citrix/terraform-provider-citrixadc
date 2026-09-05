@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
@@ -57,6 +59,7 @@ func (r *Ip6tunnelResource) Create(ctx context.Context, req resource.CreateReque
 	ip6tunnel := ip6tunnelGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
+	// Named resource keyed on "name" - use AddResource
 	ip6tunnelName := data.Name.ValueString()
 	_, err := r.client.AddResource(service.Ip6tunnel.Type(), ip6tunnelName, &ip6tunnel)
 	if err != nil {
@@ -66,8 +69,17 @@ func (r *Ip6tunnelResource) Create(ctx context.Context, req resource.CreateReque
 
 	tflog.Trace(ctx, "Created ip6tunnel resource")
 
+	// Set ID for the resource before reading state.
+	// ID is the resource name, matching the SDK v2 behavior (d.SetId(name)).
+	data.Id = types.StringValue(ip6tunnelName)
+
 	// Read the updated state back
-	r.readIp6tunnelFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readIp6tunnelFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "ip6tunnel not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -85,15 +97,24 @@ func (r *Ip6tunnelResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	tflog.Debug(ctx, "Reading ip6tunnel resource")
 
-	r.readIp6tunnelFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readIp6tunnelFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *Ip6tunnelResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data Ip6tunnelResourceModel
+	var data, state Ip6tunnelResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -101,22 +122,21 @@ func (r *Ip6tunnelResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	tflog.Debug(ctx, "Updating ip6tunnel resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	ip6tunnel := ip6tunnelGetThePayloadFromtheConfig(ctx, &data)
+	// ip6tunnel exposes no NITRO "update"/"set" operation and every attribute is
+	// ForceNew/RequiresReplace (matching the SDK v2 resource, which had no Update
+	// function). There is therefore nothing to update in place - just re-read the
+	// current state from the ADC.
+	tflog.Debug(ctx, "Updating ip6tunnel resource (no updatable attributes; re-reading state)")
 
-	// Make API call
-	err := r.client.UpdateUnnamedResource(service.Ip6tunnel.Type(), &ip6tunnel)
-	if err != nil {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update ip6tunnel, got error: %s", err))
+	if !r.readIp6tunnelFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "ip6tunnel not found during update")
+		}
 		return
 	}
-
-	tflog.Trace(ctx, "Updated ip6tunnel resource")
-
-	// Read the updated state back
-	r.readIp6tunnelFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -134,8 +154,8 @@ func (r *Ip6tunnelResource) Delete(ctx context.Context, req resource.DeleteReque
 
 	tflog.Debug(ctx, "Deleting ip6tunnel resource")
 
-	// Delete the resource
-	ip6tunnelName := data.Name.ValueString()
+	// Delete the resource by name (the ID is the resource name).
+	ip6tunnelName := data.Id.ValueString()
 	err := r.client.DeleteResource(service.Ip6tunnel.Type(), ip6tunnelName)
 	if err != nil {
 		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete ip6tunnel, got error: %s", err))
@@ -145,15 +165,20 @@ func (r *Ip6tunnelResource) Delete(ctx context.Context, req resource.DeleteReque
 	tflog.Trace(ctx, "Deleted ip6tunnel resource from state")
 }
 
-// Helper function to read ip6tunnel data from API
-func (r *Ip6tunnelResource) readIp6tunnelFromApi(ctx context.Context, data *Ip6tunnelResourceModel, diags *diag.Diagnostics) {
-	ip6tunnelName := data.Name.ValueString()
+// Helper function to read ip6tunnel data from API.
+// Returns false (without adding an error) when the resource no longer exists.
+func (r *Ip6tunnelResource) readIp6tunnelFromApi(ctx context.Context, data *Ip6tunnelResourceModel, diags *diag.Diagnostics) bool {
+	ip6tunnelName := data.Id.ValueString()
 	getResponseData, err := r.client.FindResource(service.Ip6tunnel.Type(), ip6tunnelName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read ip6tunnel, got error: %s", err))
-		return
+		return false
 	}
 
 	ip6tunnelSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

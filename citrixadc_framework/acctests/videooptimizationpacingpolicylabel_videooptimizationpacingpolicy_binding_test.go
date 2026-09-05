@@ -17,12 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // binding_with_parent. Composite ID = labelname,policyname,priority.
@@ -270,6 +271,12 @@ func testAccCheckVideooptimizationpacingpolicylabel_videooptimizationpacingpolic
 
 		dataArr, err := client.FindResourceArrayWithParams(findParams)
 		if err != nil {
+			// Parent videooptimizationpacingpolicylabel already deleted (errorcode 3087) =>
+			// the binding is gone too. This is the normal teardown order (terraform destroys
+			// the parent label before CheckDestroy runs against the pre-destroy state).
+			if strings.Contains(err.Error(), "errorcode 3087") {
+				continue
+			}
 			return err
 		}
 
@@ -339,6 +346,34 @@ func TestAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_bin
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding.tf_binding", "policyname", "tf_videooptimizationpacingpolicy_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding.tf_binding", "priority", "100"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Videooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding.Type(), "tf_videoopt_pacing_pl", map[string]string{"policyname": "tf_videooptimizationpacingpolicy", "priority": "100"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_binding_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVideooptimizationpacingpolicylabel_videooptimizationpacingpolicy_bindingExist(resAddr, nil)),
 			},
 		},
 	})

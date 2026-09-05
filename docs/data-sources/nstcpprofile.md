@@ -90,3 +90,11 @@ In addition to the arguments, the following attributes are available:
 * `timestamp` - Enable or disable TCP timestamps.
 * `ws` - Enable or disable window scaling.
 * `wsval` - Window scaling factor.
+
+### Read-only nstcpprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nstcpprofile` resource) and are computed. Any attribute the appliance does not return is `null`.
+
+* `refcnt` - Number of entities using this profile.
+* `builtin` - Flag to determine if tcp profile is built-in or not. A list of strings (possible values: MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL).
+* `feature` - The feature to be checked while applying this config.

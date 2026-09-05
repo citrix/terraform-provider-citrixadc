@@ -37,3 +37,12 @@ In addition to the arguments, the following attributes are available:
 * `deviceprofilename` - Device profile created on ADM that contains the user name and password of the instance(s).
 * `activationcode` - Activation code used to register to the ADM service.
 * `validatecert` - Validate the server certificate for secure SSL connections.
+
+### Read-only nscentralmanagementserver metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nscentralmanagementserver` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `instanceid` - Instance ID of the customer provided by Trust.
+* `customerid` - Customer ID of the citrix cloud customer.
+* `admserviceenvironment` - ADM service environment (PRODUCTION/STAGING/DEV).
+* `admserviceconnectionstatus` - Built-in agent's (mastools) connection status to ADM service (CONNECTED/DISCONNECTED).

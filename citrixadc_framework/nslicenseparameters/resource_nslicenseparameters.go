@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,17 @@ func (r *NslicenseparametersResource) Create(ctx context.Context, req resource.C
 
 	tflog.Debug(ctx, "Creating nslicenseparameters resource")
 
-	// nslicenseparameters := nslicenseparametersGetThePayloadFromtheConfig(ctx, &data)
+	// Build the payload from the plan and push it to the ADC.
+	// nslicenseparameters is a singleton config object (no primary key), so it is
+	// written with UpdateUnnamedResource, mirroring the SDK v2 implementation.
+	nslicenseparameters := nslicenseparametersGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nslicenseparameters.Type(), &nslicenseparameters)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nslicenseparameters, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nslicenseparameters.Type(), &nslicenseparameters)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nslicenseparameters, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("nslicenseparameters-config")
@@ -95,10 +99,12 @@ func (r *NslicenseparametersResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *NslicenseparametersResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NslicenseparametersResourceModel
+	var data, config, state NslicenseparametersResourceModel
 
-	// Read Terraform plan data into the model
+	// Read Terraform prior state, plan, and config into the models
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -106,17 +112,69 @@ func (r *NslicenseparametersResource) Update(ctx context.Context, req resource.U
 
 	tflog.Debug(ctx, "Updating nslicenseparameters resource")
 
-	// Create API request body from the model
-	// nslicenseparameters := nslicenseparametersGetThePayloadFromtheConfig(ctx, &data)
+	// Determine which attributes changed and which were removed from config
+	// (and thus should be unset back to their NITRO defaults).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Alert1gracetimeout.Equal(state.Alert1gracetimeout) {
+		if config.Alert1gracetimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "alert1gracetimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Alert2gracetimeout.Equal(state.Alert2gracetimeout) {
+		if config.Alert2gracetimeout.IsNull() {
+			attributesToUnset = append(attributesToUnset, "alert2gracetimeout")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Heartbeatinterval.Equal(state.Heartbeatinterval) {
+		if config.Heartbeatinterval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "heartbeatinterval")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Inventoryrefreshinterval.Equal(state.Inventoryrefreshinterval) {
+		if config.Inventoryrefreshinterval.IsNull() {
+			attributesToUnset = append(attributesToUnset, "inventoryrefreshinterval")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Licenseexpiryalerttime.Equal(state.Licenseexpiryalerttime) {
+		if config.Licenseexpiryalerttime.IsNull() {
+			attributesToUnset = append(attributesToUnset, "licenseexpiryalerttime")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nslicenseparameters.Type(), &nslicenseparameters)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nslicenseparameters, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		nslicenseparameters := nslicenseparametersGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated nslicenseparameters resource")
+		// Make API call (singleton config object - UpdateUnnamedResource)
+		err := r.client.UpdateUnnamedResource(service.Nslicenseparameters.Type(), &nslicenseparameters)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nslicenseparameters, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nslicenseparameters resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for nslicenseparameters resource, skipping update")
+	}
+
+	// Unset attributes that were removed from configuration (revert to ADC defaults)
+	// Singleton resource - no identity fields required in the unset payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nslicenseparameters.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nslicenseparameters attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readNslicenseparametersFromApi(ctx, &data, &resp.Diagnostics)

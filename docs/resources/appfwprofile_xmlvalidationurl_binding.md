@@ -60,7 +60,7 @@ resource "citrixadc_appfwprofile_xmlvalidationurl_binding" "tf_binding" {
 * `comment` - (Optional) Any comments about the purpose of profile, or other useful information about the profile.
 * `isautodeployed` - (Optional) Is the rule auto deployed by dynamic profile ?
 * `resourceid` - (Optional) A "id" that identifies the rule.
-* `ruletype` - (Optional) Specifies rule type of binding
+* `ruletype` - (Optional) Specifies rule type of binding.
 * `state` - (Optional) Enabled.
 * `xmladditionalsoapheaders` - (Optional) Allow addtional soap headers.
 * `xmlendpointcheck` - (Optional) Modifies the behaviour of the Request URL validation w.r.t. the Service URL. 	If set to ABSOLUTE, the entire request URL is validated with the entire URL mentioned in Service of the associated WSDL. 		eg: Service URL: http://example.org/ExampleService, Request URL: http//example.com/ExampleService would FAIL the validation. 	If set to RELAIVE, only the non-hostname part of the request URL is validated against the non-hostname part of the Service URL. 		eg: Service URL: http://example.org/ExampleService, Request URL: http//example.com/ExampleService would PASS the validation.
@@ -75,12 +75,12 @@ resource "citrixadc_appfwprofile_xmlvalidationurl_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_xmlvalidationurl_binding. It is the concatenation of `name` and `xmlvalidationurl` attributes separated by comma.
+* `id` - The id of the appfwprofile_xmlvalidationurl_binding. It is the concatenation of the `name` and `xmlvalidationurl` attributes separated by a comma.
 
 
 ## Import
 
-A appfwprofile_xmlvalidationurl_binding can be imported using its id, e.g.
+A binding can be imported using its id, which is the concatenation of the `name` and `xmlvalidationurl` attributes separated by a comma.
 
 ```shell
 terraform import citrixadc_appfwprofile_xmlvalidationurl_binding.tf_binding tf_appfwprofile,.*

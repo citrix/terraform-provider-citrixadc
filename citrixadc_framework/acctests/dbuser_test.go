@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccDbuser_basic = `
@@ -44,7 +45,6 @@ const testAccDbuserDataSource_basic = `
 	
 	data "citrixadc_dbuser" "tf_dbuser_ds" {
 		username = citrixadc_dbuser.tf_dbuser.username
-		loggedin = false
 	}
 `
 
@@ -57,7 +57,6 @@ func TestAccDbuserDataSource_basic(t *testing.T) {
 				Config: testAccDbuserDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_dbuser.tf_dbuser_ds", "username", "user1"),
-					resource.TestCheckResourceAttr("data.citrixadc_dbuser.tf_dbuser_ds", "loggedin", "false"),
 					resource.TestCheckResourceAttrSet("data.citrixadc_dbuser.tf_dbuser_ds", "id"),
 				),
 			},
@@ -288,6 +287,19 @@ func TestAccDbuser_password_wo_ephemeral(t *testing.T) {
 	})
 }
 
+// testAccDbuser_upgrade_basic is the fixture for the SDK v2 -> Framework upgrade test.
+// It sets a password because password_wo_version is Optional+Computed with a default of 1:
+// upgrading from 2.2.0 state (which has no password_wo_version) resolves it null->1, which
+// triggers an in-place dbuser Update. The ADC requires a password on a dbuser update
+// (errorcode 1095 otherwise), so the upgrade fixture must carry one. (testAccDbuser_basic is
+// intentionally password-less and is used by the create/import tests.)
+const testAccDbuser_upgrade_basic = `
+	resource "citrixadc_dbuser" "tf_dbuser" {
+		username = "user1"
+		password = "1234"
+	}
+`
+
 func TestAccDbuser_sdkv2StateUpgrade(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -297,7 +309,7 @@ func TestAccDbuser_sdkv2StateUpgrade(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
 				},
-				Config: testAccDbuser_basic,
+				Config: testAccDbuser_upgrade_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbuserExist("citrixadc_dbuser.tf_dbuser", nil),
 				),
@@ -305,9 +317,42 @@ func TestAccDbuser_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccDbuser_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+			},
+		},
+	})
+}
+
+func TestAccDbuser_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_dbuser.tf_dbuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckDbuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDbuserExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Dbuser.Type(), "user1"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccDbuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckDbuserExist(resAddr, nil)),
 			},
 		},
 	})

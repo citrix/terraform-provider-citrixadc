@@ -7,7 +7,7 @@ subcategory: "SSL"
 The sslprofile_ecccurve_binding data source allows you to retrieve information about a specific binding between an SSL profile and an ECC curve.
 
 
-## Example Usage
+## Example usage
 
 ```terraform
 data "citrixadc_sslprofile_ecccurve_binding" "tf_bind" {

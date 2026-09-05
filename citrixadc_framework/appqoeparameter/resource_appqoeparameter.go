@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,26 @@ func (r *AppqoeparameterResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating appqoeparameter resource")
 
-	// appqoeparameter := appqoeparameterGetThePayloadFromtheConfig(ctx, &data)
+	appqoeparameter := appqoeparameterGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appqoeparameter, got error: %s", err))
-	//	 return
-	// }
+	// Unnamed/singleton resource - use UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create appqoeparameter, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Set a fixed synthetic ID for this singleton configuration resource
 	data.Id = types.StringValue("appqoeparameter-config")
 
 	tflog.Trace(ctx, "Created appqoeparameter resource")
 
 	// Read the updated state back
 	r.readAppqoeparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -95,31 +100,85 @@ func (r *AppqoeparameterResource) Read(ctx context.Context, req resource.ReadReq
 }
 
 func (r *AppqoeparameterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data AppqoeparameterResourceModel
+	var data, config, state AppqoeparameterResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating appqoeparameter resource")
 
-	// Create API request body from the model
-	// appqoeparameter := appqoeparameterGetThePayloadFromtheConfig(ctx, &data)
+	// Determine which attributes changed and which were removed from config (unset)
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Avgwaitingclient.Equal(state.Avgwaitingclient) {
+		if config.Avgwaitingclient.IsNull() {
+			attributesToUnset = append(attributesToUnset, "avgwaitingclient")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Dosattackthresh.Equal(state.Dosattackthresh) {
+		if config.Dosattackthresh.IsNull() {
+			attributesToUnset = append(attributesToUnset, "dosattackthresh")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Maxaltrespbandwidth.Equal(state.Maxaltrespbandwidth) {
+		if config.Maxaltrespbandwidth.IsNull() {
+			attributesToUnset = append(attributesToUnset, "maxaltrespbandwidth")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Sessionlife.Equal(state.Sessionlife) {
+		if config.Sessionlife.IsNull() {
+			attributesToUnset = append(attributesToUnset, "sessionlife")
+		} else {
+			hasChange = true
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appqoeparameter, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		appqoeparameter := appqoeparameterGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated appqoeparameter resource")
+		// Make API call
+		// Unnamed/singleton resource - use UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Appqoeparameter.Type(), &appqoeparameter)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update appqoeparameter, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated appqoeparameter resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for appqoeparameter resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts to defaults
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Appqoeparameter.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset appqoeparameter attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readAppqoeparameterFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

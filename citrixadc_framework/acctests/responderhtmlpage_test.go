@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccResponderhtmlpage_basic = `
@@ -120,6 +121,77 @@ func testAccCheckResponderhtmlpageDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccResponderhtmlpage_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderhtmlpage.tf_responder_page"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderhtmlpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderhtmlpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderhtmlpageExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Responderhtmlpage.Type(), "tf_responder_page"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderhtmlpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderhtmlpageExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccResponderhtmlpage_import(t *testing.T) {
+	const resAddr = "citrixadc_responderhtmlpage.tf_responder_page"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderhtmlpageDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderhtmlpage_basic},
+			{
+				Config:                  testAccResponderhtmlpage_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"src"},
+			},
+		},
+	})
+}
+
+func TestAccResponderhtmlpage_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderhtmlpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccResponderhtmlpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderhtmlpageExist("citrixadc_responderhtmlpage.tf_responder_page", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderhtmlpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderhtmlpageExist("citrixadc_responderhtmlpage.tf_responder_page", nil)),
+			},
+		},
+	})
+}
+
 const testAccResponderhtmlpageDataSource_basic = `
 resource "citrixadc_systemfile" "tf_html_page_ds" {
     filename = "tf_html_page_ds.html"
@@ -147,6 +219,7 @@ func TestAccResponderhtmlpageDataSource_basic(t *testing.T) {
 				Config: testAccResponderhtmlpageDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_responderhtmlpage.tf_responder_page_ds", "name", "tf_responder_page_ds"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderhtmlpage.tf_responder_page_ds", "id"),
 				),
 			},
 		},

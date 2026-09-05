@@ -26,3 +26,12 @@ resource "citrixadc_appalgparam" "tf_appalgparam" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the appalgparam. It is a unique string prefixed with "tf-appalgparam-"
+
+
+## Import
+
+A appalgparam can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_appalgparam.tf_appalgparam appalgparam-config
+```

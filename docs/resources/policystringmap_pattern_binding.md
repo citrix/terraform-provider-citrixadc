@@ -4,7 +4,7 @@ subcategory: "Policy"
 
 # Resource: policystringmap\_pattern\_binding
 
-The policystringmap\_pattern\_binding resource is used to bind patters to a stringmap.
+The policystringmap\_pattern\_binding resource is used to bind a key-value pattern to a policy string map.
 
 
 ## Example usage
@@ -36,4 +36,13 @@ resource "citrixadc_policystringmap_pattern_binding" "tf_bind1" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the policystringmap. It is the concatenation of the `name` and `key` attributes separated by a comma.
+* `id` - The id of the policystringmap_pattern_binding. It is the concatenation of the `name` and `key` attributes separated by a comma.
+
+
+## Import
+
+A policystringmap_pattern_binding can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_policystringmap_pattern_binding.tf_bind1 tf_policystringmap,key1
+```

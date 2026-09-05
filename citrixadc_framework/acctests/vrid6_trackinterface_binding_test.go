@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // NOTE: trackifnum is testbed-specific. Replace TODO_PLACEHOLDER with a free
@@ -39,7 +39,7 @@ resource "citrixadc_vrid6" "tf_vrid6" {
 
 resource "citrixadc_vrid6_trackinterface_binding" "tf_vrid6_trackinterface_binding" {
 	vrid_id    = citrixadc_vrid6.tf_vrid6.vrid6_id
-	trackifnum = "1/2" // free interface, e.g. "1/2" (testbed-specific)
+	trackifnum = "1/1" // free interface (1/1 confirmed present on the VPX; siblings track it)
 
 	depends_on = [citrixadc_vrid6.tf_vrid6]
 }
@@ -67,13 +67,13 @@ func TestAccVrid6_trackinterface_binding_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVrid6_trackinterface_bindingExist("citrixadc_vrid6_trackinterface_binding.tf_vrid6_trackinterface_binding", nil),
 					resource.TestCheckResourceAttr("citrixadc_vrid6_trackinterface_binding.tf_vrid6_trackinterface_binding", "vrid_id", "100"),
-					resource.TestCheckResourceAttr("citrixadc_vrid6_trackinterface_binding.tf_vrid6_trackinterface_binding", "trackifnum", "1/2"),
+					resource.TestCheckResourceAttr("citrixadc_vrid6_trackinterface_binding.tf_vrid6_trackinterface_binding", "trackifnum", "1/1"),
 				),
 			},
 			{
 				Config: testAccVrid6_trackinterface_binding_basic_step2,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVrid6_trackinterface_bindingNotExist("citrixadc_vrid6_trackinterface_binding.tf_vrid6_trackinterface_binding", "id:100,trackifnum:1%2F2"),
+					testAccCheckVrid6_trackinterface_bindingNotExist("citrixadc_vrid6_trackinterface_binding.tf_vrid6_trackinterface_binding", "id:100,trackifnum:1%2F1"),
 				),
 			},
 		},

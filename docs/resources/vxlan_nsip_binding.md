@@ -43,7 +43,7 @@ resource "citrixadc_vxlan_nsip_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vxlan_nsip_binding. It has the same value as the `vxlanid` and `ipaddress` attributes seperated by comma.
+* `id` - The id of the vxlan_nsip_binding. It is the concatenation of `vxlanid` and `ipaddress` attributes separated by a comma.
 
 
 ## Import

@@ -44,7 +44,7 @@ resource "citrixadc_vpnvserver_vpnurl_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_vpnurl_binding. It is the concatenation of `name` and `urlname` attribute seperated by comma.
+* `id` - The id of the vpnvserver_vpnurl_binding. It is the concatenation of the `name` and `urlname` attributes separated by a comma.
 
 
 ## Import

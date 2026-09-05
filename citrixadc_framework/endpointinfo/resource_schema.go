@@ -38,7 +38,9 @@ func (r *EndpointinfoResource) Schema(ctx context.Context, req resource.SchemaRe
 				Computed: true,
 				Default:  stringdefault.StaticString("IP"),
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					// GH #1436
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 				Description: "Endpoint kind. Currently, IP endpoints are supported",
 			},

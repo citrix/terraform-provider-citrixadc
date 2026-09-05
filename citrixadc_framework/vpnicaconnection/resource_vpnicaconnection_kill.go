@@ -34,10 +34,12 @@ type VpnicaconnectionKillResource struct {
 // nodeid is intentionally absent: per the NITRO doc it is a GET-only filter
 // argument, not a kill-payload property (Pattern 15).
 type VpnicaconnectionKillResourceModel struct {
-	Id         types.String `tfsdk:"id"`
-	All        types.Bool   `tfsdk:"all"`
-	Transproto types.String `tfsdk:"transproto"`
-	Username   types.String `tfsdk:"username"`
+	Id          types.String `tfsdk:"id"`
+	All         types.Bool   `tfsdk:"all"`
+	Productname types.String `tfsdk:"productname"`
+	Tenantname  types.String `tfsdk:"tenantname"`
+	Transproto  types.String `tfsdk:"transproto"`
+	Username    types.String `tfsdk:"username"`
 }
 
 func (r *VpnicaconnectionKillResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -71,6 +73,20 @@ func (r *VpnicaconnectionKillResource) Schema(ctx context.Context, req resource.
 					boolplanmodifier.RequiresReplace(),
 				},
 				Description: "Terminate all active icaconnections.",
+			},
+			"productname": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Product name for which ica connections needs to be terminated.",
+			},
+			"tenantname": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "Tenant name for which ica connections needs to be terminated.",
 			},
 			"transproto": schema.StringAttribute{
 				Optional: true,
@@ -170,6 +186,12 @@ func vpnicaconnection_killGetThePayloadFromthePlan(ctx context.Context, data *Vp
 	vpnicaconnection := map[string]interface{}{}
 	if !data.All.IsNull() && !data.All.IsUnknown() {
 		vpnicaconnection["all"] = data.All.ValueBool()
+	}
+	if !data.Productname.IsNull() && !data.Productname.IsUnknown() {
+		vpnicaconnection["productname"] = data.Productname.ValueString()
+	}
+	if !data.Tenantname.IsNull() && !data.Tenantname.IsUnknown() {
+		vpnicaconnection["tenantname"] = data.Tenantname.ValueString()
 	}
 	if !data.Transproto.IsNull() && !data.Transproto.IsUnknown() {
 		vpnicaconnection["transproto"] = data.Transproto.ValueString()

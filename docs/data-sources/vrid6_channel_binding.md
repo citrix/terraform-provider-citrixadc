@@ -32,5 +32,10 @@ output "vrid6_channel_binding_vlan" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vrid6_channel_binding. It is the concatenation of the `vrid_id` and `ifnum` attributes in the form `id:<vrid_id>,ifnum:<ifnum>` (each value URL-encoded).
+
+### Read-only vrid6_channel_binding metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_vrid6_channel_binding` resource) and are therefore GET-only / Computed. Any attribute the appliance does not return is `null`.
+
 * `flags` - Flags reported for this binding.
 * `vlan` - The VLAN in which this VRID resides.

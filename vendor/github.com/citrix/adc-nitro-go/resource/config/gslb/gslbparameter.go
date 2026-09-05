@@ -88,6 +88,14 @@ type Gslbparameter struct {
 		* DROP - Drop the request without sending a response to the user.
 	*/
 	Undefaction string `json:"undefaction,omitempty"`
+	/**
+	* This option is to use Krpc channel for GSLB sync.
+	*/
+	Usekrpcchannelforsync string `json:"usekrpcchannelforsync,omitempty"`
+	/**
+	* If enabled, local gslb site private IP would be used as the source IP while initiating MEP/GSLB sync connection if srcIP is not configured for GSLB site.
+	*/
+	Sourceipwhitelisting string `json:"sourceipwhitelisting,omitempty"`
 
 	//------- Read only Parameter ---------;
 

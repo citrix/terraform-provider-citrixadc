@@ -40,3 +40,9 @@ In addition to the arguments, the following attributes are available:
 * `td` - Traffic Domain ID.
 * `ttl` - Number of seconds after which this simple ACL6 rule expires.
 * `id` - The id of the nssimpleacl6. It has the same value as the `aclname` attribute.
+
+### Read-only nssimpleacl6 metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_nssimpleacl6` resource). They are Computed / GET-only, and any attribute the appliance does not return is `null`.
+
+* `hits` - Number of hits for this SACL6 rule.

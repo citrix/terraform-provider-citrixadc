@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *TmsessionpolicyResource) Create(ctx context.Context, req resource.Creat
 
 	tflog.Debug(ctx, "Creating tmsessionpolicy resource")
 
-	// tmsessionpolicy := tmsessionpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	tmsessionpolicy := tmsessionpolicyGetThePayloadFromthePlan(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tmsessionpolicy.Type(), &tmsessionpolicy)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tmsessionpolicy, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("tmsessionpolicy-config")
+	// Named resource - use AddResource
+	tmsessionpolicyName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Tmsessionpolicy.Type(), tmsessionpolicyName, &tmsessionpolicy)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create tmsessionpolicy, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created tmsessionpolicy resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Name.ValueString()))
+
 	// Read the updated state back
-	r.readTmsessionpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTmsessionpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "tmsessionpolicy not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *TmsessionpolicyResource) Read(ctx context.Context, req resource.ReadReq
 
 	tflog.Debug(ctx, "Reading tmsessionpolicy resource")
 
-	r.readTmsessionpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readTmsessionpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *TmsessionpolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data TmsessionpolicyResourceModel
+	var data, state TmsessionpolicyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,44 @@ func (r *TmsessionpolicyResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// Preserve ID from prior state (name is ForceNew, so it never changes here)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating tmsessionpolicy resource")
 
-	// Create API request body from the model
-	// tmsessionpolicy := tmsessionpolicyGetThePayloadFromtheConfig(ctx, &data)
+	// Check if there are any changes in updateable attributes
+	hasChange := false
+	if !data.Action.Equal(state.Action) {
+		tflog.Debug(ctx, "action has changed for tmsessionpolicy")
+		hasChange = true
+	}
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for tmsessionpolicy")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Tmsessionpolicy.Type(), &tmsessionpolicy)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmsessionpolicy, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		tmsessionpolicy := tmsessionpolicyGetThePayloadFromthePlan(ctx, &data)
+		// Make API call - matches SDK v2 semantics (UpdateUnnamedResource with name in body)
+		err := r.client.UpdateUnnamedResource(service.Tmsessionpolicy.Type(), &tmsessionpolicy)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update tmsessionpolicy, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated tmsessionpolicy resource")
+		tflog.Trace(ctx, "Updated tmsessionpolicy resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for tmsessionpolicy resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readTmsessionpolicyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readTmsessionpolicyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "tmsessionpolicy not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +176,36 @@ func (r *TmsessionpolicyResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	tflog.Debug(ctx, "Deleting tmsessionpolicy resource")
+	// Named resource - delete using DeleteResource
+	tmsessionpolicyName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Tmsessionpolicy.Type(), tmsessionpolicyName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete tmsessionpolicy, got error: %s", err))
+		return
+	}
 
-	// For tmsessionpolicy, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted tmsessionpolicy resource from state")
+	tflog.Trace(ctx, "Deleted tmsessionpolicy resource")
 }
 
 // Helper function to read tmsessionpolicy data from API
-func (r *TmsessionpolicyResource) readTmsessionpolicyFromApi(ctx context.Context, data *TmsessionpolicyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Tmsessionpolicy.Type(), "")
+func (r *TmsessionpolicyResource) readTmsessionpolicyFromApi(ctx context.Context, data *TmsessionpolicyResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain value
+	tmsessionpolicyName := data.Id.ValueString()
+
+	var getResponseData map[string]interface{}
+	var err error
+
+	getResponseData, err = r.client.FindResource(service.Tmsessionpolicy.Type(), tmsessionpolicyName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read tmsessionpolicy, got error: %s", err))
-		return
+		return false
 	}
 
 	tmsessionpolicySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccNetprofile_natrule_binding_basic = `
@@ -97,10 +100,12 @@ func testAccCheckNetprofile_natrule_bindingExist(n string, id *string) resource.
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		natrule := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "natrule"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		natrule := idMap["natrule"]
 
 		findParams := service.FindParams{
 			ResourceType:             "netprofile_natrule_binding",
@@ -234,6 +239,127 @@ func TestAccNetprofile_natrule_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_netprofile_natrule_binding.tf_binding", "netmask", "255.255.255.255"),
 					resource.TestCheckResourceAttr("data.citrixadc_netprofile_natrule_binding.tf_binding", "rewriteip", "3.3.3.3"),
 				),
+			},
+		},
+	})
+}
+
+const testAccNetprofile_natrule_binding_upgrade_basic = `
+	resource "citrixadc_netprofile" "tf_netprofile" {
+		name                   = "tf_netprofile"
+		proxyprotocol          = "ENABLED"
+		proxyprotocoltxversion = "V1"
+	}
+	resource "citrixadc_netprofile_natrule_binding" "tf_binding" {
+		name      = citrixadc_netprofile.tf_netprofile.name
+		natrule   = "10.10.10.10"
+		netmask   = "255.255.255.255"
+		rewriteip = "3.3.3.3"
+	}
+`
+
+func TestAccNetprofile_natrule_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckNetprofile_natrule_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy comma ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccNetprofile_natrule_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofile_natrule_bindingExist("citrixadc_netprofile_natrule_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile_natrule_binding.tf_binding", "id", "tf_netprofile,10.10.10.10"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the canonical new-format id.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccNetprofile_natrule_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNetprofile_natrule_bindingExist("citrixadc_netprofile_natrule_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_netprofile_natrule_binding.tf_binding", "id", "name:tf_netprofile,natrule:10.10.10.10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetprofile_natrule_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_netprofile_natrule_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,natrule) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "natrule"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofile_natrule_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccNetprofile_natrule_binding_basic},
+			{Config: testAccNetprofile_natrule_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccNetprofile_natrule_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccNetprofile_natrule_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_netprofile_natrule_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNetprofile_natrule_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNetprofile_natrule_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofile_natrule_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Netprofile_natrule_binding.Type(), "tf_netprofile", map[string]string{"natrule": "10.10.10.10", "netmask": "255.255.255.255"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNetprofile_natrule_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNetprofile_natrule_bindingExist(resAddr, nil)),
 			},
 		},
 	})

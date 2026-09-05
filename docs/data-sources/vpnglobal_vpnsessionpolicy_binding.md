@@ -33,6 +33,7 @@ output "priority" {
 
 In addition to the arguments, the following attributes are available:
 
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type.
 * `feature` - The feature to be checked while applying this config
 * `gotopriorityexpression` - Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
 * `groupextraction` - Bind the Authentication policy to a tertiary chain which will be used only for group extraction. The user will not authenticate against this server, and this will only be called it primary and/or secondary authentication has succeeded.

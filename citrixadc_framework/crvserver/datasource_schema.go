@@ -1,8 +1,106 @@
 package crvserver
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// CrvserverDataSourceModel is the data-source-specific model, decoupled from
+// CrvserverResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only status/binding metadata attributes that the
+// resource deliberately omits (ip, value, ngname, type, curstate, status,
+// authentication, homepage, rule, policyname, pipolicyhits, servicename,
+// weight, targetvserver, priority, somethod, sopersistence, lbvserver,
+// bindpoint, invoke, labeltype, labelname, gotopriorityexpression,
+// nodefaultbindings). Every non-key attribute is Computed.
+type CrvserverDataSourceModel struct {
+	Id                       types.String `tfsdk:"id"`
+	Appflowlog               types.String `tfsdk:"appflowlog"`
+	Arp                      types.String `tfsdk:"arp"`
+	Backendssl               types.String `tfsdk:"backendssl"`
+	Backupvserver            types.String `tfsdk:"backupvserver"`
+	Cachetype                types.String `tfsdk:"cachetype"`
+	Cachevserver             types.String `tfsdk:"cachevserver"`
+	Clttimeout               types.Int64  `tfsdk:"clttimeout"`
+	Comment                  types.String `tfsdk:"comment"`
+	Destinationvserver       types.String `tfsdk:"destinationvserver"`
+	Disableprimaryondown     types.String `tfsdk:"disableprimaryondown"`
+	Disallowserviceaccess    types.String `tfsdk:"disallowserviceaccess"`
+	Dnsvservername           types.String `tfsdk:"dnsvservername"`
+	Domain                   types.String `tfsdk:"domain"`
+	Downstateflush           types.String `tfsdk:"downstateflush"`
+	Format                   types.String `tfsdk:"format"`
+	Ghost                    types.String `tfsdk:"ghost"`
+	Httpprofilename          types.String `tfsdk:"httpprofilename"`
+	Icmpvsrresponse          types.String `tfsdk:"icmpvsrresponse"`
+	Ipset                    types.String `tfsdk:"ipset"`
+	Ipv46                    types.String `tfsdk:"ipv46"`
+	L2conn                   types.String `tfsdk:"l2conn"`
+	Listenpolicy             types.String `tfsdk:"listenpolicy"`
+	Listenpriority           types.Int64  `tfsdk:"listenpriority"`
+	Map                      types.String `tfsdk:"map"`
+	Name                     types.String `tfsdk:"name"` // Required lookup key
+	Netprofile               types.String `tfsdk:"netprofile"`
+	Newname                  types.String `tfsdk:"newname"`
+	Onpolicymatch            types.String `tfsdk:"onpolicymatch"`
+	Originusip               types.String `tfsdk:"originusip"`
+	Port                     types.Int64  `tfsdk:"port"`
+	Precedence               types.String `tfsdk:"precedence"`
+	Probeport                types.Int64  `tfsdk:"probeport"`
+	Probeprotocol            types.String `tfsdk:"probeprotocol"`
+	Probesuccessresponsecode types.String `tfsdk:"probesuccessresponsecode"`
+	Range                    types.Int64  `tfsdk:"range"`
+	Redirect                 types.String `tfsdk:"redirect"`
+	Redirecturl              types.String `tfsdk:"redirecturl"`
+	Reuse                    types.String `tfsdk:"reuse"`
+	Rhistate                 types.String `tfsdk:"rhistate"`
+	Servicetype              types.String `tfsdk:"servicetype"`
+	Sopersistencetimeout     types.Int64  `tfsdk:"sopersistencetimeout"`
+	Sothreshold              types.Int64  `tfsdk:"sothreshold"`
+	Srcipexpr                types.String `tfsdk:"srcipexpr"`
+	State                    types.String `tfsdk:"state"`
+	Tcpprobeport             types.Int64  `tfsdk:"tcpprobeport"`
+	Tcpprofilename           types.String `tfsdk:"tcpprofilename"`
+	Td                       types.Int64  `tfsdk:"td"`
+	Useoriginipportforcache  types.String `tfsdk:"useoriginipportforcache"`
+	Useportrange             types.String `tfsdk:"useportrange"`
+	Via                      types.String `tfsdk:"via"`
+	Wasmmodule               types.String `tfsdk:"wasmmodule"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/crvserver.json). Never settable.
+	Ip                     types.String `tfsdk:"ip"`
+	Value                  types.String `tfsdk:"value"`
+	Ngname                 types.String `tfsdk:"ngname"`
+	Type                   types.String `tfsdk:"type"`
+	Curstate               types.String `tfsdk:"curstate"`
+	Status                 types.Int64  `tfsdk:"status"`
+	Authentication         types.String `tfsdk:"authentication"`
+	Homepage               types.String `tfsdk:"homepage"`
+	Rule                   types.String `tfsdk:"rule"`
+	Policyname             types.String `tfsdk:"policyname"`
+	Pipolicyhits           types.Int64  `tfsdk:"pipolicyhits"`
+	Servicename            types.String `tfsdk:"servicename"`
+	Weight                 types.Int64  `tfsdk:"weight"`
+	Targetvserver          types.String `tfsdk:"targetvserver"`
+	Priority               types.Int64  `tfsdk:"priority"`
+	Somethod               types.String `tfsdk:"somethod"`
+	Sopersistence          types.String `tfsdk:"sopersistence"`
+	Lbvserver              types.String `tfsdk:"lbvserver"`
+	Bindpoint              types.String `tfsdk:"bindpoint"`
+	Invoke                 types.Bool   `tfsdk:"invoke"`
+	Labeltype              types.String `tfsdk:"labeltype"`
+	Labelname              types.String `tfsdk:"labelname"`
+	Gotopriorityexpression types.String `tfsdk:"gotopriorityexpression"`
+	Nodefaultbindings      types.String `tfsdk:"nodefaultbindings"`
+}
 
 func CrvserverDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -259,6 +357,210 @@ func CrvserverDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Insert a via header in each HTTP request. In the case of a cache miss, the request is redirected from the cache server to the origin server. This header indicates whether the request is being sent from a cache server.",
 			},
+			"wasmmodule": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Name of the WASM module to assign to this virtual server.",
+			},
+
+			// Read-only (GET-only) metadata surfaced by the data source (these are
+			// intentionally NOT modeled on the resource). All Computed.
+			"ip": schema.StringAttribute{
+				Computed:    true,
+				Description: "IP address of the cache redirection virtual server.",
+			},
+			"value": schema.StringAttribute{
+				Computed:    true,
+				Description: "The ssl card status for the transparent ssl cr vserver. Possible values = Certkey/Certkeybundle/Vault not bound/Cert-store not usable, SSL feature disabled",
+			},
+			"ngname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Nodegroup devno to which this crvserver belongs to.",
+			},
+			"type": schema.StringAttribute{
+				Computed:    true,
+				Description: "Virtual server type. Possible values = CONTENT, ADDRESS",
+			},
+			"curstate": schema.StringAttribute{
+				Computed:    true,
+				Description: "The state of the cr vserver. Possible values = UP, DOWN, UNKNOWN, BUSY, OUT OF SERVICE, GOING OUT OF SERVICE, DOWN WHEN GOING OUT OF SERVICE, NS_EMPTY_STR, Unknown, DISABLED",
+			},
+			"status": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Status.",
+			},
+			"authentication": schema.StringAttribute{
+				Computed:    true,
+				Description: "Authentication. Possible values = ON, OFF",
+			},
+			"homepage": schema.StringAttribute{
+				Computed:    true,
+				Description: "Home page.",
+			},
+			"rule": schema.StringAttribute{
+				Computed:    true,
+				Description: "Rule.",
+			},
+			"policyname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Policies bound to this vserver.",
+			},
+			"pipolicyhits": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Number of hits.",
+			},
+			"servicename": schema.StringAttribute{
+				Computed:    true,
+				Description: "Service name.",
+			},
+			"weight": schema.Int64Attribute{
+				Computed:    true,
+				Description: "Weight for this service.",
+			},
+			"targetvserver": schema.StringAttribute{
+				Computed:    true,
+				Description: "The CSW target server names.",
+			},
+			"priority": schema.Int64Attribute{
+				Computed:    true,
+				Description: "The priority for the policy.",
+			},
+			"somethod": schema.StringAttribute{
+				Computed:    true,
+				Description: "The spillover factor. When the main virtual server reaches this spillover threshold, it will give further traffic to the backupvserver. Possible values = CONNECTION, DYNAMICCONNECTION, BANDWIDTH, HEALTH, LLMQUOTA, NONE",
+			},
+			"sopersistence": schema.StringAttribute{
+				Computed:    true,
+				Description: "The state of spillover persistence. Possible values = ENABLED, DISABLED",
+			},
+			"lbvserver": schema.StringAttribute{
+				Computed:    true,
+				Description: "The Default target server name.",
+			},
+			"bindpoint": schema.StringAttribute{
+				Computed:    true,
+				Description: "The bindpoint to which the policy is bound. Possible values = REQUEST, RESPONSE, ICA_REQUEST",
+			},
+			"invoke": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Invoke flag.",
+			},
+			"labeltype": schema.StringAttribute{
+				Computed:    true,
+				Description: "The invocation type. Possible values = reqvserver, resvserver, policylabel",
+			},
+			"labelname": schema.StringAttribute{
+				Computed:    true,
+				Description: "Name of the label invoked.",
+			},
+			"gotopriorityexpression": schema.StringAttribute{
+				Computed:    true,
+				Description: "Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.",
+			},
+			"nodefaultbindings": schema.StringAttribute{
+				Computed:    true,
+				Description: "to determine if the configuration will have default ssl CIPHER and ECC curve bindings. Possible values = YES, NO",
+			},
 		},
 	}
+}
+
+// crvserverDataSourceSetAttrFromGet projects a NITRO crvserver GET response onto
+// the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that
+// projection.
+func crvserverDataSourceSetAttrFromGet(ctx context.Context, data *CrvserverDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In crvserverDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Appflowlog = utils.MapGetString(g, "appflowlog")
+	data.Arp = utils.MapGetString(g, "arp")
+	data.Backendssl = utils.MapGetString(g, "backendssl")
+	data.Backupvserver = utils.MapGetString(g, "backupvserver")
+	data.Cachetype = utils.MapGetString(g, "cachetype")
+	data.Cachevserver = utils.MapGetString(g, "cachevserver")
+	data.Clttimeout = utils.MapGetInt64(g, "clttimeout")
+	data.Comment = utils.MapGetString(g, "comment")
+	data.Destinationvserver = utils.MapGetString(g, "destinationvserver")
+	data.Disableprimaryondown = utils.MapGetString(g, "disableprimaryondown")
+	data.Disallowserviceaccess = utils.MapGetString(g, "disallowserviceaccess")
+	data.Dnsvservername = utils.MapGetString(g, "dnsvservername")
+	data.Domain = utils.MapGetString(g, "domain")
+	data.Downstateflush = utils.MapGetString(g, "downstateflush")
+	data.Format = utils.MapGetString(g, "format")
+	data.Ghost = utils.MapGetString(g, "ghost")
+	data.Httpprofilename = utils.MapGetString(g, "httpprofilename")
+	data.Icmpvsrresponse = utils.MapGetString(g, "icmpvsrresponse")
+	data.Ipset = utils.MapGetString(g, "ipset")
+	data.Ipv46 = utils.MapGetString(g, "ipv46")
+	data.L2conn = utils.MapGetString(g, "l2conn")
+	data.Listenpolicy = utils.MapGetString(g, "listenpolicy")
+	data.Listenpriority = utils.MapGetInt64(g, "listenpriority")
+	data.Map = utils.MapGetString(g, "map")
+	data.Netprofile = utils.MapGetString(g, "netprofile")
+	data.Onpolicymatch = utils.MapGetString(g, "onpolicymatch")
+	data.Originusip = utils.MapGetString(g, "originusip")
+	data.Port = utils.MapGetInt64(g, "port")
+	data.Precedence = utils.MapGetString(g, "precedence")
+	data.Probeport = utils.MapGetInt64(g, "probeport")
+	data.Probeprotocol = utils.MapGetString(g, "probeprotocol")
+	data.Probesuccessresponsecode = utils.MapGetString(g, "probesuccessresponsecode")
+	data.Range = utils.MapGetInt64(g, "range")
+	data.Redirect = utils.MapGetString(g, "redirect")
+	data.Redirecturl = utils.MapGetString(g, "redirecturl")
+	data.Reuse = utils.MapGetString(g, "reuse")
+	data.Rhistate = utils.MapGetString(g, "rhistate")
+	data.Servicetype = utils.MapGetString(g, "servicetype")
+	data.Sopersistencetimeout = utils.MapGetInt64(g, "sopersistencetimeout")
+	data.Sothreshold = utils.MapGetInt64(g, "sothreshold")
+	data.Srcipexpr = utils.MapGetString(g, "srcipexpr")
+	data.State = utils.MapGetString(g, "state")
+	data.Tcpprobeport = utils.MapGetInt64(g, "tcpprobeport")
+	data.Tcpprofilename = utils.MapGetString(g, "tcpprofilename")
+	// td is a config-supplied key; NITRO omits it for the default traffic
+	// domain (0), so preserve the configured value instead of nulling it.
+	if tdv, tdok := g["td"]; tdok && tdv != nil {
+		if iv, err := utils.ConvertToInt64(tdv); err == nil {
+			data.Td = types.Int64Value(iv)
+		}
+	}
+	data.Useoriginipportforcache = utils.MapGetString(g, "useoriginipportforcache")
+	data.Useportrange = utils.MapGetString(g, "useportrange")
+	data.Via = utils.MapGetString(g, "via")
+	data.Wasmmodule = utils.MapGetString(g, "wasmmodule")
+
+	// newname is a rename-only input the GET never returns -> Null.
+	data.Newname = types.StringNull()
+
+	// Read-only metadata.
+	data.Ip = utils.MapGetString(g, "ip")
+	data.Value = utils.MapGetString(g, "value")
+	data.Ngname = utils.MapGetString(g, "ngname")
+	data.Type = utils.MapGetString(g, "type")
+	data.Curstate = utils.MapGetString(g, "curstate")
+	data.Status = utils.MapGetInt64(g, "status")
+	data.Authentication = utils.MapGetString(g, "authentication")
+	data.Homepage = utils.MapGetString(g, "homepage")
+	data.Rule = utils.MapGetString(g, "rule")
+	data.Policyname = utils.MapGetString(g, "policyname")
+	data.Pipolicyhits = utils.MapGetInt64(g, "pipolicyhits")
+	data.Servicename = utils.MapGetString(g, "servicename")
+	data.Weight = utils.MapGetInt64(g, "weight")
+	data.Targetvserver = utils.MapGetString(g, "targetvserver")
+	data.Priority = utils.MapGetInt64(g, "priority")
+	data.Somethod = utils.MapGetString(g, "somethod")
+	data.Sopersistence = utils.MapGetString(g, "sopersistence")
+	data.Lbvserver = utils.MapGetString(g, "lbvserver")
+	data.Bindpoint = utils.MapGetString(g, "bindpoint")
+	data.Invoke = utils.MapGetBool(g, "invoke")
+	data.Labeltype = utils.MapGetString(g, "labeltype")
+	data.Labelname = utils.MapGetString(g, "labelname")
+	data.Gotopriorityexpression = utils.MapGetString(g, "gotopriorityexpression")
+	data.Nodefaultbindings = utils.MapGetString(g, "nodefaultbindings")
 }

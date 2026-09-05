@@ -312,6 +312,10 @@ func (r *AuthenticationoauthactionResource) Update(ctx context.Context, req reso
 		tflog.Debug(ctx, fmt.Sprintf("resourceuri has changed for authenticationoauthaction"))
 		hasChange = true
 	}
+	if !data.Scopes.Equal(state.Scopes) {
+		tflog.Debug(ctx, fmt.Sprintf("scopes has changed for authenticationoauthaction"))
+		hasChange = true
+	}
 	if !data.Skewtime.Equal(state.Skewtime) {
 		tflog.Debug(ctx, fmt.Sprintf("skewtime has changed for authenticationoauthaction"))
 		if config.Skewtime.IsNull() { // removed from config -> unset it

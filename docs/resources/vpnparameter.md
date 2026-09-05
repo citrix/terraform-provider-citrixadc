@@ -121,6 +121,7 @@ resource "citrixadc_vpnparameter" "tf_vpnparameter" {
 * `httptrackconnproxy` - (Optional) Enable or disable HTTP tracking for packets proxied via vpn vserver using GSLB connection proxy feature.
 * `maxiipperuser` - (Optional) Maximum number of Intranet IP that can be assigned to a user from AAA group, VPN vserver or VPN global pool. This setting is not applicable for AAA user level Intranet IP configuration
 * `secureprivateaccess` - (Optional) Enables or disables the secure private access configuration.
+* `secureprivateaccessprofile` - (Optional) Clears Secure Private Access profile that may be set.
 
 
 ## Attribute Reference
@@ -129,3 +130,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the vpnparameter. It is a unique string prefixed with "tf-vpnparameter-"
 
+
+## Import
+
+A vpnparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_vpnparameter.tf_vpnparameter vpnparameter-config
+```

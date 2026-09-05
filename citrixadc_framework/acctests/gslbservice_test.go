@@ -24,8 +24,9 @@ import (
 	"github.com/citrix/adc-nitro-go/resource/config/gslb"
 	"github.com/citrix/adc-nitro-go/service"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 )
@@ -497,6 +498,155 @@ resource "citrixadc_gslbservice" "tf_test_gslbservice" {
 }
 `
 
+func TestAccGslbservice_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_gslbservice.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservice_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbserviceExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Gslbservice.Type(), "gslb1vservice"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccGslbservice_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbserviceExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+const testAccGslbservice_unset_step1 = `
+resource "citrixadc_gslbsite" "tf_unset_site" {
+  sitename        = "tf_unset_site"
+  siteipaddress   = "192.168.44.55"
+  sessionexchange = "DISABLED"
+  sitepassword    = "password123"
+}
+
+resource "citrixadc_gslbservice" "tf_unset" {
+  ip              = "192.168.44.60"
+  port            = "80"
+  servicename     = "tf_test_gslbservice_unset"
+  servicetype     = "HTTP"
+  sitename        = citrixadc_gslbsite.tf_unset_site.sitename
+  appflowlog      = "DISABLED"
+  cip             = "ENABLED"
+  healthmonitor   = "NO"
+}
+`
+
+const testAccGslbservice_unset_step2 = `
+resource "citrixadc_gslbsite" "tf_unset_site" {
+  sitename        = "tf_unset_site"
+  siteipaddress   = "192.168.44.55"
+  sessionexchange = "DISABLED"
+  sitepassword    = "password123"
+}
+
+resource "citrixadc_gslbservice" "tf_unset" {
+  ip          = "192.168.44.60"
+  port        = "80"
+  servicename = "tf_test_gslbservice_unset"
+  servicetype = "HTTP"
+  sitename    = citrixadc_gslbsite.tf_unset_site.sitename
+  # All unset-eligible attributes removed from config -> the provider must
+  # unset them (revert to NITRO defaults).
+}
+`
+
+func TestAccGslbservice_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccGslbservice_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "appflowlog", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "cip", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "healthmonitor", "NO"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: state (read back from
+				// the appliance) reverts to the documented NITRO defaults, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccGslbservice_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "appflowlog", "ENABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "cip", "DISABLED"),
+					resource.TestCheckResourceAttr("citrixadc_gslbservice.tf_unset", "healthmonitor", "YES"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckGslbserviceADCValue("tf_test_gslbservice_unset", "appflowlog", "ENABLED"),
+					testAccCheckGslbserviceADCValue("tf_test_gslbservice_unset", "healthmonitor", "YES"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckGslbserviceADCValue asserts an attribute's value directly on the
+// appliance (not just in Terraform state), proving the unset actually reverted it.
+func testAccCheckGslbserviceADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Gslbservice.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("gslbservice %s not found on appliance", name)
+		}
+		got := fmt.Sprintf("%v", data[attr])
+		if got != want {
+			return fmt.Errorf("gslbservice %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccGslbservice_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccGslbservice_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbserviceExist("citrixadc_gslbservice.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccGslbservice_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckGslbserviceExist("citrixadc_gslbservice.foo", nil)),
+			},
+		},
+	})
+}
+
 func TestAccGslbserviceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -506,12 +656,32 @@ func TestAccGslbserviceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGslbserviceDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_gslbservice.tf_gslbservice_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "servicename", "tf_gslbservice_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "ipaddress", "172.16.1.102"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "port", "80"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "servicetype", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_gslbservice.tf_gslbservice_ds", "sitename", "Site-DS-East-Coast"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccGslbservice_import(t *testing.T) {
+	const resAddr = "citrixadc_gslbservice.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccGslbservice_basic},
+			{
+				Config:                  testAccGslbservice_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -539,3 +709,88 @@ data "citrixadc_gslbservice" "tf_gslbservice_ds" {
 }
 
 `
+
+// TestAccGslbservice_lbmonitorbinding_editweight edits only a NON-KEY sub-attribute
+// (weight) of an lbmonitor binding while its diff key (monitor_name) is unchanged.
+// A key-only reconciliation would silently drop the edit; the second step asserts
+// the new weight actually reached the appliance (both on the box and in state).
+func TestAccGslbservice_lbmonitorbinding_editweight(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckGslbserviceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGslbservicelbmonitor_editweight(80),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
+					verifyLbmonitorbindingWeight("tf_test_gslbservice", "tf_test_monitor1", 80),
+				),
+			},
+			{
+				Config: testAccGslbservicelbmonitor_editweight(50),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGslbserviceExist("citrixadc_gslbservice.tf_test_gslbservice", nil),
+					verifyLbmonitorbindingWeight("tf_test_gslbservice", "tf_test_monitor1", 50),
+					resource.TestCheckTypeSetElemNestedAttrs(
+						"citrixadc_gslbservice.tf_test_gslbservice", "lbmonitorbinding.*",
+						map[string]string{"monitor_name": "tf_test_monitor1", "weight": "50"}),
+				),
+			},
+		},
+	})
+}
+
+// verifyLbmonitorbindingWeight asserts the weight bound for monitorName on the
+// appliance equals expected.
+func verifyLbmonitorbindingWeight(servicename, monitorName string, expected int64) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		bindings, _ := client.FindResourceArray("gslbservice_lbmonitor_binding", servicename)
+		for _, val := range bindings {
+			if mn, ok := val["monitor_name"].(string); ok && mn == monitorName {
+				got, cErr := utils.ConvertToInt64(val["weight"])
+				if cErr != nil {
+					return fmt.Errorf("could not parse weight for monitor %s: %v", monitorName, cErr)
+				}
+				if got != expected {
+					return fmt.Errorf("weight for monitor %s = %d on the appliance, expected %d", monitorName, got, expected)
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("no lbmonitor binding for monitor %s on gslbservice %s", monitorName, servicename)
+	}
+}
+
+func testAccGslbservicelbmonitor_editweight(weight int) string {
+	return fmt.Sprintf(`
+resource "citrixadc_lbmonitor" "tf_test_monitor1" {
+  monitorname = "tf_test_monitor1"
+  type        = "HTTP"
+}
+
+resource "citrixadc_gslbsite" "tf_test_site" {
+  sitename        = "tf_test_site"
+  siteipaddress   = "192.168.22.19"
+  sessionexchange = "DISABLED"
+  sitepassword    = "password123"
+}
+
+resource "citrixadc_gslbservice" "tf_test_gslbservice" {
+  ip          = "192.168.18.81"
+  port        = "80"
+  servicename = "tf_test_gslbservice"
+  servicetype = "HTTP"
+  sitename    = citrixadc_gslbsite.tf_test_site.sitename
+
+  lbmonitorbinding {
+    monitor_name = citrixadc_lbmonitor.tf_test_monitor1.monitorname
+    weight       = %d
+  }
+}
+`, weight)
+}

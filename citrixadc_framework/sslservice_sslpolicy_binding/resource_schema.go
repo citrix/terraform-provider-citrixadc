@@ -29,6 +29,7 @@ type SslserviceSslpolicyBindingResourceModel struct {
 	Policyname             types.String `tfsdk:"policyname"`
 	Priority               types.Int64  `tfsdk:"priority"`
 	Servicename            types.String `tfsdk:"servicename"`
+	Type                   types.String `tfsdk:"type"`
 }
 
 func (r *SslserviceSslpolicyBindingResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -103,6 +104,11 @@ func (r *SslserviceSslpolicyBindingResource) Schema(ctx context.Context, req res
 				},
 				Description: "Name of the SSL service for which to set advanced configuration.",
 			},
+			"type": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "The phase of the SSL connection in which the policy rule is evaluated.",
+			},
 		},
 	}
 }
@@ -132,6 +138,9 @@ func sslservice_sslpolicy_bindingGetThePayloadFromthePlan(ctx context.Context, d
 	}
 	if !data.Servicename.IsNull() && !data.Servicename.IsUnknown() {
 		sslservice_sslpolicy_binding.Servicename = data.Servicename.ValueString()
+	}
+	if !data.Type.IsNull() && !data.Type.IsUnknown() {
+		sslservice_sslpolicy_binding.Type = data.Type.ValueString()
 	}
 
 	return sslservice_sslpolicy_binding
@@ -177,6 +186,11 @@ func sslservice_sslpolicy_bindingSetAttrFromGet(ctx context.Context, data *Sslse
 		data.Servicename = types.StringValue(val.(string))
 	} else {
 		data.Servicename = types.StringNull()
+	}
+	if val, ok := getResponseData["type"]; ok && val != nil {
+		data.Type = types.StringValue(val.(string))
+	} else {
+		data.Type = types.StringNull()
 	}
 
 	// Set ID for the resource

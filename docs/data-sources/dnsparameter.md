@@ -62,3 +62,11 @@ The following attributes are available:
 * `splitpktqueryprocessing` - Processing requests split across multiple packets
 * `zonetransfer` - Flag to enable/disable DNS zones configuration transfer to remote GSLB site nodes
 * `id` - The id of the dnsparameter. It is a system-generated identifier.
+
+### Read-only dnsparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_dnsparameter` resource). Any attribute the appliance does not return is `null`.
+
+* `builtin` - Flag to determine if dns param is built-in or not. A list of strings. Possible values: [ MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL ].
+* `feature` - The feature to be checked while applying this config.
+* `nxdomainthresholdcrossed` - Number of times requests has been dropped as number of DNS queries leading to NXDOMAIN response has crossed the threshold.

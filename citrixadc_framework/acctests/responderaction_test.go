@@ -22,8 +22,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/responder"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccResponderaction_basic(t *testing.T) {
@@ -243,6 +244,164 @@ resource "citrixadc_responderaction" "tfaction2" {
 }
 `
 
+func TestAccResponderaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_responderaction.tfaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResponderaction_target_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Responderaction.Type(), "tfaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccResponderaction_target_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccResponderaction_import(t *testing.T) {
+	const resAddr = "citrixadc_responderaction.tfaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccResponderaction_target_step1},
+			{
+				Config:                  testAccResponderaction_target_step1,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bypasssafetycheck"},
+			},
+		},
+	})
+}
+
+// The responderaction unset test uses type "redirect", the only type that
+// accepts comment, reasonphrase and responsestatuscode together (respondwith
+// rejects responsestatuscode/headers; reasonphrase has a min length of 1). Each
+// of these Optional+Computed attributes is wired for NITRO ?action=unset via an
+// unsetOnRemove plan modifier: removing it from config reverts it on the
+// appliance (GET no longer returns it).
+const testAccResponderaction_unset_step1 = `
+resource "citrixadc_responderaction" "tf_unset" {
+  name               = "tf_responderaction_unset"
+  type               = "redirect"
+  target             = "\"http://backupsite.com\" + HTTP.REQ.URL"
+  comment            = "unset test comment"
+  reasonphrase       = "\"Moved\""
+  responsestatuscode = 307
+}
+`
+
+const testAccResponderaction_unset_step2 = `
+resource "citrixadc_responderaction" "tf_unset" {
+  name   = "tf_responderaction_unset"
+  type   = "redirect"
+  target = "\"http://backupsite.com\" + HTTP.REQ.URL"
+  # comment, reasonphrase and responsestatuscode removed from config -> the
+  # provider must unset them (revert to NITRO defaults / absent).
+}
+`
+
+func TestAccResponderaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckResponderactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default values are applied and persisted.
+				Config: testAccResponderaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderactionExist("citrixadc_responderaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_responderaction.tf_unset", "comment", "unset test comment"),
+					resource.TestCheckResourceAttr("citrixadc_responderaction.tf_unset", "reasonphrase", "\"Moved\""),
+					resource.TestCheckResourceAttr("citrixadc_responderaction.tf_unset", "responsestatuscode", "307"),
+				),
+			},
+			{
+				// Removing the attributes must unset them: the appliance no longer
+				// returns them, and the implicit post-apply plan must be empty.
+				Config: testAccResponderaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResponderactionExist("citrixadc_responderaction.tf_unset", nil),
+					// Independent appliance-level confirmation the unset took effect
+					// (unset reverts these to absent on the appliance).
+					testAccCheckResponderactionADCValue("tf_responderaction_unset", "comment", ""),
+					testAccCheckResponderactionADCValue("tf_responderaction_unset", "reasonphrase", ""),
+					testAccCheckResponderactionADCValue("tf_responderaction_unset", "responsestatuscode", ""),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckResponderactionADCValue asserts an attribute's value directly on
+// the appliance (not just in Terraform state), proving the unset actually
+// reverted it. want "" means the attribute is expected to be absent/empty.
+func testAccCheckResponderactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Responderaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("responderaction %s not found on appliance", name)
+		}
+		got := ""
+		if v, ok := data[attr]; ok && v != nil {
+			got = strings.TrimSpace(fmt.Sprintf("%v", v))
+		}
+		if got != want {
+			return fmt.Errorf("responderaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
+}
+
+func TestAccResponderaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckResponderactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccResponderaction_target_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccResponderaction_target_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckResponderactionExist("citrixadc_responderaction.tfaction", nil)),
+			},
+		},
+	})
+}
+
 const testAccResponderactionDataSource_basic = `
 resource "citrixadc_responderaction" "tfaction_ds" {
   name    = "tfaction_ds"
@@ -268,6 +427,10 @@ func TestAccResponderactionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "type", "respondwith"),
 					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "target", "\"test_response\""),
 					resource.TestCheckResourceAttr("data.citrixadc_responderaction.tfaction_ds", "comment", "datasource test comment"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderaction.tfaction_ds", "id"),
+					// Read-only metadata exposed only by the data source (counter-style,
+					// always populated for a freshly-created object).
+					resource.TestCheckResourceAttrSet("data.citrixadc_responderaction.tfaction_ds", "hits"),
 				),
 			},
 		},

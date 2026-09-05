@@ -17,11 +17,13 @@ package citrixadc
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationcertaction_add = `
@@ -148,6 +150,147 @@ func testAccCheckAuthenticationcertactionDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationcertaction_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationcertaction.tf_certaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcertactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationcertaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcertactionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationcertaction.Type(), "tf_certaction"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationcertaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcertactionExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationcertaction_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationcertaction.tf_certaction"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcertactionDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationcertaction_add},
+			{
+				Config:                  testAccAuthenticationcertaction_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationcertaction_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationcertactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationcertaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcertactionExist("citrixadc_authenticationcertaction.tf_certaction", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationcertaction_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationcertactionExist("citrixadc_authenticationcertaction.tf_certaction", nil)),
+			},
+		},
+	})
+}
+
+// twofactor is the only spec-unsettable attribute with a documented NITRO
+// default (OFF). Removing it from config must unset it back to that default.
+const testAccAuthenticationcertaction_unset_step1 = `
+	resource "citrixadc_authenticationcertaction" "tf_unset" {
+		name      = "tf_test_certaction_unset"
+		twofactor = "ON"
+	}
+`
+
+const testAccAuthenticationcertaction_unset_step2 = `
+	resource "citrixadc_authenticationcertaction" "tf_unset" {
+		name = "tf_test_certaction_unset"
+		# twofactor removed from config -> provider must unset it (revert to "OFF").
+	}
+`
+
+func TestAccAuthenticationcertaction_unset(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationcertactionDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Non-default value is applied and persisted.
+				Config: testAccAuthenticationcertaction_unset_step1,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcertactionExist("citrixadc_authenticationcertaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcertaction.tf_unset", "twofactor", "ON"),
+				),
+			},
+			{
+				// Removing the attribute must unset it: state (read back from the
+				// appliance) reverts to the documented NITRO default, and the
+				// implicit post-apply plan must be empty.
+				Config: testAccAuthenticationcertaction_unset_step2,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthenticationcertactionExist("citrixadc_authenticationcertaction.tf_unset", nil),
+					resource.TestCheckResourceAttr("citrixadc_authenticationcertaction.tf_unset", "twofactor", "OFF"),
+					// Independent appliance-level confirmation the unset took effect.
+					testAccCheckAuthenticationcertactionADCValue("tf_test_certaction_unset", "twofactor", "OFF"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckAuthenticationcertactionADCValue asserts an attribute's value
+// directly on the appliance (not just in Terraform state), proving the unset
+// actually reverted it.
+func testAccCheckAuthenticationcertactionADCValue(name, attr, want string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testAccGetFrameworkClient()
+		if err != nil {
+			return fmt.Errorf("Failed to get test client: %v", err)
+		}
+		data, err := client.FindResource(service.Authenticationcertaction.Type(), name)
+		if err != nil {
+			return err
+		}
+		if data == nil {
+			return fmt.Errorf("authenticationcertaction %s not found on appliance", name)
+		}
+		got := strings.TrimSpace(fmt.Sprintf("%v", data[attr]))
+		if got != want {
+			return fmt.Errorf("authenticationcertaction %s: appliance attr %q = %q, want %q (unset did not revert it)", name, attr, got, want)
+		}
+		return nil
+	}
 }
 
 func TestAccAuthenticationcertactionDataSource_basic(t *testing.T) {

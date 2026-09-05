@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -462,6 +464,7 @@ func (r *AuthenticationsamlidpprofileResource) Schema(ctx context.Context, req r
 			},
 			"digestmethod": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("SHA256"),
 				Description: "Algorithm to be used to compute/verify digest for SAML transactions",
 			},
@@ -472,22 +475,23 @@ func (r *AuthenticationsamlidpprofileResource) Schema(ctx context.Context, req r
 			},
 			"encryptionalgorithm": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("AES256"),
+				Computed:    true,
 				Description: "Algorithm to be used to encrypt SAML assertion",
 			},
 			"keytransportalg": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("RSA_OAEP"),
+				Computed:    true,
 				Description: "Key transport algorithm to be used in encryption of SAML assertion",
 			},
 			"logoutbinding": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("POST"),
 				Description: "This element specifies the transport mechanism of saml logout messages.",
 			},
 			"metadatarefreshinterval": schema.Int64Attribute{
 				Optional:    true,
-				Default:     int64default.StaticInt64(3600),
+				Computed:    true,
 				Description: "Interval in minute for fetching metadata from specified metadata URL",
 			},
 			"metadataurl": schema.StringAttribute{
@@ -496,7 +500,10 @@ func (r *AuthenticationsamlidpprofileResource) Schema(ctx context.Context, req r
 				Description: "This URL is used for obtaining samlidp metadata",
 			},
 			"name": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the new saml single sign-on profile. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters. Cannot be changed after an action is created.\n\nThe following requirement applies only to the Citrix ADC CLI:\nIf the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my action\" or 'my action').",
 			},
 			"nameidexpr": schema.StringAttribute{
@@ -506,16 +513,19 @@ func (r *AuthenticationsamlidpprofileResource) Schema(ctx context.Context, req r
 			},
 			"nameidformat": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("transient"),
 				Description: "Format of Name Identifier sent in Assertion.",
 			},
 			"rejectunsignedrequests": schema.StringAttribute{
 				Optional:    true,
-				Default:     stringdefault.StaticString("True"),
+				Computed:    true,
+				Default:     stringdefault.StaticString("ON"),
 				Description: "Option to Reject unsigned SAML Requests. ON option denies any authentication requests that arrive without signature.",
 			},
 			"samlbinding": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("POST"),
 				Description: "This element specifies the transport mechanism of saml messages.",
 			},
@@ -556,11 +566,13 @@ func (r *AuthenticationsamlidpprofileResource) Schema(ctx context.Context, req r
 			},
 			"signassertion": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("ASSERTION"),
 				Description: "Option to sign portions of assertion when Citrix ADC IDP sends one. Based on the user selection, either Assertion or Response or Both or none can be signed",
 			},
 			"signaturealg": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     stringdefault.StaticString("RSA-SHA256"),
 				Description: "Algorithm to be used to sign/verify SAML transactions",
 			},
@@ -571,6 +583,7 @@ func (r *AuthenticationsamlidpprofileResource) Schema(ctx context.Context, req r
 			},
 			"skewtime": schema.Int64Attribute{
 				Optional:    true,
+				Computed:    true,
 				Default:     int64default.StaticInt64(5),
 				Description: "This option specifies the number of minutes on either side of current time that the assertion would be valid. For example, if skewTime is 10, then assertion would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.",
 			},
@@ -807,7 +820,7 @@ func authenticationsamlidpprofileGetThePayloadFromtheConfig(ctx context.Context,
 	if !data.Logoutbinding.IsNull() {
 		authenticationsamlidpprofile.Logoutbinding = data.Logoutbinding.ValueString()
 	}
-	if !data.Metadatarefreshinterval.IsNull() {
+	if !data.Metadatarefreshinterval.IsNull() && !data.Metadatarefreshinterval.IsUnknown() {
 		authenticationsamlidpprofile.Metadatarefreshinterval = utils.IntPtr(int(data.Metadatarefreshinterval.ValueInt64()))
 	}
 	if !data.Metadataurl.IsNull() {
@@ -858,7 +871,7 @@ func authenticationsamlidpprofileGetThePayloadFromtheConfig(ctx context.Context,
 	if !data.Signatureservice.IsNull() {
 		authenticationsamlidpprofile.Signatureservice = data.Signatureservice.ValueString()
 	}
-	if !data.Skewtime.IsNull() {
+	if !data.Skewtime.IsNull() && !data.Skewtime.IsUnknown() {
 		authenticationsamlidpprofile.Skewtime = utils.IntPtr(int(data.Skewtime.ValueInt64()))
 	}
 	if !data.Splogouturl.IsNull() {
@@ -1299,9 +1312,11 @@ func authenticationsamlidpprofileSetAttrFromGet(ctx context.Context, data *Authe
 	} else {
 		data.Samlspcertversion = types.StringNull()
 	}
-	if val, ok := getResponseData["sendpassword"]; ok && val != nil {
-		data.Sendpassword = types.StringValue(val.(string))
-	} else {
+	// sendpassword is not reliably round-tripped by the NITRO GET response
+	// (SDK v2 deliberately skips reading it back). Preserve the configured/state
+	// value; only assign a concrete null when the value is unknown (fresh create
+	// with no config) to avoid "inconsistent result after apply".
+	if data.Sendpassword.IsUnknown() {
 		data.Sendpassword = types.StringNull()
 	}
 	if val, ok := getResponseData["serviceproviderid"]; ok && val != nil {

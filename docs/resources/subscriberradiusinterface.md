@@ -35,3 +35,12 @@ resource "citrixadc_service" "tf_service" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the subscriberradiusinterface. It is a unique string prefixed with `tf-subscriberradiusinterface-`.
+
+
+## Import
+
+A subscriberradiusinterface can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_subscriberradiusinterface.tf_subscriberradiusinterface subscriberradiusinterface-config
+```

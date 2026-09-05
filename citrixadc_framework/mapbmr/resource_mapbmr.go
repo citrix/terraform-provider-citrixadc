@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *MapbmrResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	tflog.Debug(ctx, "Creating mapbmr resource")
 
-	// mapbmr := mapbmrGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	mapbmr := mapbmrGetThePayloadFromtheConfig(ctx, &data)
 
 	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Mapbmr.Type(), &mapbmr)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create mapbmr, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("mapbmr-config")
+	// Named resource - use AddResource
+	name_value := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Mapbmr.Type(), name_value, &mapbmr)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create mapbmr, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created mapbmr resource")
 
+	// Set ID for the resource before reading state (single unique attr: name)
+	data.Id = types.StringValue(name_value)
+
 	// Read the updated state back
-	r.readMapbmrFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readMapbmrFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "mapbmr not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,24 @@ func (r *MapbmrResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	tflog.Debug(ctx, "Reading mapbmr resource")
 
-	r.readMapbmrFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readMapbmrFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *MapbmrResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data MapbmrResourceModel
+	var data, state MapbmrResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +122,23 @@ func (r *MapbmrResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating mapbmr resource")
 
-	// Create API request body from the model
-	// mapbmr := mapbmrGetThePayloadFromtheConfig(ctx, &data)
-
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Mapbmr.Type(), &mapbmr)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update mapbmr, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated mapbmr resource")
+	// mapbmr has no updateable attributes (SDK v2: every attribute is ForceNew,
+	// no UpdateContext). Any change forces recreation via RequiresReplace, so this
+	// Update path is effectively never exercised - just re-read current state.
+	tflog.Trace(ctx, "mapbmr has no updateable attributes; re-reading state")
 
 	// Read the updated state back
-	r.readMapbmrFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readMapbmrFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "mapbmr not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -136,20 +155,33 @@ func (r *MapbmrResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	tflog.Debug(ctx, "Deleting mapbmr resource")
+	// Named resource - delete using DeleteResource by ID (the live name)
+	name_value := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Mapbmr.Type(), name_value)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete mapbmr, got error: %s", err))
+		return
+	}
 
-	// For mapbmr, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted mapbmr resource from state")
+	tflog.Trace(ctx, "Deleted mapbmr resource")
 }
 
-// Helper function to read mapbmr data from API
-func (r *MapbmrResource) readMapbmrFromApi(ctx context.Context, data *MapbmrResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Mapbmr.Type(), "")
+// Helper function to read mapbmr data from API. Returns false if the resource
+// no longer exists on the ADC (so callers can remove it from state).
+func (r *MapbmrResource) readMapbmrFromApi(ctx context.Context, data *MapbmrResourceModel, diags *diag.Diagnostics) bool {
+	// Named resource: find by ID (the plain name value)
+	name_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Mapbmr.Type(), name_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read mapbmr, got error: %s", err))
-		return
+		return false
 	}
 
 	mapbmrSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

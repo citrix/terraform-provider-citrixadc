@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccClusternode_routemonitor_binding_basic = `
@@ -63,6 +66,52 @@ func TestAccClusternode_routemonitor_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccClusternode_routemonitor_binding_import(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: nodeid,routemonitor) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"nodeid", "routemonitor"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccClusternode_routemonitor_binding_basic},
+			{Config: testAccClusternode_routemonitor_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccClusternode_routemonitor_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
 func testAccCheckClusternode_routemonitor_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -90,10 +139,12 @@ func testAccCheckClusternode_routemonitor_bindingExist(n string, id *string) res
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		nodeid := idSlice[0]
-		routemonitor := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"nodeid", "routemonitor"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		nodeid := idMap["nodeid"]
+		routemonitor := idMap["routemonitor"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternode_routemonitor_binding",
@@ -135,10 +186,12 @@ func testAccCheckClusternode_routemonitor_bindingNotExist(n string, id string) r
 		if !strings.Contains(id, ",") {
 			return fmt.Errorf("Invalid id string %v. The id string must contain a comma.", id)
 		}
-		idSlice := strings.SplitN(id, ",", 2)
-
-		nodeid := idSlice[0]
-		routemonitor := idSlice[1]
+		idMap, _, err := utils.ParseIdString(id, []string{"nodeid", "routemonitor"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		nodeid := idMap["nodeid"]
+		routemonitor := idMap["routemonitor"]
 
 		findParams := service.FindParams{
 			ResourceType:             "clusternode_routemonitor_binding",
@@ -226,7 +279,94 @@ func TestAccclusternode_routemonitor_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "nodeid", "0"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "routemonitor", "10.222.74.128"),
 					resource.TestCheckResourceAttr("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "netmask", "255.255.255.192"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "id"),
 				),
+			},
+		},
+	})
+}
+
+// testAccClusternode_routemonitor_binding_upgrade_basic reuses the _basic config values.
+// It is valid under BOTH the SDK v2 2.2.0 schema and the current Framework schema.
+const testAccClusternode_routemonitor_binding_upgrade_basic = `
+
+resource "citrixadc_clusternode_routemonitor_binding" "tf_clusternode_routemonitor_binding" {
+		nodeid       = 0
+		routemonitor = "10.222.74.128"
+		netmask      = "255.255.255.192"
+	}
+`
+
+// TestAccClusternode_routemonitor_binding_sdkv2StateUpgrade verifies that state written by the
+// last SDK v2 release (2.2.0) with the legacy comma-joined id upgrades cleanly through the
+// current Framework provider, which recomputes the id to the new key:value format on Read.
+func TestAccClusternode_routemonitor_binding_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckClusternode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release (writes the legacy id).
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccClusternode_routemonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternode_routemonitor_bindingExist("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "id", "0,10.222.74.128"),
+				),
+			},
+			{
+				// Step 2: refresh/apply the same config through the current Framework provider.
+				// Read recomputes the id to the new key:value format.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccClusternode_routemonitor_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusternode_routemonitor_bindingExist("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding", "id", "netmask:255.255.255.192,nodeid:0,routemonitor:10.222.74.128"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccClusternode_routemonitor_binding_selfHealing verifies drift recovery:
+// after the binding is deleted out-of-band, the next apply of the same config recreates it.
+func TestAccClusternode_routemonitor_binding_selfHealing(t *testing.T) {
+	if adcTestbed != "CLUSTER" {
+		t.Skipf("ADC testbed is %s. Expected CLUSTER.", adcTestbed)
+	}
+	const resAddr = "citrixadc_clusternode_routemonitor_binding.tf_clusternode_routemonitor_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckClusternode_routemonitor_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusternode_routemonitor_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternode_routemonitor_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Clusternode_routemonitor_binding.Type(), "0", map[string]string{"netmask": "255.255.255.192", "routemonitor": "10.222.74.128"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccClusternode_routemonitor_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckClusternode_routemonitor_bindingExist(resAddr, nil)),
 			},
 		},
 	})

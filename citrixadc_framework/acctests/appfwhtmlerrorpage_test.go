@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwhtmlerrorpage_basic = `
@@ -113,6 +114,53 @@ func testAccCheckAppfwhtmlerrorpageDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAppfwhtmlerrorpage_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwhtmlerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwhtmlerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwhtmlerrorpageExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwhtmlerrorpage.Type(), "tf_appfwhtmlerrorpage"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwhtmlerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwhtmlerrorpageExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwhtmlerrorpage_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { doAppfwPreChecks(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwhtmlerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwhtmlerrorpage_basic},
+			{
+				Config:                  testAccAppfwhtmlerrorpage_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"comment", "src"},
+			},
+		},
+	})
+}
+
 const testAccAppfwhtmlerrorpageDataSource_basic = `
 	resource "citrixadc_appfwhtmlerrorpage" "tf_appfwhtmlerrorpage" {
 		name       = "tf_appfwhtmlerrorpage"
@@ -126,6 +174,30 @@ const testAccAppfwhtmlerrorpageDataSource_basic = `
 	}
 `
 
+func TestAccAppfwhtmlerrorpage_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { doAppfwPreChecks(t) },
+		CheckDestroy: testAccCheckAppfwhtmlerrorpageDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppfwhtmlerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwhtmlerrorpageExist("citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwhtmlerrorpage_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwhtmlerrorpageExist("citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage", nil)),
+			},
+		},
+	})
+}
+
 func TestAccAppfwhtmlerrorpageDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { doAppfwPreChecks(t) },
@@ -136,6 +208,8 @@ func TestAccAppfwhtmlerrorpageDataSource_basic(t *testing.T) {
 				Config: testAccAppfwhtmlerrorpageDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage", "name", "tf_appfwhtmlerrorpage"),
+					// id is the universal runtime-binding proof (mirrors name).
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwhtmlerrorpage.tf_appfwhtmlerrorpage", "id"),
 				),
 			},
 		},

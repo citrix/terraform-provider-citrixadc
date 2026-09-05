@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *StreamselectorResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, "Creating streamselector resource")
 
-	// streamselector := streamselectorGetThePayloadFromtheConfig(ctx, &data)
+	streamselector := streamselectorGetThePayloadFromthePlan(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Streamselector.Type(), &streamselector)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create streamselector, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("streamselector-config")
+	// Named resource - use AddResource
+	streamselectorName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Streamselector.Type(), streamselectorName, &streamselector)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create streamselector, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created streamselector resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(streamselectorName)
+
 	// Read the updated state back
-	r.readStreamselectorFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readStreamselectorFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "streamselector not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *StreamselectorResource) Read(ctx context.Context, req resource.ReadRequ
 
 	tflog.Debug(ctx, "Reading streamselector resource")
 
-	r.readStreamselectorFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readStreamselectorFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *StreamselectorResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data StreamselectorResourceModel
+	var data, state StreamselectorResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,41 @@ func (r *StreamselectorResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating streamselector resource")
 
-	// Create API request body from the model
-	// streamselector := streamselectorGetThePayloadFromtheConfig(ctx, &data)
+	// name is ForceNew/RequiresReplace, so only rule can change here.
+	hasChange := false
+	if !data.Rule.Equal(state.Rule) {
+		tflog.Debug(ctx, "rule has changed for streamselector")
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Streamselector.Type(), &streamselector)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update streamselector, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		streamselector := streamselectorGetThePayloadFromthePlan(ctx, &data)
+		// Update uses the unnamed endpoint (PUT /nitro/v1/config/streamselector) with
+		// name carried in the payload, matching the SDK v2 behavior.
+		err := r.client.UpdateUnnamedResource(service.Streamselector.Type(), &streamselector)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update streamselector, got error: %s", err))
+			return
+		}
 
-	tflog.Trace(ctx, "Updated streamselector resource")
+		tflog.Trace(ctx, "Updated streamselector resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for streamselector resource, skipping update")
+	}
 
 	// Read the updated state back
-	r.readStreamselectorFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readStreamselectorFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "streamselector not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +172,33 @@ func (r *StreamselectorResource) Delete(ctx context.Context, req resource.Delete
 
 	tflog.Debug(ctx, "Deleting streamselector resource")
 
-	// For streamselector, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted streamselector resource from state")
+	// Named resource - delete using DeleteResource (keyed on the live ID)
+	streamselectorName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Streamselector.Type(), streamselectorName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete streamselector, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted streamselector resource")
 }
 
 // Helper function to read streamselector data from API
-func (r *StreamselectorResource) readStreamselectorFromApi(ctx context.Context, data *StreamselectorResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Streamselector.Type(), "")
+func (r *StreamselectorResource) readStreamselectorFromApi(ctx context.Context, data *StreamselectorResourceModel, diags *diag.Diagnostics) bool {
+
+	// Case 2: Find with single ID attribute - ID is the plain name value
+	streamselectorName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Streamselector.Type(), streamselectorName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read streamselector, got error: %s", err))
-		return
+		return false
 	}
 
 	streamselectorSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

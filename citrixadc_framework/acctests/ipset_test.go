@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // TODO: add ipset_nsip6_binding testcase
@@ -363,6 +364,77 @@ const testAccIpsetDataSource_basic = `
 		depends_on = [citrixadc_ipset.tf_ipset]
 	}
 `
+
+func TestAccIpset_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_ipset.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIpset_no_bindings,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Ipset.Type(), "tf_test_ipset"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccIpset_no_bindings,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccIpset_import(t *testing.T) {
+	const resAddr = "citrixadc_ipset.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccIpset_no_bindings},
+			{
+				Config:                  testAccIpset_no_bindings,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccIpset_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckIpsetDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccIpset_no_bindings,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccIpset_no_bindings,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckIpsetExist("citrixadc_ipset.foo", nil)),
+			},
+		},
+	})
+}
 
 func TestAccIpsetDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

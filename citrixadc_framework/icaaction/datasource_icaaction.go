@@ -35,7 +35,7 @@ func (d *IcaactionDataSource) Schema(ctx context.Context, req datasource.SchemaR
 }
 
 func (d *IcaactionDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data IcaactionResourceModel
+	var data IcaactionDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *IcaactionDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	icaactionSetAttrFromGet(ctx, &data, getResponseData)
+	icaactionDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

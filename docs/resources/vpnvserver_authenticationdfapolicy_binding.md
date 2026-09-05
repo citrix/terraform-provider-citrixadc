@@ -31,7 +31,7 @@ resource "citrixadc_vpnvserver_authenticationdfapolicy_binding" "tf_bind" {
   name            = citrixadc_vpnvserver.tf_vpnvserver.name
   policy          = citrixadc_authenticationdfapolicy.td_dfapolicy.name
   priority        = 50
-  groupextraction = "0"
+  groupextraction = false
   bindpoint       = "REQUEST"
 }
 ```
@@ -52,7 +52,7 @@ resource "citrixadc_vpnvserver_authenticationdfapolicy_binding" "tf_bind" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_authenticationdfapolicy_binding. It is the concatenation of `name` and `policy` attributes seperated by comma.
+* `id` - The id of the vpnvserver_authenticationdfapolicy_binding. It is the concatenation of the `name` and `policy` attributes separated by a comma.
 
 
 ## Import

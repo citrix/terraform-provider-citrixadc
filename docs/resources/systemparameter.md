@@ -47,6 +47,8 @@ resource "citrixadc_systemparameter" "tf_systemparameter" {
 * `pwdhistorycount` - (Optional) Number of passwords to be maintained as history for system users. The pwdhistorycount value ranges from 1 to 10.
 * `wafprotection` - (Optional) Configure WAF protection for endpoints used by NetScaler management interfaces. The available options are: * DEFAULT - NetScaler determines which endpoints have WAF protection enabled or disabled. In the current release, WAF protection is disabled for all endpoints when this option is used. The behavior of this option may change in future releases. * GUI - Endpoints used by the Management GUI Interface are WAF protected. * DISABLED - WAF protection is disabled for all endpoints.
 * `warnpriorndays` - (Optional) Number of days before which password expiration warning would be thrown with respect to daystoexpire. The warnpriorndays value ranges from 5 to 40.
+* `denylist` - (Optional) Enable or disable denylist protection.
+* `denylistlogging` - (Optional) Enable or disable denylist protection logging.
 
 
 ## Attribute Reference
@@ -54,3 +56,12 @@ resource "citrixadc_systemparameter" "tf_systemparameter" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the systemparameter. It is a unique string prefixed with "tf-systemparameter-".
+
+
+## Import
+
+A systemparameter can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_systemparameter.tf_systemparameter systemparameter-config
+```

@@ -2,20 +2,25 @@ package lbmetrictable
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 // LbmetrictableResourceModel describes the resource data model.
+// Backward-compat: the SDK v2 resource (citrixadc/resource_citrixadc_lbmetrictable.go)
+// exposed only the "metrictable" attribute (Required, ForceNew). The metric/SNMPOID
+// pairs belong to the separate lbmetrictable_metric_binding resource, so they are not
+// part of this resource's contract.
 type LbmetrictableResourceModel struct {
 	Id          types.String `tfsdk:"id"`
-	Snmpoid     types.String `tfsdk:"snmpoid"`
-	Metric      types.String `tfsdk:"metric"`
 	Metrictable types.String `tfsdk:"metrictable"`
 }
 
@@ -27,34 +32,24 @@ func (r *LbmetrictableResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:    true,
 				Description: "The ID of the lbmetrictable resource.",
 			},
-			"snmpoid": schema.StringAttribute{
-				Required:    true,
-				Description: "New SNMP OID of the metric.",
-			},
-			"metric": schema.StringAttribute{
-				Required:    true,
-				Description: "Name of the metric for which to change the SNMP OID.",
-			},
 			"metrictable": schema.StringAttribute{
-				Required:    true,
+				Required: true,
+				// SDK v2 ForceNew: true -> RequiresReplace()
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description: "Name for the metric table. Must begin with an ASCII alphanumeric or underscore (_) character, and must contain only ASCII alphanumeric, underscore, hash (#), period (.), space, colon (:), at (@), equals (=), and hyphen (-) characters.\n\nCLI Users: If the name includes one or more spaces, enclose the name in double or single quotation marks (for example, \"my metrictable\" or 'my metrictable').",
 			},
 		},
 	}
 }
 
-func lbmetrictableGetThePayloadFromtheConfig(ctx context.Context, data *LbmetrictableResourceModel) lb.Lbmetrictable {
-	tflog.Debug(ctx, "In lbmetrictableGetThePayloadFromtheConfig Function")
+func lbmetrictableGetThePayloadFromthePlan(ctx context.Context, data *LbmetrictableResourceModel) lb.Lbmetrictable {
+	tflog.Debug(ctx, "In lbmetrictableGetThePayloadFromthePlan Function")
 
 	// Create API request body from the model
 	lbmetrictable := lb.Lbmetrictable{}
-	if !data.Snmpoid.IsNull() {
-		lbmetrictable.Snmpoid = data.Snmpoid.ValueString()
-	}
-	if !data.Metric.IsNull() {
-		lbmetrictable.Metric = data.Metric.ValueString()
-	}
-	if !data.Metrictable.IsNull() {
+	if !data.Metrictable.IsNull() && !data.Metrictable.IsUnknown() {
 		lbmetrictable.Metrictable = data.Metrictable.ValueString()
 	}
 
@@ -64,26 +59,16 @@ func lbmetrictableGetThePayloadFromtheConfig(ctx context.Context, data *Lbmetric
 func lbmetrictableSetAttrFromGet(ctx context.Context, data *LbmetrictableResourceModel, getResponseData map[string]interface{}) *LbmetrictableResourceModel {
 	tflog.Debug(ctx, "In lbmetrictableSetAttrFromGet Function")
 
-	// Convert API response to model
-	if val, ok := getResponseData["Snmpoid"]; ok && val != nil {
-		data.Snmpoid = types.StringValue(val.(string))
-	} else {
-		data.Snmpoid = types.StringNull()
-	}
-	if val, ok := getResponseData["metric"]; ok && val != nil {
-		data.Metric = types.StringValue(val.(string))
-	} else {
-		data.Metric = types.StringNull()
-	}
+	// Convert API response to model.
+	// metrictable is the unique name/key; only adopt the GET value when present so a
+	// configured/state value is never clobbered.
 	if val, ok := getResponseData["metrictable"]; ok && val != nil {
 		data.Metrictable = types.StringValue(val.(string))
-	} else {
-		data.Metrictable = types.StringNull()
 	}
 
-	// Set ID for the resource
-	// Case 2: Single unique attribute
-	data.Id = types.StringValue(data.Metrictable.ValueString())
+	// Set ID for the resource.
+	// Case 2: Single unique attribute - use plain value as ID.
+	data.Id = types.StringValue(fmt.Sprintf("%v", data.Metrictable.ValueString()))
 
 	return data
 }

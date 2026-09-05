@@ -17,12 +17,15 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccBotprofile_captcha_binding_basic = `
@@ -93,6 +96,75 @@ func TestAccBotprofile_captcha_binding_basic(t *testing.T) {
 	})
 }
 
+const testAccBotprofile_captcha_binding_upgrade_basic = `
+	resource "citrixadc_botprofile" "tf_botprofile" {
+		name                     = "tf_botprofile"
+		errorurl                 = "http://www.citrix.com"
+		trapurl                  = "/http://www.citrix.com"
+		comment                  = "tf_botprofile comment"
+		bot_enable_white_list    = "ON"
+		bot_enable_black_list    = "ON"
+		bot_enable_rate_limit    = "ON"
+		devicefingerprint        = "ON"
+		devicefingerprintaction  = ["LOG", "RESET"]
+		bot_enable_ip_reputation = "ON"
+		trap                     = "ON"
+		trapaction               = ["LOG", "RESET"]
+		bot_enable_tps           = "ON"
+	}
+	resource "citrixadc_botprofile_captcha_binding" "tf_binding" {
+		name                = citrixadc_botprofile.tf_botprofile.name
+		captcharesource     = "true"
+		bot_captcha_url     = "www.example.com"
+		bot_captcha_action  = ["NONE"]
+		bot_captcha_enabled = "OFF"
+		logmessage          = "Testing"
+		retryattempts       = 4
+	}
+`
+
+// TestAccBotprofile_captcha_binding_sdkv2StateUpgrade verifies that a resource
+// created with the last SDK v2 release (2.2.0), which writes the legacy
+// positional ID "name,bot_captcha_url", can be refreshed/planned/applied by the
+// current Plugin Framework provider without recreation. On the first framework
+// Read the ID is upgraded to the canonical new key:value format.
+func TestAccBotprofile_captcha_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckBotprofile_captcha_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create with the last SDK v2 release from the registry.
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccBotprofile_captcha_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_captcha_bindingExist("citrixadc_botprofile_captcha_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_captcha_binding.tf_binding", "id", "tf_botprofile,www.example.com"),
+				),
+			},
+			{
+				// Step 2: refresh the legacy-ID state through the current
+				// framework provider. Read parses the legacy ID and re-derives
+				// the canonical new-format ID.
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccBotprofile_captcha_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotprofile_captcha_bindingExist("citrixadc_botprofile_captcha_binding.tf_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_botprofile_captcha_binding.tf_binding", "id", "name:tf_botprofile,bot_captcha_url:www.example.com"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBotprofile_captcha_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -120,10 +192,12 @@ func testAccCheckBotprofile_captcha_bindingExist(n string, id *string) resource.
 
 		bindingId := rs.Primary.ID
 
-		idSlice := strings.SplitN(bindingId, ",", 2)
-
-		name := idSlice[0]
-		bot_captcha_url := idSlice[1]
+		idMap, _, err := utils.ParseIdString(bindingId, []string{"name", "bot_captcha_url"}, nil)
+		if err != nil {
+			return err
+		}
+		name := idMap["name"]
+		bot_captcha_url := idMap["bot_captcha_url"]
 
 		findParams := service.FindParams{
 			ResourceType:             "botprofile_captcha_binding",
@@ -272,6 +346,77 @@ func TestAccBotprofileCaptchaBindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "logmessage", "Testing"),
 					resource.TestCheckResourceAttr("data.citrixadc_botprofile_captcha_binding.tf_binding", "retryattempts", "4"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBotprofile_captcha_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_captcha_binding.tf_binding"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,bot_captcha_url) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "bot_captcha_url"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_captcha_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccBotprofile_captcha_binding_basic},
+			{Config: testAccBotprofile_captcha_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+			{Config: testAccBotprofile_captcha_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccBotprofile_captcha_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_botprofile_captcha_binding.tf_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckBotprofile_captcha_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotprofile_captcha_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_captcha_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Botprofile_captcha_binding.Type(), "tf_botprofile", []string{"bot_captcha_url:www.example.com", "captcharesource:true"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccBotprofile_captcha_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckBotprofile_captcha_bindingExist(resAddr, nil)),
 			},
 		},
 	})

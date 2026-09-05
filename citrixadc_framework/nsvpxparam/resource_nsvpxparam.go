@@ -3,6 +3,7 @@ package nsvpxparam
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/citrix/adc-nitro-go/service"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -55,17 +56,25 @@ func (r *NsvpxparamResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nsvpxparam resource")
 
-	// nsvpxparam := nsvpxparamGetThePayloadFromtheConfig(ctx, &data)
+	nsvpxparam := nsvpxparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsvpxparam.Type(), &nsvpxparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsvpxparam, got error: %s", err))
-	//	 return
-	// }
+	// nsvpxparam is a singleton/unnamed configuration resource.
+	err := r.client.UpdateUnnamedResource(service.Nsvpxparam.Type(), &nsvpxparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nsvpxparam, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("nsvpxparam-config")
+	// ID scheme mirrors SDK v2: on a cluster, ownernode selects the node the
+	// settings apply to and is the resource's identity; on a standalone VPX
+	// ownernode is unconfigured and there is a single implicit entry. Encoding
+	// the decision in the ID lets Read select the correct node during a refresh,
+	// when the raw config is not available.
+	if !data.Ownernode.IsNull() && !data.Ownernode.IsUnknown() {
+		data.Id = types.StringValue(strconv.Itoa(int(data.Ownernode.ValueInt64())))
+	} else {
+		data.Id = types.StringValue("nsvpxparam-config")
+	}
 
 	tflog.Trace(ctx, "Created nsvpxparam resource")
 
@@ -106,19 +115,21 @@ func (r *NsvpxparamResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	tflog.Debug(ctx, "Updating nsvpxparam resource")
 
-	// Create API request body from the model
-	// nsvpxparam := nsvpxparamGetThePayloadFromtheConfig(ctx, &data)
+	// All configurable attributes are RequiresReplaceIfConfigured (SDK v2
+	// ForceNew), so a configured change is handled by recreate rather than
+	// Update. This branch still pushes the config to keep any computed-value
+	// resolution consistent.
+	nsvpxparam := nsvpxparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nsvpxparam.Type(), &nsvpxparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsvpxparam, got error: %s", err))
-	//	 return
-	// }
+	err := r.client.UpdateUnnamedResource(service.Nsvpxparam.Type(), &nsvpxparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nsvpxparam, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated nsvpxparam resource")
 
-	// Read the updated state back
+	// Read the updated state back (data.Id carried over from plan/prior state)
 	r.readNsvpxparamFromApi(ctx, &data, &resp.Diagnostics)
 
 	// Save updated data into Terraform state
@@ -137,19 +148,49 @@ func (r *NsvpxparamResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting nsvpxparam resource")
 
-	// For nsvpxparam, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
+	// nsvpxparam is a global configuration resource: it cannot actually be
+	// deleted, only reset. Matching SDK v2, Delete just removes the reference
+	// from Terraform state (the framework drops the resource after this returns).
 	tflog.Trace(ctx, "Deleted nsvpxparam resource from state")
 }
 
-// Helper function to read nsvpxparam data from API
+// readNsvpxparamFromApi reads the nsvpxparam config from the ADC and populates
+// data. It mirrors the SDK v2 Read: fetch the array, then select the entry that
+// matches the ownernode encoded in the ID (numeric ID => cluster node match;
+// non-numeric ID => standalone single entry at index 0).
 func (r *NsvpxparamResource) readNsvpxparamFromApi(ctx context.Context, data *NsvpxparamResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Nsvpxparam.Type(), "")
+	findParams := service.FindParams{
+		ResourceType: "nsvpxparam",
+	}
+	dataArr, err := r.client.FindResourceArrayWithParams(findParams)
 	if err != nil {
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read nsvpxparam, got error: %s", err))
 		return
 	}
 
-	nsvpxparamSetAttrFromGet(ctx, data, getResponseData)
+	if len(dataArr) == 0 {
+		return
+	}
 
+	foundIndex := -1
+	if node, convErr := strconv.Atoi(data.Id.ValueString()); convErr == nil {
+		// Cluster mode: match by ownernode. NITRO returns ownernode as a number
+		// (float64) or string; compare via %v.
+		target := strconv.Itoa(node)
+		for index, value := range dataArr {
+			if fmt.Sprintf("%v", value["ownernode"]) == target {
+				foundIndex = index
+				break
+			}
+		}
+	} else {
+		// Standalone VPX: single implicit entry.
+		foundIndex = 0
+	}
+
+	if foundIndex == -1 {
+		return
+	}
+
+	nsvpxparamSetAttrFromGet(ctx, data, dataArr[foundIndex])
 }

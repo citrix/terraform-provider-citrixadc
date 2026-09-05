@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccFis_basic = `
@@ -111,6 +112,53 @@ func testAccCheckFisDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccFis_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_fis.tf_fis"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFisDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFis_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFisExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Fis.Type(), "tf_fis"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccFis_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFisExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccFis_import(t *testing.T) {
+	const resAddr = "citrixadc_fis.tf_fis"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckFisDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccFis_basic},
+			{
+				Config:                  testAccFis_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
 const testAccFisDataSource_basic = `
 	resource "citrixadc_fis" "tf_fis" {
 		name = "tf_fis_ds"  
@@ -121,6 +169,30 @@ const testAccFisDataSource_basic = `
 	}
 `
 
+func TestAccFis_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFisDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccFis_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFisExist("citrixadc_fis.tf_fis", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccFis_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckFisExist("citrixadc_fis.tf_fis", nil)),
+			},
+		},
+	})
+}
+
 func TestAccFisDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -129,6 +201,7 @@ func TestAccFisDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFisDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.citrixadc_fis.tf_fis_ds", "id"),
 					resource.TestCheckResourceAttr("data.citrixadc_fis.tf_fis_ds", "name", "tf_fis_ds"),
 				),
 			},

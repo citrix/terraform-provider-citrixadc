@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccCmppolicylabel_basic = `
@@ -64,6 +65,53 @@ func TestAccCmppolicylabel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_cmppolicylabel.tf_cmppolicylabel", "labelname", "my_cmppolicy_label"),
 					resource.TestCheckResourceAttr("citrixadc_cmppolicylabel.tf_cmppolicylabel", "type", "RES"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCmppolicylabel_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicylabel.tf_cmppolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCmppolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabelExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Cmppolicylabel.Type(), "my_cmppolicy_label"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccCmppolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabelExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccCmppolicylabel_import(t *testing.T) {
+	const resAddr = "citrixadc_cmppolicylabel.tf_cmppolicylabel"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCmppolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccCmppolicylabel_basic},
+			{
+				Config:                  testAccCmppolicylabel_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -133,6 +181,30 @@ func testAccCheckCmppolicylabelDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccCmppolicylabel_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckCmppolicylabelDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccCmppolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabelExist("citrixadc_cmppolicylabel.tf_cmppolicylabel", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccCmppolicylabel_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckCmppolicylabelExist("citrixadc_cmppolicylabel.tf_cmppolicylabel", nil)),
+			},
+		},
+	})
+}
+
 func TestAccCmppolicylabelDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -144,6 +216,8 @@ func TestAccCmppolicylabelDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel.tf_cmppolicylabel_ds", "labelname", "my_cmppolicy_label_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_cmppolicylabel.tf_cmppolicylabel_ds", "type", "REQ"),
+					// Universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_cmppolicylabel.tf_cmppolicylabel_ds", "id"),
 				),
 			},
 		},

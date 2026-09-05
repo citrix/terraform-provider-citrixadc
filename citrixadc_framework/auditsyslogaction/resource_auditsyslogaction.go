@@ -155,6 +155,10 @@ func (r *AuditsyslogactionResource) Update(ctx context.Context, req resource.Upd
 		tflog.Debug(ctx, fmt.Sprintf("dateformat has changed for auditsyslogaction"))
 		hasChange = true
 	}
+	if !data.Denylistviolations.Equal(state.Denylistviolations) {
+		tflog.Debug(ctx, fmt.Sprintf("denylistviolations has changed for auditsyslogaction"))
+		hasChange = true
+	}
 	if !data.Dns.Equal(state.Dns) {
 		tflog.Debug(ctx, fmt.Sprintf("dns has changed for auditsyslogaction"))
 		hasChange = true
@@ -177,6 +181,10 @@ func (r *AuditsyslogactionResource) Update(ctx context.Context, req resource.Upd
 	}
 	if !data.Httpendpointurl.Equal(state.Httpendpointurl) {
 		tflog.Debug(ctx, fmt.Sprintf("httpendpointurl has changed for auditsyslogaction"))
+		hasChange = true
+	}
+	if !data.Httpschemafile.Equal(state.Httpschemafile) {
+		tflog.Debug(ctx, fmt.Sprintf("httpschemafile has changed for auditsyslogaction"))
 		hasChange = true
 	}
 	if !data.Lbvservername.Equal(state.Lbvservername) {

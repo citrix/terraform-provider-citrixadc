@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,30 @@ func (r *ResponderhtmlpageResource) Create(ctx context.Context, req resource.Cre
 
 	tflog.Debug(ctx, "Creating responderhtmlpage resource")
 
-	// responderhtmlpage := responderhtmlpageGetThePayloadFromtheConfig(ctx, &data)
+	responderhtmlpage := responderhtmlpageGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Responderhtmlpage.Type(), &responderhtmlpage)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create responderhtmlpage, got error: %s", err))
-	//	 return
-	// }
+	// responderhtmlpage is created via the NITRO ?action=Import endpoint
+	// (POST). This mirrors the SDK v2 resource, which called
+	// ActOnResource(..., "Import") (note the capital "I" — NITRO action names
+	// are case-sensitive).
+	err := r.client.ActOnResource(service.Responderhtmlpage.Type(), &responderhtmlpage, "Import")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create responderhtmlpage, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("responderhtmlpage-config")
+	// Single unique attribute — ID is the plain name value (matches SDK v2 d.SetId(name)).
+	data.Id = types.StringValue(data.Name.ValueString())
 
 	tflog.Trace(ctx, "Created responderhtmlpage resource")
 
 	// Read the updated state back
-	r.readResponderhtmlpageFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readResponderhtmlpageFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "responderhtmlpage not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +97,25 @@ func (r *ResponderhtmlpageResource) Read(ctx context.Context, req resource.ReadR
 
 	tflog.Debug(ctx, "Reading responderhtmlpage resource")
 
-	r.readResponderhtmlpageFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readResponderhtmlpageFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		// Resource deleted out-of-band — remove from state (mirrors SDK v2 d.SetId("")).
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ResponderhtmlpageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ResponderhtmlpageResourceModel
+	var data, state ResponderhtmlpageResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +123,21 @@ func (r *ResponderhtmlpageResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	tflog.Debug(ctx, "Updating responderhtmlpage resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// responderhtmlpage := responderhtmlpageGetThePayloadFromtheConfig(ctx, &data)
+	// Update is a no-op for responderhtmlpage: every attribute is ForceNew
+	// (RequiresReplace), matching the SDK v2 resource which defined no
+	// UpdateContext. Any attribute change forces recreation, so this method is
+	// never invoked with real changes; re-read to keep state fresh.
+	tflog.Debug(ctx, "Update is a no-op for responderhtmlpage; all attributes are RequiresReplace")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Responderhtmlpage.Type(), &responderhtmlpage)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update responderhtmlpage, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated responderhtmlpage resource")
-
-	// Read the updated state back
-	r.readResponderhtmlpageFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readResponderhtmlpageFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "responderhtmlpage not found during update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +155,32 @@ func (r *ResponderhtmlpageResource) Delete(ctx context.Context, req resource.Del
 
 	tflog.Debug(ctx, "Deleting responderhtmlpage resource")
 
-	// For responderhtmlpage, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted responderhtmlpage resource from state")
+	// Named resource — delete by name (DELETE /responderhtmlpage/{name}), matching SDK v2.
+	err := r.client.DeleteResource(service.Responderhtmlpage.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete responderhtmlpage, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted responderhtmlpage resource")
 }
 
-// Helper function to read responderhtmlpage data from API
-func (r *ResponderhtmlpageResource) readResponderhtmlpageFromApi(ctx context.Context, data *ResponderhtmlpageResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Responderhtmlpage.Type(), "")
+// Helper function to read responderhtmlpage data from API.
+// Returns false (without an error diagnostic) when the resource no longer exists.
+func (r *ResponderhtmlpageResource) readResponderhtmlpageFromApi(ctx context.Context, data *ResponderhtmlpageResourceModel, diags *diag.Diagnostics) bool {
+	// Single unique attribute — ID is the plain name value.
+	name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Responderhtmlpage.Type(), name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read responderhtmlpage, got error: %s", err))
-		return
+		return false
 	}
 
 	responderhtmlpageSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

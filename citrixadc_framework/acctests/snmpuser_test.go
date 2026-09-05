@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccSnmpuser_basic = `
@@ -335,6 +336,10 @@ func TestAccSnmpuserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "name", "test_user_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "group", "test_group"),
 					resource.TestCheckResourceAttr("data.citrixadc_snmpuser.tf_snmpuser_ds", "authtype", "SHA"),
+					// Read-only metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpuser.tf_snmpuser_ds", "storagetype"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_snmpuser.tf_snmpuser_ds", "status"),
 				),
 			},
 		},
@@ -375,9 +380,42 @@ func TestAccSnmpuser_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccSnmpuser_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSnmpuser_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_snmpuser.tf_snmpuser"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckSnmpuserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnmpuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpuserExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Snmpuser.Type(), "test_user"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccSnmpuser_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckSnmpuserExist(resAddr, nil)),
 			},
 		},
 	})

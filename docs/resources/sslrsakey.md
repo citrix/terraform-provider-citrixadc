@@ -65,7 +65,7 @@ resource "citrixadc_sslrsakey" "tf_sslrsakey" {
 * `des3` - (Optional) Encrypt the generated RSA key by using the Triple-DES algorithm.
 * `password` - (Optional, Sensitive) Pass phrase to use for encryption if AES256, DES or DES3 option is selected. The value is persisted in Terraform state (encrypted). See also `password_wo` for an ephemeral alternative.
 * `password_wo` - (Optional, Sensitive, WriteOnly) Same as `password`, but the value is **not persisted in Terraform state**. Use this for improved secret hygiene. Must be used together with `password_wo_version`. If both `password` and `password_wo` are set, `password_wo` takes precedence.
-* `password_wo_version` - (Optional) An integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed. Note: this secret is immutable on the ADC, so changing `password_wo_version` (or `password`/`password_wo`) forces the resource to be **destroyed and recreated** rather than updated in place. Defaults to `1`.
+* `password_wo_version` - (Optional) A user-managed integer version tracker for `password_wo`. Because write-only values are not stored in state, Terraform cannot detect when the value changes. Increment this version number to signal that the value has changed; this causes the write-only secret to be re-sent, which forces the resource to be replaced. This attribute is user-controlled and has no default value.
 * `pkcs8` - (Optional) Create the private key in PKCS#8 format.
 
 ## Attribute Reference
@@ -74,3 +74,11 @@ In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the sslrsakey. It is a unique string prefixed with "tf-sslrsakey-"
 
+
+## Import
+
+A sslrsakey can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_sslrsakey.tf_sslrsakey sslrsakey-config
+```

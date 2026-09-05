@@ -20,8 +20,10 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuditsyslogglobal_auditsyslogpolicy_binding_basic = `
@@ -40,7 +42,7 @@ resource "citrixadc_auditsyslogglobal_auditsyslogpolicy_binding" "tf_auditsyslog
   
   resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 	  name = "tf_syslogaction"
-	  serverip = "10.78.60.33"
+	  serverip = "10.78.60.50"
 	  serverport = 514
 	  loglevel = [
 		  "ERROR",
@@ -58,7 +60,7 @@ const testAccAuditsyslogglobal_auditsyslogpolicy_binding_basic_step2 = `
 
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name = "tf_syslogaction"
-		serverip = "10.78.60.33"
+		serverip = "10.78.60.50"
 		serverport = 514
 		loglevel = [
 			"ERROR",
@@ -89,6 +91,47 @@ func TestAccAuditsyslogglobal_auditsyslogpolicy_binding_basic(t *testing.T) {
 	})
 }
 
+func TestAccAuditsyslogglobal_auditsyslogpolicy_binding_import(t *testing.T) {
+	const resAddr = "citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuditsyslogglobal_auditsyslogpolicy_binding_basic},
+			{Config: testAccAuditsyslogglobal_auditsyslogpolicy_binding_basic, ResourceName: resAddr, ImportState: true, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
+		},
+	})
+}
+
+func TestAccAuditsyslogglobal_auditsyslogpolicy_binding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuditsyslogglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Auditsyslogglobal_auditsyslogpolicy_binding.Type(), "", map[string]string{"globalbindtype": "SYSTEM_GLOBAL", "policyname": "tf_auditsyslogpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuditsyslogglobal_auditsyslogpolicy_binding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
 func testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist(n string, id *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -114,7 +157,12 @@ func testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist(n string, id *
 			return fmt.Errorf("Failed to get test client: %v", err)
 		}
 
-		policyname := rs.Primary.ID
+		// ID-parse: new key:value format (globalbindtype:...,policyname:...) or legacy plain policyname
+		idMap, _, err := utils.ParseIdString(rs.Primary.ID, []string{"policyname"}, nil)
+		if err != nil {
+			return fmt.Errorf("Error parsing ID: %v", err)
+		}
+		policyname := idMap["policyname"]
 
 		findParams := service.FindParams{
 			ResourceType:             "auditsyslogglobal_auditsyslogpolicy_binding",
@@ -212,7 +260,7 @@ const testAccAuditsyslogglobalAuditsyslogpolicyBindingDataSource_basic = `
 
 	resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
 		name = "tf_syslogaction"
-		serverip = "10.78.60.33"
+		serverip = "10.78.60.50"
 		serverport = 514
 		loglevel = [
 			"ERROR",
@@ -250,6 +298,75 @@ func TestAccAuditsyslogglobalAuditsyslogpolicyBindingDataSource_basic(t *testing
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "policyname", "tf_auditsyslogpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "priority", "100"),
 					resource.TestCheckResourceAttr("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "globalbindtype", "SYSTEM_GLOBAL"),
+					// Universal runtime-binding proof.
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "id"),
+					// Read-only (GET-only) metadata exposed only by the data source.
+					// numpol is a counter (policies bound to the label) always populated when a binding exists.
+					resource.TestCheckResourceAttrSet("data.citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "numpol"),
+				),
+			},
+		},
+	})
+}
+
+const testAccAuditsyslogglobal_auditsyslogpolicy_binding_upgrade_basic = `
+
+resource "citrixadc_auditsyslogglobal_auditsyslogpolicy_binding" "tf_auditsyslogglobal_auditsyslogpolicy_binding" {
+	policyname = citrixadc_auditsyslogpolicy.tf_auditsyslogpolicy.name
+	priority   = 100
+	globalbindtype = "SYSTEM_GLOBAL"
+	}
+
+  resource "citrixadc_auditsyslogpolicy" "tf_auditsyslogpolicy" {
+	  name = "tf_auditsyslogpolicy"
+	  rule = "true"
+	  action = citrixadc_auditsyslogaction.tf_syslogaction.name
+	}
+
+  resource "citrixadc_auditsyslogaction" "tf_syslogaction" {
+	  name = "tf_syslogaction"
+	  serverip = "10.78.60.50"
+	  serverport = 514
+	  loglevel = [
+		  "ERROR",
+		  "NOTICE",
+	  ]
+	}
+`
+
+// TestAccAuditsyslogglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade verifies that a
+// binding created with the last SDK v2 release (legacy plain-policyname id) is refreshed
+// and upgraded to the new key:value id format by the current Framework provider.
+func TestAccAuditsyslogglobal_auditsyslogpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: create with the last SDK v2 release. State is written with the legacy id (policyname).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.0.0",
+					},
+				},
+				Config: testAccAuditsyslogglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist("citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "id", "tf_auditsyslogpolicy"),
+				),
+			},
+			// Step 2: refresh the legacy-id state through the current (Framework) provider.
+			// Read exercises ParseIdString on the legacy id and recomputes the id to the new format.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuditsyslogglobal_auditsyslogpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuditsyslogglobal_auditsyslogpolicy_bindingExist("citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", nil),
+					resource.TestCheckResourceAttr("citrixadc_auditsyslogglobal_auditsyslogpolicy_binding.tf_auditsyslogglobal_auditsyslogpolicy_binding", "id", "globalbindtype:SYSTEM_GLOBAL,policyname:tf_auditsyslogpolicy"),
 				),
 			},
 		},

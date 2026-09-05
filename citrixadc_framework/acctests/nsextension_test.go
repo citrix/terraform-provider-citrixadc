@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // nsextension is created via the NITRO ?action=Import endpoint, which uploads
@@ -198,6 +198,10 @@ func TestAccNsextensionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_nsextension.tf_nsextension", "name", "tf_nsextension_ds"),
 					resource.TestCheckResourceAttr("data.citrixadc_nsextension.tf_nsextension", "comment", "datasource test"),
+					// id is the universal runtime-binding proof. Read-only counter
+					// metadata (functionhits/functionundefhits/functionhaltcount) may be
+					// omitted for a never-invoked extension, so it is not asserted here.
+					resource.TestCheckResourceAttrSet("data.citrixadc_nsextension.tf_nsextension", "id"),
 				),
 			},
 		},
@@ -328,4 +332,33 @@ func testAccCheckNsextensionADCValue(name, attr, want string) resource.TestCheck
 		}
 		return nil
 	}
+}
+
+func TestAccNsextension_selfHealing(t *testing.T) {
+	t.Skip("TODO: Requires review")
+	const resAddr = "citrixadc_nsextension.tf_nsextension"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckNsextensionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNsextension_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsextensionExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Nsextension.Type(), "tf_nsextension"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccNsextension_basic_step1,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckNsextensionExist(resAddr, nil)),
+			},
+		},
+	})
 }

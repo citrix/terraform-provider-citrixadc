@@ -23,8 +23,9 @@ import (
 
 	"github.com/citrix/adc-nitro-go/resource/config/lb"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccLbmonitor_basic(t *testing.T) {
@@ -208,6 +209,11 @@ func TestAccLbmonitorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "type", "HTTP"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "interval", "350"),
 					resource.TestCheckResourceAttr("data.citrixadc_lbmonitor.tf_lbmonitor", "resptimeout", "2"),
+					// Read-only lbmonitor metadata exposed only by the data source (the
+					// resource intentionally omits these GET-only fields).
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmonitor.tf_lbmonitor", "lrtmconf"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmonitor.tf_lbmonitor", "lrtmconfstr"),
+					resource.TestCheckResourceAttrSet("data.citrixadc_lbmonitor.tf_lbmonitor", "dup_state"),
 				),
 			},
 		},
@@ -891,9 +897,14 @@ func TestAccLbmonitor_sdkv2StateUpgrade(t *testing.T) {
 			{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Config:                   testAccLbmonitor_upgrade_basic,
-				// GH #1441: PlanOnly asserts the post-upgrade plan is EMPTY (no spurious
-				// *_wo_version / computed-attr diff) after switching to the in-tree provider.
-				PlanOnly: true,
+				// GH #1441 write-only phantom: apply the upgrade and assert no destroy+recreate
+				// (expectNoReplace) instead of asserting the strict non-refresh PlanOnly plan,
+				// which spuriously fails on write-only resources due to a one-time zero-diff
+				// phantom that clears on refresh. The built-in post-apply idempotency plan then
+				// verifies convergence.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
 			},
 		},
 	})
@@ -1062,6 +1073,34 @@ func testAccCheckLbmonitorADCValue(monitorName, attr, want string) resource.Test
 		}
 		return nil
 	}
+}
+
+func TestAccLbmonitor_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_lbmonitor.foo"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckLbmonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLbmonitor_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitorExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgsMap(service.Lbmonitor.Type(), "sample_lb_monitor", map[string]string{"type": "HTTP"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccLbmonitor_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckLbmonitorExist(resAddr, nil)),
+			},
+		},
+	})
 }
 
 // GH#1442 bug1: NetScaler normalizes time values to a different unit

@@ -10,6 +10,11 @@ func CrvserverIcapolicyBindingDataSourceSchema() schema.Schema {
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
+			"bindpoint": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "For a rewrite policy, the bind point to which to bind the policy.",
+			},
 			"gotopriorityexpression": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

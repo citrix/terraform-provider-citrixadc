@@ -35,7 +35,7 @@ func (d *VxlanDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 }
 
 func (d *VxlanDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data VxlanResourceModel
+	var data VxlanDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *VxlanDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	vxlanSetAttrFromGet(ctx, &data, getResponseData)
+	vxlanDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

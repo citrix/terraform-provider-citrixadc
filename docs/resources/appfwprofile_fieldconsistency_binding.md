@@ -9,7 +9,8 @@ The appfwprofile_fieldconsistency_binding resource is used to bind fieldconsiste
 
 ## Example usage
 
-```hclresource "citrixadc_appfwprofile" "tf_appfwprofile" {
+```hcl
+resource "citrixadc_appfwprofile" "tf_appfwprofile" {
   name                     = "tf_appfwprofile"
   bufferoverflowaction     = ["none"]
   contenttypeaction        = ["none"]
@@ -71,7 +72,7 @@ resource "citrixadc_appfwprofile_fieldconsistency_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the appfwprofile_fieldconsistency_binding. It is the concatenation of `name` , `fieldconsistency` and `formactionurl_ffc` attributes separated by comma.
+* `id` - The id of the `appfwprofile_fieldconsistency_binding`. It is the concatenation of the `name`, `fieldconsistency` and `formactionurl_ffc` attributes separated by a comma.
 
 
 ## Import

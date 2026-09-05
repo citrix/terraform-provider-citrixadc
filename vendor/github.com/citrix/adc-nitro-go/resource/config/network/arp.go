@@ -27,7 +27,7 @@ type Arp struct {
 	/**
 	* Integer value that uniquely identifies the traffic domain in which you want to configure the entity. If you do not specify an ID, the entity becomes part of the default traffic domain, which has an ID of 0.
 	*/
-	Td *int `json:"td"` // Zero is a valid value
+	Td *int `json:"td,omitempty"`
 	/**
 	* MAC address of the network device.
 	*/
@@ -51,7 +51,7 @@ type Arp struct {
 	/**
 	* The owner node for the Arp entry.
 	*/
-	Ownernode *int `json:"ownernode"` // Zero is a valid value
+	Ownernode *int `json:"ownernode,omitempty"`
 	/**
 	* Remove all ARP entries from the ARP table of the Citrix ADC.
 	*/
@@ -59,7 +59,7 @@ type Arp struct {
 	/**
 	* Unique number that identifies the cluster node.
 	*/
-	Nodeid *int `json:"nodeid"` // Zero is a valid value
+	Nodeid *int `json:"nodeid,omitempty"`
 
 	//------- Read only Parameter ---------;
 

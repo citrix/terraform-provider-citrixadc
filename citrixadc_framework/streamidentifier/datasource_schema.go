@@ -1,8 +1,45 @@
 package streamidentifier
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// StreamidentifierDataSourceModel is the data-source-specific model, decoupled
+// from StreamidentifierResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes that the resource deliberately omits.
+// The Framework's per-attribute model <-> schema reflection requires this model
+// to have exactly the attributes the data-source schema declares.
+type StreamidentifierDataSourceModel struct {
+	Id                      types.String `tfsdk:"id"`
+	Acceptancethreshold     types.String `tfsdk:"acceptancethreshold"`
+	Appflowlog              types.String `tfsdk:"appflowlog"`
+	Breachthreshold         types.Int64  `tfsdk:"breachthreshold"`
+	Interval                types.Int64  `tfsdk:"interval"`
+	Log                     types.String `tfsdk:"log"`
+	Loginterval             types.Int64  `tfsdk:"loginterval"`
+	Loglimit                types.Int64  `tfsdk:"loglimit"`
+	Maxtransactionthreshold types.Int64  `tfsdk:"maxtransactionthreshold"`
+	Mintransactionthreshold types.Int64  `tfsdk:"mintransactionthreshold"`
+	Name                    types.String `tfsdk:"name"`
+	Samplecount             types.Int64  `tfsdk:"samplecount"`
+	Selectorname            types.String `tfsdk:"selectorname"`
+	Snmptrap                types.String `tfsdk:"snmptrap"`
+	Sort                    types.String `tfsdk:"sort"`
+	Trackackonlypackets     types.String `tfsdk:"trackackonlypackets"`
+	Tracktransactions       types.String `tfsdk:"tracktransactions"`
+
+	// Read-only (GET-only) attributes from the NITRO doc read-only set
+	// (zion73x_readonly/streamidentifier.json). Never settable; populated from GET.
+	Rule types.List `tfsdk:"rule"`
+}
 
 func StreamidentifierDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -89,6 +126,46 @@ func StreamidentifierDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Track transactions exceeding configured threshold. Transaction tracking can be enabled for following metric: ResponseTime.\nBy default transaction tracking is disabled",
 			},
+
+			// Read-only (GET-only) attributes surfaced by the data source
+			// (intentionally NOT modeled on the resource). All Computed.
+			"rule": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "Rule.",
+			},
 		},
 	}
+}
+
+// streamidentifierDataSourceSetAttrFromGet projects a NITRO streamidentifier GET
+// response onto the data-source model. Because a data source has no plan/apply
+// reconciliation, attributes are simply filled from the GET (or left Null when
+// the GET omits them). The shared utils.MapGet* helpers implement that projection.
+func streamidentifierDataSourceSetAttrFromGet(ctx context.Context, data *StreamidentifierDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In streamidentifierDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["name"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Name = types.StringValue(utils.AnyToString(v))
+	}
+
+	data.Acceptancethreshold = utils.MapGetString(g, "acceptancethreshold")
+	data.Appflowlog = utils.MapGetString(g, "appflowlog")
+	data.Breachthreshold = utils.MapGetInt64(g, "breachthreshold")
+	data.Interval = utils.MapGetInt64(g, "interval")
+	data.Log = utils.MapGetString(g, "log")
+	data.Loginterval = utils.MapGetInt64(g, "loginterval")
+	data.Loglimit = utils.MapGetInt64(g, "loglimit")
+	data.Maxtransactionthreshold = utils.MapGetInt64(g, "maxtransactionthreshold")
+	data.Mintransactionthreshold = utils.MapGetInt64(g, "mintransactionthreshold")
+	data.Samplecount = utils.MapGetInt64(g, "samplecount")
+	data.Selectorname = utils.MapGetString(g, "selectorname")
+	data.Snmptrap = utils.MapGetString(g, "snmptrap")
+	data.Sort = utils.MapGetString(g, "sort")
+	data.Trackackonlypackets = utils.MapGetString(g, "trackackonlypackets")
+	data.Tracktransactions = utils.MapGetString(g, "tracktransactions")
+
+	// Read-only attributes.
+	data.Rule = utils.MapGetStringList(g, "rule")
 }

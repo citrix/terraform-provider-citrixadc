@@ -45,3 +45,13 @@ The following attributes are available:
 * `verifyusing` - Criteria for deciding whether a cached object can be served for an incoming HTTP request. Available settings function as follows: HOSTNAME - The URL, host name, and host port values in the incoming HTTP request header must match the cache policy. The IP address and the TCP port of the destination host are not evaluated. Do not use the HOSTNAME setting unless you are certain that no rogue client can access a rogue server through the cache. HOSTNAME_AND_IP - The URL, host name, host port in the incoming HTTP request header, and the IP address and TCP port of the destination server, must match the cache policy. DNS - The URL, host name and host port in the incoming HTTP request, and the TCP port must match the cache policy. The host name is used for DNS lookup of the destination server's IP address, and is compared with the set of addresses returned by the DNS lookup.
 * `via` - String to include in the Via header. A Via header is inserted into all responses served from a content group if its Insert Via flag is set.
 * `id` - The id of the cacheparameter. It is a system-generated identifier.
+
+### Read-only cacheparameter metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_cacheparameter` resource) and are Computed-only. Any attribute the appliance does not return is `null`.
+
+* `disklimit` - The disk limit for the Integrated Cache.
+* `maxdisklimit` - The maximum value of the disk limit for the Integrated Cache.
+* `memlimitactive` - Active value of the memory limit for the Integrated Cache.
+* `maxmemlimit` - The maximum value of the memory limit for the Integrated Cache.
+* `prefetchcur` - Number of current outstanding prefetches in the IC.

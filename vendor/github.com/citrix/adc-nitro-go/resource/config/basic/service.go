@@ -162,6 +162,10 @@ type Service struct {
 	*/
 	Contentinspectionprofilename string `json:"contentinspectionprofilename,omitempty"`
 	/**
+	* Name of the AIGW Profile that contains AIGW Endpoint setting for the service.
+	*/
+	Aigwprofilename string `json:"aigwprofilename,omitempty"`
+	/**
 	* Name of QUIC profile which will be attached to the service.
 	*/
 	Quicprofilename string `json:"quicprofilename,omitempty"`
@@ -197,6 +201,14 @@ type Service struct {
 	* Close monitoring connections by sending the service a connection termination message with the specified bit set.
 	*/
 	Monconnectionclose string `json:"monconnectionclose,omitempty"`
+	/**
+	* Name of MCP profile which will be attached to the service.
+	*/
+	Mcpprofilename string `json:"mcpprofilename,omitempty"`
+	/**
+	* Name of the WASM module to bind to this service.
+	*/
+	Wasmmodule string `json:"wasmmodule,omitempty"`
 	/**
 	* The new IP address of the service.
 	*/

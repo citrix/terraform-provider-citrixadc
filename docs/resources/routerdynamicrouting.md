@@ -32,3 +32,12 @@ resource "citrixadc_routerdynamicrouting" "tf_dynamicrouting" {
 In addition to the arguments, the following attributes are available:
 
 * `id` - The id of the routerdynamcirouting. It is a random string prefixed with "tf-routerdynamicrouting-"
+
+
+## Import
+
+A routerdynamicrouting can be imported using its id, e.g.
+
+```shell
+terraform import citrixadc_routerdynamicrouting.tf_routerdynamicrouting tf-routerdynamicrouting-<random_string>
+```

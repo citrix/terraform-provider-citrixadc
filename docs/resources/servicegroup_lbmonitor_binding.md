@@ -32,6 +32,8 @@ resource "citrixadc_servicegroup_lbmonitor_binding" "tf_binding" {
 * `hashid` - (Optional) Unique numerical identifier used by hash based load balancing methods to identify a service.
 * `nameserver` - (Optional) Specify the nameserver to which the query for bound domain needs to be sent. If not specified, use the global nameserver.
 * `dbsttl` - (Optional) Specify the TTL for DNS record for domain based service.The default value of ttl is 0 which indicates to use the TTL received in DNS response for monitors.
+* `aigwprofilename` - (Optional) Name of the backend AIGW Profile which will be attached to the servicegroup. This parameter enables the servicegroup to process the LLM request/response based on the profile config. Any service item bound to the servicegroup will inherit the backend AIGW Profile bound at the servicegroup level, if it does not have an explicit AIGW Profile given at bind time.
+* `order` - (Optional) Order number to be assigned to the servicegroup member
 
 
 ## Attribute Reference

@@ -1,9 +1,45 @@
 package vpnintranetapplication
 
 import (
+	"context"
+
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
+
+// VpnintranetapplicationDataSourceModel is the data-source-specific model,
+// decoupled from VpnintranetapplicationResourceModel.
+//
+// A data source is a pure read surface (Read only; no plan/apply lifecycle), so
+// it can expose the FULL GET projection: the read/write attributes (as Computed
+// outputs) AND the read-only attributes the resource deliberately omits. Every
+// non-key attribute is Computed; the Framework's per-attribute model <-> schema
+// reflection requires this model to have exactly the attributes the data-source
+// schema declares, which is why it cannot reuse the resource model.
+type VpnintranetapplicationDataSourceModel struct {
+	Id                  types.String `tfsdk:"id"`
+	Intranetapplication types.String `tfsdk:"intranetapplication"` // Required lookup key
+
+	// Read/write attributes, surfaced here as Computed outputs.
+	Clientapplication types.List   `tfsdk:"clientapplication"`
+	Destip            types.String `tfsdk:"destip"`
+	Destport          types.String `tfsdk:"destport"`
+	Hostname          types.String `tfsdk:"hostname"`
+	Interception      types.String `tfsdk:"interception"`
+	Iprange           types.String `tfsdk:"iprange"`
+	Netmask           types.String `tfsdk:"netmask"`
+	Protocol          types.String `tfsdk:"protocol"`
+	Spoofiip          types.String `tfsdk:"spoofiip"`
+	Srcip             types.String `tfsdk:"srcip"`
+	Srcport           types.Int64  `tfsdk:"srcport"`
+
+	// Read-only (GET-only) metadata from the NITRO doc read-only set
+	// (zion73x_readonly/vpnintranetapplication.json). Never settable; populated
+	// from GET.
+	Ipaddress types.String `tfsdk:"ipaddress"`
+}
 
 func VpnintranetapplicationDataSourceSchema() schema.Schema {
 	return schema.Schema{
@@ -71,6 +107,43 @@ func VpnintranetapplicationDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Source port for the application for which the Citrix Gateway virtual server proxies the traffic. If users are connecting from a device that uses the Citrix Gateway Plug-in for Java, applications must be configured manually by using the source IP address and TCP port values specified in the intranet application profile. If a port value is not set, the destination port value is used.",
 			},
+
+			// Read-only (GET-only) metadata surfaced by the data source (this is
+			// intentionally NOT modeled on the resource). Computed.
+			"ipaddress": schema.StringAttribute{
+				Computed:    true,
+				Description: "The IP address for the application. This address is the real application server IP address.",
+			},
 		},
 	}
+}
+
+// vpnintranetapplicationDataSourceSetAttrFromGet projects a NITRO
+// vpnintranetapplication GET response onto the data-source model. Because a data
+// source has no plan/apply reconciliation, attributes are simply filled from the
+// GET (or left Null when the GET omits them). The shared utils.MapGet* helpers
+// implement that projection.
+func vpnintranetapplicationDataSourceSetAttrFromGet(ctx context.Context, data *VpnintranetapplicationDataSourceModel, g map[string]interface{}) {
+	tflog.Debug(ctx, "In vpnintranetapplicationDataSourceSetAttrFromGet Function")
+
+	if v, ok := g["intranetapplication"]; ok && v != nil {
+		data.Id = types.StringValue(utils.AnyToString(v))
+		data.Intranetapplication = types.StringValue(utils.AnyToString(v))
+	}
+
+	// Read/write attributes as read-back outputs.
+	data.Clientapplication = utils.MapGetStringList(g, "clientapplication")
+	data.Destip = utils.MapGetString(g, "destip")
+	data.Destport = utils.MapGetString(g, "destport")
+	data.Hostname = utils.MapGetString(g, "hostname")
+	data.Interception = utils.MapGetString(g, "interception")
+	data.Iprange = utils.MapGetString(g, "iprange")
+	data.Netmask = utils.MapGetString(g, "netmask")
+	data.Protocol = utils.MapGetString(g, "protocol")
+	data.Spoofiip = utils.MapGetString(g, "spoofiip")
+	data.Srcip = utils.MapGetString(g, "srcip")
+	data.Srcport = utils.MapGetInt64(g, "srcport")
+
+	// Read-only metadata.
+	data.Ipaddress = utils.MapGetString(g, "ipaddress")
 }

@@ -55,14 +55,14 @@ func (r *RsskeytypeResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating rsskeytype resource")
 
-	// rsskeytype := rsskeytypeGetThePayloadFromtheConfig(ctx, &data)
+	rsskeytype := rsskeytypeGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Rsskeytype.Type(), &rsskeytype)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rsskeytype, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - rsskeytype is a singleton/unnamed configuration resource
+	err := r.client.UpdateUnnamedResource(service.Rsskeytype.Type(), &rsskeytype)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create rsskeytype, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("rsskeytype-config")
@@ -107,14 +107,14 @@ func (r *RsskeytypeResource) Update(ctx context.Context, req resource.UpdateRequ
 	tflog.Debug(ctx, "Updating rsskeytype resource")
 
 	// Create API request body from the model
-	// rsskeytype := rsskeytypeGetThePayloadFromtheConfig(ctx, &data)
+	rsskeytype := rsskeytypeGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Rsskeytype.Type(), &rsskeytype)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rsskeytype, got error: %s", err))
-	//	 return
-	// }
+	// Make API call - rsskeytype is a singleton/unnamed configuration resource
+	err := r.client.UpdateUnnamedResource(service.Rsskeytype.Type(), &rsskeytype)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update rsskeytype, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated rsskeytype resource")
 

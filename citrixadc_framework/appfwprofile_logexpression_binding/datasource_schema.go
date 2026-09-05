@@ -48,6 +48,11 @@ func AppfwprofileLogexpressionBindingDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Enabled.",
 			},
+			"ruletype": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Specifies rule type of binding.",
+			},
 		},
 	}
 }

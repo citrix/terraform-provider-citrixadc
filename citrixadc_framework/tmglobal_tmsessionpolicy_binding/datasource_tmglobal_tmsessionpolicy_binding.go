@@ -35,7 +35,7 @@ func (d *TmglobalTmsessionpolicyBindingDataSource) Schema(ctx context.Context, r
 }
 
 func (d *TmglobalTmsessionpolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data TmglobalTmsessionpolicyBindingResourceModel
+	var data TmglobalTmsessionpolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -96,7 +96,7 @@ func (d *TmglobalTmsessionpolicyBindingDataSource) Read(ctx context.Context, req
 		return
 	}
 
-	tmglobal_tmsessionpolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	tmglobal_tmsessionpolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

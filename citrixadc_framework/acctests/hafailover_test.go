@@ -18,7 +18,8 @@ package citrixadc
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 const testAccHafailover_basic = `
@@ -59,6 +60,37 @@ func TestAccHafailover_basic(t *testing.T) {
 				Config: testAccHafailover_basic_update,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("citrixadc_hafailover.tf_failover", "state", "Primary"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccHafailover_sdkv2StateUpgrade(t *testing.T) {
+	if adcTestbed != "HA_PAIR" {
+		t.Skipf("ADC testbed is %s. Expected HA_PAIR.", adcTestbed)
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccHafailover_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("citrixadc_hafailover.tf_failover", "state", "Secondary"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccHafailover_basic,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("citrixadc_hafailover.tf_failover", "state", "Secondary"),
 				),
 			},
 		},

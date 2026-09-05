@@ -2,12 +2,14 @@ package citrixadc
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccVpnvserverAppfwpolicyBinding_basic = `
@@ -107,6 +109,35 @@ func TestAccVpnvserverAppfwpolicyBinding_basic(t *testing.T) {
 
 func TestAccVpnvserverAppfwpolicyBinding_import(t *testing.T) {
 	const resAddr = "citrixadc_vpnvserver_appfwpolicy_binding.tf_bind"
+
+	// Backward-compat: import via the LEGACY SDK v2 id. Rebuild the legacy positional id from
+	// the current canonical key:value id (raw values, only the keys actually set, in legacy
+	// order: name,policy) so it matches exactly what SDK v2 wrote.
+	legacyID := func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resAddr]
+		if !ok {
+			return "", fmt.Errorf("resource not found in state: %s", resAddr)
+		}
+		kv := map[string]string{}
+		for _, p := range strings.Split(rs.Primary.ID, ",") {
+			if i := strings.Index(p, ":"); i >= 0 {
+				v, _ := url.QueryUnescape(p[i+1:])
+				kv[p[:i]] = v
+			}
+		}
+		ordr := []string{"name", "policy"}
+		parts := make([]string, 0, len(ordr))
+		for _, k := range ordr {
+			if v, ok := kv[k]; ok {
+				parts = append(parts, v)
+			}
+		}
+		// Fallback: a positional (non key:value) id has no key:value parts to reorder; import it as-is.
+		if len(parts) == 0 {
+			return rs.Primary.ID, nil
+		}
+		return strings.Join(parts, ","), nil
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -122,6 +153,7 @@ func TestAccVpnvserverAppfwpolicyBinding_import(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{},
 			},
+			{Config: testAccVpnvserverAppfwpolicyBinding_basic, ResourceName: resAddr, ImportState: true, ImportStateIdFunc: legacyID, ImportStateVerify: true, ImportStateVerifyIgnore: []string{}},
 		},
 	})
 }
@@ -258,6 +290,67 @@ func testAccCheckVpnvserverAppfwpolicyBindingDestroy(s *terraform.State) error {
 	return nil
 }
 
+const testAccVpnvserver_appfwpolicy_binding_upgrade_basic = `
+
+	resource "citrixadc_appfwprofile" "tf_appfwprofile" {
+		name = "tf_appfwprofile"
+	}
+	resource "citrixadc_appfwpolicy" "tf_appfwpolicy" {
+		name        = "tf_appfwpolicy"
+		profilename = citrixadc_appfwprofile.tf_appfwprofile.name
+		rule        = "true"
+	}
+	resource "citrixadc_vpnvserver" "tf_vpnvserver" {
+		name        = "tf_vpnvserver"
+		servicetype = "SSL"
+		ipv46       = "0.0.0.0"
+		port        = 0
+	}
+	resource "citrixadc_vpnvserver_appfwpolicy_binding" "tf_bind" {
+		name                   = citrixadc_vpnvserver.tf_vpnvserver.name
+		policy                 = citrixadc_appfwpolicy.tf_appfwpolicy.name
+		priority               = 100
+		gotopriorityexpression = "END"
+	}
+`
+
+func TestAccVpnvserver_appfwpolicy_binding_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckVpnvserverAppfwpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			// Step 1: Create the resource with the last SDK v2 release (writes state with the legacy ID).
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {
+						Source:            "citrix/citrixadc",
+						VersionConstraint: "2.2.0",
+					},
+				},
+				Config: testAccVpnvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserverAppfwpolicyBindingExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_appfwpolicy"),
+				),
+			},
+			// Step 2: Refresh the legacy-id state through the current (framework) provider.
+			// The framework Read keeps the "<name>,<policy>" id (SetAttrFromGet does not recompute it),
+			// so the canonical id remains identical to the legacy value after the upgrade.
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccVpnvserver_appfwpolicy_binding_upgrade_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnvserverAppfwpolicyBindingExist("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", nil),
+					resource.TestCheckResourceAttr("citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "id", "tf_vpnvserver,tf_appfwpolicy"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVpnvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -271,6 +364,34 @@ func TestAccVpnvserver_appfwpolicy_bindingDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "policy", "tf_appfwpolicy"),
 					resource.TestCheckResourceAttr("data.citrixadc_vpnvserver_appfwpolicy_binding.tf_bind", "priority", "100"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccVpnvserverAppfwpolicyBinding_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_vpnvserver_appfwpolicy_binding.tf_bind"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVpnvserverAppfwpolicyBindingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpnvserverAppfwpolicyBinding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserverAppfwpolicyBindingExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResourceWithArgs(service.Vpnvserver_appfwpolicy_binding.Type(), "tf_vpnvserver", []string{"policy:tf_appfwpolicy"}); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccVpnvserverAppfwpolicyBinding_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckVpnvserverAppfwpolicyBindingExist(resAddr, nil)),
 			},
 		},
 	})

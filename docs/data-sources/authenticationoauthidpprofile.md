@@ -38,3 +38,9 @@ In addition to the argument, the following attributes are exported:
 * `signaturealg` - Algorithm to be used to sign OpenID tokens.
 * `signatureservice` - Name of the service in cloud used to sign the data. This is applicable only if signature if offloaded to cloud.
 * `skewtime` - This option specifies the duration for which the token sent by Citrix ADC IdP is valid. For example, if skewTime is 10, then token would be valid from (current time - 10) min to (current time + 10) min, ie 20min in all.
+
+### Read-only authenticationoauthidpprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_authenticationoauthidpprofile` resource). They are GET-only/Computed, and any attribute the appliance does not return is `null`.
+
+* `oauthstatus` - Describes status information of the OAuth IdP metadata fetch process. Possible values: `INIT`, `CERTFETCH`, `AADFORGRAPH`, `GRAPH`, `AADFORMDM`, `MDMINFO`, `COMPLETE`.

@@ -39,3 +39,9 @@ In addition to the argument above, the following attributes are exported:
 * `comment` - Any comments to preserve information about the signature file object.
 * `overwrite` - Overwrites the existing file.
 * `src` - Local path to and name of, or URL (protocol, host, path, and file name) for, the file in which to store the imported signature file. NOTE: The import fails if the object to be imported is on an HTTPS server that requires client certificate authentication for access.
+
+### Read-only botsignature metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_botsignature` resource) and are always `Computed`. Any attribute the appliance does not return is `null`.
+
+* `response` - Response returned by the appliance for the bot signature.

@@ -41,6 +41,13 @@ In addition to the argument above, the following attributes are exported:
 
 * `newname` - New name for the bot policy label. Must begin with a letter, number, or the underscore character (_), and must contain only letters, numbers, and the hyphen (-), period (.) hash (#), space ( ), at (@), equals (=), colon (:), and underscore characters.
 
+### Read-only botpolicylabel metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_botpolicylabel` resource) and are always `Computed`. Any attribute the appliance does not return is `null`.
+
+* `numpol` - Number of policies bound to the label.
+* `hits` - Number of times the policy label was invoked.
+
 ## Common Use Cases
 
 ### Retrieve Policy Label for Bindings

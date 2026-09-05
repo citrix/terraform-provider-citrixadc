@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,29 @@ func (r *VpnsessionactionResource) Create(ctx context.Context, req resource.Crea
 
 	tflog.Debug(ctx, "Creating vpnsessionaction resource")
 
-	// vpnsessionaction := vpnsessionactionGetThePayloadFromtheConfig(ctx, &data)
+	// Create API request body from the model
+	vpnsessionaction := vpnsessionactionGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnsessionaction.Type(), &vpnsessionaction)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnsessionaction, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("vpnsessionaction-config")
+	// Named resource - use AddResource
+	vpnsessionactionName := data.Name.ValueString()
+	_, err := r.client.AddResource(service.Vpnsessionaction.Type(), vpnsessionactionName, &vpnsessionaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create vpnsessionaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created vpnsessionaction resource")
 
+	// Set ID for the resource before reading state
+	data.Id = types.StringValue(vpnsessionactionName)
+
 	// Read the updated state back
-	r.readVpnsessionactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnsessionactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnsessionaction not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +96,77 @@ func (r *VpnsessionactionResource) Read(ctx context.Context, req resource.ReadRe
 
 	tflog.Debug(ctx, "Reading vpnsessionaction resource")
 
-	r.readVpnsessionactionFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readVpnsessionactionFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *VpnsessionactionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data VpnsessionactionResourceModel
+	var data, config, state VpnsessionactionResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from config (to unset them)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating vpnsessionaction resource")
 
-	// Create API request body from the model
-	// vpnsessionaction := vpnsessionactionGetThePayloadFromtheConfig(ctx, &data)
+	// Determine attributes removed from config so they can be unset (reverted
+	// to their NITRO defaults) after the update.
+	attributesToUnset := []string{}
+	if !data.Advancedclientlessvpnmode.Equal(state.Advancedclientlessvpnmode) {
+		if config.Advancedclientlessvpnmode.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "advancedclientlessvpnmode")
+		}
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Vpnsessionaction.Type(), &vpnsessionaction)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnsessionaction, got error: %s", err))
-	//	 return
-	// }
+	// Create API request body from the model
+	vpnsessionaction := vpnsessionactionGetThePayloadFromtheConfig(ctx, &data)
+
+	// Named resource - use UpdateResource
+	vpnsessionactionName := data.Name.ValueString()
+	_, err := r.client.UpdateResource(service.Vpnsessionaction.Type(), vpnsessionactionName, &vpnsessionaction)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update vpnsessionaction, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Updated vpnsessionaction resource")
 
+	// Unset attributes removed from config so the appliance reverts them to
+	// their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": data.Name.ValueString(),
+	}
+	if err := utils.ExecuteUnset(r.client, service.Vpnsessionaction.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset vpnsessionaction attributes, got error: %s", err))
+		return
+	}
+
 	// Read the updated state back
-	r.readVpnsessionactionFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readVpnsessionactionFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "vpnsessionaction not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +184,33 @@ func (r *VpnsessionactionResource) Delete(ctx context.Context, req resource.Dele
 
 	tflog.Debug(ctx, "Deleting vpnsessionaction resource")
 
-	// For vpnsessionaction, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted vpnsessionaction resource from state")
+	// Named resource - delete using DeleteResource keyed by ID (the live name)
+	vpnsessionactionName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Vpnsessionaction.Type(), vpnsessionactionName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete vpnsessionaction, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted vpnsessionaction resource")
 }
 
 // Helper function to read vpnsessionaction data from API
-func (r *VpnsessionactionResource) readVpnsessionactionFromApi(ctx context.Context, data *VpnsessionactionResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Vpnsessionaction.Type(), "")
+func (r *VpnsessionactionResource) readVpnsessionactionFromApi(ctx context.Context, data *VpnsessionactionResourceModel, diags *diag.Diagnostics) bool {
+
+	// Named resource - ID is the plain name value
+	vpnsessionactionName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Vpnsessionaction.Type(), vpnsessionactionName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read vpnsessionaction, got error: %s", err))
-		return
+		return false
 	}
 
 	vpnsessionactionSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

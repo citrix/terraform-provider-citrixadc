@@ -33,7 +33,7 @@ type Rewriteaction struct {
 		* REPLACE_HTTP_RES <string_builder_expr>. Replaces the complete HTTP response with the string defined by the string-builder expression.
 		* REPLACE_SIP_RES <target> - Replaces the complete SIP response with the string specified by <target>.
 		* INSERT_HTTP_HEADER <header_string_builder_expr> <contents_string_builder_expr>. Inserts the HTTP header specified by <header_string_builder_expr> and header contents specified by <contents_string_builder_expr>.
-		* DELETE_HTTP_HEADER <target>. Deletes the HTTP header specified by <target>.
+		* DELETE_HTTP_HEADER <target>. Deletes all the instances of the HTTP header specified by <target>.
 		* CORRUPT_HTTP_HEADER <target>. Replaces the header name of all occurrences of the HTTP header specified by <target> with a corrupted name, so that it will not be recognized by the receiver  Example: MY_HEADER is changed to MHEY_ADER.
 		* INSERT_BEFORE <target_expr> <string_builder_expr>. Finds the string specified in <target_expr> and inserts the string in <string_builder_expr> before it.
 		* INSERT_BEFORE_ALL <target> <string_builder_expr> -search <search_expr>. In the request or response specified by <target>, locates all occurrences of the string specified in <string_builder_expr> and inserts the string specified in <search_expr> before each.
@@ -49,6 +49,8 @@ type Rewriteaction struct {
 		* INSERT_AFTER_MQTT <target_expr> <string_builder_expr> : Insert a topic specified in <string_builder_expr> in the MQTT Subscribe or Unsubscribe message after the specified target_expr.
 		* INSERT_BEFORE_MQTT <target_expr> <string_builder_expr> : Insert a topic specified in <string_builder_expr> in the MQTT Subscribe or Unsubscribe message before the specified target_expr.
 		* DELETE_MQTT <target> : Deletes the specified target in the MQTT message.
+		* DELETE_HTTP_EVENT_FIELD <target>. Deletes all the instances of the field specified by <target>.
+		* INSERT_HTTP_EVENT_FIELD <event_field_string_builder_expr> <contents_string_builder_expr>. Inserts the HTTP event field specified by <event_field_string_builder_expr> and field contents specified by <contents_string_builder_expr>.
 	*/
 	Type string `json:"type,omitempty"`
 	/**

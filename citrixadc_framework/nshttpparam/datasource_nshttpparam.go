@@ -35,7 +35,7 @@ func (d *NshttpparamDataSource) Schema(ctx context.Context, req datasource.Schem
 }
 
 func (d *NshttpparamDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NshttpparamResourceModel
+	var data NshttpparamDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *NshttpparamDataSource) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	nshttpparamSetAttrFromGet(ctx, &data, getResponseData)
+	nshttpparamDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

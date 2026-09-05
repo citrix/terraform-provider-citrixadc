@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,22 +56,28 @@ func (r *SslfipskeyResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating sslfipskey resource")
 
-	// sslfipskey := sslfipskeyGetThePayloadFromtheConfig(ctx, &data)
+	sslfipskey := sslfipskeyGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslfipskey.Type(), &sslfipskey)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslfipskey, got error: %s", err))
-	//	 return
-	// }
-
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("sslfipskey-config")
+	// sslfipskey is created via the NITRO "create" action (matches SDK v2
+	// client.ActOnResource(..., "create")), not a plain AddResource.
+	err := r.client.ActOnResource(service.Sslfipskey.Type(), &sslfipskey, "create")
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create sslfipskey, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created sslfipskey resource")
 
+	// Single unique attribute: ID is the fipskeyname (matches SDK v2 d.SetId).
+	data.Id = types.StringValue(data.Fipskeyname.ValueString())
+
 	// Read the updated state back
-	r.readSslfipskeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslfipskeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslfipskey not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,15 +95,24 @@ func (r *SslfipskeyResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	tflog.Debug(ctx, "Reading sslfipskey resource")
 
-	r.readSslfipskeyFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readSslfipskeyFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *SslfipskeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data SslfipskeyResourceModel
+	var data, state SslfipskeyResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 
@@ -104,22 +120,21 @@ func (r *SslfipskeyResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	tflog.Debug(ctx, "Updating sslfipskey resource")
+	// Preserve ID from prior state
+	data.Id = state.Id
 
-	// Create API request body from the model
-	// sslfipskey := sslfipskeyGetThePayloadFromtheConfig(ctx, &data)
+	// sslfipskey has no updateable attributes in SDK v2 (every attribute is
+	// ForceNew), so there is no NITRO write here. Any attribute change forces
+	// replacement via the RequiresReplace plan modifiers. Simply re-read the
+	// live object so computed values stay consistent.
+	tflog.Debug(ctx, "Updating sslfipskey resource (read-only refresh; all attributes force replacement)")
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Sslfipskey.Type(), &sslfipskey)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update sslfipskey, got error: %s", err))
-	//	 return
-	// }
-
-	tflog.Trace(ctx, "Updated sslfipskey resource")
-
-	// Read the updated state back
-	r.readSslfipskeyFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readSslfipskeyFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "sslfipskey not found during update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +152,32 @@ func (r *SslfipskeyResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting sslfipskey resource")
 
-	// For sslfipskey, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted sslfipskey resource from state")
+	// Named resource - delete by fipskeyname (the ID), matching SDK v2.
+	err := r.client.DeleteResource(service.Sslfipskey.Type(), data.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete sslfipskey, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted sslfipskey resource")
 }
 
-// Helper function to read sslfipskey data from API
-func (r *SslfipskeyResource) readSslfipskeyFromApi(ctx context.Context, data *SslfipskeyResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Sslfipskey.Type(), "")
+// Helper function to read sslfipskey data from API. Returns false (without an
+// error diagnostic) when the resource no longer exists on the ADC.
+func (r *SslfipskeyResource) readSslfipskeyFromApi(ctx context.Context, data *SslfipskeyResourceModel, diags *diag.Diagnostics) bool {
+	// Case 2: Find with single ID attribute - ID is the plain fipskeyname value.
+	fipskeyname_Name := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Sslfipskey.Type(), fipskeyname_Name)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read sslfipskey, got error: %s", err))
-		return
+		return false
 	}
 
 	sslfipskeySetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

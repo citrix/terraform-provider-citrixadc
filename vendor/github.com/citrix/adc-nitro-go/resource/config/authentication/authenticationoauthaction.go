@@ -217,6 +217,10 @@ type Authenticationoauthaction struct {
 		add authentication oauthAction <actionName> -intuneDeviceIdExpression 'AAA.LOGIN.INTUNEURI.AFTER_STR("IntuneDeviceId://")'
 	*/
 	Intunedeviceidexpression string `json:"intunedeviceidexpression,omitempty"`
+	/**
+	* OAuth Scopes expected. Please specify scopes in space separated format as per RFC 6749 (OAuth 2.0). Each scope value can contain any printable ASCII character except double-quote (") and backslash (\). Maximum length is 1024
+	*/
+	Scopes string `json:"scopes,omitempty"`
 
 	//------- Read only Parameter ---------;
 

@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // NOTE on the appfwarchive_export resource:
@@ -33,32 +33,48 @@ import (
 //     it does NOT (and cannot) verify the export side-effect via NITRO.
 //   - There is no destroy check (Delete is a no-op; the side-effect cannot
 //     be undone via API).
-//   - `name` must reference an archive that already exists on the ADC (e.g.
-//     created via citrixadc_appfwarchive). `target` must be a writable path
-//     on the ADC filesystem. Replace TODO_PLACEHOLDER values before running.
+//   - The test is self-contained: doAppfwarchivePreChecks (in appfwarchive_test.go)
+//     enables the AppFw feature and uploads a tar fixture to /var/tmp. Each config
+//     below first imports that fixture via a citrixadc_appfwarchive prereq so the
+//     archive `name` exists on the ADC, then exports it. `target` is a writable
+//     local:/var/tmp path. No external archive host or pre-seeded archive needed.
 
 const testAccAppfwarchiveExport_basic_step1 = `
+resource "citrixadc_appfwarchive" "tf_prereq" {
+  name = "tfappfwarch"
+  src  = "local:tfappfwarchive.tar"
+}
+
 resource "citrixadc_appfwarchive_export" "tf_appfwarchive_export" {
-  name    = "tfappfwarch"
-  target     = "local:new_tfappfwarchfile"
+  name       = citrixadc_appfwarchive.tf_prereq.name
+  target     = "local:tfappfwarch_export"
+  depends_on = [citrixadc_appfwarchive.tf_prereq]
 }
 
 `
 
 const testAccAppfwarchiveExport_basic_step2 = `
+resource "citrixadc_appfwarchive" "tf_prereq" {
+  name = "tfappfwarch"
+  src  = "local:tfappfwarchive.tar"
+}
+
 resource "citrixadc_appfwarchive_export" "tf_appfwarchive_export" {
-  name    = "tfappfwarch"
-  target     = "local:new_tfappfwarchfile_v2"
+  name       = citrixadc_appfwarchive.tf_prereq.name
+  target     = "local:tfappfwarch_export_v2"
+  depends_on = [citrixadc_appfwarchive.tf_prereq]
 }
 
 `
 
 func TestAccAppfwarchiveExport_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { doAppfwarchivePreChecks(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		// No CheckDestroy: the export action has no inverse on NITRO; Delete
-		// is a no-op that only removes the resource from Terraform state.
+		// The export action itself has no inverse on NITRO (Delete is a no-op),
+		// but the citrixadc_appfwarchive prereq IS destroyable; verify it is
+		// cleaned up so no archive is orphaned on the shared ADC.
+		CheckDestroy: testAccCheckAppfwarchiveDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppfwarchiveExport_basic_step1,

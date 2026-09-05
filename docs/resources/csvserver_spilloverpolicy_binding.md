@@ -4,34 +4,45 @@ subcategory: "Content Switching"
 
 # Resource: csvserver_spilloverpolicy_binding
 
-The csvserver_spilloverpolicy_binding resource is used to bind a spillover policy to csvserver.
+The csvserver_spilloverpolicy_binding resource is used to bind a spillover policy to a content switching virtual server.
 
 
 ## Example usage
 
 ```hcl
+resource "citrixadc_csvserver" "tf_csvserver" {
+  ipv46       = "10.10.10.33"
+  name        = "tf_csvserver"
+  port        = 80
+  servicetype = "HTTP"
+}
+
+resource "citrixadc_spilloverpolicy" "tf_spilloverpolicy" {
+  name   = "tf_spilloverpolicy"
+  rule   = "SYS.VSERVER(\"tf_csvserver\").RESPTIME.GT(100)"
+  action = "SPILLOVER"
+}
+
 resource "citrixadc_csvserver_spilloverpolicy_binding" "tf_csvserver_spilloverpolicy_binding" {
-	name = "tf_csvserver"
-	policyname = "tf_spilloverpolicy"
-	bindpoint = "REQUEST"
-	gotopriorityexpression = "END"
-	invoke = false
-	priority = 1
+  name       = citrixadc_csvserver.tf_csvserver.name
+  policyname = citrixadc_spilloverpolicy.tf_spilloverpolicy.name
+  priority   = 1
+  bindpoint  = "REQUEST"
 }
 ```
 
 
 ## Argument Reference
 
-* `policyname` - (Required) Policies bound to this vserver.
-* `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
-* `bindpoint` - (Optional) The bindpoint to which the policy is bound. Possible values: [ REQUEST, RESPONSE, ICA_REQUEST, OTHERTCP_REQUEST ]
-* `priority` - (Optional) Priority for the policy.
 * `name` - (Required) Name of the content switching virtual server to which the content switching policy applies.
-* `targetlbvserver` - (Optional) Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE. Example: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1 Note: Use this parameter only in case of Content Switching policy bind operations to a CS vserver.
-* `invoke` - (Optional) Invoke a policy label if this policy's rule evaluates to TRUE (valid only for default-syntax policies such as application firewall, transform, integrated cache, rewrite, responder, and content switching).
-* `labeltype` - (Optional) Type of label to be invoked. Possible values: [ reqvserver, resvserver, policylabel ]
+* `policyname` - (Required) Policies bound to this vserver.
+* `bindpoint` - (Optional) The bindpoint to which the policy is bound.
+* `priority` - (Optional) Priority for the policy.
+* `gotopriorityexpression` - (Optional) Expression specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.
+* `invoke` - (Optional) Invoke a policy label if this policy's rule evaluates to TRUE.
+* `labeltype` - (Optional) Type of label to be invoked.
 * `labelname` - (Optional) Name of the label to be invoked.
+* `targetlbvserver` - (Optional) Name of the Load Balancing virtual server to which the content is switched, if policy rule is evaluated to be TRUE. Example: bind cs vs cs1 -policyname pol1 -priority 101 -targetLBVserver lb1. Note: Use this parameter only in case of Content Switching policy bind operations to a CS vserver.
 
 
 ## Attribute Reference

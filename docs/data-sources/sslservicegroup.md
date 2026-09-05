@@ -51,10 +51,30 @@ In addition to the arguments, the following attributes are available:
 * `tls12` - State of TLSv1.2 protocol support for the SSL service group.
 * `tls13` - State of TLSv1.3 protocol support for the SSL service group.
 
-## Import
+### Read-only sslservicegroup metadata
 
-A sslservicegroup can be imported using its servicegroupname, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslservicegroup` resource). Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_sslservicegroup.tf_sslservicegroup tf_servicegroup
-```
+* `dh` - The state of DH key exchange support for the SSL service group.
+* `dhfile` - The file name and path for the DH parameter.
+* `dhcount` - The refresh count for the re-generation of DH public-key and private-key from the DH parameter.
+* `dhkeyexpsizelimit` - Whether the use of NIST recommended bit size for private-key size is enabled.
+* `ersa` - The state of Ephemeral RSA key exchange support for the SSL service group.
+* `ersacount` - The refresh count for the re-generation of RSA public-key and private-key pair.
+* `cipherredirect` - The state of the Cipher Redirect feature.
+* `cipherurl` - The redirect URL to be used with the Cipher Redirect feature.
+* `sslv2redirect` - The state of the SSLv2 Redirect feature.
+* `sslv2url` - The redirect URL to be used with the SSLv2 Redirect feature.
+* `clientauth` - The state of Client-Authentication support for the SSL service group.
+* `clientcert` - The rule for client certificate requirement in client authentication.
+* `sslredirect` - The state of HTTPS redirects for the SSL service group.
+* `redirectportrewrite` - The state of the port-rewrite feature.
+* `nonfipsciphers` - The state of usage of non FIPS approved ciphers.
+* `ssl2` - The state of SSLv2 protocol support for the SSL service group.
+* `ocspcheck` - The state of the OCSP check parameter (Mandatory/Optional).
+* `crlcheck` - The state of the CRL check parameter (Mandatory/Optional).
+* `cleartextport` - The port on the back-end web-servers where the clear-text data is sent by the system.
+* `servicename` - The service name.
+* `ca` - CA certificate.
+* `snicert` - Whether a CertKey is bound for SNI processing.
+* `quicflag` - Whether the QUIC transport protocol is used by a virtual server or service.

@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAuthenticationldappolicy_add = `
@@ -74,6 +75,25 @@ func TestAccAuthenticationldappolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("citrixadc_authenticationldappolicy.tf_authenticationldappolicy", "name", "tf_authenticationldappolicy"),
 					resource.TestCheckResourceAttr("citrixadc_authenticationldappolicy.tf_authenticationldappolicy", "rule", "NS_FALSE"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationldappolicy_import(t *testing.T) {
+	const resAddr = "citrixadc_authenticationldappolicy.tf_authenticationldappolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationldappolicyDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAuthenticationldappolicy_add},
+			{
+				Config:                  testAccAuthenticationldappolicy_add,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -141,6 +161,58 @@ func testAccCheckAuthenticationldappolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAuthenticationldappolicy_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_authenticationldappolicy.tf_authenticationldappolicy"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAuthenticationldappolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAuthenticationldappolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationldappolicyExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Authenticationldappolicy.Type(), "tf_authenticationldappolicy"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAuthenticationldappolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationldappolicyExist(resAddr, nil)),
+			},
+		},
+	})
+}
+
+func TestAccAuthenticationldappolicy_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAuthenticationldappolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAuthenticationldappolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationldappolicyExist("citrixadc_authenticationldappolicy.tf_authenticationldappolicy", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAuthenticationldappolicy_add,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAuthenticationldappolicyExist("citrixadc_authenticationldappolicy.tf_authenticationldappolicy", nil)),
+			},
+		},
+	})
 }
 
 const testAccAuthenticationldappolicyDataSource_basic = `

@@ -32,6 +32,7 @@ output "type" {
 
 In addition to the arguments, the following attributes are available:
 
+* `builtin` - A list of strings indicating that a variable is a built-in (SYSTEM INTERNAL) type.
 * `feature` - The feature to be checked while applying this config.
 * `globalbindtype` - Global bind type.
 * `gotopriorityexpression` - Applicable only to advance vpn session policy. An expression or other value specifying the priority of the next policy which will get evaluated if the current policy rule evaluates to TRUE.

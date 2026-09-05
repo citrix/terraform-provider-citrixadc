@@ -35,7 +35,7 @@ func (d *NstcpbufparamDataSource) Schema(ctx context.Context, req datasource.Sch
 }
 
 func (d *NstcpbufparamDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NstcpbufparamResourceModel
+	var data NstcpbufparamDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -53,7 +53,7 @@ func (d *NstcpbufparamDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	nstcpbufparamSetAttrFromGet(ctx, &data, getResponseData)
+	nstcpbufparamDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

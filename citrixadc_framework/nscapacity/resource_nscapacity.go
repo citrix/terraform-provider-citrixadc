@@ -3,8 +3,11 @@ package nscapacity
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/citrix/adc-nitro-go/resource/config/ns"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -14,6 +17,7 @@ import (
 
 // Ensure provider defined types fully satisfy framework interfaces.
 var _ resource.Resource = &NscapacityResource{}
+var _ resource.ResourceWithUpgradeState = &NscapacityResource{}
 var _ resource.ResourceWithConfigure = (*NscapacityResource)(nil)
 var _ resource.ResourceWithImportState = (*NscapacityResource)(nil)
 
@@ -43,11 +47,34 @@ func (r *NscapacityResource) Configure(ctx context.Context, req resource.Configu
 	r.client = *req.ProviderData.(**service.NitroClient)
 }
 
+// UpgradeState migrates pre-write-only state (GH #1441): it seeds the
+// password_wo_version tracker to 1 when the stored state has no value for it, so
+// the schema Default does not plan a spurious "null -> 1" update after upgrading
+// the provider. Paired with the schema Version bump so the upgrade path actually
+// runs. See utils.WoVersionUpgradeState.
+func (r *NscapacityResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaResp := resource.SchemaResponse{}
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+	return utils.WoVersionUpgradeState(schemaResp.Schema, func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+		var data NscapacityResourceModel
+		resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if data.PasswordWoVersion.IsNull() {
+			data.PasswordWoVersion = types.Int64Value(1)
+		}
+		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	})
+}
+
 func (r *NscapacityResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data NscapacityResourceModel
+	var data, config NscapacityResourceModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read write-only attributes from config (they are nullified in plan)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -55,16 +82,27 @@ func (r *NscapacityResource) Create(ctx context.Context, req resource.CreateRequ
 
 	tflog.Debug(ctx, "Creating nscapacity resource")
 
-	// nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
+	// Build the NITRO payload from the plan (Optional+Computed attributes that were
+	// not configured are unknown and are skipped by the payload builder).
+	nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
+	// Overlay write-only attributes (password_wo) from config onto the payload.
+	nscapacityApplyWriteOnlyConfig(ctx, &config, &nscapacity)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nscapacity, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - use UpdateUnnamedResource to push the capacity config.
+	err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create nscapacity, got error: %s", err))
+		return
+	}
 
-	// Generate unique ID for this configuration resource
+	// Applying capacity/licensing requires a warm reboot for it to take effect
+	// (matches the SDK v2 createNscapacityFunc behaviour).
+	if err := r.warmRebootNetScaler(ctx); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Error warm rebooting ADC after applying nscapacity, got error: %s", err))
+		return
+	}
+
+	// Singleton resource - static ID
 	data.Id = types.StringValue("nscapacity-config")
 
 	tflog.Trace(ctx, "Created nscapacity resource")
@@ -95,28 +133,97 @@ func (r *NscapacityResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *NscapacityResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data NscapacityResourceModel
+	var data, config, state NscapacityResourceModel
 
+	// Read Terraform prior state to preserve the ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state (singleton)
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating nscapacity resource")
 
-	// Create API request body from the model
-	// nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
+	// Determine whether there is a real config push and/or attributes that were
+	// removed from configuration and must be reverted to their appliance defaults
+	// via the NITRO ?action=unset operation (spec-unsettable: bandwidth/platform/vcpu).
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Bandwidth.Equal(state.Bandwidth) {
+		tflog.Debug(ctx, "bandwidth has changed for nscapacity")
+		if config.Bandwidth.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "bandwidth")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Platform.Equal(state.Platform) {
+		tflog.Debug(ctx, "platform has changed for nscapacity")
+		if config.Platform.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "platform")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Vcpu.Equal(state.Vcpu) {
+		tflog.Debug(ctx, "vcpu has changed for nscapacity")
+		if config.Vcpu.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "vcpu")
+		} else {
+			hasChange = true
+		}
+	}
+	// The remaining mutable attributes are not spec-unsettable; any change is a
+	// normal config push.
+	if !data.Edition.Equal(state.Edition) || !data.Ignoreexpiry.Equal(state.Ignoreexpiry) ||
+		!data.Nodeid.Equal(state.Nodeid) || !data.Password.Equal(state.Password) ||
+		!data.PasswordWoVersion.Equal(state.PasswordWoVersion) ||
+		!data.Unit.Equal(state.Unit) || !data.Username.Equal(state.Username) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nscapacity, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Build the NITRO payload from the plan.
+		nscapacity := nscapacityGetThePayloadFromtheConfig(ctx, &data)
+		// Overlay write-only attributes (password_wo) from config onto the payload.
+		nscapacityApplyWriteOnlyConfig(ctx, &config, &nscapacity)
 
-	tflog.Trace(ctx, "Updated nscapacity resource")
+		// Singleton resource - use UpdateUnnamedResource. SDK v2 shared its create func
+		// for updates, so the update path mirrors create (push config + warm reboot).
+		err := r.client.UpdateUnnamedResource(service.Nscapacity.Type(), &nscapacity)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update nscapacity, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated nscapacity resource")
+	} else {
+		tflog.Debug(ctx, "No config push detected for nscapacity resource, skipping update")
+	}
+
+	// Unset attributes removed from configuration so the appliance reverts them to
+	// their defaults. Singleton resource - no identity fields in the unset payload.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Nscapacity.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset nscapacity attributes, got error: %s", err))
+		return
+	}
+
+	// Applying a capacity/licensing change (push or unset) only takes effect after
+	// a warm reboot, mirroring the SDK v2 behaviour.
+	if hasChange || len(attributesToUnset) > 0 {
+		if err := r.warmRebootNetScaler(ctx); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Error warm rebooting ADC after applying nscapacity, got error: %s", err))
+			return
+		}
+	}
 
 	// Read the updated state back
 	r.readNscapacityFromApi(ctx, &data, &resp.Diagnostics)
@@ -137,9 +244,48 @@ func (r *NscapacityResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 	tflog.Debug(ctx, "Deleting nscapacity resource")
 
-	// For nscapacity, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted nscapacity resource from state")
+	// nscapacity is a singleton/action-only configuration; there is no DELETE verb.
+	// SDK v2 (deleteNscapacityFunc) resets the licensing knobs via the NITRO "unset"
+	// action, flagging the fields that were set in state. Replicate that exactly.
+	type nscapacityRemove struct {
+		Bandwidth bool `json:"bandwidth,omitempty"`
+		Platform  bool `json:"platform,omitempty"`
+		Vcpu      bool `json:"vcpu,omitempty"`
+	}
+	nscapacity := nscapacityRemove{}
+
+	if !data.Bandwidth.IsNull() && data.Bandwidth.ValueInt64() != 0 {
+		nscapacity.Bandwidth = true
+	}
+	if !data.Platform.IsNull() && data.Platform.ValueString() != "" {
+		nscapacity.Platform = true
+	}
+	if !data.Vcpu.IsNull() && data.Vcpu.ValueBool() {
+		nscapacity.Vcpu = true
+	}
+
+	if err := r.client.ActOnResource(service.Nscapacity.Type(), &nscapacity, "unset"); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete (unset) nscapacity, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted nscapacity resource (unset licensing knobs)")
+}
+
+// warmRebootNetScaler issues a warm reboot and waits for the appliance to come
+// back, mirroring the SDK v2 rebootNetScaler(d, meta, warm=true) helper. Applying
+// an nscapacity/licensing change only takes effect after a reboot.
+func (r *NscapacityResource) warmRebootNetScaler(ctx context.Context) error {
+	tflog.Debug(ctx, "Warm rebooting NetScaler after nscapacity change")
+	reboot := ns.Reboot{
+		Warm: true,
+	}
+	if err := r.client.ActOnResource("reboot", &reboot, ""); err != nil {
+		return err
+	}
+	// Wait for the NetScaler to come back after a warm reboot (SDK v2 sleeps 120s).
+	time.Sleep(time.Second * 120)
+	return nil
 }
 
 // Helper function to read nscapacity data from API

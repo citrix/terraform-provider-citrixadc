@@ -49,3 +49,11 @@ In addition to the arguments, the following attributes are available:
 * `transactionlog` - Log ANOMALOUS or ALL transactions
 * `videoanalytics` - On enabling this option, the Citrix ADC will send the videoinsight records to the configured collectors.
 * `webinsight` - On enabling this option, the Citrix ADC will send the webinsight records to the configured collectors.
+
+### Read-only appflowaction metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_appflowaction` resource) and are GET-only/Computed. Any attribute the appliance does not return is `null`.
+
+* `hits` - The number of times the action has been taken.
+* `referencecount` - The number of references to the action.
+* `description` - Description of the action.

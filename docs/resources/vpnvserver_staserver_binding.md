@@ -35,7 +35,7 @@ resource "citrixadc_vpnvserver_staserver_binding" "tf_binding" {
 
 In addition to the arguments, the following attributes are available:
 
-* `id` - The id of the vpnvserver_staserver_binding. It is the concatenation of `name` and `staserver` attributes seperated by comma.
+* `id` - The id of the vpnvserver_staserver_binding. It is the concatenation of the `name` and `staserver` attributes separated by a comma.
 
 
 ## Import

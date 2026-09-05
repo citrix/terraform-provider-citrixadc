@@ -35,6 +35,11 @@ func NsicapprofileDataSourceSchema() schema.Schema {
 				Computed:    true,
 				Description: "Insert custom ICAP headers in the ICAP request to send to ICAP server. The headers can be static or can be dynamically constructed using PI Policy Expression. For example, to send static user agent and Client's IP address, the expression can be specified as \"User-Agent: NS-ICAP-Client/V1.0\\r\\nX-Client-IP: \"+CLIENT.IP.SRC+\"\\r\\n\".\nThe Citrix ADC does not check the validity of the specified header name-value. You must manually validate the specified header syntax.",
 			},
+			"inspecthttp2": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable or Disable ICAP inspection for HTTP/2 traffic.",
+			},
 			"logaction": schema.StringAttribute{
 				Optional:    true,
 				Computed:    true,

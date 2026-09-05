@@ -35,7 +35,7 @@ func (d *AppflowparamDataSource) Schema(ctx context.Context, req datasource.Sche
 }
 
 func (d *AppflowparamDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AppflowparamResourceModel
+	var data AppflowparamDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -52,7 +52,7 @@ func (d *AppflowparamDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	appflowparamSetAttrFromGet(ctx, &data, getResponseData)
+	appflowparamDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

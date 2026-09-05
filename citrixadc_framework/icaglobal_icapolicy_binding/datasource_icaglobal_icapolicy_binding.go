@@ -35,7 +35,7 @@ func (d *IcaglobalIcapolicyBindingDataSource) Schema(ctx context.Context, req da
 }
 
 func (d *IcaglobalIcapolicyBindingDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data IcaglobalIcapolicyBindingResourceModel
+	var data IcaglobalIcapolicyBindingDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -85,6 +85,7 @@ func (d *IcaglobalIcapolicyBindingDataSource) Read(ctx context.Context, req data
 			match = false
 			continue
 		}
+		// Check type_Name
 		if !type_Name.IsNull() && type_Name.ValueString() != "" {
 			if v, ok := v["type"]; ok {
 				if v.(string) != type_Name.ValueString() {
@@ -105,7 +106,7 @@ func (d *IcaglobalIcapolicyBindingDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	icaglobal_icapolicy_bindingSetAttrFromGet(ctx, &data, dataArr[foundIndex])
+	icaglobal_icapolicy_bindingDataSourceSetAttrFromGet(ctx, &data, dataArr[foundIndex])
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

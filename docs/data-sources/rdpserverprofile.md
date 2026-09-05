@@ -26,3 +26,11 @@ In addition to the argument, the following attributes are exported:
 * `psk` - Pre shared key value.
 * `rdpip` - IPv4 or IPv6 address of RDP listener. This terminates client RDP connections.
 * `rdpport` - TCP port on which the RDP connection is established.
+* `rdpredirection` - Enable/Disable RDP redirection support.
+
+### Read-only rdpserverprofile metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_rdpserverprofile` resource). They are GET-only/Computed and are `null` when the appliance omits them.
+
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type (for example `MODIFIABLE`, `DELETABLE`, `IMMUTABLE`, `PARTITION_ALL`). A list of strings.
+* `feature` - The feature to be checked while applying this config.

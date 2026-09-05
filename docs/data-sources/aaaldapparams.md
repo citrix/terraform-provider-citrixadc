@@ -52,3 +52,12 @@ The following attributes are available:
 * `groupsearchfilter` - String to be combined with the default LDAP group search string to form the value to use when executing an LDAP search.
 * `defaultauthenticationgroup` - This is the default group that is chosen when the authentication succeeds in addition to extracted groups.
 * `id` - The id of the aaaldapparams. It is a system-generated identifier.
+
+### Read-only aaaldapparams metadata
+
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_aaaldapparams` resource). They are Computed/GET-only, and any attribute the appliance does not return is `null`.
+
+* `ldapcontimeout` - Number of seconds the Citrix ADC waits for the LDAP connection (TCP connection and SSL/TLS handshake) to be established with the LDAP server.
+* `groupauthname` - AAA group used to associate AAA users with an AAA group.
+* `builtin` - Indicates that a variable is a built-in (SYSTEM INTERNAL) type. A list of strings. Possible values = MODIFIABLE, DELETABLE, IMMUTABLE, PARTITION_ALL.
+* `feature` - The feature to be checked while applying this config.

@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/citrix/adc-nitro-go/resource/config/basic"
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -55,22 +59,37 @@ func (r *ServerResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	tflog.Debug(ctx, "Creating server resource")
 
-	// server := serverGetThePayloadFromtheConfig(ctx, &data)
+	// Resolve the server name. SDK v2 auto-generates a name when it is not set.
+	var serverName string
+	if !data.Name.IsNull() && !data.Name.IsUnknown() && data.Name.ValueString() != "" {
+		serverName = data.Name.ValueString()
+	} else {
+		serverName = sdkid.PrefixedUniqueId("tf-server-")
+	}
+	data.Name = types.StringValue(serverName)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Server.Type(), &server)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create server, got error: %s", err))
-	//	 return
-	// }
+	// Named resource - use AddResource
+	server := serverGetThePayloadFromthePlan(ctx, &data)
+	server.Name = serverName
 
-	// Generate unique ID for this configuration resource
-	data.Id = types.StringValue("server-config")
+	_, err := r.client.AddResource(service.Server.Type(), serverName, &server)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create server, got error: %s", err))
+		return
+	}
 
 	tflog.Trace(ctx, "Created server resource")
 
+	// Set ID for the resource before reading state (SDK v2: d.SetId(serverName)).
+	data.Id = types.StringValue(serverName)
+
 	// Read the updated state back
-	r.readServerFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readServerFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "server not found immediately after create")
+		}
+		return
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -88,38 +107,122 @@ func (r *ServerResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	tflog.Debug(ctx, "Reading server resource")
 
-	r.readServerFromApi(ctx, &data, &resp.Diagnostics)
+	found := r.readServerFromApi(ctx, &data, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if !found {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *ServerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ServerResourceModel
+	var data, config, state ServerResourceModel
 
+	// Read Terraform prior state to preserve ID / live name
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (unset).
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state (name is ForceNew, so the live name never changes).
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating server resource")
 
-	// Create API request body from the model
-	// server := serverGetThePayloadFromtheConfig(ctx, &data)
+	serverName := data.Id.ValueString()
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Server.Type(), &server)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update server, got error: %s", err))
-	//	 return
-	// }
+	// Build the update payload with only the changed, updateable attributes,
+	// mirroring the SDK v2 updateServerFunc.
+	server := basic.Server{
+		Name: serverName,
+	}
+	hasChange := false
+	stateChange := false
+	attributesToUnset := []string{}
 
-	tflog.Trace(ctx, "Updated server resource")
+	if !data.Comment.Equal(state.Comment) {
+		if config.Comment.IsNull() { // removed from config -> unset it
+			attributesToUnset = append(attributesToUnset, "comment")
+		} else {
+			server.Comment = data.Comment.ValueString()
+			hasChange = true
+		}
+	}
+	if !data.Domainresolvenow.Equal(state.Domainresolvenow) {
+		server.Domainresolvenow = data.Domainresolvenow.ValueBool()
+		hasChange = true
+	}
+	if !data.Domainresolveretry.Equal(state.Domainresolveretry) {
+		server.Domainresolveretry = utils.IntPtr(int(data.Domainresolveretry.ValueInt64()))
+		hasChange = true
+	}
+	if !data.Internal.Equal(state.Internal) {
+		server.Internal = data.Internal.ValueBool()
+		hasChange = true
+	}
+	if !data.Ipaddress.Equal(state.Ipaddress) {
+		server.Ipaddress = data.Ipaddress.ValueString()
+		hasChange = true
+	}
+	// querytype is a create-only param on the NITRO API; it must not be sent in
+	// the update (PUT) payload, so it is intentionally not set here.
+	if !data.Translationip.Equal(state.Translationip) {
+		server.Translationip = data.Translationip.ValueString()
+		hasChange = true
+	}
+	if !data.Translationmask.Equal(state.Translationmask) {
+		server.Translationmask = data.Translationmask.ValueString()
+		hasChange = true
+	}
+	if !data.State.Equal(state.State) {
+		stateChange = true
+	}
+
+	if hasChange {
+		_, err := r.client.UpdateResource(service.Server.Type(), serverName, &server)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update server %s, got error: %s", serverName, err))
+			return
+		}
+		tflog.Trace(ctx, "Updated server resource")
+	}
+	if stateChange {
+		if err := r.doServerStateChange(&data); err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Error enabling/disabling server %s, got error: %s", serverName, err))
+			return
+		}
+	}
+	if !hasChange && !stateChange && len(attributesToUnset) == 0 {
+		tflog.Debug(ctx, "No changes detected for server resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{
+		"name": serverName,
+	}
+	if err := utils.ExecuteUnset(r.client, service.Server.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset server attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
-	r.readServerFromApi(ctx, &data, &resp.Diagnostics)
+	if !r.readServerFromApi(ctx, &data, &resp.Diagnostics) {
+		if !resp.Diagnostics.HasError() {
+			resp.Diagnostics.AddError("Client Error", "server not found immediately after update")
+		}
+		return
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -137,19 +240,58 @@ func (r *ServerResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	tflog.Debug(ctx, "Deleting server resource")
 
-	// For server, we don't actually delete the resource as it's a global configuration
-	// We just remove it from state
-	tflog.Trace(ctx, "Deleted server resource from state")
+	// Named resource - delete using DeleteResource
+	serverName := data.Id.ValueString()
+	err := r.client.DeleteResource(service.Server.Type(), serverName)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to delete server, got error: %s", err))
+		return
+	}
+
+	tflog.Trace(ctx, "Deleted server resource")
+}
+
+// doServerStateChange mirrors the SDK v2 doServerStateChange: it enables or
+// disables the server via the NITRO enable/disable actions.
+func (r *ServerResource) doServerStateChange(data *ServerResourceModel) error {
+	// A fresh struct is required - ActOnResource fails on superfluous attributes.
+	server := basic.Server{
+		Name: data.Id.ValueString(),
+	}
+
+	newstate := data.State.ValueString()
+
+	switch newstate {
+	case "ENABLED":
+		return r.client.ActOnResource(service.Server.Type(), server, "enable")
+	case "DISABLED":
+		// Add attributes relevant to the disable operation.
+		if !data.Delay.IsNull() && !data.Delay.IsUnknown() {
+			server.Delay = utils.IntPtr(int(data.Delay.ValueInt64()))
+		}
+		if !data.Graceful.IsNull() && !data.Graceful.IsUnknown() {
+			server.Graceful = data.Graceful.ValueString()
+		}
+		return r.client.ActOnResource(service.Server.Type(), server, "disable")
+	default:
+		return fmt.Errorf("%q is not a valid state. Use (\"ENABLED\", \"DISABLED\")", newstate)
+	}
 }
 
 // Helper function to read server data from API
-func (r *ServerResource) readServerFromApi(ctx context.Context, data *ServerResourceModel, diags *diag.Diagnostics) {
-	getResponseData, err := r.client.FindResource(service.Server.Type(), "")
+func (r *ServerResource) readServerFromApi(ctx context.Context, data *ServerResourceModel, diags *diag.Diagnostics) bool {
+	serverName := data.Id.ValueString()
+
+	getResponseData, err := r.client.FindResource(service.Server.Type(), serverName)
 	if err != nil {
+		if utils.IsNotFoundError(err) {
+			return false
+		}
 		diags.AddError("Client Error", fmt.Sprintf("Unable to read server, got error: %s", err))
-		return
+		return false
 	}
 
 	serverSetAttrFromGet(ctx, data, getResponseData)
 
+	return true
 }

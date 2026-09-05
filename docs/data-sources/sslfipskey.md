@@ -48,10 +48,8 @@ PEM - Privacy Enhanced Mail; select when importing a non-FIPS key.
 * `wrapkeyname` - Name of the wrap key to use for importing the key. Required for importing a non-FIPS key.
 * `id` - The id of the sslfipskey. It has the same value as the `fipskeyname` attribute.
 
-## Import
+### Read-only sslfipskey metadata
 
-A sslfipskey can be imported using its fipskeyname, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslfipskey` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_sslfipskey.demo_sslfipskey f1
-```
+* `size` - Size.

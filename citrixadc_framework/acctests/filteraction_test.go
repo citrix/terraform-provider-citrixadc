@@ -18,8 +18,9 @@ package citrixadc
 import (
 	"fmt"
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"testing"
 )
 
@@ -61,6 +62,35 @@ func TestAccFilteraction_basic(t *testing.T) {
 					testAccCheckFilteractionExist("citrixadc_filteraction.tf_filteraction", nil),
 					resource.TestCheckResourceAttr("citrixadc_filteraction.tf_filteraction", "name", "tf_filteraction"),
 					resource.TestCheckResourceAttr("citrixadc_filteraction.tf_filteraction", "value", "X-Forwarded"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFilteraction_sdkv2StateUpgrade(t *testing.T) {
+	t.Skip("TODO: Does not support in 13.1!")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckFilteractionDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccFilteraction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilteractionExist("citrixadc_filteraction.tf_filteraction", nil),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccFilteraction_add,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFilteractionExist("citrixadc_filteraction.tf_filteraction", nil),
 				),
 			},
 		},

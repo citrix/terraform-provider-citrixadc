@@ -163,6 +163,10 @@ func (r *AaakcdaccountResource) Update(ctx context.Context, req resource.UpdateR
 		tflog.Debug(ctx, fmt.Sprintf("realmstr has changed for aaakcdaccount"))
 		hasChange = true
 	}
+	if !data.Saltexpression.Equal(state.Saltexpression) {
+		tflog.Debug(ctx, fmt.Sprintf("saltexpression has changed for aaakcdaccount"))
+		hasChange = true
+	}
 	if !data.Servicespn.Equal(state.Servicespn) {
 		tflog.Debug(ctx, fmt.Sprintf("servicespn has changed for aaakcdaccount"))
 		hasChange = true

@@ -37,10 +37,8 @@ In addition to the arguments, the following attributes are available:
 * `serialnum` - Serial number of the partition on which the key is present. Applies only to SafeNet HSM.
 * `id` - The id of the sslhsmkey. It has the same value as the `hsmkeyname` attribute.
 
-## Import
+### Read-only sslhsmkey metadata
 
-A sslhsmkey can be imported using its hsmkeyname, e.g.
+These attributes are returned by the appliance on a GET (they are not configurable on the `citrixadc_sslhsmkey` resource). They are GET-only/Computed. Any attribute the appliance does not return is `null`.
 
-```shell
-terraform import citrixadc_sslhsmkey.tf_hsmkey1 hsmkey1
-```
+* `state` - Current state of key. Possible values: `Created`, `Access Token Unavailable`, `Unauthorized`, `Does not exist`, `Unreachable`, `Marked down`, `Key operations successful`, `Key operations failed`, `Key operation throttled`.

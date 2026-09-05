@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/citrix/adc-nitro-go/service"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 const testAccAppfwjsoncontenttype_basic = `
@@ -138,7 +139,80 @@ func TestAccAppfwjsoncontenttypeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", "jsoncontenttypevalue", "tf_Acc.*test"),
 					resource.TestCheckResourceAttr("data.citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", "isregex", "REGEX"),
+					// id is the universal runtime-binding proof for the data source.
+					resource.TestCheckResourceAttrSet("data.citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppfwjsoncontenttype_import(t *testing.T) {
+	const resAddr = "citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwjsoncontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{Config: testAccAppfwjsoncontenttype_basic},
+			{
+				Config:                  testAccAppfwjsoncontenttype_basic,
+				ResourceName:            resAddr,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
+
+func TestAccAppfwjsoncontenttype_sdkv2StateUpgrade(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		CheckDestroy: testAccCheckAppfwjsoncontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"citrixadc": {Source: "citrix/citrixadc", VersionConstraint: "2.0.0"},
+				},
+				Config: testAccAppfwjsoncontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsoncontenttypeExist("citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", nil)),
+			},
+			{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{expectNoReplace()},
+				},
+				Config: testAccAppfwjsoncontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsoncontenttypeExist("citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype", nil)),
+			},
+		},
+	})
+}
+
+func TestAccAppfwjsoncontenttype_selfHealing(t *testing.T) {
+	const resAddr = "citrixadc_appfwjsoncontenttype.tf_Acc_appfwjsoncontenttype"
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckAppfwjsoncontenttypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppfwjsoncontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsoncontenttypeExist(resAddr, nil)),
+			},
+			{
+				PreConfig: func() {
+					client, err := testAccGetFrameworkClient()
+					if err != nil {
+						t.Fatalf("self-healing: client: %v", err)
+					}
+					if err := client.DeleteResource(service.Appfwjsoncontenttype.Type(), "tf_Acc.*test"); err != nil {
+						t.Fatalf("self-healing: out-of-band delete failed: %v", err)
+					}
+				},
+				Config: testAccAppfwjsoncontenttype_basic,
+				Check:  resource.ComposeTestCheckFunc(testAccCheckAppfwjsoncontenttypeExist(resAddr, nil)),
 			},
 		},
 	})

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/citrix/adc-nitro-go/service"
+	"github.com/citrix/terraform-provider-citrixadc/citrixadc_framework/utils"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -55,14 +56,14 @@ func (r *IptunnelparamResource) Create(ctx context.Context, req resource.CreateR
 
 	tflog.Debug(ctx, "Creating iptunnelparam resource")
 
-	// iptunnelparam := iptunnelparamGetThePayloadFromtheConfig(ctx, &data)
+	iptunnelparam := iptunnelparamGetThePayloadFromtheConfig(ctx, &data)
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
-	// if err != nil {
-	//	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create iptunnelparam, got error: %s", err))
-	//	 return
-	// }
+	// Singleton resource - push configuration with UpdateUnnamedResource
+	err := r.client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to create iptunnelparam, got error: %s", err))
+		return
+	}
 
 	// Generate unique ID for this configuration resource
 	data.Id = types.StringValue("iptunnelparam-config")
@@ -95,28 +96,102 @@ func (r *IptunnelparamResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *IptunnelparamResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data IptunnelparamResourceModel
+	var data, config, state IptunnelparamResourceModel
 
+	// Read Terraform prior state to preserve ID
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	// Read config to detect attributes removed from configuration (for unset)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// Preserve ID from prior state
+	data.Id = state.Id
+
 	tflog.Debug(ctx, "Updating iptunnelparam resource")
 
-	// Create API request body from the model
-	// iptunnelparam := iptunnelparamGetThePayloadFromtheConfig(ctx, &data)
+	// Detect attributes that were removed from config so they can be unset
+	// (reverted to their NITRO defaults) after the update.
+	hasChange := false
+	attributesToUnset := []string{}
+	if !data.Dropfrag.Equal(state.Dropfrag) {
+		if config.Dropfrag.IsNull() {
+			attributesToUnset = append(attributesToUnset, "dropfrag")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Dropfragcputhreshold.Equal(state.Dropfragcputhreshold) {
+		if config.Dropfragcputhreshold.IsNull() {
+			attributesToUnset = append(attributesToUnset, "dropfragcputhreshold")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Enablestrictrx.Equal(state.Enablestrictrx) {
+		if config.Enablestrictrx.IsNull() {
+			attributesToUnset = append(attributesToUnset, "enablestrictrx")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Enablestricttx.Equal(state.Enablestricttx) {
+		if config.Enablestricttx.IsNull() {
+			attributesToUnset = append(attributesToUnset, "enablestricttx")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Srciproundrobin.Equal(state.Srciproundrobin) {
+		if config.Srciproundrobin.IsNull() {
+			attributesToUnset = append(attributesToUnset, "srciproundrobin")
+		} else {
+			hasChange = true
+		}
+	}
+	if !data.Useclientsourceip.Equal(state.Useclientsourceip) {
+		if config.Useclientsourceip.IsNull() {
+			attributesToUnset = append(attributesToUnset, "useclientsourceip")
+		} else {
+			hasChange = true
+		}
+	}
+	// Attributes without a documented NITRO default are not unset-eligible;
+	// a change to them still requires an update.
+	if !data.Mac.Equal(state.Mac) {
+		hasChange = true
+	}
+	if !data.Srcip.Equal(state.Srcip) {
+		hasChange = true
+	}
 
-	// Make API call
-	// err := r.client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
-	// if err != nil {
-	// 	 resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update iptunnelparam, got error: %s", err))
-	//	 return
-	// }
+	if hasChange {
+		// Create API request body from the model
+		iptunnelparam := iptunnelparamGetThePayloadFromtheConfig(ctx, &data)
 
-	tflog.Trace(ctx, "Updated iptunnelparam resource")
+		// Singleton resource - push configuration with UpdateUnnamedResource
+		err := r.client.UpdateUnnamedResource(service.Iptunnelparam.Type(), &iptunnelparam)
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to update iptunnelparam, got error: %s", err))
+			return
+		}
+
+		tflog.Trace(ctx, "Updated iptunnelparam resource")
+	} else {
+		tflog.Debug(ctx, "No changes detected for iptunnelparam resource, skipping update")
+	}
+
+	// Unset attributes that were removed from config so the appliance reverts
+	// them to their defaults.
+	unsetIdPayload := map[string]interface{}{}
+	if err := utils.ExecuteUnset(r.client, service.Iptunnelparam.Type(), unsetIdPayload, attributesToUnset); err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to unset iptunnelparam attributes, got error: %s", err))
+		return
+	}
 
 	// Read the updated state back
 	r.readIptunnelparamFromApi(ctx, &data, &resp.Diagnostics)

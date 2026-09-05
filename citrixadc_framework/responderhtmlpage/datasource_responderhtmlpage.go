@@ -35,7 +35,7 @@ func (d *ResponderhtmlpageDataSource) Schema(ctx context.Context, req datasource
 }
 
 func (d *ResponderhtmlpageDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ResponderhtmlpageResourceModel
+	var data ResponderhtmlpageDataSourceModel
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -55,7 +55,7 @@ func (d *ResponderhtmlpageDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
-	responderhtmlpageSetAttrFromGet(ctx, &data, getResponseData)
+	responderhtmlpageDataSourceSetAttrFromGet(ctx, &data, getResponseData)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
